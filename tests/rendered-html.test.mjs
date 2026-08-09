@@ -24,8 +24,11 @@ test('server-renders the FusionDigital community portal', async () => {
   assert.match(html, /FusionDigital/);
   assert.match(html, /href="\/physics"/);
   assert.match(html, /href="\/engineering"/);
+  assert.match(html, /href="\/ai"/);
   assert.match(html, /href="\/facilities"/);
   assert.match(html, /fusiondigital-mark\.png/);
+  assert.match(html, /TOOLCHAINS/);
+  assert.match(html, /FUSION · TWIN · AGENT LOOP/);
 });
 
 test('server-renders the physics simulation atlas', async () => {
@@ -46,8 +49,19 @@ test('server-renders the Tokamak engineering atlas with external tool links', as
 
 test('server-renders the device construction-status observatory', async () => {
   const html = await htmlFor('/facilities');
+  assert.match(html, /EXL-50U/);
+  assert.match(html, /EHL-2/);
   assert.match(html, /ITER/);
   assert.match(html, /SPARC/);
   assert.match(html, /BEST/);
+  assert.match(html, /target="_blank"/);
+});
+
+test('server-renders the AI-native fusion digital twin research page', async () => {
+  const html = await htmlFor('/ai');
+  assert.match(html, /FusionMAE/);
+  assert.match(html, /TokaMind/);
+  assert.match(html, /AI AGENTS/);
+  assert.match(html, /FUSION · TWIN · AGENT LOOP/);
   assert.match(html, /target="_blank"/);
 });

@@ -1,11 +1,12 @@
 type SiteNavProps = {
-  active?: 'home' | 'physics' | 'engineering' | 'facilities';
+  active?: 'home' | 'physics' | 'engineering' | 'ai' | 'facilities';
 };
 
 const links = [
   ['home', '/', '总览'],
   ['physics', '/physics', '物理模拟'],
   ['engineering', '/engineering', '工程仿真'],
+  ['ai', '/ai', '智能原生'],
   ['facilities', '/facilities', '全球装置'],
 ] as const;
 
@@ -17,12 +18,12 @@ export default function SiteNav({active = 'home'}: SiteNavProps) {
     </a>
     <div className="siteLinks">
       {links.map(([key, href, label]) => <a className={active === key ? 'active' : ''} href={href} key={key}>{label}</a>)}
-      <a href="/#resources">工具与证据</a>
+      <a href="/#resources">工具链条</a>
       <a href="/#roadmap">路线图</a>
     </div>
     <details className="mobileNav">
       <summary aria-label="打开导航">菜单</summary>
-      <div>{links.map(([key, href, label]) => <a className={active === key ? 'active' : ''} href={href} key={key}>{label}</a>)}<a href="/#resources">工具与证据</a><a href="/#roadmap">路线图</a></div>
+      <div>{links.map(([key, href, label]) => <a className={active === key ? 'active' : ''} href={href} key={key}>{label}</a>)}<a href="/#resources">工具链条</a><a href="/#roadmap">路线图</a></div>
     </details>
   </nav>;
 }

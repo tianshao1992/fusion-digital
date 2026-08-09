@@ -1,4 +1,4 @@
-.integrated {
+﻿.integrated {
   padding: 100px 7vw;
   background: #edf1ef;
   border-top: 1px solid var(--line);
@@ -19,7 +19,7 @@
 
 .gapBand img { width: 100%; display: block; }
 .gapBand > div { padding: 36px; border-left: 1px solid var(--line); }
-.gapBand h3 { margin: 0 0 18px; font: 500 32px Georgia,"Noto Serif SC",serif; }
+.gapBand h3 { margin: 0 0 18px; font: 300 32px "Microsoft YaHei UI","Microsoft YaHei","Noto Sans SC",Arial,sans-serif; }
 .gapBand p { color: var(--muted); line-height: 1.85; }
 .gapBand a { display: inline-block; margin-top: 14px; color: var(--cyan); font-weight: 800; }
 
