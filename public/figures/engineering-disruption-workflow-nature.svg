@@ -1,0 +1,328 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="801.36pt" height="506.375719pt" viewBox="0 0 801.36 506.375719" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-08-09T19:40:17.318318</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.10.0, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 506.375719 
+L 801.36 506.375719 
+L 801.36 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 33.516 231.070759 
+L 174.132 231.070759 
+Q 183.5064 231.070759 183.5064 225.748519 
+L 183.5064 128.174119 
+Q 183.5064 122.851879 174.132 122.851879 
+L 33.516 122.851879 
+Q 24.1416 122.851879 24.1416 128.174119 
+L 24.1416 225.748519 
+Q 24.1416 231.070759 33.516 231.070759 
+z
+" clip-path="url(#p86260c68c6)" style="fill: #ffffff; stroke: #b24b76; stroke-width: 1.45; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_3">
+    <path d="M 57.7332 152.124199 
+C 61.669557 152.124199 65.44522 151.23629 68.228645 149.656023 
+C 71.012069 148.075756 72.576 145.932153 72.576 143.697319 
+C 72.576 141.462484 71.012069 139.318882 68.228645 137.738615 
+C 65.44522 136.158348 61.669557 135.270439 57.7332 135.270439 
+C 53.796843 135.270439 50.02118 136.158348 47.237755 137.738615 
+C 44.454331 139.318882 42.8904 141.462484 42.8904 143.697319 
+C 42.8904 145.932153 44.454331 148.075756 47.237755 149.656023 
+C 50.02118 151.23629 53.796843 152.124199 57.7332 152.124199 
+z
+" clip-path="url(#p86260c68c6)" style="fill: #b24b76"/>
+   </g>
+   <g id="patch_4">
+    <path d="M 228.816 231.070759 
+L 369.432 231.070759 
+Q 378.8064 231.070759 378.8064 225.748519 
+L 378.8064 128.174119 
+Q 378.8064 122.851879 369.432 122.851879 
+L 228.816 122.851879 
+Q 219.4416 122.851879 219.4416 128.174119 
+L 219.4416 225.748519 
+Q 219.4416 231.070759 228.816 231.070759 
+z
+" clip-path="url(#p86260c68c6)" style="fill: #ffffff; stroke: #35789a; stroke-width: 1.45; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_5">
+    <path d="M 253.0332 152.124199 
+C 256.969557 152.124199 260.74522 151.23629 263.528645 149.656023 
+C 266.312069 148.075756 267.876 145.932153 267.876 143.697319 
+C 267.876 141.462484 266.312069 139.318882 263.528645 137.738615 
+C 260.74522 136.158348 256.969557 135.270439 253.0332 135.270439 
+C 249.096843 135.270439 245.32118 136.158348 242.537755 137.738615 
+C 239.754331 139.318882 238.1904 141.462484 238.1904 143.697319 
+C 238.1904 145.932153 239.754331 148.075756 242.537755 149.656023 
+C 245.32118 151.23629 249.096843 152.124199 253.0332 152.124199 
+z
+" clip-path="url(#p86260c68c6)" style="fill: #35789a"/>
+   </g>
+   <g id="patch_6">
+    <path d="M 431.928 231.070759 
+L 572.544 231.070759 
+Q 581.9184 231.070759 581.9184 225.748519 
+L 581.9184 128.174119 
+Q 581.9184 122.851879 572.544 122.851879 
+L 431.928 122.851879 
+Q 422.5536 122.851879 422.5536 128.174119 
+L 422.5536 225.748519 
+Q 422.5536 231.070759 431.928 231.070759 
+z
+" clip-path="url(#p86260c68c6)" style="fill: #ffffff; stroke: #d97a3a; stroke-width: 1.45; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_7">
+    <path d="M 456.1452 152.124199 
+C 460.081557 152.124199 463.85722 151.23629 466.640645 149.656023 
+C 469.424069 148.075756 470.988 145.932153 470.988 143.697319 
+C 470.988 141.462484 469.424069 139.318882 466.640645 137.738615 
+C 463.85722 136.158348 460.081557 135.270439 456.1452 135.270439 
+C 452.208843 135.270439 448.43318 136.158348 445.649755 137.738615 
+C 442.866331 139.318882 441.3024 141.462484 441.3024 143.697319 
+C 441.3024 145.932153 442.866331 148.075756 445.649755 149.656023 
+C 448.43318 151.23629 452.208843 152.124199 456.1452 152.124199 
+z
+" clip-path="url(#p86260c68c6)" style="fill: #d97a3a"/>
+   </g>
+   <g id="patch_8">
+    <path d="M 627.228 231.070759 
+L 767.844 231.070759 
+Q 777.2184 231.070759 777.2184 225.748519 
+L 777.2184 128.174119 
+Q 777.2184 122.851879 767.844 122.851879 
+L 627.228 122.851879 
+Q 617.8536 122.851879 617.8536 128.174119 
+L 617.8536 225.748519 
+Q 617.8536 231.070759 627.228 231.070759 
+z
+" clip-path="url(#p86260c68c6)" style="fill: #ffffff; stroke: #17324d; stroke-width: 1.45; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_9">
+    <path d="M 651.4452 152.124199 
+C 655.381557 152.124199 659.15722 151.23629 661.940645 149.656023 
+C 664.724069 148.075756 666.288 145.932153 666.288 143.697319 
+C 666.288 141.462484 664.724069 139.318882 661.940645 137.738615 
+C 659.15722 136.158348 655.381557 135.270439 651.4452 135.270439 
+C 647.508843 135.270439 643.73318 136.158348 640.949755 137.738615 
+C 638.166331 139.318882 636.6024 141.462484 636.6024 143.697319 
+C 636.6024 145.932153 638.166331 148.075756 640.949755 149.656023 
+C 643.73318 151.23629 647.508843 152.124199 651.4452 152.124199 
+z
+" clip-path="url(#p86260c68c6)" style="fill: #17324d"/>
+   </g>
+   <g id="patch_10">
+    <path d="M 53.046 376.545319 
+L 201.474 376.545319 
+L 201.474 323.322919 
+L 53.046 323.322919 
+z
+" clip-path="url(#p86260c68c6)" style="fill: #f4f7f6; stroke: #d8e2e2; stroke-width: 0.8; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_11">
+    <path d="M 236.628 376.545319 
+L 385.056 376.545319 
+L 385.056 323.322919 
+L 236.628 323.322919 
+z
+" clip-path="url(#p86260c68c6)" style="fill: #f4f7f6; stroke: #d8e2e2; stroke-width: 0.8; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_12">
+    <path d="M 420.21 376.545319 
+L 568.638 376.545319 
+L 568.638 323.322919 
+L 420.21 323.322919 
+z
+" clip-path="url(#p86260c68c6)" style="fill: #f4f7f6; stroke: #d8e2e2; stroke-width: 0.8; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_13">
+    <path d="M 603.792 376.545319 
+L 752.22 376.545319 
+L 752.22 323.322919 
+L 603.792 323.322919 
+z
+" clip-path="url(#p86260c68c6)" style="fill: #f4f7f6; stroke: #d8e2e2; stroke-width: 0.8; stroke-linejoin: miter"/>
+   </g>
+   <g id="text_1">
+    <text style="font-weight: 700; font-size: 9px; font-family: 'Microsoft YaHei'; text-anchor: start; fill: #2c8fa3" x="10.08" y="17.274375" transform="rotate(-0 10.08 17.274375)">D  破裂工程分析</text>
+   </g>
+   <g id="text_2">
+    <text style="font-weight: 700; font-size: 18px; font-family: 'Microsoft YaHei'; text-anchor: start; fill: #17324d" x="10.08" y="40.317671" transform="rotate(-0 10.08 40.317671)">从等离子体演化到三维导体、结构与保护阈值</text>
+   </g>
+   <g id="text_3">
+    <text style="font-size: 8px; font-family: 'Microsoft YaHei'; text-anchor: end; fill: #6e7c85" x="791.28" y="39.698969" transform="rotate(-0 791.28 39.698969)">轴对称场景与三维结构通过可审计载荷包连接</text>
+   </g>
+   <g id="text_4">
+    <text style="font-weight: 700; font-size: 8px; font-family: 'Microsoft YaHei'; text-anchor: middle; fill: #ffffff" x="57.7332" y="145.900444" transform="rotate(-0 57.7332 145.900444)">1</text>
+   </g>
+   <g id="text_5">
+    <text style="font-weight: 700; font-size: 10px; font-family: 'Microsoft YaHei'; text-anchor: start; fill: #b24b76" x="80.388" y="147.699389" transform="rotate(-0 80.388 147.699389)">等离子体与电路</text>
+   </g>
+   <g id="text_6">
+    <text style="font-size: 7.4px; font-family: 'Microsoft YaHei'; fill: #26343b" transform="translate(47.5776 167.353494)">DINA / JOREK / MEQ</text>
+    <text style="font-size: 7.4px; font-family: 'Microsoft YaHei'; fill: #26343b" transform="translate(47.5776 178.167727)">Ip、位置、CQ、VDE</text>
+    <text style="font-size: 7.4px; font-family: 'Microsoft YaHei'; fill: #26343b" transform="translate(47.5776 188.584614)">halo 与环向假设</text>
+   </g>
+   <g id="text_7">
+    <text style="font-weight: 700; font-size: 8px; font-family: 'Microsoft YaHei'; text-anchor: middle; fill: #ffffff" x="253.0332" y="145.900444" transform="rotate(-0 253.0332 145.900444)">2</text>
+   </g>
+   <g id="text_8">
+    <text style="font-weight: 700; font-size: 10px; font-family: 'Microsoft YaHei'; text-anchor: start; fill: #35789a" x="275.688" y="147.699389" transform="rotate(-0 275.688 147.699389)">三维导体响应</text>
+   </g>
+   <g id="text_9">
+    <text style="font-size: 7.4px; font-family: 'Microsoft YaHei'; fill: #26343b" transform="translate(242.8776 167.353494)">CARIDDI / ThinCurr</text>
+    <text style="font-size: 7.4px; font-family: 'Microsoft YaHei'; fill: #26343b" transform="translate(242.8776 177.770381)">STARWALL / Maxwell</text>
+    <text style="font-size: 7.4px; font-family: 'Microsoft YaHei'; fill: #26343b" transform="translate(242.8776 188.187269)">涡流、壁电压、力密度</text>
+   </g>
+   <g id="text_10">
+    <text style="font-weight: 700; font-size: 8px; font-family: 'Microsoft YaHei'; text-anchor: middle; fill: #ffffff" x="456.1452" y="145.900444" transform="rotate(-0 456.1452 145.900444)">3</text>
+   </g>
+   <g id="text_11">
+    <text style="font-weight: 700; font-size: 10px; font-family: 'Microsoft YaHei'; text-anchor: start; fill: #d97a3a" x="478.8" y="147.699389" transform="rotate(-0 478.8 147.699389)">结构响应</text>
+   </g>
+   <g id="text_12">
+    <text style="font-size: 7.4px; font-family: 'Microsoft YaHei'; fill: #26343b" transform="translate(445.9896 167.353494)">Ansys / Abaqus</text>
+    <text style="font-size: 7.4px; font-family: 'Microsoft YaHei'; fill: #26343b" transform="translate(445.9896 177.813162)">接触、预紧、动力放大</text>
+    <text style="font-size: 7.4px; font-family: 'Microsoft YaHei'; fill: #26343b" transform="translate(445.9896 188.23005)">位移、应力、疲劳</text>
+   </g>
+   <g id="text_13">
+    <text style="font-weight: 700; font-size: 8px; font-family: 'Microsoft YaHei'; text-anchor: middle; fill: #ffffff" x="651.4452" y="145.900444" transform="rotate(-0 651.4452 145.900444)">4</text>
+   </g>
+   <g id="text_14">
+    <text style="font-weight: 700; font-size: 10px; font-family: 'Microsoft YaHei'; text-anchor: start; fill: #17324d" x="674.1" y="147.699389" transform="rotate(-0 674.1 147.699389)">保护与验收</text>
+   </g>
+   <g id="text_15">
+    <text style="font-size: 7.4px; font-family: 'Microsoft YaHei'; fill: #26343b" transform="translate(641.2896 167.353494)">阈值、裕量、联锁</text>
+    <text style="font-size: 7.4px; font-family: 'Microsoft YaHei'; fill: #26343b" transform="translate(641.2896 177.770381)">支撑/焊缝/绝缘</text>
+    <text style="font-size: 7.4px; font-family: 'Microsoft YaHei'; fill: #26343b" transform="translate(641.2896 188.187269)">事故频率与检修</text>
+   </g>
+   <g id="patch_14">
+    <path d="M 176.13125 176.961319 
+Q 201.475175 176.961319 224.806638 176.961319 
+" style="fill: none; stroke: #c59b32; stroke-width: 1.8; stroke-linecap: round"/>
+    <path d="M 220.806638 174.961319 
+L 224.806638 176.961319 
+L 220.806638 178.961319 
+z
+" style="fill: #c59b32; stroke: #c59b32; stroke-width: 1.8; stroke-linecap: round"/>
+   </g>
+   <g id="patch_15">
+    <path d="M 371.434588 176.961319 
+Q 400.682547 176.961319 427.918045 176.961319 
+" style="fill: none; stroke: #c59b32; stroke-width: 1.8; stroke-linecap: round"/>
+    <path d="M 423.918045 174.961319 
+L 427.918045 176.961319 
+L 423.918045 178.961319 
+z
+" style="fill: #c59b32; stroke: #c59b32; stroke-width: 1.8; stroke-linecap: round"/>
+   </g>
+   <g id="patch_16">
+    <path d="M 574.54325 176.961319 
+Q 599.887175 176.961319 623.218638 176.961319 
+" style="fill: none; stroke: #c59b32; stroke-width: 1.8; stroke-linecap: round"/>
+    <path d="M 619.218638 174.961319 
+L 623.218638 176.961319 
+L 619.218638 178.961319 
+z
+" style="fill: #c59b32; stroke: #c59b32; stroke-width: 1.8; stroke-linecap: round"/>
+   </g>
+   <g id="text_16">
+    <text style="font-weight: 700; font-size: 8px; font-family: 'Microsoft YaHei'; text-anchor: start; fill: #17324d" x="62.4204" y="343.281319" transform="rotate(-0 62.4204 343.281319)">磁探针 / Rogowski</text>
+   </g>
+   <g id="text_17">
+    <text style="font-size: 7.5px; font-family: 'Microsoft YaHei'; text-anchor: start; fill: #26343b" x="62.4204" y="362.352679" transform="rotate(-0 62.4204 362.352679)">B(t)、I(t)</text>
+   </g>
+   <g id="patch_17">
+    <path d="M 126.792968 321.378458 
+Q 115.542253 274.536773 104.552649 228.782204 
+" style="fill: none; stroke: #6e7c85; stroke-linecap: round"/>
+    <path d="M 103.542132 233.138677 
+L 104.552649 228.782204 
+L 107.431517 232.204501 
+z
+" style="fill: #6e7c85; stroke: #6e7c85; stroke-linecap: round"/>
+   </g>
+   <g id="text_18">
+    <text style="font-weight: 700; font-size: 8px; font-family: 'Microsoft YaHei'; text-anchor: start; fill: #17324d" x="246.0024" y="343.281319" transform="rotate(-0 246.0024 343.281319)">应变与加速度</text>
+   </g>
+   <g id="text_19">
+    <text style="font-size: 7.5px; font-family: 'Microsoft YaHei'; text-anchor: start; fill: #26343b" x="246.0024" y="362.352679" transform="rotate(-0 246.0024 362.352679)">ε(t)、a(t)</text>
+   </g>
+   <g id="patch_18">
+    <path d="M 310.603477 321.33677 
+Q 304.983025 274.535924 299.495882 228.845137 
+" style="fill: none; stroke: #6e7c85; stroke-linecap: round"/>
+    <path d="M 297.987095 233.055073 
+L 299.495882 228.845137 
+L 301.958559 232.578128 
+z
+" style="fill: #6e7c85; stroke: #6e7c85; stroke-linecap: round"/>
+   </g>
+   <g id="text_20">
+    <text style="font-weight: 700; font-size: 8px; font-family: 'Microsoft YaHei'; text-anchor: start; fill: #17324d" x="429.5844" y="343.281319" transform="rotate(-0 429.5844 343.281319)">位移与反力</text>
+   </g>
+   <g id="text_21">
+    <text style="font-size: 7.5px; font-family: 'Microsoft YaHei'; text-anchor: start; fill: #26343b" x="429.5844" y="362.352679" transform="rotate(-0 429.5844 362.352679)">u(t)、F(t)</text>
+   </g>
+   <g id="patch_19">
+    <path d="M 494.583492 321.330814 
+Q 498.329993 274.535802 501.987268 228.855257 
+" style="fill: none; stroke: #6e7c85; stroke-linecap: round"/>
+    <path d="M 499.674421 232.682885 
+L 501.987268 228.855257 
+L 503.661663 233.002111 
+z
+" style="fill: #6e7c85; stroke: #6e7c85; stroke-linecap: round"/>
+   </g>
+   <g id="text_22">
+    <text style="font-weight: 700; font-size: 8px; font-family: 'Microsoft YaHei'; text-anchor: start; fill: #17324d" x="613.1664" y="343.281319" transform="rotate(-0 613.1664 343.281319)">红外/弧光/事件</text>
+   </g>
+   <g id="text_23">
+    <text style="font-size: 7.5px; font-family: 'Microsoft YaHei'; text-anchor: start; fill: #26343b" x="613.1664" y="362.352679" transform="rotate(-0 613.1664 362.352679)">热点与故障标签</text>
+   </g>
+   <g id="patch_20">
+    <path d="M 678.398769 321.360592 
+Q 687.770861 274.536411 696.923525 228.808521 
+" style="fill: none; stroke: #6e7c85; stroke-linecap: round"/>
+    <path d="M 694.177374 232.338202 
+L 696.923525 228.808521 
+L 698.099579 233.123251 
+z
+" style="fill: #6e7c85; stroke: #6e7c85; stroke-linecap: round"/>
+   </g>
+   <g id="text_24">
+    <text style="font-weight: 700; font-size: 9px; font-family: 'Microsoft YaHei'; text-anchor: middle; fill: #b4473f" x="400.68" y="412.026919" transform="rotate(-0 400.68 412.026919)">验证原则：比较合成传感器输出，而不是把有限元节点值直接与仪器读数相减</text>
+   </g>
+   <g id="text_25">
+    <text style="font-size: 8.5px; font-family: 'Microsoft YaHei'; text-anchor: middle; fill: #26343b" x="400.68" y="447.508519" transform="rotate(-0 400.68 447.508519)">关键不确定度：CQ 时间 · halo 接触带与不对称 · 电连接电阻 · 约束/接触 · 材料率效应</text>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="p86260c68c6">
+   <rect x="10.08" y="52.775719" width="781.2" height="443.52"/>
+  </clipPath>
+ </defs>
+</svg>

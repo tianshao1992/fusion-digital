@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="745.56pt" height="506.375719pt" viewBox="0 0 745.56 506.375719" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-08-09T19:40:20.878049</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.10.0, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 506.375719 
+L 745.56 506.375719 
+L 745.56 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 10.08 438.638119 
+L 735.48 438.638119 
+L 677.448 387.633319 
+L 68.112 387.633319 
+z
+" clip-path="url(#p175dce088a)" style="fill: #6e7c85; stroke: #ffffff; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_3">
+    <path d="M 24.588 376.545319 
+L 720.972 376.545319 
+L 665.26128 325.540519 
+L 80.29872 325.540519 
+z
+" clip-path="url(#p175dce088a)" style="fill: #2c8fa3; stroke: #ffffff; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_4">
+    <path d="M 53.604 314.452519 
+L 691.956 314.452519 
+L 640.88784 263.447719 
+L 104.67216 263.447719 
+z
+" clip-path="url(#p175dce088a)" style="fill: #d97a3a; stroke: #ffffff; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_5">
+    <path d="M 89.874 252.359719 
+L 655.686 252.359719 
+L 610.42104 201.354919 
+L 135.13896 201.354919 
+z
+" clip-path="url(#p175dce088a)" style="fill: #b24b76; stroke: #ffffff; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_6">
+    <path d="M 133.398 190.266919 
+L 612.162 190.266919 
+L 573.86088 139.262119 
+L 171.69912 139.262119 
+z
+" clip-path="url(#p175dce088a)" style="fill: #17324d; stroke: #ffffff; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="text_1">
+    <text style="font-weight: 700; font-size: 9px; font-family: 'Microsoft YaHei'; text-anchor: start; fill: #2c8fa3" x="10.08" y="17.274375" transform="rotate(-0 10.08 17.274375)">I  工程模型可信度金字塔</text>
+   </g>
+   <g id="text_2">
+    <text style="font-weight: 700; font-size: 18px; font-family: 'Microsoft YaHei'; text-anchor: start; fill: #17324d" x="10.08" y="40.317671" transform="rotate(-0 10.08 40.317671)">“与另一个代码一致”只是证据的一层</text>
+   </g>
+   <g id="text_3">
+    <text style="font-size: 8px; font-family: 'Microsoft YaHei'; text-anchor: end; fill: #6e7c85" x="735.48" y="39.698969" transform="rotate(-0 735.48 39.698969)">越接近系统级，数量更少、成本更高、代表性更强</text>
+   </g>
+   <g id="text_4">
+    <text style="font-weight: 700; font-size: 9px; font-family: 'Microsoft YaHei'; text-anchor: middle; fill: #ffffff" x="372.78" y="406.522074" transform="rotate(-0 372.78 406.522074)">代码/数值验证</text>
+   </g>
+   <g id="text_5">
+    <text style="font-size: 7px; font-family: 'Microsoft YaHei'; text-anchor: middle; fill: #ffffff" x="372.78" y="425.042653" transform="rotate(-0 372.78 425.042653)">单元、守恒、解析/制造解、收敛、回归</text>
+   </g>
+   <g id="text_6">
+    <text style="font-weight: 700; font-size: 9px; font-family: 'Microsoft YaHei'; text-anchor: middle; fill: #ffffff" x="372.78" y="344.429274" transform="rotate(-0 372.78 344.429274)">跨代码与标准基准</text>
+   </g>
+   <g id="text_7">
+    <text style="font-size: 7px; font-family: 'Microsoft YaHei'; text-anchor: middle; fill: #ffffff" x="372.78" y="362.949853" transform="rotate(-0 372.78 362.949853)">几何、网格、核数据、耦合与实验响应</text>
+   </g>
+   <g id="text_8">
+    <text style="font-weight: 700; font-size: 9px; font-family: 'Microsoft YaHei'; text-anchor: middle; fill: #ffffff" x="372.78" y="282.336474" transform="rotate(-0 372.78 282.336474)">单效应试验</text>
+   </g>
+   <g id="text_9">
+    <text style="font-size: 7px; font-family: 'Microsoft YaHei'; text-anchor: middle; fill: #ffffff" x="372.78" y="300.857053" transform="rotate(-0 372.78 300.857053)">材料、接触、传热、渗透、绝缘、短样</text>
+   </g>
+   <g id="text_10">
+    <text style="font-weight: 700; font-size: 9px; font-family: 'Microsoft YaHei'; text-anchor: middle; fill: #ffffff" x="372.78" y="220.243674" transform="rotate(-0 372.78 220.243674)">部件与回路试验</text>
+   </g>
+   <g id="text_11">
+    <text style="font-size: 7px; font-family: 'Microsoft YaHei'; text-anchor: middle; fill: #ffffff" x="372.78" y="238.764253" transform="rotate(-0 372.78 238.764253)">模型线圈、高热流靶、氦/水回路、FNG</text>
+   </g>
+   <g id="text_12">
+    <text style="font-weight: 700; font-size: 9px; font-family: 'Microsoft YaHei'; text-anchor: middle; fill: #ffffff" x="372.78" y="158.150874" transform="rotate(-0 372.78 158.150874)">装置 / 系统盲预测</text>
+   </g>
+   <g id="text_13">
+    <text style="font-size: 7px; font-family: 'Microsoft YaHei'; text-anchor: middle; fill: #ffffff" x="372.78" y="176.671453" transform="rotate(-0 372.78 176.671453)">真实放电、全线圈、PFC、剂量与维护数据</text>
+   </g>
+   <g id="patch_7">
+    <path d="M 691.956 385.697067 
+Q 691.956 266.80667 691.956 149.593325 
+" style="fill: none; stroke: #17324d; stroke-width: 1.5; stroke-linecap: round"/>
+    <path d="M 690.356 152.793325 
+L 691.956 149.593325 
+L 693.556 152.793325 
+z
+" style="fill: #17324d; stroke: #17324d; stroke-width: 1.5; stroke-linecap: round"/>
+   </g>
+   <g id="text_14">
+    <text style="font-size: 8px; font-family: 'Microsoft YaHei'; fill: #17324d" transform="translate(676.77225 396.093069)">代表性 ↑</text>
+    <text style="font-size: 8px; font-family: 'Microsoft YaHei'; fill: #17324d" transform="translate(668.77225 405.755819)">决策接近度 ↑</text>
+   </g>
+   <g id="patch_8">
+    <path d="M 53.604 158.939171 
+Q 53.604 277.829567 53.604 395.042912 
+" style="fill: none; stroke: #6e7c85; stroke-width: 1.5; stroke-linecap: round"/>
+    <path d="M 55.204 391.842912 
+L 53.604 395.042912 
+L 52.004 391.842912 
+z
+" style="fill: #6e7c85; stroke: #6e7c85; stroke-width: 1.5; stroke-linecap: round"/>
+   </g>
+   <g id="text_15">
+    <text style="font-size: 8px; font-family: 'Microsoft YaHei'; fill: #6e7c85" transform="translate(34.42025 143.286669)">样本数量 ↑</text>
+    <text style="font-size: 8px; font-family: 'Microsoft YaHei'; fill: #6e7c85" transform="translate(30.42025 152.949419)">诊断可控性 ↑</text>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="p175dce088a">
+   <rect x="10.08" y="52.775719" width="725.4" height="443.52"/>
+  </clipPath>
+ </defs>
+</svg>

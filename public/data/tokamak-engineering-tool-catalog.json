@@ -1,0 +1,497 @@
+[
+  {
+    "category": "A.1 几何、数据与工作流",
+    "tool_or_platform": "CATIA V5/3DEXPERIENCE + ENOVIA",
+    "license_and_stack": "闭源商业；CAD/PLM/CAA/VBA/API",
+    "license_class": "商业/闭源",
+    "scope_and_validation": "ITER 等超大装配、配置、接口、制造；以供应商/装配检查验证",
+    "limitations_and_twin_gap": "许可与定制昂贵；CAE 派生、在线状态和物理证据需外部系统",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.1 几何、数据与工作流",
+    "tool_or_platform": "NX + Teamcenter",
+    "license_and_stack": "闭源商业；Parasolid、PLM、Simcenter 生态",
+    "license_class": "商业/闭源",
+    "scope_and_validation": "产品结构、公差、制造、CAE 数据管理；工业资格深",
+    "limitations_and_twin_gap": "聚变专用载荷/核数据接口需自建；厂商锁定",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.1 几何、数据与工作流",
+    "tool_or_platform": "AVEVA E3D / Bentley / Revit",
+    "license_and_stack": "闭源商业；厂房、管线、BIM",
+    "license_class": "商业/闭源",
+    "scope_and_validation": "厂房布置、HVAC、管线、电缆和碰撞；现场测量/施工验证",
+    "limitations_and_twin_gap": "不是物理求解器；与核分析/装置状态语义连接有限",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.1 几何、数据与工作流",
+    "tool_or_platform": "SALOME",
+    "license_and_stack": "LGPL；C++/Python、OpenCASCADE、SMESH、MED",
+    "license_class": "开源/开放",
+    "scope_and_validation": "CAD 简化、网格、场映射、YACS/SALOME_Meca/CFD；核工业积累",
+    "limitations_and_twin_gap": "大装配鲁棒性、PLM 权限和商业支持弱于主流平台",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.1 几何、数据与工作流",
+    "tool_or_platform": "FreeCAD/CadQuery/OpenCASCADE",
+    "license_and_stack": "开源；C++/Python",
+    "license_class": "开源/开放",
+    "scope_and_validation": "参数化部件、自动几何、概念模型；与 CAD 体积/尺寸比较",
+    "limitations_and_twin_gap": "复杂装配、配置、制造和核质量流程不足",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.1 几何、数据与工作流",
+    "tool_or_platform": "Paramak / bluemira",
+    "license_and_stack": "开源；Python/CadQuery/OpenCASCADE",
+    "license_class": "开源/开放",
+    "scope_and_validation": "Tokamak 参数化 CAD、概念设计、中子学几何快速迭代",
+    "limitations_and_twin_gap": "不等于制造 CAD；细节和 as-built 配置不足",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.1 几何、数据与工作流",
+    "tool_or_platform": "HyperMesh/ANSA/SpaceClaim/Cubit",
+    "license_and_stack": "闭源商业为主；网格与几何修复",
+    "license_class": "商业/闭源",
+    "scope_and_validation": "大型 FE/CFD/蒙卡前处理；网格质量和求解器导出成熟",
+    "limitations_and_twin_gap": "特征删除可能破坏电流、流束和结构路径；需审计规则",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.1 几何、数据与工作流",
+    "tool_or_platform": "Gmsh",
+    "license_and_stack": "GPL；C++/Python API",
+    "license_class": "开源/开放",
+    "scope_and_validation": "自动四面体/高阶网格和研究工作流；可用解析/基准检查",
+    "limitations_and_twin_gap": "复杂工业装配修复和团队配置管理有限",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.1 几何、数据与工作流",
+    "tool_or_platform": "ParaView/VTK",
+    "license_and_stack": "BSD；C++/Python",
+    "license_class": "开源/开放",
+    "scope_and_validation": "大规模场可视化、采样、比较和自动报告",
+    "limitations_and_twin_gap": "不管理资产语义、证据和权限",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.1 几何、数据与工作流",
+    "tool_or_platform": "preCICE / FMI / SSP",
+    "license_and_stack": "开源或标准；C++/Python、多求解器",
+    "license_class": "开源/开放",
+    "scope_and_validation": "分区耦合、ROM/系统模型交换；以守恒和耦合基准验证",
+    "limitations_and_twin_gap": "只解决通信/协同，不保证各物理模型正确或稳定",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.2 破裂、电磁、结构与磁体",
+    "tool_or_platform": "DINA / MEQ",
+    "license_and_stack": "机构/合作获取；Fortran/C/C++ 为主",
+    "license_class": "研究/合作/混合",
+    "scope_and_validation": "轴对称等离子体—线圈—被动结构动态、控制场景；装置回放",
+    "limitations_and_twin_gap": "三维导体、端口、局部 halo 和结构寿命不足",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.2 破裂、电磁、结构与磁体",
+    "tool_or_platform": "TokaMaker",
+    "license_and_stack": "开源 OFT；Fortran/C++/Python",
+    "license_class": "开源/开放",
+    "scope_and_validation": "时变自由边界平衡和电路；解析/跨代码/装置算例",
+    "limitations_and_twin_gap": "新兴；正式资格、复杂 CAD 和工业支持需建设",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.2 破裂、电磁、结构与磁体",
+    "tool_or_platform": "ThinCurr",
+    "license_and_stack": "开源 OFT；高阶 FEM/Python",
+    "license_class": "开源/开放",
+    "scope_and_validation": "三维薄壁涡流、RWM、被动导体；SPARC/DIII-D 与基准",
+    "limitations_and_twin_gap": "薄壁假设；厚度电流、连接和局部细节有限",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.2 破裂、电磁、结构与磁体",
+    "tool_or_platform": "CARIDDI",
+    "license_and_stack": "受限/合作；积分方程、边元",
+    "license_class": "研究/合作/混合",
+    "scope_and_validation": "三维体导体、传感器、电压、MHD 耦合；ITER/JOREK/MARS-F",
+    "limitations_and_twin_gap": "获取和前后处理门槛；版本/接口依赖专家",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.2 破裂、电磁、结构与磁体",
+    "tool_or_platform": "STARWALL",
+    "license_and_stack": "研究代码；薄壁表面电流",
+    "license_class": "研究/合作/混合",
+    "scope_and_validation": "JOREK/VMEC/CAS3D 壁耦合、VDE/RWM；跨代码基准",
+    "limitations_and_twin_gap": "体导体、接触、局部力和工业结构接口有限",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.2 破裂、电磁、结构与磁体",
+    "tool_or_platform": "VALEN",
+    "license_and_stack": "研究/受限；Fortran、薄壳 FEM/电路",
+    "license_class": "研究/合作/混合",
+    "scope_and_validation": "RWM、控制线圈/传感器和三维壁；DIII-D/MAST-U/FIRE",
+    "limitations_and_twin_gap": "现代接口、开放维护和一般工程集成有限",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.2 破裂、电磁、结构与磁体",
+    "tool_or_platform": "Keddy3D / PECAN",
+    "license_and_stack": "研究代码；薄壁/两阶段工作流",
+    "license_class": "研究/合作/混合",
+    "scope_and_validation": "非轴对称涡流和紧凑 Tokamak disruption 载荷",
+    "limitations_and_twin_gap": "公开质量体系与跨装置证据有限",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.2 破裂、电磁、结构与磁体",
+    "tool_or_platform": "Ansys Maxwell/APDL/Mechanical",
+    "license_and_stack": "闭源商业；FEM、APDL/Python",
+    "license_class": "商业/闭源",
+    "scope_and_validation": "线圈、涡流、磁—结构、接触、动力学；ITER/JT-60SA 等",
+    "limitations_and_twin_gap": "许可、高成本、大模型；Tokamak 场景和 halo 需自建",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.2 破裂、电磁、结构与磁体",
+    "tool_or_platform": "COMSOL",
+    "license_and_stack": "闭源商业；统一 FEM、自定义 PDE",
+    "license_class": "商业/闭源",
+    "scope_and_validation": "局部磁—热—结构—流体、反演；EAST/磁体/PFC",
+    "limitations_and_twin_gap": "大装配和核级证据较弱；求解器/版本黑箱部分存在",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.2 破裂、电磁、结构与磁体",
+    "tool_or_platform": "Opera/TOSCA / Simcenter MAGNET",
+    "license_and_stack": "闭源商业；低频电磁",
+    "license_class": "商业/闭源",
+    "scope_and_validation": "磁体、线圈、铁磁和涡流；工业磁测量验证",
+    "limitations_and_twin_gap": "Tokamak 专用等离子体/halo 接口不足",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.2 破裂、电磁、结构与磁体",
+    "tool_or_platform": "Abaqus/Simcenter 3D/Code_Aster",
+    "license_and_stack": "商业/开源混合；FEM",
+    "license_class": "开源/开放",
+    "scope_and_validation": "非线性结构、接触、疲劳、断裂、热机械；试验关联",
+    "limitations_and_twin_gap": "载荷正确性和辐照本构不由求解器保证",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.2 破裂、电磁、结构与磁体",
+    "tool_or_platform": "4C",
+    "license_and_stack": "研究/合作；多尺度热工水力/Modelica/FE",
+    "license_class": "研究/合作/混合",
+    "scope_and_validation": "CICC、线圈结构和低温回路；HELIOS/ITER/EAST 验证",
+    "limitations_and_twin_gap": "专家和配置门槛；实时部署需 ROM 与状态估计",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.2 破裂、电磁、结构与磁体",
+    "tool_or_platform": "THEA/Gandalf/Mithrandir",
+    "license_and_stack": "CryoSoft 商业/受限；1D 热—水力—电",
+    "license_class": "商业/闭源",
+    "scope_and_validation": "CICC 稳定性与失超；QUELL/SULTAN/导体试验",
+    "limitations_and_twin_gap": "老旧接口、许可和整机耦合；参数高度依赖试验",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.2 破裂、电磁、结构与磁体",
+    "tool_or_platform": "JackPot-ACDC",
+    "license_and_stack": "研究/合作；绞线网络",
+    "license_class": "研究/合作/混合",
+    "scope_and_validation": "CICC 股线电流、耦合损耗；与 THEA 联合",
+    "limitations_and_twin_gap": "计算与输入成本高，不适合整机在线",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.2 破裂、电磁、结构与磁体",
+    "tool_or_platform": "ROXIE/QuenchPro/STEAM/FiQuS",
+    "license_and_stack": "开放性各异；磁场/电路/热",
+    "license_class": "研究/合作/混合",
+    "scope_and_validation": "磁体场和失超交叉验证；加速器磁体经验",
+    "limitations_and_twin_gap": "需对 Tokamak CICC/HTS 和循环场景重新验证",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.3 热流体、PFC、包层和氚",
+    "tool_or_platform": "HEAT",
+    "license_and_stack": "开源；Python + CAD/FVM/FEM/MHD 接口",
+    "license_class": "开源/开放",
+    "scope_and_validation": "PFC 三维热流和温度；SPARC 设计、DIII-D IR 验证",
+    "limitations_and_twin_gap": "依赖外部边界物理与材料寿命；在线需加速/校准",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.3 热流体、PFC、包层和氚",
+    "tool_or_platform": "MEMENTO",
+    "license_and_stack": "开源研究；C++/AMReX",
+    "license_class": "开源/开放",
+    "scope_and_validation": "钨等金属熔化与熔层运动；EUROfusion/JET 验证",
+    "limitations_and_twin_gap": "适用异常熔融，不代替常规疲劳/结构评定",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.3 热流体、PFC、包层和氚",
+    "tool_or_platform": "Ansys CFX/Fluent",
+    "license_and_stack": "闭源商业；FVM、UDF",
+    "license_class": "商业/闭源",
+    "scope_and_validation": "冷却、共轭热、多相、包层和 PFC；大量 mock-up/回路应用",
+    "limitations_and_twin_gap": "特殊 CHF、MHD、氦/PbLi 相关式需专门验证",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.3 热流体、PFC、包层和氚",
+    "tool_or_platform": "STAR-CCM+",
+    "license_and_stack": "闭源商业；FVM/自动网格/Java API",
+    "license_class": "商业/闭源",
+    "scope_and_validation": "复杂 CFD、多相、CHT、设计探索、GPU",
+    "limitations_and_twin_gap": "核热/氚/聚变材料接口和核资格需项目建设",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.3 热流体、PFC、包层和氚",
+    "tool_or_platform": "OpenFOAM",
+    "license_and_stack": "GPL；C++/FVM",
+    "license_class": "开源/开放",
+    "scope_and_validation": "自定义 CFD、CHT、MHD、HPC；解析/实验基准",
+    "limitations_and_twin_gap": "分支碎片化、模型质量责任和工业前处理成本高",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.3 热流体、PFC、包层和氚",
+    "tool_or_platform": "Code_Saturne/SYRTHES",
+    "license_and_stack": "GPL；C/Fortran、SALOME",
+    "license_class": "开源/开放",
+    "scope_and_validation": "核/工业 CFD、热耦合；EDF 验证体系",
+    "limitations_and_twin_gap": "聚变专用模型和国际用户生态小于 OpenFOAM/商业工具",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.3 热流体、PFC、包层和氚",
+    "tool_or_platform": "NekRS",
+    "license_and_stack": "开源；谱元、GPU/MPI",
+    "license_class": "开源/开放",
+    "scope_and_validation": "高保真湍流、Cardinal 内存耦合",
+    "limitations_and_twin_gap": "工程几何/边界和系统级速度不足，需闭合/降阶",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.3 热流体、PFC、包层和氚",
+    "tool_or_platform": "GETTHEM",
+    "license_and_stack": "研究代码；1D 系统热工",
+    "license_class": "研究/合作/混合",
+    "scope_and_validation": "EU DEMO 包层/PHTS 快速瞬态与参数扫描",
+    "limitations_and_twin_gap": "三维热点、MHD 和材料细节需 CFD/FE 补充",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.3 热流体、PFC、包层和氚",
+    "tool_or_platform": "RELAP5/TRACE/CATHARE/ATHENA",
+    "license_and_stack": "许可/机构；1D 两相系统代码",
+    "license_class": "研究/合作/混合",
+    "scope_and_validation": "冷却回路和事故边界；核工业基准与 WCLL 研究",
+    "limitations_and_twin_gap": "原始关联式不一定覆盖氦、PbLi、FLiBe/聚变几何",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.3 热流体、PFC、包层和氚",
+    "tool_or_platform": "HIMAG/MHD-UCAS",
+    "license_and_stack": "研究/受限；液态金属 MHD",
+    "license_class": "研究/合作/混合",
+    "scope_and_validation": "DCLL/PbLi 高 Hartmann 流；回路/跨代码验证",
+    "limitations_and_twin_gap": "获取、文档和全包层耦合有限",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.3 热流体、PFC、包层和氚",
+    "tool_or_platform": "FreeMHD",
+    "license_and_stack": "开源；OpenFOAM/C++",
+    "license_class": "开源/开放",
+    "scope_and_validation": "多域、多相、自由表面导电流；公开 V&V",
+    "limitations_and_twin_gap": "新兴；极高 Ha、腐蚀和工程 CAD 仍需验证",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.3 热流体、PFC、包层和氚",
+    "tool_or_platform": "FESTIM",
+    "license_and_stack": "Apache-2.0；Python/FEniCSx",
+    "license_class": "研究/合作/混合",
+    "scope_and_validation": "1D-3D 氢/氚扩散、陷阱、热耦合；TDS/渗透/包层",
+    "limitations_and_twin_gap": "材料/表面参数不确定；系统管网和在线库存需外部模型",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.3 热流体、PFC、包层和氚",
+    "tool_or_platform": "TMAP8",
+    "license_and_stack": "开源；MOOSE/C++",
+    "license_class": "开源/开放",
+    "scope_and_validation": "系统质量/热/氚迁移、UQ/SQA；TMAP V&V 与实验",
+    "limitations_and_twin_gap": "正在成长；复杂表面和完整燃料循环验证不完备",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.3 热流体、PFC、包层和氚",
+    "tool_or_platform": "TESSIM-X/MHIMS/mHIT",
+    "license_and_stack": "研究/受限；扩散—陷阱",
+    "license_class": "研究/合作/混合",
+    "scope_and_validation": "欧洲包层/PFC 氚、跨代码和实验比较",
+    "limitations_and_twin_gap": "开放性、维护和多物理接口不一致",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.3 热流体、PFC、包层和氚",
+    "tool_or_platform": "Cardinal/SALAMANDER",
+    "license_and_stack": "开源；MOOSE + OpenMC + NekRS + TMAP8",
+    "license_class": "开源/开放",
+    "scope_and_validation": "核热—CFD—固体—氚高保真耦合；HCLL/教程",
+    "limitations_and_twin_gap": "目前更多是研发/演示，完整工程资格和材料库不足",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.4 中子、安全、真空、维护与生命周期",
+    "tool_or_platform": "MCNP6",
+    "license_and_stack": "受控许可；Fortran/C++",
+    "license_class": "研究/合作/混合",
+    "scope_and_validation": "融合固定源、屏蔽、核热、诊断；ITER/JET/FNG 深证据",
+    "limitations_and_twin_gap": "出口/许可、CSG 维护、自动化与开放性受限",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.4 中子、安全、真空、维护与生命周期",
+    "tool_or_platform": "TRIPOLI-4",
+    "license_and_stack": "CEA 许可；连续能量 MC",
+    "license_class": "研究/合作/混合",
+    "scope_and_validation": "ITER/DEMO 独立参考、D1S/R2S；与 MCNP/实验比较",
+    "limitations_and_twin_gap": "获取和生态受限",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.4 中子、安全、真空、维护与生命周期",
+    "tool_or_platform": "OpenMC",
+    "license_and_stack": "MIT 开源；C++/Python/HDF5",
+    "license_class": "开源/开放",
+    "scope_and_validation": "参数化中子/光子、CAD/DAGMC、R2S；FNG/SPARC",
+    "limitations_and_twin_gap": "深穿透/部分融合功能和正式认可仍在积累",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.4 中子、安全、真空、维护与生命周期",
+    "tool_or_platform": "Serpent 2",
+    "license_and_stack": "学术免费/商业许可；C",
+    "license_class": "商业/闭源",
+    "scope_and_validation": "快速连续能量、耦合和停机剂量交叉验证",
+    "limitations_and_twin_gap": "许可边界；聚变工程积累少于 MCNP",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.4 中子、安全、真空、维护与生命周期",
+    "tool_or_platform": "PHITS/FLUKA/Geant4",
+    "license_and_stack": "许可/开源混合；粒子输运",
+    "license_class": "开源/开放",
+    "scope_and_validation": "高能次级粒子、探测器、辐射防护",
+    "limitations_and_twin_gap": "TBR/核热/活化需 FENDL 和专项基准",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.4 中子、安全、真空、维护与生命周期",
+    "tool_or_platform": "SuperMC/cosRMC",
+    "license_and_stack": "机构/部分发布；CAD/蒙卡",
+    "license_class": "研究/合作/混合",
+    "scope_and_validation": "中国聚变工程、CFETR、R2S 与 ITER 基准",
+    "limitations_and_twin_gap": "国际开放性、版本和独立复核有限",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.4 中子、安全、真空、维护与生命周期",
+    "tool_or_platform": "DAGMC/McCad",
+    "license_and_stack": "开源/机构；MOAB/CAD 转换",
+    "license_class": "开源/开放",
+    "scope_and_validation": "工程 CAD 到蒙卡、复杂端口和自动派生",
+    "limitations_and_twin_gap": "几何 watertight、公差、材料和性能需严检",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.4 中子、安全、真空、维护与生命周期",
+    "tool_or_platform": "FISPACT-II/ALARA",
+    "license_and_stack": "许可/开源混合；库存/活化",
+    "license_class": "开源/开放",
+    "scope_and_validation": "活化、衰变热、dpa、气体、废物、R2S",
+    "limitations_and_twin_gap": "结果依赖谱、核数据和辐照历史；不做空间输运",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.4 中子、安全、真空、维护与生命周期",
+    "tool_or_platform": "MELCOR Fusion",
+    "license_and_stack": "受控许可；系统事故/气溶胶",
+    "license_class": "研究/合作/混合",
+    "scope_and_validation": "ITER/DEMO/DTT 事故、安全和释放",
+    "limitations_and_twin_gap": "融合模型/版本迁移、保守性和实验数据有限",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.4 中子、安全、真空、维护与生命周期",
+    "tool_or_platform": "Molflow+ / AVOCADO",
+    "license_and_stack": "GPL/研究；试验粒子蒙卡",
+    "license_class": "开源/开放",
+    "scope_and_validation": "超高真空压力、泵速、NBI 气体；电导/压力试验",
+    "limitations_and_twin_gap": "自由分子假设；表面历史、等离子体化学与事故需补充",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.4 中子、安全、真空、维护与生命周期",
+    "tool_or_platform": "EcosimPro/Modelica/AMESim",
+    "license_and_stack": "商业/开放混合；DAE/网络",
+    "license_class": "商业/闭源",
+    "scope_and_validation": "低温、热力、真空、燃料和控制系统瞬态",
+    "limitations_and_twin_gap": "组件参数/关联式与融合验证决定可信度",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.4 中子、安全、真空、维护与生命周期",
+    "tool_or_platform": "Simulink/Simscape/PSCAD/PLECS",
+    "license_and_stack": "商业；控制/电力电子/HIL",
+    "license_class": "商业/闭源",
+    "scope_and_validation": "线圈电源、保护、厂用电与硬件在环",
+    "limitations_and_twin_gap": "不是结构/核物理；模型版本和代码生成需严格治理",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.4 中子、安全、真空、维护与生命周期",
+    "tool_or_platform": "DELMIA/Tecnomatix/Process Simulate",
+    "license_and_stack": "闭源商业；机器人/工艺/PLM",
+    "license_class": "商业/闭源",
+    "scope_and_validation": "ITER 装配、远程维护、4D 工艺；全尺寸/机器人验证",
+    "limitations_and_twin_gap": "运动/碰撞不等于真实柔性、接触和辐射环境",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.4 中子、安全、真空、维护与生命周期",
+    "tool_or_platform": "ROS 2/MoveIt/Gazebo/CoppeliaSim",
+    "license_and_stack": "开源/混合；C++/Python",
+    "license_class": "开源/开放",
+    "scope_and_validation": "研究型遥操作、规划、数字样机和 HIL",
+    "limitations_and_twin_gap": "核级可用性、确定性、供应商支持和长期资格不足",
+    "evidence_cutoff": "2026-08-09"
+  },
+  {
+    "category": "A.4 中子、安全、真空、维护与生命周期",
+    "tool_or_platform": "BlockSim/Isograph/MAROS/SimPy",
+    "license_and_stack": "商业/开源混合；RAMI/离散事件",
+    "license_class": "开源/开放",
+    "scope_and_validation": "可靠性框图、故障树、维护物流和可用率",
+    "limitations_and_twin_gap": "融合失效数据稀缺；结论可能被专家先验主导",
+    "evidence_cutoff": "2026-08-09"
+  }
+]
