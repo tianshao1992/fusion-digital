@@ -44,6 +44,13 @@ export const references = [
  {id:'R18',title:'FESTIM verification and validation',org:'Nuclear Fusion',year:'2024',url:'https://doi.org/10.1088/1741-4326/ad3d86'},
  {id:'R19',title:'FISPACT-II validation',org:'UKAEA',year:'2026',url:'https://fispact.ukaea.uk/en/validation/'},
  {id:'R20',title:'TCV plasma control',org:'EPFL Swiss Plasma Center',year:'2026',url:'https://www.epfl.ch/research/domains/swiss-plasma-center/tcv-plasma-control/'},
+ {id:'R21',title:'FACETS parallel fusion-component coupling framework',org:'Euromicro / arXiv',year:'2010',url:'https://arxiv.org/abs/1004.1611'},
+ {id:'R22',title:'Integrated Plasma Simulator documentation',org:'SWIM / ORNL',year:'2026',url:'https://ips-framework.readthedocs.io/en/latest/'},
+ {id:'R23',title:'Whole Device Model Application documentation',org:'DOE Exascale Computing Project',year:'2026',url:'https://wdmapp.readthedocs.io/en/latest/'},
+ {id:'R24',title:'European Transport Simulator workflows',org:'EUROfusion',year:'2026',url:'https://wpcd-workflows.readthedocs.io/en/latest/ets.html'},
+ {id:'R25',title:'MOOSE / SALAMANDER fusion multiphysics',org:'Idaho National Laboratory',year:'2026',url:'https://salamander.inl.gov/'},
+ {id:'R26',title:'Digital Twin implementation based on ISO 23247',org:'NIST AMS 400-2',year:'2021',url:'https://doi.org/10.6028/NIST.AMS.400-2'},
+ {id:'R27',title:'FMI and SSP open co-simulation standards',org:'Modelica Association',year:'2026',url:'https://modelica.org/association/'},
 ];
 
 export const domains = ['全部', ...Array.from(new Set(tools.map(t => t.domain)))];
