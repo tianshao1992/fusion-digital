@@ -1,5 +1,7 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
+import SiteFooter from '../components/SiteFooter';
+import SiteNav from '../components/SiteNav';
 import './engineering.css';
 
 type Tool = {
@@ -10,6 +12,7 @@ type Tool = {
   scope_and_validation:string;
   limitations_and_twin_gap:string;
   evidence_cutoff:string;
+  url:string;
 };
 
 const domains = [
@@ -57,7 +60,7 @@ export default function Engineering(){
   const categories=useMemo(()=>['全部',...Array.from(new Set(tools.map(t=>t.category)))],[tools]);
   const filtered=useMemo(()=>tools.filter(t=>(category==='全部'||t.category===category)&&Object.values(t).join(' ').toLowerCase().includes(query.toLowerCase())),[tools,query,category]);
   return <main className="engPage">
-    <nav><a className="brand" href="/">FUSION / SIMULATION ATLAS</a><div><a href="/">物理模拟</a><a className="active" href="#top">工程仿真</a><a href="#domains">工程域</a><a href="#tools">工具目录</a><a href="#route">路线图</a></div></nav>
+    <SiteNav active="engineering" />
     <header id="top" className="engHero"><div><p className="eyebrow">TOKAMAK ENGINEERING SIMULATION · 2026</p><h1>把等离子体载荷，转化为<br/><em>可验证的工程裕量</em></h1><p className="lede">一份面向数字孪生与系统工程团队的 Tokamak 工程仿真图谱：系统梳理 CAD/PLM、电磁、结构、磁体失超、热流体、中子学、包层、氚、安全和远程维护工具，并解释它们如何与物理模型和实验数据闭环。</p><div className="engActions"><a className="primary" href="/tokamak-engineering-simulation-report.pdf">下载 PDF 报告</a><a href="/tokamak-engineering-simulation-report.docx">下载 Word</a><a href="#tools">浏览工具矩阵</a></div><div className="engStats"><span><b>55</b> 工具/平台组</span><span><b>87</b> 来源</span><span><b>12</b> 开放全文</span><span><b>15</b> 解释图</span></div></div><img src="/figures/engineering-tokamak-systems-nature.png" alt="Tokamak工程系统科学剖面图"/></header>
 
     <section className="engThesis"><p className="eyebrow">核心判断</p><h2>没有一个“Tokamak 工程超级求解器”。应统一资产身份、场景、载荷和证据，而不是强迫所有方程进入一个网格。</h2><div className="engThree"><article><b>物理给载荷</b><p>平衡、线圈电流、VDE/CQ/halo、热流、中子和粒子源必须成为带版本、坐标、单位、时间和不确定度的正式载荷包。</p></article><article><b>工程算响应</b><p>不同求解器负责涡流、温度、应力、压降、核热、活化、氚库存、失效概率和维修时间，并回传可执行限值。</p></article><article><b>实验定可信度</b><p>磁探针、应变、IR、量热、模型线圈、HHF、活化箔、停机剂量和维护训练共同决定模型是否适合指定决策。</p></article></div></section>
@@ -70,7 +73,7 @@ export default function Engineering(){
 
     <section className="nuclear"><div className="sectionHead"><p className="eyebrow">04 / 核环境与包层</p><h2>同一 CAD 基线，派生多个几何与时间阶段</h2></div><div className="engScienceGrid"><figure><img src="/figures/engineering-neutronics-chain-nature.png" alt="中子活化停机剂量链"/><figcaption>源—输运—活化—工程量：MCNP/TRIPOLI-4/OpenMC 与 FISPACT-II/R2S/D1S 连接核热、TBR、dpa 和停机剂量。</figcaption></figure><figure><img src="/figures/engineering-blanket-coupling-nature.png" alt="包层多物理耦合图"/><figcaption>包层可行性是核、热、流、液态金属 MHD、氚、结构与安全的交集。</figcaption></figure></div><div className="originalBand"><img src="/figures/original-freemhd-vv-fig1-2.png" alt="FreeMHD原论文验证图"/><div><p className="eyebrow">原论文证据</p><h3>FreeMHD 不只展示流场，也公开了解析验证和实验确认算例</h3><p>原论文图同时展示 Shercliff/Hunt 管道、fringing field、dam breaking、LMX-U 和 Divertorlets 等算例与网格，说明高 Hartmann 数液态金属模型必须经过分层 V&amp;V。</p><a href="https://arxiv.org/abs/2409.08950" target="_blank" rel="noreferrer">阅读原论文 ↗</a></div></div></section>
 
-    <section id="tools" className="toolCatalog"><div className="sectionHead"><p className="eyebrow">05 / 可维护工具矩阵</p><h2>55 个工具与平台组</h2><p>目录保留开放性/技术栈、适用范围与验证，以及距离运行级数字孪生的差距。可搜索并按四类工程域筛选；CSV/JSON 可下载后继续维护。</p></div><div className="toolDownloads"><a href="/data/tokamak-engineering-tool-catalog.csv">下载 CSV</a><a href="/data/tokamak-engineering-tool-catalog.json">下载 JSON</a><a href="/data/tokamak-engineering-literature-manifest.csv">下载 87 条来源清单</a></div><div className="engFilters"><input aria-label="搜索工程仿真工具" value={query} onChange={e=>setQuery(e.target.value)} placeholder="搜索工具、目标、技术栈、验证或局限…"/><select aria-label="选择工具类别" value={category} onChange={e=>setCategory(e.target.value)}>{categories.map(c=><option key={c}>{c}</option>)}</select><span>{filtered.length} / {tools.length}</span></div><div className="toolCards">{filtered.map((t,i)=><article key={`${t.category}-${t.tool_or_platform}`}><header><span>{String(i+1).padStart(2,'0')}</span><b>{t.license_class}</b></header><h3>{t.tool_or_platform}</h3><p className="toolCategory">{t.category}</p><dl><div><dt>开放性与栈</dt><dd>{t.license_and_stack}</dd></div><div><dt>范围与验证</dt><dd>{t.scope_and_validation}</dd></div><div><dt>限制/孪生差距</dt><dd>{t.limitations_and_twin_gap}</dd></div></dl></article>)}</div></section>
+    <section id="tools" className="toolCatalog"><div className="sectionHead"><p className="eyebrow">05 / 可维护工具矩阵</p><h2>55 个工具与平台组</h2><p>目录保留开放性/技术栈、适用范围与验证，以及距离运行级数字孪生的差距。每张卡片均可打开官方网站、项目文档或原始论文；CSV/JSON 也已增加 URL 字段，便于后续维护。</p></div><div className="toolDownloads"><a href="/data/tokamak-engineering-tool-catalog.csv">下载 CSV</a><a href="/data/tokamak-engineering-tool-catalog.json">下载 JSON</a><a href="/data/tokamak-engineering-literature-manifest.csv">下载 87 条来源清单</a></div><div className="engFilters"><input aria-label="搜索工程仿真工具" value={query} onChange={e=>setQuery(e.target.value)} placeholder="搜索工具、目标、技术栈、验证或局限…"/><select aria-label="选择工具类别" value={category} onChange={e=>setCategory(e.target.value)}>{categories.map(c=><option key={c}>{c}</option>)}</select><span>{filtered.length} / {tools.length}</span></div><div className="toolCards">{filtered.map((t,i)=><article key={`${t.category}-${t.tool_or_platform}`}><header><span>{String(i+1).padStart(2,'0')}</span><b>{t.license_class}</b></header><h3>{t.tool_or_platform}</h3><p className="toolCategory">{t.category}</p><dl><div><dt>开放性与栈</dt><dd>{t.license_and_stack}</dd></div><div><dt>范围与验证</dt><dd>{t.scope_and_validation}</dd></div><div><dt>限制/孪生差距</dt><dd>{t.limitations_and_twin_gap}</dd></div></dl><a className="toolLink" href={t.url} target="_blank" rel="noreferrer">官方网站 / 原始来源 ↗</a></article>)}</div></section>
 
     <section className="experiments"><div><p className="eyebrow">06 / 物理—工程—实验闭环</p><h2>验证要比较“合成传感器输出”，而不是节点值</h2><p>工程模型的温度、应变、磁场和中子通量必须经过传感器体积、方向、动态响应、发射率或能量响应函数后，才能与真实仪器读数比较。试验结果随后用于更新参数、适用域和不确定度，而不是只生成一张吻合曲线。</p><ul><li>电磁/结构：磁探针、Rogowski、应变、位移、加速度与支撑反力。</li><li>热/磁体：IR、热电偶、量热、压降、流量、电压抽头、热点与模型线圈。</li><li>核/氚：活化箔、剂量计、FNG/OKTAVIAN、JET D–T、渗透和热脱附谱。</li><li>维护/制造：扫描几何、碰撞检查、力反馈、任务时间和全尺寸训练。</li></ul></div><img src="/figures/engineering-vv-pyramid-nature.png" alt="工程模型验证确认金字塔"/></section>
 
@@ -81,6 +84,6 @@ export default function Engineering(){
     <section className="twinGap"><img src="/figures/engineering-twin-architecture-nature.png" alt="工程数字孪生参考架构"/><div><p className="eyebrow">09 / 最终架构</p><h2>工程仿真距离数字孪生，还差一套运行能力</h2><p>离线仿真通常缺少持续状态同步、可观测性、最坏时延、自动超域检测、安全回退、配置/权限控制、模型发布与撤回、网络安全和持续 V&amp;V。目标架构必须把在线状态环和离线证据工厂分开，再用统一资产 ID、载荷包和证据账本连接。</p><a href="/tokamak-engineering-simulation-report.pdf">阅读完整路线与验收门 →</a></div></section>
 
     <section className="engEvidence"><div className="sectionHead"><p className="eyebrow">10 / 核心来源与下载</p><h2>从报告结论回到原始证据</h2><p>网页展示核心入口；完整清单含 87 条官方文档、论文和报告，以及 12 份已校验文件头的开放全文本地副本。</p></div><div className="sourceGrid">{sources.map(s=><a key={s[0]} href={s[2]} target="_blank" rel="noreferrer"><span>{s[0]}</span><h3>{s[1]}</h3><b>打开原始来源 ↗</b></a>)}</div><div className="downloadPanel"><div><h3>技术报告</h3><a href="/tokamak-engineering-simulation-report.pdf">PDF</a><a href="/tokamak-engineering-simulation-report.docx">Word</a></div><div><h3>可维护数据</h3><a href="/data/tokamak-engineering-tool-catalog.csv">工具 CSV</a><a href="/data/tokamak-engineering-literature-manifest.csv">文献 CSV</a></div></div></section>
-    <footer><div><b>FUSION / SIMULATION ATLAS</b><p>聚变物理模拟与 Tokamak 工程仿真双页图谱</p></div><p>资料截止 2026-08-09 · 生成图用于技术解释，不替代正式工程设计、安全分析或许可活动。</p></footer>
+    <SiteFooter />
   </main>
 }

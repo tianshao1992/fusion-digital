@@ -1,32 +1,85 @@
-'use client';
-import { useMemo, useState } from 'react';
-import { domains, references, tools } from './data';
-import { integratedGroups } from './integrated-data';
-import './integrated.css';
+import SiteFooter from './components/SiteFooter';
+import SiteNav from './components/SiteNav';
+import './portal.css';
 
-const stages = [
-  ['01','控制服务化','0—18 个月','稳定封装 DINA/MEQ；统一平衡、线圈、诊断与放电事件数据；建立回放、影子运行、硬件在环和可信度看板。'],
-  ['02','等离子体孪生','18—36 个月','接入快速输运、加热源项、边界与破裂风险模型；以状态估计器和代理模型向控制提供可解释预测。'],
-  ['03','聚变堆孪生','3—5 年','打通中子学、包层、氚、热流体、结构与维护；把脉冲、部件寿命、安全裕量放进同一场景账本。'],
-  ['04','电厂孪生','5—8 年','连接 PROCESS/FUSE 类系统设计、RAMI、成本、电网和运行计划；形成设计—建造—调试—运行—退役数字线程。'],
+const domains = [
+  {id:'01', status:'已开放', title:'物理模拟', en:'PHYSICS', copy:'从平衡、输运、MHD、边界到中子学与整厂系统模型，建立多保真物理地图和集成模拟证据链。', href:'/physics', figure:'/figures/physics-stack-image2-v2.png', meta:'14 类物理域 · 140+ 代码/平台'},
+  {id:'02', status:'已开放', title:'工程仿真', en:'ENGINEERING', copy:'把等离子体载荷连接到电磁、结构、磁体、热流体、中子、氚、安全与维护的工程裕量。', href:'/engineering', figure:'/figures/engineering-tokamak-systems-image2-v2.png', meta:'8 类工程域 · 55 个工具组'},
+  {id:'03', status:'规划中', title:'控制与诊断', en:'CONTROL & DIAGNOSTICS', copy:'面向 DINA、MEQ、控制器、合成诊断和状态估计的可回放、可验证闭环。', href:'/#roadmap', figure:'/figures/dina-meq-architecture-image2-v2.png', meta:'控制服务 · 合成观测 · SIL/HIL'},
+  {id:'04', status:'规划中', title:'实验与数据', en:'EXPERIMENT & DATA', copy:'把提案、配置、放电、诊断、事件、模型运行与验证证据组织成一炮一链。', href:'/#roadmap', figure:'/figures/experiment-model-control-image2-v3.png', meta:'场景容器 · 数据血缘 · 评估'},
 ];
 
-export default function Home(){
- const [query,setQuery]=useState(''); const [domain,setDomain]=useState('全部');
- const filtered=useMemo(()=>tools.filter(t=>(domain==='全部'||t.domain===domain)&&(`${t.name} ${t.scope} ${t.devices} ${t.stack}`.toLowerCase().includes(query.toLowerCase()))),[query,domain]);
- return <main>
-  <nav><a className="brand" href="#top">FUSION / SIMULATION ATLAS</a><div><a href="#map">物理地图</a><a href="#catalog">物理工具</a><a href="#integrated">集成模拟</a><a href="/engineering">工程仿真</a><a href="#evidence">证据库</a></div></nav>
-  <header id="top" className="hero"><div className="heroCopy"><p className="eyebrow">聚变数字孪生 · 物理模拟技术底座</p><h1>从等离子体控制，走向<br/><em>聚变电厂级可信预测</em></h1><p className="lede">面向非聚变专业的决策者与系统工程师：用一张可追溯的物理地图连接 DINA、MEQ、输运、MHD、边界、中子学、氚与整厂系统模型。</p><div className="actions"><a className="primary" href="/fusion-physics-simulation-report.pdf">下载物理报告</a><a href="/engineering">进入工程仿真分页</a><a href="#catalog">浏览 {tools.length} 项工具</a></div><div className="stats"><span><b>14</b> 类物理域</span><span><b>{tools.length}</b> 项代码/平台</span><span><b>2026-08</b> 证据截止</span></div></div><img src="/figures/fusion-plant-cutaway-image2.png" alt="托卡马克聚变电厂剖面科学示意图"/></header>
-  <section className="thesis"><p>关键判断</p><h2>聚变数字孪生不是一个“万能大模型”，而是一套围绕具体决策、按时间尺度编排的模型组合。</h2><div className="three"><article><b>控制闭环</b><p>毫秒到秒；重建、状态估计、执行器响应和风险预测必须确定、可降级、可审计。</p></article><article><b>设计闭环</b><p>小时到月；高保真物理与工程模型提供约束、训练数据和不确定度，而非直接进入实时回路。</p></article><article><b>证据闭环</b><p>每个预测携带版本、输入、适用域、验证层级和置信区间，才能用于工程与安全决策。</p></article></div></section>
-  <section id="map" className="map"><div className="sectionHead"><p className="eyebrow">01 / 从微观到电网</p><h2>一台聚变电厂跨越约二十个数量级</h2><p>碰撞、湍流、宏观不稳定性、壁材料、中子、冷却回路和电网不会被同一种数值方法同时高效求解。系统架构的核心是分解、耦合与证据管理。</p></div><img src="/figures/fusion-multiscale-image2.png" alt="Nature风格聚变物理多尺度图版"/><div className="scale"><span>10⁻¹² s<br/><b>碰撞与波</b></span><span>10⁻⁶—10⁻³ s<br/><b>湍流与 MHD</b></span><span>秒—小时<br/><b>放电与热循环</b></span><span>年—十年<br/><b>寿命与经济性</b></span></div></section>
-  <section className="figureAtlas"><div className="sectionHead"><p className="eyebrow">02 / 图解整体理念</p><h2>模型组合由决策、反馈和证据共同定义</h2><p>以下图版均使用论文式白底、扁平色块和可复现数据关系；其中代码位置是数量级示意，不应作为求解器性能排名。</p></div><div className="scienceGrid"><figure><img src="/figures/decision-timescale-nature.png" alt="物理模型决策时间尺度图"/><figcaption><b>A · 决策时间尺度</b>　毫秒级控制、秒级缓解、小时级场景和年级寿命需要不同模型。</figcaption></figure><figure><img src="/figures/model-fidelity-latency-nature.png" alt="多保真模型成本与维数图"/><figcaption><b>B · 多保真组合</b>　高保真模型提供证据和边界，快速模型承担在线估计与决策。</figcaption></figure><figure><img src="/figures/coupling-matrix-nature.png" alt="聚变物理耦合矩阵"/><figcaption><b>C · 物理接口矩阵</b>　深色非对角元素表示需要迭代处理的双向反馈。</figcaption></figure><figure><img src="/figures/physics-stack-nature.png" alt="聚变物理栈和数字线程"/><figcaption><b>H · 物理栈与数字线程</b>　统一的是配置、接口和证据，而不是统一求解器。</figcaption></figure></div></section>
-  <section id="catalog" className="catalog"><div className="sectionHead"><p className="eyebrow">03 / 可筛选技术雷达</p><h2>代码与工具目录</h2><p>“开源”只表示可取得源代码，不等于已经适合关键决策。每张卡片同时保留验证方式、计算复杂度、实时性和装置证据。</p></div><div className="filters"><input aria-label="搜索工具" value={query} onChange={e=>setQuery(e.target.value)} placeholder="搜索代码、装置、技术栈或目标…"/><select aria-label="选择物理域" value={domain} onChange={e=>setDomain(e.target.value)}>{domains.map(d=><option key={d}>{d}</option>)}</select><span>{filtered.length} / {tools.length}</span></div><div className="cards">{filtered.map((t,i)=><article className="card" key={t.name}><div className="cardTop"><span>{String(i+1).padStart(2,'0')}</span><a href={t.url} target="_blank" rel="noreferrer">↗</a></div><h3>{t.name}</h3><p className="domain">{t.domain}</p><p>{t.scope}</p><dl><div><dt>开放性</dt><dd>{t.access}</dd></div><div><dt>保真/实时</dt><dd>{t.fidelity} · {t.realtime}</dd></div><div><dt>技术栈</dt><dd>{t.stack}</dd></div><div><dt>验证</dt><dd>{t.validation}</dd></div><div><dt>装置</dt><dd>{t.devices}</dd></div></dl></article>)}</div></section>
-  <section className="loop"><div><p className="eyebrow">04 / 可信运行闭环</p><h2>实验不是模型的“最后一步”，而是持续校准模型适用域的主线。</h2><p>高保真代码解释与外推；快速模型估计与控制；诊断数据负责证伪；工程模型把热、应力、氚和寿命约束返回给场景设计。所有环节共用版本化数据本体与验证账本。</p></div><img src="/figures/experiment-model-control-nature.png" alt="Nature风格实验模型控制证据闭环图"/></section>
-  <section className="architecture"><div className="sectionHead"><p className="eyebrow">05 / 架构与可信度</p><h2>DINA / MEQ 如何扩展，而不失去可审计性</h2></div><div className="scienceGrid"><figure><img src="/figures/dina-meq-architecture-nature.png" alt="DINA MEQ演进架构"/><figcaption><b>E · 演进架构</b>　保留装置资产包和权威求解器，以数据与证据层连接在线模型和离线证据工厂。</figcaption></figure><figure><img src="/figures/credibility-ladder-nature.png" alt="模型可信度证据梯"/><figcaption><b>F · G0—G5 证据梯</b>　“能运行”不等于“可影响指定决策”；模型影响越大，验证门越严格。</figcaption></figure></div></section>
-  <section id="integrated" className="integrated"><div className="sectionHead"><p className="eyebrow">06 / 集成模拟专题</p><h2>集成模拟是数字孪生的模型工厂，但还不是运行闭环</h2><p>以下比较把数据平台、脉冲模拟、全装置高保真、整厂设计和工业孪生平台分开评价。详细论证、验证证据与 29 项来源见完整报告第 11A 章。</p></div><div className="scienceGrid integratedFigures"><figure><img src="/figures/integrated-framework-landscape-nature.png" alt="集成模拟框架版图"/><figcaption><b>I · 框架版图</b>　不同框架解决不同层级的集成，位置表示能力重心。</figcaption></figure><figure><img src="/figures/integrated-framework-capability-matrix-nature.png" alt="集成模拟能力矩阵"/><figcaption><b>J · 能力矩阵</b>　在线部署、配置证据和闭环安全是共同短板。</figcaption></figure><figure><img src="/figures/integrated-to-digital-twin-gap-nature.png" alt="集成模拟到数字孪生差距"/><figcaption><b>L · 关键差距</b>　需要补齐状态同步、在线可信、闭环权限和生命周期连续性。</figcaption></figure><figure><img src="/figures/integrated-twin-reference-architecture-nature.png" alt="集成模拟数字孪生双速架构"/><figcaption><b>M · 双速架构</b>　在线运行环与离线证据工厂通过统一配置和模型发布连接。</figcaption></figure></div><div className="gapBand"><img src="/figures/integrated-maturity-gap-nature.png" alt="集成模拟成熟度差距"/><div><h3>最需要投资的不是更多求解器</h3><p>典型集成模拟已经能覆盖多物理、统一部分数据并复现实验，但在在线状态同步、最坏时延、超域检测、安全回退、资产配置和持续 V&amp;V 上仍有显著差距。</p><a href="/fusion-physics-simulation-report.pdf">阅读第 11A 章完整分析 →</a></div></div><div className="frameworkGroups">{integratedGroups.map(g=><article key={g.group}><header><span>{String(integratedGroups.indexOf(g)+1).padStart(2,'0')}</span><div><h3>{g.group}</h3><p>{g.purpose}</p></div></header>{g.items.map(f=><details key={f.name}><summary><b>{f.name}</b><span>{f.role}</span></summary><div className="frameworkDetail"><p><strong>优势</strong>{f.strengths}</p><p><strong>限制</strong>{f.limits}</p><p><strong>孪生差距</strong>{f.twinGap}</p><a href={f.url} target="_blank" rel="noreferrer">官方/原始来源 ↗</a></div></details>)}</article>)}</div></section>
-  <section id="roadmap" className="roadmap"><div className="sectionHead"><p className="eyebrow">07 / 能力门驱动路线</p><h2>DINA / MEQ 只是正确的起点</h2><p>每一阶段都以可验证的“决策能力”作为交付，而不是以接入更多代码作为完成标志。</p></div><img src="/figures/roadmap-nature.png" alt="Nature风格聚变数字孪生四阶段路线图"/><div className="stages">{stages.map(s=><article key={s[0]}><span>{s[0]}</span><h3>{s[1]}</h3><b>{s[2]}</b><p>{s[3]}</p></article>)}</div></section>
-  <section className="originals"><div className="sectionHead"><p className="eyebrow">08 / 原始研究证据</p><h2>从论文图回到模型边界</h2></div><div className="figureGrid"><figure><img src="/figures/original-digital-framework-fig1.png" alt="聚变电厂集成数字框架原论文图"/><figcaption>Patterson 等：聚变电厂集成数字框架。来源：Royal Society Open Science，CC BY 4.0。</figcaption></figure><figure><img src="/figures/original-fuse-architecture-fig1.png" alt="FUSE架构原论文图"/><figcaption>FUSE 的 IMAS 数据本体与多保真工作流。来源：FUSE 预印本。</figcaption></figure><figure><img src="/figures/original-dream-validation-fig5-6.png" alt="DREAM验证原论文图"/><figcaption>DREAM 与解析/独立代码的验证比较。来源：CPC 论文预印本。</figcaption></figure><figure><img src="/figures/original-jorek-starwall-fig2.png" alt="JOREK STARWALL耦合原论文图"/><figcaption>JOREK–STARWALL 真空与壁耦合。来源：JOREK 综述预印本。</figcaption></figure></div></section>
-  <section id="evidence" className="evidence"><div className="sectionHead"><p className="eyebrow">09 / 可追溯来源</p><h2>核心文献与官方资源</h2><p>本页只显示核心入口；完整报告和本地文献清单包含更细的代码、论文、许可与证据等级。</p></div><div className="refs">{references.map(r=><a key={r.id} href={r.url} target="_blank" rel="noreferrer"><span>{r.id}</span><h3>{r.title}</h3><p>{r.org} · {r.year}</p></a>)}</div></section>
-  <footer><div><b>FUSION / PHYSICS ATLAS</b><p>聚变数字孪生物理模拟技术报告配套站</p></div><p>资料截止 2026-08 · 生成图为概念说明，不替代工程设计或安全分析。</p></footer>
- </main>
+const mainLine = [
+  ['01','实验问题','目标、配置、约束与成功判据'],
+  ['02','虚拟放电','执行器、自由边界与控制状态'],
+  ['03','合成观测','诊断几何、采样、噪声与质量'],
+  ['04','跨域解释','物理状态、工程裕量与不确定度'],
+  ['05','人机决策','评估、下一炮建议与可审计批准'],
+];
+
+const roadmap = [
+  ['R0','控制服务化','当前','冻结 DINA / MEQ 接口、装置资产包、回放基线与证据门。'],
+  ['R1','窄域数字影子','近期','连接合成/历史诊断、工程限值和确定性场景回放。'],
+  ['R2','预测型装置孪生','中期','接入快速输运、边界风险、状态估计、代理模型与持续 V&V。'],
+  ['R3','聚变堆与电厂孪生','长期','贯通中子、包层、氚、寿命、RAMI、维护、经济与电网。'],
+];
+
+export default function Home() {
+  return <main className="portalPage">
+    <SiteNav active="home" />
+    <header className="portalHero" id="top">
+      <div className="heroText">
+        <p className="kicker"><span>FusionDigital</span> / FUSION DIGITAL TWIN COMMUNITY</p>
+        <h1>把聚变装置的每一次预测，<br/>变成<span>可追溯的共同知识。</span></h1>
+        <p className="heroLead">面向聚变科学家、工程师、控制与数据团队的数字孪生技术社区。以装置和实验问题为中心，连接物理模型、工程仿真、诊断证据、控制闭环与全生命周期决策。</p>
+        <div className="heroActions"><a className="solid" href="#domains">探索知识域</a><a href="/facilities">查看全球装置状态</a></div>
+        <div className="heroMetrics"><span><b>02</b>已开放知识域</span><span><b>195+</b>代码与工具条目</span><span><b>12</b>重点装置/项目</span><span><b>2026-08</b>证据截止</span></div>
+      </div>
+      <div className="twinInterface" role="img" aria-label="FusionDigital 聚变数字孪生主界面示意">
+        <div className="interfaceTop"><span>DEVICE / MODEL SYNC</span><b>SHADOW MODE</b></div>
+        <div className="orbit orbitA"/><div className="orbit orbitB"/>
+        <img src="/fusiondigital-mark.png" alt="FusionDigital 标识" />
+        <span className="node nodeA"><i/>PLASMA<br/><b>STATE</b></span>
+        <span className="node nodeB"><i/>ENGINEERING<br/><b>MARGIN</b></span>
+        <span className="node nodeC"><i/>DIAGNOSTIC<br/><b>EVIDENCE</b></span>
+        <span className="node nodeD"><i/>CONTROL<br/><b>DECISION</b></span>
+        <div className="interfaceBottom"><span>CONFIG · 0281</span><span>MODEL RUN · VERIFIED</span><span>Δt · 10 ms</span></div>
+      </div>
+    </header>
+
+    <section className="portalThesis">
+      <p className="sectionIndex">00 / COMMUNITY THESIS</p>
+      <h2>数字孪生不是一张实时三维图，也不是一个万能求解器。它是一套围绕决策组织的模型、数据、证据与责任体系。</h2>
+      <div className="thesisGrid"><p>高保真模型界定危险边界和不确定度；快速模型承担在线估计、场景扫描与控制服务；实验数据持续校准两者的适用域。</p><p>社区内容按“装置—问题—模型—工具—验证—决策”关联，让每个结论都能回到源代码、论文、配置与实验记录。</p></div>
+    </section>
+
+    <section className="mainLine" id="mainline">
+      <div className="sectionIntro"><p className="sectionIndex">01 / DIGITAL TWIN MAINLINE</p><h2>一炮一链：聚变数字孪生的共同主线</h2><p>规划报告中的七个能力域被收束到同一条可评审工作流。不同模型可以异步运行，但必须共享装置配置、场景、时间轴、坐标和模型血缘。</p></div>
+      <div className="lineSteps">{mainLine.map(step=><article key={step[0]}><span>{step[0]}</span><h3>{step[1]}</h3><p>{step[2]}</p></article>)}</div>
+    </section>
+
+    <section className="domainSection" id="domains">
+      <div className="sectionIntro"><p className="sectionIndex">02 / KNOWLEDGE DOMAINS</p><h2>从物理与工程开始，逐步形成完整社区图谱</h2><p>每个知识域都包含概念科普、专业分块、代码与工具、验证方法、装置实践、原始证据和数字孪生差距。</p></div>
+      <div className="domainCards">{domains.map(domain=><a href={domain.href} key={domain.id} className="domainCard"><div className="domainFigure"><img src={domain.figure} alt={`${domain.title}代表图`}/><span>{domain.status}</span></div><div className="domainBody"><p>{domain.id} / {domain.en}</p><h3>{domain.title}</h3><div>{domain.copy}</div><b>{domain.meta}</b><i>进入知识域 ↗</i></div></a>)}</div>
+    </section>
+
+    <section className="facilityPreview">
+      <div><p className="sectionIndex">03 / GLOBAL FACILITIES</p><h2>装置建设与运行状态，是模型需求最真实的时间轴。</h2><p>跟踪建设中、运行中、升级维护、设计阶段与退役中的代表性聚变装置，并把状态回链到项目官方页面或原始论文。</p><a href="/facilities">打开全球装置观测台 →</a></div>
+      <div className="facilityTicker"><span><b>ITER</b>6 / 9 真空室扇区模块已就位</span><span><b>SPARC</b>装置设施约完成 75%，机器装配中</span><span><b>BEST</b>主机全面装配，计划 2027 年完成</span><span><b>JT-60SA</b>ME1 维护增强，准备 OP2</span></div>
+    </section>
+
+    <section className="resourceSection" id="resources">
+      <div className="sectionIntro"><p className="sectionIndex">04 / TOOLS & EVIDENCE</p><h2>工具不是清单，而是可比较、可验证、可维护的技术资产</h2></div>
+      <div className="resourceGrid"><a href="/physics#catalog"><span>P</span><h3>物理代码图谱</h3><p>适用范围、开放性、技术栈、装置证据、验证方式与实时性。</p><b>浏览物理工具 ↗</b></a><a href="/engineering#tools"><span>E</span><h3>工程工具矩阵</h3><p>55 个工具组均提供可点击的官方或原始来源入口。</p><b>浏览工程工具 ↗</b></a><a href="/physics#integrated"><span>I</span><h3>集成模拟专题</h3><p>框架能力、耦合策略、优缺点，以及距离运行级孪生的差距。</p><b>阅读专题 ↗</b></a><a href="/facilities"><span>F</span><h3>装置证据索引</h3><p>建设与运行状态、任务阶段、数字孪生价值及核验日期。</p><b>查看装置 ↗</b></a></div>
+    </section>
+
+    <section className="portalRoadmap" id="roadmap">
+      <div className="sectionIntro"><p className="sectionIndex">05 / EVOLUTION ROADMAP</p><h2>从 DINA / MEQ 控制服务，走向聚变电厂数字孪生</h2><p>每一级都以可验证的决策能力作为交付门，而不是以“接入更多代码”作为完成标志。</p></div>
+      <img src="/figures/roadmap-image2-v2.png" alt="FusionDigital 聚变数字孪生演进路线图" />
+      <div className="roadmapCards">{roadmap.map(item=><article key={item[0]}><span>{item[0]}<small>{item[2]}</small></span><h3>{item[1]}</h3><p>{item[3]}</p></article>)}</div>
+    </section>
+
+    <section className="communityBand" id="community"><div><p className="sectionIndex">06 / BUILD WITH US</p><h2>让聚变模型、实验与工程经验真正互相理解。</h2></div><div><p>FusionDigital 将逐步开放装置、控制、诊断、数据、AI、VVUQ 与社区协作模块。欢迎研究机构、装置团队、软件开发者和工业伙伴共同完善工具条目、验证证据与装置案例。</p><a href="mailto:tianshao1992@gmail.com">联系新奥聚变人工智能团队 →</a></div></section>
+    <SiteFooter />
+  </main>;
 }
