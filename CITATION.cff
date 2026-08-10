@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use FusionDigital, please cite the project and the primary sources linked by the relevant research records."
+title: "FusionDigital: Fusion Digital Twin Research Atlas and Collaboration Portal"
+type: software
+version: 1.0.0
+date-released: 2026-08-10
+url: "https://fusion-physics-atlas-2026.tianyuanliu1992.chatgpt.site"
+abstract: >-
+  A maintainable fusion digital-twin research atlas covering physics simulation,
+  engineering simulation, integrated control, intelligent diagnostics, energy
+  conversion, auxiliary systems, data foundations, human-machine interaction,
+  whole-plant integration and AI-native methods.
+authors:
+  - name: "ENN Fusion AI Team"
+contact:
+  - name: "FusionDigital maintainers"
+    email: "tianshao1992@gmail.com"

@@ -1,0 +1,53 @@
+name: Scientific or engineering content update
+description: Propose a source-backed update to research, tools or device status.
+title: "[Content]: "
+labels: [content]
+body:
+  - type: dropdown
+    id: domain
+    attributes:
+      label: Knowledge domain
+      options:
+        - Physics simulation
+        - Engineering simulation
+        - Integrated control
+        - Intelligent diagnostics
+        - Energy conversion
+        - Auxiliary systems
+        - Data foundation
+        - Human-machine interaction
+        - Whole-plant integration
+        - AI-native cross-domain
+        - Global facilities
+    validations:
+      required: true
+  - type: textarea
+    id: change
+    attributes:
+      label: Proposed change
+      description: State the current text or record and the precise update.
+    validations:
+      required: true
+  - type: textarea
+    id: sources
+    attributes:
+      label: Primary sources
+      description: Provide DOI, official device/project page or official repository links.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Device, conditions and evidence boundary
+      description: Explain where the claim applies and what is not directly proven.
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Contributor checks
+      options:
+        - label: I checked for an existing work or duplicate projectId.
+          required: true
+        - label: The material is approved for public collaboration and contains no restricted data.
+          required: true

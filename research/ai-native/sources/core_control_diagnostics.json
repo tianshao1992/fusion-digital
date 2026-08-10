@@ -1,0 +1,645 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-08-10",
+  "scope": "聚变智能原生：物理模拟、集成控制、智能诊断；仅收录可由原始论文、装置/实验室官方页面或官方代码仓库核验的代表性工作。",
+  "code_status_vocabulary": [
+    "official-direct",
+    "official-enabling",
+    "community-reproduction",
+    "not-public"
+  ],
+  "evidence_level_vocabulary": {
+    "E0": "概念或方法，尚无仿真/装置数据证明",
+    "E1": "仿真或合成数据验证",
+    "E2": "装置历史/离线数据验证",
+    "E3": "实时系统、影子模式或硬件在环验证",
+    "E4": "装置闭环实验"
+  },
+  "works": [
+    {
+      "id": "PHY-01",
+      "domain": "物理模拟",
+      "evidenceLevel": "E2",
+      "title": "QLKNN：QuaLiKiz 湍流输运神经网络代理",
+      "year": 2020,
+      "organization": "DIFFER、CEA、EPFL、UKAEA、JET/QuaLiKiz 团队",
+      "problem": "QuaLiKiz 等准线性湍流输运模型在集成输运模拟、场景优化和控制设计中仍过于昂贵，难以进行大量参数扫描或实时预测。",
+      "approach": "以约 3 亿个 QuaLiKiz 输入—通量样本训练前馈神经网络，并通过分区/阈值处理保留临界梯度附近的零通量与刚性输运行为；可嵌入 JINTRAC、RAPTOR 等输运框架。",
+      "devices": ["JET：3 个 H 模放电的时间依赖剖面模拟", "ITER/反应堆参数区：仅为外推应用目标，非实验验证"],
+      "evidence": "论文报告相对 QuaLiKiz 加速约 3–5 个数量级，使原本小时级的动态输运计算降至数十秒；在 3 个 JET 放电中，稳态末端剖面差异约 1%–15%，动态量差异约 4%–10%。这些结果验证的是对 QuaLiKiz 的仿真代理能力，不等同于对真实湍流的独立验证。",
+      "papers": [
+        {"title": "Fast modeling of turbulent transport in fusion plasmas using neural networks", "year": 2020, "venue": "Physics of Plasmas 27", "url": "https://doi.org/10.1063/1.5134126"}
+      ],
+      "code": [
+        {"name": "QLKNN-develop", "url": "https://gitlab.com/qualikiz-group/QLKNN-develop", "status": "official-direct", "relationship": "QuaLiKiz 团队维护的 QLKNN 训练/推理实现。"},
+        {"name": "fusion_surrogates / QLKNN_7_11", "url": "https://github.com/google-deepmind/fusion_surrogates", "status": "official-enabling", "relationship": "DeepMind 为 TORAX 整理的模型权重与推理封装，是特定 QLKNN 模型的可用资产，不是原论文完整训练数据。"}
+      ],
+      "data": "训练数据库由大规模 QuaLiKiz 合成计算产生；模型与部分权重公开，但原始约 3 亿样本并非一键下载的完整公开基准。",
+      "maturity": "已在主流集成输运代码中离线耦合并用于 JET 放电回放；研究级高成熟代理，尚非安全关键在线模型。",
+      "limitations": "严格受训练域和父模型 QuaLiKiz 假设约束；对外推、非局域效应、强 MHD/边界耦合及不确定度的覆盖有限。",
+      "tags": ["湍流输运", "代理模型", "JET", "JINTRAC", "RAPTOR", "QuaLiKiz"]
+    },
+    {
+      "id": "PHY-02",
+      "domain": "物理模拟",
+      "evidenceLevel": "E2",
+      "title": "面向 JOREK 与 MAST 观测的 Fourier Neural Operator 等离子体代理",
+      "year": 2024,
+      "organization": "UKAEA、UCL、Caltech、JOREK/MAST 合作团队",
+      "problem": "高保真 MHD 时空演化计算和高速相机观测预测成本高，限制了不确定性扫描、实验前预测和近实时状态推演。",
+      "approach": "采用多变量 Fourier Neural Operator 学习从初始场/历史帧到二维时空场的算子映射，同时研究模拟数据与 MAST 高速相机图像上的多步预测和超分辨率。",
+      "devices": ["JOREK：非线性 MHD 合成数据", "MAST：中央螺线管与偏滤器视场的高速相机数据；未在 MAST-U 在线控制中部署"],
+      "evidence": "论文报告相对数值求解器约 6 个数量级的推理加速，归一化均方误差可达约 10^-5，并展示 MAST 图像的零样本空间超分辨率；长期滚动和稀有瞬态仍会损失细节。",
+      "papers": [
+        {"title": "Plasma surrogate modelling using Fourier neural operators", "year": 2024, "venue": "Nuclear Fusion 64 056025", "url": "https://doi.org/10.1088/1741-4326/ad313a"}
+      ],
+      "code": [
+        {"name": "论文训练代码与检查点", "url": "", "status": "not-public", "relationship": "未发现可核验的本文专用公开仓库。"},
+        {"name": "neuraloperator", "url": "https://github.com/NeuralOperator/neuraloperator", "status": "official-enabling", "relationship": "FNO 作者团队维护的通用神经算子库；并非本文 JOREK/MAST 数据和检查点。"}
+      ],
+      "data": "JOREK 模拟子集与 MAST 相机训练集未作为完整可复现基准公开。",
+      "maturity": "离线概念验证；未形成装置在线状态估计或闭环控制服务。",
+      "limitations": "自回归漂移、极端事件覆盖、守恒/稳定性约束、跨视线几何迁移和实验标定误差尚未系统解决。",
+      "tags": ["FNO", "JOREK", "MAST", "MHD", "高速相机", "超分辨率"]
+    },
+    {
+      "id": "PHY-03",
+      "domain": "物理模拟",
+      "evidenceLevel": "E1",
+      "title": "JOREK/STORM 边缘等离子体神经算子：可行性与数据效率",
+      "year": 2025,
+      "organization": "UKAEA、Johannes Kepler University 等",
+      "problem": "边缘/SOL 与 MHD 代码的完整时间推进代价高，而传统逐步代理在长时滚动中容易漂移。",
+      "approach": "基于 PDEArena 的 FNO/神经 PDE 训练流程，比较单变量与多变量预测、数据效率以及低保真到高保真微调，覆盖 JOREK 与 STORM 的二维演化。",
+      "devices": ["通用/合成：JOREK 与 STORM 简化二维 blob、SOL 和 MHD 配置", "未针对某一台装置做实验闭环验证"],
+      "evidence": "论文显示 FNO 能捕获 blob 运动和密度源定位等早期演化；长时自回归会累积误差并出现与特定物理现象相关的非单调误差尖峰。低保真到高保真迁移在小数据、短滚动场景可将误差降低约一个数量级，但在长滚动、大数据或动力学差异较大时收益减弱，向未见变量迁移失败。",
+      "papers": [
+        {"title": "Neural operator surrogate models of plasma edge simulations: feasibility and data efficiency", "year": 2025, "venue": "arXiv preprint; accepted by Nuclear Fusion", "url": "https://arxiv.org/abs/2502.17386"},
+        {"title": "Data efficiency and long term prediction capabilities for neural operator surrogate models of core and edge plasma codes", "year": 2024, "venue": "IAEA Fusion Energy Conference manuscript", "url": "https://arxiv.org/abs/2402.08561"}
+      ],
+      "code": [
+        {"name": "论文专用训练配置、数据与检查点", "url": "", "status": "not-public", "relationship": "未发现与论文逐项对应的公开实验资产。"},
+        {"name": "PDEArena", "url": "https://github.com/microsoft/pdearena", "status": "official-enabling", "relationship": "论文所依赖的通用 PDE 基准/训练框架；不包含全部 JOREK/STORM 研究数据。"}
+      ],
+      "data": "主要为研究团队生成的模拟数据，尚无完整公共数据发布。",
+      "maturity": "离线研究原型。",
+      "limitations": "几何和物理均较简化；细尺度结构随滚动衰减，且尚缺守恒误差、失稳边界和外推置信度的工程验收标准。",
+      "tags": ["神经算子", "JOREK", "STORM", "SOL", "边缘等离子体", "多保真"]
+    },
+    {
+      "id": "PHY-04",
+      "domain": "物理模拟",
+      "evidenceLevel": "E2",
+      "title": "NSTX-U Eqnet/Pertnet 快速平衡与等离子体响应模型",
+      "year": 2022,
+      "organization": "Princeton University、PPPL / PlasmaControl",
+      "problem": "自由边界 Grad–Shafranov 平衡与非刚性响应计算过慢，限制脉冲规划、闭环仿真和控制器批量测试。",
+      "approach": "Eqnet 学习 EFIT01 平衡重建，Pertnet 学习 Gspert 小扰动响应；同时提供前向状态预测和由磁诊断重建平衡的模式。",
+      "devices": ["NSTX-U：历史实验、EFIT01 与 Gspert 数据"],
+      "evidence": "论文展示对 NSTX-U 平衡/响应的高精度离线复现；在容器涡流显著时，重建模式相对当时的 RTEFIT 标签/输入处理表现出优势。其目标是闭环模拟和控制设计，论文未宣称已替代装置在线权威平衡。",
+      "papers": [
+        {"title": "Neural net modeling of equilibria in NSTX-U", "year": 2022, "venue": "Nuclear Fusion 62 086042", "url": "https://doi.org/10.1088/1741-4326/ac77e6"}
+      ],
+      "code": [
+        {"name": "nstxu-nns", "url": "https://github.com/PlasmaControl/nstxu-nns", "status": "official-direct", "relationship": "论文团队公开的 Eqnet、Pertnet 代码和示例。"}
+      ],
+      "data": "仓库公开模型与示例；完整 NSTX-U 放电、EFIT01/Gspert 训练数据受设施数据访问约束。",
+      "maturity": "装置特定、可用于闭环仿真的研究级代理；在线权威使用仍需装置侧 V&V。",
+      "limitations": "继承 EFIT/Gspert 标签与线性化响应假设；跨装置、强外推、失磁诊断和不确定度校准尚不足。",
+      "tags": ["NSTX-U", "平衡重建", "Grad-Shafranov", "Eqnet", "Pertnet", "控制仿真"]
+    },
+    {
+      "id": "PHY-05",
+      "domain": "物理模拟",
+      "evidenceLevel": "E1",
+      "title": "TGLF-WINN：波数信息约束的数据高效 TGLF 湍流输运代理",
+      "year": 2025,
+      "organization": "UC San Diego、General Atomics、Princeton 等",
+      "problem": "TGLF 在全脉冲输运和多次通量匹配中的调用成本过高，直接限制高维场景优化。",
+      "approach": "通过物理启发的特征工程压缩目标动态范围，在损失中加入按波数分辨的通量正则，并用贝叶斯主动学习挑选 TGLF 样本，以较少昂贵标签训练湍流通量代理。",
+      "devices": ["通用/TGLF 合成参数域；论文未报告具体装置上的在线验证"],
+      "evidence": "预印本 v3 报告特征调优与波数正则相对 TGLF-NN 的全数据 RMSLE 降低约 12.5%；加入贝叶斯主动学习后，用 25% 数据即可达到距 TGLF-NN 全数据基线约 2.8% 的离线精度，嵌入通量匹配后相对 TGLF 约 45 倍加速且重建精度相近。",
+      "papers": [
+        {"title": "TGLF-WINN: Data-Efficient Deep Learning Surrogate for Turbulent Transport Modeling in Fusion", "year": 2025, "venue": "arXiv preprint; under revision for Nuclear Fusion", "url": "https://arxiv.org/abs/2509.07024"}
+      ],
+      "code": [
+        {"name": "TGLF-WINN 训练与权重", "url": "", "status": "not-public", "relationship": "未发现作者发布的论文专用仓库。"}
+      ],
+      "data": "TGLF 合成训练集未发现可核验的完整公开下载。",
+      "maturity": "较新的预印本级离线代理。",
+      "limitations": "尚缺同行评议后的跨装置实验验证、外推检测和不确定度；最终精度上限由 TGLF 父模型决定。",
+      "tags": ["TGLF", "TGLF-WINN", "湍流输运", "波数约束", "主动学习", "通量匹配"]
+    },
+    {
+      "id": "PHY-06",
+      "domain": "物理模拟",
+      "evidenceLevel": "E1",
+      "title": "MMMnet：多模异常输运模块神经网络代理",
+      "year": 2021,
+      "organization": "Lehigh University 等",
+      "problem": "Multi-Mode Model 的异常扩散系数计算在控制导向输运仿真中仍过慢。",
+      "approach": "用降维与神经网络近似 MMM，对离子/电子热扩散及环向动量扩散等输出进行快速回归，并嵌入控制导向模拟环境。",
+      "devices": ["DIII-D：基于装置场景的 MMM/COTSIM 训练与验证"],
+      "evidence": "论文展示对 MMM 输出的良好离线拟合，并将单次计算降到适合快速输运模拟的量级；没有报告在 DIII-D 上由该模型直接闭环控制。",
+      "papers": [
+        {"title": "Neural network model of the multi-mode anomalous transport module for accelerated transport simulations", "year": 2021, "venue": "Nuclear Fusion 61 106040", "url": "https://doi.org/10.1088/1741-4326/ac207e"}
+      ],
+      "code": [
+        {"name": "MMMnet 实现与权重", "url": "", "status": "not-public", "relationship": "未发现与论文对应的公开仓库。"}
+      ],
+      "data": "DIII-D 场景与 MMM 合成训练集未公开为可直接复现的数据集。",
+      "maturity": "控制导向离线模型原型。",
+      "limitations": "装置/参数域依赖明显，输出物理范围有限；继承 MMM 系统误差，缺少在线漂移监测和安全退化策略。",
+      "tags": ["MMM", "DIII-D", "输运代理", "COTSIM", "扩散系数"]
+    },
+    {
+      "id": "PHY-07",
+      "domain": "物理模拟",
+      "evidenceLevel": "E2",
+      "title": "PORTALS：以高斯过程代理优化高保真核心输运通量匹配",
+      "year": 2024,
+      "organization": "MIT PSFC、General Atomics、UC San Diego 等",
+      "problem": "直接以 CGYRO/NEO 等高保真模型进行多通道稳态通量匹配需要大量昂贵调用，常规迭代难以承受。",
+      "approach": "在局部梯度—通量空间构建高斯过程代理，并以贝叶斯优化选择下一组高保真计算点；同时求解电子/离子温度、密度、杂质与旋转等耦合剖面。",
+      "devices": ["DIII-D：ITER Similar Shape 放电的五通道预测", "也用于/面向 Alcator C-Mod、ASDEX Upgrade、JET、SPARC、ITER 场景研究"],
+      "evidence": "论文在 DIII-D 案例中以显著少于朴素迭代的高保真调用完成五通道匹配，并保持收敛点的全物理求解精度；属于稳态预测与实验解释，不是在线动态孪生。",
+      "papers": [
+        {"title": "Enhancing predictive capabilities in fusion burning plasmas through surrogate-based optimization in core transport solvers", "year": 2024, "venue": "Nuclear Fusion", "url": "https://arxiv.org/abs/2312.12610"}
+      ],
+      "code": [
+        {"name": "MITIM-fusion / PORTALS", "url": "https://github.com/pabloprf/MITIM-fusion", "status": "official-direct", "relationship": "论文第一作者维护的 MITIM 开源套件；仓库 README 直接列出 PORTALS 论文，文档提供 PORTALS-TGLF/CGYRO 工作流与回归测试。外部求解器及其许可需另行配置。"}
+      ],
+      "data": "DIII-D 实验输入和 CGYRO/NEO 调用结果未形成公开一键基准。",
+      "maturity": "已服务多装置/反应堆场景的高保真离线预测工作流。",
+      "limitations": "主要面向稳态和局部输运；依赖 CGYRO/NEO 及所选参数化，MHD、锯齿、边界和不确定性传播仍需外部模型补足。",
+      "tags": ["PORTALS", "CGYRO", "NEO", "高斯过程", "贝叶斯优化", "通量匹配"]
+    },
+    {
+      "id": "PHY-08",
+      "domain": "物理模拟",
+      "evidenceLevel": "E1",
+      "title": "TORAX：JAX 可微分托卡马克核心输运模拟器",
+      "year": 2024,
+      "organization": "Google DeepMind、Commonwealth Fusion Systems 合作团队",
+      "problem": "脉冲设计、参数反演和控制优化需要既快速又可微、且能插拔物理模型和学习代理的核心输运求解器。",
+      "approach": "以 JAX 实现有限体积时间推进，耦合电子/离子热、粒子和电流扩散；通过 JIT、自动微分与模块化接口接入经验模型或 ML 输运代理。",
+      "devices": ["ITER-like 与 SPARC 设计场景；与 RAPTOR 做数值验证", "SPARC 尚未运行，因此不存在 SPARC 实验验证"],
+      "evidence": "论文报告与 RAPTOR 基准场景的一致性及 JAX 加速/可微能力；DeepMind 官方材料称 CFS 已将其用于日常 SPARC 虚拟实验与大规模参数研究，但这属于设计工作流应用。",
+      "papers": [
+        {"title": "TORAX: A Fast and Differentiable Tokamak Transport Simulator in JAX", "year": 2024, "venue": "arXiv preprint", "url": "https://arxiv.org/abs/2406.06718"}
+      ],
+      "code": [
+        {"name": "torax", "url": "https://github.com/google-deepmind/torax", "status": "official-direct", "relationship": "论文团队维护的完整模拟器、配置和示例。"}
+      ],
+      "data": "仓库提供 ITER/SPARC 等示例配置；真实 SPARC 实验数据尚不存在，其他装置数据同化需用户自行接入。",
+      "maturity": "活跃开源的设计/研究模拟器，已进入工业设计流程；尚不是经实验全面确认的全装置孪生。",
+      "limitations": "当前核心是 1D 径向输运；边缘、MHD、三维效应、工程系统和诊断同化需要外部耦合，数值验证不能替代实验确认。",
+      "tags": ["TORAX", "JAX", "可微分模拟", "SPARC", "ITER", "核心输运"]
+    },
+    {
+      "id": "CTL-01",
+      "domain": "集成控制",
+      "evidenceLevel": "E4",
+      "title": "TCV DeepMind 深度强化学习磁控制",
+      "year": 2022,
+      "organization": "Google DeepMind、EPFL Swiss Plasma Center",
+      "problem": "传统磁控制需要针对不同等离子体形状逐项建模和调参，难以用统一控制器处理多线圈、多目标和新形状。",
+      "approach": "在校准的 TCV 模拟器中以非对称 actor–critic 和域随机化训练策略，直接以 19 个线圈电压为动作，并以 10 kHz 在装置上零样本迁移。",
+      "devices": ["TCV：伸长、负三角度、snowflake、双液滴等多种目标形状", "未验证于 DIII-D、JET 或反应堆磁体系统"],
+      "evidence": "Nature 论文报告全控制窗内等离子体电流 RMSE 约 0.62 kA（0.47%）、形状 RMSE 约 0.75 cm（2.9%），并维持约 200 ms 双液滴；策略以 10 kHz 实时运行。论文明确不保证避开破裂。",
+      "papers": [
+        {"title": "Magnetic control of tokamak plasmas through deep reinforcement learning", "year": 2022, "venue": "Nature 602", "url": "https://www.nature.com/articles/s41586-021-04301-9"}
+      ],
+      "code": [
+        {"name": "TCV 训练环境、策略权重与装置接口", "url": "", "status": "not-public", "relationship": "论文补充材料公开了目标、奖励和终止条件代码，MPO/通用库也公开；但 FGE、LIUQE 需许可，校准模拟器、已部署策略权重和完整装置接口未公开，因此直接实现仍判为 not-public。"},
+        {"name": "Acme", "url": "https://github.com/google-deepmind/acme", "status": "official-enabling", "relationship": "DeepMind 通用强化学习框架；不是 TCV 实验环境或已部署策略。"}
+      ],
+      "data": "论文源数据有限公开；完整 TCV 训练模拟器和放电控制日志非公开一键数据集。",
+      "maturity": "真实装置闭环示范，科学成熟度高；工程安全认证和跨装置泛化仍不足。",
+      "limitations": "模拟器偏差、动作/传感器映射和线圈约束高度装置特定；未覆盖破裂保护、硬实时故障模式、形式化安全或全脉冲自治。",
+      "tags": ["TCV", "强化学习", "磁控制", "sim-to-real", "等离子体形状", "实时控制"]
+    },
+    {
+      "id": "CTL-02",
+      "domain": "集成控制",
+      "evidenceLevel": "E4",
+      "title": "DIII-D 深度强化学习主动规避撕裂模",
+      "year": 2024,
+      "organization": "Princeton、PPPL、General Atomics、Columbia、Seoul National University 等",
+      "problem": "高性能场景中的撕裂不稳定性一旦形成便难以补救，需要在保持约束和 H 模性能的同时提前规避。",
+      "approach": "将实时动力学状态重建、数据驱动的撕裂概率预测与深度强化学习策略串联，调节加热、转矩和形状/电流相关执行量，走在不稳定边界之前。",
+      "devices": ["DIII-D：低 q、低转矩和 ITER baseline-like 场景"],
+      "evidence": "装置实验中策略将撕裂风险维持在设定阈值以下，能跟踪时变稳定路径并保持 H 模；这是针对特定不稳定性和运行域的闭环证据，不是一般破裂免疫。",
+      "papers": [
+        {"title": "Avoiding fusion plasma tearing instability with deep reinforcement learning", "year": 2024, "venue": "Nature 626", "url": "https://www.nature.com/articles/s41586-024-07024-9"}
+      ],
+      "code": [
+        {"name": "撕裂预测器、RL 策略和 DIII-D 实时集成代码", "url": "", "status": "not-public", "relationship": "未发现论文专用公开仓库。"}
+      ],
+      "data": "DIII-D 放电数据受用户设施访问规则约束；论文源数据不等于完整训练集。",
+      "maturity": "真实装置闭环、针对性较强的研究示范。",
+      "limitations": "适用范围受训练场景、诊断质量和撕裂标签定义约束；尚缺跨机迁移、可证明安全、策略退化与审计接口。",
+      "tags": ["DIII-D", "强化学习", "撕裂模", "稳定性控制", "风险预测"]
+    },
+    {
+      "id": "CTL-03",
+      "domain": "集成控制",
+      "evidenceLevel": "E4",
+      "title": "DIII-D/KSTAR 机器学习辅助自适应 RMP 无 ELM 控制",
+      "year": 2024,
+      "organization": "PPPL、General Atomics、Korea Institute of Fusion Energy 等",
+      "problem": "谐振磁扰动可抑制 ELM，但固定线圈设置常以约束性能为代价，需要随等离子体状态自适应优化。",
+      "approach": "以机器学习辅助探索/优化三维场配置，并在实验中实时调整 RMP，实现边界爆发抑制与高性能约束间的折中。",
+      "devices": ["DIII-D", "KSTAR"],
+      "evidence": "Nature Communications 报告两台装置均实现无有害边界能量爆发且保持反应堆相关的高约束性能，并以多机结果支持方法的物理可迁移性；并不意味着控制器可直接跨机复用。",
+      "papers": [
+        {"title": "Highest fusion performance without harmful edge energy bursts in tokamak", "year": 2024, "venue": "Nature Communications 15 3990", "url": "https://www.nature.com/articles/s41467-024-48415-w"}
+      ],
+      "code": [
+        {"name": "自适应 RMP 控制与 ML 优化代码", "url": "", "status": "not-public", "relationship": "论文未提供可复现的装置控制仓库。"}
+      ],
+      "data": "DIII-D/KSTAR 原始控制与诊断数据未作为统一公开数据集发布。",
+      "maturity": "双装置实验验证；面向高性能边界控制的先进研究系统。",
+      "limitations": "线圈几何、等离子体响应、诊断和安全限制需逐装置标定；对其他 ELM 类型、长脉冲和故障工况的覆盖有限。",
+      "tags": ["DIII-D", "KSTAR", "RMP", "ELM", "自适应控制", "边界稳定性"]
+    },
+    {
+      "id": "CTL-04",
+      "domain": "集成控制",
+      "evidenceLevel": "E2",
+      "title": "TCV predict-first 神经状态空间模型与鲁棒 ramp-down 轨迹学习",
+      "year": 2025,
+      "organization": "MIT PSFC、EPFL/TCV 等",
+      "problem": "高性能等离子体降电流阶段容易触碰约束和失稳边界，而昂贵实验只允许少量试错。",
+      "approach": "从历史放电学习神经状态空间模型，用模型集合表达动力学不确定性，再以强化学习搜索对模型误差鲁棒的降电流轨迹，先预测后实验。",
+      "devices": ["TCV：311 个脉冲的数据集，其中仅少量为目标高性能状态"],
+      "evidence": "论文报告预测优先实验在统计指标上优于基线，并实现相对基线约 20% 的初始等离子体电流提升后仍完成 ramp-down；属于有限范围的实验外推。",
+      "papers": [
+        {"title": "Learning plasma dynamics and robust rampdown trajectories with predict-first experiments at TCV", "year": 2025, "venue": "Nature Communications 16 8877", "url": "https://www.nature.com/articles/s41467-025-63917-x"}
+      ],
+      "code": [
+        {"name": "TCV 神经状态空间模型、策略和训练环境", "url": "", "status": "not-public", "relationship": "未发现完整公开实现与训练资产。"}
+      ],
+      "data": "论文提供源数据/补充材料，但完整 311 脉冲处理数据与控制接口并非一键公共基准。",
+      "maturity": "真实装置的预测优先场景优化示范。",
+      "limitations": "高性能样本很少，适用边界和不确定性覆盖有限；轨迹级成功不等同于全状态在线反馈与安全认证。",
+      "tags": ["TCV", "ramp-down", "神经状态空间模型", "鲁棒强化学习", "predict-first"]
+    },
+    {
+      "id": "CTL-05",
+      "domain": "集成控制",
+      "evidenceLevel": "E4",
+      "title": "DIII-D 数据驱动剖面预测与有限动作集 MPC 实时基础设施",
+      "year": 2023,
+      "organization": "Columbia University、General Atomics、PlasmaControl 等",
+      "problem": "离线训练的高维剖面动力学模型难以可靠地接入装置 PCS，并在硬实时约束下转化为可审计控制动作。",
+      "approach": "用约 3500 个 DIII-D 放电、约 15 万样本训练 200 ms 预测的神经网络，再以有限候选 NBI 功率动作进行 MPC，同时通过 Keras2C 部署到实时 PCS。",
+      "devices": ["DIII-D：压力与电子温度剖面控制；实验 checkout 包括放电 187076"],
+      "evidence": "论文记录模型进入 DIII-D PCS 并实施压力/温度双目标实时控制；实验也暴露 MSE/rtEFIT 等诊断中断会破坏控制输入，成为需要健康管理与回退的直接证据。",
+      "papers": [
+        {"title": "A general infrastructure for data-driven control design and implementation in tokamaks", "year": 2023, "venue": "Journal of Plasma Physics 89", "url": "https://doi.org/10.1017/S0022377822001040"}
+      ],
+      "code": [
+        {"name": "plasma-profile-predictor", "url": "https://github.com/PlasmaControl/plasma-profile-predictor", "status": "official-direct", "relationship": "论文团队的剖面预测、控制设计和复现实验代码。"},
+        {"name": "keras2c", "url": "https://github.com/PlasmaControl/keras2c", "status": "official-enabling", "relationship": "将 Keras 网络转换为实时 C 推理的官方部署组件。"}
+      ],
+      "data": "仓库提供处理流程与放电标识；原始 DIII-D 数据需设施授权。",
+      "maturity": "已在真实 PCS 中试验的研究级实时控制基础设施。",
+      "limitations": "候选动作有限，训练域依赖强；多目标冲突、输入诊断掉线、OOD 状态与回退控制仍是工程瓶颈。",
+      "tags": ["DIII-D", "MPC", "剖面控制", "PCS", "Keras2C", "NBI"]
+    },
+    {
+      "id": "CTL-06",
+      "domain": "集成控制",
+      "evidenceLevel": "E4",
+      "title": "DIII-D 概率机器学习与贝叶斯优化安全 ramp-down",
+      "year": 2024,
+      "organization": "General Atomics、Carnegie Mellon University 等",
+      "problem": "安全降电流轨迹存在高维且实验代价昂贵的设计空间，需要在有限放电数中学习更安全的操作。",
+      "approach": "用概率代理表达轨迹参数到风险/性能的映射，以贝叶斯优化和获取函数在放电之间选择下一次实验，实现有约束的主动实验设计。",
+      "devices": ["DIII-D：2022 年 ramp-down 实验"],
+      "evidence": "Nuclear Fusion 论文报告自动设计的实验能在比典型轨迹更低的电流与储能下保持控制，并在实验轮次中持续改进；它是 shot-to-shot 优化，不是毫秒级在线反馈。",
+      "papers": [
+        {"title": "Automated experimental design of safe rampdowns via probabilistic machine learning", "year": 2024, "venue": "Nuclear Fusion 64 046014", "url": "https://doi.org/10.1088/1741-4326/ad22f5"}
+      ],
+      "code": [
+        {"name": "ramp-down 概率模型与贝叶斯优化实验代码", "url": "", "status": "not-public", "relationship": "未发现本文专用公开仓库。"}
+      ],
+      "data": "实验数据属于 DIII-D 用户设施；论文图表/补充数据不足以重建全部优化循环。",
+      "maturity": "真实装置的实验间主动优化示范。",
+      "limitations": "目标函数和安全边界装置特定；不能处理单次放电内的快速扰动，且概率校准仅在已探索域有效。",
+      "tags": ["DIII-D", "ramp-down", "贝叶斯优化", "主动实验", "概率模型"]
+    },
+    {
+      "id": "CTL-07",
+      "domain": "集成控制",
+      "evidenceLevel": "E4",
+      "title": "HL-3 高保真数据驱动动力学模型与强化学习磁控制",
+      "year": 2025,
+      "organization": "核工业西南物理研究院/HL-3 合作团队",
+      "problem": "低层磁控制需要长时域、毫秒级且足够准确的交互环境，纯第一性原理模拟过慢，普通 LSTM 又在长滚动中漂移。",
+      "approach": "以 EFITNN 压缩平衡状态，用 scheduled sampling、自注意力和集合 LSTM 学习动力学，再以 PPO 输出 17 路线圈电压并接入 HL-3 PCS。",
+      "devices": ["HL-3：历史放电训练与真实装置控制实验"],
+      "evidence": "论文报告 400 ms 轨迹预测、1 kHz/17 线圈控制；相对标准 LSTM 多项 MAE 至少降低 58.8%，PPO 在 RTX 4090 上约 22 分钟完成 25 万次训练，并在 PCS/装置实验中验证包括未见三角度目标的控制。",
+      "papers": [
+        {"title": "High-fidelity data-driven dynamics model for reinforcement learning-based control in HL-3 tokamak", "year": 2025, "venue": "Communications Physics 8 393", "url": "https://www.nature.com/articles/s42005-025-02302-y"}
+      ],
+      "code": [
+        {"name": "EFITNN、动力学集合、PPO 策略与 PCS 接口", "url": "", "status": "not-public", "relationship": "论文未公开完整训练/部署代码。"}
+      ],
+      "data": "论文补充资料含部分源数据；完整 HL-3 历史放电与控制日志未公开。",
+      "maturity": "真实装置闭环磁控制研究示范。",
+      "limitations": "数据驱动模拟器偏差、长期 OOD 和故障输入仍可能放大；无跨装置映射、形式化安全证明和可公开复现实验环境。",
+      "tags": ["HL-3", "强化学习", "PPO", "LSTM", "EFITNN", "磁控制"]
+    },
+    {
+      "id": "CTL-08",
+      "domain": "集成控制",
+      "evidenceLevel": "E4",
+      "title": "PACMAN：DIII-D 集成 AI 实时控制架构",
+      "year": 2025,
+      "organization": "General Atomics、Princeton/PPPL、Columbia 等 DIII-D 团队",
+      "problem": "多个 AI 预测器、控制器和诊断预处理链各自为政，缺少可在同一 PCS 中组合、监视和快速实验的运行架构。",
+      "approach": "构建模块化 PACMAN 实时运行时，将状态估计、学习模型、控制逻辑、执行器接口和健康检查组合，支持多类 AI 控制实验。",
+      "devices": ["DIII-D：非感应电流 RL、宽 pedestal/QH-mode ELM 预测、Alfvén 本征模控制、剖面 MPC、撕裂预测控制等"],
+      "evidence": "预印本汇总多个已在 DIII-D 放电中运行的 AI 控制用例，证明框架具备实验集成能力；其长期可用性、故障隔离和独立复现仍未被公开基准覆盖。",
+      "papers": [
+        {"title": "Enabling Integrated AI Control on DIII-D: A Control System Design with State-of-the-art Experiments", "year": 2025, "venue": "arXiv preprint", "url": "https://arxiv.org/abs/2511.08818"}
+      ],
+      "code": [
+        {"name": "PACMAN runtime 与装置配置", "url": "", "status": "not-public", "relationship": "DIII-D 装置侧集成运行时未发现公开仓库。"},
+        {"name": "keras2c", "url": "https://github.com/PlasmaControl/keras2c", "status": "official-enabling", "relationship": "若干模型的 C 实时部署工具，不等于 PACMAN 整体实现。"}
+      ],
+      "data": "各用例使用 DIII-D 设施数据，未形成统一公开训练/回放包。",
+      "maturity": "装置级集成实验平台；仍处于快速迭代研究阶段。",
+      "limitations": "机器特定 PCS/硬件依赖强；缺少公开接口规范、端到端时序证明、网络安全/安全完整性等级和独立复现。",
+      "tags": ["DIII-D", "PACMAN", "集成控制", "实时 AI", "PCS", "多模型编排"]
+    },
+    {
+      "id": "DIA-01",
+      "domain": "智能诊断",
+      "evidenceLevel": "E2",
+      "title": "FRNN：DIII-D/JET 跨装置深度学习破裂预警",
+      "year": 2019,
+      "organization": "Princeton/PPPL、General Atomics、JET/UKAEA 等",
+      "problem": "破裂前兆跨越多时间尺度和多诊断信号，手工阈值难以在保持提前量的同时兼顾漏报与误报。",
+      "approach": "以分布式训练的循环/序列神经网络直接处理多变量时间序列，并研究 DIII-D 与 JET 之间的迁移和跨装置泛化。",
+      "devices": ["DIII-D", "JET"],
+      "evidence": "Nature 论文显示多数正确报警能提供数百毫秒提前量，并展示 DIII-D/JET 的双向迁移优于只依赖目标机少量数据；这优于约 30 ms 量级缓解触发需求，但仍存在误报和漏报。",
+      "papers": [
+        {"title": "Predicting disruptive instabilities in controlled fusion plasmas through deep learning", "year": 2019, "venue": "Nature 568", "url": "https://www.nature.com/articles/s41586-019-1116-4"}
+      ],
+      "code": [
+        {"name": "plasma-python / FRNN", "url": "https://github.com/PPPLDeepLearning/plasma-python", "status": "official-direct", "relationship": "PPPL 团队发布的 FRNN 训练与评估代码。"}
+      ],
+      "data": "完整 DIII-D/JET 信号与标签需设施授权；代码公开不等于训练数据公开。",
+      "maturity": "经典跨机离线验证；算法代码公开，装置在线权威部署仍需本机再验证。",
+      "limitations": "设备域偏移、标签/时间窗定义和类别不平衡会显著改变指标；缺少校准置信度、可解释故障树和直接控制闭环证据。",
+      "tags": ["FRNN", "DIII-D", "JET", "破裂预警", "跨装置迁移", "LSTM"]
+    },
+    {
+      "id": "DIA-02",
+      "domain": "智能诊断",
+      "evidenceLevel": "E2",
+      "title": "Hybrid Deep Learner：C-Mod/DIII-D/EAST 跨机破裂预测",
+      "year": 2021,
+      "organization": "MIT PSFC、DIII-D、EAST 合作团队",
+      "problem": "新装置破裂样本稀少，单机监督模型往往无法迁移到不同诊断配置和运行分布。",
+      "approach": "组合时间卷积、循环单元和多尺度特征，配合标签平滑/迁移策略，在三台装置间共享破裂表示。",
+      "devices": ["Alcator C-Mod", "DIII-D", "EAST"],
+      "evidence": "论文报告 AUC 分别约为 C-Mod 0.801、DIII-D 0.947、EAST 0.973；仅用 20 个 EAST 破裂样本并结合其他装置数据时仍达到约 0.959 AUC，8 核 CPU 推理约 1 ms。",
+      "papers": [
+        {"title": "Hybrid deep-learning architecture for general disruption prediction across multiple tokamaks", "year": 2021, "venue": "Nuclear Fusion 61 026007", "url": "https://doi.org/10.1088/1741-4326/abc664"}
+      ],
+      "code": [
+        {"name": "Hybrid Deep Learner 原论文模型", "url": "", "status": "not-public", "relationship": "未发现本文训练代码与权重的官方公开仓库。"},
+        {"name": "disruption-py", "url": "https://github.com/MIT-PSFC/disruption-py", "status": "official-enabling", "relationship": "MIT PSFC 的跨装置破裂数据提取/特征工程框架；不是原 HDL 模型复现。"}
+      ],
+      "data": "三装置数据库均受设施访问与信号许可约束，未形成论文级完全公开数据包。",
+      "maturity": "多装置离线基准与实时可行性证明。",
+      "limitations": "仍需目标机归一化和少量目标域样本；AUC 不直接给出特定报警提前量下的误报成本，尚无公开装置闭环部署。",
+      "tags": ["C-Mod", "DIII-D", "EAST", "破裂预警", "迁移学习", "多尺度时序"]
+    },
+    {
+      "id": "DIA-03",
+      "domain": "智能诊断",
+      "evidenceLevel": "E2",
+      "title": "JT-60U 高 β 破裂似然的稀疏可解释识别",
+      "year": 2021,
+      "organization": "QST/JT-60U 团队",
+      "problem": "需要从大量相关参数中提炼少数可解释变量，识别高 β 放电接近破裂边界的程度。",
+      "approach": "穷举/稀疏特征选择结合线性支持向量机，选出归一化 β、伸长率、离子温度及 q=2 附近磁剪切等关键参数，并构造幂律形式似然边界。",
+      "devices": ["JT-60U：历史高 β 放电"],
+      "evidence": "论文对 JT-60U 历史数据库进行回顾性训练/测试，得到可由少数物理参数解释的破裂似然；未报告 JT-60SA 或在线控制部署。",
+      "papers": [
+        {"title": "Likelihood Identification of High-Beta Disruption in JT-60U", "year": 2021, "venue": "Plasma and Fusion Research 16 1402073", "url": "https://doi.org/10.1585/pfr.16.1402073"}
+      ],
+      "code": [
+        {"name": "JT-60U 稀疏选择与 SVM 实现", "url": "", "status": "not-public", "relationship": "未发现官方公开代码。"}
+      ],
+      "data": "JT-60U 历史放电数据库未公开为可下载基准。",
+      "maturity": "离线、可解释的装置特定风险指标。",
+      "limitations": "只覆盖特定高 β 破裂族；历史装置与新装置分布不同，线性边界和相关性变量不能当作因果机理或通用保护规则。",
+      "tags": ["JT-60U", "高β", "破裂预警", "SVM", "稀疏特征", "可解释性"]
+    },
+    {
+      "id": "DIA-04",
+      "domain": "智能诊断",
+      "evidenceLevel": "E2",
+      "title": "JET 深度学习 bolometer 辐射层析重建",
+      "year": 2017,
+      "organization": "JET/Eurofusion、Instituto de Plasmas e Fusão Nuclear 等",
+      "problem": "bolometer 视线积分反演成二维辐射率分布需要迭代正则化，传统算法难以满足大规模回放和实时诊断。",
+      "approach": "以既有迭代层析结果为监督标签，训练上采样卷积网络将视线测量直接映射为约 196×115 的二维辐射图。",
+      "devices": ["JET：overview bolometer 系统"],
+      "evidence": "论文显示网络能以远快于迭代算法的速度复现其辐射图，并在像素/结构指标上取得高一致性；监督标签是算法重建而非独立真值。",
+      "papers": [
+        {"title": "Deep learning for plasma tomography using the bolometer system at JET", "year": 2017, "venue": "Fusion Engineering and Design 114 18–25", "url": "https://doi.org/10.1016/j.fusengdes.2016.11.006"}
+      ],
+      "code": [
+        {"name": "JET bolometer 深度层析代码与权重", "url": "", "status": "not-public", "relationship": "未发现官方公开仓库。"}
+      ],
+      "data": "JET bolometer 原始数据和迭代重建标签未公开成训练基准。",
+      "maturity": "奠基性的离线快速层析研究。",
+      "limitations": "网络继承标签算法的先验与伪影；缺少测量噪声、几何漂移、OOD 和不确定度的在线验收，不能视作独立物理真值。",
+      "tags": ["JET", "bolometer", "层析", "辐射率", "卷积网络"]
+    },
+    {
+      "id": "DIA-05",
+      "domain": "智能诊断",
+      "evidenceLevel": "E2",
+      "title": "JET 辐射层析与变分自编码器破裂前兆分析",
+      "year": 2020,
+      "organization": "JET/Eurofusion、IPFN 等",
+      "problem": "仅用一维 bolometer 信号难以定位破裂前的辐射形态异常，需要把高速层析与无监督异常检测结合。",
+      "approach": "先以矩阵/学习代理快速生成二维 bolometer 层析，再用变分自编码器学习正常基线分布，以重建误差和潜变量偏移标记前兆。",
+      "devices": ["JET：两个实验 campaign 的 baseline 放电"],
+      "evidence": "论文在回顾性案例中识别出接近破裂时的辐射结构异常，并对比正常放电演化；尚未证明固定阈值可在实时系统中稳定满足误报/漏报要求。",
+      "papers": [
+        {"title": "Deep Learning for the Analysis of Disruption Precursors Based on Plasma Tomography", "year": 2020, "venue": "Fusion Science and Technology 76", "url": "https://doi.org/10.1080/15361055.2020.1820749"}
+      ],
+      "code": [
+        {"name": "JET tomography + VAE 实现", "url": "", "status": "not-public", "relationship": "未发现对应公开代码与模型权重。"}
+      ],
+      "data": "所用 JET baseline 数据与层析训练标签未公开。",
+      "maturity": "离线前兆发现原型。",
+      "limitations": "异常并不等于可控的因果前兆；阈值对 campaign、壁条件和运行场景敏感，缺少在线/跨装置验证。",
+      "tags": ["JET", "bolometer", "VAE", "异常检测", "破裂前兆", "层析"]
+    },
+    {
+      "id": "DIA-06",
+      "domain": "智能诊断",
+      "evidenceLevel": "E2",
+      "title": "ASDEX Upgrade 软 X 射线 Gaussian Process Tomography 模型选择",
+      "year": 2020,
+      "organization": "ASDEX Upgrade、IPFN 等",
+      "problem": "Gaussian process tomography 的核/先验模型选择若逐帧计算 Bayesian evidence，成本高且妨碍快速 SXR 层析。",
+      "approach": "训练卷积网络从 SXR 投影判断最高证据的 GPT 模型，再执行对应重建，并用前向投影残差检查与测量的一致性。",
+      "devices": ["ASDEX Upgrade：软 X 射线诊断"],
+      "evidence": "论文将神经网络分类与解析 Bayesian evidence 选择对比，并通过将重建前向投影回测量空间评估模型；它加速的是候选先验选择，不是从物理上证明发射率真值。",
+      "papers": [
+        {"title": "Deep learning for Gaussian process tomography model selection using the ASDEX Upgrade SXR system", "year": 2020, "venue": "arXiv preprint", "url": "https://arxiv.org/abs/2004.06429"}
+      ],
+      "code": [
+        {"name": "AUG SXR GPT 模型选择代码", "url": "", "status": "not-public", "relationship": "未发现论文专用公开仓库。"}
+      ],
+      "data": "AUG SXR 训练和测试投影未公开为完整基准。",
+      "maturity": "离线诊断算法研究。",
+      "limitations": "候选模型集合是封闭的；网络可能在新辐射形态/几何漂移下误选，且前向残差不能唯一验证二维真值。",
+      "tags": ["ASDEX Upgrade", "SXR", "Gaussian process tomography", "模型选择", "CNN"]
+    },
+    {
+      "id": "DIA-07",
+      "domain": "智能诊断",
+      "evidenceLevel": "E3",
+      "title": "RTCAKENN：DIII-D 实时动力学剖面重建",
+      "year": 2024,
+      "organization": "General Atomics、Princeton/PPPL 等",
+      "problem": "高质量 CAKE 动力学重建依赖离线多诊断分析且延迟高，实时控制需要快速、能容忍部分诊断缺失的剖面。",
+      "approach": "用 MLP/一维 CNN 的编码—解码结构学习七类 CAKE 剖面，并在训练时模拟输入 dropout，使其在不直接使用实时 Thomson/CER 输入时仍能估计动力学状态。",
+      "devices": ["DIII-D：实时 Plasma Control System"],
+      "evidence": "Nuclear Fusion 论文报告模型已接入 DIII-D PCS，推理低于 8 ms；相对既有实时替代方案更接近 CAKE 输出，并测试了部分输入丢失。",
+      "papers": [
+        {"title": "Machine learning-based real-time kinetic profile reconstruction in DIII-D", "year": 2024, "venue": "Nuclear Fusion 64 026006", "url": "https://doi.org/10.1088/1741-4326/ad142f"}
+      ],
+      "code": [
+        {"name": "RTCAKENN 模型、权重和训练管线", "url": "", "status": "not-public", "relationship": "未发现官方专用仓库。"},
+        {"name": "keras2c", "url": "https://github.com/PlasmaControl/keras2c", "status": "official-enabling", "relationship": "同类 DIII-D 神经网络的实时 C 部署工具；并非 RTCAKENN 的训练资产。"}
+      ],
+      "data": "完整 DIII-D/CAKE 标签和实时诊断数据未公开。",
+      "maturity": "已在装置 PCS 中运行的实时状态估计器。",
+      "limitations": "继承 CAKE 教师偏差；合成 dropout 不能覆盖全部共因故障，且剖面可信度、OOD 检测和跨机迁移仍不足。",
+      "tags": ["DIII-D", "CAKE", "剖面重建", "实时诊断", "PCS", "输入缺失"]
+    },
+    {
+      "id": "DIA-08",
+      "domain": "智能诊断",
+      "evidenceLevel": "E2",
+      "title": "EFIT-Prime：DIII-D 物理约束深度集合平衡重建与不确定度",
+      "year": 2024,
+      "organization": "Argonne National Laboratory、DIII-D/General Atomics 等",
+      "problem": "纯数据驱动平衡网络可能违反 Grad–Shafranov 约束且在新形状上不可靠，传统 EFIT 又难以满足更高频的重建需求。",
+      "approach": "以神经架构搜索得到深度集合，在监督损失中加入 Grad–Shafranov 电流/平滑与诊断位置约束，并用集合分散表达认知不确定度。",
+      "devices": ["DIII-D：训练集中排除负三角度，再以负三角度放电测试外推"],
+      "evidence": "论文报告模型可重建未参与训练的负三角度形状；深度集合一次推理约 15 ms，并展示误差与集合不确定度的关系，作者表述为经优化后具备实时潜力，而非已在 PCS 取代 EFIT。",
+      "papers": [
+        {"title": "EFIT-Prime: Probabilistic and Physics-Constrained Reduced-Order Neural Network Model for Equilibrium Reconstruction in DIII-D", "year": 2024, "venue": "Physics of Plasmas 31", "url": "https://doi.org/10.1063/5.0213609"}
+      ],
+      "code": [
+        {"name": "EFIT-Prime 训练代码、权重与 DIII-D 数据", "url": "", "status": "not-public", "relationship": "未发现可核验的官方公开仓库。"}
+      ],
+      "data": "DIII-D 磁诊断与 EFIT 标签未公开为完整训练集。",
+      "maturity": "离线高质量原型，接近实时预算但尚无公开在线部署证据。",
+      "limitations": "仍受 EFIT 标签和 DIII-D 传感器布局约束；15 ms 集合计算、置信度校准、磁诊断共模故障和跨装置泛化需继续验证。",
+      "tags": ["DIII-D", "EFIT-Prime", "平衡重建", "物理约束", "深度集合", "不确定度"]
+    },
+    {
+      "id": "DIA-09",
+      "domain": "智能诊断",
+      "evidenceLevel": "E2",
+      "title": "GS-DeepNet：KSTAR 无监督物理约束平衡重建",
+      "year": 2023,
+      "organization": "KAIST、Korea Institute of Fusion Energy/KSTAR 等",
+      "problem": "传统自由边界平衡重建需要迭代和人工选择磁测量，而监督网络又继承 EFIT 标签，难以同时获得实时性、物理一致性和不确定度。",
+      "approach": "Maxwell Net 从磁探针/磁通环和空间坐标生成磁通，Force-Balance Net 学习压力与极向电流自由函数；两者由 Grad–Shafranov 方程、Biot–Savart 响应和实测边界联合自监督，并用 MC dropout 估计不确定度。",
+      "devices": ["KSTAR：31 个可用磁探针的 BR/BZ 分量、45 个磁通环及总等离子体电流；41×41 极向网格"],
+      "evidence": "Scientific Reports 论文在 KSTAR 数据上训练、验证和测试；磁边界量与网络输出的 R² 接近 1，代表性压力剖面与 Thomson scattering 在误差范围内相符，并以 MSE 磁倾角等内部诊断作独立比较。论文报告 RTX A4000 上重建 41×41 磁通小于 1 ms；没有公开证据表明其已成为在线权威平衡。",
+      "papers": [
+        {"title": "GS-DeepNet: mastering tokamak plasma equilibria with deep neural networks and the Grad–Shafranov equation", "year": 2023, "venue": "Scientific Reports 13 15799", "url": "https://www.nature.com/articles/s41598-023-42991-5"}
+      ],
+      "code": [
+        {"name": "GS-DeepNet 训练代码与权重", "url": "", "status": "not-public", "relationship": "论文 Data/Code availability 未给出可直接复现的公共仓库。"}
+      ],
+      "data": "KSTAR 原始磁诊断、Thomson/MSE 比较数据未发布为完整公开训练集。",
+      "maturity": "装置离线数据上的物理约束研究模型，推理预算满足实时潜力。",
+      "limitations": "轴对称、诊断布局和壁/线圈响应高度 KSTAR 特定；快离子压力不可得、MC dropout 校准和真实传感器故障下的在线稳定性仍需验证。",
+      "tags": ["KSTAR", "GS-DeepNet", "Grad-Shafranov", "无监督学习", "平衡重建", "不确定度"]
+    },
+    {
+      "id": "DIA-10",
+      "domain": "智能诊断",
+      "evidenceLevel": "E2",
+      "title": "EAST 84 路磁诊断到二维磁通的深度平衡重建",
+      "year": 2023,
+      "organization": "中国科学院合肥物质科学研究院/EAST 团队",
+      "problem": "EAST 的 EFIT 平衡重建难以在高频控制周期内输出完整二维磁通，且网络结构/超参数的手工选择影响泛化。",
+      "approach": "以 84 路磁诊断为输入、129×129（16641）个磁通网格值为输出，采用自动超参数搜索构建深度回归网络，并以 EFIT 重建作为监督标签。",
+      "devices": ["EAST：MDSplus 历史放电，独立 4555 个平衡切片及 3 个未见完整放电测试"],
+      "evidence": "论文报告 4555 个测试平衡中大多数相关系数超过 0.998；3 个未见完整放电的相对磁通误差通常小于 2%，X 点和 ramp 阶段差异更明显。结果证明离线快速重建，不等同于已在 EAST PCS 在线使用。",
+      "papers": [
+        {"title": "Fast reconstruction of EAST plasma equilibrium using deep learning", "year": 2023, "venue": "AIP Advances 13", "url": "https://doi.org/10.1063/5.0152318"}
+      ],
+      "code": [
+        {"name": "EAST equilibrium deep network", "url": "", "status": "not-public", "relationship": "未发现作者发布的代码、权重与处理脚本仓库。"}
+      ],
+      "data": "训练数据存储于 EAST MDSplus；论文未提供完整公开下载。",
+      "maturity": "离线装置数据验证的快速重建原型。",
+      "limitations": "完全继承 EFIT 标签；仅用磁输入，X 点/ramp 阶段误差较大，缺少不确定度、故障输入和在线时序/延迟验证。",
+      "tags": ["EAST", "平衡重建", "磁通", "EFIT", "超参数搜索", "MDSplus"]
+    },
+    {
+      "id": "DIA-11",
+      "domain": "智能诊断",
+      "evidenceLevel": "E2",
+      "title": "FusionMAE：HL-3 多诊断自监督预训练基础模型",
+      "year": 2026,
+      "organization": "核工业西南物理研究院、HL-3、清华/SUNIST-2 等合作团队",
+      "problem": "聚变诊断多、采样异构、缺测普遍，针对每一任务单独训练模型造成接口碎片化，缺少可复用的等离子体状态表征。",
+      "approach": "以 Transformer masked autoencoder 在 88 路、12 类诊断的同步时间片上进行随机通道/系统掩码重建，形成 256 维潜在状态，再适配破裂预测、EFIT-NN、信号修复和等离子体演化等下游任务。",
+      "devices": ["HL-3：2022–2025 年 2445 个放电，1950 个开发、495 个测试", "SUNIST-2：补充跨装置/小装置验证"],
+      "evidence": "Communications Physics 报告无掩码平均 Pearson 相关约 98.7%，逐通道掩码约 97.2%，逐诊断系统掩码约 95.3%；14M 参数模型在 A100 上约 10 小时训练、约 4.8 ms 推理，并展示多项下游任务。所有证据主要为装置历史数据离线评估。",
+      "papers": [
+        {"title": "FusionMAE, a self-supervised pretrained model to optimize and simplify diagnostic and control of fusion plasma", "year": 2026, "venue": "Communications Physics 9 232", "url": "https://www.nature.com/articles/s42005-026-02626-3"}
+      ],
+      "code": [
+        {"name": "FusionMAE 代码、权重与预训练管线", "url": "", "status": "not-public", "relationship": "论文声明代码可向作者申请，但未给出公共仓库，因此按 not-public 处理。"}
+      ],
+      "data": "图表/补充数据公开；完整 HL-3 训练数据需按 Southwestern Institute of Physics 流程正式申请。",
+      "maturity": "装置离线大规模预训练与多任务验证；尚无公开实时控制部署。",
+      "limitations": "跨装置泛化仍有限；长于约 10 ms 的时间动力学建模会退化，重建相关性不保证因果/物理正确，缺少校准不确定度和在线版本治理。",
+      "tags": ["HL-3", "SUNIST-2", "基础模型", "masked autoencoder", "多模态诊断", "自监督学习"]
+    },
+    {
+      "id": "DIA-12",
+      "domain": "智能诊断",
+      "evidenceLevel": "E2",
+      "title": "Diag2Diag：DIII-D 多模态超分辨率合成 Thomson 诊断",
+      "year": 2025,
+      "organization": "Princeton/PPPL、General Atomics、PlasmaControl 等",
+      "problem": "Thomson scattering 空间信息丰富但采样慢，而 ECE、干涉仪、磁诊断等快速信号空间/物理信息不完整；需要生成高频合成剖面以研究 ELM、RMP 和磁岛动力学。",
+      "approach": "先以 CNN 学习 ECE 到干涉仪谱图，再以 MLP 将 ECE、干涉仪、磁诊断、CER、MSE 等 236 个输入映射为 80 个 Thomson 输出；训练集覆盖约 4000 个 DIII-D 放电和 340 万时间点。",
+      "devices": ["DIII-D：2017–2022 年多诊断数据；包括 ELM、RMP 和磁岛相关实验"],
+      "evidence": "Nature Communications 报告谱图 L1 误差约 1.2×10^-3、自动编码器事件检测 F1 约 0.82，并用实际低频 Thomson、burst-mode 数据、前向物理关系和已知 ELM/RMP/磁岛行为交叉验证。论文明确指出没有 MHz Thomson 真值，合成诊断不能被理解为与真实诊断逐点完全等价。",
+      "papers": [
+        {"title": "Multimodal super-resolution: discovering hidden physics and its application to fusion plasmas", "year": 2025, "venue": "Nature Communications 16 8506", "url": "https://www.nature.com/articles/s41467-025-63492-1"}
+      ],
+      "code": [
+        {"name": "Diag2Diag-SRTS", "url": "https://github.com/PlasmaControl/Diag2Diag-SRTS", "status": "official-direct", "relationship": "论文团队公开的训练脚本、图生成 notebook 和 shot list。"}
+      ],
+      "data": "代码和 shot list 公开；DIII-D 原始诊断数据仍需设施用户权限，论文 figure data 不等于完整训练集。",
+      "maturity": "大规模装置离线验证、代码公开的合成诊断研究；尚非安全关键实时测量替代品。",
+      "limitations": "不存在 MHz Thomson ground truth；相关性可在 OOD、传感器漂移或新运行场景下失效，必须以物理一致性和真实诊断抽样持续校准。",
+      "tags": ["DIII-D", "Diag2Diag", "合成诊断", "Thomson scattering", "超分辨率", "多模态"]
+    }
+  ]
+}

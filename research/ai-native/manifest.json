@@ -1,0 +1,9 @@
+{
+  "schemaVersion": "1.0",
+  "asOf": "2026-08-10",
+  "sources": [
+    "core_control_diagnostics.json",
+    "engineering_energy_aux.json",
+    "data_hmi_integration.json"
+  ]
+}

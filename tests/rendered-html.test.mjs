@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFile, stat } from 'node:fs/promises';
 import test from 'node:test';
 
 async function render(pathname = '/') {
@@ -18,6 +19,29 @@ async function htmlFor(pathname) {
   assert.match(response.headers.get('content-type') ?? '', /^text\/html\b/i);
   return response.text();
 }
+
+test('ships non-empty reports and structured download assets', async () => {
+  const assets = [
+    '../public/fusion-physics-simulation-report.docx',
+    '../public/fusion-physics-simulation-report.pdf',
+    '../public/tokamak-engineering-simulation-report.docx',
+    '../public/tokamak-engineering-simulation-report.pdf',
+    '../public/fusion-ai-native-research-report.docx',
+    '../public/fusion-ai-native-paper-code-index.csv',
+    '../public/data/fusion-ai-native-landscape.json',
+  ];
+  for (const asset of assets) {
+    const info = await stat(new URL(asset, import.meta.url));
+    assert.ok(info.isFile(), `${asset} must be a file`);
+    assert.ok(info.size > 0, `${asset} must not be empty`);
+  }
+
+  const landscape = JSON.parse(
+    await readFile(new URL('../public/data/fusion-ai-native-landscape.json', import.meta.url), 'utf8'),
+  );
+  assert.ok(landscape.entries.length > 0);
+  assert.equal(landscape.statistics.total, landscape.entries.length);
+});
 
 test('server-renders the FusionDigital community portal', async () => {
   const html = await htmlFor('/');

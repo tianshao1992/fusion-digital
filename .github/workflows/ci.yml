@@ -1,0 +1,49 @@
+name: quality-gates
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-gates-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  website-and-data:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.13.0
+          cache: npm
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install exact dependencies
+        run: npm ci
+
+      - name: Rebuild and audit research data
+        run: npm run research:ai
+
+      - name: Confirm generated data is committed
+        run: git diff --exit-code -- app/ai/aiResearch.ts public/data/fusion-ai-native-landscape.json public/fusion-ai-native-paper-code-index.csv
+
+      - name: Run code, build and rendering checks
+        run: npm run check

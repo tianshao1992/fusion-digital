@@ -1,0 +1,1843 @@
+{
+  "meta": {
+    "title": "聚变智能原生调研：数据基座、人机交互与总体集成",
+    "version": "2026-08-10",
+    "scope": [
+      "数据基座",
+      "人机交互",
+      "总体集成"
+    ],
+    "source_policy": "仅使用原始论文、官方项目或实验室页面、官方代码仓库；未找到公开代码时明确标记 not-public。",
+    "code_status_vocabulary": [
+      "official-direct",
+      "official-enabling",
+      "community-reproduction",
+      "not-public"
+    ],
+    "maturity_scale": {
+      "L1": "概念或观点",
+      "L2": "离线原型或论文验证",
+      "L3": "真实装置数据验证",
+      "L4": "装置现场、控制室或正式设计流程使用",
+      "L5": "安全关键在线闭环或电厂级持续运行"
+    },
+    "deployment_level_scale": {
+      "D1": "概念或路线",
+      "D2": "离线研究原型",
+      "D3": "装置数据验证或运行试点",
+      "D4": "生产服务、正式工作流或装置常规使用",
+      "D5": "安全关键在线系统或电厂级持续运行"
+    },
+    "evidence_level_scale": {
+      "E0": "概念或方法",
+      "E1": "仿真或合成数据",
+      "E2": "装置离线数据",
+      "E3": "实时系统、影子模式或硬件在环",
+      "E4": "装置闭环实验"
+    }
+  },
+  "works": [
+    {
+      "id": "data-mdsplus",
+      "projectId": "mdsplus",
+      "deploymentLevel": "D4",
+      "evidenceLevel": "E3",
+      "domain": "数据基座",
+      "title": "MDSplus：聚变实验采集、归档与远程访问基础设施",
+      "year": 1991,
+      "organization": "MIT PSFC、Consorzio RFX/Padova、Los Alamos National Laboratory 及国际协作社区",
+      "problem": "聚变装置产生大量异构、分层且随放电变化的数据，需要在同一自描述结构中保存实验配置、波形、分析结果与仿真数据，并允许跨站点访问。",
+      "approach": "以 shot/tree/node 为核心的自描述层次树、TDI 表达式、设备模型和客户端/服务器协议统一采集、归档与分析；MDSplus 8 扩展长节点名以适配 IMAS 语义命名。",
+      "devices": [
+        "Alcator C-Mod",
+        "RFX-mod",
+        "DIII-D",
+        "EAST",
+        "KSTAR",
+        "NSTX-U",
+        "超过 30 个磁约束聚变站点"
+      ],
+      "evidence": [
+        {
+          "claim": "官方项目称 MDSplus 已部署在四大洲 30 多个站点，是磁聚变中最广泛使用的数据管理系统。",
+          "url": "https://www.mdsplus.org/"
+        },
+        {
+          "claim": "2018 年综述记录其从 C-Mod、ZTH、RFX 建设期开始的长期装置应用。",
+          "url": "https://doi.org/10.1016/j.fusengdes.2017.12.010"
+        }
+      ],
+      "papers": [
+        {
+          "title": "MDSplus yesterday, today and tomorrow",
+          "year": 2018,
+          "venue": "Fusion Engineering and Design",
+          "url": "https://doi.org/10.1016/j.fusengdes.2017.12.010"
+        },
+        {
+          "title": "MDSplus version 8.0 – The path to long node names",
+          "year": 2025,
+          "venue": "Fusion Engineering and Design",
+          "url": "https://doi.org/10.1016/j.fusengdes.2024.114742"
+        }
+      ],
+      "code": [
+        {
+          "name": "MDSplus",
+          "url": "https://github.com/MDSplus/mdsplus",
+          "status": "official-direct",
+          "relationship": "官方核心实现，覆盖服务器、客户端、树管理和多语言接口。"
+        }
+      ],
+      "data": {
+        "availability": "由各装置独立管理；软件开放不等于实验数据开放",
+        "formats": [
+          "MDSplus tree",
+          "signal/segment",
+          "远程 thin/thick client"
+        ],
+        "ai_readiness": "可作为 AI 数据源，但通常还需批量抽取、时间对齐、质量标注、单位/坐标统一和许可治理。"
+      },
+      "maturity": {
+        "level": "L4",
+        "status": "生产级实验数据基础设施",
+        "basis": "数十年、多装置采集和归档运行。"
+      },
+      "limitations": [
+        "树结构与命名通常具有装置特异性，跨机迁移需要映射层。",
+        "逐 shot、逐信号访问并非天然适合高吞吐机器学习训练。",
+        "数据校准、标签、权限和可复用性不由存储系统自动保证。"
+      ],
+      "tags": [
+        "DAQ",
+        "archive",
+        "time-series",
+        "client-server",
+        "legacy-modernization"
+      ]
+    },
+    {
+      "id": "data-uda",
+      "projectId": "uda",
+      "deploymentLevel": "D4",
+      "evidenceLevel": "E2",
+      "domain": "数据基座",
+      "title": "UDA：面向异构聚变数据的统一远程访问层",
+      "year": 2012,
+      "organization": "UK Atomic Energy Authority",
+      "problem": "分析代码不应依赖每种装置数据的文件位置、格式、位宽和访问协议；IMAS 还需要一种可映射本地档案并支持远程分段读取的后端。",
+      "approach": "插件驱动的 C/C++ 客户端—服务器或 fat-client 架构，把 NetCDF、MDSplus、文件和装置服务映射为统一数据对象；通过 UDA/IMAS 插件按 IDS 路径提供数据。",
+      "devices": [
+        "MAST",
+        "MAST-U",
+        "JET",
+        "WEST",
+        "ASDEX Upgrade",
+        "TCV",
+        "ITER/IMAS 工作流"
+      ],
+      "evidence": [
+        {
+          "claim": "UKAEA 官方文档给出 client-server、fat-client、SSL 和插件体系。",
+          "url": "https://ukaea.github.io/UDA/"
+        },
+        {
+          "claim": "UKAEA 说明 UDA 是 MAST-U 全体内部和外部科学用户的主要数据访问系统，典型约 30 个并发连接。",
+          "url": "https://indico.ukaea.uk/event/163/contributions/257/attachments/77/103/uda231019.pdf"
+        }
+      ],
+      "papers": [
+        {
+          "title": "IMAS UDA Workshop: UDA Overview and IMAS UDA Presentation",
+          "year": 2023,
+          "venue": "ITER/UKAEA IMAS Mapping Workshop",
+          "sourceType": "conference-material",
+          "url": "https://ukaea.github.io/imas_mapping_workshop/imas_uda_presentation/index.html"
+        }
+      ],
+      "code": [
+        {
+          "name": "UDA",
+          "url": "https://github.com/ukaea/UDA",
+          "status": "official-direct",
+          "relationship": "Apache-2.0 官方实现，含 C/C++ 核心、服务器、插件及 Python wrapper。"
+        }
+      ],
+      "data": {
+        "availability": "访问策略由数据源站点决定；MAST-U 等内部资源通常需要账户或 VPN",
+        "formats": [
+          "统一数据对象",
+          "MDSplus",
+          "NetCDF",
+          "IMAS IDS via plugin"
+        ],
+        "ai_readiness": "适合作为跨后端抽取层，但大规模训练仍需要缓存、对象存储或批处理层。"
+      },
+      "maturity": {
+        "level": "L4",
+        "status": "装置生产使用与 IMAS 集成",
+        "basis": "MAST/MAST-U 主数据访问系统，并已用于多机 IMAS 映射。"
+      },
+      "limitations": [
+        "跨站点防火墙、身份认证和授权仍会限制真正的联邦访问。",
+        "插件映射正确性需要逐装置验证。",
+        "统一访问对象不等于统一物理语义、质量和时基。"
+      ],
+      "tags": [
+        "data-access",
+        "plugins",
+        "IMAS",
+        "remote",
+        "MAST-U"
+      ]
+    },
+    {
+      "id": "data-imas",
+      "projectId": "imas",
+      "deploymentLevel": "D4",
+      "evidenceLevel": "E2",
+      "domain": "数据基座",
+      "title": "IMAS：ITER 装置无关的数据字典、访问层与集成建模语义",
+      "year": 2015,
+      "organization": "ITER Organization 与 ITER Members/EUROfusion",
+      "problem": "实验数据和模拟代码若采用点对点接口，会形成 N² 集成成本；ITER 需要统一描述平衡、剖面、控制、诊断、MHD、工程与溯源的数据标准。",
+      "approach": "以版本化 IMAS Data Dictionary 定义 Interface Data Structures，配套 Access Layer、Python/C++/Fortran/Java/MATLAB 接口、后端、验证器、映射和可视化工具。",
+      "devices": [
+        "ITER",
+        "JET",
+        "MAST/MAST-U",
+        "WEST",
+        "ASDEX Upgrade",
+        "TCV",
+        "KSTAR",
+        "DIII-D",
+        "EUROfusion DEMO 工作流"
+      ],
+      "evidence": [
+        {
+          "claim": "ITER 官方 2025 年宣布 IMAS 基础设施和多项物理模型开放源码。",
+          "url": "https://www.iter.org/node/20687/release-imas-infrastructure-and-physics-models-open-source"
+        },
+        {
+          "claim": "EUROfusion 的多机数据映射已用于代码集成、数据核验与模型验证。",
+          "url": "https://doi.org/10.1080/15361055.2020.1819751"
+        }
+      ],
+      "papers": [
+        {
+          "title": "Code Integration, Data Verification, and Models Validation Using the ITER Integrated Modeling and Analysis System (IMAS) in EUROfusion",
+          "year": 2020,
+          "venue": "Fusion Science and Technology",
+          "url": "https://doi.org/10.1080/15361055.2020.1819751"
+        },
+        {
+          "title": "The initial step towards JOREK integration in IMAS",
+          "year": 2020,
+          "venue": "Fusion Engineering and Design",
+          "url": "https://arxiv.org/abs/2006.09198"
+        }
+      ],
+      "code": [
+        {
+          "name": "IMAS Data Dictionary",
+          "url": "https://github.com/iterorganization/IMAS-Data-Dictionary",
+          "status": "official-direct",
+          "relationship": "官方版本化物理数据模式。"
+        },
+        {
+          "name": "IMAS-Python",
+          "url": "https://github.com/iterorganization/IMAS-Python",
+          "status": "official-direct",
+          "relationship": "官方 Python IDS 操作与后端接口。"
+        },
+        {
+          "name": "IMAS Data Mapping",
+          "url": "https://github.com/iterorganization/IMAS-Data-Mapping",
+          "status": "official-direct",
+          "relationship": "2026 年启动的开放装置映射协作仓库。"
+        }
+      ],
+      "data": {
+        "availability": "数据字典和主要工具开放；具体实验数据及部分后端仍受机构权限控制",
+        "formats": [
+          "IDS",
+          "netCDF",
+          "MDSplus backend",
+          "UDA backend"
+        ],
+        "ai_readiness": "最重要的跨代码/跨装置语义骨架之一，但需要映射覆盖、数据质量规则和 ML 友好视图。"
+      },
+      "maturity": {
+        "level": "L4",
+        "status": "国际集成建模标准与开放基础设施",
+        "basis": "ITER 和 EUROfusion 正式采用，多代码、多机验证。"
+      },
+      "limitations": [
+        "字典版本演进会带来迁移和兼容成本。",
+        "仅符合 IDS 结构并不能保证物理完备、自洽或坐标约定正确。",
+        "高维大数据、流式在线数据和 AI 特征视图仍需额外工程。"
+      ],
+      "tags": [
+        "ontology",
+        "data-dictionary",
+        "IDS",
+        "interoperability",
+        "ITER"
+      ]
+    },
+    {
+      "id": "data-omas-ods",
+      "projectId": "omas",
+      "deploymentLevel": "D4",
+      "evidenceLevel": "E2",
+      "domain": "数据基座",
+      "title": "OMAS/ODS：面向 Python 的 IMAS 自适应数据层",
+      "year": 2018,
+      "organization": "General Atomics / OMFIT-AToM collaboration",
+      "problem": "直接使用 IMAS 数据结构时，各代码可能填充不同字段、网格和派生量，仍会产生隐性点对点转换；Python 工作流需要轻量、可插值、可校验的内存对象。",
+      "approach": "Ordered Multidimensional Array Structures 以分层 ODS（OMAS Data Storage）对象复现 IMAS 语义，提供一致性检查、坐标插值、派生量计算以及 IMAS、HDF5、NetCDF、JSON、MongoDB 等读写。",
+      "devices": [
+        "DIII-D",
+        "NSTX-U",
+        "ITER",
+        "CFETR",
+        "STEP/OMFIT 支持的其他托卡马克"
+      ],
+      "evidence": [
+        {
+          "claim": "OMAS 被 STEP 用作所有模块间的集中数据状态，并可随时转换为 IMAS。",
+          "url": "https://omfit.io/modules/mod_STEP.html"
+        },
+        {
+          "claim": "耦合 core-pedestal 工作流使用 OMAS/IMAS 在 DIII-D 放电上验证。",
+          "url": "https://www.osti.gov/pages/biblio/1766792"
+        }
+      ],
+      "papers": [
+        {
+          "title": "Interfacing Physics Codes with ITER IMAS via OMAS",
+          "year": 2019,
+          "venue": "IAEA Technical Meeting on Fusion Data Processing, Validation and Analysis",
+          "sourceType": "conference-material",
+          "url": "https://nucleus.iaea.org/sites/fusionportal/Shared%20Documents/BoA_28May.pdf"
+        },
+        {
+          "title": "Neural-network accelerated coupled core-pedestal simulations with self-consistent transport of impurities and compatible with ITER IMAS",
+          "year": 2021,
+          "venue": "Nuclear Fusion",
+          "url": "https://www.osti.gov/pages/biblio/1766792"
+        }
+      ],
+      "code": [
+        {
+          "name": "OMAS",
+          "url": "https://github.com/gafusion/omas",
+          "status": "official-direct",
+          "relationship": "官方 Python 实现；ODS 是其核心内存数据对象，不是独立求解器。"
+        }
+      ],
+      "data": {
+        "availability": "库和模式开放；装置数据访问仍取决于 OMFIT/MDSplus/站点权限",
+        "formats": [
+          "ODS",
+          "IMAS",
+          "HDF5",
+          "NetCDF",
+          "JSON",
+          "MongoDB"
+        ],
+        "ai_readiness": "适合 Python 特征工程和工作流状态交换，但训练语料仍需固定版本、快照和标签治理。"
+      },
+      "maturity": {
+        "level": "L4",
+        "status": "成熟集成工作流数据层",
+        "basis": "STEP、OMFIT 和多项 DIII-D/反应堆预测研究使用。"
+      },
+      "limitations": [
+        "不是独立的数据仓库或装置采集系统。",
+        "第三方代码到 OMAS/IMAS 的映射仍需人工实现和验证。",
+        "自动插值和派生量必须保留算法版本与不确定度，避免产生不可追溯的数据变化。"
+      ],
+      "tags": [
+        "OMAS",
+        "ODS",
+        "Python",
+        "IMAS-adapter",
+        "workflow-state"
+      ]
+    },
+    {
+      "id": "data-fair-mast",
+      "projectId": "fair-mast",
+      "deploymentLevel": "D4",
+      "evidenceLevel": "E2",
+      "domain": "数据基座",
+      "title": "FAIR-MAST：面向开放 AI/ML 的 MAST 数据管理系统",
+      "year": 2024,
+      "organization": "UKAEA、STFC Hartree Centre 与 MAST Team",
+      "problem": "传统 MAST 档案对外部数据科学团队不易检索和批量访问，难以直接支撑可复现 AI/ML。",
+      "approach": "以关系型元数据索引、JSON API、S3 对象存储和 Zarr 诊断数组提供可搜索、可并行、云优化的数据访问，并采用 FAIR 原则和开放许可。",
+      "devices": [
+        "MAST M05-M09 campaigns",
+        "规划扩展至 MAST-U",
+        "规划扩展至 JET"
+      ],
+      "evidence": [
+        {
+          "claim": "论文报告相对遗留系统约 10 倍的数据访问速度提升。",
+          "url": "https://doi.org/10.1016/j.softx.2024.101869"
+        },
+        {
+          "claim": "UKAEA 官方将其列为活跃服务，并说明其被用于 UKAEA/IBM 聚变基础模型协作。",
+          "url": "https://www.ukaea.org/service/fair-mast/"
+        }
+      ],
+      "papers": [
+        {
+          "title": "FAIR-MAST: A fusion device data management system",
+          "year": 2024,
+          "venue": "SoftwareX",
+          "url": "https://doi.org/10.1016/j.softx.2024.101869"
+        }
+      ],
+      "code": [
+        {
+          "name": "FAIR-MAST",
+          "url": "https://github.com/ukaea/fair-mast",
+          "status": "official-direct",
+          "relationship": "MIT 许可的官方服务代码与问题跟踪仓库。"
+        }
+      ],
+      "data": {
+        "availability": "MAST 历史数据公开；元数据和大部分数据采用 CC BY-SA 4.0",
+        "formats": [
+          "Zarr",
+          "S3 object store",
+          "JSON API",
+          "relational metadata"
+        ],
+        "ai_readiness": "高；已直接支撑 TokaMark/TokaMind，但目前以单装置历史数据为主。"
+      },
+      "maturity": {
+        "level": "L4",
+        "status": "公开生产服务",
+        "basis": "真实 MAST 数据开放、性能评估和下游基础模型使用。"
+      },
+      "limitations": [
+        "当前公开覆盖主要是 MAST 历史 campaigns，不代表 MAST-U/JET 已全面开放。",
+        "跨诊断校准、缺失机制和物理事件标签仍需任务级处理。",
+        "扩展至不同装置需要模式、坐标和许可治理。"
+      ],
+      "tags": [
+        "FAIR",
+        "MAST",
+        "Zarr",
+        "S3",
+        "open-data"
+      ]
+    },
+    {
+      "id": "data-mast-open-data-service",
+      "projectId": "mast-open-data-service",
+      "parentProjectId": "data-fair-mast",
+      "deploymentLevel": "D4",
+      "evidenceLevel": "E2",
+      "domain": "数据基座",
+      "title": "MAST Open Data Service：面向跨机机器学习的开放数据服务演进",
+      "year": 2025,
+      "organization": "UKAEA、STFC、ORNL 与国际 MAST/JET 合作团队",
+      "problem": "机器学习需要比单次信号读取更高吞吐的开放服务，并需要让 MAST、MAST-U、JET 数据逐步进入统一可检索、可复用管线。",
+      "approach": "沿用 FAIR-MAST 的对象存储和元数据 API，系统评估并行 worker 下的加载时间与吞吐，提出多装置数据组织、抽象 API 和开放服务路线。",
+      "devices": [
+        "MAST",
+        "MAST-U（目标/部分管线）",
+        "JET（目标/部分管线）"
+      ],
+      "evidence": [
+        {
+          "claim": "IEEE 论文明确将服务定位为 MAST、MAST-U、JET 的 AI/ML 数据基础，并报告并行性能评估。",
+          "url": "https://doi.org/10.1109/TPS.2025.3583419"
+        }
+      ],
+      "papers": [
+        {
+          "title": "An Open Data Service for Supporting Research in Machine Learning on Tokamak Data",
+          "year": 2025,
+          "venue": "IEEE Transactions on Plasma Science",
+          "url": "https://doi.org/10.1109/TPS.2025.3583419"
+        }
+      ],
+      "code": [
+        {
+          "name": "FAIR-MAST shared implementation",
+          "url": "https://github.com/ukaea/fair-mast",
+          "status": "official-direct",
+          "relationship": "该开放数据服务与 FAIR-MAST 共用核心实现；不是另一套独立求解代码。"
+        }
+      ],
+      "data": {
+        "availability": "MAST 数据已公开；MAST-U/JET 的完整公开程度受权限、校核和治理约束",
+        "formats": [
+          "object storage",
+          "relational metadata",
+          "web API",
+          "analysis-ready arrays"
+        ],
+        "ai_readiness": "高吞吐和开放访问方向明确，但多机一致性仍在建设。"
+      },
+      "maturity": {
+        "level": "L4",
+        "status": "MAST 生产开放服务；多机扩展中",
+        "basis": "公开服务、同行评审性能结果和真实 ML 下游使用。"
+      },
+      "limitations": [
+        "与 FAIR-MAST 是同一技术谱系，不能重复解读为两个完全独立平台。",
+        "公开访问不等于所有通道均已质量认证。",
+        "向在线数字孪生演进还需流式更新、版本冻结和事件级质量服务。"
+      ],
+      "tags": [
+        "open-data-service",
+        "ML-pipeline",
+        "MAST-U",
+        "JET",
+        "throughput"
+      ]
+    },
+    {
+      "id": "data-toksearch",
+      "projectId": "toksearch",
+      "parentProjectId": "data-doe-fdp",
+      "deploymentLevel": "D4",
+      "evidenceLevel": "E2",
+      "domain": "数据基座",
+      "title": "TokSearch：跨大量放电的并行查询与机器学习数据抽取",
+      "year": 2018,
+      "organization": "General Atomics / DIII-D；现由 DOE Fusion Data Platform 维护",
+      "problem": "逐 shot 串行从 MDSplus/PTDATA 读取大量信号无法支撑数万至数十万放电的统计研究和机器学习数据集构建。",
+      "approach": "借鉴 SQL 的 Python/Matlab 查询 API，把信号读取、派生计算、过滤和持久化分布到单机多核、集群或 Spark/HDFS，尽量利用数据局部性和总 I/O 带宽。",
+      "devices": [
+        "DIII-D",
+        "可通过 MDSplus/Parquet 适配其他装置"
+      ],
+      "evidence": [
+        {
+          "claim": "论文以 DIII-D 扰动 halo current 数据库研究验证大规模并行抽取。",
+          "url": "https://doi.org/10.1016/j.fusengdes.2018.02.003"
+        },
+        {
+          "claim": "2024 年 IAEA 报告确认 TokSearch 已按 Apache-2.0 开源。",
+          "url": "https://conferences.iaea.org/event/377/contributions/31647/attachments/17876/30195/sammuli_iaea_tm_2024_v0.pdf"
+        }
+      ],
+      "papers": [
+        {
+          "title": "TokSearch: A search engine for fusion experimental data",
+          "year": 2018,
+          "venue": "Fusion Engineering and Design",
+          "url": "https://doi.org/10.1016/j.fusengdes.2018.02.003"
+        }
+      ],
+      "code": [
+        {
+          "name": "TokSearch",
+          "url": "https://github.com/GA-FDP/toksearch",
+          "status": "official-direct",
+          "relationship": "DOE FDP/General Atomics 官方开放实现。"
+        }
+      ],
+      "data": {
+        "availability": "工具开放；DIII-D 原始数据通常需要 DIII-D 用户权限",
+        "formats": [
+          "MDSplus",
+          "PTDATA",
+          "Parquet",
+          "Spark/DataFrame-like results"
+        ],
+        "ai_readiness": "非常适合批量数据抽取，但不自动提供跨机语义、标签或训练/测试泄漏控制。"
+      },
+      "maturity": {
+        "level": "L4",
+        "status": "DIII-D 大规模分析工具并进入 DOE FDP 工具链",
+        "basis": "真实大规模 shot 查询、同行评审应用和正式开源。"
+      },
+      "limitations": [
+        "性能受档案网络、存储带宽和数据布局限制。",
+        "DIII-D 特定数据源和派生逻辑移植到其他装置需开发适配器。",
+        "查询可复现性需要冻结信号版本、处理代码和环境。"
+      ],
+      "tags": [
+        "batch-query",
+        "Spark",
+        "DIII-D",
+        "dataset-construction",
+        "parallel-IO"
+      ]
+    },
+    {
+      "id": "data-doe-fdp",
+      "projectId": "doe-fdp",
+      "deploymentLevel": "D3",
+      "evidenceLevel": "E2",
+      "domain": "数据基座",
+      "title": "DOE Fusion Data Platform：端到端融合数据、元数据与可复现工作流平台",
+      "year": 2025,
+      "organization": "U.S. Department of Energy Fusion Energy Sciences、General Atomics、PPPL 及合作机构",
+      "problem": "单一档案读取工具不足以覆盖数据发现、处理、版本、溯源、策展、发布与 AI/ML 工作流复现。",
+      "approach": "把 Common Metadata Framework、TokSearch、MetaHub、版本与工作流执行能力组织为分布式端到端平台，面向 FAIR 数据对象和可复现研究。",
+      "devices": [
+        "当前重点为 DIII-D",
+        "目标为美国及国际多装置实验与仿真数据"
+      ],
+      "evidence": [
+        {
+          "claim": "官方平台文档列出 CMF、TokSearch、MetaHub，并明确当前主要高效访问 DIII-D 数据。",
+          "sourceType": "official-project-page",
+          "url": "https://ga-fdp.github.io/"
+        },
+        {
+          "claim": "PPPL 2025 年官方报告将其定位为 data-driven fusion science 基础。",
+          "sourceType": "official-project-page",
+          "url": "https://www.pppl.gov/events/2025/toward-foundation-data-driven-fusion-science-fusion-data-platform"
+        }
+      ],
+      "papers": [
+        {
+          "title": "DOE Fusion Data Platform official project documentation",
+          "year": 2025,
+          "venue": "DOE FDP official project page（非同行评审论文）",
+          "sourceType": "official-project-page",
+          "url": "https://ga-fdp.github.io/"
+        }
+      ],
+      "code": [
+        {
+          "name": "GA-FDP organization",
+          "url": "https://github.com/GA-FDP",
+          "status": "official-direct",
+          "relationship": "当前 DOE FDP 组件的官方代码组织。"
+        },
+        {
+          "name": "TokSearch",
+          "url": "https://github.com/GA-FDP/toksearch",
+          "status": "official-direct",
+          "relationship": "FDP 已公开的核心批量数据处理组件。"
+        }
+      ],
+      "data": {
+        "availability": "平台代码和文档开放；当前主要数据访问仍面向已获授权的 DIII-D 用户",
+        "formats": [
+          "metadata objects",
+          "workflow artifacts",
+          "MDSplus/Parquet via TokSearch",
+          "catalog records"
+        ],
+        "ai_readiness": "目标明确，能承载数据版本、溯源和工作流；多机构统一服务仍在演进。"
+      },
+      "maturity": {
+        "level": "L3",
+        "status": "早期采用与平台集成阶段",
+        "basis": "官方平台可用且含成熟组件，但未找到覆盖现行全平台的单篇同行评审系统论文。"
+      },
+      "limitations": [
+        "当前多机覆盖和公共数据开放程度有限。",
+        "平台级长期运维、服务等级、数据治理和身份联邦仍需成熟。",
+        "尚未形成面向在线数字孪生的低时延双向状态同步。"
+      ],
+      "tags": [
+        "platform",
+        "FAIR",
+        "provenance",
+        "workflow",
+        "DOE"
+      ]
+    },
+    {
+      "id": "data-disruptionpy",
+      "projectId": "disruptionpy",
+      "deploymentLevel": "D3",
+      "evidenceLevel": "E2",
+      "domain": "数据基座",
+      "title": "DisruptionPy：跨装置扰动分析与 ML-ready 数据集构建框架",
+      "year": 2026,
+      "organization": "MIT Plasma Science and Fusion Center、UKAEA 及 MIT PSFC Disruptions Group",
+      "problem": "扰动预测研究中的信号定义、物理特征提取、时间插值和数据格式长期按装置/课题组重复实现，导致跨机比较与复现困难。",
+      "approach": "用设备配置、数据源抽象和可复用物理方法统一从 MDSplus 或 Xarray/S3 获取数据，计算经审查的物理特征，对齐时间基并输出 Parquet、HDF5 等 ML-ready 数据集。",
+      "devices": [
+        "Alcator C-Mod",
+        "DIII-D",
+        "EAST",
+        "HBT-EP",
+        "MAST"
+      ],
+      "evidence": [
+        {
+          "claim": "JOSS 论文和官方仓库列出五台装置的数据抽取能力；MAST 是无需额外授权的开放数据源。",
+          "url": "https://doi.org/10.21105/joss.09364"
+        }
+      ],
+      "papers": [
+        {
+          "title": "DisruptionPy: An open-source physics-based scientific framework for disruption analysis of fusion plasmas",
+          "year": 2026,
+          "venue": "Journal of Open Source Software",
+          "url": "https://doi.org/10.21105/joss.09364"
+        }
+      ],
+      "code": [
+        {
+          "name": "DisruptionPy",
+          "url": "https://github.com/MIT-PSFC/disruption-py",
+          "status": "official-direct",
+          "relationship": "论文对应官方仓库，含设备适配、方法库、测试和数据输出。"
+        }
+      ],
+      "data": {
+        "availability": "MAST 开放；C-Mod、DIII-D、EAST、HBT-EP 需各机构授权或网络环境",
+        "formats": [
+          "MDSplus",
+          "Xarray/S3",
+          "Parquet",
+          "HDF5"
+        ],
+        "ai_readiness": "高，明确为 AI/ML 数据准备；仍需任务标签审计和跨机分布偏移处理。"
+      },
+      "maturity": {
+        "level": "L3",
+        "status": "多机真实数据验证的开源科学框架",
+        "basis": "真实装置数据管线、同行评审软件论文和持续测试。"
+      },
+      "limitations": [
+        "工具本身不授予底层数据访问权限。",
+        "同名物理特征在不同装置上的可比性仍依赖诊断、校准和定义。",
+        "主要面向离线数据库构建，不是安全关键实时扰动服务。"
+      ],
+      "tags": [
+        "disruption",
+        "multi-machine",
+        "feature-engineering",
+        "ML-ready",
+        "FAIR"
+      ]
+    },
+    {
+      "id": "data-tokamark",
+      "projectId": "tokamark",
+      "deploymentLevel": "D3",
+      "evidenceLevel": "E2",
+      "domain": "数据基座",
+      "title": "TokaMark：MAST 多模态聚变基础模型基准",
+      "year": 2026,
+      "organization": "UKAEA、IBM Research、STFC Hartree Centre",
+      "problem": "聚变 AI 缺少公开、结构化、多模态且统一划分与指标的基准，模型之间难以公平比较，也容易产生 shot 泄漏。",
+      "approach": "在 FAIR-MAST 数据上统一时序、二维剖面、视频、执行器、缺失信号处理、任务定义、训练/验证/测试划分和评估工具。",
+      "devices": [
+        "MAST"
+      ],
+      "evidence": [
+        {
+          "claim": "论文定义 MAST 多模态任务和统一评估协议，并作为 TokaMind 的正式验证基准。",
+          "url": "https://arxiv.org/abs/2602.10132"
+        },
+        {
+          "claim": "IBM 官方发布页确认 TokaMark 与 TokaMind 已开放。",
+          "url": "https://research.ibm.com/blog/fusion-plasma-ai-model"
+        }
+      ],
+      "papers": [
+        {
+          "title": "TokaMark: A Comprehensive Benchmark for MAST Tokamak Plasma Models",
+          "year": 2026,
+          "venue": "arXiv preprint",
+          "url": "https://arxiv.org/abs/2602.10132"
+        }
+      ],
+      "code": [
+        {
+          "name": "TokaMark",
+          "url": "https://github.com/UKAEA-IBM-STFC-Fusion-FMs/tokamark",
+          "status": "official-direct",
+          "relationship": "作者团队官方 benchmark、数据处理和评估仓库。"
+        }
+      ],
+      "data": {
+        "availability": "基于公开 MAST/FAIR-MAST；具体 benchmark 下载与许可见官方仓库",
+        "formats": [
+          "multimodal windows",
+          "time series",
+          "profiles",
+          "videos",
+          "task splits"
+        ],
+        "ai_readiness": "很高，但仅证明 MAST 域内基准能力，不能自动代表跨装置或反应堆泛化。"
+      },
+      "maturity": {
+        "level": "L3",
+        "status": "公开真实装置基准",
+        "basis": "真实 MAST 数据、开放评估代码和基础模型基线。"
+      },
+      "limitations": [
+        "装置单一，跨机、跨运行年代和反应堆尺度外推尚未验证。",
+        "基准任务不等于在线控制或数字孪生闭环。",
+        "预印本和基准仍较新，长期社区复现与治理尚待观察。"
+      ],
+      "tags": [
+        "benchmark",
+        "foundation-model",
+        "MAST",
+        "multimodal",
+        "evaluation"
+      ]
+    },
+    {
+      "id": "hmi-fusion-operational-copilot",
+      "evidenceLevel": "E2",
+      "domain": "人机交互",
+      "title": "Fusion Operational Copilot：基于实验日志的托卡马克 RAG 助手",
+      "year": 2023,
+      "organization": "Carnegie Mellon University、PPPL、MIT PSFC、Princeton University",
+      "problem": "实验 session leader 必须在有限的 between-shot 时间内检索历史日志、理解装置状态并制定下一炮计划；关键词检索无法利用操作日志语义。",
+      "approach": "用 DIII-D 与 Alcator C-Mod 操作日志构建向量检索和 RAG 原型，支持语义搜索、装置特定操作问答和一般托卡马克问答，并通过研究人员调查评估。",
+      "devices": [
+        "DIII-D",
+        "Alcator C-Mod"
+      ],
+      "evidence": [
+        {
+          "claim": "论文报告原型已部署给研究人员使用；前两类任务优于基础模型/关键词搜索，但一般问题并未清晰优于 GPT-4。",
+          "url": "https://openreview.net/forum?id=yGVChrbJ4E"
+        }
+      ],
+      "papers": [
+        {
+          "title": "Towards LLMs as Operational Copilots for Fusion Reactors",
+          "year": 2023,
+          "venue": "NeurIPS 2023 AI for Science Workshop",
+          "url": "https://openreview.net/forum?id=yGVChrbJ4E"
+        }
+      ],
+      "code": [
+        {
+          "name": "Fusion operational copilot implementation",
+          "url": null,
+          "status": "not-public",
+          "relationship": "未发现作者公开的装置日志、索引或可复现实装代码。"
+        }
+      ],
+      "data": {
+        "availability": "DIII-D 与 C-Mod 操作日志未随论文公开",
+        "formats": [
+          "text logs",
+          "retrieval index",
+          "chat interface"
+        ],
+        "ai_readiness": "证明了日志语义检索价值，但需要权限隔离、引用定位、失效知识处理和量化评测。"
+      },
+      "maturity": {
+        "level": "L3",
+        "status": "真实装置知识的研究人员试用原型",
+        "basis": "使用两台装置真实日志并部署试用，但未进入控制权限链。"
+      },
+      "limitations": [
+        "工作坊论文、样本和用户调查规模有限。",
+        "不读取实时诊断，不执行控制，不可视为自主实验智能体。",
+        "一般托卡马克问答中 RAG 未显著优于基础模型。",
+        "无公开代码和日志，难以独立复现。"
+      ],
+      "tags": [
+        "RAG",
+        "copilot",
+        "shot-log",
+        "DIII-D",
+        "human-in-the-loop"
+      ]
+    },
+    {
+      "id": "hmi-west-llm4ppo",
+      "evidenceLevel": "E3",
+      "domain": "人机交互",
+      "title": "WEST LLM4PPO：红外第一壁监测的多模态决策支持",
+      "year": 2026,
+      "organization": "CEA/IRFM、WEST Team",
+      "problem": "长脉冲 WEST 的红外视频和温度曲线需要 Plasma-facing component Protection Officer 快速识别热斑并在炮间给出判断，人工负荷高且一致性有限。",
+      "approach": "在本地部署 LLaVA-NeXT 13B，多模态输入红外图与温度曲线，通过 prompt engineering、LoRA 和专家反馈把 PPO 经验注入模型，并以自然语言提供 post-pulse 决策支持。",
+      "devices": [
+        "WEST C10 campaign（2024-10 至 2024-12）"
+      ],
+      "evidence": [
+        {
+          "claim": "论文称工具在 WEST C10 控制室部署，反馈中 32% 为 OK、41% 为 positive response；所有处理在本地服务器完成。",
+          "url": "https://doi.org/10.1016/j.knosys.2025.114912"
+        }
+      ],
+      "papers": [
+        {
+          "title": "Decision support for in-operation monitoring of the WEST tokamak first wall using multimodal large language model (LLM) on infrared imaging",
+          "year": 2026,
+          "venue": "Knowledge-Based Systems",
+          "url": "https://doi.org/10.1016/j.knosys.2025.114912"
+        }
+      ],
+      "code": [
+        {
+          "name": "LLM4PPO application and fine-tuned weights",
+          "url": null,
+          "status": "not-public",
+          "relationship": "论文说明数据因隐私限制仅可申请，未发现项目代码或权重公开。"
+        }
+      ],
+      "data": {
+        "availability": "真实 WEST 数据需联系作者；训练含 150 组真实图像—prompt 对",
+        "formats": [
+          "infrared images",
+          "temperature curves rendered as images",
+          "expert prompts",
+          "operator feedback"
+        ],
+        "ai_readiness": "高价值的人在回路案例，但数据量小、输出以专家评分为主，需更严格安全与统计评价。"
+      },
+      "maturity": {
+        "level": "L4",
+        "status": "控制室炮间决策支持",
+        "basis": "真实 campaign 现场部署；明确不替代 PPO，也非实时闭环控制。"
+      },
+      "limitations": [
+        "不是实时保护逻辑，最终判定仍由人类专家做出。",
+        "训练集规模小，评价中的主观反馈比例不能替代漏检率、误报警率和安全边界验证。",
+        "数据、代码和权重未公开，跨装置迁移尚未验证。",
+        "将曲线作为图像输入可能损失原始时间序列精度。"
+      ],
+      "tags": [
+        "multimodal-LLM",
+        "infrared",
+        "WEST",
+        "decision-support",
+        "control-room"
+      ]
+    },
+    {
+      "id": "hmi-tokamind",
+      "projectId": "tokamind",
+      "evidenceLevel": "E2",
+      "domain": "数据基座",
+      "primaryDomain": "数据基座",
+      "relatedDomains": [
+        "物理模拟",
+        "智能诊断",
+        "人机交互"
+      ],
+      "deploymentLevel": "D3",
+      "title": "TokaMind：聚变等离子体多模态基础模型",
+      "year": 2026,
+      "organization": "UKAEA、IBM Research、STFC Hartree Centre",
+      "problem": "不同采样率、模态和缺失模式的托卡马克诊断难以在同一模型中预训练并迁移到预测、重建和分类任务。",
+      "approach": "以多模态 token 化、DCT3D 编码、Transformer backbone 和输出适配器预训练 MAST 诊断、剖面、视频与执行器数据，支持冻结/轻量微调。",
+      "devices": [
+        "MAST"
+      ],
+      "evidence": [
+        {
+          "claim": "论文报告在 TokaMark 上除一项任务外均优于基线，且若干任务轻量微调优于同预算从头训练。",
+          "url": "https://arxiv.org/abs/2602.15084"
+        },
+        {
+          "claim": "IBM 与 Hugging Face 官方发布模型、代码和 checkpoint。",
+          "url": "https://research.ibm.com/blog/fusion-plasma-ai-model"
+        }
+      ],
+      "papers": [
+        {
+          "title": "TokaMind: A Multi-Modal Transformer Foundation Model for Tokamak Plasma Dynamics",
+          "year": 2026,
+          "venue": "arXiv preprint / submitted to KDD 2026",
+          "url": "https://arxiv.org/abs/2602.15084"
+        }
+      ],
+      "code": [
+        {
+          "name": "TokaMind",
+          "url": "https://github.com/UKAEA-IBM-STFC-Fusion-FMs/tokamind",
+          "status": "official-direct",
+          "relationship": "作者团队训练与微调代码。"
+        },
+        {
+          "name": "TokaMind model weights",
+          "url": "https://huggingface.co/UKAEA-IBM-STFC/tokamind-base-v2",
+          "status": "official-direct",
+          "relationship": "作者团队模型卡和预训练 checkpoint。"
+        }
+      ],
+      "data": {
+        "availability": "基于公开 TokaMark/FAIR-MAST",
+        "formats": [
+          "time series",
+          "2D profiles",
+          "video",
+          "actuator settings"
+        ],
+        "ai_readiness": "聚变专用基础模型的强基线；尚不是语言助手、实验规划器或在线控制器。"
+      },
+      "maturity": {
+        "level": "L3",
+        "status": "公开基础模型与真实装置离线基准",
+        "basis": "MAST 数据、多任务评价、代码与权重开放。"
+      },
+      "limitations": [
+        "只在 MAST 历史数据上证明，不代表 MAST-U、常规纵横比托卡马克或燃烧等离子体泛化。",
+        "没有装置现场、人在回路或安全关键在线验证。",
+        "基础模型预测误差仍需物理约束、校准和不确定度门控后才能进入数字孪生。"
+      ],
+      "tags": [
+        "foundation-model",
+        "Transformer",
+        "multimodal",
+        "MAST",
+        "transfer-learning"
+      ]
+    },
+    {
+      "id": "hmi-llnl-mada",
+      "evidenceLevel": "E1",
+      "domain": "人机交互",
+      "title": "MADA：惯性聚变靶设计的多智能体设计助手",
+      "year": 2025,
+      "organization": "Lawrence Livermore National Laboratory",
+      "problem": "高能量密度与惯性聚变靶丸的几何设计、输入卡生成、高保真模拟调度和反设计高度依赖少数专家，并需要在 HPC 上运行大量多物理计算。",
+      "approach": "用自然语言和手绘概念触发专用 LLM agents，生成 MARBL 计算输入、提交 HPC 作业、分析结果并迭代几何；论文演示了在高保真代码中搜索到模拟点火设计。",
+      "devices": [
+        "NIF 相关惯性约束聚变设计环境",
+        "LLNL El Capitan/Tuolumne HPC",
+        "非托卡马克"
+      ],
+      "evidence": [
+        {
+          "claim": "LLNL 官方报道开源 LLM 经内部 MARBL 文档微调，能从手绘图和自然语言生成 simulation deck 并运行数千次模拟。",
+          "url": "https://www.llnl.gov/article/53216/llnl-pushes-frontier-of-fusion-target-design-with-ai"
+        },
+        {
+          "claim": "预印本展示多智能体与高阶多物理代码耦合的模拟点火反设计。",
+          "url": "https://arxiv.org/abs/2510.17830"
+        }
+      ],
+      "papers": [
+        {
+          "title": "Multi-Agent Design Assistant for the Simulation of Inertial Fusion Energy",
+          "year": 2025,
+          "venue": "arXiv preprint",
+          "url": "https://arxiv.org/abs/2510.17830"
+        }
+      ],
+      "code": [
+        {
+          "name": "MADA / MARBL integration",
+          "url": null,
+          "status": "not-public",
+          "relationship": "未发现可公开复现的 MADA 编排、内部文档数据或 MARBL 全套应用代码。"
+        }
+      ],
+      "data": {
+        "availability": "内部 MARBL 文档、靶设计和大量仿真产物未公开",
+        "formats": [
+          "natural-language design request",
+          "sketch/image",
+          "simulation decks",
+          "HPC results"
+        ],
+        "ai_readiness": "展示了 agent—solver—HPC 闭环，但证据是计算设计，不是 NIF 实验靶的自主执行。"
+      },
+      "maturity": {
+        "level": "L2",
+        "status": "高保真计算原型",
+        "basis": "真实生产级 HPC/代码环境中的模拟演示，尚无物理实验闭环。"
+      },
+      "limitations": [
+        "惯性约束聚变方法与托卡马克控制/实验规划不能直接等同。",
+        "模拟点火不等于实验点火或工程可制造性验证。",
+        "代码、训练语料和高保真求解器未开放。",
+        "自主动作仍需工件门控、专家审核和资源权限边界。"
+      ],
+      "tags": [
+        "agent",
+        "ICF",
+        "inverse-design",
+        "HPC",
+        "human-in-the-loop"
+      ]
+    },
+    {
+      "id": "hmi-plasmax-lingshu",
+      "evidenceLevel": "E1",
+      "domain": "人机交互",
+      "title": "PlasmaX：灵枢 PCS 的可视化与 RAG 智能开发环境",
+      "year": 2026,
+      "organization": "中国科学院合肥物质科学研究院等离子体物理研究所",
+      "problem": "PCS 算法开发涉及复杂 XML 配置、多文件一致性、C++ 模板和装置专用知识，阻碍控制算法快速集成和验证。",
+      "approach": "以 VS Code extension 实现 XML 模型与交互式 webview 双向同步、模板代码生成和本地 RAG+LLM 问答；官方报告称平均自动生成约 79.4%/近 80% 的算法代码。",
+      "devices": [
+        "EAST",
+        "面向 BEST",
+        "面向 CFETR"
+      ],
+      "evidence": [
+        {
+          "claim": "2026 年论文描述 PlasmaX 的可视化、代码生成和 RAG 问答模块。",
+          "url": "https://doi.org/10.1016/j.fusengdes.2026.115831"
+        },
+        {
+          "claim": "IAEA 2026 官方会议报告称 PlasmaX 为 EAST 灵枢辅助平台，可生成近 80% 算法代码并提供 AI agent 指导。",
+          "url": "https://conferences.iaea.org/event/450/contributions/40828/"
+        }
+      ],
+      "papers": [
+        {
+          "title": "Design and implementation of a visual and intelligent integrated development environment for the Lingshu plasma control system",
+          "year": 2026,
+          "venue": "Fusion Engineering and Design",
+          "url": "https://doi.org/10.1016/j.fusengdes.2026.115831"
+        },
+        {
+          "title": "Lingshu: A modular real-time control system framework for experimental tokamaks",
+          "year": 2025,
+          "venue": "Fusion Engineering and Design",
+          "url": "https://doi.org/10.1016/j.fusengdes.2025.115309"
+        }
+      ],
+      "code": [
+        {
+          "name": "PlasmaX VS Code extension",
+          "url": null,
+          "status": "not-public",
+          "relationship": "未找到 ASIPP 官方公开仓库或可安装扩展。"
+        },
+        {
+          "name": "Lingshu PCS",
+          "url": null,
+          "status": "not-public",
+          "relationship": "装置生产 PCS 是 PlasmaX 的目标系统，但未公开源码。"
+        }
+      ],
+      "data": {
+        "availability": "PCS 配置、知识库、生成代码和装置验证数据未公开",
+        "formats": [
+          "XML algorithm model",
+          "C++ code skeleton",
+          "webview model",
+          "RAG knowledge base"
+        ],
+        "ai_readiness": "工程价值明确，但 RAG 问答与实际 9000 炮以上 Lingshu 控制业绩应严格区分；后者不能直接归因于 LLM。"
+      },
+      "maturity": {
+        "level": "L3",
+        "status": "装置 PCS 开发辅助原型",
+        "basis": "与已在 EAST 使用的 Lingshu 工具链对接；未证明 LLM 生成代码未经人工审核直接上线。"
+      },
+      "limitations": [
+        "代码生成覆盖率不是正确性、实时性或安全性指标。",
+        "需要静态检查、模型在环、软件在环、硬件在环和变更审批闭环。",
+        "未公开代码、数据和系统化人因评价。",
+        "RAG 技术支持不等于自主 PCS 控制智能体。"
+      ],
+      "tags": [
+        "IDE",
+        "RAG",
+        "code-generation",
+        "EAST",
+        "PCS"
+      ]
+    },
+    {
+      "id": "hmi-foundation-model-visual-logbook-concept",
+      "evidenceLevel": "E0",
+      "domain": "人机交互",
+      "title": "实验聚变基础模型与自动视觉日志：概念路线",
+      "year": 2025,
+      "organization": "Princeton Plasma Physics Laboratory",
+      "problem": "融合实验的视觉诊断、事件链和操作日志尚未被统一的预训练模型利用，炮间分析与场景规划仍高度依赖人工。",
+      "approach": "观点论文提出以视频/图像基础模型、少样本微调和自动视觉日志，将诊断事件关联到放电时间线，并探索生成式场景规划。",
+      "devices": [
+        "概念上适用于 DIII-D、NSTX-U、ITER 等实验装置",
+        "论文未报告特定装置生产部署"
+      ],
+      "evidence": [
+        {
+          "claim": "论文明确声明 foundation models 尚未在聚变实验生产环境采用，示意自动 logbook 是未来用例。",
+          "url": "https://doi.org/10.3389/fphy.2024.1531334"
+        }
+      ],
+      "papers": [
+        {
+          "title": "AI foundation models for experimental fusion tasks",
+          "year": 2025,
+          "venue": "Frontiers in Physics",
+          "url": "https://doi.org/10.3389/fphy.2024.1531334"
+        }
+      ],
+      "code": [
+        {
+          "name": "Automated visual logbook reference implementation",
+          "url": null,
+          "status": "not-public",
+          "relationship": "该工作是 perspective/路线论文，未给出生产模型、代码或装置数据。"
+        }
+      ],
+      "data": {
+        "availability": "无配套数据集",
+        "formats": [
+          "conceptual video/image tokens",
+          "event timeline",
+          "text logbook"
+        ],
+        "ai_readiness": "属于需求与架构启发，不应作为已验证成果计入装置能力。"
+      },
+      "maturity": {
+        "level": "L1",
+        "status": "同行评审概念",
+        "basis": "有正式论文，但无配套代码、数据或装置验证。"
+      },
+      "limitations": [
+        "没有实验结果或基准。",
+        "没有公开实现。",
+        "自动日志中的因果叙述、置信度和责任边界尚未解决。"
+      ],
+      "tags": [
+        "perspective",
+        "visual-logbook",
+        "foundation-model",
+        "scenario-planning",
+        "concept"
+      ]
+    },
+    {
+      "id": "integration-fuse-jl",
+      "projectId": "fuse-jl",
+      "evidenceLevel": "E1",
+      "domain": "总体集成",
+      "primaryDomain": "总体集成",
+      "relatedDomains": [
+        "能量转化"
+      ],
+      "title": "FUSE.jl：融合先导电厂多保真集成设计与优化",
+      "year": 2024,
+      "organization": "General Atomics / Project Torrey Pines 与合作团队",
+      "problem": "传统 0D systems code 难以把等离子体、工程、控制和经济模型在统一可微/可优化工作流中自洽连接，也难以快速替换不同保真度模型。",
+      "approach": "Julia 模块化 actor 架构，以 IMAS 风格数据结构连接一阶、降阶、机器学习和高保真模型，支持稳态/时变场景、参数扫描、并行多目标优化和 UQ。",
+      "devices": [
+        "Fusion Pilot Plant 概念",
+        "ITER-like 与 DIII-D/反应堆场景",
+        "可配置轴对称托卡马克设计"
+      ],
+      "evidence": [
+        {
+          "claim": "框架论文明确包括物理、工程、控制、成本和多保真/机器学习模型的自洽设计优化。",
+          "url": "https://arxiv.org/abs/2409.05894"
+        }
+      ],
+      "papers": [
+        {
+          "title": "FUSE (Fusion Synthesis Engine): A Next Generation Framework for Integrated Design of Fusion Pilot Plants",
+          "year": 2024,
+          "venue": "arXiv preprint / Nuclear Fusion submission",
+          "url": "https://arxiv.org/abs/2409.05894"
+        }
+      ],
+      "code": [
+        {
+          "name": "FUSE.jl",
+          "url": "https://github.com/ProjectTorreyPines/FUSE.jl",
+          "status": "official-direct",
+          "relationship": "Apache-2.0 官方主框架。"
+        },
+        {
+          "name": "IMAS.jl",
+          "url": "https://github.com/ProjectTorreyPines/IMAS.jl",
+          "status": "official-enabling",
+          "relationship": "FUSE 生态的数据结构、物理和工程方法。"
+        }
+      ],
+      "data": {
+        "availability": "代码和示例开放；高保真外部代码、输入数据及商业组件取决于各自许可",
+        "formats": [
+          "Julia IMAS-like data dictionary",
+          "actor state",
+          "design variables",
+          "optimization histories"
+        ],
+        "ai_readiness": "高，原生支持 surrogate 与多保真替换；但数字孪生还需要装置实时数据、状态估计和持续校准。"
+      },
+      "maturity": {
+        "level": "L3",
+        "status": "开放的先进集成设计框架",
+        "basis": "多域计算和设计案例已展示，但不是已投运聚变电厂孪生。"
+      },
+      "limitations": [
+        "多数验证仍是代码对比和概念设计一致性，不是电厂运行数据验证。",
+        "不同 actor 的适用边界和 UQ 完整性不均衡。",
+        "与 CAD/PLM、资产配置、在线传感器和安全论证尚非闭环。",
+        "Julia 生态与既有 Fortran/C++/商业 CAE 的组织集成成本需评估。"
+      ],
+      "tags": [
+        "systems-design",
+        "multi-fidelity",
+        "Julia",
+        "optimization",
+        "pilot-plant"
+      ]
+    },
+    {
+      "id": "integration-process",
+      "projectId": "process",
+      "evidenceLevel": "E1",
+      "domain": "总体集成",
+      "primaryDomain": "总体集成",
+      "relatedDomains": [
+        "能量转化"
+      ],
+      "title": "PROCESS：聚变电厂 systems code 与约束优化",
+      "year": 1987,
+      "organization": "UK Atomic Energy Authority",
+      "problem": "需要在大量相互依赖的物理、磁体、热工、能量转换、建筑、可用率和经济约束下求得自洽电厂设计点。",
+      "approach": "以 0D/1D 简化模型和非线性约束求解器同时计算整个电厂，允许选择约束和优化目标，如电价、净电功率或 Q；保留 tracking 和测试基线。",
+      "devices": [
+        "EUROfusion DEMO",
+        "UK STEP Prototype Powerplant",
+        "通用 tokamak power-plant concepts",
+        "部分 stellarator systems studies"
+      ],
+      "evidence": [
+        {
+          "claim": "UKAEA 官方说明 PROCESS 被 EUROfusion DEMO 和 UK STEP 使用，范围覆盖热转换和建筑。",
+          "url": "https://www.ukaea.org/service/process/"
+        },
+        {
+          "claim": "STEP 概念设计论文以 PROCESS 生成初始设计点，再与 JETTO、FIESTA、Bluemira 等增加保真度。",
+          "url": "https://doi.org/10.1016/j.fusengdes.2024.114238"
+        }
+      ],
+      "papers": [
+        {
+          "title": "PROCESS: a systems code for fusion power plants – Part 1: Physics",
+          "year": 2014,
+          "venue": "Fusion Engineering and Design",
+          "url": "https://doi.org/10.1016/j.fusengdes.2014.09.018"
+        },
+        {
+          "title": "PROCESS: a systems code for fusion power plants – Part 2: Engineering",
+          "year": 2016,
+          "venue": "Fusion Engineering and Design",
+          "url": "https://arxiv.org/abs/1601.06147"
+        }
+      ],
+      "code": [
+        {
+          "name": "PROCESS",
+          "url": "https://github.com/ukaea/PROCESS",
+          "status": "official-direct",
+          "relationship": "UKAEA MIT-licensed Python 官方实现，含示例、测试和 tracking。"
+        }
+      ],
+      "data": {
+        "availability": "代码与典型输入开放；项目设计假设和专有技术数据未必开放",
+        "formats": [
+          "input files",
+          "scalar design variables",
+          "constraint residuals",
+          "optimization outputs"
+        ],
+        "ai_readiness": "适合作为快速 design-space oracle、代理模型数据生成和约束筛选；不适合作为动态状态估计器。"
+      },
+      "maturity": {
+        "level": "L4",
+        "status": "正式电厂概念设计 systems code",
+        "basis": "DEMO、STEP 多年设计应用和公开测试跟踪。"
+      },
+      "limitations": [
+        "0D/1D 简化关系不表达局部场、瞬态、制造细节和故障传播。",
+        "输出强烈依赖用户启用的约束与技术假设。",
+        "不是运行时双向同步的数字孪生。",
+        "版本 3 重构阶段 API 稳定性需关注。"
+      ],
+      "tags": [
+        "systems-code",
+        "DEMO",
+        "STEP",
+        "optimization",
+        "economics"
+      ]
+    },
+    {
+      "id": "integration-faroes",
+      "projectId": "faroes",
+      "evidenceLevel": "E1",
+      "domain": "总体集成",
+      "primaryDomain": "总体集成",
+      "relatedDomains": [
+        "能量转化"
+      ],
+      "title": "FAROES：基于 OpenMDAO 的可导聚变 systems code",
+      "year": 2022,
+      "organization": "Princeton University / PPPL collaboration",
+      "problem": "需要在反应堆几何、等离子体性能、热负荷和成本之间做梯度优化，并分析如正/负三角度等设计选择的系统级经济影响。",
+      "approach": "把 Menard 等 0D tokamak spreadsheet 模型迁入 Python/OpenMDAO，以显式组件、耦合变量和成本模型构造可优化的稳态 DEMO-like 反应堆。",
+      "devices": [
+        "DEMO2-like steady-state reactor",
+        "概念 tokamak reactors"
+      ],
+      "evidence": [
+        {
+          "claim": "Nuclear Fusion 论文使用 FAROES 比较负三角度和正三角度 DEMO-like 设计的 LCOE 与热负荷。",
+          "url": "https://doi.org/10.1088/1741-4326/ac62f6"
+        },
+        {
+          "claim": "作者报告明确说明该模型为 0D、基于 OpenMDAO，并指出完整说明稿当时仍在准备。",
+          "url": "https://www.osti.gov/servlets/purl/1869945"
+        }
+      ],
+      "papers": [
+        {
+          "title": "To dee or not to dee: costs and benefits of altering the triangularity of a steady-state DEMO-like reactor",
+          "year": 2022,
+          "venue": "Nuclear Fusion",
+          "url": "https://doi.org/10.1088/1741-4326/ac62f6"
+        }
+      ],
+      "code": [
+        {
+          "name": "FAROES",
+          "url": null,
+          "status": "not-public",
+          "relationship": "未检索到作者/机构官方公开仓库；2022 官方报告称计划完成后开放。"
+        },
+        {
+          "name": "OpenMDAO",
+          "url": "https://github.com/OpenMDAO/OpenMDAO",
+          "status": "official-enabling",
+          "relationship": "FAROES 使用的 NASA 官方多学科优化框架，不包含 FAROES 聚变模型本身。"
+        }
+      ],
+      "data": {
+        "availability": "论文参数和部分结果可见；完整模型代码未公开",
+        "formats": [
+          "OpenMDAO variables",
+          "0D reactor parameters",
+          "cost/LCOE outputs"
+        ],
+        "ai_readiness": "可导计算图适合优化和 surrogate，但代码不可得阻碍复现和数字孪生集成。"
+      },
+      "maturity": {
+        "level": "L2",
+        "status": "论文级 systems optimization code",
+        "basis": "有同行评审设计研究，但无公开代码或装置运行验证。"
+      },
+      "limitations": [
+        "0D 模型忽略 Shafranov shift、局部输运和多种关键物理，论文已明确说明。",
+        "对三角度和成本结论强依赖约束与标定。",
+        "没有公开仓库，难以核查版本、测试和复现。"
+      ],
+      "tags": [
+        "OpenMDAO",
+        "systems-code",
+        "LCOE",
+        "negative-triangularity",
+        "not-public"
+      ]
+    },
+    {
+      "id": "integration-openmdao",
+      "evidenceLevel": "E1",
+      "domain": "总体集成",
+      "title": "OpenMDAO：聚变多学科分析与优化的通用使能框架",
+      "year": 2012,
+      "organization": "NASA Glenn Research Center 与 OpenMDAO community",
+      "problem": "跨学科系统模型包含强耦合、隐式方程和高维设计变量，若无统一计算图、导数和求解器接口，优化成本过高。",
+      "approach": "Python 组件/组计算图、非线性与线性求解器、解析/自动/复步导数、总导数和稀疏并行优化；聚变项目可把物理、磁体、热工和成本组件嵌入。",
+      "devices": [
+        "FAROES reactor models",
+        "通用聚变设计工作流",
+        "本身非装置专用"
+      ],
+      "evidence": [
+        {
+          "claim": "官方论文给出 Newton 型耦合求解和利用问题结构的高效总导数体系。",
+          "url": "https://doi.org/10.1007/s00158-019-02211-z"
+        },
+        {
+          "claim": "FAROES 论文/报告明确使用 OpenMDAO 构建 0D tokamak 优化模型。",
+          "url": "https://www.osti.gov/servlets/purl/1869945"
+        }
+      ],
+      "papers": [
+        {
+          "title": "OpenMDAO: an open-source framework for multidisciplinary design, analysis, and optimization",
+          "year": 2019,
+          "venue": "Structural and Multidisciplinary Optimization",
+          "url": "https://doi.org/10.1007/s00158-019-02211-z"
+        }
+      ],
+      "code": [
+        {
+          "name": "OpenMDAO",
+          "url": "https://github.com/OpenMDAO/OpenMDAO",
+          "status": "official-direct",
+          "relationship": "NASA/OpenMDAO 官方框架；聚变领域模型需另行提供。"
+        }
+      ],
+      "data": {
+        "availability": "框架完全开放，不自带聚变实验数据",
+        "formats": [
+          "Python components",
+          "design variables",
+          "constraints",
+          "derivative metadata"
+        ],
+        "ai_readiness": "适合把 AI surrogate 插入多学科优化并进行梯度传播，但没有聚变语义、V&V 或实时数据管理。"
+      },
+      "maturity": {
+        "level": "L4",
+        "status": "成熟通用 MDO 框架；聚变应用成熟度取决于上层模型",
+        "basis": "NASA 和多行业长期使用，FAROES 是聚变实例。"
+      },
+      "limitations": [
+        "不是聚变 systems code，不能独立给出任何可信聚变结果。",
+        "组件导数、尺度和收敛质量由建模者负责。",
+        "实时协同、配置管理和安全认证不在核心范围。"
+      ],
+      "tags": [
+        "MDO",
+        "optimization-framework",
+        "derivatives",
+        "surrogate-integration",
+        "NASA"
+      ]
+    },
+    {
+      "id": "integration-step-omfit",
+      "evidenceLevel": "E2",
+      "domain": "总体集成",
+      "title": "STEP/OMFIT：稳定性—输运—平衡—台基自洽集成模拟",
+      "year": 2023,
+      "organization": "General Atomics、PPPL、EPFL、UKAEA 等 AToM/OMFIT collaboration",
+      "problem": "单独的 equilibrium、transport、pedestal 和 MHD stability 代码会产生不一致状态，难以对执行器目标和反应堆场景做可追溯迭代。",
+      "approach": "在 OMFIT 中把每个 physics code 封装为读取/写回 OMAS/IMAS 状态的 step，保留每步历史与 provenance，支持开环、反馈和优化；STEP-0D 从全局量生成理论自洽场景。",
+      "devices": [
+        "DIII-D",
+        "NSTX/NSTX-U",
+        "ITER",
+        "ARC",
+        "EU-DEMO",
+        "CFETR"
+      ],
+      "evidence": [
+        {
+          "claim": "STEP 论文说明耦合稳定性、输运、平衡、台基、加热/电流驱动和加料，并使用集中 IMAS 状态。",
+          "url": "https://arxiv.org/abs/2305.09683"
+        },
+        {
+          "claim": "STEP-0D 以 ITPA 数据库验证，报告能量约束时间平均相对误差低于 19%，并预测 ARC、EU-DEMO、CFETR。",
+          "url": "https://arxiv.org/abs/2305.07285"
+        }
+      ],
+      "papers": [
+        {
+          "title": "Flexible, integrated modeling of tokamak stability, transport, equilibrium, and pedestal physics",
+          "year": 2023,
+          "venue": "Plasma Physics and Controlled Fusion",
+          "url": "https://arxiv.org/abs/2305.09683"
+        },
+        {
+          "title": "Elevating zero dimensional global scaling predictions to self-consistent theory-based simulations",
+          "year": 2023,
+          "venue": "Nuclear Fusion",
+          "url": "https://arxiv.org/abs/2305.07285"
+        }
+      ],
+      "code": [
+        {
+          "name": "OMFIT/STEP source",
+          "url": "https://github.com/gafusion/OMFIT-source",
+          "status": "not-public",
+          "relationship": "官方源码仓库需要填写 OMFIT 用户协议获得权限，不能视为无条件公开代码。"
+        },
+        {
+          "name": "OMAS",
+          "url": "https://github.com/gafusion/omas",
+          "status": "official-enabling",
+          "relationship": "STEP 模块间状态交换的公开数据层。"
+        }
+      ],
+      "data": {
+        "availability": "OMFIT/STEP 访问受用户协议约束；OMAS 公开；各 physics code 和装置数据权限不一",
+        "formats": [
+          "OMAS/ODS",
+          "IMAS",
+          "OMFIT project tree",
+          "code-specific inputs/outputs"
+        ],
+        "ai_readiness": "适合 surrogate 替换、执行器优化和 scenario generation；仍是集成等离子体模拟，不是全厂在线孪生。"
+      },
+      "maturity": {
+        "level": "L4",
+        "status": "多装置集成预测与 predict-first 工作流",
+        "basis": "DIII-D 等装置分析和多反应堆场景验证。"
+      },
+      "limitations": [
+        "主要覆盖等离子体核心/台基/稳定性，工程全厂、辅机、故障和维护未形成同等闭环。",
+        "计算时延通常不满足实时孪生。",
+        "OMFIT 源码访问受协议约束，复现还取决于各外部 physics code。",
+        "不同模块的误差和相关不确定度尚难完整传播。"
+      ],
+      "tags": [
+        "integrated-plasma-modeling",
+        "OMFIT",
+        "STEP",
+        "OMAS",
+        "predict-first"
+      ]
+    },
+    {
+      "id": "integration-bluemira",
+      "projectId": "bluemira",
+      "evidenceLevel": "E1",
+      "domain": "总体集成",
+      "primaryDomain": "总体集成",
+      "relatedDomains": [
+        "能量转化"
+      ],
+      "title": "Bluemira：面向聚变电厂的参数化多保真设计框架",
+      "year": 2023,
+      "organization": "UK Atomic Energy Authority 与 Fusion Power Plant Framework community",
+      "problem": "聚变概念设计中 CAD、平衡、线圈、磁静力、结构、燃料、功率平衡和中子学几何往往由不同团队手工迭代，更新一个设计点需要数月。",
+      "approach": "以 Python Designer/Builder/ParameterFrame 把参数化几何、优化和多领域分析组合成可自动执行的设计 workflow，支持从快速模块到外部高保真代码以及 CAD/DAGMC 输出。",
+      "devices": [
+        "UK STEP Prototype Powerplant",
+        "EUROfusion EU-DEMO",
+        "通用 tokamak/stellarator concepts"
+      ],
+      "evidence": [
+        {
+          "claim": "UKAEA 官方称典型概念设计可由数月缩短到分钟，并列出 STEP 与 EU-DEMO 用例。",
+          "url": "https://www.ukaea.org/service/bluemira/"
+        },
+        {
+          "claim": "STEP PF 线圈论文展示在 Bluemira 中加入超导临界电流和 keep-in-zone 约束的嵌套优化。",
+          "url": "https://doi.org/10.1016/j.fusengdes.2025.115357"
+        }
+      ],
+      "papers": [
+        {
+          "title": "Conceptual design workflow for the STEP Prototype Powerplant",
+          "year": 2024,
+          "venue": "Fusion Engineering and Design",
+          "url": "https://doi.org/10.1016/j.fusengdes.2024.114238"
+        },
+        {
+          "title": "Optimisation of STEP poloidal field coils with superconducting coil constraints in STEP-Bluemira power plant design framework",
+          "year": 2025,
+          "venue": "Fusion Engineering and Design",
+          "url": "https://doi.org/10.1016/j.fusengdes.2025.115357"
+        }
+      ],
+      "code": [
+        {
+          "name": "bluemira",
+          "url": "https://github.com/Fusion-Power-Plant-Framework/bluemira",
+          "status": "official-direct",
+          "relationship": "UKAEA 官方 LGPL 开源主框架。"
+        },
+        {
+          "name": "eqdsk",
+          "url": "https://github.com/Fusion-Power-Plant-Framework/eqdsk",
+          "status": "official-enabling",
+          "relationship": "同一官方组织的 equilibrium 数据读写工具。"
+        }
+      ],
+      "data": {
+        "availability": "框架、示例和部分 baseline 开放；STEP 受控设计数据和外部商业分析未必开放",
+        "formats": [
+          "JSON parameters",
+          "CAD/STEP",
+          "DAGMC",
+          "equilibrium",
+          "analysis results"
+        ],
+        "ai_readiness": "参数化和自动 workflow 适合生成训练数据、主动学习和优化；缺少运行资产同步。"
+      },
+      "maturity": {
+        "level": "L4",
+        "status": "正式概念设计框架",
+        "basis": "STEP 和 EU-DEMO 设计流程使用、公开代码和工程论文。"
+      },
+      "limitations": [
+        "主要是 design twin，不是随装置状态更新的 operational twin。",
+        "分钟级快速模块通常是简化模型，不能替代详细安全和工程分析。",
+        "外部代码耦合的版本、网格、材料数据和验证证据需要独立治理。",
+        "三维配置、制造公差和 as-built/as-maintained 闭环尚需 PLM/MBSE 集成。"
+      ],
+      "tags": [
+        "design-framework",
+        "CAD",
+        "STEP",
+        "EU-DEMO",
+        "multi-fidelity"
+      ]
+    },
+    {
+      "id": "integration-powerbalance",
+      "projectId": "powerbalance",
+      "evidenceLevel": "E1",
+      "domain": "总体集成",
+      "primaryDomain": "总体集成",
+      "relatedDomains": [
+        "能量转化"
+      ],
+      "title": "Power Balance Models：托卡马克全厂动态净电功率模型",
+      "year": 2023,
+      "organization": "UK Atomic Energy Authority",
+      "problem": "聚变电厂净输出取决于磁体、低温、加热与电流驱动、真空、燃料循环等厂用负荷和热—电转换的动态耦合，0D 静态指标无法反映脉冲和启动过程。",
+      "approach": "用 OpenModelica 建立主要电厂子系统的方程模型，以 Python CLI/API 配置 plasma scenario、结构参数、参数扫描和插件，并计算随时间变化的发电与用电。",
+      "devices": [
+        "UK STEP Prototype Powerplant",
+        "通用 D-T tokamak reactor designs"
+      ],
+      "evidence": [
+        {
+          "claim": "论文描述覆盖主要 tokamak 子系统的时变功率消耗与发电，并明确公开 GitHub 代码。",
+          "url": "https://doi.org/10.1016/j.fusengdes.2023.113563"
+        },
+        {
+          "claim": "UKAEA 报告称该模型在 STEP 早期设计中得到广泛使用。",
+          "url": "https://scientific-publications.ukaea.uk/wp-content/uploads/UKAEA-STEP-CP2310.pdf"
+        }
+      ],
+      "papers": [
+        {
+          "title": "An open-source power balance model for the estimation of tokamak net electrical power output",
+          "year": 2023,
+          "venue": "Fusion Engineering and Design",
+          "url": "https://doi.org/10.1016/j.fusengdes.2023.113563"
+        }
+      ],
+      "code": [
+        {
+          "name": "powerbalance",
+          "url": "https://github.com/ukaea/powerbalance",
+          "status": "official-direct",
+          "relationship": "UKAEA 官方 Python/OpenModelica 框架与模型。"
+        },
+        {
+          "name": "OpenModelica",
+          "url": "https://github.com/OpenModelica/OpenModelica",
+          "status": "official-enabling",
+          "relationship": "PBM 的开源方程求解后端。"
+        }
+      ],
+      "data": {
+        "availability": "模型和默认参数开放；详细 STEP 子系统设计输入可能受控",
+        "formats": [
+          "Modelica",
+          "TOML configuration",
+          "MAT plasma profiles",
+          "time-series outputs"
+        ],
+        "ai_readiness": "可生成动态 surrogate 训练集并服务能量管理策略，但当前精度定位为早期概念设计 ballpark。"
+      },
+      "maturity": {
+        "level": "L4",
+        "status": "STEP 概念设计中的动态全厂功率模型",
+        "basis": "公开模型、论文验证与 STEP 实际设计使用。"
+      },
+      "limitations": [
+        "论文和 UKAEA 报告明确将结果定位为概念阶段近似。",
+        "尚无真实聚变发电厂数据验证。",
+        "需要与热工水力、电气暂态、控制保护和电网模型建立更高保真接口。",
+        "不是实时能量管理系统。"
+      ],
+      "tags": [
+        "power-balance",
+        "Modelica",
+        "STEP",
+        "balance-of-plant",
+        "dynamic-model"
+      ]
+    },
+    {
+      "id": "integration-mpex-ai-digital-twins",
+      "evidenceLevel": "E1",
+      "domain": "总体集成",
+      "title": "MPEX AI Digital Twins：实验—模拟—代理—智能体闭环原型",
+      "year": 2025,
+      "organization": "Oak Ridge National Laboratory、PPPL 及 DOE FES/American Science Cloud/Genesis Mission 合作团队",
+      "problem": "MPEX 需要在装置投运早期快速达到目标等离子体条件、评估钨材料损伤并把多物理模拟、HPC、实验数据和材料搜索连接起来。",
+      "approach": "规划 Helicon AI Hot-Spot Controller、e-beam/MPEX damage-assessment twin 和材料评估模型；Galaxy 接口连接物理代码与 DOE HPC，未来允许科学家或 AI agents 执行、验证和分析。",
+      "devices": [
+        "Proto-MPEX（历史验证基础）",
+        "MPEX（建设/投运准备）",
+        "JUDITH electron-beam facility data"
+      ],
+      "evidence": [
+        {
+          "claim": "ORNL 官方 2026 研究亮点明确提出自动控制、损伤评估、AI-guided experiment/simulation 和 Genesis agent 平台。",
+          "url": "https://www.ornl.gov/research-highlight/ai-accelerated-fusion-materials-test-facility"
+        },
+        {
+          "claim": "六个月里程碑报告说明 Galaxy 已连接部分主物理代码与 DOE HPC，但与 MPEX DAQ 的连接仍用将来时描述。",
+          "url": "https://arxiv.org/abs/2605.12116"
+        }
+      ],
+      "papers": [
+        {
+          "title": "MPEX AI Digital Twins",
+          "year": 2025,
+          "venue": "ORNL technical report",
+          "url": "https://doi.org/10.2172/3002172"
+        },
+        {
+          "title": "MPEX AI Digital Twins Milestone Report",
+          "year": 2026,
+          "venue": "DOE FES/AmSC milestone report",
+          "url": "https://arxiv.org/abs/2605.12116"
+        }
+      ],
+      "code": [
+        {
+          "name": "MPEX AI Digital Twins integration code",
+          "url": null,
+          "status": "not-public",
+          "relationship": "未发现官方公开的 MPEX 端到端 twin、controller 或 agent 仓库。"
+        },
+        {
+          "name": "Galaxy",
+          "url": "https://github.com/galaxyproject/galaxy",
+          "status": "official-enabling",
+          "relationship": "项目用于编排/接口的通用开源平台，不包含 MPEX 私有工作流和物理代码配置。"
+        }
+      ],
+      "data": {
+        "availability": "项目主要生成中的模拟和实验数据尚未形成公开训练集",
+        "formats": [
+          "physics simulation outputs",
+          "HPC workflow artifacts",
+          "DAQ data（planned connection）",
+          "material damage metrics"
+        ],
+        "ai_readiness": "架构最接近闭环 AI digital twin，但截至里程碑报告仍处建设和演示阶段。"
+      },
+      "maturity": {
+        "level": "L2",
+        "status": "建设期里程碑原型",
+        "basis": "有 Proto-MPEX 既有模型基础和 HPC 接口进展，但 MPEX 实验—AI 闭环尚未完成装置运行验证。"
+      },
+      "limitations": [
+        "MPEX 是线性等离子体材料装置，不是 tokamak 或聚变电厂。",
+        "多项能力在报告中仍是 planned/on track，不能写成已生产部署。",
+        "代码、数据和 V&V 证据尚未开放。",
+        "AI agent 必须受到权限、工件验证、物理约束和人工审批门控。"
+      ],
+      "tags": [
+        "digital-twin",
+        "agent",
+        "MPEX",
+        "plasma-material-interaction",
+        "HPC"
+      ]
+    }
+  ]
+}

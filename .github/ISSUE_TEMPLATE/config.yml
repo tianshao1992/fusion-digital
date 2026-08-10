@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Private security or sensitive-data report
+    url: mailto:tianshao1992@gmail.com
+    about: Do not place credentials, restricted device data or partner-confidential material in a public issue.

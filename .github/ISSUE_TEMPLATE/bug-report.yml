@@ -1,0 +1,41 @@
+name: Website bug
+description: Report a reproducible display, interaction, download or data problem.
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: input
+    id: page
+    attributes:
+      label: Page or route
+      placeholder: /ai
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction steps
+      placeholder: "1. Open ...\n2. Select ...\n3. Observe ..."
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Browser and device
+      placeholder: Edge 140 / Windows 11
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Data safety
+      options:
+        - label: This report contains no credentials, private device data or partner-confidential material.
+          required: true
