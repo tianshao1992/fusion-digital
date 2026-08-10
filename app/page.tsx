@@ -1,18 +1,19 @@
+import BrandWordmark from './components/BrandWordmark';
 import SiteFooter from './components/SiteFooter';
 import SiteNav from './components/SiteNav';
 import './portal.css';
 
 const domains = [
-  {id:'01', status:'已开放', title:'物理模拟', en:'PHYSICS', copy:'从平衡、输运、MHD、边界到中子学与整厂系统模型，建立多保真物理地图和集成模拟证据链。', href:'/physics', figure:'/figures/physics-stack-image2-v2.png', meta:'14 类物理域 · 140+ 代码/平台'},
-  {id:'02', status:'已开放', title:'工程仿真', en:'ENGINEERING', copy:'把等离子体载荷连接到电磁、结构、磁体、热流体、中子、氚、安全与维护的工程裕量。', href:'/engineering', figure:'/figures/engineering-tokamak-systems-image2-v2.png', meta:'8 类工程域 · 55 个工具组'},
-  {id:'03', status:'规划中', title:'集成控制', en:'INTEGRATED CONTROL', copy:'连接 DINA、MEQ、场景规划、状态估计、执行器、保护与控制器，形成可回放、可验证的闭环。', href:'/#roadmap', figure:'/figures/dina-meq-architecture-image2-v2.png', meta:'控制服务 · 场景编排 · SIL/HIL'},
-  {id:'04', status:'规划中', title:'智能诊断', en:'INTELLIGENT DIAGNOSTICS', copy:'融合诊断几何、合成观测、信号质量、数据同化和异常识别，把仪器信号转化为可信状态。', href:'/#roadmap', figure:'/figures/experiment-model-control-image2-v3.png', meta:'合成诊断 · 状态估计 · 健康评估'},
-  {id:'05', status:'规划中', title:'能量转化', en:'ENERGY CONVERSION', copy:'贯通包层热取出、一次/二次回路、蒸汽或先进发电循环、厂用电与电网，追踪从聚变热功率到稳定净电力的效率与约束。', href:'/#roadmap', figure:'/figures/fusion-plant-cutaway-image2-v5.png', meta:'包层热取出 · 热力循环 · 厂用电 · 电网'},
-  {id:'06', status:'规划中', title:'辅机模拟', en:'AUXILIARY SYSTEMS', copy:'模拟真空、低温、加热与电流驱动、燃料与氚处理、水冷和电源等辅助系统，评估动态负荷、联锁、故障传播与厂用能耗。', href:'/#roadmap', figure:'/figures/engineering-blanket-coupling-image2-v2.png', meta:'真空 · 低温 · 燃料 · 冷却 · 电源'},
-  {id:'07', status:'规划中', title:'人机交互', en:'HUMAN–MACHINE INTERACTION', copy:'面向运行员、物理学家和工程师组织态势感知、告警解释、方案比较、沉浸式操作与人在回路审批。', href:'/#roadmap', figure:'/figures/experiment-model-control-image2-v3.png', meta:'态势感知 · 解释交互 · 人在回路'},
-  {id:'08', status:'规划中', title:'数据基座', en:'DATA FOUNDATION', copy:'以装置资产、实验时间轴、模型本体、数据血缘和证据账本支撑一炮一链与跨团队协作。', href:'/#roadmap', figure:'/figures/integrated-framework-landscape-nature.png', meta:'主数据 · 本体 · 血缘 · 权限'},
-  {id:'09', status:'重点规划', title:'总体集成', en:'WHOLE-PLANT INTEGRATION', copy:'以统一需求、系统架构、接口契约、配置基线和 VVUQ 证据编排各专业孪生，把局部最优连接为可验证的电厂级决策能力。', href:'/#roadmap', figure:'/figures/integrated-twin-reference-architecture-image2-v2.png', meta:'系统架构 · 协同仿真 · 配置管理 · VVUQ', featured:'fusion'},
-  {id:'10', status:'初步开放', title:'智能原生', en:'AI-NATIVE', copy:'把机器学习、深度学习、基础模型和智能体嵌入孪生的观测、预测、规划、执行与持续学习。', href:'/ai', figure:'', meta:'代理模型 · 基础模型 · 智能体 · AI安全', featured:'ai'},
+  {id:'01', status:'已开放', title:'物理模拟', en:'PHYSICS', copy:'从平衡、输运、MHD、边界到中子学与整厂系统模型，建立多保真物理地图和集成模拟证据链。', href:'/physics', figure:'/figures/domain-physics-dark-image2.png', meta:'14 类物理域 · 140+ 代码/平台'},
+  {id:'02', status:'已开放', title:'工程仿真', en:'ENGINEERING', copy:'把等离子体载荷连接到电磁、结构、磁体、热流体、中子、氚、安全与维护的工程裕量。', href:'/engineering', figure:'/figures/domain-engineering-dark-image2.png', meta:'8 类工程域 · 55 个工具组'},
+  {id:'03', status:'规划中', title:'集成控制', en:'INTEGRATED CONTROL', copy:'连接 DINA、MEQ、场景规划、状态估计、执行器、保护与控制器，形成可回放、可验证的闭环。', href:'/#roadmap', figure:'/figures/domain-integrated-control-dark-image2.png', meta:'控制服务 · 场景编排 · SIL/HIL'},
+  {id:'04', status:'规划中', title:'智能诊断', en:'INTELLIGENT DIAGNOSTICS', copy:'融合诊断几何、合成观测、信号质量、数据同化和异常识别，把仪器信号转化为可信状态。', href:'/#roadmap', figure:'/figures/domain-intelligent-diagnostics-dark-image2.png', meta:'合成诊断 · 状态估计 · 健康评估'},
+  {id:'05', status:'规划中', title:'能量转化', en:'ENERGY CONVERSION', copy:'贯通包层热取出、一次/二次回路、蒸汽或先进发电循环、厂用电与电网，追踪从聚变热功率到稳定净电力的效率与约束。', href:'/#roadmap', figure:'/figures/domain-energy-conversion-dark-image2.png', meta:'包层热取出 · 热力循环 · 厂用电 · 电网'},
+  {id:'06', status:'规划中', title:'辅机模拟', en:'AUXILIARY SYSTEMS', copy:'模拟真空、低温、加热与电流驱动、燃料与氚处理、水冷和电源等辅助系统，评估动态负荷、联锁、故障传播与厂用能耗。', href:'/#roadmap', figure:'/figures/domain-auxiliary-systems-dark-image2.png', meta:'真空 · 低温 · 燃料 · 冷却 · 电源'},
+  {id:'07', status:'规划中', title:'人机交互', en:'HUMAN–MACHINE INTERACTION', copy:'面向运行员、物理学家和工程师组织态势感知、告警解释、方案比较、沉浸式操作与人在回路审批。', href:'/#roadmap', figure:'/figures/domain-human-machine-interaction-dark-image2.png', meta:'态势感知 · 解释交互 · 人在回路'},
+  {id:'08', status:'规划中', title:'数据基座', en:'DATA FOUNDATION', copy:'以装置资产、实验时间轴、模型本体、数据血缘和证据账本支撑一炮一链与跨团队协作。', href:'/#roadmap', figure:'/figures/domain-data-foundation-dark-image2.png', meta:'主数据 · 本体 · 血缘 · 权限'},
+  {id:'09', status:'重点规划', title:'总体集成', en:'WHOLE-PLANT INTEGRATION', copy:'以统一需求、系统架构、接口契约、配置基线和 VVUQ 证据编排各专业孪生，把局部最优连接为可验证的电厂级决策能力。', href:'/#roadmap', figure:'/figures/domain-whole-plant-integration-dark-image2.png', meta:'系统架构 · 协同仿真 · 配置管理 · VVUQ', featured:'fusion'},
+  {id:'10', status:'初步开放', title:'智能原生', en:'AI-NATIVE', copy:'把机器学习、深度学习、基础模型和智能体嵌入孪生的观测、预测、规划、执行与持续学习。', href:'/ai', figure:'/figures/domain-ai-native-dark-image2.png', meta:'代理模型 · 基础模型 · 智能体 · AI安全', featured:'ai'},
 ];
 
 const plantValues = [
@@ -42,8 +43,8 @@ export default function Home() {
     <SiteNav active="home" />
     <header className="portalHero" id="top">
       <div className="heroText">
-        <p className="kicker"><span>FusionDigital</span> / FUSION DIGITAL TWIN COMMUNITY</p>
-        <h1>聚变数字孪生：支撑未来电厂<span>成本可控 · 高效运行 · 可靠可用 · 安全可证</span></h1>
+        <p className="kicker"><BrandWordmark /> / FUSION DIGITAL TWIN COMMUNITY</p>
+        <h1>聚变数字孪生：支撑未来电厂<span className="heroTitleValues">成本可控 · 高效运行 · 可靠可用 · 安全可证</span></h1>
         <p className="heroValueEnglish">FUSION DIGITAL TWIN FOR FUTURE POWER PLANTS<br/><b>LIFECYCLE COST CONTROL · EFFICIENT OPERATION · RELIABLE AVAILABILITY · EVIDENCE-BASED SAFETY</b></p>
         <p className="heroLead">以经过验证的多物理模型、运行与实验数据及智能决策技术，贯通设计、建造、调试、运行、维护与退役全过程，为降低全寿命成本、提升系统效能和电厂可用率、强化安全论证提供持续更新、可追溯且带有不确定度说明的工程依据。</p>
         <div className="heroActions"><a className="solid" href="#domains">探索知识域</a><a href="/facilities">查看全球装置状态</a></div>
@@ -53,7 +54,7 @@ export default function Home() {
         <a href="/figures/fusion-twin-ai-native-overview.png" target="_blank" rel="noreferrer" aria-label="打开聚变数字孪生与智能体总体架构原图">
           <img src="/figures/fusion-twin-ai-native-overview.png" alt="聚变装置、数字孪生、人工智能智能体、安全权限门与经验证控制之间的总体关系图" />
         </a>
-        <figcaption><b>聚变 × 数字孪生 × 智能体</b><span>实测与模拟共同更新孪生状态，智能体提出候选行动；只有通过权限、安全与物理约束门的方案才可进入控制或实验决策。示意图表达信息流与治理边界，并非特定装置的实时控制拓扑。</span><i>点击查看原图 ↗</i></figcaption>
+        <figcaption className="srOnly">聚变、数字孪生与智能体关系图。实测与模拟共同更新孪生状态，智能体提出候选行动；只有通过权限、安全与物理约束门的方案才可进入控制或实验决策。本图表达信息流与治理边界，并非特定装置的实时控制拓扑。</figcaption>
       </figure>
       <section className="plantValue" aria-labelledby="plant-value-title">
         <p>FUSION POWER PLANT VALUE</p>
@@ -78,7 +79,7 @@ export default function Home() {
 
     <section className="domainSection" id="domains">
       <div className="sectionIntro"><p className="sectionIndex">02 / KNOWLEDGE DOMAINS</p><h2>从专业孪生走向总体集成与智能原生</h2><p>十个知识域共同覆盖聚变电厂的物理规律、工程系统、运行认知、能量链、辅机、人机协同、数据与智能；总体集成和智能原生作为并列重点，将各域组织为可验证的整体能力。</p></div>
-      <div className="domainCards">{domains.map(domain=><a href={domain.href} key={domain.id} className={`domainCard${domain.featured?` featuredDomainCard ${domain.featured}Featured`:''}`}><div className="domainFigure">{domain.figure?<img src={domain.figure} alt={`${domain.title}代表图`}/>:<div className="aiDomainVisual" aria-hidden="true"><span className="miniPlasma"/><span className="miniTwin">Δt</span><span className="miniAgent">A</span><i/><i/></div>}<span>{domain.status}</span></div><div className="domainBody"><p>{domain.id} / {domain.en}</p><h3>{domain.title}</h3><div>{domain.copy}</div><b>{domain.meta}</b><i>进入知识域 ↗</i></div></a>)}</div>
+      <div className="domainCards">{domains.map(domain=><a href={domain.href} key={domain.id} className={`domainCard${domain.featured?` featuredDomainCard ${domain.featured}Featured`:''}`}><div className="domainFigure">{domain.figure?<img src={domain.figure} alt={`${domain.title}核心结构科学信息图`} loading="lazy" decoding="async"/>:<div className="aiDomainVisual" aria-hidden="true"><span className="miniPlasma"/><span className="miniTwin">Δt</span><span className="miniAgent">A</span><i/><i/></div>}<span>{domain.status}</span></div><div className="domainBody"><p>{domain.id} / {domain.en}</p><h3>{domain.title}</h3><div>{domain.copy}</div><b>{domain.meta}</b><i>进入知识域 ↗</i></div></a>)}</div>
     </section>
 
     <section className="facilityPreview">
@@ -97,7 +98,7 @@ export default function Home() {
       <div className="roadmapCards">{roadmap.map(item=><article key={item[0]}><span>{item[0]}<small>{item[2]}</small></span><h3>{item[1]}</h3><p>{item[3]}</p></article>)}</div>
     </section>
 
-    <section className="communityBand" id="community"><div><p className="sectionIndex">06 / BUILD WITH US</p><h2>让聚变模型、实验与工程经验真正互相理解。</h2></div><div><p>FusionDigital 将逐步开放装置、控制、诊断、数据、AI、VVUQ 与社区协作模块。欢迎研究机构、装置团队、软件开发者和工业伙伴共同完善工具条目、验证证据与装置案例。</p><a href="mailto:tianshao1992@gmail.com">联系新奥聚变人工智能团队 →</a></div></section>
+    <section className="communityBand" id="community"><div><p className="sectionIndex">06 / BUILD WITH US</p><h2>让聚变模型、实验与工程经验真正互相理解。</h2></div><div><p><BrandWordmark className="brandWordmarkInline" /> 将逐步开放装置、控制、诊断、数据、AI、VVUQ 与社区协作模块。欢迎研究机构、装置团队、软件开发者和工业伙伴共同完善工具条目、验证证据与装置案例。</p><a href="mailto:tianshao1992@gmail.com">联系新奥聚变人工智能团队 →</a></div></section>
     <SiteFooter />
   </main>;
 }

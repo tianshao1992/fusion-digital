@@ -27,8 +27,14 @@ test('server-renders the FusionDigital community portal', async () => {
   assert.match(html, /href="\/ai"/);
   assert.match(html, /href="\/facilities"/);
   assert.match(html, /fusiondigital-mark\.png/);
+  assert.match(html, /class="brandWordmark"/);
+  assert.match(html, /class="brandFusion">Fusion/);
+  assert.match(html, /class="brandDigital">Digital/);
   assert.match(html, /TOOLCHAINS/);
   assert.match(html, /fusion-twin-ai-native-overview\.png/);
+  assert.match(html, /class="heroTitleValues">成本可控/);
+  assert.match(html, /<figcaption class="srOnly">聚变、数字孪生与智能体关系图/);
+  assert.match(html, /loading="lazy" decoding="async"/);
   assert.match(html, /权限、安全与物理约束门/);
   assert.match(html, /成本可控 · 高效运行 · 可靠可用 · 安全可证/);
   assert.match(html, /LIFECYCLE COST CONTROL · EFFICIENT OPERATION · RELIABLE AVAILABILITY · EVIDENCE-BASED SAFETY/);
@@ -39,6 +45,18 @@ test('server-renders the FusionDigital community portal', async () => {
   assert.match(html, /人机交互/);
   assert.match(html, /总体集成/);
   assert.match(html, /WHOLE-PLANT INTEGRATION/);
+  for (const figure of [
+    'domain-physics-dark-image2.png',
+    'domain-engineering-dark-image2.png',
+    'domain-integrated-control-dark-image2.png',
+    'domain-intelligent-diagnostics-dark-image2.png',
+    'domain-energy-conversion-dark-image2.png',
+    'domain-auxiliary-systems-dark-image2.png',
+    'domain-human-machine-interaction-dark-image2.png',
+    'domain-data-foundation-dark-image2.png',
+    'domain-whole-plant-integration-dark-image2.png',
+    'domain-ai-native-dark-image2.png',
+  ]) assert.match(html, new RegExp(figure.replaceAll('.', '\\.')));
   assert.doesNotMatch(html, /发电系统|POWER SYSTEMS|本质安全/);
 });
 

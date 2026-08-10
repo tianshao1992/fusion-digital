@@ -1,3 +1,5 @@
+import BrandWordmark from './BrandWordmark';
+
 type SiteNavProps = {
   active?: 'home' | 'physics' | 'engineering' | 'ai' | 'facilities';
 };
@@ -14,7 +16,7 @@ export default function SiteNav({active = 'home'}: SiteNavProps) {
   return <nav className="siteNav" aria-label="主导航">
     <a className="siteBrand" href="/" aria-label="FusionDigital 首页">
       <img src="/fusiondigital-mark.png" alt="" />
-      <span><b>Fusion</b>Digital<small>FUSION DIGITAL TWIN COMMUNITY</small></span>
+      <span className="siteBrandCopy"><BrandWordmark /><small>FUSION DIGITAL TWIN COMMUNITY</small></span>
     </a>
     <div className="siteLinks">
       {links.map(([key, href, label]) => <a className={active === key ? 'active' : ''} href={href} key={key}>{label}</a>)}
