@@ -93,6 +93,23 @@ test('server-renders the AI-native fusion digital twin research page', async () 
   assert.match(html, /FusionMAE/);
   assert.match(html, /TokaMind/);
   assert.match(html, /AI AGENTS/);
+  assert.match(html, /href="\/fusion-ai-native-research-report\.docx"/);
+  assert.match(html, /href="\/data\/fusion-ai-native-landscape\.json"/);
+  assert.match(html, /href="\/fusion-ai-native-paper-code-index\.csv"/);
+  assert.match(html, /type="search"/);
+  assert.match(html, /value="commercial-enabling"/);
+  assert.match(html, /value="E4"/);
+  for (const domain of [
+    'PHYSICS',
+    'ENGINEERING',
+    'INTEGRATED CONTROL',
+    'INTELLIGENT DIAGNOSTICS',
+    'ENERGY CONVERSION',
+    'AUXILIARY SYSTEMS',
+    'DATA FOUNDATION',
+    'HUMAN–MACHINE',
+    'WHOLE-PLANT',
+  ]) assert.match(html, new RegExp(domain));
   assert.match(html, /FUSION · TWIN · AGENT LOOP/);
   assert.match(html, /target="_blank"/);
 });

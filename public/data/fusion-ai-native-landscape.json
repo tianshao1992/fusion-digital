@@ -1,0 +1,3556 @@
+{
+  "schemaVersion": "1.1",
+  "asOf": "2026-08-10",
+  "scope": "Fusion AI-native research landscape across nine FusionDigital knowledge domains",
+  "evidenceLevels": {
+    "E0": "概念/方法",
+    "E1": "仿真/合成数据",
+    "E2": "真实装置离线数据",
+    "E3": "实时系统/影子/HIL",
+    "E4": "真实装置闭环实验"
+  },
+  "entries": [
+    {
+      "id": "PHY-07",
+      "projectId": "PHY-07",
+      "domain": "physics",
+      "primaryDomain": "physics",
+      "relatedDomains": [],
+      "title": "PORTALS：以高斯过程代理优化高保真核心输运通量匹配",
+      "year": 2024,
+      "organization": "MIT PSFC、General Atomics、UC San Diego 等",
+      "problem": "直接以 CGYRO/NEO 等高保真模型进行多通道稳态通量匹配需要大量昂贵调用，常规迭代难以承受。",
+      "approach": "在局部梯度—通量空间构建高斯过程代理，并以贝叶斯优化选择下一组高保真计算点；同时求解电子/离子温度、密度、杂质与旋转等耦合剖面。",
+      "devices": [
+        "DIII-D：ITER Similar Shape 放电的五通道预测",
+        "也用于/面向 Alcator C-Mod、ASDEX Upgrade、JET、SPARC、ITER 场景研究"
+      ],
+      "evidenceLevel": "E2",
+      "evidence": "论文在 DIII-D 案例中以显著少于朴素迭代的高保真调用完成五通道匹配，并保持收敛点的全物理求解精度；属于稳态预测与实验解释，不是在线动态孪生。",
+      "papers": [
+        {
+          "title": "Enhancing predictive capabilities in fusion burning plasmas through surrogate-based optimization in core transport solvers",
+          "year": 2024,
+          "venue": "Nuclear Fusion",
+          "url": "https://arxiv.org/abs/2312.12610"
+        }
+      ],
+      "code": [
+        {
+          "name": "MITIM-fusion / PORTALS",
+          "url": "https://github.com/pabloprf/MITIM-fusion",
+          "status": "official-direct",
+          "relationship": "论文第一作者维护的 MITIM 开源套件；仓库 README 直接列出 PORTALS 论文，文档提供 PORTALS-TGLF/CGYRO 工作流与回归测试。外部求解器及其许可需另行配置。"
+        }
+      ],
+      "data": "DIII-D 实验输入和 CGYRO/NEO 调用结果未形成公开一键基准。",
+      "maturity": "已服务多装置/反应堆场景的高保真离线预测工作流。",
+      "limitations": "主要面向稳态和局部输运；依赖 CGYRO/NEO 及所选参数化，MHD、锯齿、边界和不确定性传播仍需外部模型补足。",
+      "tags": [
+        "PORTALS",
+        "CGYRO",
+        "NEO",
+        "高斯过程",
+        "贝叶斯优化",
+        "通量匹配"
+      ]
+    },
+    {
+      "id": "PHY-02",
+      "projectId": "PHY-02",
+      "domain": "physics",
+      "primaryDomain": "physics",
+      "relatedDomains": [],
+      "title": "面向 JOREK 与 MAST 观测的 Fourier Neural Operator 等离子体代理",
+      "year": 2024,
+      "organization": "UKAEA、UCL、Caltech、JOREK/MAST 合作团队",
+      "problem": "高保真 MHD 时空演化计算和高速相机观测预测成本高，限制了不确定性扫描、实验前预测和近实时状态推演。",
+      "approach": "采用多变量 Fourier Neural Operator 学习从初始场/历史帧到二维时空场的算子映射，同时研究模拟数据与 MAST 高速相机图像上的多步预测和超分辨率。",
+      "devices": [
+        "JOREK：非线性 MHD 合成数据",
+        "MAST：中央螺线管与偏滤器视场的高速相机数据；未在 MAST-U 在线控制中部署"
+      ],
+      "evidenceLevel": "E2",
+      "evidence": "论文报告相对数值求解器约 6 个数量级的推理加速，归一化均方误差可达约 10^-5，并展示 MAST 图像的零样本空间超分辨率；长期滚动和稀有瞬态仍会损失细节。",
+      "papers": [
+        {
+          "title": "Plasma surrogate modelling using Fourier neural operators",
+          "year": 2024,
+          "venue": "Nuclear Fusion 64 056025",
+          "url": "https://doi.org/10.1088/1741-4326/ad313a"
+        }
+      ],
+      "code": [
+        {
+          "name": "论文训练代码与检查点",
+          "url": null,
+          "status": "not-public",
+          "relationship": "未发现可核验的本文专用公开仓库。"
+        },
+        {
+          "name": "neuraloperator",
+          "url": "https://github.com/NeuralOperator/neuraloperator",
+          "status": "official-enabling",
+          "relationship": "FNO 作者团队维护的通用神经算子库；并非本文 JOREK/MAST 数据和检查点。"
+        }
+      ],
+      "data": "JOREK 模拟子集与 MAST 相机训练集未作为完整可复现基准公开。",
+      "maturity": "离线概念验证；未形成装置在线状态估计或闭环控制服务。",
+      "limitations": "自回归漂移、极端事件覆盖、守恒/稳定性约束、跨视线几何迁移和实验标定误差尚未系统解决。",
+      "tags": [
+        "FNO",
+        "JOREK",
+        "MAST",
+        "MHD",
+        "高速相机",
+        "超分辨率"
+      ]
+    },
+    {
+      "id": "PHY-04",
+      "projectId": "PHY-04",
+      "domain": "physics",
+      "primaryDomain": "physics",
+      "relatedDomains": [],
+      "title": "NSTX-U Eqnet/Pertnet 快速平衡与等离子体响应模型",
+      "year": 2022,
+      "organization": "Princeton University、PPPL / PlasmaControl",
+      "problem": "自由边界 Grad–Shafranov 平衡与非刚性响应计算过慢，限制脉冲规划、闭环仿真和控制器批量测试。",
+      "approach": "Eqnet 学习 EFIT01 平衡重建，Pertnet 学习 Gspert 小扰动响应；同时提供前向状态预测和由磁诊断重建平衡的模式。",
+      "devices": [
+        "NSTX-U：历史实验、EFIT01 与 Gspert 数据"
+      ],
+      "evidenceLevel": "E2",
+      "evidence": "论文展示对 NSTX-U 平衡/响应的高精度离线复现；在容器涡流显著时，重建模式相对当时的 RTEFIT 标签/输入处理表现出优势。其目标是闭环模拟和控制设计，论文未宣称已替代装置在线权威平衡。",
+      "papers": [
+        {
+          "title": "Neural net modeling of equilibria in NSTX-U",
+          "year": 2022,
+          "venue": "Nuclear Fusion 62 086042",
+          "url": "https://doi.org/10.1088/1741-4326/ac77e6"
+        }
+      ],
+      "code": [
+        {
+          "name": "nstxu-nns",
+          "url": "https://github.com/PlasmaControl/nstxu-nns",
+          "status": "official-direct",
+          "relationship": "论文团队公开的 Eqnet、Pertnet 代码和示例。"
+        }
+      ],
+      "data": "仓库公开模型与示例；完整 NSTX-U 放电、EFIT01/Gspert 训练数据受设施数据访问约束。",
+      "maturity": "装置特定、可用于闭环仿真的研究级代理；在线权威使用仍需装置侧 V&V。",
+      "limitations": "继承 EFIT/Gspert 标签与线性化响应假设；跨装置、强外推、失磁诊断和不确定度校准尚不足。",
+      "tags": [
+        "NSTX-U",
+        "平衡重建",
+        "Grad-Shafranov",
+        "Eqnet",
+        "Pertnet",
+        "控制仿真"
+      ]
+    },
+    {
+      "id": "PHY-01",
+      "projectId": "PHY-01",
+      "domain": "physics",
+      "primaryDomain": "physics",
+      "relatedDomains": [],
+      "title": "QLKNN：QuaLiKiz 湍流输运神经网络代理",
+      "year": 2020,
+      "organization": "DIFFER、CEA、EPFL、UKAEA、JET/QuaLiKiz 团队",
+      "problem": "QuaLiKiz 等准线性湍流输运模型在集成输运模拟、场景优化和控制设计中仍过于昂贵，难以进行大量参数扫描或实时预测。",
+      "approach": "以约 3 亿个 QuaLiKiz 输入—通量样本训练前馈神经网络，并通过分区/阈值处理保留临界梯度附近的零通量与刚性输运行为；可嵌入 JINTRAC、RAPTOR 等输运框架。",
+      "devices": [
+        "JET：3 个 H 模放电的时间依赖剖面模拟",
+        "ITER/反应堆参数区：仅为外推应用目标，非实验验证"
+      ],
+      "evidenceLevel": "E2",
+      "evidence": "论文报告相对 QuaLiKiz 加速约 3–5 个数量级，使原本小时级的动态输运计算降至数十秒；在 3 个 JET 放电中，稳态末端剖面差异约 1%–15%，动态量差异约 4%–10%。这些结果验证的是对 QuaLiKiz 的仿真代理能力，不等同于对真实湍流的独立验证。",
+      "papers": [
+        {
+          "title": "Fast modeling of turbulent transport in fusion plasmas using neural networks",
+          "year": 2020,
+          "venue": "Physics of Plasmas 27",
+          "url": "https://doi.org/10.1063/1.5134126"
+        }
+      ],
+      "code": [
+        {
+          "name": "QLKNN-develop",
+          "url": "https://gitlab.com/qualikiz-group/QLKNN-develop",
+          "status": "official-direct",
+          "relationship": "QuaLiKiz 团队维护的 QLKNN 训练/推理实现。"
+        },
+        {
+          "name": "fusion_surrogates / QLKNN_7_11",
+          "url": "https://github.com/google-deepmind/fusion_surrogates",
+          "status": "official-enabling",
+          "relationship": "DeepMind 为 TORAX 整理的模型权重与推理封装，是特定 QLKNN 模型的可用资产，不是原论文完整训练数据。"
+        }
+      ],
+      "data": "训练数据库由大规模 QuaLiKiz 合成计算产生；模型与部分权重公开，但原始约 3 亿样本并非一键下载的完整公开基准。",
+      "maturity": "已在主流集成输运代码中离线耦合并用于 JET 放电回放；研究级高成熟代理，尚非安全关键在线模型。",
+      "limitations": "严格受训练域和父模型 QuaLiKiz 假设约束；对外推、非局域效应、强 MHD/边界耦合及不确定度的覆盖有限。",
+      "tags": [
+        "湍流输运",
+        "代理模型",
+        "JET",
+        "JINTRAC",
+        "RAPTOR",
+        "QuaLiKiz"
+      ]
+    },
+    {
+      "id": "PHY-03",
+      "projectId": "PHY-03",
+      "domain": "physics",
+      "primaryDomain": "physics",
+      "relatedDomains": [],
+      "title": "JOREK/STORM 边缘等离子体神经算子：可行性与数据效率",
+      "year": 2025,
+      "organization": "UKAEA、Johannes Kepler University 等",
+      "problem": "边缘/SOL 与 MHD 代码的完整时间推进代价高，而传统逐步代理在长时滚动中容易漂移。",
+      "approach": "基于 PDEArena 的 FNO/神经 PDE 训练流程，比较单变量与多变量预测、数据效率以及低保真到高保真微调，覆盖 JOREK 与 STORM 的二维演化。",
+      "devices": [
+        "通用/合成：JOREK 与 STORM 简化二维 blob、SOL 和 MHD 配置",
+        "未针对某一台装置做实验闭环验证"
+      ],
+      "evidenceLevel": "E1",
+      "evidence": "论文显示 FNO 能捕获 blob 运动和密度源定位等早期演化；长时自回归会累积误差并出现与特定物理现象相关的非单调误差尖峰。低保真到高保真迁移在小数据、短滚动场景可将误差降低约一个数量级，但在长滚动、大数据或动力学差异较大时收益减弱，向未见变量迁移失败。",
+      "papers": [
+        {
+          "title": "Neural operator surrogate models of plasma edge simulations: feasibility and data efficiency",
+          "year": 2025,
+          "venue": "arXiv preprint; accepted by Nuclear Fusion",
+          "url": "https://arxiv.org/abs/2502.17386"
+        },
+        {
+          "title": "Data efficiency and long term prediction capabilities for neural operator surrogate models of core and edge plasma codes",
+          "year": 2024,
+          "venue": "IAEA Fusion Energy Conference manuscript",
+          "url": "https://arxiv.org/abs/2402.08561"
+        }
+      ],
+      "code": [
+        {
+          "name": "论文专用训练配置、数据与检查点",
+          "url": null,
+          "status": "not-public",
+          "relationship": "未发现与论文逐项对应的公开实验资产。"
+        },
+        {
+          "name": "PDEArena",
+          "url": "https://github.com/microsoft/pdearena",
+          "status": "official-enabling",
+          "relationship": "论文所依赖的通用 PDE 基准/训练框架；不包含全部 JOREK/STORM 研究数据。"
+        }
+      ],
+      "data": "主要为研究团队生成的模拟数据，尚无完整公共数据发布。",
+      "maturity": "离线研究原型。",
+      "limitations": "几何和物理均较简化；细尺度结构随滚动衰减，且尚缺守恒误差、失稳边界和外推置信度的工程验收标准。",
+      "tags": [
+        "神经算子",
+        "JOREK",
+        "STORM",
+        "SOL",
+        "边缘等离子体",
+        "多保真"
+      ]
+    },
+    {
+      "id": "PHY-05",
+      "projectId": "PHY-05",
+      "domain": "physics",
+      "primaryDomain": "physics",
+      "relatedDomains": [],
+      "title": "TGLF-WINN：波数信息约束的数据高效 TGLF 湍流输运代理",
+      "year": 2025,
+      "organization": "UC San Diego、General Atomics、Princeton 等",
+      "problem": "TGLF 在全脉冲输运和多次通量匹配中的调用成本过高，直接限制高维场景优化。",
+      "approach": "通过物理启发的特征工程压缩目标动态范围，在损失中加入按波数分辨的通量正则，并用贝叶斯主动学习挑选 TGLF 样本，以较少昂贵标签训练湍流通量代理。",
+      "devices": [
+        "通用/TGLF 合成参数域；论文未报告具体装置上的在线验证"
+      ],
+      "evidenceLevel": "E1",
+      "evidence": "预印本 v3 报告特征调优与波数正则相对 TGLF-NN 的全数据 RMSLE 降低约 12.5%；加入贝叶斯主动学习后，用 25% 数据即可达到距 TGLF-NN 全数据基线约 2.8% 的离线精度，嵌入通量匹配后相对 TGLF 约 45 倍加速且重建精度相近。",
+      "papers": [
+        {
+          "title": "TGLF-WINN: Data-Efficient Deep Learning Surrogate for Turbulent Transport Modeling in Fusion",
+          "year": 2025,
+          "venue": "arXiv preprint; under revision for Nuclear Fusion",
+          "url": "https://arxiv.org/abs/2509.07024"
+        }
+      ],
+      "code": [
+        {
+          "name": "TGLF-WINN 训练与权重",
+          "url": null,
+          "status": "not-public",
+          "relationship": "未发现作者发布的论文专用仓库。"
+        }
+      ],
+      "data": "TGLF 合成训练集未发现可核验的完整公开下载。",
+      "maturity": "较新的预印本级离线代理。",
+      "limitations": "尚缺同行评议后的跨装置实验验证、外推检测和不确定度；最终精度上限由 TGLF 父模型决定。",
+      "tags": [
+        "TGLF",
+        "TGLF-WINN",
+        "湍流输运",
+        "波数约束",
+        "主动学习",
+        "通量匹配"
+      ]
+    },
+    {
+      "id": "PHY-08",
+      "projectId": "PHY-08",
+      "domain": "physics",
+      "primaryDomain": "physics",
+      "relatedDomains": [],
+      "title": "TORAX：JAX 可微分托卡马克核心输运模拟器",
+      "year": 2024,
+      "organization": "Google DeepMind、Commonwealth Fusion Systems 合作团队",
+      "problem": "脉冲设计、参数反演和控制优化需要既快速又可微、且能插拔物理模型和学习代理的核心输运求解器。",
+      "approach": "以 JAX 实现有限体积时间推进，耦合电子/离子热、粒子和电流扩散；通过 JIT、自动微分与模块化接口接入经验模型或 ML 输运代理。",
+      "devices": [
+        "ITER-like 与 SPARC 设计场景；与 RAPTOR 做数值验证",
+        "SPARC 尚未运行，因此不存在 SPARC 实验验证"
+      ],
+      "evidenceLevel": "E1",
+      "evidence": "论文报告与 RAPTOR 基准场景的一致性及 JAX 加速/可微能力；DeepMind 官方材料称 CFS 已将其用于日常 SPARC 虚拟实验与大规模参数研究，但这属于设计工作流应用。",
+      "papers": [
+        {
+          "title": "TORAX: A Fast and Differentiable Tokamak Transport Simulator in JAX",
+          "year": 2024,
+          "venue": "arXiv preprint",
+          "url": "https://arxiv.org/abs/2406.06718"
+        }
+      ],
+      "code": [
+        {
+          "name": "torax",
+          "url": "https://github.com/google-deepmind/torax",
+          "status": "official-direct",
+          "relationship": "论文团队维护的完整模拟器、配置和示例。"
+        }
+      ],
+      "data": "仓库提供 ITER/SPARC 等示例配置；真实 SPARC 实验数据尚不存在，其他装置数据同化需用户自行接入。",
+      "maturity": "活跃开源的设计/研究模拟器，已进入工业设计流程；尚不是经实验全面确认的全装置孪生。",
+      "limitations": "当前核心是 1D 径向输运；边缘、MHD、三维效应、工程系统和诊断同化需要外部耦合，数值验证不能替代实验确认。",
+      "tags": [
+        "TORAX",
+        "JAX",
+        "可微分模拟",
+        "SPARC",
+        "ITER",
+        "核心输运"
+      ]
+    },
+    {
+      "id": "PHY-06",
+      "projectId": "PHY-06",
+      "domain": "physics",
+      "primaryDomain": "physics",
+      "relatedDomains": [],
+      "title": "MMMnet：多模异常输运模块神经网络代理",
+      "year": 2021,
+      "organization": "Lehigh University 等",
+      "problem": "Multi-Mode Model 的异常扩散系数计算在控制导向输运仿真中仍过慢。",
+      "approach": "用降维与神经网络近似 MMM，对离子/电子热扩散及环向动量扩散等输出进行快速回归，并嵌入控制导向模拟环境。",
+      "devices": [
+        "DIII-D：基于装置场景的 MMM/COTSIM 训练与验证"
+      ],
+      "evidenceLevel": "E1",
+      "evidence": "论文展示对 MMM 输出的良好离线拟合，并将单次计算降到适合快速输运模拟的量级；没有报告在 DIII-D 上由该模型直接闭环控制。",
+      "papers": [
+        {
+          "title": "Neural network model of the multi-mode anomalous transport module for accelerated transport simulations",
+          "year": 2021,
+          "venue": "Nuclear Fusion 61 106040",
+          "url": "https://doi.org/10.1088/1741-4326/ac207e"
+        }
+      ],
+      "code": [
+        {
+          "name": "MMMnet 实现与权重",
+          "url": null,
+          "status": "not-public",
+          "relationship": "未发现与论文对应的公开仓库。"
+        }
+      ],
+      "data": "DIII-D 场景与 MMM 合成训练集未公开为可直接复现的数据集。",
+      "maturity": "控制导向离线模型原型。",
+      "limitations": "装置/参数域依赖明显，输出物理范围有限；继承 MMM 系统误差，缺少在线漂移监测和安全退化策略。",
+      "tags": [
+        "MMM",
+        "DIII-D",
+        "输运代理",
+        "COTSIM",
+        "扩散系数"
+      ]
+    },
+    {
+      "id": "eng-cfetr-cool-firstwall-surrogate",
+      "projectId": "eng-cfetr-cool-firstwall-surrogate",
+      "domain": "engineering",
+      "primaryDomain": "engineering",
+      "relatedDomains": [],
+      "title": "CFETR COOL 包层第一壁热—结构代理与 NSGA-II 优化",
+      "year": 2026,
+      "organization": "Institute of Plasma Physics, Chinese Academy of Sciences；University of Science and Technology of China",
+      "problem": "CFETR 超临界 CO₂ 冷却铅锂（COOL）包层第一壁同时承受高热流和结构约束，直接在大设计空间反复求解热—结构模型代价高。",
+      "approach": "结合热平衡、经验关联式和一维/二维混合导热模型构造参数化代理，并用 NSGA-II 搜索温度、压降与结构约束之间的 Pareto 解。",
+      "devices": [
+        "CFETR COOL blanket 第一壁概念设计"
+      ],
+      "evidenceLevel": "E1",
+      "evidence": "论文针对 CFETR COOL 第一壁开展代理与多目标优化，属于概念设计模型验证；未发现与第一壁原型热流试验或传感器数据的闭环验证。",
+      "papers": [
+        {
+          "title": "A surrogate-based thermo-mechanical optimization framework using NSGA-II for the first wall of CFETR COOL blanket",
+          "year": 2026,
+          "venue": "Nuclear Fusion",
+          "url": "https://doi.org/10.1088/1741-4326/ae8607"
+        }
+      ],
+      "code": [
+        {
+          "name": "CFETR COOL 第一壁代理与 NSGA-II 实现",
+          "url": null,
+          "status": "not-public",
+          "relationship": "未发现作者公开的对应代码、优化输入文件或训练数据。"
+        }
+      ],
+      "data": "混合解析/低维模型生成数据；未发现公开数据集。",
+      "maturity": "聚变包层概念设计优化的论文级原型。",
+      "limitations": "模型维度和关联式决定适用范围；复杂三维接头、制造偏差、循环疲劳、辐照材料演化及试验外推尚未验证。",
+      "tags": [
+        "CFETR",
+        "COOL blanket",
+        "第一壁",
+        "热结构",
+        "NSGA-II",
+        "sCO2"
+      ],
+      "applicabilityLevel": "fusion-specific-simulation"
+    },
+    {
+      "id": "eng-hammerhead-cooling-ml-cfd",
+      "projectId": "eng-hammerhead-cooling-ml-cfd",
+      "domain": "engineering",
+      "primaryDomain": "engineering",
+      "relatedDomains": [],
+      "title": "Hammerhead：面向聚变冷却管路的开源 ML–CFD 热工水力优化环境",
+      "year": 2026,
+      "organization": "Swansea University；Diamond Light Source；UKAEA",
+      "problem": "托卡马克冷却系统的形状参数化需要大量共轭传热 CFD，热性能和压降之间又存在多目标权衡，直接优化成本过高。",
+      "approach": "Python 自动驱动 OpenFOAM 生成高保真数据库，使用 POD 降维以及 RBF、神经网络或高斯过程代理，执行管内粗糙度/流动参数搜索与多模型比较。",
+      "devices": [
+        "聚变反应堆冷却管路代表性二维/轴对称内流算例",
+        "尚未在具体托卡马克水冷系统或实物回路上验证"
+      ],
+      "evidenceLevel": "E1",
+      "evidence": "论文展示 600 个 OpenFOAM 算例、训练/验证误差比较与高保真回算；单次高保真约 2–6 小时，代理推理远低于 1 秒。验证基于数值模型而非试验传感器。",
+      "papers": [
+        {
+          "title": "Integrated environment for machine learning-aided heat transfer optimisation in internal flows: hammerhead software",
+          "year": 2026,
+          "venue": "Machine Learning: Science and Technology 7, 015011",
+          "url": "https://doi.org/10.1088/2632-2153/ae3053"
+        },
+        {
+          "title": "Computational Heat Transfer Optimisation in Nuclear Fusion Reactors Using Data-Driven Machine Learning",
+          "year": 2025,
+          "venue": "Swansea University PhD thesis",
+          "url": "https://doi.org/10.23889/SUThesis.71082"
+        }
+      ],
+      "code": [
+        {
+          "name": "Hammerhead",
+          "url": "https://github.com/Dani-Darko/Hammerhead",
+          "status": "official-direct",
+          "relationship": "论文指定的官方源码；论文投稿时固定到 commit cd599235f8005bc3fbdd70fdc295c2d6526f9087。"
+        },
+        {
+          "name": "OpenFOAM",
+          "url": "https://develop.openfoam.com/Development/openfoam",
+          "status": "official-enabling",
+          "relationship": "Hammerhead 用于高保真 CFD 数据生成的上游求解器，不是论文代理实现本身。"
+        }
+      ],
+      "data": "论文称验证/用例数据可向作者申请；仓库可生成数据，但没有确认公开完整 600 算例数据包。",
+      "maturity": "可运行开源研究软件，完成数值 V&V 与可复现工作流；距离真实聚变部件数字孪生仍缺试验同化与长期运行验证。",
+      "limitations": "当前几何和流态较简化；未覆盖辐照、MHD、沸腾、材料退化、泵阀动态及闭环传感器校准；GP 的规模复杂度明显。",
+      "tags": [
+        "热工水力",
+        "冷却系统",
+        "OpenFOAM",
+        "POD",
+        "神经网络",
+        "高斯过程",
+        "开源"
+      ],
+      "applicabilityLevel": "fusion-specific-simulation"
+    },
+    {
+      "id": "eng-eudemo-magnet-made-ann",
+      "projectId": "eng-eudemo-magnet-made-ann",
+      "domain": "engineering",
+      "primaryDomain": "engineering",
+      "relatedDomains": [],
+      "title": "EU-DEMO 中心螺线管预设计的 MADE 数据与神经网络代理",
+      "year": 2025,
+      "organization": "University of Padova；EU-DEMO 磁体设计研究团队",
+      "problem": "EU-DEMO 超导磁体预定尺寸需要反复扫描满足电磁—机械约束的庞大设计空间，传统 MADE 扫描难以支持快速正向、逆向和跨学科迭代。",
+      "approach": "以 MAgnet Design Explorer Algorithm（MADE）生成的可行设计点云训练人工神经网络，可从输入预测磁体布局/性能，也可反求达到目标输出的输入组合。",
+      "devices": [
+        "EU-DEMO 中心螺线管模块（论文直接应用）",
+        "EU-DEMO TF/PF 线圈（作者提出的扩展对象，尚非本文验证）"
+      ],
+      "evidenceLevel": "E1",
+      "evidence": "论文在 EU-DEMO 中心螺线管预设计数据集上展示代理用于筛选最优可行配置；证据属于聚变概念设计数据验证，并非制造磁体或运行装置实测验证。",
+      "papers": [
+        {
+          "title": "Machine Learning-Based Surrogate Modeling for Enhancing the Magnet Design of Future Tokamaks",
+          "year": 2025,
+          "venue": "IEEE Transactions on Applied Superconductivity",
+          "url": "https://doi.org/10.1109/TASC.2025.3550890"
+        }
+      ],
+      "code": [
+        {
+          "name": "MADE + ANN 对应实现",
+          "url": null,
+          "status": "not-public",
+          "relationship": "论文未公开 MADE 数据生成器、训练脚本、权重或可复现实验仓库。"
+        }
+      ],
+      "data": "MADE 生成的 EU-DEMO 可行设计点云；未发现公开数据集。",
+      "maturity": "面向聚变磁体概念设计的论文级原型；已覆盖中心螺线管预设计，尚未形成经实物试验闭环验证的工程数字孪生。",
+      "limitations": "训练分布由特定 MADE 模型和约束定义；对材料退化、制造公差、局部三维应力与失超工况的泛化未证明；没有公开代码和数据。",
+      "tags": [
+        "电磁",
+        "超导磁体",
+        "结构约束",
+        "ANN",
+        "逆设计",
+        "EU-DEMO"
+      ],
+      "applicabilityLevel": "fusion-specific-simulation"
+    },
+    {
+      "id": "eng-pinn-neutronics-heating-temperature",
+      "projectId": "eng-pinn-neutronics-heating-temperature",
+      "domain": "engineering",
+      "primaryDomain": "engineering",
+      "relatedDomains": [],
+      "title": "中子体积加热驱动真空室温度场的物理信息神经网络代理",
+      "year": 2025,
+      "organization": "University of Manchester",
+      "problem": "聚变真空室与包层设计需要把中子学体积热源传递到热分析，但大规模设计空间下耦合求解成本高。",
+      "approach": "以物理信息神经网络直接求解/近似中子加热条件下真空室壁温度场，将热方程约束纳入训练损失。",
+      "devices": [
+        "参数化聚变真空室壁算例",
+        "面向未来聚变电厂包层/真空室，未声明运行托卡马克实测验证"
+      ],
+      "evidenceLevel": "E1",
+      "evidence": "论文报告温度场 L2 相对误差 0.0093；验证为数值参考解对比，不能等同于中子辐照部件实验验证。",
+      "papers": [
+        {
+          "title": "Simulating neutronics heating using physics-informed neural networks to resolve the temperature field",
+          "year": 2025,
+          "venue": "Fusion Engineering and Design 218, 115182",
+          "url": "https://doi.org/10.1016/j.fusengdes.2025.115182"
+        }
+      ],
+      "code": [
+        {
+          "name": "论文 PINN 实现",
+          "url": null,
+          "status": "not-public",
+          "relationship": "未在机构论文记录或出版页面发现公开对应仓库。"
+        }
+      ],
+      "data": "数值生成温度场；未发现公开数据集。",
+      "maturity": "聚变几何上的 PINN 数值概念验证。",
+      "limitations": "温度依赖材料、接触热阻、复杂冷却边界、辐照演化和高维几何泛化未充分证明；PINN 误差界和失效检测仍需工程化。",
+      "tags": [
+        "中子加热",
+        "温度场",
+        "PINN",
+        "真空室",
+        "多物理耦合"
+      ],
+      "applicabilityLevel": "fusion-specific-simulation"
+    },
+    {
+      "id": "eng-remote-handling-fmu-surrogates",
+      "projectId": "eng-remote-handling-fmu-surrogates",
+      "domain": "engineering",
+      "primaryDomain": "engineering",
+      "relatedDomains": [],
+      "title": "核/聚变遥操作机器人的 ML 代理 FMU 组件库方法",
+      "year": 2025,
+      "organization": "VTT Technical Research Centre of Finland",
+      "problem": "聚变远程维护机器人结构部件的 FEA 计算太慢且工具异构，难以嵌入系统级设计、预测控制与状态监测。",
+      "approach": "用 FEA 生成数据，训练多类机器学习代理，再封装为参数化 Functional Mock-up Units（FMU），在 Simulink 等平台进行跨工具组合。",
+      "devices": [
+        "核工业/聚变遥操作测试台的转动关节与执行器代表部件",
+        "面向未来聚变反应堆远程维护机器人；未在 ITER 在役维护任务验证"
+      ],
+      "evidenceLevel": "E1",
+      "evidence": "论文比较 FMU 对关节/执行器模型的时序输出并验证系统级调用，属于核工业相邻测试台与仿真证据；尚无真实聚变堆辐照环境和任务数据。",
+      "papers": [
+        {
+          "title": "Advancing remote handling capabilities in the nuclear industry with AI-based surrogate models for robotic technologies",
+          "year": 2025,
+          "venue": "Fusion Engineering and Design 219, 115286",
+          "url": "https://doi.org/10.1016/j.fusengdes.2025.115286"
+        }
+      ],
+      "code": [
+        {
+          "name": "论文 FMU 与训练实现",
+          "url": null,
+          "status": "not-public",
+          "relationship": "论文未提供公开的 FMU 文件、FEA 数据或训练仓库。"
+        }
+      ],
+      "data": "FEA 生成的部件数据与测试台数据未公开。",
+      "maturity": "核工业遥操作部件的论文级 FMU 原型；对聚变远程维护属于近邻验证。",
+      "limitations": "缺少辐射、真空、温漂、线缆柔性、接触/间隙和故障退化的聚变工况验证；不确定度量化仍被作者列为后续工作。",
+      "tags": [
+        "遥操作",
+        "机器人",
+        "FMU",
+        "FMI",
+        "FEA",
+        "代理模型"
+      ],
+      "applicabilityLevel": "nuclear-adjacent"
+    },
+    {
+      "id": "eng-liquid-metal-blanket-mhd-surrogates",
+      "projectId": "eng-liquid-metal-blanket-mhd-surrogates",
+      "domain": "engineering",
+      "primaryDomain": "engineering",
+      "relatedDomains": [],
+      "title": "液态金属聚变包层 MHD 流动的稀疏网格、PCE 与高斯过程代理",
+      "year": 2025,
+      "organization": "University of California, Los Angeles 等液态金属包层研究团队",
+      "problem": "强磁场下液态金属包层的 MHD 流动高保真计算昂贵，限制参数扫描、不确定性量化与设计优化。",
+      "approach": "以矩形导管解析 MHD 解生成训练样本，对比稀疏网格插值、稀疏多项式展开与高斯过程三类代理；扫描 Hartmann 数和壁面电导比。",
+      "devices": [
+        "液态金属增殖包层的典型矩形导管算例",
+        "未绑定特定在役托卡马克；面向未来 DCLL/WCLL 类包层迁移"
+      ],
+      "evidenceLevel": "E1",
+      "evidence": "固定方形域中，200–600 个训练样本对解析参考解的相对误差低于 0.1%；验证对象仍是简化导管而非全尺寸包层或实验回路。",
+      "papers": [
+        {
+          "title": "Surrogate modeling for MHD flows in liquid metal fusion blankets: Initial assessment with analytical solutions",
+          "year": 2025,
+          "venue": "Fusion Engineering and Design 218, 115057",
+          "url": "https://doi.org/10.1016/j.fusengdes.2025.115057"
+        }
+      ],
+      "code": [
+        {
+          "name": "论文对应代理与训练脚本",
+          "url": null,
+          "status": "not-public",
+          "relationship": "未在论文页面发现公开的对应代码仓库。"
+        }
+      ],
+      "data": "由解析 MHD 解生成的参数样本；未发现独立公开数据集。",
+      "maturity": "聚变相关基准算例上的方法验证。",
+      "limitations": "未覆盖真实包层三维几何、入口效应、湍流、温度依赖物性、自由表面、压降耦合和实验误差；不能直接替代包层资格鉴定。",
+      "tags": [
+        "MHD",
+        "液态金属包层",
+        "高斯过程",
+        "多项式混沌",
+        "不确定性量化"
+      ],
+      "applicabilityLevel": "fusion-specific-simulation"
+    },
+    {
+      "id": "eng-chimera-component-digital-twin",
+      "projectId": "eng-chimera-component-digital-twin",
+      "domain": "engineering",
+      "primaryDomain": "engineering",
+      "relatedDomains": [],
+      "title": "CHIMERA 聚变部件多物理虚拟试验与数字孪生",
+      "year": 2023,
+      "organization": "UK Atomic Energy Authority",
+      "problem": "聚变包层/第一壁部件无法在单一设施中完整复现热、磁、流体和机械载荷，且高保真全系统模型无法实时运行。",
+      "approach": "从流体、热、电磁和结构 FEA 训练快速降阶/代理模型，在 Ansys Twin Builder 中耦合；规划以 CHIMERA 的热电偶、应变计、载荷与电流等仪表更新模型。",
+      "devices": [
+        "UKAEA CHIMERA Combined Heating and Magnetic Research Apparatus",
+        "CHIMERA commissioning sample under test（CSUT）/第一壁板条样件",
+        "ITER TBM 尺度部件的半积分测试场景"
+      ],
+      "evidenceLevel": "E1",
+      "evidence": "论文报告代理与高阶模型的性能核对和虚拟诊断；CHIMERA 当时仍在建设，真正的设备在线同步与寿命预测尚属后续目标。",
+      "papers": [
+        {
+          "title": "Towards a fusion component digital twin – virtual test and monitoring of components in CHIMERA by systems simulation",
+          "year": 2023,
+          "venue": "Fusion Engineering and Design 191, 113773",
+          "url": "https://doi.org/10.1016/j.fusengdes.2023.113773"
+        },
+        {
+          "title": "CHIMERA Fusion Technology Facility: Testing and Virtual Qualification",
+          "year": 2023,
+          "venue": "Fusion Science and Technology 79",
+          "url": "https://doi.org/10.1080/15361055.2022.2147766"
+        }
+      ],
+      "code": [
+        {
+          "name": "CHIMERA 代理与 Twin Builder 集成模型",
+          "url": null,
+          "status": "not-public",
+          "relationship": "UKAEA 未公开对应工程模型、训练数据或项目仓库。"
+        },
+        {
+          "name": "Ansys Twin Builder",
+          "url": "https://www.ansys.com/products/digital-twin/ansys-twin-builder",
+          "status": "commercial-enabling",
+          "relationship": "商业系统仿真与 ROM 集成环境；不是公开源代码。",
+          "artifactType": "commercial-software",
+          "access": "proprietary"
+        }
+      ],
+      "data": "CHIMERA 试验数据计划用于后续验证；论文数据声明为可申请，未公开完整传感器数据集。",
+      "maturity": "聚变专用试验设施驱动的数字孪生路线与预调试模型；物理试验闭环尚在建设/验证阶段。",
+      "limitations": "半积分设施不能复现中子体积热源、辐照损伤和等离子体—材料相互作用；闭源工程模型削弱外部复现；在线 UQ 与寿命模型尚未完成。",
+      "tags": [
+        "CHIMERA",
+        "多物理",
+        "ROM",
+        "虚拟试验",
+        "传感器同化",
+        "Twin Builder"
+      ],
+      "applicabilityLevel": "fusion-specific-simulation"
+    },
+    {
+      "id": "eng-tbr-fast-regression",
+      "projectId": "eng-tbr-fast-regression",
+      "domain": "engineering",
+      "primaryDomain": "engineering",
+      "relatedDomains": [],
+      "title": "聚变堆氚增殖比 Monte Carlo 模型的快速回归代理",
+      "year": 2023,
+      "organization": "University College London；UK Atomic Energy Authority",
+      "problem": "氚增殖比（TBR）对包层材料与几何高度敏感，而 Monte Carlo 中子学评估太慢，难以嵌入系统级优化和自适应采样。",
+      "approach": "比较 9 类回归代理与降维方法，并提出 Quality-Adaptive Surrogate Sampling；最快的人工神经网络近似 UKAEA 的 Monte Carlo TBR 模型。",
+      "devices": [
+        "UKAEA 聚变反应堆参数化包层/径向构建模型",
+        "面向 D-T 聚变电厂概念设计，未绑定运行装置"
+      ],
+      "evidenceLevel": "E1",
+      "evidence": "最优 ANN 报告 R²=0.985、平均推理时间 0.898 微秒，相对原 Monte Carlo 模型约 8×10^6 加速；自适应采样只在玩具 TBR 理论上作初步测试。",
+      "papers": [
+        {
+          "title": "Fast regression of the tritium breeding ratio in fusion reactors",
+          "year": 2023,
+          "venue": "Machine Learning: Science and Technology 4, 015008",
+          "url": "https://doi.org/10.1088/2632-2153/acb2b3"
+        }
+      ],
+      "code": [
+        {
+          "name": "论文对应训练与 QASS 实现",
+          "url": null,
+          "status": "not-public",
+          "relationship": "未从论文与机构页面核实到官方公开仓库。"
+        }
+      ],
+      "data": "UKAEA Monte Carlo TBR 参数样本；未发现公开下载。",
+      "maturity": "聚变堆中子学设计代理的论文级验证；适合快速筛选，不是安全分析替代物。",
+      "limitations": "依赖特定参数化几何与材料空间；R² 不能揭示局部极值和边界外误差；尚无独立代码、数据和高保真跨概念外推验证。",
+      "tags": [
+        "中子学",
+        "TBR",
+        "ANN",
+        "Monte Carlo",
+        "自适应采样"
+      ],
+      "applicabilityLevel": "fusion-specific-simulation"
+    },
+    {
+      "id": "CTL-07",
+      "projectId": "CTL-07",
+      "domain": "control",
+      "primaryDomain": "control",
+      "relatedDomains": [],
+      "title": "HL-3 高保真数据驱动动力学模型与强化学习磁控制",
+      "year": 2025,
+      "organization": "核工业西南物理研究院/HL-3 合作团队",
+      "problem": "低层磁控制需要长时域、毫秒级且足够准确的交互环境，纯第一性原理模拟过慢，普通 LSTM 又在长滚动中漂移。",
+      "approach": "以 EFITNN 压缩平衡状态，用 scheduled sampling、自注意力和集合 LSTM 学习动力学，再以 PPO 输出 17 路线圈电压并接入 HL-3 PCS。",
+      "devices": [
+        "HL-3：历史放电训练与真实装置控制实验"
+      ],
+      "evidenceLevel": "E4",
+      "evidence": "论文报告 400 ms 轨迹预测、1 kHz/17 线圈控制；相对标准 LSTM 多项 MAE 至少降低 58.8%，PPO 在 RTX 4090 上约 22 分钟完成 25 万次训练，并在 PCS/装置实验中验证包括未见三角度目标的控制。",
+      "papers": [
+        {
+          "title": "High-fidelity data-driven dynamics model for reinforcement learning-based control in HL-3 tokamak",
+          "year": 2025,
+          "venue": "Communications Physics 8 393",
+          "url": "https://www.nature.com/articles/s42005-025-02302-y"
+        }
+      ],
+      "code": [
+        {
+          "name": "EFITNN、动力学集合、PPO 策略与 PCS 接口",
+          "url": null,
+          "status": "not-public",
+          "relationship": "论文未公开完整训练/部署代码。"
+        }
+      ],
+      "data": "论文补充资料含部分源数据；完整 HL-3 历史放电与控制日志未公开。",
+      "maturity": "真实装置闭环磁控制研究示范。",
+      "limitations": "数据驱动模拟器偏差、长期 OOD 和故障输入仍可能放大；无跨装置映射、形式化安全证明和可公开复现实验环境。",
+      "tags": [
+        "HL-3",
+        "强化学习",
+        "PPO",
+        "LSTM",
+        "EFITNN",
+        "磁控制"
+      ]
+    },
+    {
+      "id": "CTL-08",
+      "projectId": "CTL-08",
+      "domain": "control",
+      "primaryDomain": "control",
+      "relatedDomains": [],
+      "title": "PACMAN：DIII-D 集成 AI 实时控制架构",
+      "year": 2025,
+      "organization": "General Atomics、Princeton/PPPL、Columbia 等 DIII-D 团队",
+      "problem": "多个 AI 预测器、控制器和诊断预处理链各自为政，缺少可在同一 PCS 中组合、监视和快速实验的运行架构。",
+      "approach": "构建模块化 PACMAN 实时运行时，将状态估计、学习模型、控制逻辑、执行器接口和健康检查组合，支持多类 AI 控制实验。",
+      "devices": [
+        "DIII-D：非感应电流 RL、宽 pedestal/QH-mode ELM 预测、Alfvén 本征模控制、剖面 MPC、撕裂预测控制等"
+      ],
+      "evidenceLevel": "E4",
+      "evidence": "预印本汇总多个已在 DIII-D 放电中运行的 AI 控制用例，证明框架具备实验集成能力；其长期可用性、故障隔离和独立复现仍未被公开基准覆盖。",
+      "papers": [
+        {
+          "title": "Enabling Integrated AI Control on DIII-D: A Control System Design with State-of-the-art Experiments",
+          "year": 2025,
+          "venue": "arXiv preprint",
+          "url": "https://arxiv.org/abs/2511.08818"
+        }
+      ],
+      "code": [
+        {
+          "name": "PACMAN runtime 与装置配置",
+          "url": null,
+          "status": "not-public",
+          "relationship": "DIII-D 装置侧集成运行时未发现公开仓库。"
+        },
+        {
+          "name": "keras2c",
+          "url": "https://github.com/PlasmaControl/keras2c",
+          "status": "official-enabling",
+          "relationship": "若干模型的 C 实时部署工具，不等于 PACMAN 整体实现。"
+        }
+      ],
+      "data": "各用例使用 DIII-D 设施数据，未形成统一公开训练/回放包。",
+      "maturity": "装置级集成实验平台；仍处于快速迭代研究阶段。",
+      "limitations": "机器特定 PCS/硬件依赖强；缺少公开接口规范、端到端时序证明、网络安全/安全完整性等级和独立复现。",
+      "tags": [
+        "DIII-D",
+        "PACMAN",
+        "集成控制",
+        "实时 AI",
+        "PCS",
+        "多模型编排"
+      ]
+    },
+    {
+      "id": "CTL-06",
+      "projectId": "CTL-06",
+      "domain": "control",
+      "primaryDomain": "control",
+      "relatedDomains": [],
+      "title": "DIII-D 概率机器学习与贝叶斯优化安全 ramp-down",
+      "year": 2024,
+      "organization": "General Atomics、Carnegie Mellon University 等",
+      "problem": "安全降电流轨迹存在高维且实验代价昂贵的设计空间，需要在有限放电数中学习更安全的操作。",
+      "approach": "用概率代理表达轨迹参数到风险/性能的映射，以贝叶斯优化和获取函数在放电之间选择下一次实验，实现有约束的主动实验设计。",
+      "devices": [
+        "DIII-D：2022 年 ramp-down 实验"
+      ],
+      "evidenceLevel": "E4",
+      "evidence": "Nuclear Fusion 论文报告自动设计的实验能在比典型轨迹更低的电流与储能下保持控制，并在实验轮次中持续改进；它是 shot-to-shot 优化，不是毫秒级在线反馈。",
+      "papers": [
+        {
+          "title": "Automated experimental design of safe rampdowns via probabilistic machine learning",
+          "year": 2024,
+          "venue": "Nuclear Fusion 64 046014",
+          "url": "https://doi.org/10.1088/1741-4326/ad22f5"
+        }
+      ],
+      "code": [
+        {
+          "name": "ramp-down 概率模型与贝叶斯优化实验代码",
+          "url": null,
+          "status": "not-public",
+          "relationship": "未发现本文专用公开仓库。"
+        }
+      ],
+      "data": "实验数据属于 DIII-D 用户设施；论文图表/补充数据不足以重建全部优化循环。",
+      "maturity": "真实装置的实验间主动优化示范。",
+      "limitations": "目标函数和安全边界装置特定；不能处理单次放电内的快速扰动，且概率校准仅在已探索域有效。",
+      "tags": [
+        "DIII-D",
+        "ramp-down",
+        "贝叶斯优化",
+        "主动实验",
+        "概率模型"
+      ]
+    },
+    {
+      "id": "CTL-02",
+      "projectId": "CTL-02",
+      "domain": "control",
+      "primaryDomain": "control",
+      "relatedDomains": [],
+      "title": "DIII-D 深度强化学习主动规避撕裂模",
+      "year": 2024,
+      "organization": "Princeton、PPPL、General Atomics、Columbia、Seoul National University 等",
+      "problem": "高性能场景中的撕裂不稳定性一旦形成便难以补救，需要在保持约束和 H 模性能的同时提前规避。",
+      "approach": "将实时动力学状态重建、数据驱动的撕裂概率预测与深度强化学习策略串联，调节加热、转矩和形状/电流相关执行量，走在不稳定边界之前。",
+      "devices": [
+        "DIII-D：低 q、低转矩和 ITER baseline-like 场景"
+      ],
+      "evidenceLevel": "E4",
+      "evidence": "装置实验中策略将撕裂风险维持在设定阈值以下，能跟踪时变稳定路径并保持 H 模；这是针对特定不稳定性和运行域的闭环证据，不是一般破裂免疫。",
+      "papers": [
+        {
+          "title": "Avoiding fusion plasma tearing instability with deep reinforcement learning",
+          "year": 2024,
+          "venue": "Nature 626",
+          "url": "https://www.nature.com/articles/s41586-024-07024-9"
+        }
+      ],
+      "code": [
+        {
+          "name": "撕裂预测器、RL 策略和 DIII-D 实时集成代码",
+          "url": null,
+          "status": "not-public",
+          "relationship": "未发现论文专用公开仓库。"
+        }
+      ],
+      "data": "DIII-D 放电数据受用户设施访问规则约束；论文源数据不等于完整训练集。",
+      "maturity": "真实装置闭环、针对性较强的研究示范。",
+      "limitations": "适用范围受训练场景、诊断质量和撕裂标签定义约束；尚缺跨机迁移、可证明安全、策略退化与审计接口。",
+      "tags": [
+        "DIII-D",
+        "强化学习",
+        "撕裂模",
+        "稳定性控制",
+        "风险预测"
+      ]
+    },
+    {
+      "id": "CTL-03",
+      "projectId": "CTL-03",
+      "domain": "control",
+      "primaryDomain": "control",
+      "relatedDomains": [],
+      "title": "DIII-D/KSTAR 机器学习辅助自适应 RMP 无 ELM 控制",
+      "year": 2024,
+      "organization": "PPPL、General Atomics、Korea Institute of Fusion Energy 等",
+      "problem": "谐振磁扰动可抑制 ELM，但固定线圈设置常以约束性能为代价，需要随等离子体状态自适应优化。",
+      "approach": "以机器学习辅助探索/优化三维场配置，并在实验中实时调整 RMP，实现边界爆发抑制与高性能约束间的折中。",
+      "devices": [
+        "DIII-D",
+        "KSTAR"
+      ],
+      "evidenceLevel": "E4",
+      "evidence": "Nature Communications 报告两台装置均实现无有害边界能量爆发且保持反应堆相关的高约束性能，并以多机结果支持方法的物理可迁移性；并不意味着控制器可直接跨机复用。",
+      "papers": [
+        {
+          "title": "Highest fusion performance without harmful edge energy bursts in tokamak",
+          "year": 2024,
+          "venue": "Nature Communications 15 3990",
+          "url": "https://www.nature.com/articles/s41467-024-48415-w"
+        }
+      ],
+      "code": [
+        {
+          "name": "自适应 RMP 控制与 ML 优化代码",
+          "url": null,
+          "status": "not-public",
+          "relationship": "论文未提供可复现的装置控制仓库。"
+        }
+      ],
+      "data": "DIII-D/KSTAR 原始控制与诊断数据未作为统一公开数据集发布。",
+      "maturity": "双装置实验验证；面向高性能边界控制的先进研究系统。",
+      "limitations": "线圈几何、等离子体响应、诊断和安全限制需逐装置标定；对其他 ELM 类型、长脉冲和故障工况的覆盖有限。",
+      "tags": [
+        "DIII-D",
+        "KSTAR",
+        "RMP",
+        "ELM",
+        "自适应控制",
+        "边界稳定性"
+      ]
+    },
+    {
+      "id": "CTL-05",
+      "projectId": "CTL-05",
+      "domain": "control",
+      "primaryDomain": "control",
+      "relatedDomains": [],
+      "title": "DIII-D 数据驱动剖面预测与有限动作集 MPC 实时基础设施",
+      "year": 2023,
+      "organization": "Columbia University、General Atomics、PlasmaControl 等",
+      "problem": "离线训练的高维剖面动力学模型难以可靠地接入装置 PCS，并在硬实时约束下转化为可审计控制动作。",
+      "approach": "用约 3500 个 DIII-D 放电、约 15 万样本训练 200 ms 预测的神经网络，再以有限候选 NBI 功率动作进行 MPC，同时通过 Keras2C 部署到实时 PCS。",
+      "devices": [
+        "DIII-D：压力与电子温度剖面控制；实验 checkout 包括放电 187076"
+      ],
+      "evidenceLevel": "E4",
+      "evidence": "论文记录模型进入 DIII-D PCS 并实施压力/温度双目标实时控制；实验也暴露 MSE/rtEFIT 等诊断中断会破坏控制输入，成为需要健康管理与回退的直接证据。",
+      "papers": [
+        {
+          "title": "A general infrastructure for data-driven control design and implementation in tokamaks",
+          "year": 2023,
+          "venue": "Journal of Plasma Physics 89",
+          "url": "https://doi.org/10.1017/S0022377822001040"
+        }
+      ],
+      "code": [
+        {
+          "name": "plasma-profile-predictor",
+          "url": "https://github.com/PlasmaControl/plasma-profile-predictor",
+          "status": "official-direct",
+          "relationship": "论文团队的剖面预测、控制设计和复现实验代码。"
+        },
+        {
+          "name": "keras2c",
+          "url": "https://github.com/PlasmaControl/keras2c",
+          "status": "official-enabling",
+          "relationship": "将 Keras 网络转换为实时 C 推理的官方部署组件。"
+        }
+      ],
+      "data": "仓库提供处理流程与放电标识；原始 DIII-D 数据需设施授权。",
+      "maturity": "已在真实 PCS 中试验的研究级实时控制基础设施。",
+      "limitations": "候选动作有限，训练域依赖强；多目标冲突、输入诊断掉线、OOD 状态与回退控制仍是工程瓶颈。",
+      "tags": [
+        "DIII-D",
+        "MPC",
+        "剖面控制",
+        "PCS",
+        "Keras2C",
+        "NBI"
+      ]
+    },
+    {
+      "id": "CTL-01",
+      "projectId": "CTL-01",
+      "domain": "control",
+      "primaryDomain": "control",
+      "relatedDomains": [],
+      "title": "TCV DeepMind 深度强化学习磁控制",
+      "year": 2022,
+      "organization": "Google DeepMind、EPFL Swiss Plasma Center",
+      "problem": "传统磁控制需要针对不同等离子体形状逐项建模和调参，难以用统一控制器处理多线圈、多目标和新形状。",
+      "approach": "在校准的 TCV 模拟器中以非对称 actor–critic 和域随机化训练策略，直接以 19 个线圈电压为动作，并以 10 kHz 在装置上零样本迁移。",
+      "devices": [
+        "TCV：伸长、负三角度、snowflake、双液滴等多种目标形状",
+        "未验证于 DIII-D、JET 或反应堆磁体系统"
+      ],
+      "evidenceLevel": "E4",
+      "evidence": "Nature 论文报告全控制窗内等离子体电流 RMSE 约 0.62 kA（0.47%）、形状 RMSE 约 0.75 cm（2.9%），并维持约 200 ms 双液滴；策略以 10 kHz 实时运行。论文明确不保证避开破裂。",
+      "papers": [
+        {
+          "title": "Magnetic control of tokamak plasmas through deep reinforcement learning",
+          "year": 2022,
+          "venue": "Nature 602",
+          "url": "https://www.nature.com/articles/s41586-021-04301-9"
+        }
+      ],
+      "code": [
+        {
+          "name": "TCV 训练环境、策略权重与装置接口",
+          "url": null,
+          "status": "not-public",
+          "relationship": "论文补充材料公开了目标、奖励和终止条件代码，MPO/通用库也公开；但 FGE、LIUQE 需许可，校准模拟器、已部署策略权重和完整装置接口未公开，因此直接实现仍判为 not-public。"
+        },
+        {
+          "name": "Acme",
+          "url": "https://github.com/google-deepmind/acme",
+          "status": "official-enabling",
+          "relationship": "DeepMind 通用强化学习框架；不是 TCV 实验环境或已部署策略。"
+        }
+      ],
+      "data": "论文源数据有限公开；完整 TCV 训练模拟器和放电控制日志非公开一键数据集。",
+      "maturity": "真实装置闭环示范，科学成熟度高；工程安全认证和跨装置泛化仍不足。",
+      "limitations": "模拟器偏差、动作/传感器映射和线圈约束高度装置特定；未覆盖破裂保护、硬实时故障模式、形式化安全或全脉冲自治。",
+      "tags": [
+        "TCV",
+        "强化学习",
+        "磁控制",
+        "sim-to-real",
+        "等离子体形状",
+        "实时控制"
+      ]
+    },
+    {
+      "id": "CTL-04",
+      "projectId": "CTL-04",
+      "domain": "control",
+      "primaryDomain": "control",
+      "relatedDomains": [],
+      "title": "TCV predict-first 神经状态空间模型与鲁棒 ramp-down 轨迹学习",
+      "year": 2025,
+      "organization": "MIT PSFC、EPFL/TCV 等",
+      "problem": "高性能等离子体降电流阶段容易触碰约束和失稳边界，而昂贵实验只允许少量试错。",
+      "approach": "从历史放电学习神经状态空间模型，用模型集合表达动力学不确定性，再以强化学习搜索对模型误差鲁棒的降电流轨迹，先预测后实验。",
+      "devices": [
+        "TCV：311 个脉冲的数据集，其中仅少量为目标高性能状态"
+      ],
+      "evidenceLevel": "E2",
+      "evidence": "论文报告预测优先实验在统计指标上优于基线，并实现相对基线约 20% 的初始等离子体电流提升后仍完成 ramp-down；属于有限范围的实验外推。",
+      "papers": [
+        {
+          "title": "Learning plasma dynamics and robust rampdown trajectories with predict-first experiments at TCV",
+          "year": 2025,
+          "venue": "Nature Communications 16 8877",
+          "url": "https://www.nature.com/articles/s41467-025-63917-x"
+        }
+      ],
+      "code": [
+        {
+          "name": "TCV 神经状态空间模型、策略和训练环境",
+          "url": null,
+          "status": "not-public",
+          "relationship": "未发现完整公开实现与训练资产。"
+        }
+      ],
+      "data": "论文提供源数据/补充材料，但完整 311 脉冲处理数据与控制接口并非一键公共基准。",
+      "maturity": "真实装置的预测优先场景优化示范。",
+      "limitations": "高性能样本很少，适用边界和不确定性覆盖有限；轨迹级成功不等同于全状态在线反馈与安全认证。",
+      "tags": [
+        "TCV",
+        "ramp-down",
+        "神经状态空间模型",
+        "鲁棒强化学习",
+        "predict-first"
+      ]
+    },
+    {
+      "id": "aux-west-realtime-thermal-ai-pcs",
+      "projectId": "aux-west-realtime-thermal-ai-pcs",
+      "domain": "diagnostics",
+      "primaryDomain": "diagnostics",
+      "relatedDomains": [
+        "control",
+        "auxiliary"
+      ],
+      "title": "WEST 红外壁监视 AI：从热事件识别到加热系统闭环指令",
+      "year": 2025,
+      "organization": "CEA Institute for Magnetic Fusion Research (IRFM)",
+      "problem": "长脉冲 WEST 的红外视频量巨大，偏滤器/第一壁热点、电弧和反射难以由操作员实时区分，延迟可能造成 PFC 或天线损伤。",
+      "approach": "在 Wall Monitoring System 配置 NVIDIA A40 GPU，将热事件检测/跟踪、钨偏滤器 strike-line characterization 和紧凑 CNN 电弧检测组合为模块化实时流水线，并与 Plasma Control System/加热天线接口。",
+      "devices": [
+        "WEST tokamak C9 campaign",
+        "WEST tungsten divertor and in-vessel components",
+        "WEST heating antennae",
+        "WEST Wall Monitoring System / PCS"
+      ],
+      "evidenceLevel": "E4",
+      "evidence": "论文报告热事件/打击线算法以 30 fps、电弧 CNN 超过 100 fps 运行，在 WEST C9 大量红外视频上首次测试；并直接报告 AI 图像分析通过 PCS 向加热天线发送指令，是装置闭环实验级证据。",
+      "papers": [
+        {
+          "title": "Real-time monitoring system for detection and characterization of thermal events on WEST Tokamak: Implementation and first results",
+          "year": 2025,
+          "venue": "Fusion Engineering and Design 215, 114960",
+          "url": "https://doi.org/10.1016/j.fusengdes.2025.114960"
+        },
+        {
+          "title": "Deep learning-based process for the automatic detection, tracking, and classification of thermal events on the in-vessel components of fusion reactors",
+          "year": 2023,
+          "venue": "Fusion Engineering and Design 192, 113636",
+          "url": "https://doi.org/10.1016/j.fusengdes.2023.113636"
+        }
+      ],
+      "code": [
+        {
+          "name": "WEST WMS thermal-event AI and PCS integration",
+          "url": null,
+          "status": "not-public",
+          "relationship": "未发现 CEA 发布完整检测模型、权重、标注工具和实时 PCS 集成源码。"
+        }
+      ],
+      "data": "论文明确声明作者无权共享 WEST 红外数据；专家标注库和本地事件数据库不公开。",
+      "maturity": "真实长脉冲托卡马克上的实时部署与有限闭环动作示范，是聚变工程 AI 中少见的 E4 工作。",
+      "limitations": "尚非核安全级机器保护；误报受发射率、反射、相机漂移和新型热事件影响；需要独立冗余、失效安全逻辑、跨 campaign 再验证与严格变更控制。",
+      "tags": [
+        "WEST",
+        "infrared",
+        "PFC",
+        "thermal event",
+        "Faster R-CNN",
+        "CNN",
+        "real-time",
+        "closed-loop"
+      ],
+      "applicabilityLevel": "fusion-device-online"
+    },
+    {
+      "id": "aux-east-intellimik-quench",
+      "projectId": "aux-east-intellimik-quench",
+      "domain": "diagnostics",
+      "primaryDomain": "diagnostics",
+      "relatedDomains": [
+        "control",
+        "auxiliary"
+      ],
+      "title": "IntelliMIK：EAST 超导磁体神经网络感应电压补偿与失超检测",
+      "year": 2025,
+      "organization": "Hefei Institutes of Physical Science, Chinese Academy of Sciences；University of Science and Technology of China",
+      "problem": "CS/PF 电流、等离子体和真空室涡流耦合产生 kV 级感应电压，传统 CWW+MIK 补偿后峰值噪声仍可能越过 500 mV/1 s 失超阈值并误判，HTS 的更低阈值使问题加剧。",
+      "approach": "用历史 EAST 信号训练神经网络替代二级 Inductive Noise Realtime Calculation，保留 co-wound wire 一级补偿，实时估计并消除非线性感应电压，提取电阻性 quench voltage。",
+      "devices": [
+        "EAST superconducting TF/CS/PF magnet quench-detection system",
+        "中国下一代聚变装置 HTS CS magnets（会议提出的迁移目标）"
+      ],
+      "evidenceLevel": "E3",
+      "evidence": "论文报告 IntelliMIK 已在 EAST 最近 2000 炮（141001–143000）中在线运行，并显著降低感应电压补偿后的噪声；但 EAST 尚未发生真实磁体失超，阳性检出仅通过向历史信号人工注入模拟失超电压进行验证。因此 E3 只表示在线感应电压补偿已部署，不代表真实失超 true-positive 或自动安全卸能已验证。",
+      "papers": [
+        {
+          "title": "IntelliMIK: a novel intelligent quench detection method for fusion devices",
+          "year": 2025,
+          "venue": "Nuclear Fusion 65, 036022",
+          "url": "https://doi.org/10.1088/1741-4326/adb0dd"
+        }
+      ],
+      "code": [
+        {
+          "name": "IntelliMIK",
+          "url": null,
+          "status": "not-public",
+          "relationship": "未发现官方训练代码、模型权重、实时推理工程或安全系统接口公开。"
+        }
+      ],
+      "data": "EAST 历史训练数据与 2000 炮运行评估数据未公开。",
+      "maturity": "真实超导托卡马克上经 2000 炮运行考核的在线感应电压补偿功能；真实失超检出仍处于合成信号验证阶段。",
+      "limitations": "EAST 没有真实失超阳性样本，当前 true-positive 证据来自人工注入的模拟失超电压；公开证据不足以认定安全完整性等级或自动卸能闭环，跨磁体、HTS 工况、漂移监视与 fail-safe 回退仍需证明。",
+      "tags": [
+        "EAST",
+        "superconducting magnet",
+        "quench",
+        "IntelliMIK",
+        "neural network",
+        "induced voltage",
+        "real-time"
+      ],
+      "applicabilityLevel": "fusion-device-online"
+    },
+    {
+      "id": "DIA-07",
+      "projectId": "DIA-07",
+      "domain": "diagnostics",
+      "primaryDomain": "diagnostics",
+      "relatedDomains": [],
+      "title": "RTCAKENN：DIII-D 实时动力学剖面重建",
+      "year": 2024,
+      "organization": "General Atomics、Princeton/PPPL 等",
+      "problem": "高质量 CAKE 动力学重建依赖离线多诊断分析且延迟高，实时控制需要快速、能容忍部分诊断缺失的剖面。",
+      "approach": "用 MLP/一维 CNN 的编码—解码结构学习七类 CAKE 剖面，并在训练时模拟输入 dropout，使其在不直接使用实时 Thomson/CER 输入时仍能估计动力学状态。",
+      "devices": [
+        "DIII-D：实时 Plasma Control System"
+      ],
+      "evidenceLevel": "E3",
+      "evidence": "Nuclear Fusion 论文报告模型已接入 DIII-D PCS，推理低于 8 ms；相对既有实时替代方案更接近 CAKE 输出，并测试了部分输入丢失。",
+      "papers": [
+        {
+          "title": "Machine learning-based real-time kinetic profile reconstruction in DIII-D",
+          "year": 2024,
+          "venue": "Nuclear Fusion 64 026006",
+          "url": "https://doi.org/10.1088/1741-4326/ad142f"
+        }
+      ],
+      "code": [
+        {
+          "name": "RTCAKENN 模型、权重和训练管线",
+          "url": null,
+          "status": "not-public",
+          "relationship": "未发现官方专用仓库。"
+        },
+        {
+          "name": "keras2c",
+          "url": "https://github.com/PlasmaControl/keras2c",
+          "status": "official-enabling",
+          "relationship": "同类 DIII-D 神经网络的实时 C 部署工具；并非 RTCAKENN 的训练资产。"
+        }
+      ],
+      "data": "完整 DIII-D/CAKE 标签和实时诊断数据未公开。",
+      "maturity": "已在装置 PCS 中运行的实时状态估计器。",
+      "limitations": "继承 CAKE 教师偏差；合成 dropout 不能覆盖全部共因故障，且剖面可信度、OOD 检测和跨机迁移仍不足。",
+      "tags": [
+        "DIII-D",
+        "CAKE",
+        "剖面重建",
+        "实时诊断",
+        "PCS",
+        "输入缺失"
+      ]
+    },
+    {
+      "id": "aux-diiid-realtime-magnetic-sensor-ae",
+      "projectId": "aux-diiid-realtime-magnetic-sensor-ae",
+      "domain": "diagnostics",
+      "primaryDomain": "diagnostics",
+      "relatedDomains": [
+        "auxiliary",
+        "control"
+      ],
+      "title": "DIII-D 等离子体控制系统中的实时磁传感器自编码器异常检测",
+      "year": 2022,
+      "organization": "DIII-D National Fusion Facility；General Atomics",
+      "problem": "磁通环和磁探针故障会污染平衡重建与等离子体位置/形状控制，必须在控制周期内识别异常传感器。",
+      "approach": "训练 autoencoder 学习磁诊断信号正常相关结构，以重构残差检测/定位异常，并将推理实现到 DIII-D Plasma Control System。",
+      "devices": [
+        "DIII-D tokamak",
+        "DIII-D magnetic flux loops and magnetic probes",
+        "DIII-D Plasma Control System"
+      ],
+      "evidenceLevel": "E3",
+      "evidence": "论文标题、摘要和 DOE/OSTI 记录直接说明系统在 DIII-D PCS 上实时实现；证据支持在线监视部署，但未证明算法自动重构控制输入或闭环容错动作。",
+      "papers": [
+        {
+          "title": "Real-Time Magnetic Sensor Anomaly Detection Using Autoencoder Neural Networks on the DIII-D Tokamak",
+          "year": 2022,
+          "venue": "IEEE Transactions on Plasma Science 50, 4126–4130",
+          "url": "https://doi.org/10.1109/TPS.2022.3181548"
+        }
+      ],
+      "code": [
+        {
+          "name": "DIII-D PCS autoencoder anomaly detector",
+          "url": null,
+          "status": "not-public",
+          "relationship": "未发现 General Atomics 或论文作者发布对应训练、部署和 PCS 集成代码。"
+        }
+      ],
+      "data": "DIII-D 磁诊断脉冲与注入/观测异常数据未作为公开数据集发布。",
+      "maturity": "已进入真实托卡马克实时控制软件栈的工程监视功能。",
+      "limitations": "论文证据不等于 safety-certified fault-tolerant control；跨 campaign、传感器更换、等离子体场景漂移与多故障同时发生的稳健性仍需持续监控。",
+      "tags": [
+        "DIII-D",
+        "magnetic diagnostics",
+        "sensor fault",
+        "autoencoder",
+        "real-time",
+        "PCS"
+      ],
+      "applicabilityLevel": "fusion-device-online"
+    },
+    {
+      "id": "DIA-11",
+      "projectId": "DIA-11",
+      "domain": "diagnostics",
+      "primaryDomain": "diagnostics",
+      "relatedDomains": [],
+      "title": "FusionMAE：HL-3 多诊断自监督预训练基础模型",
+      "year": 2026,
+      "organization": "核工业西南物理研究院、HL-3、清华/SUNIST-2 等合作团队",
+      "problem": "聚变诊断多、采样异构、缺测普遍，针对每一任务单独训练模型造成接口碎片化，缺少可复用的等离子体状态表征。",
+      "approach": "以 Transformer masked autoencoder 在 88 路、12 类诊断的同步时间片上进行随机通道/系统掩码重建，形成 256 维潜在状态，再适配破裂预测、EFIT-NN、信号修复和等离子体演化等下游任务。",
+      "devices": [
+        "HL-3：2022–2025 年 2445 个放电，1950 个开发、495 个测试",
+        "SUNIST-2：补充跨装置/小装置验证"
+      ],
+      "evidenceLevel": "E2",
+      "evidence": "Communications Physics 报告无掩码平均 Pearson 相关约 98.7%，逐通道掩码约 97.2%，逐诊断系统掩码约 95.3%；14M 参数模型在 A100 上约 10 小时训练、约 4.8 ms 推理，并展示多项下游任务。所有证据主要为装置历史数据离线评估。",
+      "papers": [
+        {
+          "title": "FusionMAE, a self-supervised pretrained model to optimize and simplify diagnostic and control of fusion plasma",
+          "year": 2026,
+          "venue": "Communications Physics 9 232",
+          "url": "https://www.nature.com/articles/s42005-026-02626-3"
+        }
+      ],
+      "code": [
+        {
+          "name": "FusionMAE 代码、权重与预训练管线",
+          "url": null,
+          "status": "not-public",
+          "relationship": "论文声明代码可向作者申请，但未给出公共仓库，因此按 not-public 处理。"
+        }
+      ],
+      "data": "图表/补充数据公开；完整 HL-3 训练数据需按 Southwestern Institute of Physics 流程正式申请。",
+      "maturity": "装置离线大规模预训练与多任务验证；尚无公开实时控制部署。",
+      "limitations": "跨装置泛化仍有限；长于约 10 ms 的时间动力学建模会退化，重建相关性不保证因果/物理正确，缺少校准不确定度和在线版本治理。",
+      "tags": [
+        "HL-3",
+        "SUNIST-2",
+        "基础模型",
+        "masked autoencoder",
+        "多模态诊断",
+        "自监督学习"
+      ]
+    },
+    {
+      "id": "DIA-12",
+      "projectId": "DIA-12",
+      "domain": "diagnostics",
+      "primaryDomain": "diagnostics",
+      "relatedDomains": [],
+      "title": "Diag2Diag：DIII-D 多模态超分辨率合成 Thomson 诊断",
+      "year": 2025,
+      "organization": "Princeton/PPPL、General Atomics、PlasmaControl 等",
+      "problem": "Thomson scattering 空间信息丰富但采样慢，而 ECE、干涉仪、磁诊断等快速信号空间/物理信息不完整；需要生成高频合成剖面以研究 ELM、RMP 和磁岛动力学。",
+      "approach": "先以 CNN 学习 ECE 到干涉仪谱图，再以 MLP 将 ECE、干涉仪、磁诊断、CER、MSE 等 236 个输入映射为 80 个 Thomson 输出；训练集覆盖约 4000 个 DIII-D 放电和 340 万时间点。",
+      "devices": [
+        "DIII-D：2017–2022 年多诊断数据；包括 ELM、RMP 和磁岛相关实验"
+      ],
+      "evidenceLevel": "E2",
+      "evidence": "Nature Communications 报告谱图 L1 误差约 1.2×10^-3、自动编码器事件检测 F1 约 0.82，并用实际低频 Thomson、burst-mode 数据、前向物理关系和已知 ELM/RMP/磁岛行为交叉验证。论文明确指出没有 MHz Thomson 真值，合成诊断不能被理解为与真实诊断逐点完全等价。",
+      "papers": [
+        {
+          "title": "Multimodal super-resolution: discovering hidden physics and its application to fusion plasmas",
+          "year": 2025,
+          "venue": "Nature Communications 16 8506",
+          "url": "https://www.nature.com/articles/s41467-025-63492-1"
+        }
+      ],
+      "code": [
+        {
+          "name": "Diag2Diag-SRTS",
+          "url": "https://github.com/PlasmaControl/Diag2Diag-SRTS",
+          "status": "official-direct",
+          "relationship": "论文团队公开的训练脚本、图生成 notebook 和 shot list。"
+        }
+      ],
+      "data": "代码和 shot list 公开；DIII-D 原始诊断数据仍需设施用户权限，论文 figure data 不等于完整训练集。",
+      "maturity": "大规模装置离线验证、代码公开的合成诊断研究；尚非安全关键实时测量替代品。",
+      "limitations": "不存在 MHz Thomson ground truth；相关性可在 OOD、传感器漂移或新运行场景下失效，必须以物理一致性和真实诊断抽样持续校准。",
+      "tags": [
+        "DIII-D",
+        "Diag2Diag",
+        "合成诊断",
+        "Thomson scattering",
+        "超分辨率",
+        "多模态"
+      ]
+    },
+    {
+      "id": "DIA-08",
+      "projectId": "DIA-08",
+      "domain": "diagnostics",
+      "primaryDomain": "diagnostics",
+      "relatedDomains": [],
+      "title": "EFIT-Prime：DIII-D 物理约束深度集合平衡重建与不确定度",
+      "year": 2024,
+      "organization": "Argonne National Laboratory、DIII-D/General Atomics 等",
+      "problem": "纯数据驱动平衡网络可能违反 Grad–Shafranov 约束且在新形状上不可靠，传统 EFIT 又难以满足更高频的重建需求。",
+      "approach": "以神经架构搜索得到深度集合，在监督损失中加入 Grad–Shafranov 电流/平滑与诊断位置约束，并用集合分散表达认知不确定度。",
+      "devices": [
+        "DIII-D：训练集中排除负三角度，再以负三角度放电测试外推"
+      ],
+      "evidenceLevel": "E2",
+      "evidence": "论文报告模型可重建未参与训练的负三角度形状；深度集合一次推理约 15 ms，并展示误差与集合不确定度的关系，作者表述为经优化后具备实时潜力，而非已在 PCS 取代 EFIT。",
+      "papers": [
+        {
+          "title": "EFIT-Prime: Probabilistic and Physics-Constrained Reduced-Order Neural Network Model for Equilibrium Reconstruction in DIII-D",
+          "year": 2024,
+          "venue": "Physics of Plasmas 31",
+          "url": "https://doi.org/10.1063/5.0213609"
+        }
+      ],
+      "code": [
+        {
+          "name": "EFIT-Prime 训练代码、权重与 DIII-D 数据",
+          "url": null,
+          "status": "not-public",
+          "relationship": "未发现可核验的官方公开仓库。"
+        }
+      ],
+      "data": "DIII-D 磁诊断与 EFIT 标签未公开为完整训练集。",
+      "maturity": "离线高质量原型，接近实时预算但尚无公开在线部署证据。",
+      "limitations": "仍受 EFIT 标签和 DIII-D 传感器布局约束；15 ms 集合计算、置信度校准、磁诊断共模故障和跨装置泛化需继续验证。",
+      "tags": [
+        "DIII-D",
+        "EFIT-Prime",
+        "平衡重建",
+        "物理约束",
+        "深度集合",
+        "不确定度"
+      ]
+    },
+    {
+      "id": "DIA-10",
+      "projectId": "DIA-10",
+      "domain": "diagnostics",
+      "primaryDomain": "diagnostics",
+      "relatedDomains": [],
+      "title": "EAST 84 路磁诊断到二维磁通的深度平衡重建",
+      "year": 2023,
+      "organization": "中国科学院合肥物质科学研究院/EAST 团队",
+      "problem": "EAST 的 EFIT 平衡重建难以在高频控制周期内输出完整二维磁通，且网络结构/超参数的手工选择影响泛化。",
+      "approach": "以 84 路磁诊断为输入、129×129（16641）个磁通网格值为输出，采用自动超参数搜索构建深度回归网络，并以 EFIT 重建作为监督标签。",
+      "devices": [
+        "EAST：MDSplus 历史放电，独立 4555 个平衡切片及 3 个未见完整放电测试"
+      ],
+      "evidenceLevel": "E2",
+      "evidence": "论文报告 4555 个测试平衡中大多数相关系数超过 0.998；3 个未见完整放电的相对磁通误差通常小于 2%，X 点和 ramp 阶段差异更明显。结果证明离线快速重建，不等同于已在 EAST PCS 在线使用。",
+      "papers": [
+        {
+          "title": "Fast reconstruction of EAST plasma equilibrium using deep learning",
+          "year": 2023,
+          "venue": "AIP Advances 13",
+          "url": "https://doi.org/10.1063/5.0152318"
+        }
+      ],
+      "code": [
+        {
+          "name": "EAST equilibrium deep network",
+          "url": null,
+          "status": "not-public",
+          "relationship": "未发现作者发布的代码、权重与处理脚本仓库。"
+        }
+      ],
+      "data": "训练数据存储于 EAST MDSplus；论文未提供完整公开下载。",
+      "maturity": "离线装置数据验证的快速重建原型。",
+      "limitations": "完全继承 EFIT 标签；仅用磁输入，X 点/ramp 阶段误差较大，缺少不确定度、故障输入和在线时序/延迟验证。",
+      "tags": [
+        "EAST",
+        "平衡重建",
+        "磁通",
+        "EFIT",
+        "超参数搜索",
+        "MDSplus"
+      ]
+    },
+    {
+      "id": "DIA-09",
+      "projectId": "DIA-09",
+      "domain": "diagnostics",
+      "primaryDomain": "diagnostics",
+      "relatedDomains": [],
+      "title": "GS-DeepNet：KSTAR 无监督物理约束平衡重建",
+      "year": 2023,
+      "organization": "KAIST、Korea Institute of Fusion Energy/KSTAR 等",
+      "problem": "传统自由边界平衡重建需要迭代和人工选择磁测量，而监督网络又继承 EFIT 标签，难以同时获得实时性、物理一致性和不确定度。",
+      "approach": "Maxwell Net 从磁探针/磁通环和空间坐标生成磁通，Force-Balance Net 学习压力与极向电流自由函数；两者由 Grad–Shafranov 方程、Biot–Savart 响应和实测边界联合自监督，并用 MC dropout 估计不确定度。",
+      "devices": [
+        "KSTAR：31 个可用磁探针的 BR/BZ 分量、45 个磁通环及总等离子体电流；41×41 极向网格"
+      ],
+      "evidenceLevel": "E2",
+      "evidence": "Scientific Reports 论文在 KSTAR 数据上训练、验证和测试；磁边界量与网络输出的 R² 接近 1，代表性压力剖面与 Thomson scattering 在误差范围内相符，并以 MSE 磁倾角等内部诊断作独立比较。论文报告 RTX A4000 上重建 41×41 磁通小于 1 ms；没有公开证据表明其已成为在线权威平衡。",
+      "papers": [
+        {
+          "title": "GS-DeepNet: mastering tokamak plasma equilibria with deep neural networks and the Grad–Shafranov equation",
+          "year": 2023,
+          "venue": "Scientific Reports 13 15799",
+          "url": "https://www.nature.com/articles/s41598-023-42991-5"
+        }
+      ],
+      "code": [
+        {
+          "name": "GS-DeepNet 训练代码与权重",
+          "url": null,
+          "status": "not-public",
+          "relationship": "论文 Data/Code availability 未给出可直接复现的公共仓库。"
+        }
+      ],
+      "data": "KSTAR 原始磁诊断、Thomson/MSE 比较数据未发布为完整公开训练集。",
+      "maturity": "装置离线数据上的物理约束研究模型，推理预算满足实时潜力。",
+      "limitations": "轴对称、诊断布局和壁/线圈响应高度 KSTAR 特定；快离子压力不可得、MC dropout 校准和真实传感器故障下的在线稳定性仍需验证。",
+      "tags": [
+        "KSTAR",
+        "GS-DeepNet",
+        "Grad-Shafranov",
+        "无监督学习",
+        "平衡重建",
+        "不确定度"
+      ]
+    },
+    {
+      "id": "DIA-02",
+      "projectId": "DIA-02",
+      "domain": "diagnostics",
+      "primaryDomain": "diagnostics",
+      "relatedDomains": [],
+      "title": "Hybrid Deep Learner：C-Mod/DIII-D/EAST 跨机破裂预测",
+      "year": 2021,
+      "organization": "MIT PSFC、DIII-D、EAST 合作团队",
+      "problem": "新装置破裂样本稀少，单机监督模型往往无法迁移到不同诊断配置和运行分布。",
+      "approach": "组合时间卷积、循环单元和多尺度特征，配合标签平滑/迁移策略，在三台装置间共享破裂表示。",
+      "devices": [
+        "Alcator C-Mod",
+        "DIII-D",
+        "EAST"
+      ],
+      "evidenceLevel": "E2",
+      "evidence": "论文报告 AUC 分别约为 C-Mod 0.801、DIII-D 0.947、EAST 0.973；仅用 20 个 EAST 破裂样本并结合其他装置数据时仍达到约 0.959 AUC，8 核 CPU 推理约 1 ms。",
+      "papers": [
+        {
+          "title": "Hybrid deep-learning architecture for general disruption prediction across multiple tokamaks",
+          "year": 2021,
+          "venue": "Nuclear Fusion 61 026007",
+          "url": "https://doi.org/10.1088/1741-4326/abc664"
+        }
+      ],
+      "code": [
+        {
+          "name": "Hybrid Deep Learner 原论文模型",
+          "url": null,
+          "status": "not-public",
+          "relationship": "未发现本文训练代码与权重的官方公开仓库。"
+        },
+        {
+          "name": "disruption-py",
+          "url": "https://github.com/MIT-PSFC/disruption-py",
+          "status": "official-enabling",
+          "relationship": "MIT PSFC 的跨装置破裂数据提取/特征工程框架；不是原 HDL 模型复现。"
+        }
+      ],
+      "data": "三装置数据库均受设施访问与信号许可约束，未形成论文级完全公开数据包。",
+      "maturity": "多装置离线基准与实时可行性证明。",
+      "limitations": "仍需目标机归一化和少量目标域样本；AUC 不直接给出特定报警提前量下的误报成本，尚无公开装置闭环部署。",
+      "tags": [
+        "C-Mod",
+        "DIII-D",
+        "EAST",
+        "破裂预警",
+        "迁移学习",
+        "多尺度时序"
+      ]
+    },
+    {
+      "id": "DIA-03",
+      "projectId": "DIA-03",
+      "domain": "diagnostics",
+      "primaryDomain": "diagnostics",
+      "relatedDomains": [],
+      "title": "JT-60U 高 β 破裂似然的稀疏可解释识别",
+      "year": 2021,
+      "organization": "QST/JT-60U 团队",
+      "problem": "需要从大量相关参数中提炼少数可解释变量，识别高 β 放电接近破裂边界的程度。",
+      "approach": "穷举/稀疏特征选择结合线性支持向量机，选出归一化 β、伸长率、离子温度及 q=2 附近磁剪切等关键参数，并构造幂律形式似然边界。",
+      "devices": [
+        "JT-60U：历史高 β 放电"
+      ],
+      "evidenceLevel": "E2",
+      "evidence": "论文对 JT-60U 历史数据库进行回顾性训练/测试，得到可由少数物理参数解释的破裂似然；未报告 JT-60SA 或在线控制部署。",
+      "papers": [
+        {
+          "title": "Likelihood Identification of High-Beta Disruption in JT-60U",
+          "year": 2021,
+          "venue": "Plasma and Fusion Research 16 1402073",
+          "url": "https://doi.org/10.1585/pfr.16.1402073"
+        }
+      ],
+      "code": [
+        {
+          "name": "JT-60U 稀疏选择与 SVM 实现",
+          "url": null,
+          "status": "not-public",
+          "relationship": "未发现官方公开代码。"
+        }
+      ],
+      "data": "JT-60U 历史放电数据库未公开为可下载基准。",
+      "maturity": "离线、可解释的装置特定风险指标。",
+      "limitations": "只覆盖特定高 β 破裂族；历史装置与新装置分布不同，线性边界和相关性变量不能当作因果机理或通用保护规则。",
+      "tags": [
+        "JT-60U",
+        "高β",
+        "破裂预警",
+        "SVM",
+        "稀疏特征",
+        "可解释性"
+      ]
+    },
+    {
+      "id": "DIA-06",
+      "projectId": "DIA-06",
+      "domain": "diagnostics",
+      "primaryDomain": "diagnostics",
+      "relatedDomains": [],
+      "title": "ASDEX Upgrade 软 X 射线 Gaussian Process Tomography 模型选择",
+      "year": 2020,
+      "organization": "ASDEX Upgrade、IPFN 等",
+      "problem": "Gaussian process tomography 的核/先验模型选择若逐帧计算 Bayesian evidence，成本高且妨碍快速 SXR 层析。",
+      "approach": "训练卷积网络从 SXR 投影判断最高证据的 GPT 模型，再执行对应重建，并用前向投影残差检查与测量的一致性。",
+      "devices": [
+        "ASDEX Upgrade：软 X 射线诊断"
+      ],
+      "evidenceLevel": "E2",
+      "evidence": "论文将神经网络分类与解析 Bayesian evidence 选择对比，并通过将重建前向投影回测量空间评估模型；它加速的是候选先验选择，不是从物理上证明发射率真值。",
+      "papers": [
+        {
+          "title": "Deep learning for Gaussian process tomography model selection using the ASDEX Upgrade SXR system",
+          "year": 2020,
+          "venue": "arXiv preprint",
+          "url": "https://arxiv.org/abs/2004.06429"
+        }
+      ],
+      "code": [
+        {
+          "name": "AUG SXR GPT 模型选择代码",
+          "url": null,
+          "status": "not-public",
+          "relationship": "未发现论文专用公开仓库。"
+        }
+      ],
+      "data": "AUG SXR 训练和测试投影未公开为完整基准。",
+      "maturity": "离线诊断算法研究。",
+      "limitations": "候选模型集合是封闭的；网络可能在新辐射形态/几何漂移下误选，且前向残差不能唯一验证二维真值。",
+      "tags": [
+        "ASDEX Upgrade",
+        "SXR",
+        "Gaussian process tomography",
+        "模型选择",
+        "CNN"
+      ]
+    },
+    {
+      "id": "DIA-05",
+      "projectId": "DIA-05",
+      "domain": "diagnostics",
+      "primaryDomain": "diagnostics",
+      "relatedDomains": [],
+      "title": "JET 辐射层析与变分自编码器破裂前兆分析",
+      "year": 2020,
+      "organization": "JET/Eurofusion、IPFN 等",
+      "problem": "仅用一维 bolometer 信号难以定位破裂前的辐射形态异常，需要把高速层析与无监督异常检测结合。",
+      "approach": "先以矩阵/学习代理快速生成二维 bolometer 层析，再用变分自编码器学习正常基线分布，以重建误差和潜变量偏移标记前兆。",
+      "devices": [
+        "JET：两个实验 campaign 的 baseline 放电"
+      ],
+      "evidenceLevel": "E2",
+      "evidence": "论文在回顾性案例中识别出接近破裂时的辐射结构异常，并对比正常放电演化；尚未证明固定阈值可在实时系统中稳定满足误报/漏报要求。",
+      "papers": [
+        {
+          "title": "Deep Learning for the Analysis of Disruption Precursors Based on Plasma Tomography",
+          "year": 2020,
+          "venue": "Fusion Science and Technology 76",
+          "url": "https://doi.org/10.1080/15361055.2020.1820749"
+        }
+      ],
+      "code": [
+        {
+          "name": "JET tomography + VAE 实现",
+          "url": null,
+          "status": "not-public",
+          "relationship": "未发现对应公开代码与模型权重。"
+        }
+      ],
+      "data": "所用 JET baseline 数据与层析训练标签未公开。",
+      "maturity": "离线前兆发现原型。",
+      "limitations": "异常并不等于可控的因果前兆；阈值对 campaign、壁条件和运行场景敏感，缺少在线/跨装置验证。",
+      "tags": [
+        "JET",
+        "bolometer",
+        "VAE",
+        "异常检测",
+        "破裂前兆",
+        "层析"
+      ]
+    },
+    {
+      "id": "DIA-01",
+      "projectId": "DIA-01",
+      "domain": "diagnostics",
+      "primaryDomain": "diagnostics",
+      "relatedDomains": [],
+      "title": "FRNN：DIII-D/JET 跨装置深度学习破裂预警",
+      "year": 2019,
+      "organization": "Princeton/PPPL、General Atomics、JET/UKAEA 等",
+      "problem": "破裂前兆跨越多时间尺度和多诊断信号，手工阈值难以在保持提前量的同时兼顾漏报与误报。",
+      "approach": "以分布式训练的循环/序列神经网络直接处理多变量时间序列，并研究 DIII-D 与 JET 之间的迁移和跨装置泛化。",
+      "devices": [
+        "DIII-D",
+        "JET"
+      ],
+      "evidenceLevel": "E2",
+      "evidence": "Nature 论文显示多数正确报警能提供数百毫秒提前量，并展示 DIII-D/JET 的双向迁移优于只依赖目标机少量数据；这优于约 30 ms 量级缓解触发需求，但仍存在误报和漏报。",
+      "papers": [
+        {
+          "title": "Predicting disruptive instabilities in controlled fusion plasmas through deep learning",
+          "year": 2019,
+          "venue": "Nature 568",
+          "url": "https://www.nature.com/articles/s41586-019-1116-4"
+        }
+      ],
+      "code": [
+        {
+          "name": "plasma-python / FRNN",
+          "url": "https://github.com/PPPLDeepLearning/plasma-python",
+          "status": "official-direct",
+          "relationship": "PPPL 团队发布的 FRNN 训练与评估代码。"
+        }
+      ],
+      "data": "完整 DIII-D/JET 信号与标签需设施授权；代码公开不等于训练数据公开。",
+      "maturity": "经典跨机离线验证；算法代码公开，装置在线权威部署仍需本机再验证。",
+      "limitations": "设备域偏移、标签/时间窗定义和类别不平衡会显著改变指标；缺少校准置信度、可解释故障树和直接控制闭环证据。",
+      "tags": [
+        "FRNN",
+        "DIII-D",
+        "JET",
+        "破裂预警",
+        "跨装置迁移",
+        "LSTM"
+      ]
+    },
+    {
+      "id": "DIA-04",
+      "projectId": "DIA-04",
+      "domain": "diagnostics",
+      "primaryDomain": "diagnostics",
+      "relatedDomains": [],
+      "title": "JET 深度学习 bolometer 辐射层析重建",
+      "year": 2017,
+      "organization": "JET/Eurofusion、Instituto de Plasmas e Fusão Nuclear 等",
+      "problem": "bolometer 视线积分反演成二维辐射率分布需要迭代正则化，传统算法难以满足大规模回放和实时诊断。",
+      "approach": "以既有迭代层析结果为监督标签，训练上采样卷积网络将视线测量直接映射为约 196×115 的二维辐射图。",
+      "devices": [
+        "JET：overview bolometer 系统"
+      ],
+      "evidenceLevel": "E2",
+      "evidence": "论文显示网络能以远快于迭代算法的速度复现其辐射图，并在像素/结构指标上取得高一致性；监督标签是算法重建而非独立真值。",
+      "papers": [
+        {
+          "title": "Deep learning for plasma tomography using the bolometer system at JET",
+          "year": 2017,
+          "venue": "Fusion Engineering and Design 114 18–25",
+          "url": "https://doi.org/10.1016/j.fusengdes.2016.11.006"
+        }
+      ],
+      "code": [
+        {
+          "name": "JET bolometer 深度层析代码与权重",
+          "url": null,
+          "status": "not-public",
+          "relationship": "未发现官方公开仓库。"
+        }
+      ],
+      "data": "JET bolometer 原始数据和迭代重建标签未公开成训练基准。",
+      "maturity": "奠基性的离线快速层析研究。",
+      "limitations": "网络继承标签算法的先验与伪影；缺少测量噪声、几何漂移、OOD 和不确定度的在线验收，不能视作独立物理真值。",
+      "tags": [
+        "JET",
+        "bolometer",
+        "层析",
+        "辐射率",
+        "卷积网络"
+      ]
+    },
+    {
+      "id": "energy-pulsed-pcs-modelica-fresa",
+      "projectId": "energy-pulsed-pcs-modelica-fresa",
+      "domain": "energy",
+      "primaryDomain": "energy",
+      "relatedDomains": [],
+      "title": "脉冲托卡马克 PCS–熔盐储热的动态 Modelica 与多智能体优化",
+      "year": 2025,
+      "organization": "University College London；UK Atomic Energy Authority",
+      "problem": "脉冲托卡马克 dwell 期间热源骤降会冲击透平与电网；储热虽能平滑输出却显著增加体积和成本，需要动态而非仅稳态的设计优化。",
+      "approach": "用 Modelica 构建三热源、蒸汽 Rankine 循环和间接显热熔盐储热的动态模型，开发一相/两相换热器集总模型；以 Fresa.jl 黑箱植物繁殖算法和多智能体 fitness-ranking 协作求解单/双目标设计问题。",
+      "devices": [
+        "UKAEA 支持的 prototype pulsed fusion tokamak power-conversion concept",
+        "未绑定已发电装置"
+      ],
+      "evidenceLevel": "E1",
+      "evidence": "论文展示动态模型足够稳健和快速以嵌入优化；官方案例页报告熔盐罐体积可缩减最多 40.5%，同时保持相对稳定的透平入口条件。全部为模型计算。",
+      "papers": [
+        {
+          "title": "A dynamic model of a power conversion system with indirect thermal energy storage for a pulsed fusion tokamak for use in design optimisation",
+          "year": 2025,
+          "venue": "Fusion Engineering and Design 219, 115289",
+          "url": "https://doi.org/10.1016/j.fusengdes.2025.115289"
+        }
+      ],
+      "code": [
+        {
+          "name": "论文 PCS/储热 Modelica 模型",
+          "url": null,
+          "status": "not-public",
+          "relationship": "未核实到对应完整模型、参数和优化脚本的公开仓库。"
+        },
+        {
+          "name": "Fresa.jl",
+          "url": "https://github.com/ericsfraga/Fresa.jl",
+          "status": "official-enabling",
+          "relationship": "论文作者维护的通用优化器；不是完整聚变 PCS 模型。"
+        },
+        {
+          "name": "OpenModelica",
+          "url": "https://github.com/OpenModelica/OpenModelica",
+          "status": "official-enabling",
+          "relationship": "模型执行环境的官方开源代码。"
+        }
+      ],
+      "data": "论文输入与 Pareto 结果可读；完整动态轨迹、组件图谱和实验数据未公开。",
+      "maturity": "聚变专用动态设计优化原型；首次把多智能体 ranking 用于该 PCS 设计，但不是自主运行智能体。",
+      "limitations": "没有换热器、熔盐罐、透平或电网 HIL 验证；未覆盖故障、腐蚀/冻结、控制保护、RAMI、启停和多年退化。",
+      "tags": [
+        "pulsed tokamak",
+        "Modelica",
+        "thermal storage",
+        "Rankine",
+        "Fresa.jl",
+        "multi-agent",
+        "多目标优化"
+      ],
+      "applicabilityLevel": "fusion-specific-simulation"
+    },
+    {
+      "id": "energy-cfetr-sco2-genetic-optimization",
+      "projectId": "energy-cfetr-sco2-genetic-optimization",
+      "domain": "energy",
+      "primaryDomain": "energy",
+      "relatedDomains": [],
+      "title": "CFETR 双热源 sCO₂ Brayton 能量链的遗传算法与多准则优化",
+      "year": 2023,
+      "organization": "Institute of Plasma Physics, Chinese Academy of Sciences；University of Science and Technology of China",
+      "problem": "CFETR 脉冲运行且包层、偏滤器出口温度不同，需在热效率、火用效率、设备复杂度和单位产品成本之间寻找可行的热—电转换方案。",
+      "approach": "为包层与偏滤器双热源构造新型超临界 CO₂ Brayton 循环，设置高温熔盐与低温混凝土储热回路；用遗传算法和多准则优化同时搜索循环热效率、系统火用效率和总产品单位成本。",
+      "devices": [
+        "CFETR power conversion system 概念",
+        "CFETR blanket 与 divertor 双热源"
+      ],
+      "evidenceLevel": "E1",
+      "evidence": "论文基于 CFETR 第一冷却回路参数完成热力、火用、火用经济和敏感性计算，并给出优化运行方案；全部为概念电厂模型，未有 CFETR 发电回路实验。",
+      "papers": [
+        {
+          "title": "Analyses and optimization of the CFETR power conversion system with a new supercritical CO2 Brayton cycle",
+          "year": 2023,
+          "venue": "Nuclear Fusion 63, 046026",
+          "url": "https://doi.org/10.1088/1741-4326/acbe0d"
+        }
+      ],
+      "code": [
+        {
+          "name": "CFETR sCO2 循环模型与优化脚本",
+          "url": null,
+          "status": "not-public",
+          "relationship": "出版物未提供官方代码、输入 deck 或可运行热力模型。"
+        }
+      ],
+      "data": "论文表格和参数可用于人工重建；未发现机器可读的设计点、Pareto 集或模型数据集。",
+      "maturity": "面向明确聚变电厂概念的优化研究；工程等级仍为前概念/概念设计。",
+      "limitations": "循环部件偏离设计点、材料与腐蚀、熔盐冻结、控制策略、故障、RAMI 和电网瞬态未由试验验证；遗传算法最优只对既定模型与边界条件成立。",
+      "tags": [
+        "CFETR",
+        "sCO2",
+        "Brayton",
+        "储热",
+        "遗传算法",
+        "火用经济",
+        "多准则优化"
+      ],
+      "applicabilityLevel": "fusion-specific-simulation"
+    },
+    {
+      "id": "energy-stellarator-brayton-rankine-ga",
+      "projectId": "energy-stellarator-brayton-rankine-ga",
+      "domain": "energy",
+      "primaryDomain": "energy",
+      "relatedDomains": [],
+      "title": "高场恒星器 Brayton–Rankine 联合循环的遗传算法优化",
+      "year": 2023,
+      "organization": "Renaissance Fusion；University of Tuscia 等",
+      "problem": "连续运行、液态金属壁高温聚变电厂需要把多个温位的热量高效转化为电力，同时控制换热器、压缩机与汽轮机的系统复杂度。",
+      "approach": "建立以超临界 CO₂ Brayton 顶循环和水蒸气 Rankine 底循环组成的联合循环热力模型，用遗传算法搜索主要压力、温度和换热参数。",
+      "devices": [
+        "Renaissance Fusion 高场液态金属壁 stellarator power-plant 概念"
+      ],
+      "evidenceLevel": "E1",
+      "evidence": "论文对特定恒星器概念报告约 51% PCS 效率和约 34% 整厂净效率；这是模型优化结果，不能泛化为已建成装置性能。",
+      "papers": [
+        {
+          "title": "An optimized power conversion system for a stellarator-based nuclear fusion power plant",
+          "year": 2023,
+          "venue": "Energy Conversion and Management 276, 116572",
+          "url": "https://doi.org/10.1016/j.enconman.2022.116572"
+        }
+      ],
+      "code": [
+        {
+          "name": "恒星器联合循环模型与遗传算法实现",
+          "url": null,
+          "status": "not-public",
+          "relationship": "未发现作者或公司发布对应源码、模型文件或优化 deck。"
+        }
+      ],
+      "data": "论文设计参数和结果公开；无独立机器可读数据集。",
+      "maturity": "企业聚变电厂概念的热力系统优化；尚未建成并联调。",
+      "limitations": "高温液态金属接口、材料寿命、实际透平地图、辅机耗电、停机和维护假设决定净效率；无动态、控制、故障和实验验证。",
+      "tags": [
+        "stellarator",
+        "sCO2",
+        "Brayton-Rankine",
+        "遗传算法",
+        "净效率",
+        "Renaissance Fusion"
+      ],
+      "applicabilityLevel": "fusion-specific-simulation"
+    },
+    {
+      "id": "aux-east-cryoplant-expert-diagnosis",
+      "projectId": "aux-east-cryoplant-expert-diagnosis",
+      "domain": "auxiliary",
+      "primaryDomain": "auxiliary",
+      "relatedDomains": [],
+      "title": "EAST 2 kW/4 K 氦低温站实时故障诊断专家系统",
+      "year": 2012,
+      "organization": "Institute of Plasma Physics, Chinese Academy of Sciences",
+      "problem": "EAST 低温站设备和过程变量多，DCS 可报警却难以实时定位根因并向操作员给出处置建议，故障会破坏超导磁体冷却并中断实验。",
+      "approach": "把运行专家经验整理为 176 张 empirical knowledge tables，以含不确定性的 fault-tree analysis 构建知识库和推理机；用 Qt Creator/C++、MySQL 与低温 DCS 实时过程变量集成，提供监视、诊断和建议界面。",
+      "devices": [
+        "EAST 2 kW/4 K helium refrigerator",
+        "EAST helium distribution system",
+        "EAST cryogenic DCS"
+      ],
+      "evidenceLevel": "E3",
+      "evidence": "论文说明已开发实时诊断系统并完成初步测试，结果满意；直接证据是实际 EAST 低温系统/DCS 的实时软件原型，不是机器学习统计模型，也未报告自动执行控制动作。",
+      "papers": [
+        {
+          "title": "Design of a real-time fault diagnosis expert system for the EAST cryoplant",
+          "year": 2012,
+          "venue": "Fusion Engineering and Design 87, 2002–2006",
+          "url": "https://doi.org/10.1016/j.fusengdes.2012.04.016"
+        }
+      ],
+      "code": [
+        {
+          "name": "EAST cryoplant fault-diagnosis expert system",
+          "url": null,
+          "status": "not-public",
+          "relationship": "未发现 ASIPP 发布知识库、推理机、Qt/C++ 工程或 DCS connector 源码。"
+        }
+      ],
+      "data": "176 条经验知识表、故障树和 EAST 低温站过程数据未公开。",
+      "maturity": "真实聚变低温站上的实时专家系统原型；代表可解释知识驱动 AI，而非现代深度学习。",
+      "limitations": "知识获取与维护高度依赖专家；论文只称 preliminary test，缺长期检出率、误报率和故障覆盖统计；无法自动适应新设备、传感器漂移与未知故障。",
+      "tags": [
+        "EAST",
+        "cryoplant",
+        "helium refrigerator",
+        "expert system",
+        "fault tree",
+        "DCS",
+        "real-time"
+      ],
+      "applicabilityLevel": "fusion-device-online"
+    },
+    {
+      "id": "aux-east-nbi-breakdown-neural",
+      "projectId": "aux-east-nbi-breakdown-neural",
+      "domain": "auxiliary",
+      "primaryDomain": "auxiliary",
+      "relatedDomains": [],
+      "title": "EAST-NBI 离子源击穿预测与参数匹配的 SOM/BP 神经网络",
+      "year": 2021,
+      "organization": "Institute of Plasma Physics, Chinese Academy of Sciences；University of Science and Technology of China",
+      "problem": "EAST 中性束离子源参数失配会导致引出过程击穿，损伤离子源并限制长脉冲高功率运行；传统 snubber 只能减轻电源损伤，不能预防事件。",
+      "approach": "结合多轮实验数据、先验等离子体模型信息和 OPTICS 特征提取，以 self-organizing map 与 back-propagation 网络估计可实现的束引出脉宽，并学习击穿前数毫秒的诊断信号畸变。",
+      "devices": [
+        "EAST neutral beam injector ion source",
+        "未来 CFETR-NNBI（作者提出迁移目标，未验证）"
+      ],
+      "evidenceLevel": "E2",
+      "evidence": "PPCF 论文与 IAEA 技术会议材料使用 EAST-NBI 历史实验数据并报告部分击穿被成功预报；作者同时明确成功率并不理想，因此只能认定为离线装置数据验证。",
+      "papers": [
+        {
+          "title": "Breakdown prediction of ion source at EAST-NBI using neural network",
+          "year": 2021,
+          "venue": "Plasma Physics and Controlled Fusion 63, 125014",
+          "url": "https://doi.org/10.1088/1361-6587/ac2afd"
+        },
+        {
+          "title": "EAST-NBI experimental data processing method based on improved OPTICS algorithm",
+          "year": 2021,
+          "venue": "Fusion Engineering and Design 173, 112737",
+          "url": "https://doi.org/10.1016/j.fusengdes.2021.112737"
+        }
+      ],
+      "code": [
+        {
+          "name": "EAST-NBI SOM/BP breakdown predictor",
+          "url": null,
+          "status": "not-public",
+          "relationship": "未发现作者发布训练代码、模型权重或 NBI 数据处理系统源码。"
+        }
+      ],
+      "data": "EAST-NBI 多轮束引出实验波形；未公开，论文未提供可下载 shot 列表与标签集。",
+      "maturity": "真实 NBI 数据上的早期预警研究原型，尚未达到可靠保护或自动参数控制。",
+      "limitations": "少数击穿才有明显前兆，论文承认成功率不高；标签不平衡、装置工况漂移、提前量和误停束代价需系统评估，CFETR 外推未验证。",
+      "tags": [
+        "EAST",
+        "NBI",
+        "ion source",
+        "breakdown",
+        "SOM",
+        "BP neural network",
+        "OPTICS",
+        "predictive maintenance"
+      ],
+      "applicabilityLevel": "fusion-device-data"
+    },
+    {
+      "id": "aux-iter-tsm-ml-anomaly",
+      "projectId": "aux-iter-tsm-ml-anomaly",
+      "domain": "auxiliary",
+      "primaryDomain": "auxiliary",
+      "relatedDomains": [],
+      "title": "ITER Tokamak Systems Monitor 的统一机器学习异常检测模块",
+      "year": 2026,
+      "organization": "ITER Organization；General Atomics；VERSE EUROPA",
+      "problem": "ITER 工程系统将产生数千通道信号，漂移和组合异常可能不越过传统阈值，人工跨系统监视难以扩展。",
+      "approach": "在 TSM Plant Operation Zone 中以统一 Python 接口托管可独立演进的算法，覆盖整脉冲 intershot 分类和时间局部在线监视；示例包括 gyrotron 脉冲的降维/聚类，以及 magnet power supplies 的 conditional invertible neural network。",
+      "devices": [
+        "ITER 电子回旋加热 gyrotron 工程脉冲",
+        "ITER 磁体电源工程模型/信号",
+        "未来 ITER commissioning 与 operation"
+      ],
+      "evidenceLevel": "E1",
+      "evidence": "论文给出已实现模块、两种算法和与 ITER CODAC/TSM 执行框架的接口，但明确强调 ITER 尚处预运行状态、ground truth 有限；磁体电源示例包含模型生成数据，尚未证明运行 ITER 上的在线告警效果。",
+      "papers": [
+        {
+          "title": "Design and implementation of machine learning-based anomaly detection in the ITER Tokamak Systems Monitor",
+          "year": 2026,
+          "venue": "Frontiers in Physics 14, 1824578",
+          "url": "https://doi.org/10.3389/fphy.2026.1824578"
+        },
+        {
+          "title": "Feasibility evaluation and pre-conceptual design of the ITER tokamak systems monitor",
+          "year": 2023,
+          "venue": "Fusion Engineering and Design 188, 113435",
+          "url": "https://doi.org/10.1016/j.fusengdes.2023.113435"
+        }
+      ],
+      "code": [
+        {
+          "name": "TSM / tsmadkit / tsmadalg",
+          "url": null,
+          "status": "not-public",
+          "relationship": "论文明确称为 ITER 专有知识产权；开放源代码流程正在准备，但截至投稿不能公开，仅可能协议共享。"
+        }
+      ],
+      "data": "工程模型与 ITER 项目相关 operational datasets 均受访问限制；论文明确不随代码发布。",
+      "maturity": "面向正式运行环境的软件架构与预运行算法实现；属于 commissioning 前的 MLOps/监视基础设施。",
+      "limitations": "尚无 ITER 运行分布、真实故障标签和长期 concept drift；自动告警只支撑操作员判断，不替代保护系统；安全鉴定、解释和更新治理仍待运行期完成。",
+      "tags": [
+        "ITER",
+        "TSM",
+        "anomaly detection",
+        "gyrotron",
+        "magnet power supply",
+        "CINN",
+        "MLOps",
+        "CODAC"
+      ],
+      "applicabilityLevel": "fusion-specific-simulation"
+    },
+    {
+      "id": "aux-tmap8-tritium-multiscale-surrogates",
+      "projectId": "aux-tmap8-tritium-multiscale-surrogates",
+      "domain": "auxiliary",
+      "primaryDomain": "auxiliary",
+      "relatedDomains": [],
+      "title": "Tokamak Energy FPP 的 TMAP8 组件代理—系统燃料循环多尺度氚核算",
+      "year": 2026,
+      "organization": "Idaho National Laboratory；Tokamak Energy Ltd.；U.S. DOE Milestone Program collaborators",
+      "problem": "氚在偏滤器、第一壁和真空室中的扩散、陷获、回收跨越材料微观到整厂燃料循环时间尺度，高保真逐组件计算无法直接支持大量设计权衡、库存与安全评估。",
+      "approach": "在开源 MOOSE/TMAP8 中训练/嵌入组件级 surrogate models，再耦合 system-level fuel-cycle model，快速计算正常运行和 bake-out 下的回收动力学、库存、滞留与损失。",
+      "devices": [
+        "Tokamak Energy preliminary Fusion Pilot Plant design",
+        "divertor",
+        "centre-column first wall",
+        "blanket first wall",
+        "vacuum vessel",
+        "tritium fuel-cycle systems"
+      ],
+      "evidenceLevel": "E1",
+      "evidence": "论文是 DOE milestone 下明确 FPP 概念的多尺度仿真，展示组件代理进入整厂燃料循环；TMAP8 官方拥有解析/历史 TMAP 与实验相关 V&V 套件，但该 FPP 代理研究本身没有运行氚电厂数据。",
+      "papers": [
+        {
+          "title": "Multiscale Assessment of Tritium Behavior in Preliminary Fusion Pilot Plant Design Using Surrogate Models in TMAP8",
+          "year": 2026,
+          "venue": "arXiv preprint",
+          "url": "https://arxiv.org/abs/2604.19647"
+        },
+        {
+          "title": "MOOSE-based Tritium Migration Analysis Program, Version 8 (TMAP8) for advanced open-source tritium transport and fuel cycle modeling",
+          "year": 2025,
+          "venue": "Fusion Engineering and Design 214, 114874",
+          "url": "https://doi.org/10.1016/j.fusengdes.2025.114874"
+        }
+      ],
+      "code": [
+        {
+          "name": "论文特定 Tokamak Energy FPP surrogate/input set",
+          "url": null,
+          "status": "not-public",
+          "relationship": "未在论文或官方仓库中核实到可直接定位的该 FPP 配置、训练样本和代理权重。"
+        },
+        {
+          "name": "TMAP8",
+          "url": "https://github.com/idaholab/TMAP8",
+          "status": "official-enabling",
+          "relationship": "INL 官方 LGPL 开源求解器和 fuel-cycle/divertor 示例，是该研究实现底座；不等同于论文专有 FPP 模型资产。"
+        }
+      ],
+      "data": "TMAP8 的 V&V、示例和部分输入公开；Tokamak Energy FPP 几何、工况、代理训练集与权重未核实公开。",
+      "maturity": "聚变公司 FPP 里程碑设计中的开源物理平台+代理概念验证。",
+      "limitations": "尚无聚变电厂尺度氚库存实测；材料损伤、表面条件、捕获参数和工厂 availability 不确定性可主导结果；代理误差需跨尺度传播并形成安全裕量，预印本仍待同行评议。",
+      "tags": [
+        "TMAP8",
+        "Tokamak Energy",
+        "FPP",
+        "tritium",
+        "fuel cycle",
+        "surrogate",
+        "multiscale",
+        "MOOSE"
+      ],
+      "applicabilityLevel": "fusion-specific-simulation"
+    },
+    {
+      "id": "aux-nstx-west-icrf-ml-surrogate",
+      "projectId": "aux-nstx-west-icrf-ml-surrogate",
+      "domain": "auxiliary",
+      "primaryDomain": "auxiliary",
+      "relatedDomains": [],
+      "title": "NSTX/WEST ICRF 加热的 TORIC–ML 微秒级代理",
+      "year": 2024,
+      "organization": "Princeton Plasma Physics Laboratory；Lawrence Berkeley National Laboratory；CEA-IRFM；MIT Plasma Science and Fusion Center",
+      "problem": "ICRF 全波谱求解器 TORIC 每例需约 1–5 分钟，无法进入在线场景预测、加热优化或快速 integrated modeling。",
+      "approach": "以 NSTX high-harmonic fast-wave 和 WEST hydrogen-minority heating 的 TORIC 参数数据库训练 random forest regressors 与 multilayer perceptrons，预测各粒子种类径向功率沉积分布，并分析/过滤求解器数值 outliers。",
+      "devices": [
+        "NSTX shot 138506 equilibrium / expected flat-top parameter range",
+        "WEST shot 56898 equilibrium / expected flat-top parameter range",
+        "NSTX-U 与 WEST ICRF 场景迁移候选"
+      ],
+      "evidenceLevel": "E1",
+      "evidence": "12240 个 NSTX 和 10000 个 WEST TORIC 仿真用于训练/测试；推理约 2–50 微秒，相对 TORIC 加速约六个数量级。NSTX 电子/氘 R²=0.97/0.94，WEST 电子/氢 R²=0.81/0.70。标签仍来自 TORIC，未在真实闭环加热上验证。",
+      "papers": [
+        {
+          "title": "Real-time capable modeling of ICRF heating on NSTX and WEST via machine learning approaches",
+          "year": 2024,
+          "venue": "Nuclear Fusion 64, 096039",
+          "url": "https://doi.org/10.1088/1741-4326/ad645d"
+        }
+      ],
+      "code": [
+        {
+          "name": "论文 TORIC–ML 训练与推理代码",
+          "url": null,
+          "status": "not-public",
+          "relationship": "论文公开数据但未给出作者维护的完整训练/部署仓库。"
+        },
+        {
+          "name": "scikit-learn",
+          "url": "https://github.com/scikit-learn/scikit-learn",
+          "status": "official-enabling",
+          "relationship": "论文使用 RandomForestRegressor 与 MLPRegressor 的官方上游实现，不包含 TORIC 数据流水线。"
+        }
+      ],
+      "data": "两套 TORIC 数据库公开于 Princeton Data Commons：https://doi.org/10.34770/g2gt-4694。",
+      "maturity": "公开数据支持的高质量仿真代理研究；速度满足实时预算，但尚未完成 PCS 集成。",
+      "limitations": "限定 Maxwellian、特定平衡与参数范围；未覆盖三离子、非 Maxwellian、杂质、广义平衡和 core/edge 耦合；代理可能平滑物理少见区，不能把修复 TORIC outlier 视为实验真值。",
+      "tags": [
+        "NSTX",
+        "WEST",
+        "ICRF",
+        "TORIC",
+        "random forest",
+        "MLP",
+        "surrogate",
+        "open data"
+      ],
+      "applicabilityLevel": "fusion-specific-simulation"
+    },
+    {
+      "id": "data-mdsplus",
+      "projectId": "mdsplus",
+      "domain": "data",
+      "primaryDomain": "data",
+      "relatedDomains": [],
+      "title": "MDSplus：聚变实验采集、归档与远程访问基础设施",
+      "year": 1991,
+      "organization": "MIT PSFC、Consorzio RFX/Padova、Los Alamos National Laboratory 及国际协作社区",
+      "problem": "聚变装置产生大量异构、分层且随放电变化的数据，需要在同一自描述结构中保存实验配置、波形、分析结果与仿真数据，并允许跨站点访问。",
+      "approach": "以 shot/tree/node 为核心的自描述层次树、TDI 表达式、设备模型和客户端/服务器协议统一采集、归档与分析；MDSplus 8 扩展长节点名以适配 IMAS 语义命名。",
+      "devices": [
+        "Alcator C-Mod",
+        "RFX-mod",
+        "DIII-D",
+        "EAST",
+        "KSTAR",
+        "NSTX-U",
+        "超过 30 个磁约束聚变站点"
+      ],
+      "evidenceLevel": "E3",
+      "evidence": "官方项目称 MDSplus 已部署在四大洲 30 多个站点，是磁聚变中最广泛使用的数据管理系统。；2018 年综述记录其从 C-Mod、ZTH、RFX 建设期开始的长期装置应用。",
+      "papers": [
+        {
+          "title": "MDSplus yesterday, today and tomorrow",
+          "year": 2018,
+          "venue": "Fusion Engineering and Design",
+          "url": "https://doi.org/10.1016/j.fusengdes.2017.12.010"
+        },
+        {
+          "title": "MDSplus version 8.0 – The path to long node names",
+          "year": 2025,
+          "venue": "Fusion Engineering and Design",
+          "url": "https://doi.org/10.1016/j.fusengdes.2024.114742"
+        }
+      ],
+      "code": [
+        {
+          "name": "MDSplus",
+          "url": "https://github.com/MDSplus/mdsplus",
+          "status": "official-direct",
+          "relationship": "官方核心实现，覆盖服务器、客户端、树管理和多语言接口。"
+        }
+      ],
+      "data": "由各装置独立管理；软件开放不等于实验数据开放；MDSplus tree；signal/segment；远程 thin/thick client；可作为 AI 数据源，但通常还需批量抽取、时间对齐、质量标注、单位/坐标统一和许可治理。",
+      "maturity": "生产级实验数据基础设施；数十年、多装置采集和归档运行。；L4",
+      "limitations": "树结构与命名通常具有装置特异性，跨机迁移需要映射层。；逐 shot、逐信号访问并非天然适合高吞吐机器学习训练。；数据校准、标签、权限和可复用性不由存储系统自动保证。",
+      "tags": [
+        "DAQ",
+        "archive",
+        "time-series",
+        "client-server",
+        "legacy-modernization"
+      ],
+      "deploymentLevel": "D4"
+    },
+    {
+      "id": "data-disruptionpy",
+      "projectId": "disruptionpy",
+      "domain": "data",
+      "primaryDomain": "data",
+      "relatedDomains": [],
+      "title": "DisruptionPy：跨装置扰动分析与 ML-ready 数据集构建框架",
+      "year": 2026,
+      "organization": "MIT Plasma Science and Fusion Center、UKAEA 及 MIT PSFC Disruptions Group",
+      "problem": "扰动预测研究中的信号定义、物理特征提取、时间插值和数据格式长期按装置/课题组重复实现，导致跨机比较与复现困难。",
+      "approach": "用设备配置、数据源抽象和可复用物理方法统一从 MDSplus 或 Xarray/S3 获取数据，计算经审查的物理特征，对齐时间基并输出 Parquet、HDF5 等 ML-ready 数据集。",
+      "devices": [
+        "Alcator C-Mod",
+        "DIII-D",
+        "EAST",
+        "HBT-EP",
+        "MAST"
+      ],
+      "evidenceLevel": "E2",
+      "evidence": "JOSS 论文和官方仓库列出五台装置的数据抽取能力；MAST 是无需额外授权的开放数据源。",
+      "papers": [
+        {
+          "title": "DisruptionPy: An open-source physics-based scientific framework for disruption analysis of fusion plasmas",
+          "year": 2026,
+          "venue": "Journal of Open Source Software",
+          "url": "https://doi.org/10.21105/joss.09364"
+        }
+      ],
+      "code": [
+        {
+          "name": "DisruptionPy",
+          "url": "https://github.com/MIT-PSFC/disruption-py",
+          "status": "official-direct",
+          "relationship": "论文对应官方仓库，含设备适配、方法库、测试和数据输出。"
+        }
+      ],
+      "data": "MAST 开放；C-Mod、DIII-D、EAST、HBT-EP 需各机构授权或网络环境；MDSplus；Xarray/S3；Parquet；HDF5；高，明确为 AI/ML 数据准备；仍需任务标签审计和跨机分布偏移处理。",
+      "maturity": "多机真实数据验证的开源科学框架；真实装置数据管线、同行评审软件论文和持续测试。；L3",
+      "limitations": "工具本身不授予底层数据访问权限。；同名物理特征在不同装置上的可比性仍依赖诊断、校准和定义。；主要面向离线数据库构建，不是安全关键实时扰动服务。",
+      "tags": [
+        "disruption",
+        "multi-machine",
+        "feature-engineering",
+        "ML-ready",
+        "FAIR"
+      ],
+      "deploymentLevel": "D3"
+    },
+    {
+      "id": "data-tokamark",
+      "projectId": "tokamark",
+      "domain": "data",
+      "primaryDomain": "data",
+      "relatedDomains": [],
+      "title": "TokaMark：MAST 多模态聚变基础模型基准",
+      "year": 2026,
+      "organization": "UKAEA、IBM Research、STFC Hartree Centre",
+      "problem": "聚变 AI 缺少公开、结构化、多模态且统一划分与指标的基准，模型之间难以公平比较，也容易产生 shot 泄漏。",
+      "approach": "在 FAIR-MAST 数据上统一时序、二维剖面、视频、执行器、缺失信号处理、任务定义、训练/验证/测试划分和评估工具。",
+      "devices": [
+        "MAST"
+      ],
+      "evidenceLevel": "E2",
+      "evidence": "论文定义 MAST 多模态任务和统一评估协议，并作为 TokaMind 的正式验证基准。；IBM 官方发布页确认 TokaMark 与 TokaMind 已开放。",
+      "papers": [
+        {
+          "title": "TokaMark: A Comprehensive Benchmark for MAST Tokamak Plasma Models",
+          "year": 2026,
+          "venue": "arXiv preprint",
+          "url": "https://arxiv.org/abs/2602.10132"
+        }
+      ],
+      "code": [
+        {
+          "name": "TokaMark",
+          "url": "https://github.com/UKAEA-IBM-STFC-Fusion-FMs/tokamark",
+          "status": "official-direct",
+          "relationship": "作者团队官方 benchmark、数据处理和评估仓库。"
+        }
+      ],
+      "data": "基于公开 MAST/FAIR-MAST；具体 benchmark 下载与许可见官方仓库；multimodal windows；time series；profiles；videos；task splits；很高，但仅证明 MAST 域内基准能力，不能自动代表跨装置或反应堆泛化。",
+      "maturity": "公开真实装置基准；真实 MAST 数据、开放评估代码和基础模型基线。；L3",
+      "limitations": "装置单一，跨机、跨运行年代和反应堆尺度外推尚未验证。；基准任务不等于在线控制或数字孪生闭环。；预印本和基准仍较新，长期社区复现与治理尚待观察。",
+      "tags": [
+        "benchmark",
+        "foundation-model",
+        "MAST",
+        "multimodal",
+        "evaluation"
+      ],
+      "deploymentLevel": "D3"
+    },
+    {
+      "id": "hmi-tokamind",
+      "projectId": "tokamind",
+      "domain": "data",
+      "primaryDomain": "data",
+      "relatedDomains": [
+        "physics",
+        "diagnostics",
+        "hmi"
+      ],
+      "title": "TokaMind：聚变等离子体多模态基础模型",
+      "year": 2026,
+      "organization": "UKAEA、IBM Research、STFC Hartree Centre",
+      "problem": "不同采样率、模态和缺失模式的托卡马克诊断难以在同一模型中预训练并迁移到预测、重建和分类任务。",
+      "approach": "以多模态 token 化、DCT3D 编码、Transformer backbone 和输出适配器预训练 MAST 诊断、剖面、视频与执行器数据，支持冻结/轻量微调。",
+      "devices": [
+        "MAST"
+      ],
+      "evidenceLevel": "E2",
+      "evidence": "论文报告在 TokaMark 上除一项任务外均优于基线，且若干任务轻量微调优于同预算从头训练。；IBM 与 Hugging Face 官方发布模型、代码和 checkpoint。",
+      "papers": [
+        {
+          "title": "TokaMind: A Multi-Modal Transformer Foundation Model for Tokamak Plasma Dynamics",
+          "year": 2026,
+          "venue": "arXiv preprint / submitted to KDD 2026",
+          "url": "https://arxiv.org/abs/2602.15084"
+        }
+      ],
+      "code": [
+        {
+          "name": "TokaMind",
+          "url": "https://github.com/UKAEA-IBM-STFC-Fusion-FMs/tokamind",
+          "status": "official-direct",
+          "relationship": "作者团队训练与微调代码。"
+        },
+        {
+          "name": "TokaMind model weights",
+          "url": "https://huggingface.co/UKAEA-IBM-STFC/tokamind-base-v2",
+          "status": "official-direct",
+          "relationship": "作者团队模型卡和预训练 checkpoint。"
+        }
+      ],
+      "data": "基于公开 TokaMark/FAIR-MAST；time series；2D profiles；video；actuator settings；聚变专用基础模型的强基线；尚不是语言助手、实验规划器或在线控制器。",
+      "maturity": "公开基础模型与真实装置离线基准；MAST 数据、多任务评价、代码与权重开放。；L3",
+      "limitations": "只在 MAST 历史数据上证明，不代表 MAST-U、常规纵横比托卡马克或燃烧等离子体泛化。；没有装置现场、人在回路或安全关键在线验证。；基础模型预测误差仍需物理约束、校准和不确定度门控后才能进入数字孪生。",
+      "tags": [
+        "foundation-model",
+        "Transformer",
+        "multimodal",
+        "MAST",
+        "transfer-learning"
+      ],
+      "deploymentLevel": "D3"
+    },
+    {
+      "id": "data-doe-fdp",
+      "projectId": "doe-fdp",
+      "domain": "data",
+      "primaryDomain": "data",
+      "relatedDomains": [],
+      "title": "DOE Fusion Data Platform：端到端融合数据、元数据与可复现工作流平台",
+      "year": 2025,
+      "organization": "U.S. Department of Energy Fusion Energy Sciences、General Atomics、PPPL 及合作机构",
+      "problem": "单一档案读取工具不足以覆盖数据发现、处理、版本、溯源、策展、发布与 AI/ML 工作流复现。",
+      "approach": "把 Common Metadata Framework、TokSearch、MetaHub、版本与工作流执行能力组织为分布式端到端平台，面向 FAIR 数据对象和可复现研究。",
+      "devices": [
+        "当前重点为 DIII-D",
+        "目标为美国及国际多装置实验与仿真数据"
+      ],
+      "evidenceLevel": "E2",
+      "evidence": "官方平台文档列出 CMF、TokSearch、MetaHub，并明确当前主要高效访问 DIII-D 数据。；PPPL 2025 年官方报告将其定位为 data-driven fusion science 基础。",
+      "papers": [
+        {
+          "title": "DOE Fusion Data Platform official project documentation",
+          "year": 2025,
+          "venue": "DOE FDP official project page（非同行评审论文）",
+          "url": "https://ga-fdp.github.io/",
+          "sourceType": "official-project-page"
+        }
+      ],
+      "code": [
+        {
+          "name": "GA-FDP organization",
+          "url": "https://github.com/GA-FDP",
+          "status": "official-direct",
+          "relationship": "当前 DOE FDP 组件的官方代码组织。"
+        },
+        {
+          "name": "TokSearch",
+          "url": "https://github.com/GA-FDP/toksearch",
+          "status": "official-direct",
+          "relationship": "FDP 已公开的核心批量数据处理组件。"
+        }
+      ],
+      "data": "平台代码和文档开放；当前主要数据访问仍面向已获授权的 DIII-D 用户；metadata objects；workflow artifacts；MDSplus/Parquet via TokSearch；catalog records；目标明确，能承载数据版本、溯源和工作流；多机构统一服务仍在演进。",
+      "maturity": "早期采用与平台集成阶段；官方平台可用且含成熟组件，但未找到覆盖现行全平台的单篇同行评审系统论文。；L3",
+      "limitations": "当前多机覆盖和公共数据开放程度有限。；平台级长期运维、服务等级、数据治理和身份联邦仍需成熟。；尚未形成面向在线数字孪生的低时延双向状态同步。",
+      "tags": [
+        "platform",
+        "FAIR",
+        "provenance",
+        "workflow",
+        "DOE"
+      ],
+      "deploymentLevel": "D3"
+    },
+    {
+      "id": "data-mast-open-data-service",
+      "projectId": "mast-open-data-service",
+      "domain": "data",
+      "primaryDomain": "data",
+      "relatedDomains": [],
+      "title": "MAST Open Data Service：面向跨机机器学习的开放数据服务演进",
+      "year": 2025,
+      "organization": "UKAEA、STFC、ORNL 与国际 MAST/JET 合作团队",
+      "problem": "机器学习需要比单次信号读取更高吞吐的开放服务，并需要让 MAST、MAST-U、JET 数据逐步进入统一可检索、可复用管线。",
+      "approach": "沿用 FAIR-MAST 的对象存储和元数据 API，系统评估并行 worker 下的加载时间与吞吐，提出多装置数据组织、抽象 API 和开放服务路线。",
+      "devices": [
+        "MAST",
+        "MAST-U（目标/部分管线）",
+        "JET（目标/部分管线）"
+      ],
+      "evidenceLevel": "E2",
+      "evidence": "IEEE 论文明确将服务定位为 MAST、MAST-U、JET 的 AI/ML 数据基础，并报告并行性能评估。",
+      "papers": [
+        {
+          "title": "An Open Data Service for Supporting Research in Machine Learning on Tokamak Data",
+          "year": 2025,
+          "venue": "IEEE Transactions on Plasma Science",
+          "url": "https://doi.org/10.1109/TPS.2025.3583419"
+        }
+      ],
+      "code": [
+        {
+          "name": "FAIR-MAST shared implementation",
+          "url": "https://github.com/ukaea/fair-mast",
+          "status": "official-direct",
+          "relationship": "该开放数据服务与 FAIR-MAST 共用核心实现；不是另一套独立求解代码。"
+        }
+      ],
+      "data": "MAST 数据已公开；MAST-U/JET 的完整公开程度受权限、校核和治理约束；object storage；relational metadata；web API；analysis-ready arrays；高吞吐和开放访问方向明确，但多机一致性仍在建设。",
+      "maturity": "MAST 生产开放服务；多机扩展中；公开服务、同行评审性能结果和真实 ML 下游使用。；L4",
+      "limitations": "与 FAIR-MAST 是同一技术谱系，不能重复解读为两个完全独立平台。；公开访问不等于所有通道均已质量认证。；向在线数字孪生演进还需流式更新、版本冻结和事件级质量服务。",
+      "tags": [
+        "open-data-service",
+        "ML-pipeline",
+        "MAST-U",
+        "JET",
+        "throughput"
+      ],
+      "parentProjectId": "data-fair-mast",
+      "deploymentLevel": "D4"
+    },
+    {
+      "id": "data-fair-mast",
+      "projectId": "fair-mast",
+      "domain": "data",
+      "primaryDomain": "data",
+      "relatedDomains": [],
+      "title": "FAIR-MAST：面向开放 AI/ML 的 MAST 数据管理系统",
+      "year": 2024,
+      "organization": "UKAEA、STFC Hartree Centre 与 MAST Team",
+      "problem": "传统 MAST 档案对外部数据科学团队不易检索和批量访问，难以直接支撑可复现 AI/ML。",
+      "approach": "以关系型元数据索引、JSON API、S3 对象存储和 Zarr 诊断数组提供可搜索、可并行、云优化的数据访问，并采用 FAIR 原则和开放许可。",
+      "devices": [
+        "MAST M05-M09 campaigns",
+        "规划扩展至 MAST-U",
+        "规划扩展至 JET"
+      ],
+      "evidenceLevel": "E2",
+      "evidence": "论文报告相对遗留系统约 10 倍的数据访问速度提升。；UKAEA 官方将其列为活跃服务，并说明其被用于 UKAEA/IBM 聚变基础模型协作。",
+      "papers": [
+        {
+          "title": "FAIR-MAST: A fusion device data management system",
+          "year": 2024,
+          "venue": "SoftwareX",
+          "url": "https://doi.org/10.1016/j.softx.2024.101869"
+        }
+      ],
+      "code": [
+        {
+          "name": "FAIR-MAST",
+          "url": "https://github.com/ukaea/fair-mast",
+          "status": "official-direct",
+          "relationship": "MIT 许可的官方服务代码与问题跟踪仓库。"
+        }
+      ],
+      "data": "MAST 历史数据公开；元数据和大部分数据采用 CC BY-SA 4.0；Zarr；S3 object store；JSON API；relational metadata；高；已直接支撑 TokaMark/TokaMind，但目前以单装置历史数据为主。",
+      "maturity": "公开生产服务；真实 MAST 数据开放、性能评估和下游基础模型使用。；L4",
+      "limitations": "当前公开覆盖主要是 MAST 历史 campaigns，不代表 MAST-U/JET 已全面开放。；跨诊断校准、缺失机制和物理事件标签仍需任务级处理。；扩展至不同装置需要模式、坐标和许可治理。",
+      "tags": [
+        "FAIR",
+        "MAST",
+        "Zarr",
+        "S3",
+        "open-data"
+      ],
+      "deploymentLevel": "D4"
+    },
+    {
+      "id": "data-omas-ods",
+      "projectId": "omas",
+      "domain": "data",
+      "primaryDomain": "data",
+      "relatedDomains": [],
+      "title": "OMAS/ODS：面向 Python 的 IMAS 自适应数据层",
+      "year": 2018,
+      "organization": "General Atomics / OMFIT-AToM collaboration",
+      "problem": "直接使用 IMAS 数据结构时，各代码可能填充不同字段、网格和派生量，仍会产生隐性点对点转换；Python 工作流需要轻量、可插值、可校验的内存对象。",
+      "approach": "Ordered Multidimensional Array Structures 以分层 ODS（OMAS Data Storage）对象复现 IMAS 语义，提供一致性检查、坐标插值、派生量计算以及 IMAS、HDF5、NetCDF、JSON、MongoDB 等读写。",
+      "devices": [
+        "DIII-D",
+        "NSTX-U",
+        "ITER",
+        "CFETR",
+        "STEP/OMFIT 支持的其他托卡马克"
+      ],
+      "evidenceLevel": "E2",
+      "evidence": "OMAS 被 STEP 用作所有模块间的集中数据状态，并可随时转换为 IMAS。；耦合 core-pedestal 工作流使用 OMAS/IMAS 在 DIII-D 放电上验证。",
+      "papers": [
+        {
+          "title": "Interfacing Physics Codes with ITER IMAS via OMAS",
+          "year": 2019,
+          "venue": "IAEA Technical Meeting on Fusion Data Processing, Validation and Analysis",
+          "url": "https://nucleus.iaea.org/sites/fusionportal/Shared%20Documents/BoA_28May.pdf",
+          "sourceType": "conference-material"
+        },
+        {
+          "title": "Neural-network accelerated coupled core-pedestal simulations with self-consistent transport of impurities and compatible with ITER IMAS",
+          "year": 2021,
+          "venue": "Nuclear Fusion",
+          "url": "https://www.osti.gov/pages/biblio/1766792"
+        }
+      ],
+      "code": [
+        {
+          "name": "OMAS",
+          "url": "https://github.com/gafusion/omas",
+          "status": "official-direct",
+          "relationship": "官方 Python 实现；ODS 是其核心内存数据对象，不是独立求解器。"
+        }
+      ],
+      "data": "库和模式开放；装置数据访问仍取决于 OMFIT/MDSplus/站点权限；ODS；IMAS；HDF5；NetCDF；JSON；MongoDB；适合 Python 特征工程和工作流状态交换，但训练语料仍需固定版本、快照和标签治理。",
+      "maturity": "成熟集成工作流数据层；STEP、OMFIT 和多项 DIII-D/反应堆预测研究使用。；L4",
+      "limitations": "不是独立的数据仓库或装置采集系统。；第三方代码到 OMAS/IMAS 的映射仍需人工实现和验证。；自动插值和派生量必须保留算法版本与不确定度，避免产生不可追溯的数据变化。",
+      "tags": [
+        "OMAS",
+        "ODS",
+        "Python",
+        "IMAS-adapter",
+        "workflow-state"
+      ],
+      "deploymentLevel": "D4"
+    },
+    {
+      "id": "data-toksearch",
+      "projectId": "toksearch",
+      "domain": "data",
+      "primaryDomain": "data",
+      "relatedDomains": [],
+      "title": "TokSearch：跨大量放电的并行查询与机器学习数据抽取",
+      "year": 2018,
+      "organization": "General Atomics / DIII-D；现由 DOE Fusion Data Platform 维护",
+      "problem": "逐 shot 串行从 MDSplus/PTDATA 读取大量信号无法支撑数万至数十万放电的统计研究和机器学习数据集构建。",
+      "approach": "借鉴 SQL 的 Python/Matlab 查询 API，把信号读取、派生计算、过滤和持久化分布到单机多核、集群或 Spark/HDFS，尽量利用数据局部性和总 I/O 带宽。",
+      "devices": [
+        "DIII-D",
+        "可通过 MDSplus/Parquet 适配其他装置"
+      ],
+      "evidenceLevel": "E2",
+      "evidence": "论文以 DIII-D 扰动 halo current 数据库研究验证大规模并行抽取。；2024 年 IAEA 报告确认 TokSearch 已按 Apache-2.0 开源。",
+      "papers": [
+        {
+          "title": "TokSearch: A search engine for fusion experimental data",
+          "year": 2018,
+          "venue": "Fusion Engineering and Design",
+          "url": "https://doi.org/10.1016/j.fusengdes.2018.02.003"
+        }
+      ],
+      "code": [
+        {
+          "name": "TokSearch",
+          "url": "https://github.com/GA-FDP/toksearch",
+          "status": "official-direct",
+          "relationship": "DOE FDP/General Atomics 官方开放实现。"
+        }
+      ],
+      "data": "工具开放；DIII-D 原始数据通常需要 DIII-D 用户权限；MDSplus；PTDATA；Parquet；Spark/DataFrame-like results；非常适合批量数据抽取，但不自动提供跨机语义、标签或训练/测试泄漏控制。",
+      "maturity": "DIII-D 大规模分析工具并进入 DOE FDP 工具链；真实大规模 shot 查询、同行评审应用和正式开源。；L4",
+      "limitations": "性能受档案网络、存储带宽和数据布局限制。；DIII-D 特定数据源和派生逻辑移植到其他装置需开发适配器。；查询可复现性需要冻结信号版本、处理代码和环境。",
+      "tags": [
+        "batch-query",
+        "Spark",
+        "DIII-D",
+        "dataset-construction",
+        "parallel-IO"
+      ],
+      "parentProjectId": "data-doe-fdp",
+      "deploymentLevel": "D4"
+    },
+    {
+      "id": "data-imas",
+      "projectId": "imas",
+      "domain": "data",
+      "primaryDomain": "data",
+      "relatedDomains": [],
+      "title": "IMAS：ITER 装置无关的数据字典、访问层与集成建模语义",
+      "year": 2015,
+      "organization": "ITER Organization 与 ITER Members/EUROfusion",
+      "problem": "实验数据和模拟代码若采用点对点接口，会形成 N² 集成成本；ITER 需要统一描述平衡、剖面、控制、诊断、MHD、工程与溯源的数据标准。",
+      "approach": "以版本化 IMAS Data Dictionary 定义 Interface Data Structures，配套 Access Layer、Python/C++/Fortran/Java/MATLAB 接口、后端、验证器、映射和可视化工具。",
+      "devices": [
+        "ITER",
+        "JET",
+        "MAST/MAST-U",
+        "WEST",
+        "ASDEX Upgrade",
+        "TCV",
+        "KSTAR",
+        "DIII-D",
+        "EUROfusion DEMO 工作流"
+      ],
+      "evidenceLevel": "E2",
+      "evidence": "ITER 官方 2025 年宣布 IMAS 基础设施和多项物理模型开放源码。；EUROfusion 的多机数据映射已用于代码集成、数据核验与模型验证。",
+      "papers": [
+        {
+          "title": "Code Integration, Data Verification, and Models Validation Using the ITER Integrated Modeling and Analysis System (IMAS) in EUROfusion",
+          "year": 2020,
+          "venue": "Fusion Science and Technology",
+          "url": "https://doi.org/10.1080/15361055.2020.1819751"
+        },
+        {
+          "title": "The initial step towards JOREK integration in IMAS",
+          "year": 2020,
+          "venue": "Fusion Engineering and Design",
+          "url": "https://arxiv.org/abs/2006.09198"
+        }
+      ],
+      "code": [
+        {
+          "name": "IMAS Data Dictionary",
+          "url": "https://github.com/iterorganization/IMAS-Data-Dictionary",
+          "status": "official-direct",
+          "relationship": "官方版本化物理数据模式。"
+        },
+        {
+          "name": "IMAS-Python",
+          "url": "https://github.com/iterorganization/IMAS-Python",
+          "status": "official-direct",
+          "relationship": "官方 Python IDS 操作与后端接口。"
+        },
+        {
+          "name": "IMAS Data Mapping",
+          "url": "https://github.com/iterorganization/IMAS-Data-Mapping",
+          "status": "official-direct",
+          "relationship": "2026 年启动的开放装置映射协作仓库。"
+        }
+      ],
+      "data": "数据字典和主要工具开放；具体实验数据及部分后端仍受机构权限控制；IDS；netCDF；MDSplus backend；UDA backend；最重要的跨代码/跨装置语义骨架之一，但需要映射覆盖、数据质量规则和 ML 友好视图。",
+      "maturity": "国际集成建模标准与开放基础设施；ITER 和 EUROfusion 正式采用，多代码、多机验证。；L4",
+      "limitations": "字典版本演进会带来迁移和兼容成本。；仅符合 IDS 结构并不能保证物理完备、自洽或坐标约定正确。；高维大数据、流式在线数据和 AI 特征视图仍需额外工程。",
+      "tags": [
+        "ontology",
+        "data-dictionary",
+        "IDS",
+        "interoperability",
+        "ITER"
+      ],
+      "deploymentLevel": "D4"
+    },
+    {
+      "id": "data-uda",
+      "projectId": "uda",
+      "domain": "data",
+      "primaryDomain": "data",
+      "relatedDomains": [],
+      "title": "UDA：面向异构聚变数据的统一远程访问层",
+      "year": 2012,
+      "organization": "UK Atomic Energy Authority",
+      "problem": "分析代码不应依赖每种装置数据的文件位置、格式、位宽和访问协议；IMAS 还需要一种可映射本地档案并支持远程分段读取的后端。",
+      "approach": "插件驱动的 C/C++ 客户端—服务器或 fat-client 架构，把 NetCDF、MDSplus、文件和装置服务映射为统一数据对象；通过 UDA/IMAS 插件按 IDS 路径提供数据。",
+      "devices": [
+        "MAST",
+        "MAST-U",
+        "JET",
+        "WEST",
+        "ASDEX Upgrade",
+        "TCV",
+        "ITER/IMAS 工作流"
+      ],
+      "evidenceLevel": "E2",
+      "evidence": "UKAEA 官方文档给出 client-server、fat-client、SSL 和插件体系。；UKAEA 说明 UDA 是 MAST-U 全体内部和外部科学用户的主要数据访问系统，典型约 30 个并发连接。",
+      "papers": [
+        {
+          "title": "IMAS UDA Workshop: UDA Overview and IMAS UDA Presentation",
+          "year": 2023,
+          "venue": "ITER/UKAEA IMAS Mapping Workshop",
+          "url": "https://ukaea.github.io/imas_mapping_workshop/imas_uda_presentation/index.html",
+          "sourceType": "conference-material"
+        }
+      ],
+      "code": [
+        {
+          "name": "UDA",
+          "url": "https://github.com/ukaea/UDA",
+          "status": "official-direct",
+          "relationship": "Apache-2.0 官方实现，含 C/C++ 核心、服务器、插件及 Python wrapper。"
+        }
+      ],
+      "data": "访问策略由数据源站点决定；MAST-U 等内部资源通常需要账户或 VPN；统一数据对象；MDSplus；NetCDF；IMAS IDS via plugin；适合作为跨后端抽取层，但大规模训练仍需要缓存、对象存储或批处理层。",
+      "maturity": "装置生产使用与 IMAS 集成；MAST/MAST-U 主数据访问系统，并已用于多机 IMAS 映射。；L4",
+      "limitations": "跨站点防火墙、身份认证和授权仍会限制真正的联邦访问。；插件映射正确性需要逐装置验证。；统一访问对象不等于统一物理语义、质量和时基。",
+      "tags": [
+        "data-access",
+        "plugins",
+        "IMAS",
+        "remote",
+        "MAST-U"
+      ],
+      "deploymentLevel": "D4"
+    },
+    {
+      "id": "hmi-west-llm4ppo",
+      "projectId": "hmi-west-llm4ppo",
+      "domain": "hmi",
+      "primaryDomain": "hmi",
+      "relatedDomains": [],
+      "title": "WEST LLM4PPO：红外第一壁监测的多模态决策支持",
+      "year": 2026,
+      "organization": "CEA/IRFM、WEST Team",
+      "problem": "长脉冲 WEST 的红外视频和温度曲线需要 Plasma-facing component Protection Officer 快速识别热斑并在炮间给出判断，人工负荷高且一致性有限。",
+      "approach": "在本地部署 LLaVA-NeXT 13B，多模态输入红外图与温度曲线，通过 prompt engineering、LoRA 和专家反馈把 PPO 经验注入模型，并以自然语言提供 post-pulse 决策支持。",
+      "devices": [
+        "WEST C10 campaign（2024-10 至 2024-12）"
+      ],
+      "evidenceLevel": "E3",
+      "evidence": "论文称工具在 WEST C10 控制室部署，反馈中 32% 为 OK、41% 为 positive response；所有处理在本地服务器完成。",
+      "papers": [
+        {
+          "title": "Decision support for in-operation monitoring of the WEST tokamak first wall using multimodal large language model (LLM) on infrared imaging",
+          "year": 2026,
+          "venue": "Knowledge-Based Systems",
+          "url": "https://doi.org/10.1016/j.knosys.2025.114912"
+        }
+      ],
+      "code": [
+        {
+          "name": "LLM4PPO application and fine-tuned weights",
+          "url": null,
+          "status": "not-public",
+          "relationship": "论文说明数据因隐私限制仅可申请，未发现项目代码或权重公开。"
+        }
+      ],
+      "data": "真实 WEST 数据需联系作者；训练含 150 组真实图像—prompt 对；infrared images；temperature curves rendered as images；expert prompts；operator feedback；高价值的人在回路案例，但数据量小、输出以专家评分为主，需更严格安全与统计评价。",
+      "maturity": "控制室炮间决策支持；真实 campaign 现场部署；明确不替代 PPO，也非实时闭环控制。；L4",
+      "limitations": "不是实时保护逻辑，最终判定仍由人类专家做出。；训练集规模小，评价中的主观反馈比例不能替代漏检率、误报警率和安全边界验证。；数据、代码和权重未公开，跨装置迁移尚未验证。；将曲线作为图像输入可能损失原始时间序列精度。",
+      "tags": [
+        "multimodal-LLM",
+        "infrared",
+        "WEST",
+        "decision-support",
+        "control-room"
+      ]
+    },
+    {
+      "id": "hmi-fusion-operational-copilot",
+      "projectId": "hmi-fusion-operational-copilot",
+      "domain": "hmi",
+      "primaryDomain": "hmi",
+      "relatedDomains": [],
+      "title": "Fusion Operational Copilot：基于实验日志的托卡马克 RAG 助手",
+      "year": 2023,
+      "organization": "Carnegie Mellon University、PPPL、MIT PSFC、Princeton University",
+      "problem": "实验 session leader 必须在有限的 between-shot 时间内检索历史日志、理解装置状态并制定下一炮计划；关键词检索无法利用操作日志语义。",
+      "approach": "用 DIII-D 与 Alcator C-Mod 操作日志构建向量检索和 RAG 原型，支持语义搜索、装置特定操作问答和一般托卡马克问答，并通过研究人员调查评估。",
+      "devices": [
+        "DIII-D",
+        "Alcator C-Mod"
+      ],
+      "evidenceLevel": "E2",
+      "evidence": "论文报告原型已部署给研究人员使用；前两类任务优于基础模型/关键词搜索，但一般问题并未清晰优于 GPT-4。",
+      "papers": [
+        {
+          "title": "Towards LLMs as Operational Copilots for Fusion Reactors",
+          "year": 2023,
+          "venue": "NeurIPS 2023 AI for Science Workshop",
+          "url": "https://openreview.net/forum?id=yGVChrbJ4E"
+        }
+      ],
+      "code": [
+        {
+          "name": "Fusion operational copilot implementation",
+          "url": null,
+          "status": "not-public",
+          "relationship": "未发现作者公开的装置日志、索引或可复现实装代码。"
+        }
+      ],
+      "data": "DIII-D 与 C-Mod 操作日志未随论文公开；text logs；retrieval index；chat interface；证明了日志语义检索价值，但需要权限隔离、引用定位、失效知识处理和量化评测。",
+      "maturity": "真实装置知识的研究人员试用原型；使用两台装置真实日志并部署试用，但未进入控制权限链。；L3",
+      "limitations": "工作坊论文、样本和用户调查规模有限。；不读取实时诊断，不执行控制，不可视为自主实验智能体。；一般托卡马克问答中 RAG 未显著优于基础模型。；无公开代码和日志，难以独立复现。",
+      "tags": [
+        "RAG",
+        "copilot",
+        "shot-log",
+        "DIII-D",
+        "human-in-the-loop"
+      ]
+    },
+    {
+      "id": "hmi-plasmax-lingshu",
+      "projectId": "hmi-plasmax-lingshu",
+      "domain": "hmi",
+      "primaryDomain": "hmi",
+      "relatedDomains": [],
+      "title": "PlasmaX：灵枢 PCS 的可视化与 RAG 智能开发环境",
+      "year": 2026,
+      "organization": "中国科学院合肥物质科学研究院等离子体物理研究所",
+      "problem": "PCS 算法开发涉及复杂 XML 配置、多文件一致性、C++ 模板和装置专用知识，阻碍控制算法快速集成和验证。",
+      "approach": "以 VS Code extension 实现 XML 模型与交互式 webview 双向同步、模板代码生成和本地 RAG+LLM 问答；官方报告称平均自动生成约 79.4%/近 80% 的算法代码。",
+      "devices": [
+        "EAST",
+        "面向 BEST",
+        "面向 CFETR"
+      ],
+      "evidenceLevel": "E1",
+      "evidence": "2026 年论文描述 PlasmaX 的可视化、代码生成和 RAG 问答模块。；IAEA 2026 官方会议报告称 PlasmaX 为 EAST 灵枢辅助平台，可生成近 80% 算法代码并提供 AI agent 指导。",
+      "papers": [
+        {
+          "title": "Design and implementation of a visual and intelligent integrated development environment for the Lingshu plasma control system",
+          "year": 2026,
+          "venue": "Fusion Engineering and Design",
+          "url": "https://doi.org/10.1016/j.fusengdes.2026.115831"
+        },
+        {
+          "title": "Lingshu: A modular real-time control system framework for experimental tokamaks",
+          "year": 2025,
+          "venue": "Fusion Engineering and Design",
+          "url": "https://doi.org/10.1016/j.fusengdes.2025.115309"
+        }
+      ],
+      "code": [
+        {
+          "name": "PlasmaX VS Code extension",
+          "url": null,
+          "status": "not-public",
+          "relationship": "未找到 ASIPP 官方公开仓库或可安装扩展。"
+        },
+        {
+          "name": "Lingshu PCS",
+          "url": null,
+          "status": "not-public",
+          "relationship": "装置生产 PCS 是 PlasmaX 的目标系统，但未公开源码。"
+        }
+      ],
+      "data": "PCS 配置、知识库、生成代码和装置验证数据未公开；XML algorithm model；C++ code skeleton；webview model；RAG knowledge base；工程价值明确，但 RAG 问答与实际 9000 炮以上 Lingshu 控制业绩应严格区分；后者不能直接归因于 LLM。",
+      "maturity": "装置 PCS 开发辅助原型；与已在 EAST 使用的 Lingshu 工具链对接；未证明 LLM 生成代码未经人工审核直接上线。；L3",
+      "limitations": "代码生成覆盖率不是正确性、实时性或安全性指标。；需要静态检查、模型在环、软件在环、硬件在环和变更审批闭环。；未公开代码、数据和系统化人因评价。；RAG 技术支持不等于自主 PCS 控制智能体。",
+      "tags": [
+        "IDE",
+        "RAG",
+        "code-generation",
+        "EAST",
+        "PCS"
+      ]
+    },
+    {
+      "id": "hmi-llnl-mada",
+      "projectId": "hmi-llnl-mada",
+      "domain": "hmi",
+      "primaryDomain": "hmi",
+      "relatedDomains": [],
+      "title": "MADA：惯性聚变靶设计的多智能体设计助手",
+      "year": 2025,
+      "organization": "Lawrence Livermore National Laboratory",
+      "problem": "高能量密度与惯性聚变靶丸的几何设计、输入卡生成、高保真模拟调度和反设计高度依赖少数专家，并需要在 HPC 上运行大量多物理计算。",
+      "approach": "用自然语言和手绘概念触发专用 LLM agents，生成 MARBL 计算输入、提交 HPC 作业、分析结果并迭代几何；论文演示了在高保真代码中搜索到模拟点火设计。",
+      "devices": [
+        "NIF 相关惯性约束聚变设计环境",
+        "LLNL El Capitan/Tuolumne HPC",
+        "非托卡马克"
+      ],
+      "evidenceLevel": "E1",
+      "evidence": "LLNL 官方报道开源 LLM 经内部 MARBL 文档微调，能从手绘图和自然语言生成 simulation deck 并运行数千次模拟。；预印本展示多智能体与高阶多物理代码耦合的模拟点火反设计。",
+      "papers": [
+        {
+          "title": "Multi-Agent Design Assistant for the Simulation of Inertial Fusion Energy",
+          "year": 2025,
+          "venue": "arXiv preprint",
+          "url": "https://arxiv.org/abs/2510.17830"
+        }
+      ],
+      "code": [
+        {
+          "name": "MADA / MARBL integration",
+          "url": null,
+          "status": "not-public",
+          "relationship": "未发现可公开复现的 MADA 编排、内部文档数据或 MARBL 全套应用代码。"
+        }
+      ],
+      "data": "内部 MARBL 文档、靶设计和大量仿真产物未公开；natural-language design request；sketch/image；simulation decks；HPC results；展示了 agent—solver—HPC 闭环，但证据是计算设计，不是 NIF 实验靶的自主执行。",
+      "maturity": "高保真计算原型；真实生产级 HPC/代码环境中的模拟演示，尚无物理实验闭环。；L2",
+      "limitations": "惯性约束聚变方法与托卡马克控制/实验规划不能直接等同。；模拟点火不等于实验点火或工程可制造性验证。；代码、训练语料和高保真求解器未开放。；自主动作仍需工件门控、专家审核和资源权限边界。",
+      "tags": [
+        "agent",
+        "ICF",
+        "inverse-design",
+        "HPC",
+        "human-in-the-loop"
+      ]
+    },
+    {
+      "id": "hmi-foundation-model-visual-logbook-concept",
+      "projectId": "hmi-foundation-model-visual-logbook-concept",
+      "domain": "hmi",
+      "primaryDomain": "hmi",
+      "relatedDomains": [],
+      "title": "实验聚变基础模型与自动视觉日志：概念路线",
+      "year": 2025,
+      "organization": "Princeton Plasma Physics Laboratory",
+      "problem": "融合实验的视觉诊断、事件链和操作日志尚未被统一的预训练模型利用，炮间分析与场景规划仍高度依赖人工。",
+      "approach": "观点论文提出以视频/图像基础模型、少样本微调和自动视觉日志，将诊断事件关联到放电时间线，并探索生成式场景规划。",
+      "devices": [
+        "概念上适用于 DIII-D、NSTX-U、ITER 等实验装置",
+        "论文未报告特定装置生产部署"
+      ],
+      "evidenceLevel": "E0",
+      "evidence": "论文明确声明 foundation models 尚未在聚变实验生产环境采用，示意自动 logbook 是未来用例。",
+      "papers": [
+        {
+          "title": "AI foundation models for experimental fusion tasks",
+          "year": 2025,
+          "venue": "Frontiers in Physics",
+          "url": "https://doi.org/10.3389/fphy.2024.1531334"
+        }
+      ],
+      "code": [
+        {
+          "name": "Automated visual logbook reference implementation",
+          "url": null,
+          "status": "not-public",
+          "relationship": "该工作是 perspective/路线论文，未给出生产模型、代码或装置数据。"
+        }
+      ],
+      "data": "无配套数据集；conceptual video/image tokens；event timeline；text logbook；属于需求与架构启发，不应作为已验证成果计入装置能力。",
+      "maturity": "同行评审概念；有正式论文，但无配套代码、数据或装置验证。；L1",
+      "limitations": "没有实验结果或基准。；没有公开实现。；自动日志中的因果叙述、置信度和责任边界尚未解决。",
+      "tags": [
+        "perspective",
+        "visual-logbook",
+        "foundation-model",
+        "scenario-planning",
+        "concept"
+      ]
+    },
+    {
+      "id": "integration-step-omfit",
+      "projectId": "integration-step-omfit",
+      "domain": "integration",
+      "primaryDomain": "integration",
+      "relatedDomains": [],
+      "title": "STEP/OMFIT：稳定性—输运—平衡—台基自洽集成模拟",
+      "year": 2023,
+      "organization": "General Atomics、PPPL、EPFL、UKAEA 等 AToM/OMFIT collaboration",
+      "problem": "单独的 equilibrium、transport、pedestal 和 MHD stability 代码会产生不一致状态，难以对执行器目标和反应堆场景做可追溯迭代。",
+      "approach": "在 OMFIT 中把每个 physics code 封装为读取/写回 OMAS/IMAS 状态的 step，保留每步历史与 provenance，支持开环、反馈和优化；STEP-0D 从全局量生成理论自洽场景。",
+      "devices": [
+        "DIII-D",
+        "NSTX/NSTX-U",
+        "ITER",
+        "ARC",
+        "EU-DEMO",
+        "CFETR"
+      ],
+      "evidenceLevel": "E2",
+      "evidence": "STEP 论文说明耦合稳定性、输运、平衡、台基、加热/电流驱动和加料，并使用集中 IMAS 状态。；STEP-0D 以 ITPA 数据库验证，报告能量约束时间平均相对误差低于 19%，并预测 ARC、EU-DEMO、CFETR。",
+      "papers": [
+        {
+          "title": "Flexible, integrated modeling of tokamak stability, transport, equilibrium, and pedestal physics",
+          "year": 2023,
+          "venue": "Plasma Physics and Controlled Fusion",
+          "url": "https://arxiv.org/abs/2305.09683"
+        },
+        {
+          "title": "Elevating zero dimensional global scaling predictions to self-consistent theory-based simulations",
+          "year": 2023,
+          "venue": "Nuclear Fusion",
+          "url": "https://arxiv.org/abs/2305.07285"
+        }
+      ],
+      "code": [
+        {
+          "name": "OMFIT/STEP source",
+          "url": "https://github.com/gafusion/OMFIT-source",
+          "status": "not-public",
+          "relationship": "官方源码仓库需要填写 OMFIT 用户协议获得权限，不能视为无条件公开代码。"
+        },
+        {
+          "name": "OMAS",
+          "url": "https://github.com/gafusion/omas",
+          "status": "official-enabling",
+          "relationship": "STEP 模块间状态交换的公开数据层。"
+        }
+      ],
+      "data": "OMFIT/STEP 访问受用户协议约束；OMAS 公开；各 physics code 和装置数据权限不一；OMAS/ODS；IMAS；OMFIT project tree；code-specific inputs/outputs；适合 surrogate 替换、执行器优化和 scenario generation；仍是集成等离子体模拟，不是全厂在线孪生。",
+      "maturity": "多装置集成预测与 predict-first 工作流；DIII-D 等装置分析和多反应堆场景验证。；L4",
+      "limitations": "主要覆盖等离子体核心/台基/稳定性，工程全厂、辅机、故障和维护未形成同等闭环。；计算时延通常不满足实时孪生。；OMFIT 源码访问受协议约束，复现还取决于各外部 physics code。；不同模块的误差和相关不确定度尚难完整传播。",
+      "tags": [
+        "integrated-plasma-modeling",
+        "OMFIT",
+        "STEP",
+        "OMAS",
+        "predict-first"
+      ]
+    },
+    {
+      "id": "integration-mpex-ai-digital-twins",
+      "projectId": "integration-mpex-ai-digital-twins",
+      "domain": "integration",
+      "primaryDomain": "integration",
+      "relatedDomains": [],
+      "title": "MPEX AI Digital Twins：实验—模拟—代理—智能体闭环原型",
+      "year": 2025,
+      "organization": "Oak Ridge National Laboratory、PPPL 及 DOE FES/American Science Cloud/Genesis Mission 合作团队",
+      "problem": "MPEX 需要在装置投运早期快速达到目标等离子体条件、评估钨材料损伤并把多物理模拟、HPC、实验数据和材料搜索连接起来。",
+      "approach": "规划 Helicon AI Hot-Spot Controller、e-beam/MPEX damage-assessment twin 和材料评估模型；Galaxy 接口连接物理代码与 DOE HPC，未来允许科学家或 AI agents 执行、验证和分析。",
+      "devices": [
+        "Proto-MPEX（历史验证基础）",
+        "MPEX（建设/投运准备）",
+        "JUDITH electron-beam facility data"
+      ],
+      "evidenceLevel": "E1",
+      "evidence": "ORNL 官方 2026 研究亮点明确提出自动控制、损伤评估、AI-guided experiment/simulation 和 Genesis agent 平台。；六个月里程碑报告说明 Galaxy 已连接部分主物理代码与 DOE HPC，但与 MPEX DAQ 的连接仍用将来时描述。",
+      "papers": [
+        {
+          "title": "MPEX AI Digital Twins",
+          "year": 2025,
+          "venue": "ORNL technical report",
+          "url": "https://doi.org/10.2172/3002172"
+        },
+        {
+          "title": "MPEX AI Digital Twins Milestone Report",
+          "year": 2026,
+          "venue": "DOE FES/AmSC milestone report",
+          "url": "https://arxiv.org/abs/2605.12116"
+        }
+      ],
+      "code": [
+        {
+          "name": "MPEX AI Digital Twins integration code",
+          "url": null,
+          "status": "not-public",
+          "relationship": "未发现官方公开的 MPEX 端到端 twin、controller 或 agent 仓库。"
+        },
+        {
+          "name": "Galaxy",
+          "url": "https://github.com/galaxyproject/galaxy",
+          "status": "official-enabling",
+          "relationship": "项目用于编排/接口的通用开源平台，不包含 MPEX 私有工作流和物理代码配置。"
+        }
+      ],
+      "data": "项目主要生成中的模拟和实验数据尚未形成公开训练集；physics simulation outputs；HPC workflow artifacts；DAQ data（planned connection）；material damage metrics；架构最接近闭环 AI digital twin，但截至里程碑报告仍处建设和演示阶段。",
+      "maturity": "建设期里程碑原型；有 Proto-MPEX 既有模型基础和 HPC 接口进展，但 MPEX 实验—AI 闭环尚未完成装置运行验证。；L2",
+      "limitations": "MPEX 是线性等离子体材料装置，不是 tokamak 或聚变电厂。；多项能力在报告中仍是 planned/on track，不能写成已生产部署。；代码、数据和 V&V 证据尚未开放。；AI agent 必须受到权限、工件验证、物理约束和人工审批门控。",
+      "tags": [
+        "digital-twin",
+        "agent",
+        "MPEX",
+        "plasma-material-interaction",
+        "HPC"
+      ]
+    },
+    {
+      "id": "integration-fuse-jl",
+      "projectId": "fuse-jl",
+      "domain": "integration",
+      "primaryDomain": "integration",
+      "relatedDomains": [
+        "energy"
+      ],
+      "title": "FUSE.jl：融合先导电厂多保真集成设计与优化",
+      "year": 2024,
+      "organization": "General Atomics / Project Torrey Pines 与合作团队",
+      "problem": "传统 0D systems code 难以把等离子体、工程、控制和经济模型在统一可微/可优化工作流中自洽连接，也难以快速替换不同保真度模型。",
+      "approach": "Julia 模块化 actor 架构，以 IMAS 风格数据结构连接一阶、降阶、机器学习和高保真模型，支持稳态/时变场景、参数扫描、并行多目标优化和 UQ。",
+      "devices": [
+        "Fusion Pilot Plant 概念",
+        "ITER-like 与 DIII-D/反应堆场景",
+        "可配置轴对称托卡马克设计"
+      ],
+      "evidenceLevel": "E1",
+      "evidence": "框架论文明确包括物理、工程、控制、成本和多保真/机器学习模型的自洽设计优化。",
+      "papers": [
+        {
+          "title": "FUSE (Fusion Synthesis Engine): A Next Generation Framework for Integrated Design of Fusion Pilot Plants",
+          "year": 2024,
+          "venue": "arXiv preprint / Nuclear Fusion submission",
+          "url": "https://arxiv.org/abs/2409.05894"
+        }
+      ],
+      "code": [
+        {
+          "name": "FUSE.jl",
+          "url": "https://github.com/ProjectTorreyPines/FUSE.jl",
+          "status": "official-direct",
+          "relationship": "Apache-2.0 官方主框架。"
+        },
+        {
+          "name": "IMAS.jl",
+          "url": "https://github.com/ProjectTorreyPines/IMAS.jl",
+          "status": "official-enabling",
+          "relationship": "FUSE 生态的数据结构、物理和工程方法。"
+        }
+      ],
+      "data": "代码和示例开放；高保真外部代码、输入数据及商业组件取决于各自许可；Julia IMAS-like data dictionary；actor state；design variables；optimization histories；高，原生支持 surrogate 与多保真替换；但数字孪生还需要装置实时数据、状态估计和持续校准。",
+      "maturity": "开放的先进集成设计框架；多域计算和设计案例已展示，但不是已投运聚变电厂孪生。；L3",
+      "limitations": "多数验证仍是代码对比和概念设计一致性，不是电厂运行数据验证。；不同 actor 的适用边界和 UQ 完整性不均衡。；与 CAD/PLM、资产配置、在线传感器和安全论证尚非闭环。；Julia 生态与既有 Fortran/C++/商业 CAE 的组织集成成本需评估。",
+      "tags": [
+        "systems-design",
+        "multi-fidelity",
+        "Julia",
+        "optimization",
+        "pilot-plant"
+      ]
+    },
+    {
+      "id": "integration-bluemira",
+      "projectId": "bluemira",
+      "domain": "integration",
+      "primaryDomain": "integration",
+      "relatedDomains": [
+        "energy"
+      ],
+      "title": "Bluemira：面向聚变电厂的参数化多保真设计框架",
+      "year": 2023,
+      "organization": "UK Atomic Energy Authority 与 Fusion Power Plant Framework community",
+      "problem": "聚变概念设计中 CAD、平衡、线圈、磁静力、结构、燃料、功率平衡和中子学几何往往由不同团队手工迭代，更新一个设计点需要数月。",
+      "approach": "以 Python Designer/Builder/ParameterFrame 把参数化几何、优化和多领域分析组合成可自动执行的设计 workflow，支持从快速模块到外部高保真代码以及 CAD/DAGMC 输出。",
+      "devices": [
+        "UK STEP Prototype Powerplant",
+        "EUROfusion EU-DEMO",
+        "通用 tokamak/stellarator concepts"
+      ],
+      "evidenceLevel": "E1",
+      "evidence": "UKAEA 官方称典型概念设计可由数月缩短到分钟，并列出 STEP 与 EU-DEMO 用例。；STEP PF 线圈论文展示在 Bluemira 中加入超导临界电流和 keep-in-zone 约束的嵌套优化。",
+      "papers": [
+        {
+          "title": "Conceptual design workflow for the STEP Prototype Powerplant",
+          "year": 2024,
+          "venue": "Fusion Engineering and Design",
+          "url": "https://doi.org/10.1016/j.fusengdes.2024.114238"
+        },
+        {
+          "title": "Optimisation of STEP poloidal field coils with superconducting coil constraints in STEP-Bluemira power plant design framework",
+          "year": 2025,
+          "venue": "Fusion Engineering and Design",
+          "url": "https://doi.org/10.1016/j.fusengdes.2025.115357"
+        }
+      ],
+      "code": [
+        {
+          "name": "bluemira",
+          "url": "https://github.com/Fusion-Power-Plant-Framework/bluemira",
+          "status": "official-direct",
+          "relationship": "UKAEA 官方 LGPL 开源主框架。"
+        },
+        {
+          "name": "eqdsk",
+          "url": "https://github.com/Fusion-Power-Plant-Framework/eqdsk",
+          "status": "official-enabling",
+          "relationship": "同一官方组织的 equilibrium 数据读写工具。"
+        }
+      ],
+      "data": "框架、示例和部分 baseline 开放；STEP 受控设计数据和外部商业分析未必开放；JSON parameters；CAD/STEP；DAGMC；equilibrium；analysis results；参数化和自动 workflow 适合生成训练数据、主动学习和优化；缺少运行资产同步。",
+      "maturity": "正式概念设计框架；STEP 和 EU-DEMO 设计流程使用、公开代码和工程论文。；L4",
+      "limitations": "主要是 design twin，不是随装置状态更新的 operational twin。；分钟级快速模块通常是简化模型，不能替代详细安全和工程分析。；外部代码耦合的版本、网格、材料数据和验证证据需要独立治理。；三维配置、制造公差和 as-built/as-maintained 闭环尚需 PLM/MBSE 集成。",
+      "tags": [
+        "design-framework",
+        "CAD",
+        "STEP",
+        "EU-DEMO",
+        "multi-fidelity"
+      ]
+    },
+    {
+      "id": "integration-powerbalance",
+      "projectId": "powerbalance",
+      "domain": "integration",
+      "primaryDomain": "integration",
+      "relatedDomains": [
+        "energy"
+      ],
+      "title": "Power Balance Models：托卡马克全厂动态净电功率模型",
+      "year": 2023,
+      "organization": "UK Atomic Energy Authority",
+      "problem": "聚变电厂净输出取决于磁体、低温、加热与电流驱动、真空、燃料循环等厂用负荷和热—电转换的动态耦合，0D 静态指标无法反映脉冲和启动过程。",
+      "approach": "用 OpenModelica 建立主要电厂子系统的方程模型，以 Python CLI/API 配置 plasma scenario、结构参数、参数扫描和插件，并计算随时间变化的发电与用电。",
+      "devices": [
+        "UK STEP Prototype Powerplant",
+        "通用 D-T tokamak reactor designs"
+      ],
+      "evidenceLevel": "E1",
+      "evidence": "论文描述覆盖主要 tokamak 子系统的时变功率消耗与发电，并明确公开 GitHub 代码。；UKAEA 报告称该模型在 STEP 早期设计中得到广泛使用。",
+      "papers": [
+        {
+          "title": "An open-source power balance model for the estimation of tokamak net electrical power output",
+          "year": 2023,
+          "venue": "Fusion Engineering and Design",
+          "url": "https://doi.org/10.1016/j.fusengdes.2023.113563"
+        }
+      ],
+      "code": [
+        {
+          "name": "powerbalance",
+          "url": "https://github.com/ukaea/powerbalance",
+          "status": "official-direct",
+          "relationship": "UKAEA 官方 Python/OpenModelica 框架与模型。"
+        },
+        {
+          "name": "OpenModelica",
+          "url": "https://github.com/OpenModelica/OpenModelica",
+          "status": "official-enabling",
+          "relationship": "PBM 的开源方程求解后端。"
+        }
+      ],
+      "data": "模型和默认参数开放；详细 STEP 子系统设计输入可能受控；Modelica；TOML configuration；MAT plasma profiles；time-series outputs；可生成动态 surrogate 训练集并服务能量管理策略，但当前精度定位为早期概念设计 ballpark。",
+      "maturity": "STEP 概念设计中的动态全厂功率模型；公开模型、论文验证与 STEP 实际设计使用。；L4",
+      "limitations": "论文和 UKAEA 报告明确将结果定位为概念阶段近似。；尚无真实聚变发电厂数据验证。；需要与热工水力、电气暂态、控制保护和电网模型建立更高保真接口。；不是实时能量管理系统。",
+      "tags": [
+        "power-balance",
+        "Modelica",
+        "STEP",
+        "balance-of-plant",
+        "dynamic-model"
+      ]
+    },
+    {
+      "id": "integration-faroes",
+      "projectId": "faroes",
+      "domain": "integration",
+      "primaryDomain": "integration",
+      "relatedDomains": [
+        "energy"
+      ],
+      "title": "FAROES：基于 OpenMDAO 的可导聚变 systems code",
+      "year": 2022,
+      "organization": "Princeton University / PPPL collaboration",
+      "problem": "需要在反应堆几何、等离子体性能、热负荷和成本之间做梯度优化，并分析如正/负三角度等设计选择的系统级经济影响。",
+      "approach": "把 Menard 等 0D tokamak spreadsheet 模型迁入 Python/OpenMDAO，以显式组件、耦合变量和成本模型构造可优化的稳态 DEMO-like 反应堆。",
+      "devices": [
+        "DEMO2-like steady-state reactor",
+        "概念 tokamak reactors"
+      ],
+      "evidenceLevel": "E1",
+      "evidence": "Nuclear Fusion 论文使用 FAROES 比较负三角度和正三角度 DEMO-like 设计的 LCOE 与热负荷。；作者报告明确说明该模型为 0D、基于 OpenMDAO，并指出完整说明稿当时仍在准备。",
+      "papers": [
+        {
+          "title": "To dee or not to dee: costs and benefits of altering the triangularity of a steady-state DEMO-like reactor",
+          "year": 2022,
+          "venue": "Nuclear Fusion",
+          "url": "https://doi.org/10.1088/1741-4326/ac62f6"
+        }
+      ],
+      "code": [
+        {
+          "name": "FAROES",
+          "url": null,
+          "status": "not-public",
+          "relationship": "未检索到作者/机构官方公开仓库；2022 官方报告称计划完成后开放。"
+        },
+        {
+          "name": "OpenMDAO",
+          "url": "https://github.com/OpenMDAO/OpenMDAO",
+          "status": "official-enabling",
+          "relationship": "FAROES 使用的 NASA 官方多学科优化框架，不包含 FAROES 聚变模型本身。"
+        }
+      ],
+      "data": "论文参数和部分结果可见；完整模型代码未公开；OpenMDAO variables；0D reactor parameters；cost/LCOE outputs；可导计算图适合优化和 surrogate，但代码不可得阻碍复现和数字孪生集成。",
+      "maturity": "论文级 systems optimization code；有同行评审设计研究，但无公开代码或装置运行验证。；L2",
+      "limitations": "0D 模型忽略 Shafranov shift、局部输运和多种关键物理，论文已明确说明。；对三角度和成本结论强依赖约束与标定。；没有公开仓库，难以核查版本、测试和复现。",
+      "tags": [
+        "OpenMDAO",
+        "systems-code",
+        "LCOE",
+        "negative-triangularity",
+        "not-public"
+      ]
+    },
+    {
+      "id": "integration-openmdao",
+      "projectId": "integration-openmdao",
+      "domain": "integration",
+      "primaryDomain": "integration",
+      "relatedDomains": [],
+      "title": "OpenMDAO：聚变多学科分析与优化的通用使能框架",
+      "year": 2012,
+      "organization": "NASA Glenn Research Center 与 OpenMDAO community",
+      "problem": "跨学科系统模型包含强耦合、隐式方程和高维设计变量，若无统一计算图、导数和求解器接口，优化成本过高。",
+      "approach": "Python 组件/组计算图、非线性与线性求解器、解析/自动/复步导数、总导数和稀疏并行优化；聚变项目可把物理、磁体、热工和成本组件嵌入。",
+      "devices": [
+        "FAROES reactor models",
+        "通用聚变设计工作流",
+        "本身非装置专用"
+      ],
+      "evidenceLevel": "E1",
+      "evidence": "官方论文给出 Newton 型耦合求解和利用问题结构的高效总导数体系。；FAROES 论文/报告明确使用 OpenMDAO 构建 0D tokamak 优化模型。",
+      "papers": [
+        {
+          "title": "OpenMDAO: an open-source framework for multidisciplinary design, analysis, and optimization",
+          "year": 2019,
+          "venue": "Structural and Multidisciplinary Optimization",
+          "url": "https://doi.org/10.1007/s00158-019-02211-z"
+        }
+      ],
+      "code": [
+        {
+          "name": "OpenMDAO",
+          "url": "https://github.com/OpenMDAO/OpenMDAO",
+          "status": "official-direct",
+          "relationship": "NASA/OpenMDAO 官方框架；聚变领域模型需另行提供。"
+        }
+      ],
+      "data": "框架完全开放，不自带聚变实验数据；Python components；design variables；constraints；derivative metadata；适合把 AI surrogate 插入多学科优化并进行梯度传播，但没有聚变语义、V&V 或实时数据管理。",
+      "maturity": "成熟通用 MDO 框架；聚变应用成熟度取决于上层模型；NASA 和多行业长期使用，FAROES 是聚变实例。；L4",
+      "limitations": "不是聚变 systems code，不能独立给出任何可信聚变结果。；组件导数、尺度和收敛质量由建模者负责。；实时协同、配置管理和安全认证不在核心范围。",
+      "tags": [
+        "MDO",
+        "optimization-framework",
+        "derivatives",
+        "surrogate-integration",
+        "NASA"
+      ]
+    },
+    {
+      "id": "integration-process",
+      "projectId": "process",
+      "domain": "integration",
+      "primaryDomain": "integration",
+      "relatedDomains": [
+        "energy"
+      ],
+      "title": "PROCESS：聚变电厂 systems code 与约束优化",
+      "year": 1987,
+      "organization": "UK Atomic Energy Authority",
+      "problem": "需要在大量相互依赖的物理、磁体、热工、能量转换、建筑、可用率和经济约束下求得自洽电厂设计点。",
+      "approach": "以 0D/1D 简化模型和非线性约束求解器同时计算整个电厂，允许选择约束和优化目标，如电价、净电功率或 Q；保留 tracking 和测试基线。",
+      "devices": [
+        "EUROfusion DEMO",
+        "UK STEP Prototype Powerplant",
+        "通用 tokamak power-plant concepts",
+        "部分 stellarator systems studies"
+      ],
+      "evidenceLevel": "E1",
+      "evidence": "UKAEA 官方说明 PROCESS 被 EUROfusion DEMO 和 UK STEP 使用，范围覆盖热转换和建筑。；STEP 概念设计论文以 PROCESS 生成初始设计点，再与 JETTO、FIESTA、Bluemira 等增加保真度。",
+      "papers": [
+        {
+          "title": "PROCESS: a systems code for fusion power plants – Part 1: Physics",
+          "year": 2014,
+          "venue": "Fusion Engineering and Design",
+          "url": "https://doi.org/10.1016/j.fusengdes.2014.09.018"
+        },
+        {
+          "title": "PROCESS: a systems code for fusion power plants – Part 2: Engineering",
+          "year": 2016,
+          "venue": "Fusion Engineering and Design",
+          "url": "https://arxiv.org/abs/1601.06147"
+        }
+      ],
+      "code": [
+        {
+          "name": "PROCESS",
+          "url": "https://github.com/ukaea/PROCESS",
+          "status": "official-direct",
+          "relationship": "UKAEA MIT-licensed Python 官方实现，含示例、测试和 tracking。"
+        }
+      ],
+      "data": "代码与典型输入开放；项目设计假设和专有技术数据未必开放；input files；scalar design variables；constraint residuals；optimization outputs；适合作为快速 design-space oracle、代理模型数据生成和约束筛选；不适合作为动态状态估计器。",
+      "maturity": "正式电厂概念设计 systems code；DEMO、STEP 多年设计应用和公开测试跟踪。；L4",
+      "limitations": "0D/1D 简化关系不表达局部场、瞬态、制造细节和故障传播。；输出强烈依赖用户启用的约束与技术假设。；不是运行时双向同步的数字孪生。；版本 3 重构阶段 API 稳定性需关注。",
+      "tags": [
+        "systems-code",
+        "DEMO",
+        "STEP",
+        "optimization",
+        "economics"
+      ]
+    }
+  ],
+  "statistics": {
+    "total": 71,
+    "uniqueProjects": 71,
+    "domains": {
+      "physics": 8,
+      "engineering": 8,
+      "control": 8,
+      "diagnostics": 15,
+      "energy": 3,
+      "auxiliary": 5,
+      "data": 11,
+      "hmi": 5,
+      "integration": 8
+    },
+    "domainAssociations": {
+      "physics": 9,
+      "engineering": 8,
+      "control": 11,
+      "diagnostics": 16,
+      "auxiliary": 8,
+      "energy": 8,
+      "data": 11,
+      "hmi": 6,
+      "integration": 8
+    },
+    "evidence": {
+      "E2": 29,
+      "E1": 27,
+      "E4": 8,
+      "E3": 6,
+      "E0": 1
+    },
+    "code": {
+      "official-direct": 28,
+      "not-public": 48,
+      "official-enabling": 19,
+      "commercial-enabling": 1
+    }
+  }
+}
