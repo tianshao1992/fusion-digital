@@ -30,6 +30,16 @@ test('server-renders the FusionDigital community portal', async () => {
   assert.match(html, /TOOLCHAINS/);
   assert.match(html, /fusion-twin-ai-native-overview\.png/);
   assert.match(html, /权限、安全与物理约束门/);
+  assert.match(html, /成本可控 · 高效运行 · 可靠可用 · 安全可证/);
+  assert.match(html, /LIFECYCLE COST CONTROL · EFFICIENT OPERATION · RELIABLE AVAILABILITY · EVIDENCE-BASED SAFETY/);
+  assert.match(html, /能量转化/);
+  assert.match(html, /ENERGY CONVERSION/);
+  assert.match(html, /包层热取出、一次\/二次回路/);
+  assert.match(html, /辅机模拟/);
+  assert.match(html, /人机交互/);
+  assert.match(html, /总体集成/);
+  assert.match(html, /WHOLE-PLANT INTEGRATION/);
+  assert.doesNotMatch(html, /发电系统|POWER SYSTEMS|本质安全/);
 });
 
 test('server-renders the physics simulation atlas', async () => {
