@@ -28,7 +28,8 @@ test('server-renders the FusionDigital community portal', async () => {
   assert.match(html, /href="\/facilities"/);
   assert.match(html, /fusiondigital-mark\.png/);
   assert.match(html, /TOOLCHAINS/);
-  assert.match(html, /FUSION · TWIN · AGENT LOOP/);
+  assert.match(html, /fusion-twin-ai-native-overview\.png/);
+  assert.match(html, /权限、安全与物理约束门/);
 });
 
 test('server-renders the physics simulation atlas', async () => {
@@ -44,6 +45,8 @@ test('server-renders the Tokamak engineering atlas with external tool links', as
   assert.match(html, /55/);
   assert.match(html, /tokamak-engineering-simulation-report\.pdf/);
   assert.match(html, /engineering-twin-architecture-nature\.png/);
+  assert.match(html, /phase1-engineering-twin-trust-chain\.png/);
+  assert.match(html, /xjtu-engineering-digital-twin-phase1-brief\.docx/);
   assert.match(html, /target="_blank"/);
 });
 

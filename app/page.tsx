@@ -1,6 +1,5 @@
 import SiteFooter from './components/SiteFooter';
 import SiteNav from './components/SiteNav';
-import TwinAgentMotion from './components/TwinAgentMotion';
 import './portal.css';
 
 const domains = [
@@ -39,7 +38,12 @@ export default function Home() {
         <div className="heroActions"><a className="solid" href="#domains">探索知识域</a><a href="/facilities">查看全球装置状态</a></div>
         <div className="heroMetrics"><span><b>03</b>已开放知识域</span><span><b>195+</b>代码与工具条目</span><span><b>14</b>重点装置/项目</span><span><b>2026-08</b>证据截止</span></div>
       </div>
-      <TwinAgentMotion compact />
+      <figure className="heroArchitectureFigure">
+        <a href="/figures/fusion-twin-ai-native-overview.png" target="_blank" rel="noreferrer" aria-label="打开聚变数字孪生与智能体总体架构原图">
+          <img src="/figures/fusion-twin-ai-native-overview.png" alt="聚变装置、数字孪生、人工智能智能体、安全权限门与经验证控制之间的总体关系图" />
+        </a>
+        <figcaption><b>聚变 × 数字孪生 × 智能体</b><span>实测与模拟共同更新孪生状态，智能体提出候选行动；只有通过权限、安全与物理约束门的方案才可进入控制或实验决策。示意图表达信息流与治理边界，并非特定装置的实时控制拓扑。</span><i>点击查看原图 ↗</i></figcaption>
+      </figure>
     </header>
 
     <section className="portalThesis">
