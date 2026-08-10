@@ -29,6 +29,11 @@ test('ships non-empty reports and structured download assets', async () => {
     '../public/fusion-ai-native-research-report.docx',
     '../public/fusion-ai-native-paper-code-index.csv',
     '../public/data/fusion-ai-native-landscape.json',
+    '../public/fusion-integrated-control-research-report.docx',
+    '../public/fusion-control-paper-code-index.csv',
+    '../public/fusion-control-references.bib',
+    '../public/data/fusion-control-landscape.json',
+    '../public/data/fusion-control-device-profiles.json',
   ];
   for (const asset of assets) {
     const info = await stat(new URL(asset, import.meta.url));
@@ -41,6 +46,35 @@ test('ships non-empty reports and structured download assets', async () => {
   );
   assert.ok(landscape.entries.length > 0);
   assert.equal(landscape.statistics.total, landscape.entries.length);
+
+  const controlLandscape = JSON.parse(
+    await readFile(new URL('../public/data/fusion-control-landscape.json', import.meta.url), 'utf8'),
+  );
+  const controlDevices = JSON.parse(
+    await readFile(new URL('../public/data/fusion-control-device-profiles.json', import.meta.url), 'utf8'),
+  );
+  assert.ok(controlLandscape.entries.length >= 80);
+  assert.equal(controlLandscape.statistics.total, controlLandscape.entries.length);
+  assert.equal(new Set(controlLandscape.entries.map((item) => item.id)).size, controlLandscape.entries.length);
+  assert.equal(new Set(controlLandscape.entries.map((item) => item.projectId)).size, controlLandscape.entries.length);
+  assert.ok(controlLandscape.entries.every((item) => item.papers.length > 0));
+  assert.ok(controlLandscape.entries.every((item) => item.papers.every((paper) => paper.year > 0)));
+  assert.ok(controlLandscape.entries.every((item) => item.code.every((artifact) => artifact.status !== 'not-public' || artifact.url === null)));
+  const byId = Object.fromEntries(controlLandscape.entries.map((item) => [item.id, item]));
+  assert.equal(byId['CPT-010'].primaryTask, 'T4');
+  assert.equal(byId['CPT-031'].primaryTask, 'T0');
+  assert.equal(byId['CPT-043'].primaryTask, 'T0');
+  assert.equal(byId['PCS-039'].primaryTask, 'T0');
+  assert.equal(byId['PCS-039'].evidenceLevel, 'E4');
+  assert.equal(byId['CPT-049'].evidenceLevel, 'E2');
+  assert.deepEqual(controlLandscape.entries.filter((item) => item.deploymentLevel === 'D5').map((item) => item.id), ['CPT-045']);
+  assert.ok(controlDevices.devices.length >= 16);
+  assert.equal(controlDevices.statistics.total, controlDevices.devices.length);
+  assert.ok(controlDevices.devices.every((device) => device.representativeWorks.length > 0));
+  assert.ok(controlDevices.devices.every((device) => device.papers.every((paper) => paper.year > 0)));
+  for (const name of ['DIII-D', 'TCV', 'EAST', 'ITER', 'EXL-50U', 'EHL-2']) {
+    assert.ok(controlDevices.devices.some((device) => device.name.includes(name)), `missing device profile ${name}`);
+  }
 });
 
 test('server-renders the FusionDigital community portal', async () => {
@@ -48,6 +82,7 @@ test('server-renders the FusionDigital community portal', async () => {
   assert.match(html, /FusionDigital/);
   assert.match(html, /href="\/physics"/);
   assert.match(html, /href="\/engineering"/);
+  assert.match(html, /href="\/control"/);
   assert.match(html, /href="\/ai"/);
   assert.match(html, /href="\/facilities"/);
   assert.match(html, /fusiondigital-mark\.png/);
@@ -69,6 +104,7 @@ test('server-renders the FusionDigital community portal', async () => {
   assert.match(html, /人机交互/);
   assert.match(html, /总体集成/);
   assert.match(html, /WHOLE-PLANT INTEGRATION/);
+  assert.match(html, /<b>04<\/b>已开放知识域/);
   for (const figure of [
     'domain-physics-dark-image2.png',
     'domain-engineering-dark-image2.png',
@@ -82,6 +118,29 @@ test('server-renders the FusionDigital community portal', async () => {
     'domain-ai-native-dark-image2.png',
   ]) assert.match(html, new RegExp(figure.replaceAll('.', '\\.')));
   assert.doesNotMatch(html, /发电系统|POWER SYSTEMS|本质安全/);
+});
+
+test('server-renders the integrated-control and PCS research atlas', async () => {
+  const html = await htmlFor('/control');
+  assert.match(html, /INTEGRATED CONTROL &amp; PCS ATLAS/);
+  assert.match(html, /T0–T9/);
+  assert.match(html, /状态估计与实时诊断/);
+  assert.match(html, /PCS、脉冲编排与验证基础设施/);
+  assert.match(html, /href="\/fusion-integrated-control-research-report\.docx"/);
+  assert.match(html, /href="\/data\/fusion-control-landscape\.json"/);
+  assert.match(html, /href="\/fusion-control-paper-code-index\.csv"/);
+  assert.match(html, /href="\/fusion-control-references\.bib"/);
+  assert.match(html, /type="search"/);
+  assert.match(html, /value="official-direct"/);
+  assert.match(html, /value="E4"/);
+  assert.match(html, /value="D4"/);
+  assert.match(html, /EXL-50U/);
+  assert.match(html, /EHL-2/);
+  assert.match(html, /control-closed-loop-architecture-nature\.png/);
+  assert.match(html, /control-task-timescale-nature\.png/);
+  assert.match(html, /control-verification-ladder-nature\.png/);
+  assert.match(html, /control-digital-twin-roadmap-nature\.png/);
+  assert.match(html, /target="_blank"/);
 });
 
 test('server-renders the physics simulation atlas', async () => {

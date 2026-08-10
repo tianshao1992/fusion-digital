@@ -16,6 +16,9 @@
     "research:ai": "node scripts/research/ai-native.mjs rebuild",
     "research:audit": "node scripts/research/ai-native.mjs audit",
     "research:report": "node scripts/research/ai-native.mjs report",
+    "research:control": "node scripts/research/control.mjs rebuild",
+    "research:control:audit": "node scripts/research/control.mjs audit",
+    "research:control:report": "node scripts/research/control.mjs report",
     "db:generate": "drizzle-kit generate"
   },
   "dependencies": {

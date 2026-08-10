@@ -1,0 +1,1721 @@
+{
+  "schemaVersion": "1.0",
+  "asOf": "2026-08-10",
+  "statistics": {
+    "total": 20
+  },
+  "devices": [
+    {
+      "id": "dev-013",
+      "name": "ARC",
+      "country": "美国",
+      "organization": "Commonwealth Fusion Systems概念/电厂项目",
+      "status": "概念与设计阶段",
+      "pcsArchitecture": "公开物理基础与概念设计；尚无可核验生产PCS；可继承SPARC模型/控制经验但需电厂级再设计",
+      "timing": "未公开生产基线；需求从快速等离子体控制跨越秒—年尺度的电厂控制和资产管理。",
+      "primaryTasks": [
+        "T3",
+        "T5",
+        "T6",
+        "T9"
+      ],
+      "sensors": [],
+      "actuators": [],
+      "representativeWorks": [
+        "Overview of the physics basis for the ARC fusion power plant"
+      ],
+      "papers": [
+        {
+          "title": "Overview of the physics basis for the ARC fusion power plant",
+          "authors": "J. C. Hillesheim, A. J. Creely, T. H. Eich, N. T. Howard, N. Leuthold et al.",
+          "year": 2026,
+          "venue": "Journal of Plasma Physics 92, E69",
+          "doi": "10.1017/S0022377826101706",
+          "url": "https://www.cambridge.org/core/services/aop-cambridge-core/content/view/B472B3A64EF71DA1899B9EFB65D7C390/S0022377826101706a.pdf/overview_of_the_physics_basis_for_the_arc_fusion_power_plant.pdf",
+          "sourceType": "peer-reviewed journal article"
+        }
+      ],
+      "code": [
+        {
+          "name": "ARC PCS",
+          "url": null,
+          "status": "not-public",
+          "relationship": "项目尚处概念/设计；未发现生产PCS架构或代码。",
+          "artifactType": "software",
+          "access": "not-public",
+          "license": "未标注"
+        }
+      ],
+      "maturity": "电厂概念/物理设计，非装置闭环。",
+      "gaps": "PCS与plant DCS总体架构；安全等级和独立保护；可用率/可维护性；氚与能量转换耦合；真实燃烧等离子体数据",
+      "sources": []
+    },
+    {
+      "id": "dev-003",
+      "name": "ASDEX Upgrade",
+      "country": "德国",
+      "organization": "Max Planck Institute for Plasma Physics",
+      "status": "运行中的研究装置",
+      "pcsArchitecture": "Discharge Control System；配置驱动函数链；Linux/VxWorks/Solaris节点；实时诊断；Fenix flight simulator；ASTRA/SPIDER/Simulink；RAPTOR集成",
+      "timing": "功能和节点多速率；DCS论文强调确定性任务图与分布式执行，不给全局单周期。I/O覆盖磁、动理学诊断、加热、气体、线圈和设备状态。",
+      "primaryTasks": [
+        "T0",
+        "T2",
+        "T3",
+        "T4",
+        "T5",
+        "T6",
+        "T7",
+        "T8",
+        "T9"
+      ],
+      "sensors": [
+        "干涉仪",
+        "Thomson 散射",
+        "反射计/边缘密度",
+        "粒子源和执行器状态",
+        "磁诊断",
+        "参数化平衡",
+        "打击点/间隙",
+        "线圈电流与力限值",
+        "Mirnov线圈",
+        "实时平衡",
+        "EC沉积估计",
+        "干涉仪/密度剖面",
+        "边缘与核心辐射",
+        "约束/储能",
+        "辐射功率",
+        "偏滤器热流/温度",
+        "核心性能",
+        "密度",
+        "辐射测量",
+        "偏滤器诊断",
+        "Dα"
+      ],
+      "actuators": [
+        "气体阀",
+        "颗粒注入",
+        "在 TCV 中补偿 ECCD 引起的密度扰动",
+        "内部快 PF 线圈",
+        "外部 PF 线圈",
+        "ECCD",
+        "可移动EC镜面",
+        "弹丸注入器",
+        "N2气阀",
+        "加热功率",
+        "燃料气体",
+        "杂质气阀",
+        "燃料气阀"
+      ],
+      "representativeWorks": [
+        "ASDEX Upgrade Discharge Control System",
+        "ASDEX Upgrade Discharge Control System—A real-time plasma control framework",
+        "Fenix—ASDEX Upgrade's flight simulator"
+      ],
+      "papers": [
+        {
+          "title": "ASDEX Upgrade Discharge Control System—A real-time plasma control framework",
+          "authors": "未完整列出",
+          "year": 2014,
+          "venue": "peer-reviewed",
+          "doi": "10.1016/j.fusengdes.2014.01.001",
+          "url": "https://doi.org/10.1016/j.fusengdes.2014.01.001",
+          "sourceType": "peer-reviewed"
+        },
+        {
+          "title": "Fenix—ASDEX Upgrade's flight simulator",
+          "authors": "W. Treutterer, E. Fable, A. Gräter, F. Janky, O. Kudlacek et al.",
+          "year": 2019,
+          "venue": "Fusion Engineering and Design 146, 1073–1076",
+          "doi": "10.1016/j.fusengdes.2019.02.008",
+          "url": "https://pure.mpg.de/pubman/faces/ViewItemOverviewPage.jsp?itemId=item_2132788",
+          "sourceType": "peer-reviewed journal article"
+        }
+      ],
+      "code": [
+        {
+          "name": "AUG DCS/Fenix",
+          "url": null,
+          "status": "not-public",
+          "relationship": "论文公开，完整生产分支/模型未公开。",
+          "artifactType": "software",
+          "access": "not-public",
+          "license": "未标注"
+        }
+      ],
+      "maturity": "DCS为装置长期生产控制，Fenix用于开发/验证。",
+      "gaps": "生产软件和装置模型受限；多OS/历史组件维护；模型在环覆盖度需显式量化；机器保护职责需与PCS区分",
+      "sources": []
+    },
+    {
+      "id": "dev-019",
+      "name": "CFETR",
+      "country": "中国",
+      "organization": "中国聚变工程试验堆研究团队",
+      "status": "工程设计/研发阶段",
+      "pcsArchitecture": "DINA/集成模拟和控制概念研究；ITER/CODAC/PCS经验参考；尚无运行装置生产PCS",
+      "timing": "设计需求跨微秒垂直环到电厂慢过程；具体基线随工程设计演进。",
+      "primaryTasks": [
+        "T3",
+        "T5",
+        "T6",
+        "T7",
+        "T8",
+        "T9"
+      ],
+      "sensors": [],
+      "actuators": [],
+      "representativeWorks": [
+        "Preliminary design of real-time plasma control system for CFETR"
+      ],
+      "papers": [
+        {
+          "title": "Preliminary design of real-time plasma control system for CFETR",
+          "authors": "Q. Yuan, H. Guo, L. Yan, Z. Huang, J. Huang, B. Xiao, Y. Zheng, R. Zhang and Z. Luo",
+          "year": 2021,
+          "venue": "Fusion Engineering and Design 173, 112876",
+          "doi": "10.1016/j.fusengdes.2021.112876",
+          "url": "https://doi.org/10.1016/j.fusengdes.2021.112876",
+          "sourceType": "peer-reviewed journal article"
+        }
+      ],
+      "code": [
+        {
+          "name": "CFETR PCS",
+          "url": null,
+          "status": "not-public",
+          "relationship": "链接为概念设计论文而非代码；项目无运行装置，未发现完整公开生产实现。",
+          "artifactType": "software",
+          "access": "not-public",
+          "license": "未标注"
+        },
+        {
+          "name": "DINA-IMAS",
+          "url": "https://github.com/iterorganization/DINA-IMAS",
+          "status": "official-direct",
+          "relationship": "官方公开的使能代码，可用于方法研究；不是CFETR装置配置。",
+          "artifactType": "software",
+          "access": "public",
+          "license": "未标注"
+        }
+      ],
+      "maturity": "控制/模拟设计研究，尚无CFETR真机。",
+      "gaps": "需求与架构冻结；燃烧等离子体数据；工程/安全分级；高可用与维护；完整数字线程",
+      "sources": []
+    },
+    {
+      "id": "dev-001",
+      "name": "DIII-D",
+      "country": "美国",
+      "organization": "General Atomics / DOE Office of Science",
+      "status": "运行中的研究装置",
+      "pcsArchitecture": "GA PCS C/C++；category/phase；rtEFIT/isoflux；多处理器实时节点；专用ADC/DAC和实时网络；MDSplus；PCS闭环仿真",
+      "timing": "多速率；历史采样基准约60 μs，RWM专用链路曾由约50 μs优化到约11 μs；不能将专环数字外推为全PCS周期。I/O覆盖磁、MSE/ECE/干涉仪、加热/束/RF、线圈、气阀和装置状态。",
+      "primaryTasks": [
+        "T0",
+        "T1",
+        "T2",
+        "T3",
+        "T4",
+        "T5",
+        "T6",
+        "T7",
+        "T8",
+        "T9"
+      ],
+      "sensors": [
+        "BES高带宽边缘涨落",
+        "磁探针",
+        "磁通环",
+        "线圈/等离子体电流",
+        "MSE（可选）",
+        "压力约束（可选）",
+        "MSE",
+        "实时 EFIT",
+        "磁诊断",
+        "储能/β 信号",
+        "实时磁平衡",
+        "局部磁场导数/零点位置",
+        "红外热流作为物理验证",
+        "线圈电流",
+        "等离子体电流",
+        "rtEFIT 边界/X 点",
+        "Thomson 散射",
+        "实时平衡/密度",
+        "H&CD 状态",
+        "实时 q0/平衡",
+        "βN/储能",
+        "NBI 功率、能量和转矩估计",
+        "实时剖面和全局量",
+        "NBI/ECH/气体/Ip 命令"
+      ],
+      "actuators": [
+        "无；离线分类研究",
+        "无直接执行器；向多个 PCS 控制器提供状态",
+        "等离子体电流目标",
+        "NBI",
+        "ECCD/ECH",
+        "多组 PF 线圈",
+        "PF 线圈",
+        "快速垂直线圈",
+        "电流电源",
+        "NBI/ECH 等加热通道",
+        "共向 NBI",
+        "反向 NBI",
+        "加热/电流驱动",
+        "NBI 功率/转矩",
+        "ECH",
+        "气体",
+        "Ip 目标",
+        "ECCD 功率与可转向镜面",
+        "Ip",
+        "等离子体电流",
+        "EC H&CD",
+        "非轴对称RMP线圈",
+        "中性束功率",
+        "形状/等离子体参数参考"
+      ],
+      "representativeWorks": [
+        "DIII-D Plasma Control System：可扩展多处理器实时控制平台",
+        "DIII-D Integrated Plasma Control：模型驱动设计—验证—部署方法",
+        "Current State of DIII-D Plasma Control System",
+        "Recent Advancements in the DIII-D Plasma Control System",
+        "Integrated Plasma Control in DIII-D"
+      ],
+      "papers": [
+        {
+          "title": "Current State of DIII-D Plasma Control System",
+          "authors": "未完整列出",
+          "year": 2020,
+          "venue": "peer-reviewed",
+          "doi": "10.1016/j.fusengdes.2019.111368",
+          "url": "https://doi.org/10.1016/j.fusengdes.2019.111368",
+          "sourceType": "peer-reviewed"
+        },
+        {
+          "title": "Recent Advancements in the DIII-D Plasma Control System",
+          "authors": "未完整列出",
+          "year": 2024,
+          "venue": "peer-reviewed",
+          "doi": "10.1109/TPS.2024.3415768",
+          "url": "https://doi.org/10.1109/TPS.2024.3415768",
+          "sourceType": "peer-reviewed"
+        },
+        {
+          "title": "Integrated Plasma Control in DIII-D",
+          "authors": "未完整列出",
+          "year": 2005,
+          "venue": "peer-reviewed",
+          "doi": "10.13182/FST05-A1075",
+          "url": "https://doi.org/10.13182/FST05-A1075",
+          "sourceType": "peer-reviewed"
+        }
+      ],
+      "code": [
+        {
+          "name": "GA plasma-control page",
+          "url": null,
+          "status": "not-public",
+          "relationship": "官方能力/合作入口，不是公共源码。",
+          "artifactType": "software",
+          "access": "restricted",
+          "license": "未标注"
+        },
+        {
+          "name": "OMAS",
+          "url": "https://github.com/gafusion/omas",
+          "status": "official-enabling",
+          "relationship": "数据适配层，不是PCS。",
+          "artifactType": "software",
+          "access": "public",
+          "license": "未标注"
+        }
+      ],
+      "maturity": "同行评议论文记录长期装置闭环和日常实验。",
+      "gaps": "核心PCS与装置配置受控；商业实时OS/硬件依赖；跨装置分支一致性难审计；安全资格与电厂级可用率不是研究PCS证据",
+      "sources": []
+    },
+    {
+      "id": "dev-005",
+      "name": "EAST",
+      "country": "中国",
+      "organization": "中国科学院合肥物质科学研究院等离子体物理研究所",
+      "status": "运行中的超导托卡马克",
+      "pcsArchitecture": "早期GA PCS血缘；现代LingShu双冗余集群；定制实时Linux；共享内存/网络；模块化多进程；状态机；PCS-SDP",
+      "timing": "官方机构报道定制实时Linux抖动低于5 μs并称双冗余可靠性99.99%；均应标为机构测试/声明，而非第三方认证。PCS各环多速率。",
+      "primaryTasks": [
+        "T0",
+        "T1",
+        "T2",
+        "T3",
+        "T5",
+        "T6",
+        "T7",
+        "T8",
+        "T9"
+      ],
+      "sensors": [
+        "磁诊断",
+        "POINT 偏振干涉测量",
+        "线圈电流",
+        "等离子体电流",
+        "磁探针",
+        "磁通环",
+        "线圈/等离子体电流",
+        "MSE（可选）",
+        "压力约束（可选）",
+        "光纤电流传感器 FOCS",
+        "磁诊断/P-EFIT",
+        "环电压",
+        "位置和形状误差",
+        "磁测量",
+        "实时平衡",
+        "PF 电流",
+        "POINT 偏振干涉测量（剖面扩展）",
+        "q/电流剖面估计",
+        "储能/β",
+        "Ip",
+        "H&CD 状态",
+        "Langmuir探针Te与Jsat",
+        "辐射",
+        "核心性能与杂质诊断"
+      ],
+      "actuators": [
+        "无直接执行器；计划向 q/电流剖面控制提供状态",
+        "无直接执行器；向多个 PCS 控制器提供状态",
+        "PF 线圈",
+        "快速垂直线圈",
+        "低杂波加热/电流驱动功率",
+        "PF线圈",
+        "形状参考值",
+        "快控线圈",
+        "EAST H&CD 功率",
+        "总等离子体电流",
+        "N2/Ne/Ar杂质气阀",
+        "燃料气体",
+        "无；离线预测研究"
+      ],
+      "representativeWorks": [
+        "EAST Plasma Control System：DIII-D PCS架构的超导长脉冲适配",
+        "EAST稳态高级运行升级：打击点、漂移补偿与诊断自检",
+        "PCS-SDP：CFETR/EAST可视化控制算法开发平台",
+        "EAST plasma control system",
+        "Upgrade of EAST plasma control system for steady-state advanced operation",
+        "Custom application of PCS software development platform on EAST"
+      ],
+      "papers": [
+        {
+          "title": "EAST plasma control system",
+          "authors": "未完整列出",
+          "year": 2008,
+          "venue": "peer-reviewed",
+          "doi": "10.1016/j.fusengdes.2007.12.028",
+          "url": "https://doi.org/10.1016/j.fusengdes.2007.12.028",
+          "sourceType": "peer-reviewed"
+        },
+        {
+          "title": "Upgrade of EAST plasma control system for steady-state advanced operation",
+          "authors": "未完整列出",
+          "year": 2018,
+          "venue": "peer-reviewed",
+          "doi": "10.1016/j.fusengdes.2018.02.079",
+          "url": "https://doi.org/10.1016/j.fusengdes.2018.02.079",
+          "sourceType": "peer-reviewed"
+        },
+        {
+          "title": "Custom application of PCS software development platform on EAST",
+          "authors": "未完整列出",
+          "year": 2021,
+          "venue": "peer-reviewed",
+          "doi": "10.1016/j.fusengdes.2021.112314",
+          "url": "https://doi.org/10.1016/j.fusengdes.2021.112314",
+          "sourceType": "peer-reviewed"
+        }
+      ],
+      "code": [
+        {
+          "name": "LingShu PCS",
+          "url": null,
+          "status": "not-public",
+          "relationship": "机构官方技术报道，无公共生产仓库。",
+          "artifactType": "software",
+          "access": "not-public",
+          "license": "未标注"
+        }
+      ],
+      "maturity": "EAST长期实验及多代PCS论文；LingShu细节主要来自官方报道。",
+      "gaps": "LingShu源码/接口/测试集未公开；可靠性数字缺第三方审计语境；长脉冲全链路数据漂移与热约束；GA旧分支到新平台迁移证据需版本化",
+      "sources": []
+    },
+    {
+      "id": "dev-018",
+      "name": "EHL-2",
+      "country": "中国",
+      "organization": "新奥集团",
+      "status": "规划/建设信息，以项目最新官方状态为准",
+      "pcsArchitecture": "公开路线图/会议海报；未找到完整PCS技术基线；未来可复用EXL数据与控制资产但须独立验证",
+      "timing": "未公开；任何具体接口均应在与装置团队的接口控制文件中确认。",
+      "primaryTasks": [
+        "T2",
+        "T5",
+        "T6",
+        "T7",
+        "T9"
+      ],
+      "sensors": [],
+      "actuators": [],
+      "representativeWorks": [
+        "EHL-2控制需求与公开证据缺口",
+        "ENN's Roadmap for Proton-Boron Fusion Based on Spherical Torus",
+        "Overview of the Physics Design of the EHL-2 Spherical Torus for Proton-Boron Fusion"
+      ],
+      "papers": [
+        {
+          "title": "ENN's Roadmap for Proton-Boron Fusion Based on Spherical Torus",
+          "authors": "M. Liu, H. Xie, Y. Wang, J. Dong, K. Feng, X. Gu, X. Huang, X. Jiang et al. and the ENN Fusion Team",
+          "year": 2024,
+          "venue": "Physics of Plasmas 31, 062507",
+          "doi": "10.1063/5.0199112",
+          "url": "https://doi.org/10.1063/5.0199112",
+          "sourceType": "peer-reviewed roadmap"
+        },
+        {
+          "title": "Overview of the Physics Design of the EHL-2 Spherical Torus for Proton-Boron Fusion",
+          "authors": "H. Xie, Y. Liang, Y. Shi, X. Gu, X. Jiang, L. Dong, W. Liu, X. Wang et al. and the EHL-2 Team",
+          "year": 2025,
+          "venue": "30th IAEA Fusion Energy Conference, IAC-2989",
+          "doi": null,
+          "url": "https://conferences.iaea.org/event/392/contributions/35908/attachments/19881/36142/FEC2025_EHL2_poster-Xie-V4.pdf",
+          "sourceType": "IAEA FEC original conference poster"
+        }
+      ],
+      "code": [
+        {
+          "name": "EHL-2 PCS",
+          "url": null,
+          "status": "not-public",
+          "relationship": "链接为项目海报而非代码；公开证据不足，未发现公开代码或可审计架构。",
+          "artifactType": "software",
+          "access": "not-public",
+          "license": "未标注"
+        }
+      ],
+      "maturity": "公开材料不足以证明PCS仿真、HIL或真机闭环。",
+      "gaps": "控制需求基线；PCS/机器保护/安全职责；实时网络与I/O；模型在环/HIL；数据语义与版本治理；公开论文/代码",
+      "sources": []
+    },
+    {
+      "id": "dev-017",
+      "name": "EXL-50 / EXL-50U",
+      "country": "中国",
+      "organization": "新奥集团",
+      "status": "EXL系列实验与升级推进",
+      "pcsArchitecture": "公开物理论文中的装置控制接口；PTEFIT预印本；完整PCS运行内核/OS/网络/保护未公开",
+      "timing": "PTEFIT预印本报告约0.268 ms计算，不含完整I/O端到端；生产PCS周期与通道清单未找到公开证据。",
+      "primaryTasks": [
+        "T0",
+        "T1",
+        "T2",
+        "T9"
+      ],
+      "sensors": [
+        "磁探针与磁通环",
+        "线圈电流",
+        "装置几何与响应矩阵"
+      ],
+      "actuators": [
+        "PF线圈电源（Rmax PID与isoflux反馈；具体通道映射未公开）"
+      ],
+      "representativeWorks": [
+        "EXL-50/EXL-50U PTEFIT快速平衡重建与反馈探索",
+        "Overview of EXL-50 research progress",
+        "A Novel Numerical Algorithms Optimization Method with Machine Learning Frameworks: Application on Real-time Plasmas Equilibrium Reconstruction in EXL-50U Spherical Torus",
+        "Strategy and experimental progress of the EXL-50U spherical torus in support of the EHL-2 project"
+      ],
+      "papers": [
+        {
+          "title": "Overview of EXL-50 research progress",
+          "authors": "Y. Shi, Y. Wang, B. Liu, X. Song, S. Song, X. Jiang, D. Guo, D. Luo, X. Gu et al. and the EXL-50 Team",
+          "year": 2025,
+          "venue": "Nuclear Fusion 65, 092004",
+          "doi": "10.1088/1741-4326/adf239",
+          "url": "https://doi.org/10.1088/1741-4326/adf239",
+          "sourceType": "peer-reviewed journal article"
+        },
+        {
+          "title": "A Novel Numerical Algorithms Optimization Method with Machine Learning Frameworks: Application on Real-time Plasmas Equilibrium Reconstruction in EXL-50U Spherical Torus",
+          "authors": "G.H. Zheng, S.F. Liu, X. Gu, Y.P. Zhang, J. Li, Y. Liu, X.C. Lun, L. Xing, J.G. Chen, Z.Y. Chen, Y. Yu, D. Guo, Z.Y. Yang, H.S. Xie, X.M. Song, Y.J. Shi and the EXL-50U Team",
+          "year": 2026,
+          "venue": "arXiv:2601.12378",
+          "doi": "10.48550/arXiv.2601.12378",
+          "url": "https://arxiv.org/abs/2601.12378",
+          "sourceType": "original preprint, not peer-reviewed at audit date"
+        },
+        {
+          "title": "Strategy and experimental progress of the EXL-50U spherical torus in support of the EHL-2 project",
+          "authors": "Y. Shi, X. Song, D. Guo, X. Jiang, X. Gu et al. and the EXL-50U Team",
+          "year": 2025,
+          "venue": "Plasma Science and Technology 27, 024003",
+          "doi": "10.1088/2058-6272/ad9e8f",
+          "url": "https://pst.hfcas.ac.cn/article/cstr/32219.14.2058-6272/ad9e8f",
+          "sourceType": "peer-reviewed journal article"
+        }
+      ],
+      "code": [
+        {
+          "name": "PTEFIT",
+          "url": null,
+          "status": "not-public",
+          "relationship": "无可核验官方公共代码仓库。",
+          "artifactType": "software",
+          "access": "not-public",
+          "license": "未标注"
+        }
+      ],
+      "maturity": "EXL实验数据和预印本算法证据；完整PCS成熟度不可由公开资料判定。",
+      "gaps": "完整PCS架构/时序/I-O；生产代码与数据接口；PTEFIT同行评议与独立复现；保护和HIL证据",
+      "sources": []
+    },
+    {
+      "id": "dev-014",
+      "name": "HL-2A",
+      "country": "中国",
+      "organization": "核工业西南物理研究院",
+      "status": "研究装置",
+      "pcsArchitecture": "装置专用控制与DAQ；实时诊断；机器学习破裂预测器；MGI/SMBI接口",
+      "timing": "公开破裂预测论文报告在线处理382炮并触发MGI/SMBI；完整PCS周期和I/O拓扑未公开。",
+      "primaryTasks": [
+        "T2",
+        "T4",
+        "T7",
+        "T9"
+      ],
+      "sensors": [
+        "实时破裂预测特征（磁、密度与辐射等；完整通道清单未公开）"
+      ],
+      "actuators": [
+        "MGI/SMBI缓解触发"
+      ],
+      "representativeWorks": [
+        "Real-time disruption prediction and mitigation on HL-2A"
+      ],
+      "papers": [
+        {
+          "title": "Real-time disruption prediction and mitigation on HL-2A",
+          "authors": "Z. Yang, F. Xia, X. Song, Z. Gao, Y. Li, X. Gong, Y. Dong, Y. Zhang, C. Chen et al.",
+          "year": 2022,
+          "venue": "Fusion Engineering and Design 182, 113223",
+          "doi": "10.1016/j.fusengdes.2022.113223",
+          "url": "https://doi.org/10.1016/j.fusengdes.2022.113223",
+          "sourceType": "peer-reviewed journal article"
+        }
+      ],
+      "code": [
+        {
+          "name": "HL-2A PCS/predictor",
+          "url": null,
+          "status": "not-public",
+          "relationship": "论文公开，训练数据/代码/生产配置未公开。",
+          "artifactType": "software",
+          "access": "not-public",
+          "license": "未标注"
+        }
+      ],
+      "maturity": "特定预测—缓解链有在线真机证据；全PCS成熟度资料不完整。",
+      "gaps": "完整PCS公开资料；训练分布漂移；误触发成本；代码/数据复现；HL-2M迁移证据",
+      "sources": []
+    },
+    {
+      "id": "dev-015",
+      "name": "HL-2M",
+      "country": "中国",
+      "organization": "核工业西南物理研究院",
+      "status": "实验与控制系统持续建设",
+      "pcsArchitecture": "DIII-D PCS框架；三节点实时Linux；D-TACQ2106；反射内存；磁/电源接口",
+      "timing": "设计慢环1 ms、快速垂直环200 μs；磁探针/磁通环输入，经RFM跨节点，输出PF/垂直电源。",
+      "primaryTasks": [
+        "T1",
+        "T2",
+        "T7",
+        "T9"
+      ],
+      "sensors": [
+        "磁探针与磁通环",
+        "线圈与电源状态"
+      ],
+      "actuators": [
+        "PF线圈电源",
+        "快速垂直稳定电源"
+      ],
+      "representativeWorks": [
+        "HL-2M新型等离子体控制系统",
+        "A new scheme of plasma control system based on real-time Linux cluster for HL-2M"
+      ],
+      "papers": [
+        {
+          "title": "A new scheme of plasma control system based on real-time Linux cluster for HL-2M",
+          "authors": "未完整列出",
+          "year": 2023,
+          "venue": "peer-reviewed",
+          "doi": "10.1016/j.fusengdes.2023.113763",
+          "url": "https://doi.org/10.1016/j.fusengdes.2023.113763",
+          "sourceType": "peer-reviewed"
+        }
+      ],
+      "code": [
+        {
+          "name": "HL-2M PCS",
+          "url": null,
+          "status": "not-public",
+          "relationship": "生产分支未公开。",
+          "artifactType": "software",
+          "access": "restricted",
+          "license": "未标注"
+        }
+      ],
+      "maturity": "2023论文以平台和初步仿真为主要证据；后续真机证据需新增论文核验。",
+      "gaps": "真机闭环验收；完整磁标定/电源模型；异常工况和故障注入；生产源码/配置",
+      "sources": []
+    },
+    {
+      "id": "dev-009",
+      "name": "ITER",
+      "country": "国际",
+      "organization": "ITER Organization",
+      "status": "建设与系统集成，尚无等离子体运行",
+      "pcsArchitecture": "iPCS功能架构；PCSSP；MBSE/需求追踪；CODAC Core System；EPICS 7；RHEL；Fast Controllers；IMAS；DINA-IMAS",
+      "timing": "从快速垂直环到慢监控多速率；CODAC连接约220个plant I&C。机器保护和人员/核安全与CODAC/PCS显式解耦。",
+      "primaryTasks": [
+        "T0",
+        "T1",
+        "T2",
+        "T3",
+        "T4",
+        "T5",
+        "T6",
+        "T7",
+        "T8",
+        "T9"
+      ],
+      "sensors": [
+        "LIUQE 平衡",
+        "等离子体电流",
+        "ECE/密度",
+        "MSE（若可用）",
+        "H&CD 状态",
+        "边界磁通",
+        "磁场测量",
+        "线圈电流",
+        "可扩展内部剖面诊断",
+        "磁探针与磁通环的合成测量",
+        "PF/CS 线圈电流",
+        "边界间隙/垂直速度估计",
+        "磁诊断",
+        "PF/VS 线圈电流",
+        "边界间隙",
+        "β/内感扰动估计",
+        "磁测量",
+        "垂直位置/速度估计",
+        "线圈状态",
+        "聚变功率",
+        "核心密度/温度",
+        "辐射",
+        "靶板温度/热流",
+        "中性压力"
+      ],
+      "actuators": [
+        "无直接执行器；预测 Ip、ECCD/ECRH 等动作对 q 的影响",
+        "无直接执行器；输出给 JET q/剖面和形状控制",
+        "中央螺线管",
+        "PF 线圈",
+        "快速垂直稳定线圈/电压命令",
+        "6 个 PF 线圈",
+        "2 个真空室内 VS 线圈",
+        "ITER真空室内垂直稳定执行器",
+        "超导PF线圈",
+        "外加热",
+        "弹丸",
+        "Ne注入",
+        "抽气",
+        "NBI",
+        "ICRH/ECRH",
+        "弹丸/气体加料",
+        "D/T 气体和颗粒",
+        "ECH/ECCD",
+        "ICRH",
+        "碎裂弹丸注入器",
+        "推进气体与低温制备系统",
+        "模拟中的杂质注入、壁与电场参数",
+        "任务降级",
+        "参考值覆盖"
+      ],
+      "representativeWorks": [
+        "ITER Plasma Control System功能架构",
+        "ITER Plasma Control System Simulation Platform（PCSSP）",
+        "ITER PCS系统工程与模型驱动设计/部署策略",
+        "Architectural concept for the ITER Plasma Control System",
+        "The ITER Plasma Control System Simulation Platform",
+        "Strategy to systematically design and deploy the ITER plasma control system: A system engineering and model-based design approach"
+      ],
+      "papers": [
+        {
+          "title": "Architectural concept for the ITER Plasma Control System",
+          "authors": "未完整列出",
+          "year": 2014,
+          "venue": "peer-reviewed",
+          "doi": "10.1016/j.fusengdes.2014.02.079",
+          "url": "https://doi.org/10.1016/j.fusengdes.2014.02.079",
+          "sourceType": "peer-reviewed"
+        },
+        {
+          "title": "The ITER Plasma Control System Simulation Platform",
+          "authors": "未完整列出",
+          "year": 2015,
+          "venue": "peer-reviewed",
+          "doi": "10.1016/j.fusengdes.2015.01.009",
+          "url": "https://doi.org/10.1016/j.fusengdes.2015.01.009",
+          "sourceType": "peer-reviewed"
+        },
+        {
+          "title": "Strategy to systematically design and deploy the ITER plasma control system: A system engineering and model-based design approach",
+          "authors": "未完整列出",
+          "year": 2024,
+          "venue": "peer-reviewed",
+          "doi": "10.1016/j.fusengdes.2024.114464",
+          "url": "https://doi.org/10.1016/j.fusengdes.2024.114464",
+          "sourceType": "peer-reviewed"
+        }
+      ],
+      "code": [
+        {
+          "name": "PCSSP",
+          "url": "https://github.com/iterorganization/PCSSP",
+          "status": "official-direct",
+          "relationship": "MATLAB/Simulink开源平台，不含全部模型。",
+          "artifactType": "software",
+          "access": "public",
+          "license": "未标注"
+        },
+        {
+          "name": "DINA-IMAS",
+          "url": "https://github.com/iterorganization/DINA-IMAS",
+          "status": "official-direct",
+          "relationship": "公开接口化实现。",
+          "artifactType": "software",
+          "access": "public",
+          "license": "未标注"
+        },
+        {
+          "name": "IMAS",
+          "url": "https://github.com/iterorganization/IMAS-Python",
+          "status": "official-enabling",
+          "relationship": "开放API/数据字典。",
+          "artifactType": "software",
+          "access": "public",
+          "license": "未标注"
+        },
+        {
+          "name": "CODAC distribution",
+          "url": null,
+          "status": "not-public",
+          "relationship": "面向注册贡献者分发。",
+          "artifactType": "software",
+          "access": "restricted",
+          "license": "未标注"
+        }
+      ],
+      "maturity": "架构、仿真平台、系统集成和KSTAR先行部署；ITER真机闭环尚不存在。",
+      "gaps": "燃烧等离子体不确定性；辐照下诊断退化；执行器饱和与低机时；安全/保护独立资格；全配置和plant模型并非都公开",
+      "sources": []
+    },
+    {
+      "id": "dev-016",
+      "name": "J-TEXT",
+      "country": "中国",
+      "organization": "华中科技大学",
+      "status": "运行中的研究装置",
+      "pcsArchitecture": "JRTF；中央控制/定时；EPICS设备层；装置DAQ/归档；实验专用执行器接口",
+      "timing": "任务多速率；JRTF处理磁、密度、辐射和MHD等信号，输出到线圈/电源/气体等；EPICS不作为快速环周期证明。",
+      "primaryTasks": [
+        "T4",
+        "T8",
+        "T9"
+      ],
+      "sensors": [
+        "磁、密度、辐射与MHD实时信号"
+      ],
+      "actuators": [
+        "线圈与电源",
+        "气体及实验专用执行器接口"
+      ],
+      "representativeWorks": [
+        "J-TEXT实时框架（JRTF）与中央控制集成",
+        "A new implementation of data process in J-TEXT real-time framework",
+        "JRTF: A flexible software framework for real-time control in magnetic confinement nuclear fusion experiments"
+      ],
+      "papers": [
+        {
+          "title": "A new implementation of data process in J-TEXT real-time framework",
+          "authors": "未完整列出",
+          "year": 2018,
+          "venue": "peer-reviewed",
+          "doi": "10.1016/j.fusengdes.2018.02.060",
+          "url": "https://doi.org/10.1016/j.fusengdes.2018.02.060",
+          "sourceType": "peer-reviewed"
+        },
+        {
+          "title": "JRTF: A flexible software framework for real-time control in magnetic confinement nuclear fusion experiments",
+          "authors": "M. Zhang, G. Z. Zheng, W. Zheng, Z. Chen, T. Yuan and C. Yang",
+          "year": 2016,
+          "venue": "IEEE Transactions on Nuclear Science 63, 1070–1075",
+          "doi": "10.1109/TNS.2016.2518709",
+          "url": "https://doi.org/10.1109/TNS.2016.2518709",
+          "sourceType": "peer-reviewed journal article"
+        }
+      ],
+      "code": [
+        {
+          "name": "JRTF",
+          "url": null,
+          "status": "not-public",
+          "relationship": "论文实现，无公共仓库。",
+          "artifactType": "software",
+          "access": "not-public",
+          "license": "未标注"
+        },
+        {
+          "name": "EPICS Base",
+          "url": "https://github.com/epics-base/epics-base",
+          "status": "official-enabling",
+          "relationship": "通用设备层。",
+          "artifactType": "software",
+          "access": "public",
+          "license": "未标注"
+        }
+      ],
+      "maturity": "JRTF有J-TEXT在线应用；具体闭环按独立控制论文判断。",
+      "gaps": "生产框架开源性；驱动/配置/标定；控制任务目录和版本基线；跨装置语义",
+      "sources": []
+    },
+    {
+      "id": "dev-004",
+      "name": "JET",
+      "country": "欧洲/英国",
+      "organization": "UKAEA for EUROfusion（历史运行）",
+      "status": "实验运行已结束，数据/方法继续研究",
+      "pcsArchitecture": "PPCC；RTPS/RTDN；RTCC；WALLS；VTM；多层保护；MARTe/MARTe2部分系统及升级原型；MDSplus",
+      "timing": "多速率；WALLS论文称所有模块执行低于1 ms，此数不是传感器—执行器总响应。I/O覆盖磁、动理学/辐射/壁诊断、加热、气体与保护。",
+      "primaryTasks": [
+        "T0",
+        "T2",
+        "T3",
+        "T4",
+        "T5",
+        "T6",
+        "T7",
+        "T9"
+      ],
+      "sensors": [
+        "LIUQE 平衡",
+        "等离子体电流",
+        "ECE/密度",
+        "MSE（若可用）",
+        "H&CD 状态",
+        "边界磁通",
+        "磁场测量",
+        "线圈电流",
+        "可扩展内部剖面诊断",
+        "磁探针",
+        "实时垂直位置估计",
+        "JET 实时边界重建",
+        "磁测量",
+        "PF 电流",
+        "形状/间隙误差",
+        "实时 q/电流密度",
+        "ECE 电子温度",
+        "密度/压力",
+        "实时 q 剖面（磁、Faraday/极化与平衡）",
+        "H&CD 功率",
+        "温度/压力辅助信号",
+        "一匝环电压",
+        "磁重建电流二阶矩",
+        "外靶Langmuir探针阵列"
+      ],
+      "actuators": [
+        "无直接执行器；预测 Ip、ECCD/ECRH 等动作对 q 的影响",
+        "无直接执行器；输出给 JET q/剖面和形状控制",
+        "增强径向场放大器",
+        "垂直稳定线圈",
+        "JET PF 线圈与电源",
+        "NBI",
+        "ICRH",
+        "LHCD",
+        "3.7 GHz LHCD 功率/波形",
+        "氮气注入",
+        "模拟中的杂质注入、壁与电场参数",
+        "无；论文为预测器离线验证",
+        "形状/电流参考覆盖",
+        "密度目标",
+        "NBI/ICRH等加热降额",
+        "终止序列",
+        "无；所述战役中输出记录而非自动缓解",
+        "大剂量气体注入阀"
+      ],
+      "representativeWorks": [
+        "JET Real-Time Central Controller与实时数据网络",
+        "JET WALLS—VTM—RTPS：等离子体壁负荷监测与协调终止",
+        "Plasma control at JET",
+        "The software and hardware architecture of the real-time protection of in-vessel components in JET-ILW",
+        "The JET real-time plasma-wall load monitoring system"
+      ],
+      "papers": [
+        {
+          "title": "Plasma control at JET",
+          "authors": "未完整列出",
+          "year": 2000,
+          "venue": "peer-reviewed",
+          "doi": "10.1016/S0920-3796(00)00125-3",
+          "url": "https://doi.org/10.1016/S0920-3796(00)00125-3",
+          "sourceType": "peer-reviewed"
+        },
+        {
+          "title": "The software and hardware architecture of the real-time protection of in-vessel components in JET-ILW",
+          "authors": "未完整列出",
+          "year": 2019,
+          "venue": "peer-reviewed",
+          "doi": "10.1088/1741-4326/ab1a79",
+          "url": "https://doi.org/10.1088/1741-4326/ab1a79",
+          "sourceType": "peer-reviewed"
+        },
+        {
+          "title": "The JET real-time plasma-wall load monitoring system",
+          "authors": "未完整列出",
+          "year": 2014,
+          "venue": "peer-reviewed",
+          "doi": "10.1016/j.fusengdes.2013.10.010",
+          "url": "https://doi.org/10.1016/j.fusengdes.2013.10.010",
+          "sourceType": "peer-reviewed"
+        }
+      ],
+      "code": [
+        {
+          "name": "MARTe2",
+          "url": "https://vcis-gitlab.f4e.europa.eu/aneto/MARTe2",
+          "status": "official-enabling",
+          "relationship": "使能框架；JET RTCC/RTPS/WALLS/VTM装置代码不公开。",
+          "artifactType": "software",
+          "access": "public",
+          "license": "未标注"
+        },
+        {
+          "name": "JET data",
+          "url": null,
+          "status": "not-public",
+          "relationship": "按EUROfusion规则访问。",
+          "artifactType": "software",
+          "access": "restricted",
+          "license": "未标注"
+        }
+      ],
+      "maturity": "生产系统在JET长期闭环/保护运行。",
+      "gaps": "生产代码与配置未公开；历史硬件可维护性；MARTe2论文多为局部/升级原型，不能写成全站迁移；保护结果不直接转移到新装置",
+      "sources": []
+    },
+    {
+      "id": "dev-008",
+      "name": "JT-60SA",
+      "country": "日本/欧盟",
+      "organization": "QST / Fusion for Energy",
+      "status": "commissioning与分阶段实验",
+      "pcsArchitecture": "Central Control System；Real-Time Plasma Control；设备/子系统控制；时钟与事件；DINA/控制仿真工具；分层interlock",
+      "timing": "多速率；公开官方页未给全系统端到端周期。接口覆盖磁/电源/线圈、加热、气体、真空、设备状态与时序。",
+      "primaryTasks": [
+        "T1",
+        "T2",
+        "T3",
+        "T7",
+        "T8",
+        "T9"
+      ],
+      "sensors": [
+        "电源电流/电压",
+        "断路器与冷却状态",
+        "联锁",
+        "磁体状态",
+        "PF/CS 电流",
+        "环电压",
+        "击穿区磁场",
+        "初始等离子体电流",
+        "双色CO2干涉仪",
+        "相位/条纹质量标志"
+      ],
+      "actuators": [
+        "电源参考",
+        "断路/停机",
+        "放电序列控制",
+        "CS",
+        "EF/PF 线圈",
+        "预磁化波形",
+        "气体加料",
+        "异常时反馈抑制/中止接口"
+      ],
+      "representativeWorks": [
+        "JT-60SA中央控制、实时等离子体控制与保护分层",
+        "JT-60SA磁体电源监督与保护控制",
+        "A simulation tool to design and test control laws for JT60-SA scenarios",
+        "JT-60SA control system"
+      ],
+      "papers": [
+        {
+          "title": "A simulation tool to design and test control laws for JT60-SA scenarios",
+          "authors": "未完整列出",
+          "year": 2023,
+          "venue": "peer-reviewed",
+          "doi": "10.1016/j.fusengdes.2023.113631",
+          "url": "https://doi.org/10.1016/j.fusengdes.2023.113631",
+          "sourceType": "peer-reviewed"
+        },
+        {
+          "title": "JT-60SA control system",
+          "authors": "JT-60SA project",
+          "year": 2024,
+          "venue": "JT-60SA official website",
+          "doi": null,
+          "url": "https://www.jt60sa.org/wp/control-system/",
+          "sourceType": "official project documentation"
+        }
+      ],
+      "code": [
+        {
+          "name": "JT-60SA PCS/configuration",
+          "url": null,
+          "status": "not-public",
+          "relationship": "官方职责描述，无公共生产仓库。",
+          "artifactType": "software",
+          "access": "not-public",
+          "license": "未标注"
+        }
+      ],
+      "maturity": "设备commissioning和仿真证据；高性能全任务闭环需逐论文确认。",
+      "gaps": "装置状态快速演进；PCS代码与参数受限；仿真到真机覆盖矩阵未公开；保护/PCS职责需保持分离",
+      "sources": []
+    },
+    {
+      "id": "dev-006",
+      "name": "KSTAR",
+      "country": "韩国",
+      "organization": "Korea Institute of Fusion Energy",
+      "status": "运行中的超导托卡马克",
+      "pcsArchitecture": "GA PCS血缘/本地升级；实时Linux与DAQ；反射内存/确定性网络；装置专用算法；2026 ITER iPCS真机部署活动",
+      "timing": "多速率，公开论文不足以给统一周期；I/O覆盖磁、密度、加热、气体、异常事件和设备状态。",
+      "primaryTasks": [
+        "T0",
+        "T2",
+        "T3",
+        "T4",
+        "T5",
+        "T6",
+        "T7",
+        "T8",
+        "T9"
+      ],
+      "sensors": [
+        "多通道 MSE",
+        "NBI 诊断束",
+        "磁测量",
+        "实时平衡",
+        "磁探针",
+        "磁通环",
+        "PF 线圈电流",
+        "线圈/等离子体电流",
+        "MSE（可选）",
+        "压力约束（可选）",
+        "相对磁通",
+        "上下对称磁通环电压差",
+        "rtEFIT/ISOFLUX 形状",
+        "实时 ECE Te 剖面",
+        "NBI/ECH 功率",
+        "平衡/密度",
+        "Dα",
+        "平衡与剖面诊断",
+        "储能/约束指标",
+        "线平均密度",
+        "现有RWM传感器",
+        "候选模态传感器",
+        "Langmuir探针",
+        "辐射/靶板状态"
+      ],
+      "actuators": [
+        "无直接执行器；计划服务 NBI/ECCD/Ip 的 q 剖面控制",
+        "无直接执行器；为 KSTAR ISOFLUX 提供候选边界状态",
+        "无直接执行器；向多个 PCS 控制器提供状态",
+        "IVC 快控线圈",
+        "超导 PF 线圈",
+        "NBI",
+        "ECH",
+        "非轴对称RMP线圈",
+        "无；论文验证实时分类，未闭环改变加热/气体",
+        "KSTAR三维场线圈",
+        "杂质气体注入",
+        "NBI-1功率/脉宽调制",
+        "PF/垂直稳定控制电压",
+        "异常处置逻辑"
+      ],
+      "representativeWorks": [
+        "KSTAR PCS升级与长脉冲高级集成控制",
+        "Achievements and lessons learned from the operation of KSTAR plasma control system upgrade",
+        "Advances and challenges in KSTAR plasma control toward long-pulse, high-performance experiments",
+        "On KSTAR, ITER’s plasma control system successfully takes charge"
+      ],
+      "papers": [
+        {
+          "title": "Achievements and lessons learned from the operation of KSTAR plasma control system upgrade",
+          "authors": "未完整列出",
+          "year": 2018,
+          "venue": "peer-reviewed",
+          "doi": "10.1016/j.fusengdes.2018.02.066",
+          "url": "https://doi.org/10.1016/j.fusengdes.2018.02.066",
+          "sourceType": "peer-reviewed"
+        },
+        {
+          "title": "Advances and challenges in KSTAR plasma control toward long-pulse, high-performance experiments",
+          "authors": "未完整列出",
+          "year": 2020,
+          "venue": "peer-reviewed",
+          "doi": "10.1016/j.fusengdes.2020.111622",
+          "url": "https://doi.org/10.1016/j.fusengdes.2020.111622",
+          "sourceType": "peer-reviewed"
+        },
+        {
+          "title": "On KSTAR, ITER’s plasma control system successfully takes charge",
+          "authors": "未完整列出",
+          "year": 2026,
+          "venue": "ITER official",
+          "doi": null,
+          "url": "https://www.iter.org/node/20687/kstar-iters-plasma-control-system-successfully-takes-charge",
+          "sourceType": "ITER official"
+        }
+      ],
+      "code": [
+        {
+          "name": "KSTAR PCS/iPCS branch",
+          "url": null,
+          "status": "not-public",
+          "relationship": "部署由ITER官方确认，源码未公开。",
+          "artifactType": "software",
+          "access": "not-public",
+          "license": "未标注"
+        }
+      ],
+      "maturity": "KSTAR本地PCS长期真机；2026 iPCS活动属于新增部署证据。",
+      "gaps": "iPCS技术论文尚需补足时序/覆盖/验收清单；生产源码受限；长脉冲诊断漂移和执行器老化；KSTAR结果不能等同ITER条件",
+      "sources": []
+    },
+    {
+      "id": "dev-011",
+      "name": "MAST-U",
+      "country": "英国",
+      "organization": "UK Atomic Energy Authority",
+      "status": "运行中的球形托卡马克",
+      "pcsArchitecture": "GA PCS；category/phase；装置专用虚拟电路；FIESTA模型；磁与气阀I/O；站点数据系统",
+      "timing": "多速率；大PF线圈组与11组气阀构成强耦合执行器接口。论文未给可外推的统一周期。",
+      "primaryTasks": [
+        "T1",
+        "T2",
+        "T5",
+        "T9"
+      ],
+      "sensors": [
+        "可见光/光谱排热前沿",
+        "靶板热流/红外诊断",
+        "密度与磁构型",
+        "快速成像",
+        "Fulcher发射前沿",
+        "平衡与偏滤器几何"
+      ],
+      "actuators": [
+        "偏滤器/主腔气体注入",
+        "Super-X 磁构型（由形状回路维持）",
+        "偏滤器燃料/气体注入"
+      ],
+      "representativeWorks": [
+        "MAST Upgrade Plasma Control System",
+        "The MAST Upgrade plasma control system"
+      ],
+      "papers": [
+        {
+          "title": "The MAST Upgrade plasma control system",
+          "authors": "未完整列出",
+          "year": 2020,
+          "venue": "peer-reviewed",
+          "doi": "10.1016/j.fusengdes.2020.111764",
+          "url": "https://doi.org/10.1016/j.fusengdes.2020.111764",
+          "sourceType": "peer-reviewed"
+        }
+      ],
+      "code": [
+        {
+          "name": "MAST-U GA PCS branch",
+          "url": null,
+          "status": "not-public",
+          "relationship": "论文公开，代码受控。",
+          "artifactType": "software",
+          "access": "restricted",
+          "license": "未标注"
+        }
+      ],
+      "maturity": "commissioning及MAST-U真机运行。",
+      "gaps": "强耦合磁执行器；Super-X多目标权衡；FIESTA/PCS配置受控；跨装置复现",
+      "sources": []
+    },
+    {
+      "id": "dev-010",
+      "name": "NSTX-U",
+      "country": "美国",
+      "organization": "Princeton Plasma Physics Laboratory",
+      "status": "升级/恢复与实验准备（具体状态需查当期官方页）",
+      "pcsArchitecture": "GA PCS；64-bit Concurrent RedHawk Linux；PSRTC；rtEFIT/isoflux；Fibre Channel/FPDP；MDSplus；GSevolve开发",
+      "timing": "历史NSTX论文报告252路、5 kHz采集；NSTX-U升级采用现代串行I/O，模块多速率。应避免用旧系统数字描述恢复后的当前配置。",
+      "primaryTasks": [
+        "T1",
+        "T2",
+        "T4",
+        "T5",
+        "T6",
+        "T7",
+        "T9"
+      ],
+      "sensors": [
+        "磁扰动",
+        "快离子诊断",
+        "中子率",
+        "NBI状态",
+        "VUV阵列",
+        "bolometer",
+        "边缘/偏滤器诊断",
+        "rtEFIT/MSE q 与电流剖面",
+        "β/储能",
+        "NBI 源和密度",
+        "磁测量",
+        "实时平衡",
+        "垂直位置/速度",
+        "执行器状态"
+      ],
+      "actuators": [
+        "不同几何NBI源",
+        "束功率与时序",
+        "计划中的杂质注入",
+        "加热/场景协调",
+        "NBI 功率/能量/束源组合",
+        "Ip/CS-PF（场景阶段）",
+        "PF/垂直稳定控制电压",
+        "异常处置逻辑"
+      ],
+      "representativeWorks": [
+        "NSTX-U控制系统升级：64位实时Linux与现代I/O",
+        "NSTX-U Control System Upgrades",
+        "Plasma boundary shape control and real-time equilibrium reconstruction on NSTX-U",
+        "Plasma shape and position control development for NSTX-U using the GSEvolve plasma simulator"
+      ],
+      "papers": [
+        {
+          "title": "NSTX-U Control System Upgrades",
+          "authors": "未完整列出",
+          "year": 2014,
+          "venue": "peer-reviewed",
+          "doi": null,
+          "url": "https://bp-pub.pppl.gov/pub_report/2014/PPPL-5045-abs.html",
+          "sourceType": "peer-reviewed"
+        },
+        {
+          "title": "Plasma boundary shape control and real-time equilibrium reconstruction on NSTX-U",
+          "authors": "未完整列出",
+          "year": 2018,
+          "venue": "peer-reviewed",
+          "doi": "10.1088/1741-4326/aaa4d0",
+          "url": "https://doi.org/10.1088/1741-4326/aaa4d0",
+          "sourceType": "peer-reviewed"
+        },
+        {
+          "title": "Plasma shape and position control development for NSTX-U using the GSEvolve plasma simulator",
+          "authors": "未完整列出",
+          "year": 2025,
+          "venue": "peer-reviewed",
+          "doi": "10.1016/j.fusengdes.2025.115302",
+          "url": "https://doi.org/10.1016/j.fusengdes.2025.115302",
+          "sourceType": "peer-reviewed"
+        }
+      ],
+      "code": [
+        {
+          "name": "NSTX-U GA PCS/GSevolve configuration",
+          "url": null,
+          "status": "not-public",
+          "relationship": "论文公开，生产环境未公开。",
+          "artifactType": "software",
+          "access": "restricted",
+          "license": "未标注"
+        },
+        {
+          "name": "MDSplus",
+          "url": "https://github.com/MDSplus/mdsplus",
+          "status": "official-enabling",
+          "relationship": "数据系统。",
+          "artifactType": "software",
+          "access": "public",
+          "license": "未标注"
+        }
+      ],
+      "maturity": "历史NSTX/NSTX-U闭环运行；恢复后具体配置需重新验证。",
+      "gaps": "商业实时OS；恢复后配置差异；生产代码/模型受限；实验数据访问和标定",
+      "sources": []
+    },
+    {
+      "id": "dev-020",
+      "name": "RFX-mod / RFX-mod2",
+      "country": "意大利",
+      "organization": "Consorzio RFX / EUROfusion",
+      "status": "RFX-mod2升级与集成",
+      "pcsArchitecture": "MARTe/MARTe2；高速磁I/O；RAPTOR集成；MDSplus；装置专用控制矩阵",
+      "timing": "快速磁控制与较慢状态观测多速率；公开论文需逐模块看周期，不能合并为单一全机频率。",
+      "primaryTasks": [
+        "T0",
+        "T2",
+        "T3",
+        "T4",
+        "T9"
+      ],
+      "sensors": [
+        "高速磁I/O",
+        "RAPTOR状态与剖面观测量"
+      ],
+      "actuators": [
+        "多输入多输出磁控制线圈（装置专用控制矩阵）"
+      ],
+      "representativeWorks": [
+        "RAPTOR实时状态观测器与剖面控制链",
+        "Integration of the state observer RAPTOR in the real-time MARTe framework at RFX-mod"
+      ],
+      "papers": [
+        {
+          "title": "Integration of the state observer RAPTOR in the real-time MARTe framework at RFX-mod",
+          "authors": "未完整列出",
+          "year": 2017,
+          "venue": "peer-reviewed",
+          "doi": "10.1016/j.fusengdes.2017.04.122",
+          "url": "https://doi.org/10.1016/j.fusengdes.2017.04.122",
+          "sourceType": "peer-reviewed"
+        }
+      ],
+      "code": [
+        {
+          "name": "MARTe2",
+          "url": "https://vcis-gitlab.f4e.europa.eu/aneto/MARTe2",
+          "status": "official-enabling",
+          "relationship": "开源执行框架。",
+          "artifactType": "software",
+          "access": "public",
+          "license": "未标注"
+        },
+        {
+          "name": "RAPTOR",
+          "url": null,
+          "status": "not-public",
+          "relationship": "需授权。",
+          "artifactType": "software",
+          "access": "restricted",
+          "license": "未标注"
+        }
+      ],
+      "maturity": "RFX-mod有在线集成证据；RFX-mod2升级后的完整闭环基线需新论文确认。",
+      "gaps": "升级后配置验证；装置专用磁矩阵/驱动受限；RAPTOR访问限制；全链路HIL/回放公开度",
+      "sources": []
+    },
+    {
+      "id": "dev-012",
+      "name": "SPARC",
+      "country": "美国",
+      "organization": "Commonwealth Fusion Systems / MIT collaboration",
+      "status": "在建装置",
+      "pcsArchitecture": "neutrino实时框架；无锁进程/节点通信；COMET plant模型；HOOTL/HITL；GSPulse设计工具",
+      "timing": "公开会议材料未给完整WCET/抖动表；计划I/O涵盖磁、辐射、PFC、执行器和机器状态。当前主要为仿真/HIL。",
+      "primaryTasks": [
+        "T0",
+        "T1",
+        "T2",
+        "T6",
+        "T7",
+        "T9"
+      ],
+      "sensors": [
+        "规划中的磁、平衡、辐射、PFC与机器状态量"
+      ],
+      "actuators": [
+        "规划中的线圈、加热/加料与终止接口（待投运验证）"
+      ],
+      "representativeWorks": [
+        "SPARC实时控制框架neutrino与COMET闭环开发环境",
+        "GSPulse可微Grad–Shafranov脉冲设计与反馈仿真",
+        "The SPARC plasma control system",
+        "GSPulse: A differentiable free-boundary Grad-Shafranov solver for tokamak pulse design and control"
+      ],
+      "papers": [
+        {
+          "title": "The SPARC plasma control system",
+          "authors": "未完整列出",
+          "year": 2024,
+          "venue": "APS-DPP original conference abstract",
+          "doi": null,
+          "url": "https://meetings-archive.aps.org/dpp/2024/np12/105/",
+          "sourceType": "APS-DPP original conference abstract"
+        },
+        {
+          "title": "GSPulse: A differentiable free-boundary Grad-Shafranov solver for tokamak pulse design and control",
+          "authors": "未完整列出",
+          "year": 2025,
+          "venue": "original preprint; peer-review status must be rechecked",
+          "doi": null,
+          "url": "https://arxiv.org/abs/2506.21760",
+          "sourceType": "original preprint; peer-review status must be rechecked"
+        }
+      ],
+      "code": [
+        {
+          "name": "GSPulse_public",
+          "url": "https://github.com/jwai-cfs/GSPulse_public",
+          "status": "official-direct",
+          "relationship": "公开设计代码。",
+          "artifactType": "software",
+          "access": "public",
+          "license": "未标注"
+        },
+        {
+          "name": "neutrino/COMET",
+          "url": null,
+          "status": "not-public",
+          "relationship": "生产框架/模型未公开。",
+          "artifactType": "software",
+          "access": "not-public",
+          "license": "未标注"
+        }
+      ],
+      "maturity": "HOOTL/HITL和跨装置模型对照；无SPARC等离子体闭环。",
+      "gaps": "首机I/O与commissioning；燃烧等离子体模型失配；生产代码公开性；安全/保护资格；最坏时序公开证据",
+      "sources": []
+    },
+    {
+      "id": "dev-002",
+      "name": "TCV",
+      "country": "瑞士",
+      "organization": "EPFL Swiss Plasma Center",
+      "status": "运行中的研究装置",
+      "pcsArchitecture": "Simulink设计与代码生成；MARTe2；PREEMPT_RT Linux；双主节点；MDSplus；EtherCAT/DDS迁移；LIUQE/MEQ；RAPTOR/RAPDENS；SAMONE",
+      "timing": "全机主控制10 kHz；硬件测试显示50 kHz潜力；LIUQE约1 ms。192路前端最高1 MS/s，经光纤送双节点，另接共享内存/网络和EtherCAT。",
+      "primaryTasks": [
+        "T0",
+        "T1",
+        "T2",
+        "T3",
+        "T4",
+        "T5",
+        "T7",
+        "T8",
+        "T9"
+      ],
+      "sensors": [
+        "干涉仪",
+        "Thomson 散射",
+        "反射计/边缘密度",
+        "粒子源和执行器状态",
+        "LIUQE 平衡",
+        "等离子体电流",
+        "ECE/密度",
+        "MSE（若可用）",
+        "H&CD 状态",
+        "133 路磁测量",
+        "线圈电流",
+        "真空室电流模型",
+        "可选内部诊断约束",
+        "TCV 实时磁状态/LIUQE",
+        "内层磁控制状态",
+        "形状输出与约束",
+        "磁测量",
+        "目标形状描述",
+        "RAPTOR/LIUQE q 估计",
+        "β/储能",
+        "密度观测器",
+        "EC 功率与总电流",
+        "ECE",
+        "实时平衡"
+      ],
+      "actuators": [
+        "气体阀",
+        "颗粒注入",
+        "在 TCV 中补偿 ECCD 引起的密度扰动",
+        "无直接执行器；预测 Ip、ECCD/ECRH 等动作对 q 的影响",
+        "无直接执行器；作为形状、q 剖面与 RAPTOR 控制的状态服务",
+        "经内层回路作用的 PF 线圈参考",
+        "TCV 19 路可控线圈电压",
+        "两组 ECRH/ECCD gyrotron",
+        "等离子体电流请求",
+        "ECRH/ECCD功率",
+        "EC沉积位置",
+        "D2气阀",
+        "N2杂质气阀",
+        "TCV 19 路线圈",
+        "电流目标",
+        "加热/燃料的场景波形",
+        "电流、加热、密度和形状轨迹",
+        "气体/加热",
+        "形状与电流参考",
+        "任务使能/禁用",
+        "ECRH/ECCD",
+        "加热与电流驱动",
+        "气体",
+        "任务参考值"
+      ],
+      "representativeWorks": [
+        "MEQ实时平衡重建、前馈与磁控制工具箱",
+        "TCV数字实时控制系统：Simulink自动代码生成与MARTe2全机运行",
+        "MARTe2通用确定性实时执行框架",
+        "RAPTOR实时状态观测器与剖面控制链",
+        "TCV分布式反馈控制系统的架构与投运",
+        "Overview of the TCV digital real-time plasma control system and its applications",
+        "Distributed digital real-time control system for the TCV tokamak and its applications",
+        "Architecture and commissioning of the TCV distributed feedback control system"
+      ],
+      "papers": [
+        {
+          "title": "Overview of the TCV digital real-time plasma control system and its applications",
+          "authors": "未完整列出",
+          "year": 2024,
+          "venue": "peer-reviewed open access",
+          "doi": "10.1016/j.fusengdes.2024.114640",
+          "url": "https://doi.org/10.1016/j.fusengdes.2024.114640",
+          "sourceType": "peer-reviewed open access"
+        },
+        {
+          "title": "Distributed digital real-time control system for the TCV tokamak and its applications",
+          "authors": "未完整列出",
+          "year": 2017,
+          "venue": "peer-reviewed",
+          "doi": "10.1088/1741-4326/aa6120",
+          "url": "https://doi.org/10.1088/1741-4326/aa6120",
+          "sourceType": "peer-reviewed"
+        },
+        {
+          "title": "Architecture and commissioning of the TCV distributed feedback control system",
+          "authors": "未完整列出",
+          "year": 2010,
+          "venue": "peer-reviewed conference",
+          "doi": "10.1109/RTC.2010.5750487",
+          "url": "https://doi.org/10.1109/RTC.2010.5750487",
+          "sourceType": "peer-reviewed conference"
+        }
+      ],
+      "code": [
+        {
+          "name": "MEQ",
+          "url": "https://gitlab.epfl.ch/spc/public/meq/meq",
+          "status": "official-direct",
+          "relationship": "Apache-2.0，含LIUQE/FBT/FGE等。",
+          "artifactType": "software",
+          "access": "public",
+          "license": "未标注"
+        },
+        {
+          "name": "MARTe2",
+          "url": "https://vcis-gitlab.f4e.europa.eu/aneto/MARTe2",
+          "status": "official-enabling",
+          "relationship": "实时运行框架。",
+          "artifactType": "software",
+          "access": "public",
+          "license": "未标注"
+        },
+        {
+          "name": "RAPTOR",
+          "url": null,
+          "status": "not-public",
+          "relationship": "主代码需签署CLA/获授权。",
+          "artifactType": "software",
+          "access": "restricted",
+          "license": "未标注"
+        }
+      ],
+      "maturity": "2024综述证明MARTe2全机运行及多项真机闭环。",
+      "gaps": "Simulink/代码生成商业依赖；完整TCV配置和驱动未全开；DDS新网络仍需持续验证；从灵活研究装置到电厂可靠性需工程化",
+      "sources": []
+    },
+    {
+      "id": "dev-007",
+      "name": "WEST",
+      "country": "法国",
+      "organization": "CEA-IRFM / EUROfusion",
+      "status": "运行中的长脉冲钨装置",
+      "pcsArchitecture": "Tore Supra控制遗产；中央PCS；实时诊断/共享内存；红外Wall Monitoring System；RF执行器接口",
+      "timing": "多速率；红外WMS→共享内存→PCS→五套RF天线。论文统计C4阶段63次触发、97%成功、0.2%误报，仅适用特定样本。",
+      "primaryTasks": [
+        "T0",
+        "T2",
+        "T4",
+        "T5",
+        "T6",
+        "T7",
+        "T9"
+      ],
+      "sensors": [
+        "红外相机",
+        "图像元数据",
+        "壁几何",
+        "6个红外视场",
+        "部件温度ROI",
+        "加热系统状态"
+      ],
+      "actuators": [
+        "与加热天线指令接口集成；公开结果不足以确认已完成自动闭环功率调节",
+        "LH功率",
+        "ICRH功率",
+        "功率降额/切断"
+      ],
+      "representativeWorks": [
+        "WEST等离子体控制系统集成与首轮运行",
+        "The WEST plasma control system: Integration, commissioning and operation on first experimental campaigns",
+        "First real-time detection and feedback control of plasma-wall interaction in WEST"
+      ],
+      "papers": [
+        {
+          "title": "The WEST plasma control system: Integration, commissioning and operation on first experimental campaigns",
+          "authors": "未完整列出",
+          "year": 2019,
+          "venue": "peer-reviewed",
+          "doi": "10.1016/j.fusengdes.2019.01.139",
+          "url": "https://doi.org/10.1016/j.fusengdes.2019.01.139",
+          "sourceType": "peer-reviewed"
+        },
+        {
+          "title": "First real-time detection and feedback control of plasma-wall interaction in WEST",
+          "authors": "未完整列出",
+          "year": 2021,
+          "venue": "original preprint",
+          "doi": null,
+          "url": "https://arxiv.org/abs/2101.01914",
+          "sourceType": "original preprint"
+        }
+      ],
+      "code": [
+        {
+          "name": "WEST PCS/WMS",
+          "url": null,
+          "status": "not-public",
+          "relationship": "装置页面公开，生产代码未公开。",
+          "artifactType": "software",
+          "access": "not-public",
+          "license": "未标注"
+        }
+      ],
+      "maturity": "PCS与壁温反馈有真机闭环证据。",
+      "gaps": "完整架构/源码受限；红外标定与遮挡；反馈统计需跨场景复核；保护与优化控制边界需形式化",
+      "sources": []
+    }
+  ]
+}

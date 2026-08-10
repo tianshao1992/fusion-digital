@@ -35,6 +35,7 @@
 
 ```bash
 npm run research:ai
+npm run research:control
 npm run check
 ```
 
@@ -51,6 +52,7 @@ public/fusion-ai-native-paper-code-index.csv
 ```bash
 python -m pip install -r requirements-research.txt
 npm run research:report
+npm run research:control:report
 ```
 
 Windows 且安装 Microsoft Word 时，可使用 `scripts/research/render_word_pdf.vbs` 将 DOCX 渲染为 PDF 进行逐页检查。其他平台可使用 LibreOffice 转 PDF，但分页可能与 Word 不同。

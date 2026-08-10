@@ -1,0 +1,242 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-08-11",
+  "maturityScale": {
+    "M0": "概念/需求，尚无装置闭环证据",
+    "M1": "离线模型或软件在环",
+    "M2": "回放、硬件在环或设备commissioning",
+    "M3": "装置在线/影子运行",
+    "M4": "装置闭环实验或日常运行"
+  },
+  "governanceBoundary": "M级描述装置控制成熟度，不是安全完整性或部署批准等级。所有装置生产PCS/闭环证据在主报告口径中至多为D4；本数据集没有足够原始证据授予D5。",
+  "devices": [
+    {
+      "id": "DEV-001", "name": "DIII-D", "countryOrRegion": "美国", "operator": "General Atomics / DOE Office of Science", "status": "运行中的研究装置",
+      "controlTasks": ["电流/位置/形状", "垂直稳定", "密度", "加热与电流驱动", "剖面", "RWM/NTM", "偏滤器与辐射", "异常预测和放电终止"],
+      "pcsStack": ["GA PCS C/C++", "category/phase", "rtEFIT/isoflux", "多处理器实时节点", "专用ADC/DAC和实时网络", "MDSplus", "PCS闭环仿真"],
+      "cycleAndIO": "多速率；历史采样基准约60 μs，RWM专用链路曾由约50 μs优化到约11 μs；不能将专环数字外推为全PCS周期。I/O覆盖磁、MSE/ECE/干涉仪、加热/束/RF、线圈、气阀和装置状态。",
+      "representativePapers": [
+        {"title": "Current State of DIII-D Plasma Control System", "url": "https://doi.org/10.1016/j.fusengdes.2019.111368"},
+        {"title": "Recent Advancements in the DIII-D Plasma Control System", "url": "https://doi.org/10.1109/TPS.2024.3415768"},
+        {"title": "Integrated Plasma Control in DIII-D", "url": "https://doi.org/10.13182/FST05-A1075"}
+      ],
+      "publicCodeAndData": [{"name": "GA plasma-control page", "status": "controlled-access", "url": "https://www.ga.com/plasma-control", "note": "官方能力/合作入口，不是公共源码。"}, {"name": "OMAS", "status": "official-framework", "url": "https://github.com/gafusion/omas", "note": "数据适配层，不是PCS。"}],
+      "maturity": {"level": "M4", "basis": "同行评议论文记录长期装置闭环和日常实验。"},
+      "gaps": ["核心PCS与装置配置受控", "商业实时OS/硬件依赖", "跨装置分支一致性难审计", "安全资格与电厂级可用率不是研究PCS证据"],
+      "evidenceBoundary": "官方称多装置使用GA PCS，不代表算法、版本、性能和安全边界相同。"
+    },
+    {
+      "id": "DEV-002", "name": "TCV", "countryOrRegion": "瑞士", "operator": "EPFL Swiss Plasma Center", "status": "运行中的研究装置",
+      "controlTasks": ["灵活位形/形状", "垂直稳定", "密度", "EC定位", "实时平衡", "温度/密度/q剖面", "MHD事件", "场景管理"],
+      "pcsStack": ["Simulink设计与代码生成", "MARTe2", "PREEMPT_RT Linux", "双主节点", "MDSplus", "EtherCAT/DDS迁移", "LIUQE/MEQ", "RAPTOR/RAPDENS", "SAMONE"],
+      "cycleAndIO": "全机主控制10 kHz；硬件测试显示50 kHz潜力；LIUQE约1 ms。192路前端最高1 MS/s，经光纤送双节点，另接共享内存/网络和EtherCAT。",
+      "representativePapers": [
+        {"title": "Overview of the TCV digital real-time plasma control system and its applications", "url": "https://doi.org/10.1016/j.fusengdes.2024.114640"},
+        {"title": "Distributed digital real-time control system for the TCV tokamak and its applications", "url": "https://doi.org/10.1088/1741-4326/aa6120"},
+        {"title": "Architecture and commissioning of the TCV distributed feedback control system", "url": "https://doi.org/10.1109/RTC.2010.5750487"}
+      ],
+      "publicCodeAndData": [{"name": "MEQ", "status": "paper-direct", "url": "https://gitlab.epfl.ch/spc/public/meq/meq", "note": "Apache-2.0，含LIUQE/FBT/FGE等。"}, {"name": "MARTe2", "status": "official-framework", "url": "https://vcis-gitlab.f4e.europa.eu/aneto/MARTe2", "note": "实时运行框架。"}, {"name": "RAPTOR", "status": "controlled-access", "url": "https://crppwww.epfl.ch/~sauter/raptor/", "note": "主代码需签署CLA/获授权。"}],
+      "maturity": {"level": "M4", "basis": "2024综述证明MARTe2全机运行及多项真机闭环。"},
+      "gaps": ["Simulink/代码生成商业依赖", "完整TCV配置和驱动未全开", "DDS新网络仍需持续验证", "从灵活研究装置到电厂可靠性需工程化"],
+      "evidenceBoundary": "TCV是MARTe2全机成熟样例，但不证明框架在任意硬件上自动满足确定性。"
+    },
+    {
+      "id": "DEV-003", "name": "ASDEX Upgrade", "countryOrRegion": "德国", "operator": "Max Planck Institute for Plasma Physics", "status": "运行中的研究装置",
+      "controlTasks": ["磁控制", "密度/加料", "加热与执行器负载管理", "剖面/状态观测", "破裂预防", "放电段编排", "异常处置"],
+      "pcsStack": ["Discharge Control System", "配置驱动函数链", "Linux/VxWorks/Solaris节点", "实时诊断", "Fenix flight simulator", "ASTRA/SPIDER/Simulink", "RAPTOR集成"],
+      "cycleAndIO": "功能和节点多速率；DCS论文强调确定性任务图与分布式执行，不给全局单周期。I/O覆盖磁、动理学诊断、加热、气体、线圈和设备状态。",
+      "representativePapers": [{"title": "ASDEX Upgrade discharge control system—A real-time plasma control framework", "url": "https://doi.org/10.1016/j.fusengdes.2014.01.001"}, {"title": "Fenix—ASDEX Upgrade's flight simulator", "url": "https://pure.mpg.de/pubman/faces/ViewItemOverviewPage.jsp?itemId=item_2132788"}],
+      "publicCodeAndData": [{"name": "AUG DCS/Fenix", "status": "not-public", "url": "https://pure.mpg.de/pubman/item/item_2052819_3/component/file_2383424/Treutterer.pdf", "note": "论文公开，完整生产分支/模型未公开。"}],
+      "maturity": {"level": "M4", "basis": "DCS为装置长期生产控制，Fenix用于开发/验证。"},
+      "gaps": ["生产软件和装置模型受限", "多OS/历史组件维护", "模型在环覆盖度需显式量化", "机器保护职责需与PCS区分"],
+      "evidenceBoundary": "Fenix成熟不等于其模型覆盖所有破裂、PFC和设备失效。"
+    },
+    {
+      "id": "DEV-004", "name": "JET", "countryOrRegion": "欧洲/英国", "operator": "UKAEA for EUROfusion（历史运行）", "status": "实验运行已结束，数据/方法继续研究",
+      "controlTasks": ["位置/形状", "密度", "加热", "实时剖面/事件", "壁保护WALLS", "VTM终止", "RTCC场景协调", "机器保护"],
+      "pcsStack": ["PPCC", "RTPS/RTDN", "RTCC", "WALLS", "VTM", "多层保护", "MARTe/MARTe2部分系统及升级原型", "MDSplus"],
+      "cycleAndIO": "多速率；WALLS论文称所有模块执行低于1 ms，此数不是传感器—执行器总响应。I/O覆盖磁、动理学/辐射/壁诊断、加热、气体与保护。",
+      "representativePapers": [{"title": "Plasma control at JET", "url": "https://doi.org/10.1016/S0920-3796(00)00125-3"}, {"title": "The JET real-time protection system", "url": "https://doi.org/10.1088/1741-4326/ab1a79"}, {"title": "WALLS: A real-time plasma-wall monitoring system", "url": "https://doi.org/10.1016/j.fusengdes.2013.10.010"}],
+      "publicCodeAndData": [{"name": "MARTe2", "status": "official-framework", "url": "https://vcis-gitlab.f4e.europa.eu/aneto/MARTe2", "note": "使能框架；JET RTCC/RTPS/WALLS/VTM装置代码不公开。"}, {"name": "JET data", "status": "controlled-access", "url": "https://users.euro-fusion.org/", "note": "按EUROfusion规则访问。"}],
+      "maturity": {"level": "M4", "basis": "生产系统在JET长期闭环/保护运行。"},
+      "gaps": ["生产代码与配置未公开", "历史硬件可维护性", "MARTe2论文多为局部/升级原型，不能写成全站迁移", "保护结果不直接转移到新装置"],
+      "evidenceBoundary": "JET已经停机；成熟度描述历史已验证能力，不代表当前可在线运行。"
+    },
+    {
+      "id": "DEV-005", "name": "EAST", "countryOrRegion": "中国", "operator": "中国科学院合肥物质科学研究院等离子体物理研究所", "status": "运行中的超导托卡马克",
+      "controlTasks": ["电流/位置/形状", "垂直稳定", "密度", "长脉冲加热/加料", "偏滤器", "稳态运行", "异常处理", "数据处理"],
+      "pcsStack": ["早期GA PCS血缘", "现代LingShu双冗余集群", "定制实时Linux", "共享内存/网络", "模块化多进程", "状态机", "PCS-SDP"],
+      "cycleAndIO": "官方机构报道定制实时Linux抖动低于5 μs并称双冗余可靠性99.99%；均应标为机构测试/声明，而非第三方认证。PCS各环多速率。",
+      "representativePapers": [{"title": "Plasma control system for EAST", "url": "https://doi.org/10.1016/j.fusengdes.2007.12.028"}, {"title": "Upgrade of EAST plasma control system for steady-state operation", "url": "https://doi.org/10.1016/j.fusengdes.2018.02.079"}, {"title": "Development of EAST PCS-SDP", "url": "https://doi.org/10.1016/j.fusengdes.2021.112314"}],
+      "publicCodeAndData": [{"name": "LingShu PCS", "status": "not-public", "url": "https://ipp.cas.cn/xwdt/kydt/202308/t20230827_374112.html", "note": "机构官方技术报道，无公共生产仓库。"}],
+      "maturity": {"level": "M4", "basis": "EAST长期实验及多代PCS论文；LingShu细节主要来自官方报道。"},
+      "gaps": ["LingShu源码/接口/测试集未公开", "可靠性数字缺第三方审计语境", "长脉冲全链路数据漂移与热约束", "GA旧分支到新平台迁移证据需版本化"],
+      "evidenceBoundary": "99.99%与<5 μs按中科院官方说法引用，不等同于核级认证或全PCS端到端性能。"
+    },
+    {
+      "id": "DEV-006", "name": "KSTAR", "countryOrRegion": "韩国", "operator": "Korea Institute of Fusion Energy", "status": "运行中的超导托卡马克",
+      "controlTasks": ["磁位形", "长脉冲密度/加热/气体", "剖面与高性能场景", "异常处置", "实时诊断集成"],
+      "pcsStack": ["GA PCS血缘/本地升级", "实时Linux与DAQ", "反射内存/确定性网络", "装置专用算法", "2026 ITER iPCS真机部署活动"],
+      "cycleAndIO": "多速率，公开论文不足以给统一周期；I/O覆盖磁、密度、加热、气体、异常事件和设备状态。",
+      "representativePapers": [{"title": "Achievements and lessons learned from the operation of KSTAR plasma control system upgrade", "url": "https://doi.org/10.1016/j.fusengdes.2018.02.066"}, {"title": "Advances and challenges in KSTAR plasma control toward long-pulse, high-performance experiments", "url": "https://doi.org/10.1016/j.fusengdes.2020.111622"}, {"title": "On KSTAR, ITER’s plasma control system successfully takes charge", "url": "https://www.iter.org/node/20687/kstar-iters-plasma-control-system-successfully-takes-charge"}],
+      "publicCodeAndData": [{"name": "KSTAR PCS/iPCS branch", "status": "not-public", "url": "https://www.iter.org/node/20687/kstar-iters-plasma-control-system-successfully-takes-charge", "note": "部署由ITER官方确认，源码未公开。"}],
+      "maturity": {"level": "M4", "basis": "KSTAR本地PCS长期真机；2026 iPCS活动属于新增部署证据。"},
+      "gaps": ["iPCS技术论文尚需补足时序/覆盖/验收清单", "生产源码受限", "长脉冲诊断漂移和执行器老化", "KSTAR结果不能等同ITER条件"],
+      "evidenceBoundary": "iPCS在KSTAR操作不等于ITER PCS已在燃烧等离子体或ITER硬件上完成验证。"
+    },
+    {
+      "id": "DEV-007", "name": "WEST", "countryOrRegion": "法国", "operator": "CEA-IRFM / EUROfusion", "status": "运行中的长脉冲钨装置",
+      "controlTasks": ["磁控制", "密度", "RF功率", "壁温/热点反馈", "长脉冲编排", "保护协调"],
+      "pcsStack": ["Tore Supra控制遗产", "中央PCS", "实时诊断/共享内存", "红外Wall Monitoring System", "RF执行器接口"],
+      "cycleAndIO": "多速率；红外WMS→共享内存→PCS→五套RF天线。论文统计C4阶段63次触发、97%成功、0.2%误报，仅适用特定样本。",
+      "representativePapers": [{"title": "The WEST plasma control system: Integration, commissioning and operation on first experimental campaigns", "url": "https://doi.org/10.1016/j.fusengdes.2019.01.139"}, {"title": "First real-time detection and feedback control of plasma-wall interaction in WEST", "url": "https://arxiv.org/abs/2101.01914"}],
+      "publicCodeAndData": [{"name": "WEST PCS/WMS", "status": "not-public", "url": "https://irfm.cea.fr/en/west/", "note": "装置页面公开，生产代码未公开。"}],
+      "maturity": {"level": "M4", "basis": "PCS与壁温反馈有真机闭环证据。"},
+      "gaps": ["完整架构/源码受限", "红外标定与遮挡", "反馈统计需跨场景复核", "保护与优化控制边界需形式化"],
+      "evidenceBoundary": "单一反馈功能的统计不能代表整机保护可用率。"
+    },
+    {
+      "id": "DEV-008", "name": "JT-60SA", "countryOrRegion": "日本/欧盟", "operator": "QST / Fusion for Energy", "status": "commissioning与分阶段实验",
+      "controlTasks": ["中央脉冲编排", "电流/位置/形状", "垂直稳定", "加热/气体", "设备联锁", "机器保护"],
+      "pcsStack": ["Central Control System", "Real-Time Plasma Control", "设备/子系统控制", "时钟与事件", "DINA/控制仿真工具", "分层interlock"],
+      "cycleAndIO": "多速率；公开官方页未给全系统端到端周期。接口覆盖磁/电源/线圈、加热、气体、真空、设备状态与时序。",
+      "representativePapers": [{"title": "A simulation tool to design and test control laws for JT60-SA scenarios", "url": "https://doi.org/10.1016/j.fusengdes.2023.113631"}, {"title": "JT-60SA control system", "url": "https://www.jt60sa.org/wp/control-system/"}],
+      "publicCodeAndData": [{"name": "JT-60SA PCS/configuration", "status": "not-public", "url": "https://www.jt60sa.org/wp/control-system/", "note": "官方职责描述，无公共生产仓库。"}],
+      "maturity": {"level": "M2", "basis": "设备commissioning和仿真证据；高性能全任务闭环需逐论文确认。"},
+      "gaps": ["装置状态快速演进", "PCS代码与参数受限", "仿真到真机覆盖矩阵未公开", "保护/PCS职责需保持分离"],
+      "evidenceBoundary": "首等离子体/commissioning不等于完整控制包已验收。"
+    },
+    {
+      "id": "DEV-009", "name": "ITER", "countryOrRegion": "国际", "operator": "ITER Organization", "status": "建设与系统集成，尚无等离子体运行",
+      "controlTasks": ["脉冲计划执行", "磁/垂直稳定", "动理学/燃烧控制", "MHD", "功率与粒子", "执行器管理", "异常响应", "plant I&C协调"],
+      "pcsStack": ["iPCS功能架构", "PCSSP", "MBSE/需求追踪", "CODAC Core System", "EPICS 7", "RHEL", "Fast Controllers", "IMAS", "DINA-IMAS"],
+      "cycleAndIO": "从快速垂直环到慢监控多速率；CODAC连接约220个plant I&C。机器保护和人员/核安全与CODAC/PCS显式解耦。",
+      "representativePapers": [{"title": "Architectural concept for the ITER Plasma Control System", "url": "https://doi.org/10.1016/j.fusengdes.2014.02.079"}, {"title": "The ITER Plasma Control System Simulation Platform", "url": "https://doi.org/10.1016/j.fusengdes.2015.01.009"}, {"title": "Strategy to systematically design and deploy the ITER plasma control system", "url": "https://doi.org/10.1016/j.fusengdes.2024.114464"}],
+      "publicCodeAndData": [{"name": "PCSSP", "status": "paper-direct", "url": "https://github.com/iterorganization/PCSSP", "note": "MATLAB/Simulink开源平台，不含全部模型。"}, {"name": "DINA-IMAS", "status": "paper-direct", "url": "https://github.com/iterorganization/DINA-IMAS", "note": "公开接口化实现。"}, {"name": "IMAS", "status": "official-framework", "url": "https://github.com/iterorganization/IMAS-Python", "note": "开放API/数据字典。"}, {"name": "CODAC distribution", "status": "controlled-access", "url": "https://www.iter.org/machine/supporting-systems/codac/codac-core-system", "note": "面向注册贡献者分发。"}],
+      "maturity": {"level": "M2", "basis": "架构、仿真平台、系统集成和KSTAR先行部署；ITER真机闭环尚不存在。"},
+      "gaps": ["燃烧等离子体不确定性", "辐照下诊断退化", "执行器饱和与低机时", "安全/保护独立资格", "全配置和plant模型并非都公开"],
+      "evidenceBoundary": "ITER PCS成熟度不能由其他装置闭环或CODAC组件测试替代。"
+    },
+    {
+      "id": "DEV-010", "name": "NSTX-U", "countryOrRegion": "美国", "operator": "Princeton Plasma Physics Laboratory", "status": "升级/恢复与实验准备（具体状态需查当期官方页）",
+      "controlTasks": ["电流/位置/形状", "垂直稳定", "实时平衡", "气体", "电源控制", "球形托卡马克场景"],
+      "pcsStack": ["GA PCS", "64-bit Concurrent RedHawk Linux", "PSRTC", "rtEFIT/isoflux", "Fibre Channel/FPDP", "MDSplus", "GSevolve开发"],
+      "cycleAndIO": "历史NSTX论文报告252路、5 kHz采集；NSTX-U升级采用现代串行I/O，模块多速率。应避免用旧系统数字描述恢复后的当前配置。",
+      "representativePapers": [{"title": "NSTX-U Control System Upgrades", "url": "https://bp-pub.pppl.gov/pub_report/2014/PPPL-5045-abs.html"}, {"title": "Plasma boundary shape control and real-time equilibrium reconstruction on NSTX-U", "url": "https://doi.org/10.1088/1741-4326/aaa4d0"}, {"title": "Plasma shape and position control development for NSTX-U using the GSEvolve plasma simulator", "url": "https://doi.org/10.1016/j.fusengdes.2025.115302"}],
+      "publicCodeAndData": [{"name": "NSTX-U GA PCS/GSevolve configuration", "status": "controlled-access", "url": "https://www.osti.gov/pages/biblio/2572215-plasma-shape-position-control-development-nstx-using-gsevolve-plasma-simulator", "note": "论文公开，生产环境未公开。"}, {"name": "MDSplus", "status": "official-framework", "url": "https://github.com/MDSplus/mdsplus", "note": "数据系统。"}],
+      "maturity": {"level": "M4", "basis": "历史NSTX/NSTX-U闭环运行；恢复后具体配置需重新验证。"},
+      "gaps": ["商业实时OS", "恢复后配置差异", "生产代码/模型受限", "实验数据访问和标定"],
+      "evidenceBoundary": "2025 GSevolve工作包含复现和开发，不表示所有改进已在恢复后的NSTX-U闭环。"
+    },
+    {
+      "id": "DEV-011", "name": "MAST-U", "countryOrRegion": "英国", "operator": "UK Atomic Energy Authority", "status": "运行中的球形托卡马克",
+      "controlTasks": ["电流/位置/形状", "气体分配", "Super-X场景", "偏滤器/脱靶研究", "加热协调"],
+      "pcsStack": ["GA PCS", "category/phase", "装置专用虚拟电路", "FIESTA模型", "磁与气阀I/O", "站点数据系统"],
+      "cycleAndIO": "多速率；大PF线圈组与11组气阀构成强耦合执行器接口。论文未给可外推的统一周期。",
+      "representativePapers": [{"title": "The MAST Upgrade plasma control system", "url": "https://doi.org/10.1016/j.fusengdes.2020.111764"}],
+      "publicCodeAndData": [{"name": "MAST-U GA PCS branch", "status": "controlled-access", "url": "https://doi.org/10.1016/j.fusengdes.2020.111764", "note": "论文公开，代码受控。"}],
+      "maturity": {"level": "M4", "basis": "commissioning及MAST-U真机运行。"},
+      "gaps": ["强耦合磁执行器", "Super-X多目标权衡", "FIESTA/PCS配置受控", "跨装置复现"],
+      "evidenceBoundary": "共享GA PCS血缘不等于与DIII-D/NSTX-U功能等价。"
+    },
+    {
+      "id": "DEV-012", "name": "SPARC", "countryOrRegion": "美国", "operator": "Commonwealth Fusion Systems / MIT collaboration", "status": "在建装置",
+      "controlTasks": ["实时平衡", "形状/垂直稳定", "功率平衡", "PFC监视", "破裂预警", "soft/hard landing", "场景执行"],
+      "pcsStack": ["neutrino实时框架", "无锁进程/节点通信", "COMET plant模型", "HOOTL/HITL", "GSPulse设计工具"],
+      "cycleAndIO": "公开会议材料未给完整WCET/抖动表；计划I/O涵盖磁、辐射、PFC、执行器和机器状态。当前主要为仿真/HIL。",
+      "representativePapers": [{"title": "The SPARC plasma control system", "url": "https://meetings-archive.aps.org/dpp/2024/np12/105/"}, {"title": "GSPulse", "url": "https://arxiv.org/abs/2506.21760"}],
+      "publicCodeAndData": [{"name": "GSPulse_public", "status": "paper-direct", "url": "https://github.com/jwai-cfs/GSPulse_public", "note": "公开设计代码。"}, {"name": "neutrino/COMET", "status": "not-public", "url": "https://meetings-archive.aps.org/dpp/2024/np12/105/", "note": "生产框架/模型未公开。"}],
+      "maturity": {"level": "M2", "basis": "HOOTL/HITL和跨装置模型对照；无SPARC等离子体闭环。"},
+      "gaps": ["首机I/O与commissioning", "燃烧等离子体模型失配", "生产代码公开性", "安全/保护资格", "最坏时序公开证据"],
+      "evidenceBoundary": "在建装置的HIL成熟度不能写成真机闭环成熟度。"
+    },
+    {
+      "id": "DEV-013", "name": "ARC", "countryOrRegion": "美国", "operator": "Commonwealth Fusion Systems概念/电厂项目", "status": "概念与设计阶段",
+      "controlTasks": ["燃烧功率", "磁与剖面", "氚/燃料循环协调", "热功率与电厂负荷", "PFC/偏滤器保护", "异常安全停堆", "维护状态"],
+      "pcsStack": ["公开物理基础与概念设计", "尚无可核验生产PCS", "可继承SPARC模型/控制经验但需电厂级再设计"],
+      "cycleAndIO": "未公开生产基线；需求从快速等离子体控制跨越秒—年尺度的电厂控制和资产管理。",
+      "representativePapers": [{"title": "Overview of the physics basis for the ARC fusion power plant", "url": "https://www.cambridge.org/core/services/aop-cambridge-core/content/view/B472B3A64EF71DA1899B9EFB65D7C390/S0022377826101706a.pdf/overview_of_the_physics_basis_for_the_arc_fusion_power_plant.pdf"}],
+      "publicCodeAndData": [{"name": "ARC PCS", "status": "not-public", "url": "https://cfs.energy/arc/", "note": "项目尚处概念/设计；未发现生产PCS架构或代码。"}],
+      "maturity": {"level": "M0", "basis": "电厂概念/物理设计，非装置闭环。"},
+      "gaps": ["PCS与plant DCS总体架构", "安全等级和独立保护", "可用率/可维护性", "氚与能量转换耦合", "真实燃烧等离子体数据"],
+      "evidenceBoundary": "SPARC控制成果不能自动视为ARC电厂控制验证。"
+    },
+    {
+      "id": "DEV-014", "name": "HL-2A", "countryOrRegion": "中国", "operator": "核工业西南物理研究院", "status": "研究装置",
+      "controlTasks": ["磁位形", "密度/加热", "MHD", "破裂预测", "MGI/SMBI缓解触发"],
+      "pcsStack": ["装置专用控制与DAQ", "实时诊断", "机器学习破裂预测器", "MGI/SMBI接口"],
+      "cycleAndIO": "公开破裂预测论文报告在线处理382炮并触发MGI/SMBI；完整PCS周期和I/O拓扑未公开。",
+      "representativePapers": [{"title": "Real-time disruption prediction and mitigation on HL-2A", "url": "https://doi.org/10.1016/j.fusengdes.2022.113223"}],
+      "publicCodeAndData": [{"name": "HL-2A PCS/predictor", "status": "not-public", "url": "https://doi.org/10.1016/j.fusengdes.2022.113223", "note": "论文公开，训练数据/代码/生产配置未公开。"}],
+      "maturity": {"level": "M4", "basis": "特定预测—缓解链有在线真机证据；全PCS成熟度资料不完整。"},
+      "gaps": ["完整PCS公开资料", "训练分布漂移", "误触发成本", "代码/数据复现", "HL-2M迁移证据"],
+      "evidenceBoundary": "382炮是特定研究样本，不表示跨装置或所有破裂类型覆盖。"
+    },
+    {
+      "id": "DEV-015", "name": "HL-2M", "countryOrRegion": "中国", "operator": "核工业西南物理研究院", "status": "实验与控制系统持续建设",
+      "controlTasks": ["电流/径向/垂直位置", "形状", "快速垂直稳定", "放电phase", "后续动理学/异常控制"],
+      "pcsStack": ["DIII-D PCS框架", "三节点实时Linux", "D-TACQ2106", "反射内存", "磁/电源接口"],
+      "cycleAndIO": "设计慢环1 ms、快速垂直环200 μs；磁探针/磁通环输入，经RFM跨节点，输出PF/垂直电源。",
+      "representativePapers": [{"title": "A new scheme of plasma control system based on real-time Linux cluster for HL-2M", "url": "https://doi.org/10.1016/j.fusengdes.2023.113763"}],
+      "publicCodeAndData": [{"name": "HL-2M PCS", "status": "controlled-access", "url": "https://doi.org/10.1016/j.fusengdes.2023.113763", "note": "生产分支未公开。"}],
+      "maturity": {"level": "M1", "basis": "2023论文以平台和初步仿真为主要证据；后续真机证据需新增论文核验。"},
+      "gaps": ["真机闭环验收", "完整磁标定/电源模型", "异常工况和故障注入", "生产源码/配置"],
+      "evidenceBoundary": "不能把论文设计周期写成已完成所有真机验收。"
+    },
+    {
+      "id": "DEV-016", "name": "J-TEXT", "countryOrRegion": "中国", "operator": "华中科技大学", "status": "运行中的研究装置",
+      "controlTasks": ["磁/电流", "RMP/MHD实验", "实时数据处理", "反馈插件", "中央时序与设备控制"],
+      "pcsStack": ["JRTF", "中央控制/定时", "EPICS设备层", "装置DAQ/归档", "实验专用执行器接口"],
+      "cycleAndIO": "任务多速率；JRTF处理磁、密度、辐射和MHD等信号，输出到线圈/电源/气体等；EPICS不作为快速环周期证明。",
+      "representativePapers": [{"title": "A new implementation of data process in J-TEXT real-time framework", "url": "https://doi.org/10.1016/j.fusengdes.2018.02.060"}, {"title": "JRTF: A flexible software framework for real-time control in magnetic confinement nuclear fusion experiments", "url": "https://doi.org/10.1109/TNS.2016.2518709"}],
+      "publicCodeAndData": [{"name": "JRTF", "status": "not-public", "url": "https://doi.org/10.1016/j.fusengdes.2018.02.060", "note": "论文实现，无公共仓库。"}, {"name": "EPICS Base", "status": "official-framework", "url": "https://github.com/epics-base/epics-base", "note": "通用设备层。"}],
+      "maturity": {"level": "M4", "basis": "JRTF有J-TEXT在线应用；具体闭环按独立控制论文判断。"},
+      "gaps": ["生产框架开源性", "驱动/配置/标定", "控制任务目录和版本基线", "跨装置语义"],
+      "evidenceBoundary": "实时数据框架投运不等于所有机器控制和保护由它承担。"
+    },
+    {
+      "id": "DEV-017", "name": "EXL-50 / EXL-50U", "countryOrRegion": "中国", "operator": "新奥集团", "status": "EXL系列实验与升级推进",
+      "controlTasks": ["球形托卡马克位形", "快速平衡重建", "非感应启动/维持", "线圈/加热/加料协调", "后续长脉冲和异常控制"],
+      "pcsStack": ["公开物理论文中的装置控制接口", "PTEFIT预印本", "完整PCS运行内核/OS/网络/保护未公开"],
+      "cycleAndIO": "PTEFIT预印本报告约0.268 ms计算，不含完整I/O端到端；生产PCS周期与通道清单未找到公开证据。",
+      "representativePapers": [{"title": "Overview of recent experimental results on the EXL-50 spherical tokamak", "url": "https://doi.org/10.1088/1741-4326/adf239"}, {"title": "PTEFIT preprint", "url": "https://arxiv.org/abs/2601.12378"}, {"title": "EXL-50U strategy", "url": "https://pst.hfcas.ac.cn/article/cstr/32219.14.2058-6272/ad9e8f"}],
+      "publicCodeAndData": [{"name": "PTEFIT", "status": "not-public", "url": "https://arxiv.org/abs/2601.12378", "note": "无可核验官方公共代码仓库。"}],
+      "maturity": {"level": "M2", "basis": "EXL实验数据和预印本算法证据；完整PCS成熟度不可由公开资料判定。"},
+      "gaps": ["完整PCS架构/时序/I-O", "生产代码与数据接口", "PTEFIT同行评议与独立复现", "保护和HIL证据"],
+      "evidenceBoundary": "必须把同行评议的装置物理结果与预印本控制算法、未公开PCS三者分开。"
+    },
+    {
+      "id": "DEV-018", "name": "EHL-2", "countryOrRegion": "中国", "operator": "新奥集团", "status": "规划/建设信息，以项目最新官方状态为准",
+      "controlTasks": ["规划中的磁控制", "功率/加热/加料", "高场稳定性", "PFC热负荷", "异常安全处置", "装置—工程集成"],
+      "pcsStack": ["公开路线图/会议海报", "未找到完整PCS技术基线", "未来可复用EXL数据与控制资产但须独立验证"],
+      "cycleAndIO": "未公开；任何具体接口均应在与装置团队的接口控制文件中确认。",
+      "representativePapers": [{"title": "Roadmap of ENN's fusion program", "url": "https://doi.org/10.1063/5.0199112"}, {"title": "EHL-2 project poster", "url": "https://conferences.iaea.org/event/392/contributions/35908/attachments/19881/36142/FEC2025_EHL2_poster-Xie-V4.pdf"}],
+      "publicCodeAndData": [{"name": "EHL-2 PCS", "status": "not-public", "url": "https://conferences.iaea.org/event/392/contributions/35908/attachments/19881/36142/FEC2025_EHL2_poster-Xie-V4.pdf", "note": "链接为项目海报而非代码；公开证据不足，未发现公开代码或可审计架构。"}],
+      "maturity": {"level": "M0", "basis": "公开材料不足以证明PCS仿真、HIL或真机闭环。"},
+      "gaps": ["控制需求基线", "PCS/机器保护/安全职责", "实时网络与I/O", "模型在环/HIL", "数据语义与版本治理", "公开论文/代码"],
+      "evidenceBoundary": "规划目标不等于已建成或已验证；最新状态需新奥项目文件确认。"
+    },
+    {
+      "id": "DEV-019", "name": "CFETR", "countryOrRegion": "中国", "operator": "中国聚变工程试验堆研究团队", "status": "工程设计/研发阶段",
+      "controlTasks": ["燃烧等离子体功率", "磁/剖面", "长脉冲/稳态", "执行器分配", "偏滤器热负荷", "破裂/异常", "电厂接口"],
+      "pcsStack": ["DINA/集成模拟和控制概念研究", "ITER/CODAC/PCS经验参考", "尚无运行装置生产PCS"],
+      "cycleAndIO": "设计需求跨微秒垂直环到电厂慢过程；具体基线随工程设计演进。",
+      "representativePapers": [{"title": "Preliminary design of real-time plasma control system for CFETR", "url": "https://doi.org/10.1016/j.fusengdes.2021.112876"}],
+      "publicCodeAndData": [{"name": "CFETR PCS", "status": "not-public", "url": "https://doi.org/10.1016/j.fusengdes.2021.112876", "note": "链接为概念设计论文而非代码；项目无运行装置，未发现完整公开生产实现。"}, {"name": "DINA-IMAS", "status": "paper-direct", "url": "https://github.com/iterorganization/DINA-IMAS", "note": "官方公开的使能代码，可用于方法研究；不是CFETR装置配置。"}],
+      "maturity": {"level": "M1", "basis": "控制/模拟设计研究，尚无CFETR真机。"},
+      "gaps": ["需求与架构冻结", "燃烧等离子体数据", "工程/安全分级", "高可用与维护", "完整数字线程"],
+      "evidenceBoundary": "设计论文和ITER经验不能作为CFETR装置闭环证据。"
+    },
+    {
+      "id": "DEV-020", "name": "RFX-mod / RFX-mod2", "countryOrRegion": "意大利", "operator": "Consorzio RFX / EUROfusion", "status": "RFX-mod2升级与集成",
+      "controlTasks": ["MHD/磁边界", "多输入多输出线圈控制", "实时状态观测", "剖面RAPTOR", "放电控制"],
+      "pcsStack": ["MARTe/MARTe2", "高速磁I/O", "RAPTOR集成", "MDSplus", "装置专用控制矩阵"],
+      "cycleAndIO": "快速磁控制与较慢状态观测多速率；公开论文需逐模块看周期，不能合并为单一全机频率。",
+      "representativePapers": [{"title": "Integration of the state observer RAPTOR in the real-time MARTe framework at RFX-mod", "url": "https://doi.org/10.1016/j.fusengdes.2017.04.122"}],
+      "publicCodeAndData": [{"name": "MARTe2", "status": "official-framework", "url": "https://vcis-gitlab.f4e.europa.eu/aneto/MARTe2", "note": "开源执行框架。"}, {"name": "RAPTOR", "status": "controlled-access", "url": "https://crppwww.epfl.ch/~sauter/raptor/", "note": "需授权。"}],
+      "maturity": {"level": "M3", "basis": "RFX-mod有在线集成证据；RFX-mod2升级后的完整闭环基线需新论文确认。"},
+      "gaps": ["升级后配置验证", "装置专用磁矩阵/驱动受限", "RAPTOR访问限制", "全链路HIL/回放公开度"],
+      "evidenceBoundary": "RFX-mod历史验证不自动等于RFX-mod2全部新硬件闭环成熟。"
+    }
+  ]
+}

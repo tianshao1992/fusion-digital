@@ -1,0 +1,16 @@
+{
+  "schemaVersion": "1.0",
+  "editionDate": "2026-08-10",
+  "workSources": [
+    "core_tasks.json",
+    "protection_power_tasks.json",
+    "pcs_frameworks.json"
+  ],
+  "deviceSource": "device_control_profiles.json",
+  "notes": [
+    "core_tasks_notes.md",
+    "protection_power_tasks_notes.md",
+    "pcs_devices_notes.md",
+    "synthesis_notes.md"
+  ]
+}

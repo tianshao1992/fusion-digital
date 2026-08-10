@@ -6,7 +6,7 @@ import './portal.css';
 const domains = [
   {id:'01', status:'已开放', title:'物理模拟', en:'PHYSICS', copy:'从平衡、输运、MHD、边界到中子学与整厂系统模型，建立多保真物理地图和集成模拟证据链。', href:'/physics', figure:'/figures/domain-physics-dark-image2.png', meta:'14 类物理域 · 140+ 代码/平台'},
   {id:'02', status:'已开放', title:'工程仿真', en:'ENGINEERING', copy:'把等离子体载荷连接到电磁、结构、磁体、热流体、中子、氚、安全与维护的工程裕量。', href:'/engineering', figure:'/figures/domain-engineering-dark-image2.png', meta:'8 类工程域 · 55 个工具组'},
-  {id:'03', status:'规划中', title:'集成控制', en:'INTEGRATED CONTROL', copy:'连接 DINA、MEQ、场景规划、状态估计、执行器、保护与控制器，形成可回放、可验证的闭环。', href:'/#roadmap', figure:'/figures/domain-integrated-control-dark-image2.png', meta:'控制服务 · 场景编排 · SIL/HIL'},
+  {id:'03', status:'已开放', title:'集成控制', en:'INTEGRATED CONTROL', copy:'按 T0–T9 控制任务与装置 / PCS 双索引，连接状态估计、位形、剖面、稳定性、排热、功率、保护、多执行器协调和可验证实时基础设施。', href:'/control', figure:'/figures/domain-integrated-control-dark-image2.png', meta:'控制任务 · 装置 PCS · SIL/HIL · 论文代码'},
   {id:'04', status:'规划中', title:'智能诊断', en:'INTELLIGENT DIAGNOSTICS', copy:'融合诊断几何、合成观测、信号质量、数据同化和异常识别，把仪器信号转化为可信状态。', href:'/#roadmap', figure:'/figures/domain-intelligent-diagnostics-dark-image2.png', meta:'合成诊断 · 状态估计 · 健康评估'},
   {id:'05', status:'规划中', title:'能量转化', en:'ENERGY CONVERSION', copy:'贯通包层热取出、一次/二次回路、蒸汽或先进发电循环、厂用电与电网，追踪从聚变热功率到稳定净电力的效率与约束。', href:'/#roadmap', figure:'/figures/domain-energy-conversion-dark-image2.png', meta:'包层热取出 · 热力循环 · 厂用电 · 电网'},
   {id:'06', status:'规划中', title:'辅机模拟', en:'AUXILIARY SYSTEMS', copy:'模拟真空、低温、加热与电流驱动、燃料与氚处理、水冷和电源等辅助系统，评估动态负荷、联锁、故障传播与厂用能耗。', href:'/#roadmap', figure:'/figures/domain-auxiliary-systems-dark-image2.png', meta:'真空 · 低温 · 燃料 · 冷却 · 电源'},
@@ -48,7 +48,7 @@ export default function Home() {
         <p className="heroValueEnglish">FUSION DIGITAL TWIN FOR FUTURE POWER PLANTS<br/><b>LIFECYCLE COST CONTROL · EFFICIENT OPERATION · RELIABLE AVAILABILITY · EVIDENCE-BASED SAFETY</b></p>
         <p className="heroLead">以经过验证的多物理模型、运行与实验数据及智能决策技术，贯通设计、建造、调试、运行、维护与退役全过程，为降低全寿命成本、提升系统效能和电厂可用率、强化安全论证提供持续更新、可追溯且带有不确定度说明的工程依据。</p>
         <div className="heroActions"><a className="solid" href="#domains">探索知识域</a><a href="/facilities">查看全球装置状态</a></div>
-        <div className="heroMetrics"><span><b>03</b>已开放知识域</span><span><b>195+</b>代码与工具条目</span><span><b>14</b>重点装置/项目</span><span><b>2026-08</b>证据截止</span></div>
+        <div className="heroMetrics"><span><b>04</b>已开放知识域</span><span><b>195+</b>代码与工具条目</span><span><b>18+</b>重点装置/项目</span><span><b>2026-08</b>证据截止</span></div>
       </div>
       <figure className="heroArchitectureFigure">
         <a href="/figures/fusion-twin-ai-native-overview.png" target="_blank" rel="noreferrer" aria-label="打开聚变数字孪生与智能体总体架构原图">
@@ -89,7 +89,7 @@ export default function Home() {
 
     <section className="resourceSection" id="resources">
       <div className="sectionIntro"><p className="sectionIndex">04 / TOOLCHAINS</p><h2>工具不是孤立清单，而是从输入、求解、验证到决策的链条。</h2><p>每条工具链都明确数据接口、尺度转换、验证证据、适用域和输出责任；任何一个环节不可追溯，整条链就不能进入数字孪生。</p></div>
-      <div className="resourceGrid"><a href="/physics#catalog"><span>P</span><h3>物理预测链</h3><p>平衡 → 输运 → MHD → 边界 → 中子与燃料循环。</p><b>浏览物理工具链 ↗</b></a><a href="/engineering#tools"><span>E</span><h3>工程裕量链</h3><p>载荷 → 电磁 → 结构/热流 → 损伤 → 寿命与维护。</p><b>浏览工程工具链 ↗</b></a><a href="/physics#integrated"><span>C</span><h3>集成控制链</h3><p>场景 → 虚拟放电 → 合成诊断 → 控制器 → 回放验证。</p><b>阅读集成专题 ↗</b></a><a href="/ai"><span>A</span><h3>智能原生链</h3><p>数据 → 表征 → 代理模型 → 智能体 → 权限与安全门。</p><b>进入智能原生 ↗</b></a></div>
+      <div className="resourceGrid"><a href="/physics#catalog"><span>P</span><h3>物理预测链</h3><p>平衡 → 输运 → MHD → 边界 → 中子与燃料循环。</p><b>浏览物理工具链 ↗</b></a><a href="/engineering#tools"><span>E</span><h3>工程裕量链</h3><p>载荷 → 电磁 → 结构/热流 → 损伤 → 寿命与维护。</p><b>浏览工程工具链 ↗</b></a><a href="/control"><span>C</span><h3>集成控制链</h3><p>状态 → 位形/剖面/MHD/排热 → 多执行器协调 → PCS → SIL/HIL 与闭环证据。</p><b>进入集成控制图谱 ↗</b></a><a href="/ai"><span>A</span><h3>智能原生链</h3><p>数据 → 表征 → 代理模型 → 智能体 → 权限与安全门。</p><b>进入智能原生 ↗</b></a></div>
     </section>
 
     <section className="portalRoadmap" id="roadmap">

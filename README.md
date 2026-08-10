@@ -15,6 +15,7 @@ FusionDigital 是由新奥聚变人工智能团队维护的聚变数字孪生知
 | 总览 | `/` | FusionDigital 价值主张、十个知识模块、路线图 |
 | 物理模拟 | `/physics` | 多尺度物理、代码图谱、集成模拟与数字孪生差距 |
 | 工程仿真 | `/engineering` | 电磁、结构、热流体、中子、材料及实验验证链 |
+| 集成控制 | `/control` | T0–T9 控制任务、装置/PCS、论文代码、证据分级与数字孪生路线 |
 | 智能原生 | `/ai` | 九域 AI 工作、论文、代码、装置与证据分级检索 |
 | 全球装置 | `/facilities` | 装置建设与运行状态、原始来源链接 |
 
@@ -38,6 +39,9 @@ npm run check            # lint + build + tests
 npm run research:ai      # 重建智能原生 JSON、CSV 与 TypeScript 数据
 npm run research:audit   # 审计智能原生条目、领域、论文和代码链接结构
 npm run research:report  # 重新生成智能原生 Word 报告（需要 Python）
+npm run research:control # 重建并审计集成控制 JSON、CSV、BIB 与 TypeScript 数据
+npm run research:control:audit  # 单独审计控制工作与装置档案
+npm run research:control:report # 生成集成控制 Word 报告（需要 Python）
 ```
 
 `dev`、`build` 与 `start` 命令不依赖 POSIX 环境变量写法，可在 Windows PowerShell、macOS 和 Linux 使用。
@@ -50,7 +54,7 @@ npm run research:report  # 重新生成智能原生 Word 报告（需要 Python�
 python -m pip install -r requirements-research.txt
 ```
 
-如果 Python 不在默认 PATH，可设置 `PYTHON` 指向解释器。源数据位于 `research/ai-native/sources/`，生成脚本位于 `scripts/research/`。
+如果 Python 不在默认 PATH，可设置 `PYTHON` 指向解释器。源数据位于 `research/ai-native/sources/` 与 `research/control/sources/`，生成脚本位于 `scripts/research/`。
 
 智能原生数据链如下：
 
@@ -65,6 +69,23 @@ public/fusion-ai-native-paper-code-index.csv
 ```
 
 运行 `npm run research:ai` 后，应审查生成差异并提交源数据与生成文件，避免网页数据和研究底稿分叉。
+
+集成控制采用控制任务与装置/PCS双索引：
+
+```text
+research/control/sources/core_tasks.json
+research/control/sources/protection_power_tasks.json
+research/control/sources/pcs_frameworks.json
+research/control/sources/device_control_profiles.json
+        ↓ T0–T9 规范化 + 证据/部署/代码关系审计
+public/data/fusion-control-landscape.json
+public/data/fusion-control-device-profiles.json
+app/control/controlResearch.ts
+public/fusion-control-paper-code-index.csv
+public/fusion-control-references.bib
+        ↓ audit
+/control 检索页面与 5 万字以上 Word 报告
+```
 
 ## 与 Codex 协同开发
 
@@ -89,6 +110,7 @@ fix/mobile-navigation
 app/                         网站路由、组件、样式与页面数据
 public/                      报告、图片、CSV/JSON 与下载资源
 research/ai-native/sources/  智能原生调研源数据和研究说明
+research/control/sources/    集成控制任务、PCS、装置档案与专题说明
 scripts/research/            数据生成、审计与 Word 报告脚本
 tests/                       服务端渲染与关键内容断言
 docs/                        架构、内容维护与协作说明
@@ -105,7 +127,7 @@ docs/                        架构、内容维护与协作说明
 发布原则：
 
 - 合并前运行 `npm run check`。
-- 调研数据变更同时运行 `npm run research:ai`。
+- 调研数据变更同时运行对应生成器：`npm run research:ai` 和/或 `npm run research:control`。
 - 只部署已经推送并通过验证的同一提交。
 - 报告、图片和公开数据不得包含装置敏感参数、访问令牌或未获授权资料。
 

@@ -1,0 +1,134 @@
+import Link from 'next/link';
+import SiteFooter from '../components/SiteFooter';
+import SiteNav from '../components/SiteNav';
+import ControlResearchCatalog from './ControlResearchCatalog';
+import { controlDeviceProfiles, controlResearchItems, controlTaskMeta, type ControlTaskId } from './controlResearch';
+import './control.css';
+
+const taskBriefs: Record<ControlTaskId, { short: string; time: string; state: string; actuator: string }> = {
+  T0: { short: '把异步、噪声和可能失效的诊断转化为带质量与不确定度的实时控制状态。', time: '10 μs–1 s', state: '边界 · q/剖面 · 模式 · 辐射前沿', actuator: '不直接执行；服务全部回路' },
+  T1: { short: '在伏秒、磁体、电源、涡流和稳定约束下完成击穿、升流、平顶与受控降流。', time: '0.1 ms–100 s', state: 'Ip · 环电压 · 磁通 · li · 启动可行域', actuator: 'CS/PF · 预电离 · H&CD · 燃料' },
+  T2: { short: '协调快慢线圈，控制垂直稳定、位置、边界、间隙、X 点和打击点拓扑。', time: '10 μs–100 ms', state: 'Z/R · gap · X 点 · 打击点 · 稳定裕度', actuator: 'VS 线圈 · PF · 电源电压/电流' },
+  T3: { short: '在输运记忆和诊断稀疏下，控制 q、电流、温度、密度、压力与旋转剖面。', time: '10 ms–10 s', state: 'q(r) · Te/Ti · ne · p · rotation', actuator: 'NBI · EC/IC/LH · 气体/丸注 · Ip' },
+  T4: { short: '按物理机制分别检测、定位和控制 NTM、RWM、锯齿、AE、ELM 与误差场。', time: '10 μs–1 s', state: '模式幅值/相位/位置 · 增长率 · 约束态', actuator: 'ECCD · RMP · 线圈 · 加热 · 丸注' },
+  T5: { short: '在核心性能、辐射、脱靶、热流、杂质、壁库存和部件寿命之间保持可持续窗口。', time: '1 ms–10 s', state: '辐射前沿 · q⊥ · Te,target · W · 壁状态', actuator: '杂质/燃料 · 抽气 · 形状/扫掠 · 加热' },
+  T6: { short: '从 β、储能和中子率走向聚变功率、Q、alpha 加热、燃料比与氦灰控制。', time: '10 ms–100 s', state: 'βN · W · Pfus · Q · D/T · helium ash', actuator: 'H&CD · 燃料 · 杂质 · 形状/排热' },
+  T7: { short: '区分预测、避免、恢复、受控终止和缓解请求，并保持机器保护的独立权威。', time: '10 μs–10 s', state: '风险 · 可恢复域 · VDE/热能/电磁负荷', actuator: '加热/燃料/形状 · 终止轨迹 · 缓解请求' },
+  T8: { short: '显式处理共享执行器、目标优先级、约束、冲突、故障重构和确定性降级。', time: '1 ms–10 s', state: '任务请求 · 能力矩阵 · 约束/健康 · 未满足量', actuator: '控制分配器 · 监督器 · 参考治理器' },
+  T9: { short: '承载配置、状态机、时钟、I/O、实时算法、回放、权限以及 SIL/HIL 验证。', time: 'μs–脉冲生命周期', state: '配置 · 阶段 · 数据新鲜度 · 运行时 · 证据', actuator: 'PCS/CODAC · 实时框架 · I/O · 测试设施' },
+};
+
+const evidenceSteps = [
+  ['E0', '概念 / 需求', '只说明目标、架构或需求，尚无足够动态结果。'],
+  ['E1', '数值闭环', '植物模型、合成测量或控制器设计验证。'],
+  ['E2', '装置离线', '真实历史炮次、回放或独立诊断比较。'],
+  ['E3', '实时 / HIL / 影子', '满足实时链或系统测试，但不直接控制装置。'],
+  ['E4', '装置闭环', '真实装置中动作影响执行器或放电轨迹。'],
+];
+
+const gaps = [
+  ['配置权威', '模型、线圈、电源、诊断、标定、壁与限值必须绑定到具体装置/炮次版本。'],
+  ['状态可信', '状态值之外还要发布时间戳、质量、置信度、物理/测量残差和降级标志。'],
+  ['任务契约', '目标、约束、优先级、执行器能力、未满足请求和切换原因需机器可读。'],
+  ['系统级 VVUQ', '控制模型、代理、PCS、网络、电源和保护接口必须共同进入 SIL/HIL 证据链。'],
+  ['超域与失败', '诊断缺失、时延、饱和、故障、训练域外和失败炮次必须进入版本验收。'],
+  ['责任与权限', '孪生建议、操作员批准、PCS 命令、机器保护与安全系统边界必须可审计。'],
+  ['持续校准', '每炮更新预测残差；生产控制模型只有重新过门后才允许发布新版本。'],
+  ['电厂目标', '逐步把部件寿命、RAMI、氚、热循环、净电效率、维护和安全论证纳入目标。'],
+];
+
+const roadmap = [
+  ['C0', '磁控制可信回放', 'DINA/MEQ 资产包、合成磁诊断、真实控制器、线圈/电源约束和历史基准。', '重放一致；配置、模型和误差可追溯'],
+  ['C1', '控制数字影子', '实时/准实时状态、候选动作和风险预测，不写执行器。', '每炮形成预测—实测残差与 OOD 报告'],
+  ['C2', '跨任务预测', '接入快速输运、MHD、排热/热负荷和执行器能力模型。', '共享执行器冲突可预测、可解释'],
+  ['C3', '系统级 SIL/HIL', '连接 PCS 实码、I/O、网络、电源/仿真器与故障注入。', '最坏时延、降级和回退自动通过'],
+  ['C4', '有限装置闭环', '从低风险参考治理、局部分配或 MPC 开始，经装置治理逐项放权。', '受限适用域 E4；版本冻结并可回退'],
+  ['C5', '堆/电厂控制孪生', '燃烧、工程限值、氚/RAMI、热循环、维护和电网协同。', '长期可用率、安全证据和生命周期治理'],
+];
+
+export const metadata = {
+  title: '集成控制与 PCS',
+  description: '按控制任务与装置/PCS双索引梳理托卡马克位形、剖面、稳定性、排热、功率、保护、多执行器集成、实时系统、论文与代码。',
+};
+
+export default function ControlPage() {
+  const uniquePapers = new Set(controlResearchItems.flatMap((item) => item.papers.map((paper) => paper.doi ? `doi:${paper.doi.toLowerCase().replace(/^https?:\/\/(?:dx\.)?doi\.org\//, '')}` : paper.url.toLowerCase().replace(/[?#].*$/, '')))).size;
+  const closedLoop = controlResearchItems.filter((item) => item.evidenceLevel === 'E4').length;
+  const directCode = controlResearchItems.filter((item) => item.code.some((code) => code.status === 'official-direct')).length;
+
+  return <main className="controlPage">
+    <SiteNav active="control" />
+
+    <header className="controlHero">
+      <div className="controlHeroCopy">
+        <p className="controlEyebrow">FUSIONDIGITAL / INTEGRATED CONTROL &amp; PCS ATLAS / 2026</p>
+        <h1><span className="controlHeroLead">把每一次控制动作，</span><span>变成可验证、可回放、</span><span>可治理的决策。</span></h1>
+        <p>以 T0–T9 十类控制任务和装置/PCS 双索引，连接状态估计、位形、剖面、MHD、排热、功率、破裂规避、多执行器协调、实时基础设施及其原始论文与代码。数字孪生增强预测与证据，但不替代独立机器保护和安全系统。</p>
+        <div className="controlActions">
+          <a href="#research">检索关键工作</a>
+          <a href="/fusion-integrated-control-research-report.docx" download>下载 5 万字以上 Word 报告</a>
+        </div>
+        <dl className="controlHeroStats">
+          <div><dt>{controlResearchItems.length}</dt><dd>项关键控制工作</dd></div>
+          <div><dt>{uniquePapers}</dt><dd>篇/项原始来源</dd></div>
+          <div><dt>{controlDeviceProfiles.length}</dt><dd>个装置与 PCS 档案</dd></div>
+          <div><dt>{closedLoop} / {directCode}</dt><dd>E4 真机闭环记录 / 含直接代码资产</dd></div>
+        </dl>
+      </div>
+      <figure className="controlHeroFigure">
+        <img src="/figures/control-closed-loop-architecture-nature.png" alt="聚变装置、诊断、状态估计、任务控制、多执行器协调、PCS和独立保护之间的闭环架构" />
+        <figcaption>控制闭环与责任边界：实时控制和数字孪生共享状态与证据，机器保护与安全系统保留独立最终权威。</figcaption>
+      </figure>
+    </header>
+
+    <section className="controlThesis">
+      <p className="controlIndex">00 / CENTRAL THESIS</p>
+      <h2>集成控制不是把所有回路写进一个程序；它是在多时间尺度下，<span>让状态、目标、约束、执行器、事件和责任保持一致。</span></h2>
+      <div><p>控制任务回答“如何改变等离子体与装置状态”；PCS 回答“算法怎样按时、按配置、按权限运行”；数字孪生再增加真实状态同步、模型适用域、预测—实测残差、版本和验证证据。</p><p>因此本专题不以算法名称排序，而以控制对象与证据排序，并从装置角度反查每项能力是否真正进入实时、影子、闭环或常规运行。</p></div>
+    </section>
+
+    <section className="controlArchitecture" id="architecture">
+      <div className="controlSectionHead"><p className="controlIndex">01 / CLOSED-LOOP ARCHITECTURE</p><h2>同一闭环，六类信息和两条权威链</h2><p>诊断与设备数据形成状态，任务控制提出物理效果请求，监督/分配层处理共享执行器和约束，PCS 确定性执行；数字孪生在旁路完成预测、回放和证据更新。独立机器保护/安全链可以消费相同状态，却不能被孪生或优化器取代。</p></div>
+      <figure><img src="/figures/control-pcs-layers-nature.png" alt="托卡马克PCS分层、数字孪生和独立保护的关系" loading="lazy" decoding="async"/><figcaption>PCS 分层并不意味着一个大控制器：快内环、中层任务、慢监督与脉冲编排拥有不同时间预算和回退策略。</figcaption></figure>
+      <div className="controlLayerStrip"><span>信号与时间</span><span>状态与质量</span><span>任务与约束</span><span>执行器能力</span><span>事件与阶段</span><span>权限与证据</span></div>
+    </section>
+
+    <section className="controlTasks" id="tasks">
+      <div className="controlSectionHead"><p className="controlIndex">02 / T0–T9 TASK TAXONOMY</p><h2>十类任务：T0 与 T9 横切，<br />T1–T8 构成被控主链</h2><p>分类保留位形、剖面、不稳定性、热负荷、功率和控制集成等核心概念，同时把启动/磁通、状态估计、失稳终止和 PCS/V&amp;V 单独列出，避免将物理任务与软件平台混为一层。</p></div>
+      <figure className="controlTimescale"><img src="/figures/control-task-timescale-nature.png" alt="T0到T9控制任务在微秒到脉冲生命周期的典型时间尺度" loading="lazy" decoding="async"/><figcaption>典型时间尺度用于架构分层，不是统一周期要求；具体值必须回到装置硬件、诊断与物理响应。</figcaption></figure>
+      <div className="controlTaskGrid">{(Object.keys(controlTaskMeta) as ControlTaskId[]).map((task) => {
+        const meta = controlTaskMeta[task]; const brief = taskBriefs[task];
+        const count = controlResearchItems.filter((item) => [item.primaryTask, ...item.relatedTasks].includes(task)).length;
+        return <article key={task} className={meta.role === 'cross-cutting' ? 'crossCutting' : ''}>
+          <header><b>{task}</b><span>{meta.en}</span><i>{count} 项关联工作</i></header><h3>{meta.label}</h3><p>{brief.short}</p>
+          <dl><div><dt>典型时间</dt><dd>{brief.time}</dd></div><div><dt>核心状态</dt><dd>{brief.state}</dd></div><div><dt>主要执行</dt><dd>{brief.actuator}</dd></div></dl>
+          <Link href={`/control?task=${task}#catalog`} className="controlTaskLink">查看 {task} 全部关联工作 ↗</Link>
+        </article>;
+      })}</div>
+    </section>
+
+    <section className="controlResearch" id="research">
+      <div className="controlSectionHead controlResearchHead"><div><p className="controlIndex">03 / SEARCHABLE RESEARCH LANDSCAPE</p><h2>按任务、装置、证据与代码关系检索关键工作</h2><p>按公开证据尽可能说明问题、架构、传感器、执行器、装置、验证、结果、局限、论文与代码；设施未公开的接口和实现会明确标注。装置数据、实时运行和真实闭环被严格区分。</p></div><div className="controlDownloads"><a href="/fusion-integrated-control-research-report.docx" download><b>WORD</b><span>完整技术报告</span></a><a href="/data/fusion-control-landscape.json" download><b>JSON</b><span>控制工作数据</span></a><a href="/fusion-control-paper-code-index.csv" download><b>CSV</b><span>论文代码索引</span></a><a href="/fusion-control-references.bib" download><b>BIB</b><span>引用元数据</span></a></div></div>
+      <ControlResearchCatalog />
+    </section>
+
+    <section className="controlEvidence" id="evidence">
+      <div className="controlSectionHead"><p className="controlIndex">04 / EVIDENCE &amp; VERIFICATION</p><h2>平均速度不是实时证据，单次成功也不是安全资格</h2><p>证据 E0–E4 与部署 D1–D5 分开维护。升级必须同时证明模型、数据、软件运行时、硬件接口、故障回退和装置治理，而不是只展示一次最优曲线。</p></div>
+      <div className="evidenceLayout"><figure><img src="/figures/control-verification-ladder-nature.png" alt="聚变控制从数值验证到持续运行的验证阶梯" loading="lazy" decoding="async"/><figcaption>逐级验证：数值基准 → 历史回放 → SIL → 实时/HIL → 影子 → 低风险闭环 → 目标工况 → 持续运行。</figcaption></figure><div className="evidenceSteps">{evidenceSteps.map((step)=><article key={step[0]}><span>{step[0]}</span><div><h3>{step[1]}</h3><p>{step[2]}</p></div></article>)}</div></div>
+    </section>
+
+    <section className="controlGaps">
+      <div className="controlSectionHead"><p className="controlIndex">05 / FROM INTEGRATED CONTROL TO DIGITAL TWIN</p><h2>距离可信数字孪生，还差八种持续运行能力</h2><p>先进控制主要解决“怎样达到目标”；数字孪生还必须说明当前装置的权威状态、模型为何可信、动作由谁批准、结果如何反证模型以及下一版怎样受控发布。</p></div>
+      <div className="controlGapGrid">{gaps.map((gap,index)=><article key={gap[0]}><span>{String(index+1).padStart(2,'0')}</span><h3>{gap[0]}</h3><p>{gap[1]}</p></article>)}</div>
+    </section>
+
+    <section className="controlRoadmap" id="roadmap">
+      <div className="controlSectionHead"><p className="controlIndex">06 / FUSIONDIGITAL ROADMAP</p><h2>从 DINA / MEQ 控制服务，逐级走向堆与电厂控制孪生</h2><p>每一级以证据门验收。影子模式先于闭环，多任务协调先证明可解释与可回退，最终才把燃烧、工程限值、RAMI、氚、热循环和电网接入多时间尺度决策。</p></div>
+      <figure><img src="/figures/control-digital-twin-roadmap-nature.png" alt="FusionDigital从磁控制回放到聚变电厂控制数字孪生的路线图" loading="lazy" decoding="async"/><figcaption>路线不是代码接入清单，而是从可重复回放到持续 VVUQ、治理与电厂级目标的能力升级。</figcaption></figure>
+      <div className="controlRoadmapGrid">{roadmap.map((item)=><article key={item[0]}><header><span>{item[0]}</span><b>{item[1]}</b></header><p>{item[2]}</p><footer>{item[3]}</footer></article>)}</div>
+    </section>
+
+    <section className="controlClosing"><div><p className="controlIndex">07 / COLLABORATE</p><h2>把控制论文、装置经验和真实失败案例连接成共同证据。</h2></div><div><p>欢迎装置控制、PCS、诊断、实时软件、机器保护、物理模拟与工程团队共同补充论文、代码关系、装置配置和 V&amp;V 案例。网页条目用于技术交流，不替代装置运行程序、安全分析或许可活动。</p><a href="mailto:tianshao1992@gmail.com">联系新奥聚变人工智能团队 →</a></div></section>
+    <SiteFooter />
+  </main>;
+}
