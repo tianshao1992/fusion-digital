@@ -34,6 +34,11 @@ test('ships non-empty reports and structured download assets', async () => {
     '../public/fusion-control-references.bib',
     '../public/data/fusion-control-landscape.json',
     '../public/data/fusion-control-device-profiles.json',
+    '../public/models/paramak-tokamak-demo/paramak-tokamak-demo.step',
+    '../public/models/paramak-tokamak-demo/paramak-tokamak-demo.glb',
+    '../public/models/paramak-tokamak-demo/paramak-tokamak-demo-poster.png',
+    '../public/models/paramak-tokamak-demo/PARAMAK-LICENSE.txt',
+    '../public/models/paramak-tokamak-demo/model-manifest.json',
   ];
   for (const asset of assets) {
     const info = await stat(new URL(asset, import.meta.url));
@@ -75,6 +80,16 @@ test('ships non-empty reports and structured download assets', async () => {
   for (const name of ['DIII-D', 'TCV', 'EAST', 'ITER', 'EXL-50U', 'EHL-2']) {
     assert.ok(controlDevices.devices.some((device) => device.name.includes(name)), `missing device profile ${name}`);
   }
+
+  const modelManifest = JSON.parse(
+    await readFile(new URL('../public/models/paramak-tokamak-demo/model-manifest.json', import.meta.url), 'utf8'),
+  );
+  assert.equal(modelManifest.generator.name, 'Paramak');
+  assert.equal(modelManifest.generator.version, '0.9.11');
+  assert.equal(modelManifest.generator.license, 'MIT');
+  assert.ok(modelManifest.webModel.triangles > 0);
+  assert.equal(modelManifest.webModel.linearUnit, 'metre');
+  assert.match(modelManifest.disclaimer, /not an engineering model of EXL-50U/);
 });
 
 test('server-renders the FusionDigital community portal', async () => {
@@ -90,6 +105,17 @@ test('server-renders the FusionDigital community portal', async () => {
   assert.match(html, /class="brandFusion">Fusion/);
   assert.match(html, /class="brandDigital">Digital/);
   assert.match(html, /TOOLCHAINS/);
+  assert.match(html, /data-three-viewer="paramak-tokamak-demo"/);
+  assert.match(html, /id="device-3d"/);
+  assert.match(html, /GENERIC PARAMAK TOKAMAK/);
+  assert.match(html, /paramak-tokamak-demo-poster\.png/);
+  assert.match(html, /href="\/models\/paramak-tokamak-demo\/paramak-tokamak-demo\.step"/);
+  assert.match(html, /href="\/models\/paramak-tokamak-demo\/paramak-tokamak-demo\.glb"/);
+  assert.match(html, /href="\/models\/paramak-tokamak-demo\/model-manifest\.json"/);
+  assert.match(html, /PF COILS \/ CASES/);
+  assert.match(html, /href="\/licenses\/THREE-LICENSE\.txt"/);
+  assert.match(html, /Paramak 0\.9\.11/);
+  assert.match(html, /它不是 EXL-50U、EHL-2 或其他在役装置的工程权威模型/);
   assert.match(html, /fusion-twin-ai-native-overview\.png/);
   assert.match(html, /class="heroTitleValues">成本可控/);
   assert.match(html, /<figcaption class="srOnly">聚变、数字孪生与智能体关系图/);

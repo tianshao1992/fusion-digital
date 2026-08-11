@@ -14,5 +14,8 @@
 *.docx binary
 *.zip binary
 *.tgz binary
+*.glb binary
+*.step binary
+*.stp binary
 *.woff binary
 *.woff2 binary

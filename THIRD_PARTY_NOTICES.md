@@ -20,6 +20,12 @@ Tokamak, device, laboratory and software names are used for research identificat
 
 Interactive scientific charts use Apache ECharts 6.1.0, distributed under the Apache License 2.0. ECharts renders the structured editorial datasets in the browser; it is not the source of the scientific classifications, planning scores or tool-performance assumptions shown by this project.
 
+## Interactive Tokamak CAD demonstration
+
+The homepage Tokamak model is generated from the Paramak 0.9.11 example `tokamak_with_pf_tf_magnets_divertor.py`. Paramak is distributed under the MIT License, copyright Fusion Energy and Paramak contributors; the upstream license text is retained beside the downloadable model. The model is generic parametric demonstration geometry, not an engineering model of EXL-50U, ITER, or any other specific device. Presentation colors identify broad model groups and do not encode measured fields or simulation results.
+
+The interactive viewer uses Three.js, distributed under the MIT License. The complete upstream license text is retained at [`public/licenses/THREE-LICENSE.txt`](public/licenses/THREE-LICENSE.txt) and is publicly served at `/licenses/THREE-LICENSE.txt`. Model provenance, transformation details and SHA-256 hashes are recorded in `public/models/paramak-tokamak-demo/model-manifest.json`.
+
 ## Papers and datasets
 
 The repository stores links and bibliographic metadata. It does not grant rights to republish linked papers or datasets. Do not add paywalled PDFs, restricted experimental data or partner materials without written authorization.

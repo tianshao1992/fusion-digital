@@ -1,0 +1,57 @@
+{
+  "schemaVersion": "1.0",
+  "id": "paramak-tokamak-demo",
+  "title": "Generic Paramak tokamak with PF/TF magnets and divertor",
+  "asOf": "2026-08-11",
+  "generator": {
+    "name": "Paramak",
+    "version": "0.9.11",
+    "cadqueryVersion": "2.8.0",
+    "openCascadeGenerator": "Open CASCADE Technology 7.9",
+    "repository": "https://github.com/fusion-energy/paramak/tree/0.9.11",
+    "example": "examples/tokamak_with_pf_tf_magnets_divertor.py",
+    "sourceUrl": "https://raw.githubusercontent.com/fusion-energy/paramak/0.9.11/examples/tokamak_with_pf_tf_magnets_divertor.py",
+    "sourceSha256": "9C48447EAC5E67BA7D79163140850EDD387A3B92786AF42817E6F85D01620E9B",
+    "license": "MIT",
+    "licenseUrl": "https://github.com/fusion-energy/paramak/blob/0.9.11/LICENSE",
+    "paper": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7983317/"
+  },
+  "sourceCad": {
+    "path": "/models/paramak-tokamak-demo/paramak-tokamak-demo.step",
+    "format": "STEP",
+    "sourceUnit": "millimetre",
+    "bytes": 3121474,
+    "sha256": "1BB205E32B6506705A33CDC0F01EF01924EF0C11B9ECA0E5D74A12AB2BAC9492"
+  },
+  "webModel": {
+    "path": "/models/paramak-tokamak-demo/paramak-tokamak-demo.glb",
+    "format": "glTF 2.0 binary",
+    "linearUnit": "metre",
+    "sourceCoordinateScale": 0.001,
+    "bytes": 1088432,
+    "sha256": "B2504989723247CE86D84B45E705FE8B9AFDBBD0E30A416F1EF5670C86647FA0",
+    "nodes": 18,
+    "meshes": 17,
+    "primitives": 243,
+    "triangles": 42992,
+    "vertices": 30330,
+    "rawBoundsBeforeRootScale": {
+      "min": [-910.0, 0.0, -570.0],
+      "max": [910.0, 910.0, 570.0]
+    }
+  },
+  "poster": {
+    "path": "/models/paramak-tokamak-demo/paramak-tokamak-demo-poster.png",
+    "bytes": 789642,
+    "sha256": "40C28C621A2F92C9450DF93B2B97FB49B547A9D88C62EDDC2CFE5240A4A5268A",
+    "note": "Programmatic rendering of the same GLB; presentation colors do not encode measured fields or simulation results."
+  },
+  "visibleSystems": [
+    "layered tokamak radial build",
+    "plasma volume",
+    "toroidal-field coils",
+    "poloidal-field coils and cases",
+    "lower divertor region"
+  ],
+  "disclaimer": "Generic open parametric demonstration geometry. It is not an engineering model of EXL-50U, ITER, or any specific device and must not be used for manufacturing, dimensional verification, physics calculation, or safety decisions."
+}

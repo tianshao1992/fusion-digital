@@ -1,0 +1,113 @@
+.tokamakCadSection{
+  --cad-bg:#07110e;
+  --cad-panel:#0b1713;
+  --cad-panel-2:#0d201a;
+  --cad-line:#8ddfca2a;
+  --cad-cyan:#64ead5;
+  --cad-orange:#ff7a2f;
+  --cad-violet:#9b7cff;
+  --cad-text:#edf9f4;
+  --cad-muted:#8ca69b;
+  position:relative;
+  overflow:hidden;
+  padding:96px 7vw 88px;
+  color:var(--cad-text);
+  background:
+    radial-gradient(circle at 82% 16%,#174338 0,transparent 32%),
+    radial-gradient(circle at 15% 78%,#3f251a55 0,transparent 31%),
+    var(--cad-bg);
+  font-family:"Microsoft YaHei UI","Microsoft YaHei","Noto Sans SC",Arial,sans-serif;
+}
+.tokamakCadSection:before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  opacity:.42;
+  background-image:linear-gradient(#80cdb80b 1px,transparent 1px),linear-gradient(90deg,#80cdb80b 1px,transparent 1px);
+  background-size:48px 48px;
+  mask-image:linear-gradient(to bottom,#000,transparent 92%);
+}
+.tokamakCadIntro,.tokamakCadShell,.tokamakCadFootnotes{position:relative;z-index:1}
+.tokamakCadIntro{display:grid;grid-template-columns:minmax(180px,.34fr) minmax(0,1fr);gap:5vw;align-items:start;max-width:1440px;margin:0 auto 42px}
+.tokamakCadIndex{margin:8px 0;color:var(--cad-orange);font-size:10px;font-weight:900;letter-spacing:.18em}
+.tokamakCadIntro h2{max-width:950px;margin:0;font-size:clamp(35px,4.6vw,68px);font-weight:300;line-height:1.13;letter-spacing:-.045em}
+.tokamakCadIntro div>p{max-width:820px;margin:22px 0 0;color:#a8beb4;font-size:14px;line-height:1.85}
+
+.tokamakCadShell{max-width:1440px;margin:0 auto;border:1px solid #79d5bd45;background:#07100d;box-shadow:0 34px 110px #000b,inset 0 0 0 1px #fff02}
+.tokamakCadShell:fullscreen{width:100vw;height:100vh;max-width:none;border:0;display:grid;grid-template-rows:auto minmax(0,1fr) auto;background:#050c0a}
+.tokamakCadShell:fullscreen .tokamakCadViewportShell{min-height:0;height:auto}
+.tokamakCadTopbar{height:68px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;border-bottom:1px solid var(--cad-line);background:linear-gradient(90deg,#0e211a,#09130f)}
+.tokamakCadIdentity{display:flex;align-items:center;gap:13px}
+.tokamakCadIdentity>div{display:flex;flex-direction:column;gap:4px}
+.tokamakCadIdentity b{font-size:12px;letter-spacing:.13em;color:#f3fff9}
+.tokamakCadIdentity small{font-size:8px;letter-spacing:.14em;color:#789489}
+.tokamakCadPulse{width:10px;height:10px;border:2px solid var(--cad-orange);border-radius:50%;box-shadow:0 0 0 5px #ff7a2f14,0 0 18px #ff7a2f88;animation:tokamakCadPulse 2.2s ease-in-out infinite}
+.tokamakCadStatus{display:flex;align-items:center;gap:11px;color:var(--cad-cyan);font-size:9px;font-weight:900;letter-spacing:.16em}
+.tokamakCadStatus i{width:7px;height:7px;border-radius:50%;background:#5a6b64;box-shadow:0 0 0 4px #5a6b6418}
+.status-ready .tokamakCadStatus i{background:var(--cad-cyan);box-shadow:0 0 0 4px #64ead51a,0 0 18px #64ead5aa}
+.status-loading .tokamakCadStatus i{background:var(--cad-orange);animation:tokamakCadPulse 1s ease-in-out infinite}
+.status-error .tokamakCadStatus{color:#ffb084}.status-error .tokamakCadStatus i{background:var(--cad-orange)}
+
+.tokamakCadViewportShell{position:relative;height:clamp(520px,57vw,750px);min-height:520px;overflow:hidden;isolation:isolate;background:
+  radial-gradient(ellipse at 50% 51%,#16382f 0,#091612 37%,#050b09 72%)}
+.tokamakCadViewportShell:before,.tokamakCadViewportShell:after{content:"";position:absolute;z-index:4;pointer-events:none}
+.tokamakCadViewportShell:before{inset:15px;border:1px solid #8be2ca28;clip-path:polygon(0 0,48px 0,48px 1px,1px 1px,1px 48px,0 48px,0 0,100% 0,100% 48px,99.9% 48px,99.9% 1px,calc(100% - 48px) 1px,calc(100% - 48px) 0,100% 0,100% 100%,calc(100% - 48px) 100%,calc(100% - 48px) 99.9%,99.9% 99.9%,99.9% calc(100% - 48px),100% calc(100% - 48px),100% 100%,0 100%,0 calc(100% - 48px),1px calc(100% - 48px),1px calc(100% - 1px),48px calc(100% - 1px),48px 100%,0 100%)}
+.tokamakCadViewportShell:after{inset:0;background:radial-gradient(ellipse at 50% 52%,transparent 40%,#020705ad 100%)}
+.tokamakCadViewport{position:absolute;inset:0;z-index:1}
+.tokamakCadPoster{position:absolute;inset:0;z-index:0;width:100%;height:100%;object-fit:cover;object-position:center;filter:saturate(.9) contrast(1.07) brightness(.72);transition:opacity .45s}.status-ready .tokamakCadPoster{opacity:0}
+.tokamakCadViewport canvas{display:block;width:100%;height:100%;touch-action:none;outline:none;cursor:grab}
+.tokamakCadViewport canvas:active{cursor:grabbing}.tokamakCadViewport canvas:focus-visible{outline:1px solid var(--cad-cyan);outline-offset:-3px}
+.tokamakCadScan{position:absolute;z-index:3;left:0;right:0;top:-12%;height:12%;pointer-events:none;opacity:0;background:linear-gradient(to bottom,transparent,#65ead51c,transparent);mix-blend-mode:screen}
+.status-ready .tokamakCadScan{opacity:1;animation:tokamakCadScan 8s linear infinite}
+.tokamakCadReticle{position:absolute;z-index:3;left:50%;top:50%;width:min(46vw,570px);aspect-ratio:1;transform:translate(-50%,-50%);border:1px solid #71d8c01d;border-radius:50%;pointer-events:none}
+.tokamakCadReticle:before,.tokamakCadReticle:after{content:"";position:absolute;inset:13%;border:1px dashed #71d8c018;border-radius:50%}.tokamakCadReticle:after{inset:34%;border-style:solid}
+.tokamakCadReticle i{position:absolute;background:#71d8c01a}.tokamakCadReticle i:first-child{left:50%;top:-10%;bottom:-10%;width:1px}.tokamakCadReticle i:last-child{top:50%;left:-10%;right:-10%;height:1px}
+
+.tokamakCadLaunch,.tokamakCadLoading,.tokamakCadFallback{position:absolute;z-index:8;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px;background:#06100dc4}
+.tokamakCadLaunch{background:radial-gradient(circle at 50% 47%,#102c2470,#06100dc4 68%)}
+.tokamakCadLaunch{background:radial-gradient(circle at 50% 47%,#102c24b8,#06100ddd 70%)}
+.tokamakCadLaunch p,.tokamakCadFallback p{margin:26px 0 7px;color:var(--cad-orange);font-size:9px;font-weight:900;letter-spacing:.19em}
+.tokamakCadLaunch h3,.tokamakCadFallback h3{margin:0;color:#f0fbf6;font-size:clamp(24px,3vw,39px);font-weight:400;letter-spacing:-.03em}
+.tokamakCadLaunch>span,.tokamakCadFallback>span{max-width:600px;margin:14px auto 24px;color:#91aaa0;font-size:12px;line-height:1.75}
+.tokamakCadLaunch button,.tokamakCadFallback button,.tokamakCadFallback a{min-height:44px;border:1px solid var(--cad-orange);padding:13px 18px;color:#10100c;background:var(--cad-orange);font:800 11px/1 "Microsoft YaHei UI","Microsoft YaHei",sans-serif;letter-spacing:.08em;cursor:pointer}
+.tokamakCadLaunch button{display:flex;align-items:center;gap:28px;box-shadow:0 0 34px #ff7a2f24}.tokamakCadLaunch button:hover,.tokamakCadLaunch button:focus-visible{background:#ff965b;box-shadow:0 0 45px #ff7a2f4d}.tokamakCadLaunch button i{font-style:normal;font-size:15px}
+.tokamakCadLaunchGlyph,.tokamakFallbackTorus{position:relative;width:158px;height:105px;border:1px solid #64ead55c;border-radius:50%;transform:rotate(-8deg);box-shadow:0 0 42px #64ead51a,inset 0 0 26px #64ead516}
+.tokamakCadLaunchGlyph:before,.tokamakCadLaunchGlyph:after,.tokamakFallbackTorus:before,.tokamakFallbackTorus:after{content:"";position:absolute;border-radius:50%;inset:14px;border:1px solid #64ead542}.tokamakCadLaunchGlyph:after,.tokamakFallbackTorus:after{inset:32px 48px;background:var(--cad-orange);border:0;box-shadow:0 0 22px var(--cad-orange),0 0 60px #ff7a2f66;animation:tokamakCadCore 2.5s ease-in-out infinite}.tokamakCadLaunchGlyph span,.tokamakFallbackTorus span{position:absolute;inset:-17px 59px;border:1px solid #9b7cff80}.tokamakCadLaunchGlyph i,.tokamakFallbackTorus i{position:absolute;left:50%;top:-27px;width:1px;height:160px;background:#64ead52e}.tokamakCadLaunchGlyph b,.tokamakFallbackTorus b{position:absolute;left:-28px;right:-28px;top:50%;height:1px;background:#64ead52e}
+
+.tokamakCadLoading{gap:16px;color:#9ab1a7}.tokamakCadLoading>span{font-size:9px;font-weight:900;letter-spacing:.2em;color:var(--cad-cyan)}.tokamakCadLoading>div{width:min(420px,70vw);height:2px;background:#396055;overflow:hidden}.tokamakCadLoading>div i{display:block;height:100%;background:linear-gradient(90deg,var(--cad-orange),var(--cad-cyan));box-shadow:0 0 16px var(--cad-cyan);transition:width .25s}.tokamakCadLoading>b{font-size:11px;letter-spacing:.08em;color:#bdd0c8}
+.tokamakCadFallback{background:radial-gradient(circle at 50% 47%,#25170fe8,#06100df0 66%)}.tokamakFallbackTorus{filter:grayscale(.25);opacity:.72}.tokamakCadFallback>div:last-child{display:flex;gap:10px}.tokamakCadFallback a{background:transparent;color:var(--cad-orange)}
+
+.tokamakCadLegend{position:absolute;z-index:6;left:30px;top:30px;display:flex;flex-direction:column;gap:10px;padding:13px 15px;border-left:1px solid #77dec47d;background:#06100db8;backdrop-filter:blur(10px);pointer-events:none}
+.tokamakCadLegend span{display:flex;align-items:center;gap:9px;color:#9bb1a7;font-size:8px;font-weight:800;letter-spacing:.12em}.tokamakCadLegend i{width:16px;height:2px;box-shadow:0 0 8px currentColor}.tokamakCadLegend .plasma{color:var(--cad-orange);background:var(--cad-orange)}.tokamakCadLegend .tf{color:var(--cad-cyan);background:var(--cad-cyan)}.tokamakCadLegend .pf{color:var(--cad-violet);background:var(--cad-violet)}.tokamakCadLegend .structure{color:#d2aa74;background:#d2aa74}
+.tokamakCadReadout{position:absolute;z-index:6;right:30px;bottom:27px;display:grid;grid-template-columns:repeat(4,auto);border:1px solid #77dec429;background:#06100dc7;backdrop-filter:blur(12px);pointer-events:none}
+.tokamakCadReadout>span{min-width:110px;padding:12px 14px;border-right:1px solid #77dec429}.tokamakCadReadout>span:last-child{border-right:0}.tokamakCadReadout small,.tokamakCadReadout b{display:block}.tokamakCadReadout small{margin-bottom:5px;color:#69877c;font-size:7px;letter-spacing:.14em}.tokamakCadReadout b{color:#cce2d9;font-size:10px;letter-spacing:.05em}
+
+.tokamakCadControls{min-height:70px;display:flex;align-items:center;justify-content:space-between;gap:22px;padding:13px 20px;border-top:1px solid var(--cad-line);background:#091511}
+.tokamakCadPresets,.tokamakCadTools{display:flex;align-items:center;gap:6px}.tokamakCadPresets>span{margin-right:7px;color:#607b70;font-size:8px;font-weight:900;letter-spacing:.17em}.tokamakCadControls button{min-width:54px;min-height:38px;padding:9px 12px;border:1px solid #769e8e3d;color:#9eb3aa;background:#0b1814;font:700 10px/1 "Microsoft YaHei UI","Microsoft YaHei",sans-serif;cursor:pointer;transition:.2s}.tokamakCadControls button:hover:not(:disabled),.tokamakCadControls button:focus-visible:not(:disabled){border-color:var(--cad-cyan);color:var(--cad-cyan)}.tokamakCadControls button.active{border-color:var(--cad-cyan);color:#06110d;background:var(--cad-cyan);box-shadow:0 0 20px #64ead528}.tokamakCadControls button:disabled{opacity:.35;cursor:not-allowed}
+
+.tokamakCadFootnotes{display:grid;grid-template-columns:1fr 1fr;gap:4vw;max-width:1440px;margin:24px auto 0}.tokamakCadFootnotes p{margin:0;color:#829a90;font-size:11px;line-height:1.75}.tokamakCadFootnotes b{display:block;margin-bottom:4px;color:var(--cad-orange);font-size:9px;letter-spacing:.13em}.tokamakCadFootnotes a{margin-right:14px;color:var(--cad-cyan);font-weight:800;border-bottom:1px solid #64ead54a}
+
+@keyframes tokamakCadPulse{50%{opacity:.54;box-shadow:0 0 0 9px #ff7a2f08,0 0 28px #ff7a2f99}}
+@keyframes tokamakCadScan{from{transform:translateY(0)}to{transform:translateY(930%)}}
+@keyframes tokamakCadCore{50%{transform:scale(1.16);opacity:.72}}
+
+@media(max-width:900px){
+  .tokamakCadSection{padding:78px 5vw 70px}
+  .tokamakCadIntro{grid-template-columns:1fr;gap:14px}
+  .tokamakCadViewportShell{height:620px}
+  .tokamakCadReadout{left:22px;right:22px;grid-template-columns:repeat(2,1fr)}
+  .tokamakCadReadout>span{min-width:0}.tokamakCadReadout>span:nth-child(2){border-right:0}.tokamakCadReadout>span:nth-child(-n+2){border-bottom:1px solid #77dec429}
+}
+@media(max-width:650px){
+  .tokamakCadSection{padding:68px 0 58px}.tokamakCadIntro,.tokamakCadFootnotes{margin-left:6vw;margin-right:6vw}
+  .tokamakCadShell{border-left:0;border-right:0}.tokamakCadTopbar{height:62px;padding:0 14px}.tokamakCadIdentity small{display:none}.tokamakCadIdentity b{font-size:9px}.tokamakCadStatus{font-size:7px}
+  .tokamakCadViewportShell{height:570px;min-height:480px}.tokamakCadReticle{width:76vw}.tokamakCadLegend{left:15px;top:17px}.tokamakCadReadout{left:15px;right:15px;bottom:17px}
+  .tokamakCadReadout>span{padding:9px 10px}.tokamakCadReadout b{font-size:8px}
+  .tokamakCadControls{align-items:stretch;flex-direction:column;padding:12px 14px}.tokamakCadPresets,.tokamakCadTools{display:grid;grid-template-columns:repeat(4,1fr)}.tokamakCadPresets>span{display:none}.tokamakCadControls button{min-width:0;min-height:44px}
+  .tokamakCadLaunch,.tokamakCadLoading,.tokamakCadFallback{padding:28px 20px}.tokamakCadLaunchGlyph,.tokamakFallbackTorus{width:130px;height:86px}.tokamakCadLaunchGlyph i,.tokamakFallbackTorus i{height:130px}
+  .tokamakCadFootnotes{grid-template-columns:1fr;gap:16px}
+}
+@media(prefers-reduced-motion:reduce){
+  .tokamakCadPulse,.tokamakCadScan,.tokamakCadLaunchGlyph:after,.tokamakFallbackTorus:after{animation:none!important}
+}
