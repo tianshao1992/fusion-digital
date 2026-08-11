@@ -58,9 +58,19 @@ export default function ControlResearchCatalog() {
   const taskCounts = useMemo(() => Object.fromEntries((Object.keys(controlTaskMeta) as ControlTaskId[]).map((taskId) => [taskId, controlResearchItems.filter((item) => [item.primaryTask, ...item.relatedTasks].includes(taskId)).length])) as Record<ControlTaskId, number>, []);
 
   useEffect(() => {
-    const requested = new URLSearchParams(window.location.search).get('task');
-    if (!requested || !(requested in controlTaskMeta)) return;
-    const frame = window.requestAnimationFrame(() => setTask(requested as ControlTaskId));
+    const params = new URLSearchParams(window.location.search);
+    const requestedTask = params.get('task');
+    const requestedEvidence = params.get('evidence');
+    const requestedDeployment = params.get('deployment');
+    const validEvidence = requestedEvidence && requestedEvidence in evidenceLabels ? requestedEvidence as ControlEvidenceLevel : null;
+    const validDeployment = requestedDeployment && requestedDeployment in deploymentLabels ? requestedDeployment as ControlDeploymentLevel : null;
+    if ((!requestedTask || !(requestedTask in controlTaskMeta)) && !validEvidence && !validDeployment) return;
+    const frame = window.requestAnimationFrame(() => {
+      if (requestedTask && requestedTask in controlTaskMeta) setTask(requestedTask as ControlTaskId);
+      if (validEvidence) setEvidence(validEvidence);
+      if (validDeployment) setDeployment(validDeployment);
+      setPage(0);
+    });
     return () => window.cancelAnimationFrame(frame);
   }, []);
 

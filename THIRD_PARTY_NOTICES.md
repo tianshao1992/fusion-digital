@@ -16,6 +16,10 @@ Files named `*-image2*.png` and the dark knowledge-domain illustrations are team
 
 Tokamak, device, laboratory and software names are used for research identification. Ansys, Abaqus, COMSOL, MATLAB, Simulink and other commercial product names and trademarks belong to their respective owners. Listing a product does not imply endorsement, license ownership or permission to redistribute commercial models.
 
+## Interactive chart runtime
+
+Interactive scientific charts use Apache ECharts 6.1.0, distributed under the Apache License 2.0. ECharts renders the structured editorial datasets in the browser; it is not the source of the scientific classifications, planning scores or tool-performance assumptions shown by this project.
+
 ## Papers and datasets
 
 The repository stores links and bibliographic metadata. It does not grant rights to republish linked papers or datasets. Do not add paywalled PDFs, restricted experimental data or partner materials without written authorization.

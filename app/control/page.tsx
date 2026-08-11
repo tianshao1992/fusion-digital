@@ -1,22 +1,34 @@
 import Link from 'next/link';
 import SiteFooter from '../components/SiteFooter';
 import SiteNav from '../components/SiteNav';
+import { ControlEvidenceHeatmap, ControlTimescaleChart, type ControlTimescaleDatum } from './ControlCharts';
 import ControlResearchCatalog from './ControlResearchCatalog';
 import { controlDeviceProfiles, controlResearchItems, controlTaskMeta, type ControlTaskId } from './controlResearch';
 import './control.css';
 
-const taskBriefs: Record<ControlTaskId, { short: string; time: string; state: string; actuator: string }> = {
-  T0: { short: '把异步、噪声和可能失效的诊断转化为带质量与不确定度的实时控制状态。', time: '10 μs–1 s', state: '边界 · q/剖面 · 模式 · 辐射前沿', actuator: '不直接执行；服务全部回路' },
-  T1: { short: '在伏秒、磁体、电源、涡流和稳定约束下完成击穿、升流、平顶与受控降流。', time: '0.1 ms–100 s', state: 'Ip · 环电压 · 磁通 · li · 启动可行域', actuator: 'CS/PF · 预电离 · H&CD · 燃料' },
-  T2: { short: '协调快慢线圈，控制垂直稳定、位置、边界、间隙、X 点和打击点拓扑。', time: '10 μs–100 ms', state: 'Z/R · gap · X 点 · 打击点 · 稳定裕度', actuator: 'VS 线圈 · PF · 电源电压/电流' },
-  T3: { short: '在输运记忆和诊断稀疏下，控制 q、电流、温度、密度、压力与旋转剖面。', time: '10 ms–10 s', state: 'q(r) · Te/Ti · ne · p · rotation', actuator: 'NBI · EC/IC/LH · 气体/丸注 · Ip' },
-  T4: { short: '按物理机制分别检测、定位和控制 NTM、RWM、锯齿、AE、ELM 与误差场。', time: '10 μs–1 s', state: '模式幅值/相位/位置 · 增长率 · 约束态', actuator: 'ECCD · RMP · 线圈 · 加热 · 丸注' },
-  T5: { short: '在核心性能、辐射、脱靶、热流、杂质、壁库存和部件寿命之间保持可持续窗口。', time: '1 ms–10 s', state: '辐射前沿 · q⊥ · Te,target · W · 壁状态', actuator: '杂质/燃料 · 抽气 · 形状/扫掠 · 加热' },
-  T6: { short: '从 β、储能和中子率走向聚变功率、Q、alpha 加热、燃料比与氦灰控制。', time: '10 ms–100 s', state: 'βN · W · Pfus · Q · D/T · helium ash', actuator: 'H&CD · 燃料 · 杂质 · 形状/排热' },
-  T7: { short: '区分预测、避免、恢复、受控终止和缓解请求，并保持机器保护的独立权威。', time: '10 μs–10 s', state: '风险 · 可恢复域 · VDE/热能/电磁负荷', actuator: '加热/燃料/形状 · 终止轨迹 · 缓解请求' },
-  T8: { short: '显式处理共享执行器、目标优先级、约束、冲突、故障重构和确定性降级。', time: '1 ms–10 s', state: '任务请求 · 能力矩阵 · 约束/健康 · 未满足量', actuator: '控制分配器 · 监督器 · 参考治理器' },
-  T9: { short: '承载配置、状态机、时钟、I/O、实时算法、回放、权限以及 SIL/HIL 验证。', time: 'μs–脉冲生命周期', state: '配置 · 阶段 · 数据新鲜度 · 运行时 · 证据', actuator: 'PCS/CODAC · 实时框架 · I/O · 测试设施' },
+type TaskBrief = { short: string; time: string; state: string; actuator: string; minSeconds: number; maxSeconds: number; openEnded?: boolean };
+
+const taskBriefs: Record<ControlTaskId, TaskBrief> = {
+  T0: { short: '把异步、噪声和可能失效的诊断转化为带质量与不确定度的实时控制状态。', time: '10 μs–1 s', state: '边界 · q/剖面 · 模式 · 辐射前沿', actuator: '不直接执行；服务全部回路', minSeconds: 1e-5, maxSeconds: 1 },
+  T1: { short: '在伏秒、磁体、电源、涡流和稳定约束下完成击穿、升流、平顶与受控降流。', time: '0.1 ms–100 s', state: 'Ip · 环电压 · 磁通 · li · 启动可行域', actuator: 'CS/PF · 预电离 · H&CD · 燃料', minSeconds: 1e-4, maxSeconds: 100 },
+  T2: { short: '协调快慢线圈，控制垂直稳定、位置、边界、间隙、X 点和打击点拓扑。', time: '10 μs–100 ms', state: 'Z/R · gap · X 点 · 打击点 · 稳定裕度', actuator: 'VS 线圈 · PF · 电源电压/电流', minSeconds: 1e-5, maxSeconds: 1e-1 },
+  T3: { short: '在输运记忆和诊断稀疏下，控制 q、电流、温度、密度、压力与旋转剖面。', time: '10 ms–10 s', state: 'q(r) · Te/Ti · ne · p · rotation', actuator: 'NBI · EC/IC/LH · 气体/丸注 · Ip', minSeconds: 1e-2, maxSeconds: 10 },
+  T4: { short: '按物理机制分别检测、定位和控制 NTM、RWM、锯齿、AE、ELM 与误差场。', time: '10 μs–1 s', state: '模式幅值/相位/位置 · 增长率 · 约束态', actuator: 'ECCD · RMP · 线圈 · 加热 · 丸注', minSeconds: 1e-5, maxSeconds: 1 },
+  T5: { short: '在核心性能、辐射、脱靶、热流、杂质、壁库存和部件寿命之间保持可持续窗口。', time: '1 ms–10 s', state: '辐射前沿 · q⊥ · Te,target · W · 壁状态', actuator: '杂质/燃料 · 抽气 · 形状/扫掠 · 加热', minSeconds: 1e-3, maxSeconds: 10 },
+  T6: { short: '从 β、储能和中子率走向聚变功率、Q、alpha 加热、燃料比与氦灰控制。', time: '10 ms–100 s', state: 'βN · W · Pfus · Q · D/T · helium ash', actuator: 'H&CD · 燃料 · 杂质 · 形状/排热', minSeconds: 1e-2, maxSeconds: 100 },
+  T7: { short: '区分预测、避免、恢复、受控终止和缓解请求，并保持机器保护的独立权威。', time: '10 μs–10 s', state: '风险 · 可恢复域 · VDE/热能/电磁负荷', actuator: '加热/燃料/形状 · 终止轨迹 · 缓解请求', minSeconds: 1e-5, maxSeconds: 10 },
+  T8: { short: '显式处理共享执行器、目标优先级、约束、冲突、故障重构和确定性降级。', time: '1 ms–10 s', state: '任务请求 · 能力矩阵 · 约束/健康 · 未满足量', actuator: '控制分配器 · 监督器 · 参考治理器', minSeconds: 1e-3, maxSeconds: 10 },
+  T9: { short: '承载配置、状态机、时钟、I/O、实时算法、回放、权限以及 SIL/HIL 验证。', time: 'μs–脉冲生命周期', state: '配置 · 阶段 · 数据新鲜度 · 运行时 · 证据', actuator: 'PCS/CODAC · 实时框架 · I/O · 测试设施', minSeconds: 1e-6, maxSeconds: 100, openEnded: true },
 };
+
+const taskTimescaleData: ControlTimescaleDatum[] = (Object.keys(controlTaskMeta) as ControlTaskId[]).map((task) => ({
+  id: task,
+  label: controlTaskMeta[task].label,
+  timeLabel: taskBriefs[task].time,
+  minSeconds: taskBriefs[task].minSeconds,
+  maxSeconds: taskBriefs[task].maxSeconds,
+  openEnded: taskBriefs[task].openEnded,
+}));
 
 const evidenceSteps = [
   ['E0', '概念 / 需求', '只说明目标、架构或需求，尚无足够动态结果。'],
@@ -95,7 +107,7 @@ export default function ControlPage() {
 
     <section className="controlTasks" id="tasks">
       <div className="controlSectionHead"><p className="controlIndex">02 / T0–T9 TASK TAXONOMY</p><h2>十类任务：T0 与 T9 横切，<br />T1–T8 构成被控主链</h2><p>分类保留位形、剖面、不稳定性、热负荷、功率和控制集成等核心概念，同时把启动/磁通、状态估计、失稳终止和 PCS/V&amp;V 单独列出，避免将物理任务与软件平台混为一层。</p></div>
-      <figure className="controlTimescale"><img src="/figures/control-task-timescale-nature.png" alt="T0到T9控制任务在微秒到脉冲生命周期的典型时间尺度" loading="lazy" decoding="async"/><figcaption>典型时间尺度用于架构分层，不是统一周期要求；具体值必须回到装置硬件、诊断与物理响应。</figcaption></figure>
+      <figure className="controlTimescale"><ControlTimescaleChart tasks={taskTimescaleData}/><figcaption>典型时间尺度用于架构分层，不是统一周期要求；箭头表示开放端或数量级示意。点击任务条带可进入对应研究目录，具体值仍须回到装置硬件、诊断与物理响应。</figcaption></figure>
       <div className="controlTaskGrid">{(Object.keys(controlTaskMeta) as ControlTaskId[]).map((task) => {
         const meta = controlTaskMeta[task]; const brief = taskBriefs[task];
         const count = controlResearchItems.filter((item) => [item.primaryTask, ...item.relatedTasks].includes(task)).length;
@@ -114,7 +126,7 @@ export default function ControlPage() {
 
     <section className="controlEvidence" id="evidence">
       <div className="controlSectionHead"><p className="controlIndex">04 / EVIDENCE &amp; VERIFICATION</p><h2>平均速度不是实时证据，单次成功也不是安全资格</h2><p>证据 E0–E4 与部署 D1–D5 分开维护。升级必须同时证明模型、数据、软件运行时、硬件接口、故障回退和装置治理，而不是只展示一次最优曲线。</p></div>
-      <div className="evidenceLayout"><figure><img src="/figures/control-verification-ladder-nature.png" alt="聚变控制从数值验证到持续运行的验证阶梯" loading="lazy" decoding="async"/><figcaption>逐级验证：数值基准 → 历史回放 → SIL → 实时/HIL → 影子 → 低风险闭环 → 目标工况 → 持续运行。</figcaption></figure><div className="evidenceSteps">{evidenceSteps.map((step)=><article key={step[0]}><span>{step[0]}</span><div><h3>{step[1]}</h3><p>{step[2]}</p></div></article>)}</div></div>
+      <div className="evidenceLayout"><figure><ControlEvidenceHeatmap/><figcaption>热图按 E0–E4 证据与 D1–D5 部署责任聚合全部工作；点击格子可筛选目录。若交互组件不可用，则回退显示原验证阶梯：数值基准 → 历史回放 → SIL → 实时/HIL → 影子 → 低风险闭环 → 目标工况 → 持续运行。</figcaption></figure><div className="evidenceSteps">{evidenceSteps.map((step)=><article key={step[0]}><span>{step[0]}</span><div><h3>{step[1]}</h3><p>{step[2]}</p></div></article>)}</div></div>
     </section>
 
     <section className="controlGaps">

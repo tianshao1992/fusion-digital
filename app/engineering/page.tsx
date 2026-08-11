@@ -2,6 +2,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import SiteFooter from '../components/SiteFooter';
 import SiteNav from '../components/SiteNav';
+import {
+  EngineeringDomainMatrixChart,
+  EngineeringRoadmapChart,
+  EngineeringToolLandscapeChart,
+  engineeringRoadmapStages,
+} from './EngineeringCharts';
 import './engineering.css';
 
 type Tool = {
@@ -35,14 +41,6 @@ const cases = [
   ['DTT / KSTAR','DTT 把虚拟样机、超冗余机械臂和维护可达性纳入设计；KSTAR 的涡流/垂直力分析和长期运行数据适合支撑结构响应与状态估计研究。'],
 ];
 
-const stages = [
-  ['E0','载荷接口基线','0—12 个月','DINA/MEQ 历史回放；建立资产 ID、CAD/线圈/导体版本、场景时间线、单位和守恒检查。'],
-  ['E1','破裂电磁窄孪生','12—24 个月','接入三维导体模型和结构 ROM；比较磁探针、壁电压、应变、位移与反力；先影子运行，再影响阈值。'],
-  ['E2','热与磁体状态','2—3 年','以 IR/量热校准 PFC 热状态；以电压、流量、压力和模型线圈数据校准 CICC/低温状态估计。'],
-  ['E3','核—包层—氚','3—5 年','连接核热/TBR/活化、冷却/MHD、氚渗透和库存；形成部件寿命、停机剂量和材料批次账本。'],
-  ['E4','整厂运行与 RAMI','4—8 年','把安全、维护、备件、可用率、功率转换、电网和许可证据接入全生命周期数字线程。'],
-];
-
 const sources = [
   ['E15','ThinCurr：SPARC 与 DIII-D 三维薄壁导体','https://arxiv.org/abs/2309.15336'],
   ['E23','4C 资格与验证综述（IAEA FEC 2025）','https://conferences.iaea.org/event/392/papers/36422/files/13780-FEC2025_Paper_4C_v3_final.pdf'],
@@ -67,7 +65,7 @@ export default function Engineering(){
 
     <section className="loadThread"><div className="sectionHead"><p className="eyebrow">01 / 载荷数字线程</p><h2>求解器之前，先把物理与工程的接口做对</h2><p>工程风险往往来自错误 CAD 版本、坐标/单位不一致、过度平滑、非守恒映射或缺失的不确定度，而不是有限元迭代器本身。</p></div><img src="/figures/engineering-load-chain-nature.png" alt="物理载荷到工程决策数字线程"/><div className="principles"><span>资产身份</span><span>单位与坐标</span><span>力/能量/电流守恒</span><span>数值误差预算</span><span>适用域与 UQ</span></div></section>
 
-    <section id="domains" className="domains"><div className="sectionHead"><p className="eyebrow">02 / 工程域全景</p><h2>八个工程域，跨越微秒到全寿期</h2><p>高频破裂载荷、秒级失超、小时级热工、年级活化和维护不能共享统一时间步，但可以共享一条配置受控数字线程。</p></div><div className="domainGrid">{domains.map(d=><article key={d[0]}><span>{d[0]}</span><h3>{d[1]}</h3><b>{d[2]}</b><p>{d[3]}</p></article>)}</div><div className="engScienceGrid"><figure><img src="/figures/engineering-domain-matrix-nature.png" alt="工程仿真时间尺度矩阵"/><figcaption>工程域—时间尺度矩阵：深色表示主要决策尺度。</figcaption></figure><figure><img src="/figures/engineering-tool-landscape-nature.png" alt="工程仿真工具版图"/><figcaption>工具版图：位置为典型任务耗时数量级，不构成性能承诺。</figcaption></figure></div></section>
+    <section id="domains" className="domains"><div className="sectionHead"><p className="eyebrow">02 / 工程域全景</p><h2>八个工程域，跨越微秒到全寿期</h2><p>高频破裂载荷、秒级失超、小时级热工、年级活化和维护不能共享统一时间步，但可以共享一条配置受控数字线程。</p></div><div className="domainGrid">{domains.map(d=><article key={d[0]}><span>{d[0]}</span><h3>{d[1]}</h3><b>{d[2]}</b><p>{d[3]}</p></article>)}</div><div className="engScienceGrid"><figure><EngineeringDomainMatrixChart/><figcaption>工程域—时间尺度矩阵：深色表示主要决策尺度；分类是编辑性判断，不构成性能承诺。</figcaption></figure><figure><EngineeringToolLandscapeChart/><figcaption>工具版图：位置为典型任务耗时的编辑性数量级，不构成求解器性能承诺。</figcaption></figure></div></section>
 
     <section className="workflows"><div className="sectionHead"><p className="eyebrow">03 / 三条高价值工作流</p><h2>先形成可验证的“窄孪生”</h2></div><div className="workflowGrid"><figure><img src="/figures/engineering-disruption-workflow-nature.png" alt="破裂电磁结构工作流"/><figcaption><b>破裂电磁—结构</b><p>DINA/JOREK/MEQ → CARIDDI/ThinCurr/Maxwell → Ansys/Abaqus → 保护阈值；用磁探针、壁电压、应变和位移确认。</p></figcaption></figure><figure><img src="/figures/engineering-magnet-quench-nature.png" alt="超导磁体失超工作流"/><figcaption><b>磁体—低温—保护</b><p>Maxwell/Opera → JackPot → 4C/THEA → 结构/保护；用模型线圈、SULTAN/EDIPO 和装置低温数据确认。</p></figcaption></figure><figure><img src="/figures/engineering-pfc-life-nature.png" alt="PFC热机械寿命工作流"/><figcaption><b>PFC 热状态与寿命</b><p>HEAT/SOLPS → 三维表面映射 → CFD/共轭传热 → 热机械与 MEMENTO；用 IR、量热和 HHF 试验确认。</p></figcaption></figure></div></section>
 
@@ -81,7 +79,7 @@ export default function Engineering(){
 
     <section className="cases"><div className="sectionHead"><p className="eyebrow">08 / 装置实践</p><h2>装置不是“选一个软件”，而是组合一条证据链</h2></div><div className="caseGrid">{cases.map((c,i)=><article key={c[0]}><span>{String(i+1).padStart(2,'0')}</span><h3>{c[0]}</h3><p>{c[1]}</p></article>)}</div></section>
 
-    <section id="route" className="engRoute"><div className="sectionHead"><p className="eyebrow">09 / 路线图</p><h2>从 DINA / MEQ 控制服务到聚变电厂工程孪生</h2><p>每个阶段都必须通过能力门：历史回放、盲预测、跨试验验证、多源项账本闭合和运行治理，而不是只以“接入代码数量”验收。</p></div><img src="/figures/engineering-roadmap-nature.png" alt="DINA MEQ到工程数字孪生路线图"/><div className="routeCards">{stages.map(s=><article key={s[0]}><span>{s[0]}</span><p>{s[2]}</p><h3>{s[1]}</h3><div>{s[3]}</div></article>)}</div></section>
+    <section id="route" className="engRoute"><div className="sectionHead"><p className="eyebrow">09 / 路线图</p><h2>从 DINA / MEQ 控制服务到聚变电厂工程孪生</h2><p>每个阶段都必须通过能力门：历史回放、盲预测、跨试验验证、多源项账本闭合和运行治理，而不是只以“接入代码数量”验收。</p></div><figure className="engRoadmapFigure"><EngineeringRoadmapChart/><figcaption>路线规划区间允许并行推进：E3（3—5 年）与 E4（4—8 年）在第 4—5 年重叠；区间用于能力规划，不构成项目进度承诺。</figcaption></figure><div className="routeCards">{engineeringRoadmapStages.map(s=><article key={s.id}><span>{s.id}</span><p>{s.period}</p><h3>{s.title}</h3><div>{s.detail}</div></article>)}</div></section>
 
     <section className="twinGap"><img src="/figures/engineering-twin-architecture-nature.png" alt="工程数字孪生参考架构"/><div><p className="eyebrow">10 / 最终架构</p><h2>工程仿真距离数字孪生，还差一套运行能力</h2><p>离线仿真通常缺少持续状态同步、可观测性、最坏时延、自动超域检测、安全回退、配置/权限控制、模型发布与撤回、网络安全和持续 V&amp;V。目标架构必须把在线状态环和离线证据工厂分开，再用统一资产 ID、载荷包和证据账本连接。</p><a href="/tokamak-engineering-simulation-report.pdf">阅读完整路线与验收门 →</a></div></section>
 

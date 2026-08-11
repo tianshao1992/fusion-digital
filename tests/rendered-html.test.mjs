@@ -140,6 +140,8 @@ test('server-renders the integrated-control and PCS research atlas', async () =>
   assert.match(html, /control-task-timescale-nature\.png/);
   assert.match(html, /control-verification-ladder-nature\.png/);
   assert.match(html, /control-digital-twin-roadmap-nature\.png/);
+  assert.match(html, /data-echart="control-task-timescale"/);
+  assert.match(html, /data-echart="control-evidence-deployment-matrix"/);
   assert.match(html, /target="_blank"/);
 });
 
@@ -147,6 +149,15 @@ test('server-renders the physics simulation atlas', async () => {
   const html = await htmlFor('/physics');
   assert.match(html, /fusion-physics-simulation-report\.pdf/);
   assert.match(html, /integrated-twin-reference-architecture-nature\.png/);
+  for (const chart of [
+    'physics-decision-timescale',
+    'physics-fidelity-latency',
+    'physics-coupling-matrix',
+    'integrated-framework-landscape',
+    'integrated-framework-capability',
+    'integrated-maturity-gap',
+    'physics-digital-twin-roadmap',
+  ]) assert.match(html, new RegExp(`data-echart="${chart}"`));
   assert.match(html, /href="\/engineering"/);
 });
 
@@ -158,6 +169,11 @@ test('server-renders the Tokamak engineering atlas with external tool links', as
   assert.match(html, /engineering-twin-architecture-nature\.png/);
   assert.match(html, /phase1-engineering-twin-trust-chain\.png/);
   assert.match(html, /xjtu-engineering-digital-twin-phase1-brief\.docx/);
+  for (const chart of [
+    'engineering-domain-timescale',
+    'engineering-tool-runtime-landscape',
+    'engineering-digital-twin-roadmap',
+  ]) assert.match(html, new RegExp(`data-echart="${chart}"`));
   assert.match(html, /target="_blank"/);
 });
 
