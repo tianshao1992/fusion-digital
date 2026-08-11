@@ -116,6 +116,24 @@ test('server-renders the FusionDigital community portal', async () => {
   assert.match(html, /href="\/licenses\/THREE-LICENSE\.txt"/);
   assert.match(html, /Paramak 0\.9\.11/);
   assert.match(html, /它不是 EXL-50U、EHL-2 或其他在役装置的工程权威模型/);
+  assert.match(html, /data-echart="fusion-twin-system-map"/);
+  assert.match(html, /一个装置 · 一条数字主线 · 十项协同能力/);
+  assert.match(html, /ONE ASSET · ONE DIGITAL THREAD · TEN COORDINATED CAPABILITIES/);
+  for (const baseline of ['AS-DESIGNED', 'AS-BUILT', 'AS-COMMISSIONED', 'AS-OPERATED', 'AS-MAINTAINED', 'AS-DECOMMISSIONED']) {
+    assert.match(html, new RegExp(baseline));
+  }
+  for (const domain of ['物理模拟', '工程仿真', '集成控制', '智能诊断', '能量转化', '辅机模拟', '人机交互', '数据基座', '总体集成', '智能原生']) {
+    assert.match(html, new RegExp(domain));
+  }
+  assert.match(html, /class="fusionTwinModuleDock"/);
+  assert.equal((html.match(/data-module-id=/g) ?? []).length, 10);
+  assert.match(html, /NESTED CLOCKS/);
+  assert.match(html, /μs—ms/);
+  assert.match(html, /年—数十年/);
+  assert.match(html, /安全与授权门/);
+  assert.match(html, /AI 加速感知、代理建模、优化与知识协同/);
+  assert.match(html, /人工智能不得直接连接装置执行器/);
+  assert.doesNotMatch(html, /COMMUNITY THESIS|DIGITAL TWIN MAINLINE|一炮一链：聚变数字孪生的共同主线/);
   assert.match(html, /fusion-twin-ai-native-overview\.png/);
   assert.match(html, /class="heroTitleValues">成本可控/);
   assert.match(html, /<figcaption class="srOnly">聚变、数字孪生与智能体关系图/);

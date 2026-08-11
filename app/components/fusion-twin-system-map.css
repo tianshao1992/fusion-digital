@@ -1,0 +1,610 @@
+.fusionTwinMapSection {
+  --map-bg: #07100d;
+  --map-panel: #0a1511;
+  --map-line: rgba(137, 178, 158, 0.22);
+  --map-muted: #91a89c;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: clamp(78px, 8vw, 128px) 5.5vw clamp(84px, 9vw, 140px);
+  color: #f4fff9;
+  background:
+    radial-gradient(circle at 15% 8%, rgba(255, 135, 56, 0.13), transparent 29%),
+    radial-gradient(circle at 82% 13%, rgba(169, 139, 255, 0.12), transparent 30%),
+    radial-gradient(circle at 50% 75%, rgba(101, 230, 210, 0.08), transparent 38%),
+    var(--map-bg);
+}
+
+.fusionTwinMapSection::before {
+  position: absolute;
+  z-index: -2;
+  inset: 0;
+  content: '';
+  opacity: 0.22;
+  background-image:
+    linear-gradient(rgba(128, 181, 158, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(128, 181, 158, 0.12) 1px, transparent 1px);
+  background-size: 54px 54px;
+  mask-image: linear-gradient(to bottom, transparent, #000 13%, #000 85%, transparent);
+}
+
+.fusionTwinMapSection::after {
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  left: 50%;
+  width: min(88vw, 1480px);
+  height: 1px;
+  content: '';
+  transform: translateX(-50%);
+  background: linear-gradient(90deg, transparent, #ff8738, #65e6d2, #a98bff, transparent);
+  box-shadow: 0 0 28px rgba(101, 230, 210, 0.44);
+}
+
+.fusionTwinMapIntro {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(290px, 0.58fr);
+  gap: clamp(38px, 6vw, 100px);
+  align-items: end;
+  width: min(1480px, 100%);
+  margin: 0 auto clamp(36px, 5vw, 68px);
+}
+
+.fusionTwinMapIntro .sectionIndex {
+  margin: 0 0 22px;
+  color: #65e6d2;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+}
+
+.fusionTwinMapIntro h2 {
+  max-width: 1080px;
+  margin: 0;
+  font-size: clamp(36px, 4.4vw, 76px);
+  font-weight: 330;
+  line-height: 1.09;
+  letter-spacing: -0.055em;
+}
+
+.fusionTwinMapIntro > div > p:not(.sectionIndex) {
+  max-width: 980px;
+  margin: 30px 0 18px;
+  color: #bdd0c6;
+  font-size: clamp(15px, 1.32vw, 20px);
+  line-height: 1.9;
+}
+
+.fusionTwinMapIntro > div > small {
+  color: #789689;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+
+.fusionTwinMapIntro aside {
+  position: relative;
+  padding: 26px 26px 24px;
+  border: 1px solid rgba(169, 139, 255, 0.44);
+  background: linear-gradient(135deg, rgba(169, 139, 255, 0.12), rgba(9, 19, 15, 0.84));
+  box-shadow: inset 3px 0 0 #a98bff, 0 24px 70px rgba(0, 0, 0, 0.24);
+}
+
+.fusionTwinMapIntro aside::after {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 25px;
+  height: 25px;
+  border-top: 1px solid #a98bff;
+  border-right: 1px solid #a98bff;
+  content: '';
+}
+
+.fusionTwinMapIntro aside b {
+  color: #c8b9ff;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+}
+
+.fusionTwinMapIntro aside p {
+  margin: 14px 0 0;
+  color: #d7e4dd;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.fusionTwinMapShell {
+  position: relative;
+  width: min(1580px, 100%);
+  margin: 0 auto;
+  border: 1px solid rgba(126, 171, 150, 0.3);
+  background: rgba(5, 13, 10, 0.86);
+  box-shadow: 0 50px 120px rgba(0, 0, 0, 0.32), inset 0 0 80px rgba(101, 230, 210, 0.025);
+  backdrop-filter: blur(16px);
+}
+
+.fusionTwinMapShell::before,
+.fusionTwinMapShell::after {
+  position: absolute;
+  z-index: 2;
+  width: 56px;
+  height: 56px;
+  pointer-events: none;
+  content: '';
+}
+
+.fusionTwinMapShell::before {
+  top: -1px;
+  left: -1px;
+  border-top: 2px solid #ff8738;
+  border-left: 2px solid #ff8738;
+}
+
+.fusionTwinMapShell::after {
+  right: -1px;
+  bottom: -1px;
+  border-right: 2px solid #65e6d2;
+  border-bottom: 2px solid #65e6d2;
+}
+
+.fusionTwinPhaseTabs {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  border-bottom: 1px solid var(--map-line);
+}
+
+.fusionTwinPhaseTabs button {
+  min-height: 72px;
+  padding: 14px 12px;
+  border: 0;
+  border-right: 1px solid var(--map-line);
+  color: #8da79a;
+  background: rgba(7, 16, 13, 0.74);
+  cursor: pointer;
+  transition: color 180ms ease, background 180ms ease, box-shadow 180ms ease;
+}
+
+.fusionTwinPhaseTabs button:last-child { border-right: 0; }
+
+.fusionTwinPhaseTabs button:hover,
+.fusionTwinPhaseTabs button:focus-visible {
+  color: #f5fff9;
+  background: rgba(101, 230, 210, 0.07);
+  outline: none;
+  box-shadow: inset 0 -2px #65e6d2;
+}
+
+.fusionTwinPhaseTabs button.isActive {
+  color: #fff;
+  background: linear-gradient(180deg, rgba(255, 135, 56, 0.13), rgba(101, 230, 210, 0.08));
+  box-shadow: inset 0 -3px #ff8738, inset 0 0 28px rgba(255, 135, 56, 0.05);
+}
+
+.fusionTwinPhaseTabs span,
+.fusionTwinPhaseTabs small { display: block; }
+
+.fusionTwinPhaseTabs span {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.fusionTwinPhaseTabs span i {
+  display: block;
+  margin-top: 3px;
+  font-size: 7px;
+  font-style: normal;
+  letter-spacing: 0.08em;
+  opacity: 0.58;
+}
+
+.fusionTwinPhaseTabs small {
+  margin-top: 6px;
+  color: inherit;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  opacity: 0.68;
+}
+
+.fusionTwinModuleDock {
+  display: grid;
+  grid-template-columns: 158px minmax(0, 1fr);
+  align-items: stretch;
+  border-bottom: 1px solid var(--map-line);
+  background: rgba(4, 11, 8, 0.84);
+}
+
+.fusionTwinModuleDock > p {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding: 0 18px;
+  border-right: 1px solid var(--map-line);
+  color: #738c80;
+  font-size: 8px;
+  font-weight: 800;
+  line-height: 1.55;
+  letter-spacing: 0.1em;
+}
+
+.fusionTwinModuleDock > div {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  overflow-x: auto;
+  scrollbar-color: #34574a #0a1511;
+  scrollbar-width: thin;
+}
+
+.fusionTwinModuleDock button {
+  position: relative;
+  min-width: 92px;
+  min-height: 70px;
+  padding: 11px 8px 9px;
+  border: 0;
+  border-right: 1px solid rgba(126, 171, 150, 0.16);
+  color: #c1d1c9;
+  background: transparent;
+  cursor: pointer;
+  transition: color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+}
+
+.fusionTwinModuleDock button::after {
+  position: absolute;
+  right: 14px;
+  bottom: 0;
+  left: 14px;
+  height: 2px;
+  content: '';
+  opacity: 0.45;
+  background: var(--module-color);
+  transform: scaleX(0.35);
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.fusionTwinModuleDock button:hover,
+.fusionTwinModuleDock button:focus-visible,
+.fusionTwinModuleDock button.isActive {
+  color: #fff;
+  outline: none;
+  background: color-mix(in srgb, var(--module-color) 10%, transparent);
+  box-shadow: inset 0 0 24px color-mix(in srgb, var(--module-color) 8%, transparent);
+}
+
+.fusionTwinModuleDock button:hover::after,
+.fusionTwinModuleDock button:focus-visible::after,
+.fusionTwinModuleDock button.isActive::after {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+.fusionTwinModuleDock b,
+.fusionTwinModuleDock span,
+.fusionTwinModuleDock small { display: block; }
+.fusionTwinModuleDock b { color: var(--module-color); font-size: 8px; }
+.fusionTwinModuleDock span { margin-top: 4px; font-size: 10px; font-weight: 700; }
+.fusionTwinModuleDock small { margin-top: 3px; color: #6f897c; font-size: 6px; font-weight: 800; letter-spacing: 0.04em; }
+
+.fusionTwinMapViewport {
+  position: relative;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-color: #34574a #0a1511;
+  scrollbar-width: thin;
+}
+
+.fusionTwinMapCanvas {
+  position: relative;
+  min-width: 1040px;
+  height: 690px;
+  background:
+    linear-gradient(90deg, transparent 49.94%, rgba(130, 181, 159, 0.09) 50%, transparent 50.06%),
+    linear-gradient(rgba(130, 181, 159, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(130, 181, 159, 0.05) 1px, transparent 1px),
+    radial-gradient(circle at 50% 45%, rgba(101, 230, 210, 0.055), transparent 42%);
+  background-size: auto, 36px 36px, 36px 36px, auto;
+}
+
+.fusionTwinMapMount,
+.fusionTwinMapFallback {
+  position: absolute;
+  inset: 0;
+}
+
+.fusionTwinMapMount {
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 260ms ease;
+}
+
+.fusionTwinMapMount.isReady { opacity: 1; }
+
+.fusionTwinMapFallback {
+  z-index: 1;
+  display: grid;
+  grid-template-rows: 100px 1fr 1fr;
+  gap: 56px;
+  padding: 92px 64px 64px;
+  opacity: 1;
+  transition: opacity 180ms ease;
+}
+
+.fusionTwinMapFallback.isHidden { opacity: 0; pointer-events: none; }
+
+.fallbackAi {
+  align-self: center;
+  justify-self: center;
+  width: min(600px, 70%);
+  padding: 18px 24px;
+  border: 1px dashed #a98bff;
+  color: #cdbfff;
+  background: rgba(169, 139, 255, 0.08);
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.fallbackCore {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+}
+
+.fallbackCore span,
+.fallbackModels button {
+  padding: 16px 17px;
+  border: 1px solid rgba(101, 230, 210, 0.5);
+  color: #e9fff6;
+  background: #0d1815;
+  font: inherit;
+}
+
+.fallbackCore i { color: #ff8738; font-style: normal; }
+
+.fallbackModels {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+  align-self: start;
+  width: 70%;
+  margin: 0 auto;
+}
+
+.fallbackModels button { cursor: pointer; }
+.fallbackModels small { display: block; margin-top: 5px; color: var(--map-muted); font-size: 8px; }
+
+.fusionTwinMapStatus {
+  position: absolute;
+  z-index: 3;
+  right: 18px;
+  bottom: 15px;
+  padding: 7px 10px;
+  border: 1px solid rgba(101, 230, 210, 0.28);
+  color: #83aa99;
+  background: rgba(5, 13, 10, 0.88);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+}
+
+.fusionTwinMapDetails {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.62fr) minmax(0, 1.38fr);
+  border-top: 1px solid var(--map-line);
+}
+
+.fusionTwinMapDetails article {
+  min-height: 240px;
+  padding: clamp(26px, 3vw, 44px);
+}
+
+.phaseDetail {
+  border-right: 1px solid var(--map-line);
+  background: linear-gradient(145deg, rgba(255, 135, 56, 0.075), transparent 65%);
+}
+
+.phaseDetail > p,
+.moduleDetail > p:first-child {
+  margin: 0 0 12px;
+  color: #ff9d5c;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+
+.fusionTwinMapDetails h3 {
+  margin: 0 0 15px;
+  font-size: clamp(21px, 2vw, 32px);
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.fusionTwinMapDetails h3 small {
+  color: #788f83;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.phaseDetail > b {
+  display: block;
+  margin-bottom: 16px;
+  color: #65e6d2;
+  font-size: 12px;
+}
+
+.phaseDetail > div,
+.moduleDetail > div {
+  color: #b9ccc2;
+  font-size: 13px;
+  line-height: 1.75;
+}
+
+.phaseDetail > span,
+.moduleDetail > span {
+  display: block;
+  margin-top: 17px;
+  color: #788f83;
+  font-size: 10px;
+  line-height: 1.7;
+}
+
+.moduleDetail { background: rgba(101, 230, 210, 0.025); }
+.moduleDetail.hasModule { box-shadow: inset 3px 0 rgba(169, 139, 255, 0.55); }
+
+.moduleDetail > p:not(:first-child) {
+  margin: 10px 0 0;
+  color: #9fb5aa;
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+.moduleDetail > p b { color: #dcebe4; }
+
+.moduleIo {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 17px 0;
+}
+
+.moduleIo span {
+  padding: 13px 14px;
+  border: 1px solid rgba(130, 181, 159, 0.18);
+  background: rgba(255, 255, 255, 0.018);
+}
+
+.moduleIo b {
+  display: block;
+  margin-bottom: 5px;
+  color: #65e6d2;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+}
+
+.moduleDetail a {
+  display: inline-block;
+  margin-top: 16px;
+  color: #ff9d5c;
+  font-size: 11px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.fusionTwinTimeScale {
+  padding: 24px clamp(22px, 3vw, 44px) 30px;
+  border-top: 1px solid var(--map-line);
+  background: rgba(255, 255, 255, 0.012);
+}
+
+.fusionTwinTimeScale > p {
+  margin: 0 0 14px;
+  color: #79978a;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+}
+
+.fusionTwinTimeScale > div {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 2px;
+}
+
+.fusionTwinTimeScale span {
+  position: relative;
+  min-height: 70px;
+  padding: 13px 15px;
+  background: linear-gradient(90deg, rgba(101, 230, 210, 0.08), rgba(101, 230, 210, 0.018));
+}
+
+.fusionTwinTimeScale span::before {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  content: '';
+  background: linear-gradient(90deg, #65e6d2, transparent);
+}
+
+.fusionTwinTimeScale b,
+.fusionTwinTimeScale small { display: block; }
+.fusionTwinTimeScale b { color: #eafff6; font-size: 13px; }
+.fusionTwinTimeScale small { margin-top: 7px; color: #789186; font-size: 9px; line-height: 1.5; }
+
+.fusionTwinMapLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 28px;
+  align-items: center;
+  padding: 22px clamp(22px, 3vw, 44px) 25px;
+  border-top: 1px solid var(--map-line);
+}
+
+.fusionTwinMapLegend > span {
+  position: relative;
+  padding-left: 29px;
+  color: #a8bdb2;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.fusionTwinMapLegend > span::before {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 20px;
+  border-top: 2px solid;
+  content: '';
+  transform: translateY(-50%);
+}
+
+.fusionTwinMapLegend .dataFlow::before { border-color: #65e6d2; }
+.fusionTwinMapLegend .modelFlow::before { border-color: #ff9b54; border-style: dashed; }
+.fusionTwinMapLegend .evidenceFlow::before { border-color: #d7e5de; border-width: 1px; }
+.fusionTwinMapLegend .commandFlow::before { border-color: #ff8738; border-width: 3px; }
+.fusionTwinMapLegend .aiFlow::before { border-color: #a98bff; border-style: dashed; }
+
+.fusionTwinMapLegend p {
+  flex-basis: 100%;
+  margin: 10px 0 0;
+  color: #61786d;
+  font-size: 9px;
+  line-height: 1.65;
+}
+
+@media (max-width: 1050px) {
+  .fusionTwinMapIntro { grid-template-columns: 1fr; }
+  .fusionTwinMapIntro aside { max-width: 720px; }
+  .fusionTwinPhaseTabs { display: flex; overflow-x: auto; }
+  .fusionTwinPhaseTabs button { min-width: 142px; flex: 1 0 142px; }
+  .fusionTwinModuleDock { grid-template-columns: 1fr; }
+  .fusionTwinModuleDock > p { min-height: 34px; border-right: 0; border-bottom: 1px solid var(--map-line); }
+  .fusionTwinModuleDock > div { display: flex; }
+  .fusionTwinModuleDock button { min-width: 108px; flex: 0 0 108px; }
+}
+
+@media (max-width: 720px) {
+  .fusionTwinMapSection { padding: 68px 18px 82px; }
+  .fusionTwinMapIntro { gap: 28px; margin-bottom: 32px; }
+  .fusionTwinMapIntro h2 { font-size: clamp(34px, 10.5vw, 50px); letter-spacing: -0.045em; }
+  .fusionTwinMapIntro > div > p:not(.sectionIndex) { margin-top: 22px; font-size: 14px; line-height: 1.75; }
+  .fusionTwinMapIntro aside { padding: 22px; }
+  .fusionTwinMapShell { margin-right: 0; margin-left: 0; }
+  .fusionTwinMapCanvas { min-width: 1040px; height: 610px; }
+  .fusionTwinMapDetails { grid-template-columns: 1fr; }
+  .fusionTwinMapDetails article { min-height: 0; padding: 26px 22px; }
+  .phaseDetail { border-right: 0; border-bottom: 1px solid var(--map-line); }
+  .moduleIo { grid-template-columns: 1fr; }
+  .fusionTwinTimeScale > div { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; }
+  .fusionTwinTimeScale span { min-width: 170px; scroll-snap-align: start; }
+  .fusionTwinMapLegend { gap: 13px 18px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fusionTwinMapMount,
+  .fusionTwinMapFallback,
+  .fusionTwinPhaseTabs button { transition: none; }
+}

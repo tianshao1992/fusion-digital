@@ -1,4 +1,5 @@
 import BrandWordmark from './components/BrandWordmark';
+import FusionTwinSystemMap from './components/FusionTwinSystemMap';
 import SiteFooter from './components/SiteFooter';
 import SiteNav from './components/SiteNav';
 import TokamakCadViewer from './components/TokamakCadViewer';
@@ -22,14 +23,6 @@ const plantValues = [
   {id:'02', cn:'高效运行', en:'EFFICIENT OPERATION', copy:'联动等离子体、热循环、辅机与电网约束，持续优化净电功率、可控工况和资源利用。'},
   {id:'03', cn:'可靠可用', en:'RELIABLE & AVAILABLE', copy:'以状态估计、寿命预测和预测性维护提升任务成功率、设备可靠性与电厂可用率。'},
   {id:'04', cn:'安全可证', en:'EVIDENCE-BASED SAFETY', copy:'以可信模型、实体试验和 V&V 共同形成可追溯的安全证据；数字孪生增强安全论证，但不替代实体验证。'},
-];
-
-const mainLine = [
-  ['01','实验问题','目标、配置、约束与成功判据'],
-  ['02','虚拟放电','执行器、自由边界与控制状态'],
-  ['03','合成观测','诊断几何、采样、噪声与质量'],
-  ['04','跨域解释','物理状态、工程裕量与不确定度'],
-  ['05','人机决策','评估、下一炮建议与可审计批准'],
 ];
 
 const roadmap = [
@@ -69,16 +62,7 @@ export default function Home() {
 
     <TokamakCadViewer />
 
-    <section className="portalThesis">
-      <p className="sectionIndex">00 / COMMUNITY THESIS</p>
-      <h2>数字孪生不是一张实时三维图，也不是一个万能求解器。它是一套围绕决策组织的模型、数据、证据与责任体系。</h2>
-      <div className="thesisGrid"><p>高保真模型界定危险边界和不确定度；快速模型承担在线估计、场景扫描与控制服务；实验数据持续校准两者的适用域。</p><p>社区内容按“装置—问题—模型—工具—验证—决策”关联，让每个结论都能回到源代码、论文、配置与实验记录。</p></div>
-    </section>
-
-    <section className="mainLine" id="mainline">
-      <div className="sectionIntro"><p className="sectionIndex">01 / DIGITAL TWIN MAINLINE</p><h2>一炮一链：聚变数字孪生的共同主线</h2><p>当前十个知识域被收束到同一条可评审工作流。不同模型可以异步运行，但必须共享装置配置、场景、时间轴、坐标和模型血缘。</p></div>
-      <div className="lineSteps">{mainLine.map(step=><article key={step[0]}><span>{step[0]}</span><h3>{step[1]}</h3><p>{step[2]}</p></article>)}</div>
-    </section>
+    <FusionTwinSystemMap />
 
     <section className="domainSection" id="domains">
       <div className="sectionIntro"><p className="sectionIndex">02 / KNOWLEDGE DOMAINS</p><h2>从专业孪生走向总体集成与智能原生</h2><p>十个知识域共同覆盖聚变电厂的物理规律、工程系统、运行认知、能量链、辅机、人机协同、数据与智能；总体集成和智能原生作为并列重点，将各域组织为可验证的整体能力。</p></div>

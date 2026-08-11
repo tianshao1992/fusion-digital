@@ -1,4 +1,4 @@
-import { BarChart, CustomChart, HeatmapChart, ScatterChart } from 'echarts/charts';
+import { BarChart, CustomChart, GraphChart, HeatmapChart, ScatterChart } from 'echarts/charts';
 import {
   AriaComponent,
   DataZoomComponent,
@@ -15,6 +15,7 @@ import { SVGRenderer } from 'echarts/renderers';
 registerEChartsModules([
   BarChart,
   CustomChart,
+  GraphChart,
   HeatmapChart,
   ScatterChart,
   AriaComponent,
