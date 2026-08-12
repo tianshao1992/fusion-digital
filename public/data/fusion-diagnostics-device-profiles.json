@@ -1,0 +1,1980 @@
+{
+  "schemaVersion": "1.0",
+  "asOf": "2026-08-12",
+  "statistics": {
+    "total": 18
+  },
+  "devices": [
+    {
+      "id": "FDP-DEV-006",
+      "name": "ASDEX Upgrade",
+      "type": "中型先进托卡马克",
+      "countryOrRegion": "德国",
+      "operator": "Max Planck Institute for Plasma Physics",
+      "status": "运行中的研究装置",
+      "diagnosticSummary": "AUG 的约七十类诊断与约一百五十个 DAQ 系统构成高度模块化生态，其中约二十套实时诊断向 DCS 提供输入。电子/离子剖面、辐射/杂质、快离子、MHD、边界与钨壁热状态均有成熟测量，shotfile、Diagnostic Control Center 与实时信号通信是其诊断数字线程特色。",
+      "primaryTasks": [
+        "DG0",
+        "DG1",
+        "DG2",
+        "DG3",
+        "DG4",
+        "DG5",
+        "DG6",
+        "DG7",
+        "DG10",
+        "DG11"
+      ],
+      "representativeWorks": [
+        "DG4-017",
+        "DG5-026",
+        "DG5-028",
+        "DG6-032",
+        "DG7-036",
+        "DSI-001",
+        "DSI-011",
+        "DSI-024"
+      ],
+      "representativeWorkSummaries": [
+        "约 20 套 rtDiags 与 DCS 低时延链路",
+        "ECE/Thomson/CXRS/Li-beam/干涉剖面",
+        "SXR/bolometer/光谱和钨杂质诊断",
+        "CTS/FIDA/INPA 等快离子诊断",
+        "shotfile + DCC 的集中配置和档案"
+      ],
+      "diagnosticSystems": [
+        "family: real-time-profiles；systems: ECE；Thomson；CXRS；interferometry；magnetic/equilibrium diagnostics；measuredQuantities: Te/ne/Ti/rotation；equilibrium；MHD；evidence: E4/D4；realTimeUse: 约 20 套实时诊断连接 DCS",
+        "family: radiation-fast-ion-edge；systems: SXR；bolometer；spectroscopy；CTS；FIDA/INPA；IR thermography；divertor Thomson/Langmuir；measuredQuantities: radiation/impurity；fast ions；edge/heat load；evidence: E2-E4/D2-D4，系统差异大；realTimeUse: 部分系统实时，部分离线",
+        "family: daq-data；systems: autonomous DAQ；Diagnostic Control Center；shotfile archive；universal time/timestamping；measuredQuantities: raw/processed signals and configuration；evidence: E4/D4；realTimeUse: 集中管理、分布执行"
+      ],
+      "sensors": [
+        "magnetics",
+        "ECE/reflectometry receivers",
+        "Thomson/CXRS optics",
+        "SXR/bolometers",
+        "CTS/FIDA detectors",
+        "IR/visible cameras",
+        "edge probes"
+      ],
+      "realTimeInterfaces": [
+        "DCS signal network",
+        "real-time diagnostic clusters",
+        "DCC configuration and shotfile provenance"
+      ],
+      "dataPlatform": [
+        "systems: AUG shotfile system；DCC；distributed DAQ/archive；access: 装置合作权限；数据格式/架构论文公开；evidence: AUG DAQ and rtDiag primary papers"
+      ],
+      "papers": [
+        {
+          "title": "Update on the ASDEX Upgrade data acquisition and data management environment",
+          "authors": "K. Behler; H. Blank; A. Buhler; R. Drube; H. Eixenberger; K. Engelhardt; A. Lohs; R. Merkel; G. Raupp; W. Treutterer",
+          "year": 2014,
+          "venue": "Fusion Engineering and Design",
+          "doi": "10.1016/j.fusengdes.2014.04.030",
+          "url": "https://doi.org/10.1016/j.fusengdes.2014.04.030",
+          "sourceType": "peer-reviewed operational infrastructure paper"
+        },
+        {
+          "title": "Real-time diagnostics at ASDEX Upgrade—Architecture and operation",
+          "authors": "K. Behler; H. Blank; H. Eixenberger; A. Lohs; K. Lüddecke; R. Merkel; G. Raupp; G. Schramm; W. Treutterer; M. Zilker",
+          "year": 2008,
+          "venue": "Fusion Engineering and Design",
+          "doi": "10.1016/j.fusengdes.2008.01.015",
+          "url": "https://doi.org/10.1016/j.fusengdes.2008.01.015",
+          "sourceType": "peer-reviewed real-time diagnostics paper"
+        },
+        {
+          "title": "ASDEX Upgrade: Diagnostics",
+          "authors": "未完整列出",
+          "year": 2018,
+          "venue": "原始论文 / 官方来源",
+          "doi": null,
+          "url": "https://pure.mpg.de/pubman/item/item_2540278_4/component/file_2540277/IPP2018_02.pdf",
+          "sourceType": "official institute report"
+        }
+      ],
+      "code": [
+        {
+          "name": "AUG shotfile/rtDiag production stack",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "data-platform-or-interface",
+          "access": "controlled",
+          "relation": "论文 URL 已移入参考文献；架构公开，生产代码和数据未发现可核验公共仓库"
+        },
+        {
+          "name": "AUG diagnostic datasets",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "dataset",
+          "access": "controlled",
+          "relation": "装置主页已移入参考来源；数据需装置合作流程，未发现可直接访问的公共数据 API"
+        }
+      ],
+      "limitations": [
+        "多年代异构硬件与 Solaris/Linux/专用卡造成维护负担",
+        "shotfile/诊断程序接口并非跨装置标准",
+        "实时信号可用不等于全链路 UQ 和故障容错已统一"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "FDP-DEV-003",
+      "name": "DIII-D",
+      "type": "先进托卡马克用户装置",
+      "countryOrRegion": "美国",
+      "operator": "General Atomics / US DOE Office of Science",
+      "status": "运行中的用户设施",
+      "diagnosticSummary": "DIII-D 具有五十余套诊断和成熟 PCS，是平衡、MSE、电荷交换、ECE/ECEI、Thomson、反射计、BES、FIDA、中子、bolometry、SXR 和边界成像与控制耦合的代表装置。其优势是诊断密度、场景灵活性和大量控制实验；限制是原始 shot 数据及装置专用分析代码主要面向合作用户。",
+      "primaryTasks": [
+        "DG1",
+        "DG2",
+        "DG3",
+        "DG4",
+        "DG5",
+        "DG6",
+        "DG7",
+        "DG10",
+        "DG11"
+      ],
+      "representativeWorks": [
+        "DSI-002",
+        "DG1-004",
+        "DG1-005",
+        "DG3-011",
+        "DG4-017",
+        "DG4-019",
+        "DG5-026",
+        "DG6-029",
+        "DG7-036",
+        "DG2-006",
+        "DSI-011",
+        "DSI-031"
+      ],
+      "representativeWorkSummaries": [
+        "三阵列 45 通道 MSE 电流剖面测量",
+        "Thomson/ECE/CER 与动力学平衡",
+        "BES/ECEI/磁阵列的 MHD 与湍流观测",
+        "FIDA/中子/快离子损失诊断",
+        "Diag2Diag 合成 Thomson 与多诊断恢复"
+      ],
+      "diagnosticSystems": [
+        "family: magnetic-equilibrium；systems: magnetics；MSE；rtEFIT/EFIT constraints；measuredQuantities: boundary；q/current profile；Er constraints；evidence: E4/D4；realTimeUse: rtEFIT/isoflux/profile/NTM control",
+        "family: kinetic-fast-ion；systems: Thomson；ECE/ECEI；CER；FIDA；neutron diagnostics；measuredQuantities: ne/Te/Ti/rotation；fast-ion distribution；fusion rate；evidence: E4/D4；realTimeUse: selected channels and derived states enter PCS",
+        "family: fluctuation-edge；systems: BES；reflectometry；magnetic arrays；IR/visible imaging；Langmuir/divertor diagnostics；measuredQuantities: turbulence/MHD；ELMs；heat load/detachment；evidence: E4/D4；realTimeUse: experiment-dependent"
+      ],
+      "sensors": [
+        "magnetic pickup/flux loops",
+        "MSE polarimetry",
+        "laser Thomson polychromators",
+        "ECE radiometers/imagers",
+        "spectrometers",
+        "neutral-particle/neutron detectors",
+        "IR/visible cameras"
+      ],
+      "realTimeInterfaces": [
+        "GA PCS",
+        "rtEFIT and real-time diagnostic nodes",
+        "quality/fault handling remains application-specific"
+      ],
+      "dataPlatform": [
+        "systems: MDSplus；PTDATA；OMFIT/OMAS adapters；access: facility user/collaboration access; selected figure data and repositories public；evidence: DOE facility page and GA data-management report"
+      ],
+      "papers": [
+        {
+          "title": "Current Profile Measurement on the DIII-D Tokamak",
+          "authors": "未完整列出",
+          "year": 2006,
+          "venue": "原始论文 / 官方来源",
+          "doi": null,
+          "url": "https://www.osti.gov/biblio/20854266",
+          "sourceType": "peer-reviewed primary diagnostic paper"
+        },
+        {
+          "title": "Multimodal super-resolution: discovering hidden physics and its application to fusion plasmas",
+          "authors": "Azarakhsh Jalalvand; SangKyeun Kim; Jaemin Seo; Qiming Hu; Max Curie; Peter Steiner; Andrew Oakleigh Nelson; Yong-Su Na; Egemen Kolemen",
+          "year": 2025,
+          "venue": "Nature Communications",
+          "doi": "10.1038/s41467-025-63492-1",
+          "url": "https://doi.org/10.1038/s41467-025-63492-1",
+          "sourceType": "peer-reviewed multi-diagnostic study"
+        },
+        {
+          "title": "DIII-D National Fusion Facility",
+          "authors": "未完整列出",
+          "year": 2026,
+          "venue": "原始论文 / 官方来源",
+          "doi": null,
+          "url": "https://science.osti.gov/fes/Facilities/User-Facilities/DIII-D",
+          "sourceType": "official facility capability page"
+        }
+      ],
+      "code": [
+        {
+          "name": "OMAS",
+          "url": "https://github.com/gafusion/omas",
+          "status": "official-enabling",
+          "artifactType": "data-model-api",
+          "access": "open-or-public",
+          "relation": "使能 DIII-D/IMAS 数据映射，不是诊断反演全集"
+        },
+        {
+          "name": "Diag2Diag-SRTS",
+          "url": "https://github.com/PlasmaControl/Diag2Diag-SRTS",
+          "status": "official-direct",
+          "artifactType": "source-or-facility-software",
+          "access": "open-or-public",
+          "relation": "论文方法与 shot list 公开；原始 DIII-D 数据仍受设施规则约束"
+        },
+        {
+          "name": "DIII-D experimental data",
+          "url": "https://www.ga.com/magnetic-fusion/diii-d",
+          "status": "controlled-access",
+          "artifactType": "dataset",
+          "access": "controlled",
+          "relation": "用户设施合作访问"
+        }
+      ],
+      "limitations": [
+        "完整训练数据、标定数据库和生产 PCS/诊断代码不公开",
+        "多诊断相关性在 OOD、坏道和硬件升级后会漂移",
+        "研究装置冗余和端口条件不同于电厂"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "FDP-DEV-004",
+      "name": "EAST",
+      "type": "全超导长脉冲托卡马克",
+      "countryOrRegion": "中国",
+      "operator": "中国科学院合肥物质科学研究院等离子体物理研究所",
+      "status": "运行中的长脉冲研究装置",
+      "diagnosticSummary": "EAST 的诊断组合服务于稳态高约束、加热电流驱动、快离子、钨偏滤器和长脉冲设备健康：磁测量/POINT、Thomson、ECE/ECEI、反射计、FIDA、中子监测、光谱/SXR/bolometer、IR 与 Langmuir 探针。MDSplus 既归档物理诊断也支持技术诊断；长脉冲中标定漂移、冷却与数据连续性尤为重要。",
+      "primaryTasks": [
+        "DG0",
+        "DG1",
+        "DG2",
+        "DG3",
+        "DG4",
+        "DG5",
+        "DG6",
+        "DG7",
+        "DG8",
+        "DG11"
+      ],
+      "representativeWorks": [
+        "PDT-003",
+        "PDT-007",
+        "DSI-002",
+        "DG1-003",
+        "DG1-005",
+        "DG3-012",
+        "DG4-017",
+        "DG6-029",
+        "DG7-036",
+        "DG2-006",
+        "DG5-024",
+        "DSI-012"
+      ],
+      "representativeWorkSummaries": [
+        "POINT 偏振干涉约束实时电流剖面",
+        "ECE 频段升级与 ECEI 合成诊断",
+        "双视向 FIDA 与中子谱/相机",
+        "钨偏滤器 IR/探针/光谱",
+        "超导线圈温度技术诊断与联锁"
+      ],
+      "diagnosticSystems": [
+        "family: profiles-equilibrium；systems: magnetics；POINT polarimeter-interferometer；Thomson；ECE/ECEI；reflectometry；measuredQuantities: boundary/current profile；ne/Te；MHD；evidence: E4/D4；realTimeUse: P-EFIT、密度和温度/事件服务",
+        "family: fast-ion-radiation；systems: FIDA；neutron flux/profile/spectrum；SXR；bolometry；spectroscopy；measuredQuantities: fast ions；fusion neutrons；radiation/impurities；evidence: E3-E4/D3-D4；realTimeUse: 系统而异",
+        "family: engineering-edge；systems: IR thermography；Langmuir probes；coil outlet temperature TDS；cryogenic/vacuum plant signals；measuredQuantities: PFC temperature/heat load；edge plasma；coil/cryogenic health；evidence: E4/D4；realTimeUse: TDS 阈值可触发装置安全联锁"
+      ],
+      "sensors": [
+        "magnetic coils/FOCS",
+        "FIR/polarimetry optics",
+        "ECE radiometers",
+        "laser Thomson",
+        "spectrometers",
+        "neutron detectors",
+        "IR cameras/probes",
+        "cryogenic temperature sensors"
+      ],
+      "realTimeInterfaces": [
+        "PCS/P-EFIT/POINT",
+        "MDSplus 实时/脉冲归档",
+        "TDS 到 cryogenic system 与 safety interlock"
+      ],
+      "dataPlatform": [
+        "systems: MDSplus；MySQL for selected engineering metadata；EAST DAQ；access: 数据主要通过合作；DAQ论文和部分接口材料公开；evidence: EAST DAQ/TDS primary papers"
+      ],
+      "papers": [
+        {
+          "title": "Development of real-time plasma current profile reconstruction with POINT diagnostic for EAST plasma control",
+          "authors": "Y. Huang; B.J. Xiao; Z.P. Luo; J.P. Qian; S. Li; Y. Chen; H.Q. Liu; L.Q. Xu; Y. Yuan; Q.P. Yuan",
+          "year": 2017,
+          "venue": "Fusion Engineering and Design",
+          "doi": "10.1016/j.fusengdes.2017.05.005",
+          "url": "https://doi.org/10.1016/j.fusengdes.2017.05.005",
+          "sourceType": "peer-reviewed real-time diagnostic paper"
+        },
+        {
+          "title": "Upgrade of the ECE diagnostic on EAST",
+          "authors": "Hailin Zhao; Tianfu Zhou; Yong Liu; Ang Ti; Bili Ling; M. E. Austin; Saeid Houshmandyar; H. Huang; W. L. Rowan; Liqun Hu",
+          "year": 2018,
+          "venue": "Review of Scientific Instruments",
+          "doi": "10.1063/1.5035452",
+          "url": "https://doi.org/10.1063/1.5035452",
+          "sourceType": "peer-reviewed diagnostic paper"
+        },
+        {
+          "title": "Fast-ion Dα spectrum diagnostic in the EAST",
+          "authors": "Y. M. Hou; C. R. Wu; J. Huang; W. W. Heidbrink; M. G. von Hellermann; Z. Xu; Z. Jin; J. F. Chang; Y. B. Zhu; W. Gao; Y. J. Chen; B. Lyu; et al. (19 authors)",
+          "year": 2016,
+          "venue": "Review of Scientific Instruments",
+          "doi": "10.1063/1.4960598",
+          "url": "https://doi.org/10.1063/1.4960598",
+          "sourceType": "peer-reviewed installed diagnostic paper"
+        }
+      ],
+      "code": [
+        {
+          "name": "EAST MDSplus/DAQ",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "data-platform-or-interface",
+          "access": "closed-or-unconfirmed",
+          "relation": "论文公开架构；论文 URL 已移入参考文献，未发现匿名开放 shot server 或可核验的 EAST 专用公共实现"
+        },
+        {
+          "name": "EAST diagnostic production code",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "source-or-facility-software",
+          "access": "closed-or-unconfirmed",
+          "relation": "未发现可核验的完整公共仓库"
+        }
+      ],
+      "limitations": [
+        "各诊断标定、数据质量位和生产算法开放度有限",
+        "长期稳态放大了积分漂移、热漂移、通道退化与数据吞吐风险",
+        "技术诊断联锁证据不等于核安全资格"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "FDP-DEV-018",
+      "name": "EHL-2",
+      "type": "高场球形环 / p-11B 研究平台（设计建设阶段）",
+      "countryOrRegion": "中国",
+      "operator": "新奥能源研究院 / ENN",
+      "status": "物理与工程设计/建设推进；尚无 EHL-2 plasma data",
+      "diagnosticSummary": "EHL-2 的公开论文聚焦高场、高离子温度和 p-11B 物理/工程设计，尚未发现可核验的完整诊断基线、接口控制文件或生产代码。合理需求包括磁与平衡、电子/离子剖面、组分与硼谱、硬 X 射线/逃逸电子、聚变产物（尤其带电粒子与伴随辐射）、PFC 热监测以及磁体/低温/结构/真空状态，但报告不得把需求写成已安装能力。",
+      "primaryTasks": [
+        "DG0",
+        "DG1",
+        "DG2",
+        "DG3",
+        "DG4",
+        "DG5",
+        "DG7",
+        "DG8",
+        "DG9",
+        "DG11"
+      ],
+      "representativeWorks": [],
+      "representativeWorkSummaries": [
+        "FEC 2025 physics-design paper/poster",
+        "ENN official project page",
+        "diagnostic requirements and port/harsh-environment co-design gap"
+      ],
+      "diagnosticSystems": [
+        "family: requirements；systems: magnetics/equilibrium；interferometry/Thomson/ECE；CXRS/impurity spectroscopy；X-ray/radiation/fusion-product diagnostics；IR/visible/PFC sensors；engineering condition monitoring；measuredQuantities: required plasma and plant states；evidence: E0-E1/D1：需求/设计推导，非已安装清单；realTimeUse: future PCS/protection requirements only"
+      ],
+      "sensors": [
+        "to be defined by project ICD and port allocation"
+      ],
+      "realTimeInterfaces": [
+        "应建立 diagnostic-to-PCS/protection/data ICD",
+        "尚无公开生产接口证据"
+      ],
+      "dataPlatform": [
+        "systems: not publicly specified；access: 无公开 shot data（装置尚未运行）；evidence: official project and IAEA design papers"
+      ],
+      "papers": [
+        {
+          "title": "Overview of the physics design of the EHL-2 spherical torus for proton-Boron fusion",
+          "authors": "未完整列出",
+          "year": 2025,
+          "venue": "原始论文 / 官方来源",
+          "doi": null,
+          "url": "https://conferences.iaea.org/event/392/contributions/35908",
+          "sourceType": "IAEA FEC primary design paper"
+        },
+        {
+          "title": "EHL-2 official project page",
+          "authors": "未完整列出",
+          "year": 2026,
+          "venue": "原始论文 / 官方来源",
+          "doi": null,
+          "url": "https://en.ennresearch.com/researchfield/Compactfusion/EHL_2",
+          "sourceType": "official project page"
+        },
+        {
+          "title": "EHL-2 physics design manuscript",
+          "authors": "未完整列出",
+          "year": 2025,
+          "venue": "原始论文 / 官方来源",
+          "doi": null,
+          "url": "https://conferences.iaea.org/event/392/papers/35908/files/13899-FEC2025_EHL2-Manuscript-Xie-V6.pdf",
+          "sourceType": "IAEA FEC design manuscript"
+        }
+      ],
+      "code": [
+        {
+          "name": "EHL-2 diagnostic code/data",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "source-or-facility-software",
+          "access": "closed-or-unconfirmed",
+          "relation": "未发现可核验的诊断生产仓库或实验数据"
+        }
+      ],
+      "limitations": [
+        "当前只能形成需求和协同设计路线，不能评价装置测量效果",
+        "p-11B 带电聚变产物、强硬 X 射线/高能电子和有限端口会改变诊断选择",
+        "需要项目方提供端口、辐射/热/磁环境、量程、精度、延迟、校准与维护 ICD"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "FDP-DEV-017",
+      "name": "EXL-50U",
+      "type": "带中心螺线管辅助的球形托卡马克 / p-11B 研究装置",
+      "countryOrRegion": "中国",
+      "operator": "新奥能源研究院 / ENN",
+      "status": "EXL-50U 自 2024 年运行；它是 EXL-50 的升级装置，但磁体、真空室、位形能力与诊断配置均须按 EXL-50U 基线独立版本化",
+      "diagnosticSummary": "EXL-50 是无中心螺线管装置；EXL-50U 则安装了中心螺线管，并以 ECRH 非感应启动、中心螺线管辅助爬升。公开 EXL-50 综述列出磁测量、可见/红外、微波与 HCN FIR 干涉、Thomson、Hα/杂质光谱、杂散 EC 波监测、ECE、AXUV、软/硬 X 射线和 Langmuir 探针，这只能作为 EXL-50U 的候选继承基线，不能直接等同于 EXL-50U 已安装、已标定或已接入实时链路的清单。EXL-50U 公开工作还直接证明了中心螺线管辅助放电及 FOCS 涡流测量；每套诊断仍需按装置配置、几何和标定版本确认。",
+      "primaryTasks": [
+        "DG0",
+        "DG1",
+        "DG2",
+        "DG3",
+        "DG4",
+        "DG5",
+        "DG6",
+        "DG7",
+        "DG10",
+        "DG11"
+      ],
+      "representativeWorks": [],
+      "representativeWorkSummaries": [
+        "EXL-50 diagnostics layout and research overview",
+        "磁/可见/IR/干涉/Thomson/ECE/X-ray/AXUV/探针组合",
+        "高能电子与多流体平衡交叉解释",
+        "EXL-50U 中心螺线管辅助放电、位置/平衡/控制与 FOCS 涡流测量的公开论文线索"
+      ],
+      "diagnosticSystems": [
+        "family: baseline-plasma；systems: magnetics；microwave and HCN FIR interferometers；Thomson；ECE；visible/IR cameras；H-alpha/impurity spectroscopy；measuredQuantities: equilibrium/current；density；Te；plasma/wall image；impurity；evidence: EXL-50 E4/D4；EXL-50U 逐系统继承/升级状态未完整公开，不从 EXL-50 自动外推；realTimeUse: magnetics and selected derived states support control",
+        "family: energetic-radiation-edge；systems: stray EC-wave monitors；AXUV；SXR/HXR arrays；Langmuir probes；dual-loop fiber-optic current sensor for toroidal eddy current；measuredQuantities: energetic electrons；radiation；edge plasma；plasma and toroidal eddy current；evidence: EXL-50 文献提供部分 E3-E4/D3-D4 基线；EXL-50U FOCS 有 2026 装置放电与数值模型对比证据；realTimeUse: not publicly documented as a unified real-time chain"
+      ],
+      "sensors": [
+        "magnetic coils",
+        "microwave/FIR interferometers",
+        "Thomson optics",
+        "ECE receivers",
+        "visible/IR cameras",
+        "spectrometers",
+        "AXUV/SXR/HXR detectors",
+        "Langmuir probes"
+      ],
+      "realTimeInterfaces": [
+        "device PCS and equilibrium reconstruction",
+        "public detail insufficient for a complete ICD",
+        "control papers should not be read as full diagnostic qualification"
+      ],
+      "dataPlatform": [
+        "systems: ENN device acquisition/archive (public implementation detail limited)；access: 未发现匿名开放 shot repository；合作获取；evidence: EXL overview and ENN/IAEA papers"
+      ],
+      "papers": [
+        {
+          "title": "Overview of EXL-50 research progress",
+          "authors": "Yuejiang Shi; Yumin Wang; Bing Liu; Xianming Song; Shaodong Song; X C Jiang; Dong Guo; Di Luo; Xiang Gu; Sun Tiantian; Xianli Huang; Zhi Li; et al. (38 authors)",
+          "year": 2025,
+          "venue": "Nuclear Fusion",
+          "doi": "10.1088/1741-4326/adf239",
+          "url": "https://doi.org/10.1088/1741-4326/adf239",
+          "sourceType": "peer-reviewed device overview"
+        },
+        {
+          "title": "Strategy and experimental progress of the EXL-50U spherical torus in support of the EHL-2 project",
+          "authors": "Yuejiang 跃江 SHI 石; Xianming 显明 SONG 宋; Dong 栋 GUO 郭; Xinchen 欣辰 JIANG 姜; Xiang 翔 GU 顾; Lili 力立 DONG 董; Xueyun 雪韵 WANG 王; Tiantian 恬恬 SUN 孙; Muzhi 沐芝 TAN 谭; Zhengyuan 正元 CHEN 陈; Guang 光 YANG 杨; Danke 丹可 YANG 杨; et al. (43 authors)",
+          "year": 2025,
+          "venue": "Plasma Science and Technology",
+          "doi": "10.1088/2058-6272/ad9e8f",
+          "url": "https://doi.org/10.1088/2058-6272/ad9e8f",
+          "sourceType": "peer-reviewed primary EXL-50U device paper"
+        },
+        {
+          "title": "Direct measurement of toroidal eddy current on the EXL-50U tokamak with a hardware-compensated fiber optic current sensor",
+          "authors": "Jia 佳 LI 李; Dong 栋 GUO 郭; Xianming 显明 SONG 宋; Xiaoyue CHANG (常晓月); Dongwei LIU (刘东伟); Renyi TAO (陶仁义); Zhixin WANG (王志辛); Lin CHEN (陈琳); Shuo LIU (刘硕); Yuejiang SHI (石跃江)",
+          "year": 2026,
+          "venue": "Plasma Science and Technology",
+          "doi": "10.1088/2058-6272/ae23a3",
+          "url": "https://doi.org/10.1088/2058-6272/ae23a3",
+          "sourceType": "peer-reviewed primary EXL-50U diagnostic paper"
+        },
+        {
+          "title": "Overview of EXL-50U experiments",
+          "authors": "未完整列出",
+          "year": 2025,
+          "venue": "原始论文 / 官方来源",
+          "doi": null,
+          "url": "https://conferences.iaea.org/event/392/papers/35644/files/13873-OV2999-EXL-50UOverview-YJShi.pdf",
+          "sourceType": "IAEA FEC primary device paper"
+        },
+        {
+          "title": "Solenoid-free current drive via ECRH in EXL-50 spherical torus plasmas",
+          "authors": "未完整列出",
+          "year": 2021,
+          "venue": "原始论文 / 官方来源",
+          "doi": null,
+          "url": "https://arxiv.org/abs/2104.14844",
+          "sourceType": "primary device physics preprint"
+        }
+      ],
+      "code": [
+        {
+          "name": "EXL-50/50U diagnostic data and production code",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "source-or-facility-software",
+          "access": "closed-or-unconfirmed",
+          "relation": "未发现可核验的全量公共仓库或 shot API"
+        }
+      ],
+      "limitations": [
+        "EXL-50 是无中心螺线管装置，而 EXL-50U 安装中心螺线管；两者的硬件、几何、标定与信号命名不得混用",
+        "高能电子导致单流体平衡、温度与电流解释具有特殊性",
+        "公开资料不足以确认每套诊断的采样、延迟、标定、质量位和 PCS 接口"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "FDP-DEV-012",
+      "name": "HL-2A / HL-2M（HL-3）",
+      "type": "偏滤器托卡马克 / 新一代中型托卡马克",
+      "countryOrRegion": "中国",
+      "operator": "核工业西南物理研究院",
+      "status": "HL-2M/HL-3 运行与诊断分阶段扩展；HL-2A 提供历史方法和数据",
+      "diagnosticSummary": "HL-2M 首等离子体阶段完成约 16 套基础系统，包括磁、宽视场成像、快电离规、高速 VUV、固态 THz 干涉和 CO2 色散干涉；公开计划为约五年扩展至约七十套。随后发展的宽谱光谱、Cherenkov 逃逸电子、TOF 中子、边界探针和高级剖面诊断成熟度各异，不能把概念设计统一标成部署。",
+      "primaryTasks": [
+        "DG0",
+        "DG1",
+        "DG2",
+        "DG3",
+        "DG4",
+        "DG5",
+        "DG6",
+        "DG7",
+        "DG11"
+      ],
+      "representativeWorks": [
+        "DG1-005",
+        "DG3-011",
+        "DG4-020"
+      ],
+      "representativeWorkSummaries": [
+        "首等离子体 16 套基础诊断",
+        "宽谱段光谱",
+        "HL-2M Cherenkov 逃逸电子首批结果",
+        "双环中子 TOF 设计/样机",
+        "重离子束探针概念/开发"
+      ],
+      "diagnosticSystems": [
+        "family: first-plasma；systems: magnetics；wide-angle visible imaging；fast ionization gauge；high-speed VUV；THz and CO2 interferometers；measuredQuantities: plasma current/position；image/impurity；gas/density；runaway/MHD support；evidence: E3-E4/D3-D4；realTimeUse: position control and operation monitoring",
+        "family: advanced-staged；systems: overview spectroscopy；Cherenkov runaway probe；neutron TOF；HIBP；edge/divertor diagnostics；measuredQuantities: impurity/radiation；runaway electrons；neutron spectrum；potential/turbulence；evidence: E1-E4/D1-D4 by system；realTimeUse: TOF design targets real time; not all systems deployed"
+      ],
+      "sensors": [
+        "magnetic coils",
+        "THz/CO2 interferometers",
+        "VUV/visible spectrometers",
+        "ionization gauges",
+        "Cherenkov probe",
+        "scintillation/TOF neutron detectors",
+        "cameras"
+      ],
+      "realTimeInterfaces": [
+        "HL-2M central timing/control and PCS",
+        "EPICS-based central control",
+        "diagnostic acquisition synchronized to experiment"
+      ],
+      "dataPlatform": [
+        "systems: HL-2M central DAQ/control archive；access: 主要通过 SWIP collaboration；论文公开；evidence: central-control and diagnostic-development primary papers"
+      ],
+      "papers": [
+        {
+          "title": "Development of diagnostic systems for first plasma on HL-2M tokamak",
+          "authors": "未完整列出",
+          "year": 2021,
+          "venue": "原始论文 / 官方来源",
+          "doi": null,
+          "url": "https://www.clpu.es/src/uploads/2021/05/Zhongbing_Shi-b7a.pdf",
+          "sourceType": "facility-team conference paper"
+        },
+        {
+          "title": "Development of the real-time double-ring fusion neutron time-of-flight spectrometer system at HL-2M",
+          "authors": "Bo-Wen Zheng; Wei Zhang; Tong-Yu Wu; Si-Cheng Huang; Yi-Po Zhang; Xiu-Feng Xu; Shi-Biao Tang; Ze-Jie Yin",
+          "year": 2019,
+          "venue": "Nuclear Science and Techniques",
+          "doi": "10.1007/s41365-019-0702-3",
+          "url": "https://doi.org/10.1007/s41365-019-0702-3",
+          "sourceType": "peer-reviewed prototype/design paper"
+        },
+        {
+          "title": "Development of a Cherenkov probe with high time resolution for runaway electron measurements in the HL-2M tokamak",
+          "authors": "Y.X. Zhu; J. Zhang; Y.P. Zhang; H.B. Xu; Z.H. Wang; M.Y. Zhao; X.R. Duan; S.K. Cheng; X.W. Zhan; S. Guan; Q.L. Yang; Y.H. Liu; et al. (16 authors)",
+          "year": 2024,
+          "venue": "Fusion Engineering and Design",
+          "doi": "10.1016/j.fusengdes.2023.114114",
+          "url": "https://doi.org/10.1016/j.fusengdes.2023.114114",
+          "sourceType": "peer-reviewed installed diagnostic paper"
+        }
+      ],
+      "code": [
+        {
+          "name": "HL-2A/HL-2M diagnostic code/data",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "source-or-facility-software",
+          "access": "closed-or-unconfirmed",
+          "relation": "未找到完整公共数据或生产代码仓库"
+        },
+        {
+          "name": "HL-2M diagnostic papers",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "source-or-facility-software",
+          "access": "closed-or-unconfirmed",
+          "relation": "论文/演示材料只作为参考证据；未发现可执行诊断生产代码仓库"
+        }
+      ],
+      "limitations": [
+        "约七十套是发展计划，不是同一时点的已验收清单",
+        "中文/会议材料中的系统状态需逐 campaign 复核",
+        "HL-2A 方法继承不等于 HL-2M 标定和接口已完成"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "FDP-DEV-001",
+      "name": "ITER",
+      "type": "大型燃烧等离子体托卡马克（在建）",
+      "countryOrRegion": "国际 / 法国",
+      "operator": "ITER Organization",
+      "status": "建设、装配和分系统集成；尚无 ITER 等离子体实验数据",
+      "diagnosticSummary": "ITER 规划约四十套大型诊断，覆盖磁、光学、微波、辐射、中子/伽马、粒子与边界测量。其核心挑战不是再复制研究装置诊断，而是在中子、伽马、热、真空、氚包容、远程维护和有限端口条件下向保护、PCS 和物理研究持续提供带质量标志的测量。",
+      "primaryTasks": [
+        "DG0",
+        "DG1",
+        "DG2",
+        "DG3",
+        "DG4",
+        "DG5",
+        "DG7",
+        "DG9",
+        "DG11"
+      ],
+      "representativeWorks": [
+        "PDT-001",
+        "PDT-010",
+        "PDT-015",
+        "PDT-016",
+        "DSI-007",
+        "DG1-003",
+        "DG4-019",
+        "DG5-023",
+        "DG2-006",
+        "DG3-013",
+        "DG7-038",
+        "DSI-016"
+      ],
+      "representativeWorkSummaries": [
+        "磁诊断约 2000 个、19 类传感器的设计与资格试验",
+        "中子相机、通量监视、活化系统和伽马谱的燃烧等离子体测量链",
+        "DRGA 对燃料比、氦灰和杂质的样机开发",
+        "诊断端口、第一镜、辐照与远程维护工程集成"
+      ],
+      "diagnosticSystems": [
+        "family: magnetic；systems: vessel-wall inductive sensors；divertor magnetic coils；Rogowski coils；diamagnetic loops；Hall/FOCS/LTCC sensors；measuredQuantities: plasma current；position/shape；halo current；error fields；evidence: E2/D3：设计、制造和资格试验；尚无 ITER plasma validation；realTimeUse: 计划向 PCS 和机器保护提供信号",
+        "family: neutron-gamma-particle；systems: radial/vertical neutron cameras；micro-fission chambers；activation system；gamma-ray spectrometers；lost-alpha/fast-ion diagnostics；measuredQuantities: fusion power；emissivity profile；fluence；fuel ratio/fast-ion state；evidence: E1-E2/D2-D3：设计、原型与标定开发；realTimeUse: 部分测量被规划用于控制或保护",
+        "family: optical-microwave-spectroscopy；systems: Thomson scattering；ECE；interferometry/polarimetry；CXRS；bolometry；visible/IR viewing；residual gas analyzer；measuredQuantities: ne/Te；ion state；radiation；PFC temperature；fuel/ash/impurity gas；evidence: E1-E2；子系统成熟度不一；realTimeUse: 需求级接口；不能写成已在 ITER 运行"
+      ],
+      "sensors": [
+        "mineral-insulated magnetic coils",
+        "Rogowski/diamagnetic loops",
+        "fission chambers",
+        "diamond/scintillation detectors",
+        "spectrometers",
+        "laser/microwave receivers",
+        "IR/visible cameras",
+        "mass spectrometers"
+      ],
+      "realTimeInterfaces": [
+        "PCS 将消费相当一部分诊断参数",
+        "CODAC/plant I&C 提供采集、时间同步和归档",
+        "中央联锁、机器保护和人员/核安全职责必须与诊断/PCS 分离"
+      ],
+      "dataPlatform": [
+        "systems: CODAC Core System；EPICS；IMAS；access: CODAC 发行与完整配置受项目/贡献者权限约束；IMAS-Python 公开不等于 ITER 诊断数据公开；evidence: 官方 CODAC/IMAS 文档与仓库"
+      ],
+      "papers": [
+        {
+          "title": "Chapter 7: Diagnostics",
+          "authors": "A.J.H Donné; A.E Costley; R Barnsley; H Bindslev; R Boivin; G Conway; R Fisher; R Giannella; H Hartfuss; M.G. von Hellermann; E Hodgson; L.C Ingesson; et al. (34 authors)",
+          "year": 2007,
+          "venue": "Nuclear Fusion",
+          "doi": "10.1088/0029-5515/47/6/s07",
+          "url": "https://doi.org/10.1088/0029-5515/47/6/s07",
+          "sourceType": "peer-reviewed requirements/physics basis"
+        },
+        {
+          "title": "ITER Engineering Basis Handbook, Vol. 1 Ch. 4: The role and distinctive features of ITER",
+          "authors": "未完整列出",
+          "year": 2026,
+          "venue": "原始论文 / 官方来源",
+          "doi": null,
+          "url": "https://www.iter.org/sites/default/files/media/2026-01/vol.1_ch.04_role_and_distinctive_feature_dv4qgd_v2_0.pdf",
+          "sourceType": "official engineering handbook"
+        },
+        {
+          "title": "Description of the prototype diagnostic residual gas analyzer for ITER",
+          "authors": "T. R. Younkin; T. M. Biewer; C. C. Klepper; C. Marcus",
+          "year": 2014,
+          "venue": "Review of Scientific Instruments",
+          "doi": "10.1063/1.4892157",
+          "url": "https://doi.org/10.1063/1.4892157",
+          "sourceType": "peer-reviewed prototype paper"
+        }
+      ],
+      "code": [
+        {
+          "name": "IMAS-Python",
+          "url": "https://github.com/iterorganization/IMAS-Python",
+          "status": "official-enabling",
+          "artifactType": "data-model-api",
+          "access": "open-or-public",
+          "relation": "使能语义与数据交换，不是诊断采集或反演代码"
+        },
+        {
+          "name": "ITER CODAC Core System",
+          "url": "https://www.iter.org/machine/supporting-systems/codac/codac-core-system",
+          "status": "controlled-access",
+          "artifactType": "control-platform",
+          "access": "controlled",
+          "relation": "官方控制/数据基础设施；需注册和项目规则"
+        }
+      ],
+      "limitations": [
+        "所有 ITER plasma 性能、可用率和长期辐照漂移均尚无本机证据",
+        "端口、第一镜污染、辐射诱导效应、远程标定与替换是主要风险",
+        "外部装置验证不能替代 ITER 环境资格与端到端验收"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "FDP-DEV-013",
+      "name": "J-TEXT",
+      "type": "中型托卡马克",
+      "countryOrRegion": "中国",
+      "operator": "华中科技大学",
+      "status": "运行中的研究装置",
+      "diagnosticSummary": "J-TEXT 长期服务于 MHD、破裂、逃逸电子和边界研究，拥有磁阵列、软/硬 X 射线、干涉/偏振、ECE/ECEI、Thomson、可见/高速成像、光谱和边界探针。其 Web 全栈 DAQ 把 HDF5、MDSplus、EPICS 与 REST API 统一起来，适合作为较小规模的诊断数据接口实验场。",
+      "primaryTasks": [
+        "DG0",
+        "DG1",
+        "DG2",
+        "DG4",
+        "DG5",
+        "DG6",
+        "DG7",
+        "DG11"
+      ],
+      "representativeWorks": [
+        "DG6-029",
+        "DG4-020"
+      ],
+      "representativeWorkSummaries": [
+        "15+ 类诊断、700+ DAQ 通道的统一时序",
+        "ECEI Web-based DAQ",
+        "HDF5/MDSplus/EPICS 的 RESTful unified access",
+        "高场侧偏滤器 Langmuir probe 升级",
+        "磁振动污染分析"
+      ],
+      "diagnosticSystems": [
+        "family: mhd-runaway；systems: dense magnetics；SXR/HXR；ECE/ECEI；fast visible cameras；measuredQuantities: MHD modes；thermal/runaway electrons；disruption dynamics；evidence: E3-E4/D3-D4；realTimeUse: 破裂/控制研究",
+        "family: daq-edge；systems: Web DAQ/REST；HDF5/MDSplus；EPICS；Langmuir probes；spectroscopy；measuredQuantities: raw/engineering data；edge Te/ne/flux；radiation；evidence: E4/D4 infrastructure；realTimeUse: central timing and unified access"
+      ],
+      "sensors": [
+        "magnetic arrays",
+        "SXR/HXR detectors",
+        "ECE/ECEI receivers",
+        "interferometry/polarimetry",
+        "visible cameras",
+        "Langmuir probes"
+      ],
+      "realTimeInterfaces": [
+        "J-TEXT CODAC/EPICS",
+        "central timing",
+        "REST API for control/status/data",
+        "MDSplus/HDF5 archive"
+      ],
+      "dataPlatform": [
+        "systems: J-TEXTDB/Web DAQ；HDF5；MDSplus；EPICS；access: 架构论文公开；装置数据服务访问规则需团队确认；evidence: peer-reviewed operational infrastructure papers"
+      ],
+      "papers": [
+        {
+          "title": "A full stack data acquisition, archive and access solution for J-TEXT based on web technologies",
+          "authors": "Wei Zheng; Yuxing Wang; Ming Zhang; Feiyang Wu; Zhou Yang",
+          "year": 2020,
+          "venue": "Fusion Engineering and Design",
+          "doi": "10.1016/j.fusengdes.2019.111450",
+          "url": "https://doi.org/10.1016/j.fusengdes.2019.111450",
+          "sourceType": "peer-reviewed deployed infrastructure paper"
+        },
+        {
+          "title": "The timing system on the J-TEXT tokamak",
+          "authors": "Wei Zheng; Ming Zhang; Ge Zhuang; Tonghai Ding; Fuqiang Huang; Lingjie Shan",
+          "year": 2014,
+          "venue": "Fusion Engineering and Design",
+          "doi": "10.1016/j.fusengdes.2013.10.014",
+          "url": "https://doi.org/10.1016/j.fusengdes.2013.10.014",
+          "sourceType": "peer-reviewed deployed timing paper"
+        },
+        {
+          "title": "The Reconstruction and Research Progress of the TEXT-U Tokamak in China",
+          "authors": "未完整列出",
+          "year": 2010,
+          "venue": "原始论文 / 官方来源",
+          "doi": null,
+          "url": "https://www-pub.iaea.org/mtcd/meetings/pdfplus/2010/cn180/cn180_papers/ov_p-8.pdf",
+          "sourceType": "IAEA device overview primary paper"
+        }
+      ],
+      "code": [
+        {
+          "name": "J-TEXT Web DAQ",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "source-or-facility-software",
+          "access": "closed-or-unconfirmed",
+          "relation": "接口和基准公开；未确认持续维护的公共生产仓库"
+        },
+        {
+          "name": "MDSplus/EPICS/HDF5",
+          "url": "https://github.com/MDSplus/mdsplus",
+          "status": "official-enabling",
+          "artifactType": "data-platform-or-interface",
+          "access": "open-or-public",
+          "relation": "公共依赖，不等于 J-TEXT configuration"
+        }
+      ],
+      "limitations": [
+        "论文描述的 deployed stack 仍需版本、认证、API 和权限审计",
+        "诊断几何/标定与 REST 元数据契约未完整公开",
+        "单机短脉冲数据模式到长脉冲/电厂需重新设计"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "FDP-DEV-002",
+      "name": "JET",
+      "type": "大型 D-T 托卡马克（已结束实验运行）",
+      "countryOrRegion": "欧洲 / 英国",
+      "operator": "UKAEA for EUROfusion（历史运行）",
+      "status": "2023 年结束实验；进入退役准备与数据再利用阶段",
+      "diagnosticSummary": "JET 的价值在于经过 D-T、ITER-like wall 和高功率场景考验的多诊断链：磁平衡、LIDAR/高分辨 Thomson、ECE、反射计、CXRS、可见/UV/X 射线、bolometer、质量谱以及中子相机/谱仪。当前应把它作为有氚运行、跨诊断校核和数据治理的历史基准，而非在线设施。",
+      "primaryTasks": [
+        "DG1",
+        "DG2",
+        "DG3",
+        "DG4",
+        "DG5",
+        "DG6",
+        "DG7",
+        "DG10"
+      ],
+      "representativeWorks": [
+        "PDT-012",
+        "PDT-014",
+        "DG2-007",
+        "DG3-011",
+        "DG4-019",
+        "DG5-023",
+        "DG7-039",
+        "DSI-001",
+        "DSI-009",
+        "DSI-023",
+        "DSI-032",
+        "DG1-001"
+      ],
+      "representativeWorkSummaries": [
+        "LIDAR Thomson 与 HR-TS/ECE/reflectometer 交叉一致性",
+        "D-T 中子相机、谱仪、活化与总产额监视",
+        "CXRS、bolometry、bremsstrahlung 与质量谱联合解释",
+        "实时数据网络和保护诊断"
+      ],
+      "diagnosticSystems": [
+        "family: profiles-spectroscopy；systems: LIDAR Thomson；high-resolution Thomson；ECE；reflectometry；CXRS；high-resolution spectroscopy；measuredQuantities: ne/Te；Ti/rotation；isotope ratio；impurities；evidence: E4/D4：长期装置与 D-T 实验；realTimeUse: 部分信号进入实时状态/保护",
+        "family: fusion-products；systems: neutron yield monitors；neutron camera；neutron spectrometers；gamma-ray diagnostics；activation；measuredQuantities: fusion rate；emissivity；fuel/fast-ion information；evidence: E4/D4：D-T campaigns；realTimeUse: 监视与保护/物理分析",
+        "family: radiation-edge；systems: bolometers；SXR；visible/VUV spectroscopy；IR/visible wall viewing；measuredQuantities: radiated power；MHD；wall/PFC state；evidence: E4/D4；realTimeUse: WALLS/RTPS 等历史链路"
+      ],
+      "sensors": [
+        "Thomson APD/PMT and spectrometers",
+        "ECE radiometers",
+        "bolometer arrays",
+        "scintillator/fission/activation detectors",
+        "spectroscopy cameras",
+        "magnetic coils"
+      ],
+      "realTimeInterfaces": [
+        "JET real-time data network",
+        "PPCC/RTCC/RTPS/WALLS 历史接口",
+        "装置已停机，实时能力是历史证据"
+      ],
+      "dataPlatform": [
+        "systems: JET PPF；MDSplus gateways；TRANSP netCDF/MDSplus trees；access: EUROfusion/项目权限为主；部分论文数据和接口文档公开；evidence: JET TRANSP 官方文档和 MDSplus gateway 文档"
+      ],
+      "papers": [
+        {
+          "title": "Status of the JET LIDAR Thomson scattering diagnostic",
+          "authors": "未完整列出",
+          "year": 2014,
+          "venue": "原始论文 / 官方来源",
+          "doi": null,
+          "url": "https://scientific-publications.ukaea.uk/papers/status-of-the-jet-lidar-thomson-scattering-diagnostic",
+          "sourceType": "peer-reviewed diagnostic status paper"
+        },
+        {
+          "title": "New diagnostic techniques and technologies at JET (invited)",
+          "authors": "A. Murari; B. Alper; L. Bertalot; J. H. Brzozowski; P. Coad; S. Conroy; E. De La Luna; G. Ericsson; H. G. Esser; S. Hacquin; J. Kaellne; V. Kiptily; et al. (17 authors)",
+          "year": 2006,
+          "venue": "Review of Scientific Instruments",
+          "doi": "10.1063/1.2336447",
+          "url": "https://doi.org/10.1063/1.2336447",
+          "sourceType": "peer-reviewed invited paper"
+        },
+        {
+          "title": "Deuterium density profile determination at JET using a neutron camera and a neutron spectrometer",
+          "authors": "未完整列出",
+          "year": 2024,
+          "venue": "原始论文 / 官方来源",
+          "doi": null,
+          "url": "https://scientific-publications.ukaea.uk/papers/deuterium-density-profile-determination-at-jet-using-a-neutron-cameraa-neutron-spectrometer",
+          "sourceType": "peer-reviewed primary analysis"
+        }
+      ],
+      "code": [
+        {
+          "name": "JET TRANSP MDSplus interface documentation",
+          "url": "https://transp.jetdata.eu/docs/Running%20Transp/Input/MDSplus/MDSplus.htm",
+          "status": "official-enabling",
+          "artifactType": "documentation",
+          "access": "open-or-public",
+          "relation": "说明 PPF/MDSplus/TRANSP 连接；不是完整 JET data release"
+        },
+        {
+          "name": "JET experimental data",
+          "url": "https://users.euro-fusion.org",
+          "status": "controlled-access",
+          "artifactType": "dataset",
+          "access": "controlled",
+          "relation": "合作访问；不能视为匿名开放数据"
+        }
+      ],
+      "limitations": [
+        "停机后的可复现依赖档案、软件和专家知识保全",
+        "诊断算法、标定和生产分支多数未公开",
+        "历史 D-T 成功不等于未来电厂辐照寿命或安全资格"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "FDP-DEV-011",
+      "name": "JT-60SA / JT-60U",
+      "type": "大型超导托卡马克 / 历史前身",
+      "countryOrRegion": "日本 / 欧洲",
+      "operator": "QST / Fusion for Energy",
+      "status": "JT-60SA 完成首等离子体后处于维护增强和后续运行准备；JT-60U 为历史数据来源",
+      "diagnosticSummary": "JT-60SA 研究计划把磁、Thomson、ECE、干涉/偏振、CXRS、MSE、反射计、SXR/bolometer、光谱、中子/快离子和偏滤器诊断分阶段部署；JT-60U 的 MSE、ECE、快离子、中子与剖面数据提供方法继承。当前必须区分规划清单、已安装 commissioning 与 JT-60U 历史能力。",
+      "primaryTasks": [
+        "DG0",
+        "DG1",
+        "DG2",
+        "DG3",
+        "DG4",
+        "DG5",
+        "DG6",
+        "DG7",
+        "DG11"
+      ],
+      "representativeWorks": [
+        "PDT-002",
+        "DSI-012"
+      ],
+      "representativeWorkSummaries": [
+        "JT-60SA Research Plan 的分阶段诊断矩阵",
+        "首等离子体磁/成像/基础剖面链",
+        "JT-60U MSE/ECE/fast-ion legacy",
+        "Doppler reflectometry 可行性设计"
+      ],
+      "diagnosticSystems": [
+        "family: planned-core；systems: magnetics；interferometry/polarimetry；Thomson；ECE；MSE/CXRS；reflectometry；measuredQuantities: equilibrium；ne/Te；q；Ti/rotation；turbulence；evidence: JT-60SA E1-E3/D1-D3; JT-60U historical E4；realTimeUse: 计划接入 plasma control/monitoring",
+        "family: radiation-particle-edge；systems: SXR/bolometer；spectroscopy；neutron/fast-ion diagnostics；IR/visible/divertor probes；measuredQuantities: radiation/impurity；fusion products；edge/PFC；evidence: 分阶段规划与部分 commissioning；realTimeUse: 按运行阶段逐步启用"
+      ],
+      "sensors": [
+        "magnetic coils",
+        "laser/microwave diagnostics",
+        "spectrometers",
+        "neutron/particle detectors",
+        "IR/visible cameras",
+        "edge probes"
+      ],
+      "realTimeInterfaces": [
+        "JT-60SA central control and real-time plasma control",
+        "central timing/data acquisition",
+        "interlock and diagnostic status"
+      ],
+      "dataPlatform": [
+        "systems: JT-60SA central data system；JT-60U/JT-60 data archive；access: experiment-team/collaboration; Research Plan public；evidence: QST/JT-60SA official plans and calls"
+      ],
+      "papers": [
+        {
+          "title": "JT-60SA Research Plan, Version 4.0",
+          "authors": "未完整列出",
+          "year": 2018,
+          "venue": "原始论文 / 官方来源",
+          "doi": null,
+          "url": "https://www.jt60sa.org/pdfs/JT-60SA_Res_Plan.pdf",
+          "sourceType": "official binational research plan"
+        },
+        {
+          "title": "A feasibility study for a Doppler Reflectometer System in the JT-60SA tokamak",
+          "authors": "未完整列出",
+          "year": 2026,
+          "venue": "原始论文 / 官方来源",
+          "doi": null,
+          "url": "https://arxiv.org/abs/2601.09906",
+          "sourceType": "diagnostic design preprint"
+        },
+        {
+          "title": "JT-60SA Experiment Team call: IC-OP1 analyses and activity towards operations 2, 3",
+          "authors": "未完整列出",
+          "year": 2026,
+          "venue": "原始论文 / 官方来源",
+          "doi": null,
+          "url": "https://www.jt60sa.org/wp/wp-content/uploads/2026/04/call_for_ET_2026.pdf",
+          "sourceType": "official operation status document"
+        }
+      ],
+      "code": [
+        {
+          "name": "JT-60SA/JT-60U diagnostic data",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "dataset",
+          "access": "controlled",
+          "relation": "运行主页不是数据 API；未发现全量匿名公共 shot API"
+        },
+        {
+          "name": "JT-60SA diagnostic production code",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "source-or-facility-software",
+          "access": "closed-or-unconfirmed",
+          "relation": "研究计划公开，生产实现未公开"
+        }
+      ],
+      "limitations": [
+        "规划清单不能标为已运行",
+        "JT-60U 几何、壁与硬件经验不能无条件迁移",
+        "JT-60SA 装置状态和 diagnostic commissioning 必须按 campaign 更新"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "FDP-DEV-005",
+      "name": "KSTAR",
+      "type": "全超导长脉冲托卡马克",
+      "countryOrRegion": "韩国",
+      "operator": "Korea Institute of Fusion Energy",
+      "status": "运行中的长脉冲研究装置",
+      "diagnosticSummary": "KSTAR 从首等离子体时期的磁、干涉、ECE、可见光谱与成像，扩展到 Thomson、ECEI、MSE、CXRS、反射计、SXR/bolometer、边界/快离子诊断。诊断 DAQ 通过 EPICS 与中央控制集成，脉冲数据进入 MDSplus；实时诊断和 PCS 的耦合已用于平衡、剖面与高性能场景研究。",
+      "primaryTasks": [
+        "DG0",
+        "DG1",
+        "DG2",
+        "DG3",
+        "DG4",
+        "DG5",
+        "DG6",
+        "DG7",
+        "DG11"
+      ],
+      "representativeWorks": [
+        "DSI-002",
+        "DG1-004",
+        "DG1-005",
+        "DG3-011",
+        "DG3-012",
+        "DG5-028",
+        "DG6-029",
+        "DG2-008",
+        "DG4-018",
+        "DG7-038",
+        "DSI-017"
+      ],
+      "representativeWorkSummaries": [
+        "ECEI 二维电子温度波动/MHD",
+        "MSE 电流剖面约束",
+        "Thomson 与 ECE/干涉交叉",
+        "EPICS+MDSplus 异构诊断 DAQ",
+        "实时诊断接入 PCS"
+      ],
+      "diagnosticSystems": [
+        "family: kinetic-mhd；systems: ECE/ECEI；Thomson；interferometer；MSE；magnetics；measuredQuantities: Te/ne；MHD structures；q/current profile；evidence: E4/D4；realTimeUse: 部分系统进入 PCS/状态估计",
+        "family: spectroscopy-edge；systems: CXRS；visible survey；H-alpha/filter scope；SXR/bolometry；IR/visible cameras；measuredQuantities: Ti/rotation/impurity；radiation；edge/PFC；evidence: E3-E4/D3-D4；realTimeUse: 按 campaign/系统",
+        "family: daq；systems: EPICS IOC；local/central timing；MDSplus archive；KDIS concepts；measuredQuantities: raw and processed diagnostics；engineering status；evidence: E4/D4；realTimeUse: 中央同步和 shot-cycle integration"
+      ],
+      "sensors": [
+        "magnetics",
+        "millimeter-wave interferometer",
+        "ECE/ECEI receivers",
+        "Thomson polychromators",
+        "MSE/CXRS optics",
+        "SXR/bolometers",
+        "cameras"
+      ],
+      "realTimeInterfaces": [
+        "KSTAR PCS",
+        "EPICS central control",
+        "timing network",
+        "MDSplus archive"
+      ],
+      "dataPlatform": [
+        "systems: MDSplus；EPICS Channel Archiver；relational logs/KDIS；access: 主要是 KSTAR collaboration；架构论文公开；evidence: KSTAR diagnostic DAQ papers"
+      ],
+      "papers": [
+        {
+          "title": "Data acquisition system implemented with various platforms for KSTAR diagnostic systems",
+          "authors": "Mikyung Park; Taegu Lee; Woongryol Lee; Hirofumi Yonekawa; Sulhee Baek; Jaesic Hong; Yeong-kook Oh; Jongha Lee; Hoonkyun Na; Myeun Kwon",
+          "year": 2010,
+          "venue": "Fusion Engineering and Design",
+          "doi": "10.1016/j.fusengdes.2009.10.007",
+          "url": "https://doi.org/10.1016/j.fusengdes.2009.10.007",
+          "sourceType": "peer-reviewed operational DAQ paper"
+        },
+        {
+          "title": "Development of KSTAR ECE imaging system for measurement of temperature fluctuations and edge density fluctuations",
+          "authors": "G. S. Yun; W. Lee; M. J. Choi; J. B. Kim; H. K. Park; C. W. Domier; B. Tobias; T. Liang; X. Kong; N. C. Luhmann; A. J. H. Donné",
+          "year": 2010,
+          "venue": "Review of Scientific Instruments",
+          "doi": "10.1063/1.3483209",
+          "url": "https://doi.org/10.1063/1.3483209",
+          "sourceType": "peer-reviewed diagnostic development"
+        },
+        {
+          "title": "Development of the EPICS-based data acquisition system for Thomson scattering diagnostic",
+          "authors": "Woongryol Lee; Mikyung Park; Jongha Lee; Sulhee Baek; Taegu Lee; Sangil Lee; Hanmin Wi; Sungtae Oh; Hoonkyun Na; Hyungshin Kim",
+          "year": 2011,
+          "venue": "Fusion Engineering and Design",
+          "doi": "10.1016/j.fusengdes.2011.03.006",
+          "url": "https://doi.org/10.1016/j.fusengdes.2011.03.006",
+          "sourceType": "peer-reviewed DAQ/diagnostic paper"
+        }
+      ],
+      "code": [
+        {
+          "name": "KSTAR MDSplus/EPICS DAQ",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "data-platform-or-interface",
+          "access": "controlled",
+          "relation": "论文 URL 已移入参考文献；MDSplus/EPICS 是通用使能平台，KSTAR 配置和数据受合作规则约束"
+        },
+        {
+          "name": "KSTAR diagnostic analysis",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "source-or-facility-software",
+          "access": "closed-or-unconfirmed",
+          "relation": "未发现完整公共生产仓库"
+        }
+      ],
+      "limitations": [
+        "首等离子体 DAQ 论文不能代表当前全部诊断清单和性能",
+        "生产配置、数据、标定与质量状态不公开",
+        "长脉冲和钨环境需要持续再标定和健康管理"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "FDP-DEV-016",
+      "name": "Large Helical Device (LHD)",
+      "type": "大型超导螺旋装置（非托卡马克参照）",
+      "countryOrRegion": "日本",
+      "operator": "National Institute for Fusion Science",
+      "status": "LHD 项目实验运行已完成；作为学术研究平台开放数据和诊断资源",
+      "diagnosticSummary": "LHD 在电子/离子剖面、ECE、干涉、重离子束探针、光谱、bolometer/SXR、中子/快离子、磁和边界成像方面积累丰富，最突出的数字孪生资产是官方 Fusion Diagnostic Data Repository：可按 shot/diagnostic 检索 raw/primarily processed/analyzed products，并有明确权利、联系人和引用 DOI。",
+      "primaryTasks": [
+        "DG0",
+        "DG2",
+        "DG3",
+        "DG4",
+        "DG5",
+        "DG6",
+        "DG7",
+        "DG10"
+      ],
+      "representativeWorks": [
+        "DG5-026",
+        "DG3-013"
+      ],
+      "representativeWorkSummaries": [
+        "按诊断名/shot 检索的开放 repository",
+        "Retrieve/dbStore/paraStore 数据链",
+        "数据在放电后小时级进入仓库",
+        "明确仪器人员协作、caveat 和引用规则"
+      ],
+      "diagnosticSystems": [
+        "family: plasma；systems: Thomson；ECE；interferometry；CXRS/spectroscopy；HIBP；bolometer/SXR；neutron/fast-ion；edge imaging/probes；measuredQuantities: ne/Te/Ti/flow；potential；radiation；fast ions；edge；evidence: E4/D4 historical operation；realTimeUse: system dependent; repository focuses experiment data",
+        "family: data；systems: LABCOM DAQ；Retrieve；dbStore/paraStore；Analyzed Data Repository；Open Data search；measuredQuantities: raw, primary processed, analyzed and shot-summary products；evidence: E4/D4 operational repository；realTimeUse: post-shot to near-hour availability"
+      ],
+      "sensors": [
+        "laser/microwave diagnostics",
+        "spectrometers",
+        "bolometer/SXR",
+        "neutron/particle detectors",
+        "magnetics",
+        "cameras/probes"
+      ],
+      "realTimeInterfaces": [
+        "LABCOM timing/DAQ",
+        "Retrieve API/tools",
+        "repository product pipeline"
+      ],
+      "dataPlatform": [
+        "systems: LHD Fusion Diagnostic Data Repository；LHD Analyzed Data Repository；LABCOM Retrieve/dbStore；access: public search/retrieval subject to rights and collaboration rules；evidence: NIFS official repository and terms"
+      ],
+      "papers": [
+        {
+          "title": "LHD analyzed data repository",
+          "authors": "未完整列出",
+          "year": 2026,
+          "venue": "原始论文 / 官方来源",
+          "doi": null,
+          "url": "https://www-lhd.nifs.ac.jp/pub/Repository_en.html",
+          "sourceType": "official data repository"
+        },
+        {
+          "title": "Rights and Terms of Use for LHD Data",
+          "authors": "未完整列出",
+          "year": 2026,
+          "venue": "原始论文 / 官方来源",
+          "doi": null,
+          "url": "https://www-lhd.nifs.ac.jp/pub/RightsTerms.html",
+          "sourceType": "official data policy"
+        },
+        {
+          "title": "LHD Open Data / Fusion Diagnostic Data Repository",
+          "authors": "未完整列出",
+          "year": 2026,
+          "venue": "原始论文 / 官方来源",
+          "doi": null,
+          "url": "https://w3.lhd.nifs.ac.jp/LHD_Opendata.htm",
+          "sourceType": "official open data portal"
+        }
+      ],
+      "code": [
+        {
+          "name": "LHD Experiment Data Repository",
+          "url": "https://doi.org/10.57451/lhd.analyzed-data",
+          "status": "official-enabling",
+          "artifactType": "dataset",
+          "access": "open-with-terms",
+          "relation": "可检索数据产品；发表需遵守咨询、caveat 和致谢规则"
+        },
+        {
+          "name": "Retrieve package and example scripts",
+          "url": "https://w3.lhd.nifs.ac.jp/en/Service/DataAccess/RetrieveManual-e.htm",
+          "status": "official-direct",
+          "artifactType": "source-or-facility-software",
+          "access": "open-or-public",
+          "relation": "官方访问工具；环境与旧格式依赖需管理"
+        }
+      ],
+      "limitations": [
+        "开放不等于无条件再发布，论文使用需与仪器负责人沟通",
+        "不同 campaign/诊断参数和格式版本不一",
+        "LHD 三维磁构型和非 D-T 环境限制向托卡马克电厂直接迁移"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "FDP-DEV-009",
+      "name": "MAST Upgrade",
+      "type": "球形托卡马克",
+      "countryOrRegion": "英国",
+      "operator": "UKAEA",
+      "status": "运行中的研究装置",
+      "diagnosticSummary": "MAST-U 诊断围绕 Super-X/先进偏滤器、球形环 MHD、快离子和高空间分辨剖面展开。磁诊断在升级后重建并完成 in-situ 标定；foil bolometer 使用 FPGA 采集并以合成诊断评估二维反演；Thomson、BES、CXRS、IR/可见、光谱和边界探针构成主要物理链。",
+      "primaryTasks": [
+        "DG0",
+        "DG1",
+        "DG2",
+        "DG3",
+        "DG4",
+        "DG5",
+        "DG6",
+        "DG7",
+        "DG9",
+        "DG11"
+      ],
+      "representativeWorks": [
+        "DG5-026",
+        "DG5-028",
+        "DG6-029",
+        "DG6-031",
+        "DG7-036",
+        "DG7-039",
+        "DSI-003",
+        "DG2-010",
+        "DSI-011",
+        "DSI-030",
+        "DSI-033"
+      ],
+      "representativeWorkSummaries": [
+        "102 个 flux loops 与 pickup/Rogowski 的磁诊断重建和不确定度标定",
+        "main-chamber/divertor foil bolometers + FPGA",
+        "bolometer synthetic diagnostic 与 2D reconstruction UQ",
+        "Super-X 辐射前沿、光谱、IR 和探针"
+      ],
+      "diagnosticSystems": [
+        "family: magnetic；systems: flux loops；pickup coils；Rogowski coils；instability arrays；measuredQuantities: equilibrium/current；MHD；evidence: E4/D4；realTimeUse: 机器保护、PCS 和物理",
+        "family: radiation-divertor；systems: foil bolometer arrays；divertor spectroscopy/imaging；IR thermography；Langmuir/reciprocating probes；measuredQuantities: radiation emissivity；detachment/front；heat load/edge state；evidence: E3-E4/D3-D4；realTimeUse: 实时前沿/排热研究逐步集成",
+        "family: profiles-fast-ion；systems: Thomson；BES；CXRS；FIDA/FILD；measuredQuantities: ne/Te；turbulence；Ti/rotation；fast ions；evidence: E3-E4/D3-D4；realTimeUse: system dependent"
+      ],
+      "sensors": [
+        "magnetic coils",
+        "foil bolometers and FPGA electronics",
+        "Thomson lasers/polychromators",
+        "spectrometers",
+        "IR/visible cameras",
+        "edge/fast-ion probes"
+      ],
+      "realTimeInterfaces": [
+        "GA PCS branch and MAST-U control",
+        "FPGA bolometer processing",
+        "UDA/MDSplus-like multi-machine access through collaboration"
+      ],
+      "dataPlatform": [
+        "systems: UDA；MAST-U facility archive；access: UKAEA collaboration; selected papers/data products public；evidence: UKAEA publications and research plan"
+      ],
+      "papers": [
+        {
+          "title": "Initial progress of the magnetic diagnostics of the MAST-U tokamak",
+          "authors": "D. A. Ryan; R. Martin; L. Appel; N. B. Ayed; L. Kogan; A. Kirk",
+          "year": 2023,
+          "venue": "Review of Scientific Instruments",
+          "doi": "10.1063/5.0156334",
+          "url": "https://doi.org/10.1063/5.0156334",
+          "sourceType": "peer-reviewed installed diagnostic paper"
+        },
+        {
+          "title": "Overview and first measurements of the MAST Upgrade bolometer diagnostic",
+          "authors": "未完整列出",
+          "year": 2023,
+          "venue": "原始论文 / 官方来源",
+          "doi": null,
+          "url": "https://scientific-publications.ukaea.uk/papers/overview-and-first-measurements-of-the-mast-upgrade-bolometer-diagnostic",
+          "sourceType": "peer-reviewed installed diagnostic paper"
+        },
+        {
+          "title": "MAST Upgrade Research Plan",
+          "authors": "未完整列出",
+          "year": 2019,
+          "venue": "原始论文 / 官方来源",
+          "doi": null,
+          "url": "https://ccfe.ukaea.uk/wp-content/uploads/2019/12/MAST-U_RP_2019_v1.pdf",
+          "sourceType": "official research plan"
+        }
+      ],
+      "code": [
+        {
+          "name": "MAST-U diagnostic and synthetic-bolometer code",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "source-or-facility-software",
+          "access": "on-request",
+          "relation": "论文已在参考文献列出；未找到持续公共生产仓库"
+        },
+        {
+          "name": "MAST-U data",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "dataset",
+          "access": "controlled",
+          "relation": "设施主页不是数据 API；需通过 UKAEA/实验团队合作获取"
+        }
+      ],
+      "limitations": [
+        "第一轮运行暴露 bolometer 电噪声和探测器失效机制",
+        "磁标定不确定度必须随硬件/维修版本保留",
+        "先进偏滤器诊断变量与反应堆尺度热通量间仍需模型外推"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "FDP-DEV-010",
+      "name": "NSTX-U",
+      "type": "球形托卡马克",
+      "countryOrRegion": "美国",
+      "operator": "Princeton Plasma Physics Laboratory / US DOE",
+      "status": "升级装置的调试与研究恢复阶段；具体 campaign 状态应查当期官方计划",
+      "diagnosticSummary": "NSTX/NSTX-U 形成了磁、Thomson、CHERS、MSE、reflectometry、BES、SXR、bolometer、中性粒子/快离子、IR/可见与边界探针数据体系。其突出价值是 MDSplus 同时组织原始、约化、分析和工程数据，并公开数据管理规则与 Web 工具；装置升级后各诊断的 commissioning 状态必须逐项核验。",
+      "primaryTasks": [
+        "DG0",
+        "DG1",
+        "DG2",
+        "DG3",
+        "DG4",
+        "DG5",
+        "DG6",
+        "DG7",
+        "DG10",
+        "DG11"
+      ],
+      "representativeWorks": [
+        "PDT-019",
+        "DSI-002",
+        "DG6-031",
+        "DG6-035",
+        "DSI-011",
+        "DSI-014"
+      ],
+      "representativeWorkSummaries": [
+        "MDSplus physics/engineering trees and Web Tools",
+        "raw-reduced-analyzed data治理与诊断负责人制度",
+        "Thomson/CHERS/MSE 和 TRANSP/NUBEAM 集成",
+        "fast camera CAMDATA 与 3D 时变影像"
+      ],
+      "diagnosticSystems": [
+        "family: profiles-fast-ion；systems: Thomson；CHERS；MSE；reflectometry；BES；FIDA/NPA/neutron；measuredQuantities: ne/Te/Ti/rotation；q；turbulence；fast ions；evidence: NSTX E4；NSTX-U varies E2-E4；realTimeUse: selected signals to PCS/analysis",
+        "family: data-governance；systems: MDSplus physics/engineering trees；EPICS archiver；CAMDATA；Physics Viewer/Web Scope/NERVE；measuredQuantities: raw/reduced/analyzed/engineering data；evidence: E4/D4 infrastructure；realTimeUse: shot cycle and web visualization"
+      ],
+      "sensors": [
+        "magnetics",
+        "laser Thomson",
+        "CHERS/MSE optics",
+        "microwave receivers",
+        "SXR/bolometers",
+        "neutron/particle detectors",
+        "fast/IR cameras"
+      ],
+      "realTimeInterfaces": [
+        "NSTX-U PCS",
+        "MDSplus action nodes/shot cycle",
+        "EPICS archiver for engineering operations"
+      ],
+      "dataPlatform": [
+        "systems: MDSplus；EPICS archiver；CAMDATA；NSTX-U Web Tools；Princeton Data Commons for selected publication data；access: team sharing plus public web tools/selected analyzed data; not all raw data anonymous；evidence: official NSTX-U data management plan"
+      ],
+      "papers": [
+        {
+          "title": "NSTX-U Data Management Plan",
+          "authors": "未完整列出",
+          "year": 2025,
+          "venue": "原始论文 / 官方来源",
+          "doi": null,
+          "url": "https://sites.google.com/a/pppl.gov/nstx-u/research/data-management-plan",
+          "sourceType": "official facility data policy"
+        },
+        {
+          "title": "MDSplus for NSTX-U",
+          "authors": "未完整列出",
+          "year": 2026,
+          "venue": "原始论文 / 官方来源",
+          "doi": null,
+          "url": "https://nstx.pppl.gov/software-tools/MDSplus/index.html",
+          "sourceType": "official facility technical documentation"
+        },
+        {
+          "title": "Overview of NSTX Software and MDSplus",
+          "authors": "未完整列出",
+          "year": 2013,
+          "venue": "原始论文 / 官方来源",
+          "doi": null,
+          "url": "https://nstx.pppl.gov/nstx-archive/Software/Overview/index.html",
+          "sourceType": "official facility archive documentation"
+        }
+      ],
+      "code": [
+        {
+          "name": "NSTX-U Web Tools",
+          "url": "https://nstx.pppl.gov/software-tools/WebTools/index.html",
+          "status": "official-enabling",
+          "artifactType": "data-platform-or-interface",
+          "access": "open-or-public",
+          "relation": "公开入口；后端数据权限因工具/数据级别而异"
+        },
+        {
+          "name": "MDSplus",
+          "url": "https://github.com/MDSplus/mdsplus",
+          "status": "official-enabling",
+          "artifactType": "data-platform-or-interface",
+          "access": "open-or-public",
+          "relation": "公共平台，不含 NSTX-U 全量数据和诊断算法"
+        }
+      ],
+      "limitations": [
+        "NSTX 历史成熟度不能自动转移到 NSTX-U 新硬件",
+        "不同数据级别的验证责任和共享条件不同",
+        "fast-camera 数据采用独立仓库，跨模态时钟/几何/元数据需额外治理"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "FDP-DEV-014",
+      "name": "SPARC",
+      "type": "高场紧凑 D-T 托卡马克（在建）",
+      "countryOrRegion": "美国",
+      "operator": "Commonwealth Fusion Systems / MIT collaboration",
+      "status": "建设、诊断制造与样机验证；尚无 SPARC plasma data",
+      "diagnosticSummary": "SPARC 以约五十套目标诊断支撑早期 Qfus>1、机器保护和 ARC 降风险。公开细节包括三类 X 射线系统、约四类中子系统、磁、干涉、ECE、光谱、可见/IR、粒子和工程传感；设计强调 12 T 磁场、D-T 中子、混凝土屏蔽、真空/氚边界和远距电子学。",
+      "primaryTasks": [
+        "DG0",
+        "DG1",
+        "DG2",
+        "DG3",
+        "DG4",
+        "DG5",
+        "DG6",
+        "DG7",
+        "DG8",
+        "DG9",
+        "DG11"
+      ],
+      "representativeWorks": [
+        "PDT-020",
+        "DSI-007",
+        "DG3-012",
+        "DG4-017",
+        "DG2-010",
+        "DG4-020",
+        "DSI-012"
+      ],
+      "representativeWorkSummaries": [
+        "early-campaign diagnostics systems engineering",
+        "in-vessel SXR tomography + ex-vessel HXR + XICS",
+        "neutron flux/activation/camera/MPR spectrometer",
+        "OpenMC diagnostic scoping",
+        "radiation/magnetic/thermal/vacuum prototype qualification"
+      ],
+      "diagnosticSystems": [
+        "family: xray；systems: in-vessel SXR tomography；ex-vessel HXR scintillators；X-ray crystal spectrometers；measuredQuantities: position/MHD/impurity；runaway electrons；Ti/rotation；evidence: E1-E2/D2-D3；realTimeUse: planned operation/protection roles",
+        "family: neutron；systems: ~15 flux monitors；two activation systems；spectrometric radial neutron camera；MPR spectrometer；measuredQuantities: fusion power；fluence；emissivity profile；core spectrum/Ti/fuel/fast ions；evidence: E1-E2/D2-D3 design/prototypes；realTimeUse: 10 ms target for selected measurements; no plasma validation",
+        "family: baseline；systems: magnetics；interferometry；ECE；visible/IR；spectroscopy；particle/gas diagnostics；measuredQuantities: equilibrium；ne/Te；wall/plasma state；composition；evidence: E1-E3 by subsystem；realTimeUse: planned PCS/machine protection"
+      ],
+      "sensors": [
+        "radiation-hard magnetics",
+        "X-ray diode/scintillator/crystal spectrometers",
+        "fission/ionization/proportional/diamond detectors",
+        "activation foils",
+        "MPR proton optics",
+        "IR/visible cameras"
+      ],
+      "realTimeInterfaces": [
+        "planned SPARC PCS/neutrino framework",
+        "diagnostic labs behind shielding",
+        "machine protection inputs",
+        "no SPARC plasma closed-loop evidence yet"
+      ],
+      "dataPlatform": [
+        "systems: CFS plant/data stack (not public)；publication datasets and modeling repositories；access: production data/configuration private; papers and selected model artifacts public；evidence: SPARC diagnostic overview papers"
+      ],
+      "papers": [
+        {
+          "title": "Overview of the early campaign diagnostics for the SPARC tokamak (invited)",
+          "authors": "M. L. Reinke; I. Abramovic; A. Albert; K. Asai; J. Ball; J. Batko; J. Brettingen; D. Brunner; M. Cario; J. Carmichael; C. Chrobak; A. Creely; et al. (87 authors)",
+          "year": 2024,
+          "venue": "Review of Scientific Instruments",
+          "doi": "10.1063/5.0218254",
+          "url": "https://doi.org/10.1063/5.0218254",
+          "sourceType": "peer-reviewed design/verification overview"
+        },
+        {
+          "title": "SPARC x-ray diagnostics: Technical and functional overview",
+          "authors": "D. Vezinet; C. J. Perks; E. Panontin; S. Normile; R. A. Tinguely; J. Rice; M. Reinke; M. Cario; J. Raimond; A. Hoffmann; E. Dubas; A. Saltos; et al. (13 authors)",
+          "year": 2024,
+          "venue": "Review of Scientific Instruments",
+          "doi": "10.1063/5.0219486",
+          "url": "https://doi.org/10.1063/5.0219486",
+          "sourceType": "peer-reviewed design paper"
+        },
+        {
+          "title": "Overview of the neutron diagnostic systems for the SPARC tokamak",
+          "authors": "P. Raj; J. L. Ball; J. Carmichael; J. A. Frenje; R. Gocht; G. Gorini; I. Holmes; M. Gatu Johnson; R. Kennedy; S. Mackie; M. Nocente; E. Panontin; et al. (22 authors)",
+          "year": 2024,
+          "venue": "Review of Scientific Instruments",
+          "doi": "10.1063/5.0219538",
+          "url": "https://doi.org/10.1063/5.0219538",
+          "sourceType": "peer-reviewed design/prototype paper"
+        }
+      ],
+      "code": [
+        {
+          "name": "OpenMC",
+          "url": "https://github.com/openmc-dev/openmc",
+          "status": "official-enabling",
+          "artifactType": "source-or-facility-software",
+          "access": "open-or-public",
+          "relation": "SPARC 诊断 scoping 使用的通用代码；SPARC detailed model may be controlled"
+        },
+        {
+          "name": "SPARC diagnostic production stack/data",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "source-or-facility-software",
+          "access": "closed-or-unconfirmed",
+          "relation": "未发现生产诊断与数据平台公共仓库"
+        }
+      ],
+      "limitations": [
+        "所有 SPARC plasma 诊断性能仍待首机验证",
+        "强场、D-T 中子、屏蔽和长电缆会改变噪声、增益和维护性",
+        "目标时间/空间/精度是设计要求，不是已实现统计"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "FDP-DEV-007",
+      "name": "TCV",
+      "type": "高灵活位形托卡马克",
+      "countryOrRegion": "瑞士",
+      "operator": "EPFL Swiss Plasma Center",
+      "status": "运行中的研究装置",
+      "diagnosticSummary": "TCV 有四十余套诊断，突出灵活端口、快速维护和与控制的紧耦合。两百余磁探针/磁通环、FIR、实时 Thomson、ECE、MPX、RADCAM/MANTIS、CXRS、DNBI、FIDA、边界探针和高速成像共同支持位形、剖面和先进偏滤器研究。",
+      "primaryTasks": [
+        "DG1",
+        "DG2",
+        "DG3",
+        "DG4",
+        "DG5",
+        "DG6",
+        "DG7",
+        "DG10",
+        "DG11"
+      ],
+      "representativeWorks": [
+        "DSI-002",
+        "DG6-035",
+        "DG7-039",
+        "DSI-001",
+        "DSI-016",
+        "DSI-031"
+      ],
+      "representativeWorkSummaries": [
+        "200+ 磁测量用于形状和 MHD",
+        "14 弦 FIR 快速密度",
+        "百余 polychromator Thomson、分析延迟低于 0.5 ms",
+        "RADCAM/MANTIS 辐射/偏滤器成像",
+        "诊断输入 RAPTOR/RAPDENS"
+      ],
+      "diagnosticSystems": [
+        "family: active；systems: FIR interferometer；incoherent Thomson；CXRS with DNBI；FIDA；developing CTS；measuredQuantities: line density；ne/Te；Ti/flow/impurity；fast ions；evidence: E3-E4/D3-D4；CTS 仍在开发；realTimeUse: FIR/TS 等进入实时状态和控制",
+        "family: passive；systems: 200+ magnetics；ECE；MPX/SXR；RADCAM/MANTIS；fast cameras；measuredQuantities: shape/MHD；Te；radiation/fronts；edge dynamics；evidence: E4/D4；realTimeUse: 多系统向 MARTe2/PCS 提供参数"
+      ],
+      "sensors": [
+        "flux loops/pickup coils/LTCC probes",
+        "FIR hot-electron bolometers",
+        "Nd:YAG Thomson/polychromators",
+        "ECE receivers",
+        "spectrometers",
+        "camera arrays",
+        "probes"
+      ],
+      "realTimeInterfaces": [
+        "MARTe2-based TCV control",
+        "RAPTOR/RAPDENS observers",
+        "MDSplus shot and real-time trees"
+      ],
+      "dataPlatform": [
+        "systems: MDSplus；TCV real-time trees；EPFL analysis routines；access: 合作/教学案例可访问；未发现全量匿名 shot repository；evidence: EPFL official diagnostics/control pages"
+      ],
+      "papers": [
+        {
+          "title": "TCV Diagnostics",
+          "authors": "未完整列出",
+          "year": 2026,
+          "venue": "原始论文 / 官方来源",
+          "doi": null,
+          "url": "https://www.epfl.ch/research/domains/swiss-plasma-center/tcv-diagnostics",
+          "sourceType": "official facility technical overview"
+        },
+        {
+          "title": "TCV Active Diagnostics",
+          "authors": "未完整列出",
+          "year": 2026,
+          "venue": "原始论文 / 官方来源",
+          "doi": null,
+          "url": "https://www.epfl.ch/research/domains/swiss-plasma-center/tcv-active-diagnostics",
+          "sourceType": "official facility system descriptions"
+        },
+        {
+          "title": "TCV Passive Diagnostics",
+          "authors": "未完整列出",
+          "year": 2026,
+          "venue": "原始论文 / 官方来源",
+          "doi": null,
+          "url": "https://www.epfl.ch/research/domains/swiss-plasma-center?p=5281",
+          "sourceType": "official facility system descriptions"
+        }
+      ],
+      "code": [
+        {
+          "name": "MARTe2",
+          "url": "https://vcis-gitlab.f4e.europa.eu/aneto/MARTe2",
+          "status": "official-enabling",
+          "artifactType": "data-platform-or-interface",
+          "access": "open-or-public",
+          "relation": "运行框架，不包含完整 TCV 诊断配置"
+        },
+        {
+          "name": "TCV data and diagnostics routines",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "source-or-facility-software",
+          "access": "controlled",
+          "relation": "官方系统介绍页已移入参考来源；生产数据/代码需合作且未发现统一公共仓库"
+        }
+      ],
+      "limitations": [
+        "灵活研究装置端口与维护条件优于电厂",
+        "实时诊断的延迟数字不能外推到所有系统",
+        "CTS 等系统仍是开发状态，不能写成例行能力"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "FDP-DEV-015",
+      "name": "Wendelstein 7-X",
+      "type": "优化仿星器（非托卡马克参照）",
+      "countryOrRegion": "德国",
+      "operator": "Max Planck Institute for Plasma Physics",
+      "status": "长脉冲实验、维护与后续 campaign 准备",
+      "diagnosticSummary": "W7-X 约四十五套诊断利用大量端口和三维磁构型，强调冗余物理原理、长脉冲连续采集和热事件自动识别。磁、Thomson、ECE、干涉、XICS/CXRS、bolometry、SXR、反射计、快离子、IR/visible/EDICAM 与边界探针共同构成长稳态参照；其 ArchiveDB/日志和 Web live monitoring 对数字孪生很有价值。",
+      "primaryTasks": [
+        "DG0",
+        "DG2",
+        "DG3",
+        "DG4",
+        "DG5",
+        "DG6",
+        "DG7",
+        "DG8",
+        "DG10",
+        "DG11"
+      ],
+      "representativeWorks": [
+        "PDT-006",
+        "PDT-018"
+      ],
+      "representativeWorkSummaries": [
+        "约 45 套诊断、同参数多原理冗余",
+        "长脉冲 IR thermography 自动热事件检测",
+        "Web-based live data/state/video monitoring",
+        "ArchiveDB/连续 DAQ",
+        "三维合成诊断/磁构型映射"
+      ],
+      "diagnosticSystems": [
+        "family: steady-state-plasma；systems: Thomson；ECE；interferometry；XICS/CXRS；bolometry/SXR；reflectometry；magnetics；measuredQuantities: ne/Te/Ti/flow；radiation；MHD/turbulence；configuration；evidence: E4/D4；realTimeUse: selected control/monitoring parameters",
+        "family: thermal-machine；systems: IR/visible endoscopes；EDICAM；water/calorimetry signals；superconducting coil protection；measuredQuantities: PFC temperature/thermal events；machine state；magnet health；evidence: E3-E4/D3-D4；realTimeUse: automatic event detection and protection preparation"
+      ],
+      "sensors": [
+        "laser/microwave diagnostics",
+        "X-ray and bolometer arrays",
+        "spectrometers",
+        "IR/visible cameras",
+        "magnetic/edge probes",
+        "cryogenic/magnet sensors"
+      ],
+      "realTimeInterfaces": [
+        "W7-X control/safety systems",
+        "continuous DAQ and ArchiveDB",
+        "web live monitoring",
+        "thermal-event algorithms"
+      ],
+      "dataPlatform": [
+        "systems: W7-X ArchiveDB；WebAPI/live monitoring；experiment programs/logbook；access: public APIs/selected datasets and collaboration access; exact product availability varies；evidence: official W7-X and peer-reviewed data-system papers"
+      ],
+      "papers": [
+        {
+          "title": "Overview of diagnostic performance and results for the first operation phase in Wendelstein 7-X (invited)",
+          "authors": "M. Krychowiak; A. Adnan; A. Alonso; T. Andreeva; J. Baldzuhn; T. Barbui; M. Beurskens; W. Biel; C. Biedermann; B. D. Blackwell; H. S. Bosch; S. Bozhenkov; et al. (102 authors)",
+          "year": 2016,
+          "venue": "Review of Scientific Instruments",
+          "doi": "10.1063/1.4964376",
+          "url": "https://doi.org/10.1063/1.4964376",
+          "sourceType": "peer-reviewed device diagnostic overview"
+        },
+        {
+          "title": "Observation of thermal events on the plasma facing components of Wendelstein 7-X",
+          "authors": "未完整列出",
+          "year": 2020,
+          "venue": "原始论文 / 官方来源",
+          "doi": null,
+          "url": "https://arxiv.org/abs/1910.04270",
+          "sourceType": "primary device thermography study"
+        },
+        {
+          "title": "Next generation web based live data monitoring for W7-X",
+          "authors": "Simon Dumke; Heike Riemann; Torsten Bluhm; Robil Daher; Michael Grahl; Martin Grün; Andreas Holtz; Jon Krom; Georg Kühner; Heike Laqua; Marc Lewerentz; Anett Spring; et al. (13 authors)",
+          "year": 2018,
+          "venue": "Fusion Engineering and Design",
+          "doi": "10.1016/j.fusengdes.2018.02.022",
+          "url": "https://doi.org/10.1016/j.fusengdes.2018.02.022",
+          "sourceType": "peer-reviewed deployed data-system paper"
+        }
+      ],
+      "code": [
+        {
+          "name": "W7-X ArchiveDB Web API",
+          "url": "https://archive-webapi.ipp-hgw.mpg.de",
+          "status": "official-enabling",
+          "artifactType": "data-platform-or-interface",
+          "access": "open-or-public",
+          "relation": "公开接口；数据产品和语义需按文档/合作规则解释"
+        },
+        {
+          "name": "W7-X diagnostic production code",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "source-or-facility-software",
+          "access": "controlled",
+          "relation": "系统介绍页不是源码；完整生产代码未发现统一公共仓库"
+        }
+      ],
+      "limitations": [
+        "三维几何使视线和磁面映射比轴对称托卡马克更复杂",
+        "长脉冲连续数据要求时间窗、状态段和标定事件可查询",
+        "W7-X 无 D-T 中子环境，不能替代燃烧电厂诊断辐照验证"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "FDP-DEV-008",
+      "name": "WEST",
+      "type": "长脉冲钨环境托卡马克",
+      "countryOrRegion": "法国",
+      "operator": "CEA-IRFM / EUROfusion",
+      "status": "运行中的长脉冲研究装置",
+      "diagnosticSummary": "WEST 的诊断重点是主动冷却钨偏滤器、长脉冲壁状态和稳态场景。红外壁监视、超高分辨率热成像、FBG/热电偶、可见/X 射线、ECEI、磁与核心剖面诊断一方面服务物理分析，另一方面通过 Wall Monitoring System 进入实时保护/功率退让。",
+      "primaryTasks": [
+        "DG0",
+        "DG1",
+        "DG2",
+        "DG4",
+        "DG6",
+        "DG7",
+        "DG8",
+        "DG9",
+        "DG11"
+      ],
+      "representativeWorks": [
+        "PDT-004",
+        "PDT-005",
+        "DSI-001",
+        "DG2-010",
+        "DG7-037",
+        "DSI-013"
+      ],
+      "representativeWorkSummaries": [
+        "红外 Wall Monitoring System 与 RF 退让",
+        "100 µm 级高分辨率 divertor thermography",
+        "FBG 在下偏滤器超过 2600 炮的温度数据库",
+        "CIVA/IR synthetic diagnostic 支持视线、遮挡和温度反演"
+      ],
+      "diagnosticSystems": [
+        "family: pfc-thermal；systems: wide-angle IR endoscopes；high-resolution IR endoscope；FBG/thermocouple arrays；visible cameras；measuredQuantities: surface temperature；hot spots；heat load/thermal events；evidence: E4/D4；realTimeUse: WMS → PCS/RF actuators",
+        "family: plasma；systems: magnetics；interferometry；ECE/ECEI；spectroscopy；X-ray/bolometry；measuredQuantities: equilibrium；ne/Te；MHD/radiation/impurity；evidence: E3-E4/D3-D4；ECEI commissioning history must be versioned；realTimeUse: selected parameters"
+      ],
+      "sensors": [
+        "IR/visible cameras and endoscopes",
+        "FBG and thermocouples",
+        "magnetic coils",
+        "ECE receivers",
+        "CdTe X-ray detector",
+        "spectrometers"
+      ],
+      "realTimeInterfaces": [
+        "WMS to central PCS",
+        "shared-memory/real-time imaging chain",
+        "verified RF command path for thermal protection"
+      ],
+      "dataPlatform": [
+        "systems: WEST facility archive；real-time WMS streams；access: collaboration access; papers/selected data public；evidence: CEA/IRFM primary reports and papers"
+      ],
+      "papers": [
+        {
+          "title": "WEST operation with real time feed back control based on wall component temperature toward machine protection in a steady state tungsten environment",
+          "authors": "未完整列出",
+          "year": 2021,
+          "venue": "原始论文 / 官方来源",
+          "doi": null,
+          "url": "https://arxiv.org/abs/2101.01914",
+          "sourceType": "primary device-operation preprint"
+        },
+        {
+          "title": "First temperature database achieved with Fiber Bragg Grating sensors in uncooled plasma facing components of the WEST lower divertor",
+          "authors": "Y. Corre; N. Chanet; R. Cotillard; J. Gaspar; G. Laffont; C. Pocheau; G. Caulier; C. Destouches; J-L. Gardarein; M. Firdaouss; M. Houry; M. Missirlian; et al. (14 authors)",
+          "year": 2021,
+          "venue": "Fusion Engineering and Design",
+          "doi": "10.1016/j.fusengdes.2021.112528",
+          "url": "https://doi.org/10.1016/j.fusengdes.2021.112528",
+          "sourceType": "peer-reviewed long-term diagnostic paper"
+        },
+        {
+          "title": "Surface temperature measurement from infrared synthetic diagnostic in preparation for ITER operations",
+          "authors": "M.-H. Aumeunier; A. Juven; J. Gerardin; C-M. B. Cisse; S. Pamela; R. Miorelli; C. Reboud; F. Retailleau; J. Marot; F. Rigollet; L. Marot",
+          "year": 2024,
+          "venue": "Nuclear Fusion",
+          "doi": "10.1088/1741-4326/ad5a1f",
+          "url": "https://doi.org/10.1088/1741-4326/ad5a1f",
+          "sourceType": "peer-reviewed synthetic diagnostic paper"
+        }
+      ],
+      "code": [
+        {
+          "name": "WEST WMS/IR processing",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "source-or-facility-software",
+          "access": "closed-or-unconfirmed",
+          "relation": "论文公开，生产代码未发现公共仓库"
+        },
+        {
+          "name": "CIVA IR synthetic diagnostic integration",
+          "url": "https://list.cea.fr/fr/19-septembre-2025-un-outil-developpe-pour-west-integre-dans-civa-reference-mondiale-du-controle-non-destructif",
+          "status": "commercial",
+          "artifactType": "commercial-software",
+          "access": "commercial-or-controlled-license",
+          "relation": "官方案例；不是开源工具"
+        }
+      ],
+      "limitations": [
+        "IR 温度受发射率、反射、沉积、遮挡和几何映射影响",
+        "FBG 需区分温度/应变交叉敏感与高温漂移",
+        "特定热保护统计不能代表全机可用率或安全等级"
+      ],
+      "asOf": "2026-08-12"
+    }
+  ]
+}

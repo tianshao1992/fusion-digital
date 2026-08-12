@@ -17,11 +17,12 @@
 
 ## 生成文件
 
-<!-- 若修改研究源数据，列出 research:ai / research:report 生成的文件。 -->
+<!-- 若修改研究源数据，列出对应的 research:ai / research:control / research:diagnostics 生成文件。 -->
 
 ## 验证
 
 - [ ] `npm run research:audit`（涉及调研数据时）
+- [ ] `npm run research:control:audit` / `npm run research:diagnostics:audit`（涉及对应知识域时）
 - [ ] `npm run check`
 - [ ] 新增/修改的外链已核对
 - [ ] 二进制报告或图片已人工检查

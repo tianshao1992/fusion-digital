@@ -35,11 +35,12 @@ npm ci
 npm run check
 ```
 
-修改智能原生源数据时还要运行：
+修改智能原生、控制或诊断源数据时还要运行相应生成器；诊断域使用：
 
 ```bash
 npm run research:ai
-git diff -- research/ai-native/sources public/data app/ai/aiResearch.ts public/fusion-ai-native-paper-code-index.csv
+npm run research:diagnostics
+git diff -- research/diagnostics public/data app/diagnostics/diagnosticsResearch.ts public/fusion-diagnostics-paper-code-index.csv public/fusion-diagnostics-references.bib
 ```
 
 如果重新生成 Word 报告：
@@ -47,6 +48,7 @@ git diff -- research/ai-native/sources public/data app/ai/aiResearch.ts public/f
 ```bash
 python -m pip install -r requirements-research.txt
 npm run research:report
+npm run research:diagnostics:report
 ```
 
 二进制报告无法通过普通文本 diff 审核。提交前应打开 Word 文件抽查目录、表格、图片、外链和分页，并在 Pull Request 中说明检查范围。

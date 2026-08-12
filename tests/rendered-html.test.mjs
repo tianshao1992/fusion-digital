@@ -34,6 +34,11 @@ test('ships non-empty reports and structured download assets', async () => {
     '../public/fusion-control-references.bib',
     '../public/data/fusion-control-landscape.json',
     '../public/data/fusion-control-device-profiles.json',
+    '../public/fusion-diagnostics-research-report.docx',
+    '../public/fusion-diagnostics-paper-code-index.csv',
+    '../public/fusion-diagnostics-references.bib',
+    '../public/data/fusion-diagnostics-landscape.json',
+    '../public/data/fusion-diagnostics-device-profiles.json',
     '../public/models/paramak-tokamak-demo/paramak-tokamak-demo.step',
     '../public/models/paramak-tokamak-demo/paramak-tokamak-demo.glb',
     '../public/models/paramak-tokamak-demo/paramak-tokamak-demo-poster.png',
@@ -81,6 +86,37 @@ test('ships non-empty reports and structured download assets', async () => {
     assert.ok(controlDevices.devices.some((device) => device.name.includes(name)), `missing device profile ${name}`);
   }
 
+  const diagnosticsLandscape = JSON.parse(
+    await readFile(new URL('../public/data/fusion-diagnostics-landscape.json', import.meta.url), 'utf8'),
+  );
+  const diagnosticsDevices = JSON.parse(
+    await readFile(new URL('../public/data/fusion-diagnostics-device-profiles.json', import.meta.url), 'utf8'),
+  );
+  assert.ok(diagnosticsLandscape.entries.length >= 90);
+  assert.equal(diagnosticsLandscape.statistics.total, diagnosticsLandscape.entries.length);
+  assert.equal(new Set(diagnosticsLandscape.entries.map((item) => item.id)).size, diagnosticsLandscape.entries.length);
+  assert.ok(diagnosticsLandscape.entries.every((item) => item.papers.length > 0));
+  assert.ok(diagnosticsLandscape.entries.every((item) => item.papers.every((paper) => paper.year > 0)));
+  assert.ok(diagnosticsLandscape.entries.every((item) => item.code.every((asset) => asset.status !== 'not-public' || asset.url === null)));
+  assert.deepEqual(
+    new Set(diagnosticsLandscape.entries.flatMap((item) => [item.primaryTask, ...item.relatedTasks])),
+    new Set(['DG0', 'DG1', 'DG2', 'DG3', 'DG4', 'DG5', 'DG6', 'DG7', 'DG8', 'DG9', 'DG10', 'DG11']),
+  );
+  assert.equal(diagnosticsLandscape.statistics.uniquePapers, 167);
+  assert.equal(diagnosticsLandscape.statistics.uniqueCodeAssets, 35);
+  const diagnosticById = Object.fromEntries(diagnosticsLandscape.entries.map((item) => [item.id, item]));
+  assert.match(diagnosticById['DSI-035'].title, /Tokamak Systems Monitor/);
+  assert.equal(diagnosticById['DSI-035'].evidenceLevel, 'E2');
+  assert.equal(diagnosticById['DSI-032'].deploymentLevel, 'D2');
+  assert.equal(diagnosticsDevices.statistics.total, diagnosticsDevices.devices.length);
+  assert.ok(diagnosticsDevices.devices.length >= 18);
+  for (const name of ['DIII-D', 'TCV', 'EAST', 'ITER', 'EXL-50U', 'EHL-2']) {
+    assert.ok(diagnosticsDevices.devices.some((device) => device.name.includes(name)), `missing diagnostics device profile ${name}`);
+  }
+  const exlDiagnostics = diagnosticsDevices.devices.find((device) => device.name.includes('EXL-50U'));
+  assert.match(exlDiagnostics.type, /中心螺线管/);
+  assert.doesNotMatch(exlDiagnostics.type, /^无中心螺线管/);
+
   const modelManifest = JSON.parse(
     await readFile(new URL('../public/models/paramak-tokamak-demo/model-manifest.json', import.meta.url), 'utf8'),
   );
@@ -98,6 +134,8 @@ test('server-renders the FusionDigital community portal', async () => {
   assert.match(html, /href="\/physics"/);
   assert.match(html, /href="\/engineering"/);
   assert.match(html, /href="\/control"/);
+  assert.match(html, /href="\/diagnostics"/);
+  assert.match(html, /href="\/diagnostics"[^>]*>诊断感知<\/a>/);
   assert.match(html, /href="\/ai"/);
   assert.match(html, /href="\/facilities"/);
   assert.match(html, /fusiondigital-mark\.png/);
@@ -122,7 +160,7 @@ test('server-renders the FusionDigital community portal', async () => {
   for (const baseline of ['AS-DESIGNED', 'AS-BUILT', 'AS-COMMISSIONED', 'AS-OPERATED', 'AS-MAINTAINED', 'AS-DECOMMISSIONED']) {
     assert.match(html, new RegExp(baseline));
   }
-  for (const domain of ['物理模拟', '工程仿真', '集成控制', '智能诊断', '能量转化', '辅机模拟', '人机交互', '数据基座', '总体集成', '智能原生']) {
+  for (const domain of ['物理模拟', '工程仿真', '集成控制', '诊断感知', '能量转化', '辅机模拟', '人机交互', '数据基座', '总体集成', '智能原生']) {
     assert.match(html, new RegExp(domain));
   }
   assert.match(html, /class="fusionTwinModuleDock"/);
@@ -148,7 +186,10 @@ test('server-renders the FusionDigital community portal', async () => {
   assert.match(html, /人机交互/);
   assert.match(html, /总体集成/);
   assert.match(html, /WHOLE-PLANT INTEGRATION/);
-  assert.match(html, /<b>04<\/b>已开放知识域/);
+  assert.match(html, /<b>05<\/b>已开放知识域/);
+  assert.match(html, /DIAGNOSTICS &amp; SENSING/);
+  assert.match(html, /诊断证据链/);
+  assert.doesNotMatch(html, /智能诊断|INTELLIGENT DIAGNOSTICS/);
   for (const figure of [
     'domain-physics-dark-image2.png',
     'domain-engineering-dark-image2.png',
@@ -187,6 +228,56 @@ test('server-renders the integrated-control and PCS research atlas', async () =>
   assert.match(html, /data-echart="control-task-timescale"/);
   assert.match(html, /data-echart="control-evidence-deployment-matrix"/);
   assert.match(html, /target="_blank"/);
+});
+
+test('server-renders the diagnostics and sensing research atlas', async () => {
+  const html = await htmlFor('/diagnostics');
+  assert.match(html, /诊断感知/);
+  assert.match(html, /DIAGNOSTICS &amp; SENSING/);
+  assert.match(html, /DG0/);
+  assert.match(html, /DG11/);
+  assert.match(html, /href="\/fusion-diagnostics-research-report\.docx"/);
+  assert.match(html, /href="\/data\/fusion-diagnostics-landscape\.json"/);
+  assert.match(html, /href="\/fusion-diagnostics-paper-code-index\.csv"/);
+  assert.match(html, /href="\/fusion-diagnostics-references\.bib"/);
+  assert.match(html, /href="\/data\/fusion-diagnostics-device-profiles\.json"/);
+  assert.match(html, /type="search"/);
+  assert.match(html, /EXL-50U/);
+  assert.match(html, /EHL-2/);
+  assert.match(html, /diagnostics-measurement-chain-nature\.png/);
+  assert.match(html, /diagnostics-synthetic-loop-nature\.png/);
+  assert.match(html, /diagnostics-digital-twin-architecture-nature\.png/);
+  assert.match(html, /aria-label="按 DG0 到 DG11 筛选诊断目录"/);
+  assert.match(html, /aria-label="按科学证据与部署责任筛选诊断目录"/);
+  assert.match(html, /href="\/diagnostics\?task=DG0#catalog"/);
+  assert.match(html, /href="\/diagnostics\?evidence=E4&amp;deployment=D4#catalog"/);
+  assert.match(html, /诊断工作科学证据与部署责任矩阵/);
+  assert.doesNotMatch(html, /fallbackAlt="聚变诊断实时治理与验证静态图"/);
+  for (const chart of [
+    'diagnostics-observation-model-decision-loop',
+    'diagnostics-task-coverage',
+    'diagnostics-evidence-deployment-matrix',
+    'diagnostics-nested-timescales',
+    'diagnostics-device-task-coverage',
+    'diagnostics-digital-twin-roadmap',
+  ]) assert.match(html, new RegExp(`data-echart="${chart}"`));
+  assert.match(html, /href="\/diagnostics"[^>]*class="active"[^>]*>诊断感知<\/a>|class="active"[^>]*href="\/diagnostics"[^>]*>诊断感知<\/a>/);
+  assert.match(html, /target="_blank"/);
+});
+
+test('server-renders and validates diagnostics catalog URL filters', async () => {
+  const filtered = await htmlFor('/diagnostics?task=DG1&evidence=E4&technique=MAGNETIC&device=DIII-D&code=official-direct&page=2&query=rtEFIT');
+  assert.match(filtered, /class="active" aria-pressed="true" title="磁平衡、电流与位形">DG1/);
+  assert.match(filtered, /value="MAGNETIC" selected=""/);
+  assert.match(filtered, /value="DIII-D" selected=""/);
+  assert.match(filtered, /value="E4" selected=""/);
+  assert.match(filtered, /value="official-direct" selected=""/);
+  assert.match(filtered, /type="search"[^>]*value="rtEFIT"|value="rtEFIT"[^>]*type="search"/);
+
+  const invalid = await htmlFor('/diagnostics?task=INVALID&evidence=E9&technique=NOPE&device=NoSuchDevice&code=oops&page=-5&query=Tokamak');
+  assert.match(invalid, /class="active" aria-pressed="true">全部/);
+  assert.doesNotMatch(invalid, /value="NoSuchDevice" selected/);
+  assert.match(invalid, /type="search"[^>]*value="Tokamak"|value="Tokamak"[^>]*type="search"/);
 });
 
 test('server-renders the physics simulation atlas', async () => {
@@ -246,7 +337,7 @@ test('server-renders the AI-native fusion digital twin research page', async () 
     'PHYSICS',
     'ENGINEERING',
     'INTEGRATED CONTROL',
-    'INTELLIGENT DIAGNOSTICS',
+    'DIAGNOSTICS &amp; SENSING',
     'ENERGY CONVERSION',
     'AUXILIARY SYSTEMS',
     'DATA FOUNDATION',

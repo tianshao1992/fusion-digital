@@ -10,7 +10,7 @@
 ## 2. 发布前条件
 
 - Pull Request 已合并，必要的科学和软件审核均完成。
-- `npm run research:ai` 没有产生未提交差异。
+- `npm run research:ai`、`npm run research:control` 与 `npm run research:diagnostics` 没有产生未提交差异。
 - `npm run check` 通过。
 - 关键报告、JSON、CSV 和图片存在且非空。
 - 公开站点内容已经完成敏感信息与第三方许可复核。

@@ -1,0 +1,1754 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-08-12",
+  "asOf": "2026-08-12",
+  "scope": "工程设备与聚变电厂状态诊断代表性工作；主分类 DG8，并关联 DG0 标定/健康和 DG11 实时决策。",
+  "evidenceScale": {
+    "E0": "需求、概念或架构，缺少足够动态结果",
+    "E1": "数值、合成数据验证或设计分析",
+    "E2": "实验室、标定台、样机或受控部件验证",
+    "E3": "真实装置离线分析、安装/调试或与独立诊断交叉验证",
+    "E4": "真实装置在线/实时或常规实验使用；不自动代表安全资格"
+  },
+  "deploymentScale": {
+    "D1": "概念或需求",
+    "D2": "软件、数值或实验室原型",
+    "D3": "安装、联调、回放、影子运行或 HIL",
+    "D4": "装置常规运行或正式工作流",
+    "D5": "有明确审批、配置责任、测试与生命周期证据的安全/保护关键用途"
+  },
+  "items": [
+    {
+      "id": "PDT-001",
+      "projectId": "iter-quench-detection",
+      "primaryTask": "DG8",
+      "relatedTasks": [
+        "DG0",
+        "DG11"
+      ],
+      "techniqueFamilies": [
+        "ENGINEERING_SENSOR",
+        "COMPUTATIONAL"
+      ],
+      "title": "ITER 超导磁体多通道失超探测与抗噪监视",
+      "titleEn": "Multi-channel quench detection and noise rejection for ITER superconducting magnets",
+      "technique": "差分电压桥式失超探测与冗余保护监视",
+      "problem": "大型超导线圈储能高，正常爬流的感应电压、强电磁噪声和长电缆可能掩盖小电阻电压；发现过迟会造成局部过热与绝缘损伤。",
+      "measurementPrinciple": "利用差分/桥式电压比较、冗余电压抽头、光隔离和高压信号调理监视正常区形成；把探测器状态、原始波形和触发阈值送至独立失超保护链。ITER 官方资料说明约三千个失超探测传感器的量级。",
+      "quantities": [
+        "线圈差分/桥路电压 [V]",
+        "线圈电流 [A]",
+        "局部温度 [K]",
+        "冷却回路压力 [Pa]",
+        "失超状态与触发时刻"
+      ],
+      "region": [
+        "magnet",
+        "cryogenic-system",
+        "plant"
+      ],
+      "hardware": [
+        "voltage taps",
+        "bridge circuits",
+        "current transducers",
+        "temperature/pressure sensors",
+        "high-voltage optical isolation"
+      ],
+      "calibration": "采用已知电压注入、桥路平衡、通道共模抑制测试和受控加热/模拟失超校核；阈值、滤波与配置需版本化。",
+      "inference": "桥路残差、持续时间、双通道符合和磁体状态机共同判定；最终保护动作保持在独立安全链。",
+      "devices": [
+        {
+          "name": "ITER",
+          "fit": "本工作所述系统、方法的目标装置或验证对象",
+          "validation": "传感器、电子学和信号调理的设计/样机/资格试验；尚无 ITER 磁体系统长期运行统计。"
+        }
+      ],
+      "validation": "传感器、电子学和信号调理的设计/样机/资格试验；尚无 ITER 磁体系统长期运行统计。",
+      "evidenceLevel": "E2",
+      "deploymentLevel": "D3",
+      "results": "建立高噪声、高共模电压环境下的多通道探测与冗余保护架构，并把可观测性纳入磁体系统集成。",
+      "timescale": "毫秒至秒，取决于线圈、正常区传播、滤波和保护动作",
+      "limitations": "电压阈值受 ramp rate、耦合和噪声影响；仅测电压难定位 HTS 慢传播热点；诊断触发与最终 QPC 安全职责必须隔离。",
+      "twinRelevance": "孪生应同步电磁—热—水力模型、传感器残差、阈值版本和保护动作回放，形成磁体健康数字线程。",
+      "papers": [
+        {
+          "title": "3,000 sensors for detecting the quench",
+          "year": 2013,
+          "url": "https://www.iter.org/node/20687/3000-sensors-detecting-quench",
+          "sourceType": "official ITER engineering report"
+        },
+        {
+          "title": "A High Voltage Signal Conditioner for the Quench Detection System of the ITER Superconducting Magnet",
+          "year": 2016,
+          "url": "https://yonsei.elsevierpure.com/en/publications/a-high-voltage-signal-conditioner-for-the-quench-detection-system/",
+          "sourceType": "peer-reviewed engineering paper"
+        }
+      ],
+      "code": [
+        {
+          "name": "ITER QDS production logic/configuration",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "production-software-or-configuration",
+          "access": "closed",
+          "relation": "公开文献描述功能与资格方法，未发现生产仓库。"
+        }
+      ],
+      "organizations": [
+        "ITER Organization"
+      ],
+      "tags": [
+        "quench",
+        "superconducting-magnet",
+        "protection",
+        "noise-rejection"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "PDT-002",
+      "projectId": "jt60sa-magnet-cryogenic-monitoring",
+      "primaryTask": "DG8",
+      "relatedTasks": [
+        "DG0",
+        "DG11"
+      ],
+      "techniqueFamilies": [
+        "ENGINEERING_SENSOR",
+        "COMPUTATIONAL"
+      ],
+      "title": "JT-60SA 磁体—低温联合状态监测与失超保护调试",
+      "titleEn": "Integrated magnet-cryogenic monitoring and quench protection commissioning on JT-60SA",
+      "technique": "磁体—低温联合状态监测与失超保护调试",
+      "problem": "磁体快放电/失超既威胁线圈，也给低温回路带来瞬态热负荷和压力上升；保护阈值过于保守又造成超过一天的恢复代价。",
+      "measurementPrinciple": "Magnet Controller 采集温度、压力和质量流量并控制氦流；相邻 TF 线圈桥式比较探测电阻增长，双路冗余触发 QPC；commissioning 通过受控加热线圈、分级电流和 pyrobreaker 试验验证链路。",
+      "quantities": [
+        "线圈差分电压 [V]",
+        "线圈电流 [A]",
+        "氦温度 [K]",
+        "压力 [Pa]",
+        "质量流量 [kg/s]",
+        "阀门与保护状态"
+      ],
+      "region": [
+        "magnet",
+        "cryogenic-system",
+        "plant"
+      ],
+      "hardware": [
+        "coil differential voltage",
+        "cryogenic temperature",
+        "pressure",
+        "mass flow",
+        "valve state"
+      ],
+      "calibration": "以受控加热线圈、桥路逐对触发、分级通流、pyrobreaker 与压力卸放试验校核端到端链路。",
+      "inference": "桥式电阻增长判据与低温温压流趋势联合解释，并由冗余状态机触发 QPC。",
+      "devices": [
+        {
+          "name": "JT-60SA",
+          "fit": "本工作所述系统、方法的目标装置或验证对象",
+          "validation": "真实磁体 commissioning：9 对失超探测器逐对触发、15 kA pyrobreaker 试验、低温压力卸放检查。"
+        }
+      ],
+      "validation": "真实磁体 commissioning：9 对失超探测器逐对触发、15 kA pyrobreaker 试验、低温压力卸放检查。",
+      "evidenceLevel": "E3",
+      "deploymentLevel": "D3",
+      "results": "验证了磁体、QPC、低温阀门和 quench tank 的联合响应；同时明确两级 interlock 对恢复时间的影响。",
+      "timescale": "快速失超触发为毫秒—秒；低温恢复为小时—天",
+      "limitations": "commissioning 的受控触发覆盖有限，不能代替多年运行统计；模型阈值依赖 FLOWER/HEATER/SUPERMAGNET 假设和传感器校准。",
+      "twinRelevance": "是快电保护、慢低温动态和维护恢复成本共同进入孪生决策的典型案例。",
+      "papers": [
+        {
+          "title": "Monitoring and control of the magnet system of JT-60SA",
+          "year": 2019,
+          "doi": "10.1016/j.fusengdes.2018.12.080",
+          "url": "https://doi.org/10.1016/j.fusengdes.2018.12.080",
+          "sourceType": "peer-reviewed design/commissioning paper",
+          "authors": "K. Fukui; K. Kamiy; K. Natsume; K. Kawano; T. Isono; K. Kizu; H. Murakami; K. Tsuchiya; R. Heller",
+          "venue": "Fusion Engineering and Design"
+        },
+        {
+          "title": "Toroidal field magnet energized",
+          "year": 2023,
+          "url": "https://www.jt60sa.org/wp/toroidal-field-magnet-energized/",
+          "sourceType": "official commissioning report"
+        }
+      ],
+      "code": [
+        {
+          "name": "JT-60SA Magnet Controller/QPC logic",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "production-software-or-configuration",
+          "access": "closed",
+          "relation": "生产逻辑与阈值未公开。"
+        }
+      ],
+      "organizations": [
+        "JT-60SA Project",
+        "QST",
+        "Fusion for Energy"
+      ],
+      "tags": [
+        "quench",
+        "cryogenics",
+        "commissioning",
+        "QPC"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "PDT-003",
+      "projectId": "east-coil-temperature-diagnostics",
+      "primaryTask": "DG8",
+      "relatedTasks": [
+        "DG0",
+        "DG11"
+      ],
+      "techniqueFamilies": [
+        "ENGINEERING_SENSOR",
+        "COMPUTATIONAL"
+      ],
+      "title": "EAST 超导线圈出口温度技术诊断与安全联锁",
+      "titleEn": "EAST superconducting-coil outlet temperature diagnostics and interlock",
+      "technique": "超导线圈出口低温温度诊断与联锁",
+      "problem": "超导线圈氦/氮出口温度异常可指示冷却不足或热负荷失常，需要连续采集并在阈值越界时触发保护。",
+      "measurementPrinciple": "PXI 采集氮温，Lake Shore 224 采集氦温；支持连续和脉冲采集，数据写入 MySQL/MDSplus，并向低温系统发布状态、向安全联锁输出故障。",
+      "quantities": [
+        "氦出口温度 [K]",
+        "氮出口温度 [K]",
+        "通道质量状态",
+        "故障/联锁状态"
+      ],
+      "region": [
+        "magnet",
+        "cryogenic-system",
+        "plant"
+      ],
+      "hardware": [
+        "cryogenic temperature sensors",
+        "PXI DAQ",
+        "Lake Shore monitors",
+        "status/fault I/O"
+      ],
+      "calibration": "温度传感器与采集链按参考温标校准，并通过连续/脉冲采集比对、通道零漂和联锁注入试验确认。",
+      "inference": "量程、变化率和阈值规则生成设备健康标志，并将故障发布给低温系统和独立联锁。",
+      "devices": [
+        {
+          "name": "EAST",
+          "fit": "本工作所述系统、方法的目标装置或验证对象",
+          "validation": "论文报告系统用于 2018 EAST campaign；早期磁体工程调试亦记录技术诊断/保护。"
+        }
+      ],
+      "validation": "论文报告系统在 2018 EAST 装置实验 campaign 在线使用；早期磁体工程调试亦记录技术诊断/保护。",
+      "evidenceLevel": "E4",
+      "deploymentLevel": "D4",
+      "results": "打通线圈温度—长期档案—低温运行—安全联锁链，提供可回放工程状态。",
+      "timescale": "连续慢监控叠加脉冲归档；阈值响应以设备热惯性为准",
+      "limitations": "出口温度是系统级滞后观测，不能独立定位局部热点；阈值、传感器漂移和通信故障需要独立诊断。",
+      "twinRelevance": "适合把热水力模型、传感器健康和联锁事件统一回放，验证异常提前量和误报代价。",
+      "papers": [
+        {
+          "title": "The Design of Data Acquisition System for EAST Technical Diagnostic System",
+          "year": 2018,
+          "url": "https://arxiv.org/abs/1806.10663",
+          "sourceType": "facility-team technical paper"
+        },
+        {
+          "title": "Technical diagnosis system for EAST tokamak",
+          "year": 2010,
+          "url": "https://www.sciencedirect.com/science/article/pii/S0920379610002796",
+          "sourceType": "peer-reviewed system paper"
+        }
+      ],
+      "code": [
+        {
+          "name": "EAST TDS DAQ/interlock application",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "production-software-or-configuration",
+          "access": "closed",
+          "relation": "论文描述架构，生产配置未公开。"
+        }
+      ],
+      "organizations": [
+        "Institute of Plasma Physics, Chinese Academy of Sciences"
+      ],
+      "tags": [
+        "temperature",
+        "cryogenics",
+        "interlock",
+        "MDSplus"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "PDT-004",
+      "projectId": "west-wall-monitoring-system",
+      "primaryTask": "DG8",
+      "relatedTasks": [
+        "DG7",
+        "DG9",
+        "DG11"
+      ],
+      "techniqueFamilies": [
+        "OPTICAL",
+        "COMPUTATIONAL"
+      ],
+      "title": "WEST 红外壁监视到射频功率退让的实时闭环",
+      "titleEn": "WEST infrared wall monitoring and RF power fallback loop",
+      "technique": "红外壁温监视、热点识别与射频功率退让",
+      "problem": "长脉冲钨环境中局部热点、弧光或对准偏差可快速损坏 PFC，需要从多相机影像识别超温并协调多个 RF 执行器。",
+      "measurementPrinciple": "实时 IR 采集、ROI/几何映射、温度阈值与事件分类将告警送入 Wall Monitoring System，再由 PCS 执行功率退让/停止；离线用合成 IR 和热模型解释反射/发射率。",
+      "quantities": [
+        "PFC 表面温度 [K]",
+        "热点位置 [pixel/mm]",
+        "ROI 最大温度 [K]",
+        "功率退让请求与时刻"
+      ],
+      "region": [
+        "first-wall",
+        "plasma-facing-component",
+        "plant"
+      ],
+      "hardware": [
+        "wide-angle IR cameras",
+        "high-resolution endoscope",
+        "camera health/status",
+        "RF actuator state"
+      ],
+      "calibration": "使用黑体/参考温源、相机非均匀性修正、视线几何配准和材料发射率假设；每次光学或壁状态变化后复核。",
+      "inference": "实时 ROI、热点连通域和持续时间判据生成经质量门控的功率退让请求。",
+      "devices": [
+        {
+          "name": "WEST",
+          "fit": "本工作所述系统、方法的目标装置或验证对象",
+          "validation": "WEST C4 campaign 真机实时运行与反馈；论文报告触发统计但不代表全机安全可用率。"
+        }
+      ],
+      "validation": "WEST C4 campaign 真机实时运行与反馈；论文报告触发统计但不代表全机安全可用率。",
+      "evidenceLevel": "E4",
+      "deploymentLevel": "D4",
+      "results": "证明图像诊断可以跨越几何/热解释进入实时机器保护性退让。",
+      "timescale": "视频帧至 10–100 ms 决策；PFC 热扩散为更慢尺度",
+      "limitations": "金属反射、发射率变化、沉积、遮挡和坏像素会造成假热点/漏检；阈值闭环不等于可证明安全。",
+      "twinRelevance": "要求几何光学、热模型、相机标定和执行器日志共用同一配置版本，是工程—物理孪生关键接口。",
+      "papers": [
+        {
+          "title": "WEST operation with real time feed back control based on wall component temperature toward machine protection in a steady state tungsten environment",
+          "year": 2021,
+          "url": "https://arxiv.org/abs/2101.01914",
+          "sourceType": "primary device-operation paper"
+        }
+      ],
+      "code": [
+        {
+          "name": "WEST WMS",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "production-software-or-configuration",
+          "access": "closed",
+          "relation": "生产图像处理、ROI 和 PCS 配置未公开。"
+        }
+      ],
+      "organizations": [
+        "CEA IRFM",
+        "WEST Team"
+      ],
+      "tags": [
+        "infrared",
+        "machine-protection",
+        "PFC",
+        "real-time-feedback"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "PDT-005",
+      "projectId": "west-divertor-fbg-temperature",
+      "primaryTask": "DG8",
+      "relatedTasks": [
+        "DG0",
+        "DG7"
+      ],
+      "techniqueFamilies": [
+        "ENGINEERING_SENSOR"
+      ],
+      "title": "WEST 下偏滤器 FBG 多点温度长期监测",
+      "titleEn": "Long-term multiplexed FBG temperature monitoring in the WEST lower divertor",
+      "technique": "FBG 多点偏滤器温度长期监测",
+      "problem": "强磁、真空和高温环境下大量热电偶布线复杂，且需要长期多点温度数据库评估 PFC 热历史。",
+      "measurementPrinciple": "在钨涂层石墨部件嵌入再生 FBG，每根光纤复用 11 个测点，并与热电偶和热模型交叉验证。",
+      "quantities": [
+        "Bragg 波长漂移 [pm]",
+        "PFC 温度 [K]",
+        "通道漂移与有效性",
+        "脉冲累计热历史"
+      ],
+      "region": [
+        "divertor",
+        "plasma-facing-component",
+        "plant"
+      ],
+      "hardware": [
+        "regenerated fiber Bragg gratings",
+        "thermocouples",
+        "optical interrogator"
+      ],
+      "calibration": "以受控温升、参考热电偶和解调器波长基准建立波长—温度曲线，并区分安装应变与长期漂移。",
+      "inference": "由补偿后的 Bragg 波长漂移反演温度，按脉冲与位置生成长期数据库。",
+      "devices": [
+        {
+          "name": "WEST",
+          "fit": "本工作所述系统、方法的目标装置或验证对象",
+          "validation": "超过 2600 个 WEST pulses 的装置数据库。"
+        }
+      ],
+      "validation": "超过 2600 个 WEST pulses 的装置数据库。",
+      "evidenceLevel": "E4",
+      "deploymentLevel": "D4",
+      "results": "显示 FBG 在高温、强磁、真空和长期运行中的可用性，同时揭示高温与稳定性限制。",
+      "timescale": "脉冲内热响应与 campaign 级累计漂移",
+      "limitations": "FBG 同时受温度、应变与封装影响；高温退火、谱峰重叠和辐照漂移需持续标定。",
+      "twinRelevance": "适合作为材料/PFC 资产孪生的低布线密度多点状态输入，并与 IR 表面温度互补。",
+      "papers": [
+        {
+          "title": "First temperature database achieved with Fiber Bragg Grating sensors in uncooled plasma facing components of the WEST lower divertor",
+          "year": 2021,
+          "doi": "10.1016/j.fusengdes.2021.112528",
+          "url": "https://doi.org/10.1016/j.fusengdes.2021.112528",
+          "sourceType": "peer-reviewed long-term device paper",
+          "authors": "Y. Corre; N. Chanet; R. Cotillard; J. Gaspar; G. Laffont; C. Pocheau; G. Caulier; C. Destouches; J-L. Gardarein; M. Firdaouss; M. Houry; M. Missirlian; et al. (14 authors)",
+          "venue": "Fusion Engineering and Design"
+        }
+      ],
+      "code": [
+        {
+          "name": "WEST FBG processing",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "production-software-or-configuration",
+          "access": "closed",
+          "relation": "光谱解调、补偿和数据库流水线未公开。"
+        }
+      ],
+      "organizations": [
+        "CEA IRFM",
+        "WEST Team"
+      ],
+      "tags": [
+        "FBG",
+        "temperature",
+        "divertor",
+        "long-pulse"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "PDT-006",
+      "projectId": "w7x-thermal-event-detection",
+      "primaryTask": "DG8",
+      "relatedTasks": [
+        "DG7",
+        "DG11"
+      ],
+      "techniqueFamilies": [
+        "OPTICAL",
+        "COMPUTATIONAL"
+      ],
+      "title": "W7-X 长脉冲热事件自动检测与图像数据库",
+      "titleEn": "Automated thermal-event detection and image database on W7-X",
+      "technique": "长脉冲红外热事件自动检测与事件数据库",
+      "problem": "稳态装置无法依赖操作员持续检查大量相机画面，反射、灰尘、热点和冷却异常需要自动分型。",
+      "measurementPrinciple": "多 IR 视场检测热事件、人工/规则标注事件数据库，并逐步以计算机视觉自动化；结果与组件几何、脉冲阶段和机器状态关联。",
+      "quantities": [
+        "PFC 表面温度 [K]",
+        "热事件位置与面积",
+        "事件持续时间 [s]",
+        "事件类别与置信度"
+      ],
+      "region": [
+        "first-wall",
+        "divertor",
+        "plasma-facing-component"
+      ],
+      "hardware": [
+        "IR cameras/endoscopes",
+        "visible cameras",
+        "cooling/calorimetry signals",
+        "machine event stream"
+      ],
+      "calibration": "进行相机辐射定标、坏像素/漂移修正、几何投影和发射率核查，并用人工复核事件集评估检出率。",
+      "inference": "热点分割、时序跟踪和规则/分类器生成事件记录；异常输出必须保留原图和质量标志。",
+      "devices": [
+        {
+          "name": "Wendelstein 7-X",
+          "fit": "本工作所述系统、方法的目标装置或验证对象",
+          "validation": "真实 W7-X campaign 热事件和图像数据库。"
+        }
+      ],
+      "validation": "真实 W7-X 装置 campaign 的在线热事件监测和图像数据库。",
+      "evidenceLevel": "E4",
+      "deploymentLevel": "D4",
+      "results": "把图像异常从事后浏览推进到长脉冲自动监测和实时保护准备。",
+      "timescale": "视频帧到分钟级长脉冲；数据库跨 campaign",
+      "limitations": "标签受专家判断和 camera configuration 影响；长脉冲 OOD、遮挡和反射需独立质量位。",
+      "twinRelevance": "影像、CAD/光线追迹、冷却状态和维护记录必须在同一资产坐标中关联。",
+      "papers": [
+        {
+          "title": "Observation of thermal events on the plasma facing components of Wendelstein 7-X",
+          "year": 2020,
+          "url": "https://arxiv.org/abs/1910.04270",
+          "sourceType": "primary device thermography study"
+        }
+      ],
+      "code": [
+        {
+          "name": "W7-X thermal event detector",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "production-software-or-configuration",
+          "access": "closed",
+          "relation": "事件库和生产算法未作为完整公共仓库发布。"
+        }
+      ],
+      "organizations": [
+        "Max Planck Institute for Plasma Physics",
+        "W7-X Team"
+      ],
+      "tags": [
+        "infrared",
+        "thermal-event",
+        "long-pulse",
+        "event-database"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "PDT-007",
+      "projectId": "east-divertor-fbg-strain",
+      "primaryTask": "DG8",
+      "relatedTasks": [
+        "DG0",
+        "DG7"
+      ],
+      "techniqueFamilies": [
+        "ENGINEERING_SENSOR"
+      ],
+      "title": "EAST 钨偏滤器 FBG 应变—温度监测研发",
+      "titleEn": "FBG strain-temperature monitoring R&D for the EAST tungsten divertor",
+      "technique": "FBG 应变—温度解耦与高热流组件监测",
+      "problem": "偏滤器承受电磁与热机械耦合载荷，需要在强电磁环境下测量应变/温度并减少电缆数量。",
+      "measurementPrinciple": "在钨单块/组件上布置 FBG，开展烘烤和高热流试验，以热电偶和 ANSYS/Fluent 结果交叉验证，并设计 EAST 安装方案。",
+      "quantities": [
+        "Bragg 波长漂移 [pm]",
+        "应变 [microstrain]",
+        "温度 [K]",
+        "FE/试验残差"
+      ],
+      "region": [
+        "divertor",
+        "plasma-facing-component",
+        "plant"
+      ],
+      "hardware": [
+        "femtosecond/regenerated FBG",
+        "thermocouples",
+        "strain references"
+      ],
+      "calibration": "在高热流台架上以参考热电偶、载荷/位移和无应变温度通道标定温度灵敏度、应变灵敏度及交叉敏感。",
+      "inference": "温度补偿后由波长漂移估计应变，并与热—结构有限元响应交叉验证。",
+      "devices": [
+        {
+          "name": "EAST divertor mock-up",
+          "fit": "本工作所述系统、方法的目标装置或验证对象",
+          "validation": "高热流台架和组件测试；部分论文为安装计划而非长期真机证据。"
+        },
+        {
+          "name": "planned/partial EAST integration",
+          "fit": "本工作所述系统、方法的目标装置或验证对象",
+          "validation": "高热流台架和组件测试；部分论文为安装计划而非长期真机证据。"
+        }
+      ],
+      "validation": "高热流台架和组件测试；部分论文为安装计划而非长期真机证据。",
+      "evidenceLevel": "E2",
+      "deploymentLevel": "D2",
+      "results": "在最高约 1000 °C 台架条件下与对称热电偶/有限元结果一致，展示多点复用优势。",
+      "timescale": "高热流瞬态至结构热循环",
+      "limitations": "温度—应变交叉敏感、封装传递函数和辐照效应尚需真机长期标定。",
+      "twinRelevance": "直接对应用户关心的力、位移、应变、应力与温度传感校核，可用于结构—热代理模型训练。",
+      "papers": [
+        {
+          "title": "Fibre Bragg grating sensors for fusion diagnostics: Temperature monitoring of a tungsten mono-block mock-up under high heat flux",
+          "year": 2020,
+          "doi": "10.1016/j.fusengdes.2019.111378",
+          "url": "https://doi.org/10.1016/j.fusengdes.2019.111378",
+          "sourceType": "peer-reviewed high-heat-flux test",
+          "authors": "Xingli Wang; Zhen Chen; Wanjing Wang; Yuping Xu; Qiang Li; Chunyi Xie; Jichao Wang; Zhongshi Yang; Guang-Nan Luo",
+          "venue": "Fusion Engineering and Design"
+        },
+        {
+          "title": "R&D of a strain monitoring system for the EAST tungsten divertor",
+          "year": 2017,
+          "url": "https://www.sciencedirect.com/science/article/pii/S2352179117300662",
+          "sourceType": "peer-reviewed engineering R&D"
+        }
+      ],
+      "code": [
+        {
+          "name": "FBG demodulation/FE comparison workflow",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "production-software-or-configuration",
+          "access": "closed",
+          "relation": "试验与仿真代码未公开。"
+        }
+      ],
+      "organizations": [
+        "Institute of Plasma Physics, Chinese Academy of Sciences"
+      ],
+      "tags": [
+        "FBG",
+        "strain",
+        "temperature",
+        "high-heat-flux"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "PDT-008",
+      "projectId": "tokamak-structural-rom",
+      "primaryTask": "DG8",
+      "relatedTasks": [
+        "DG0",
+        "DG9",
+        "DG11"
+      ],
+      "techniqueFamilies": [
+        "ENGINEERING_SENSOR",
+        "COMPUTATIONAL"
+      ],
+      "title": "大型托卡马克真空室电磁载荷—结构位移实时降阶监测",
+      "titleEn": "Reduced-order real-time monitoring of tokamak vessel displacement under electromagnetic loads",
+      "technique": "电磁—结构降阶模型的实时位移/应变估计",
+      "problem": "破裂/VDE 产生的涡流和 halo current 引起真空室/支撑位移与应力，高保真 IEM+FEM 难以实时执行，稀疏传感器也无法直接覆盖全场。",
+      "measurementPrinciple": "对电磁积分方程与有限元结构模型做 projection-based model order reduction，用少量载荷/状态输入重建关键位置位移、应变和应力；与全阶解比较。",
+      "quantities": [
+        "真空室位移 [m]",
+        "应变 [-]",
+        "应力 [Pa]",
+        "电磁载荷 [N/Nm]",
+        "ROM 误差与运行时间"
+      ],
+      "region": [
+        "vacuum-vessel",
+        "structure",
+        "plant"
+      ],
+      "hardware": [
+        "coil/plasma current",
+        "halo current estimates",
+        "strain gauges/FBG",
+        "displacement sensors",
+        "accelerometers"
+      ],
+      "calibration": "当前证据为全阶 IEM/FEM 数值基准；真实应用还需几何、材料、边界条件和位移/应变传感器零点的装置标定。",
+      "inference": "离线构建电磁与结构 ROM，在线由电流/载荷状态快速预测关键位置位移与应变，并报告相对全阶模型误差。",
+      "devices": [
+        {
+          "name": "large-scale tokamak models; device-specific validation pending",
+          "fit": "本工作所述系统、方法的目标装置或验证对象",
+          "validation": "数值全阶—降阶对比；公开证据不等于装置传感闭环。"
+        }
+      ],
+      "validation": "数值全阶—降阶对比；公开证据不等于装置传感闭环。",
+      "evidenceLevel": "E1",
+      "deploymentLevel": "D2",
+      "results": "给出把高保真电磁—结构求解压缩为实时状态估计服务的可行路线。",
+      "timescale": "破裂毫秒—秒；ROM 目标实时/近实时",
+      "limitations": "ROM 训练域、接触/间隙、塑性、支撑非线性和传感器偏置限制外推；必须经结构试验和真机事件验证。",
+      "twinRelevance": "是商业电磁/结构软件与实时代理模型之间的直接桥梁，适合第一阶段联合攻关。",
+      "papers": [
+        {
+          "title": "Reduced order modeling for real-time monitoring of structural displacements due to electromagnetic forces in large scale tokamaks",
+          "year": 2024,
+          "doi": "10.1088/1361-6587/ad7889",
+          "url": "https://doi.org/10.1088/1361-6587/ad7889",
+          "sourceType": "peer-reviewed numerical primary study",
+          "authors": "F Lucchini; A Frescura; R Torchio; P Alotto; P Bettini",
+          "venue": "Plasma Physics and Controlled Fusion"
+        }
+      ],
+      "code": [
+        {
+          "name": "IEM/FEM ROM implementation",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "production-software-or-configuration",
+          "access": "closed",
+          "relation": "未发现论文对应公开仓库。"
+        }
+      ],
+      "organizations": [
+        "University of Padova"
+      ],
+      "tags": [
+        "structural-health",
+        "electromagnetic-load",
+        "reduced-order-model",
+        "real-time"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "PDT-009",
+      "projectId": "textor-t10-vibration-monitoring",
+      "primaryTask": "DG8",
+      "relatedTasks": [
+        "DG0",
+        "DG1"
+      ],
+      "techniqueFamilies": [
+        "ENGINEERING_SENSOR",
+        "COMPUTATIONAL"
+      ],
+      "title": "TEXTOR/T-10 运行中部件振动与位移测量",
+      "titleEn": "In-operation vibration and displacement measurements on TEXTOR and T-10",
+      "technique": "抗电磁干扰的部件振动与位移测量",
+      "problem": "脉冲电磁载荷使线圈、真空室和内部部件振动，既影响结构寿命，也通过运动感生信号污染磁诊断。",
+      "measurementPrinciple": "开发线性可变电阻式位移/振动传感器和多通道 DAQ，覆盖 0.01–10 mm、最高约 1 kHz，并在装置脉冲中记录。",
+      "quantities": [
+        "振动位移幅值 [mm]",
+        "频率 [Hz]",
+        "相对位移 [mm]",
+        "与线圈电流/磁测量的相干性"
+      ],
+      "region": [
+        "vacuum-vessel",
+        "coil",
+        "structure"
+      ],
+      "hardware": [
+        "linear variable resistive displacement sensors",
+        "multi-channel analog DAQ"
+      ],
+      "calibration": "使用已知机械位移/振动输入和静态几何基准校核线性可变电阻传感器、模拟采集带宽和电磁敏感性。",
+      "inference": "时域峰值、频谱/模态和与电磁激励的相关分析识别结构响应及对磁诊断的污染。",
+      "devices": [
+        {
+          "name": "TEXTOR",
+          "fit": "本工作所述系统、方法的目标装置或验证对象",
+          "validation": "真实装置运行测量。"
+        },
+        {
+          "name": "T-10",
+          "fit": "本工作所述系统、方法的目标装置或验证对象",
+          "validation": "真实装置运行测量。"
+        }
+      ],
+      "validation": "真实装置运行测量。",
+      "evidenceLevel": "E4",
+      "deploymentLevel": "D4",
+      "results": "证明电磁载荷下部件位移/振动可直接测量，为磁传感器去耦和结构模型校核提供基准。",
+      "timescale": "亚毫秒采样、脉冲级振动衰减",
+      "limitations": "老装置、低辐照、传感器带宽和布置不能直接代表现代超导机；位移传感本身可能受电磁环境影响。",
+      "twinRelevance": "提示数字孪生需同时解释结构运动和磁测量共因误差，避免把传感器运动误识别为等离子体 MHD。",
+      "papers": [
+        {
+          "title": "Vibration measurements of the tokamaks components of TEXTOR and T-10 in operation",
+          "year": 2001,
+          "doi": "10.1016/s0920-3796(01)00433-1",
+          "url": "https://doi.org/10.1016/s0920-3796(01)00433-1",
+          "sourceType": "peer-reviewed primary device measurements",
+          "authors": "P.P Khvostenko; V.A Mikhailichenko; V.F Bogdanov; F.H Bohn; B Giesen; I.Yu Kucherenko; O Neubauer; G.E Notkin; M.M Sokolov; A.N Vertiporokh; S.N Vostrikov",
+          "venue": "Fusion Engineering and Design"
+        }
+      ],
+      "code": [
+        {
+          "name": "TEXTOR/T-10 vibration DAQ",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "production-software-or-configuration",
+          "access": "closed",
+          "relation": "历史硬件/软件未公开。"
+        }
+      ],
+      "organizations": [
+        "Kurchatov Institute",
+        "Forschungszentrum Juelich"
+      ],
+      "tags": [
+        "vibration",
+        "displacement",
+        "EMI",
+        "structural-health"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "PDT-010",
+      "projectId": "iter-drga",
+      "primaryTask": "DG8",
+      "relatedTasks": [
+        "DG0",
+        "DG4",
+        "DG11"
+      ],
+      "techniqueFamilies": [
+        "PROBE_SAMPLING",
+        "COMPUTATIONAL"
+      ],
+      "title": "ITER 诊断残余气体分析器的燃料、氦灰与杂质监测",
+      "titleEn": "ITER diagnostic residual gas analyzer for fuel, helium ash and impurities",
+      "technique": "诊断残余气体质量谱与燃料/氦灰/杂质反演",
+      "problem": "偏滤器/排气中的 D/T 比、He 灰和杂质既影响 plasma control，也反映真空、燃料循环和泄漏状态；单一质量谱技术在复杂混合物和强环境下可能歧义。",
+      "measurementPrinciple": "组合 quadrupole mass spectrometer、ion-trap mass spectrometer 和 optical Penning gauge，采用重叠量程与绝对/相对浓度校准。",
+      "quantities": [
+        "分压 [Pa]",
+        "D/T/He 浓度或比值",
+        "杂质组分",
+        "谱峰强度与不确定度"
+      ],
+      "region": [
+        "vacuum",
+        "fuel-cycle",
+        "plant"
+      ],
+      "hardware": [
+        "QMS",
+        "ion-trap mass spectrometer",
+        "optical Penning gauge",
+        "vacuum gauges"
+      ],
+      "calibration": "以已知组成和压力的标准混合气建立质量谱灵敏度/裂解矩阵，并验证真空、抽气和动态响应。",
+      "inference": "对重叠质量峰做响应矩阵解卷积与时间滤波，输出带质量标志的燃料比、氦灰和杂质估计。",
+      "devices": [
+        {
+          "name": "ITER prototype",
+          "fit": "本工作所述系统、方法的目标装置或验证对象",
+          "validation": "ORNL 原型系统和实验室测试；尚无 ITER plasma exhaust validation。"
+        }
+      ],
+      "validation": "ORNL 原型系统和实验室测试；尚无 ITER plasma exhaust validation。",
+      "evidenceLevel": "E2",
+      "deploymentLevel": "D2",
+      "results": "形成多技术冗余的 DRGA 原型，目标同时服务机器保护、基础控制和物理。",
+      "timescale": "秒级到过程监控尺度",
+      "limitations": "同质素/碎片谱重叠、取样管线延迟、壁记忆、污染和绝对校准会限制动态反演。",
+      "twinRelevance": "应把取样线路、真空容积、泵速和组分反应模型纳入测量算子，避免把分析仪读数当作等离子体边界瞬时真值。",
+      "papers": [
+        {
+          "title": "Description of the prototype diagnostic residual gas analyzer for ITER",
+          "year": 2014,
+          "doi": "10.1063/1.4892157",
+          "url": "https://doi.org/10.1063/1.4892157",
+          "sourceType": "peer-reviewed prototype paper",
+          "authors": "T. R. Younkin; T. M. Biewer; C. C. Klepper; C. Marcus",
+          "venue": "Review of Scientific Instruments"
+        }
+      ],
+      "code": [
+        {
+          "name": "ITER DRGA control/spectral analysis",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "production-software-or-configuration",
+          "access": "closed",
+          "relation": "原型硬件公开，生产分析代码未公开。"
+        }
+      ],
+      "organizations": [
+        "ITER Organization",
+        "Oak Ridge National Laboratory"
+      ],
+      "tags": [
+        "mass-spectrometry",
+        "fuel-ratio",
+        "helium-ash",
+        "vacuum"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "PDT-011",
+      "projectId": "fusion-water-leak-tracer",
+      "primaryTask": "DG8",
+      "relatedTasks": [
+        "DG0",
+        "DG7",
+        "DG11"
+      ],
+      "techniqueFamilies": [
+        "PROBE_SAMPLING",
+        "ENGINEERING_SENSOR"
+      ],
+      "title": "聚变堆冷却水内漏的示踪气体—质量谱定位",
+      "titleEn": "Tracer-gas mass-spectrometric localization of cooling-water leaks",
+      "technique": "水溶性示踪气体—四极杆质谱泄漏定位",
+      "problem": "真空室内水冷通道小泄漏难在运行后快速定位，水蒸气背景和多支路会掩盖源位置。",
+      "measurementPrinciple": "让 Kr 等可溶示踪气体随冷却水循环，泄漏进入真空后由 QMS 检出，利用输运延迟区分位置；另有 OH*/Xe 光谱定位概念。",
+      "quantities": [
+        "示踪气体峰电流 [A]",
+        "到达时间 [s]",
+        "泄漏率 [Pa m3/s]",
+        "估计泄漏位置 [m]"
+      ],
+      "region": [
+        "cooling-water",
+        "vacuum-vessel",
+        "plant"
+      ],
+      "hardware": [
+        "quadrupole mass spectrometer",
+        "tracer injection/concentration",
+        "flow/temperature/pressure",
+        "spectrometer optional"
+      ],
+      "calibration": "通过已知位置、已知泄漏率和受控水温/流量台架建立传输时延与质谱响应，并评估本底和 cryopump 影响。",
+      "inference": "根据示踪峰到达时间和冷却回路传输模型反演泄漏区段；公开台架精度不得外推为整机精度。",
+      "devices": [
+        {
+          "name": "ITER-relevant water-loop test",
+          "fit": "本工作所述系统、方法的目标装置或验证对象",
+          "validation": "水回路台架，两处相距 1 m 的 10^-3 Pa m3/s 级泄漏在特定工况下形成可分峰。"
+        }
+      ],
+      "validation": "水回路台架，两处相距 1 m 的 10^-3 Pa m3/s 级泄漏在特定工况下形成可分峰。",
+      "evidenceLevel": "E2",
+      "deploymentLevel": "D2",
+      "results": "展示在全循环水条件下定位微小内漏的可行性。",
+      "timescale": "几十秒至分钟，受水路长度、温度和泵速影响",
+      "limitations": "示踪溶解、壁吸附、多个并发泄漏、背景 QMS 峰和真实几何会破坏简单时间差定位；台架不能替代核设施资格。",
+      "twinRelevance": "把水路一维输运、真空泵送和传感器响应组合为泄漏定位孪生，可指导隔离和远程维护。",
+      "papers": [
+        {
+          "title": "Development of water leak detection method in fusion reactors using water-soluble gas",
+          "year": 2008,
+          "doi": "10.1016/j.fusengdes.2007.06.025",
+          "url": "https://doi.org/10.1016/j.fusengdes.2007.06.025",
+          "sourceType": "peer-reviewed component test",
+          "authors": "S. Hiroki; S. Tanzawa; T. Arai; T. Abe",
+          "venue": "Fusion Engineering and Design"
+        },
+        {
+          "title": "Spectroscopic localization of water leaks in ITER",
+          "year": 2013,
+          "url": "https://www.sciencedirect.com/science/article/pii/S0920379612005790",
+          "sourceType": "peer-reviewed design/simulation study"
+        }
+      ],
+      "code": [
+        {
+          "name": "leak transport/localization model",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "production-software-or-configuration",
+          "access": "closed",
+          "relation": "未发现公开实现。"
+        }
+      ],
+      "organizations": [
+        "Japan Atomic Energy Agency"
+      ],
+      "tags": [
+        "water-leak",
+        "tracer-gas",
+        "mass-spectrometry",
+        "localization"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "PDT-012",
+      "projectId": "jet-aghs-gas-chromatography",
+      "primaryTask": "DG8",
+      "relatedTasks": [
+        "DG0",
+        "DG4",
+        "DG11"
+      ],
+      "techniqueFamilies": [
+        "PROBE_SAMPLING",
+        "COMPUTATIONAL"
+      ],
+      "title": "JET 氚燃料循环在线气相色谱与物料衡算",
+      "titleEn": "JET tritium-fuel-cycle gas chromatography and material accountancy",
+      "technique": "在线气相色谱、氚过程组分与动态物料衡算",
+      "problem": "AGHS 需分析 H/D/T、氦和含氚杂质，支持同位素分离、回收、再供给与安全物料衡算。",
+      "measurementPrinciple": "中央 analytical GC 通过长取样管连接各子系统，使用 thermal-conductivity、flame-ionization 和 ionization-chamber detectors；建立校准因子、精度和最低检出限。",
+      "quantities": [
+        "氢同位素/杂质浓度",
+        "色谱保留时间 [s]",
+        "批次/流量",
+        "氚库存与衡算差"
+      ],
+      "region": [
+        "fuel-cycle",
+        "tritium-plant",
+        "plant"
+      ],
+      "hardware": [
+        "gas chromatographs",
+        "TCD",
+        "FID",
+        "ionization chambers",
+        "mass spectrometers"
+      ],
+      "calibration": "使用可追溯标准混合气、保留时间和响应因子校准，并以批次样品、流量计和库存记录进行交叉核对。",
+      "inference": "色谱峰识别/积分与过程流量、容器状态联合，形成带时间戳的组分和物料衡算。",
+      "devices": [
+        {
+          "name": "JET Active Gas Handling System",
+          "fit": "本工作所述系统、方法的目标装置或验证对象",
+          "validation": "DTE1 氚 commissioning 和运行，论文记录约 318 次分析；近期 D-T campaigns 形成更大运行经验。"
+        }
+      ],
+      "validation": "JET DTE1 氚装置 commissioning 和在线运行，论文记录约 318 次分析；近期 D-T campaigns 形成更大运行经验。",
+      "evidenceLevel": "E4",
+      "deploymentLevel": "D4",
+      "results": "证明复杂氚流程中多组分定量和中央实验室的运行价值。",
+      "timescale": "批次采样/分钟级分析与 campaign 物料衡算",
+      "limitations": "取样延迟、记忆效应、手工转移和测量不确定度影响动态 inventory；历史 JET 系统不能直接满足未来监管要求。",
+      "twinRelevance": "应将每次转移、容器状态、分析结果与不确定度写入守恒账本，做动态氚 inventory reconciliation。",
+      "papers": [
+        {
+          "title": "The analytical gas chromatographic system of the JET Active Gas Handling System — tritium commissioning and use during DTE1",
+          "year": 1999,
+          "doi": "10.1016/s0920-3796(99)00090-3",
+          "url": "https://doi.org/10.1016/s0920-3796(99)00090-3",
+          "sourceType": "peer-reviewed plant-operation paper",
+          "authors": "R. Lässer; A.C. Bell; B. Grieveson; J.L. Hemmerich; R. Stagg; G.V. Atkins",
+          "venue": "Fusion Engineering and Design"
+        },
+        {
+          "title": "JET Active Gas Handling System—operating experience and lessons learned from recent D-T campaigns",
+          "year": 2024,
+          "url": "https://publikationen.bibliothek.kit.edu/1000179367",
+          "sourceType": "facility-team primary operations paper"
+        }
+      ],
+      "code": [
+        {
+          "name": "JET AGHS process control/accountancy",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "production-software-or-configuration",
+          "access": "closed",
+          "relation": "生产 DCS、配方和账户数据库未公开。"
+        }
+      ],
+      "organizations": [
+        "UK Atomic Energy Authority",
+        "JET Team"
+      ],
+      "tags": [
+        "gas-chromatography",
+        "tritium",
+        "fuel-cycle",
+        "accountancy"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "PDT-013",
+      "projectId": "demo-raman-tritium-analysis",
+      "primaryTask": "DG8",
+      "relatedTasks": [
+        "DG0",
+        "DG11"
+      ],
+      "techniqueFamilies": [
+        "LASER",
+        "PROBE_SAMPLING",
+        "COMPUTATIONAL"
+      ],
+      "title": "DEMO 实时激光拉曼氚过程气体分析原型",
+      "titleEn": "Compact real-time laser Raman process-gas analysis prototype for DEMO tritium accountancy",
+      "technique": "实时激光拉曼过程气体分析与氚衡算原型",
+      "problem": "未来燃料循环流程多、存量大，离线取样无法及时闭合动态氚账户或控制同位素分离。",
+      "measurementPrinciple": "紧凑激光 Raman 单元远程测量氢同位素气体组分，在恒流浓度变化台架上测试 tracking，并面向在线 accountancy。",
+      "quantities": [
+        "Raman 峰位 [cm-1]",
+        "谱峰强度",
+        "氢同位素分子浓度",
+        "浓度不确定度与更新率"
+      ],
+      "region": [
+        "fuel-cycle",
+        "tritium-plant",
+        "plant"
+      ],
+      "hardware": [
+        "laser Raman spectrometer",
+        "flow/pressure/temperature",
+        "reference gas/calibration cell"
+      ],
+      "calibration": "以已知同位素混合气建立峰位、仪器响应和浓度标定曲线，并检查激光功率、光路和窗口漂移。",
+      "inference": "光谱基线扣除、峰拟合和响应因子换算得到多组分浓度，再进入动态物料衡算。",
+      "devices": [
+        {
+          "name": "DEMO fuel-cycle prototype",
+          "fit": "本工作所述系统、方法的目标装置或验证对象",
+          "validation": "原型台架；远程分析和浓度变化 tracking demonstration。"
+        }
+      ],
+      "validation": "原型台架；远程分析和浓度变化 tracking demonstration。",
+      "evidenceLevel": "E2",
+      "deploymentLevel": "D2",
+      "results": "证明用光学非接触方式构建紧凑动态氚组分监视的可行性。",
+      "timescale": "实时/准实时过程分析，秒—分钟",
+      "limitations": "光谱重叠、光路污染、辐照、流量/温压补偿和法规计量溯源仍待集成验证。",
+      "twinRelevance": "可把光谱反演、流量计量和守恒约束融合为燃料循环状态估计器。",
+      "papers": [
+        {
+          "title": "Development of a compact real-time process gas analysis system for tritium accountancy for a DEMO fusion reactor by an application of laser Raman spectroscopy",
+          "year": 2021,
+          "doi": "10.1016/j.fusengdes.2021.112502",
+          "url": "https://doi.org/10.1016/j.fusengdes.2021.112502",
+          "sourceType": "peer-reviewed prototype paper",
+          "authors": "Shigeru O’hira; Yuki Edao; Kanetsugu Isobe; Yasunori Iwai",
+          "venue": "Fusion Engineering and Design"
+        }
+      ],
+      "code": [
+        {
+          "name": "Raman concentration/accountancy software",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "production-software-or-configuration",
+          "access": "closed",
+          "relation": "校准和反演软件未公开。"
+        }
+      ],
+      "organizations": [
+        "Karlsruhe Institute of Technology"
+      ],
+      "tags": [
+        "Raman",
+        "tritium",
+        "process-analysis",
+        "accountancy"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "PDT-014",
+      "projectId": "jet-exhaust-detritiation-monitoring",
+      "primaryTask": "DG8",
+      "relatedTasks": [
+        "DG0",
+        "DG11"
+      ],
+      "techniqueFamilies": [
+        "PROBE_SAMPLING",
+        "ENGINEERING_SENSOR"
+      ],
+      "title": "JET 排气去氚系统腐蚀失效诊断与替换后运行监测",
+      "titleEn": "Corrosion diagnosis, replacement and monitoring of the JET exhaust detritiation system",
+      "technique": "排气去氚系统腐蚀失效诊断与替换后运行监测",
+      "problem": "含卤素意外进入催化重组器后生成酸，造成冷凝管路点蚀和穿透失效，威胁去氚和排放边界。",
+      "measurementPrinciple": "失效分析定位腐蚀机理，替换 EDS 并加入 Ca(OH)2 酸钝化子系统；commissioning 测试进出口酸和 detritiation factor，运行中持续监视。",
+      "quantities": [
+        "过程温度/压力/流量",
+        "气体与水分组分",
+        "腐蚀/泄漏状态",
+        "去氚效率与可用率"
+      ],
+      "region": [
+        "exhaust-detritiation",
+        "fuel-cycle",
+        "plant"
+      ],
+      "hardware": [
+        "gas composition",
+        "tritium monitors",
+        "acid detection/sampling",
+        "pressure/flow/temperature",
+        "corrosion inspection"
+      ],
+      "calibration": "过程仪表按工厂程序校验，并通过材料检查、泄漏试验、commissioning 物料平衡和替换前后趋势核对。",
+      "inference": "过程趋势、物料衡算和设备状态残差用于定位腐蚀、堵塞或效率退化；公开证据未给出通用预测模型。",
+      "devices": [
+        {
+          "name": "JET Active Gas Handling System",
+          "fit": "本工作所述系统、方法的目标装置或验证对象",
+          "validation": "替换系统的 commissioning 与最近 D-T campaigns 运行。"
+        }
+      ],
+      "validation": "替换系统的 commissioning 与最近 D-T campaigns 运行。",
+      "evidenceLevel": "E4",
+      "deploymentLevel": "D4",
+      "results": "试验中钝化柱出口酸低于检出限，并报告运行性能与故障经验。",
+      "timescale": "过程分钟—小时；腐蚀为 campaign/寿命尺度",
+      "limitations": "特定卤素事件和化学工艺不能泛化为所有腐蚀模式；在线腐蚀速率与剩余寿命仍需模型/检验结合。",
+      "twinRelevance": "展示异常事件—根因—设计变更—commissioning—性能指标闭环，是资产孪生和经验复用的范例。",
+      "papers": [
+        {
+          "title": "JET Exhaust Detritiation System replacement—design, commissioning, and operation",
+          "year": 2023,
+          "url": "https://scientific-publications.ukaea.uk/papers/jet-exhaust-detritiation-system-replacement-design-commissioning-and-operation/",
+          "sourceType": "peer-reviewed plant commissioning/operation paper"
+        }
+      ],
+      "code": [
+        {
+          "name": "JET EDS control and monitoring",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "production-software-or-configuration",
+          "access": "closed",
+          "relation": "生产流程和 historian 未公开。"
+        }
+      ],
+      "organizations": [
+        "UK Atomic Energy Authority",
+        "JET Team"
+      ],
+      "tags": [
+        "detritiation",
+        "corrosion",
+        "fuel-cycle",
+        "condition-monitoring"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "PDT-015",
+      "projectId": "iter-remote-inspection-maintenance",
+      "primaryTask": "DG8",
+      "relatedTasks": [
+        "DG0",
+        "DG7",
+        "DG11"
+      ],
+      "techniqueFamilies": [
+        "OPTICAL",
+        "ENGINEERING_SENSOR",
+        "COMPUTATIONAL"
+      ],
+      "title": "ITER 在役远程视觉、计量与诊断维护",
+      "titleEn": "ITER in-vessel remote viewing, metrology and diagnostic maintenance",
+      "technique": "在役远程视觉、几何计量与机器人维护诊断",
+      "problem": "D-T 后活化和氚污染使人员无法进入，需在低可视、辐照、真空和狭窄空间中检查 PFC、定位缺陷并维护诊断。",
+      "measurementPrinciple": "IVVS、多用途部署器、转运/热室系统与 eye-in-hand 视觉/三维标记完成检查和计量；通过全尺寸 mock-up、远程连接器和维护流程试验验证。",
+      "quantities": [
+        "部件位姿 [m/rad]",
+        "尺寸/间隙 [mm]",
+        "图像缺陷与污染",
+        "机器人关节/载荷状态",
+        "任务与证据状态"
+      ],
+      "region": [
+        "in-vessel",
+        "remote-maintenance",
+        "plant"
+      ],
+      "hardware": [
+        "radiation-tolerant cameras",
+        "structured/marker vision",
+        "joint encoders",
+        "force/torque",
+        "tool status",
+        "metrology targets"
+      ],
+      "calibration": "以相机内外参、机器人运动学、计量基准件和全尺寸 mock-up 校准，并对连接器/工具重复定位和辐照后漂移复验。",
+      "inference": "视觉配准、尺寸/间隙判据、变化检测与机器人状态一致性检查支持人工审批；自动化边界取决于已验证算法。",
+      "devices": [
+        {
+          "name": "ITER remote handling prototypes",
+          "fit": "本工作所述系统、方法的目标装置或验证对象",
+          "validation": "设计、部件样机和全尺寸关键接口/载荷演示；尚无活化 ITER in-vessel operation。"
+        },
+        {
+          "name": "RACE mock-ups",
+          "fit": "本工作所述系统、方法的目标装置或验证对象",
+          "validation": "设计、部件样机和全尺寸关键接口/载荷演示；尚无活化 ITER in-vessel operation。"
+        }
+      ],
+      "validation": "设计、部件样机和全尺寸关键接口/载荷演示；尚无活化 ITER in-vessel operation。",
+      "evidenceLevel": "E2",
+      "deploymentLevel": "D2",
+      "results": "验证诊断端口 plug 和重载远程操作的关键兼容性，形成 inspection/maintenance architecture。",
+      "timescale": "脉冲间检查、停堆维护小时—月",
+      "limitations": "mock-up 无法完全覆盖辐照、污染、视野退化、长时延和罕见 recovery；人的授权和应急接管不可省略。",
+      "twinRelevance": "需要 as-maintained CAD、辐照剂量、可达性、工具/机器人健康和步骤证据共同驱动维护孪生。",
+      "papers": [
+        {
+          "title": "The remote handling systems for ITER",
+          "year": 2011,
+          "doi": "10.1016/j.fusengdes.2011.01.138",
+          "url": "https://doi.org/10.1016/j.fusengdes.2011.01.138",
+          "sourceType": "peer-reviewed system design paper",
+          "authors": "Isabel Ribeiro; Carlo Damiani; Alessandro Tesini; Satoshi Kakudate; Mikko Siuko; Carlo Neri",
+          "venue": "Fusion Engineering and Design"
+        },
+        {
+          "title": "Design and Prototyping of Remote Handling Electrical Connector for Diagnostic Rack in ITER",
+          "year": 2023,
+          "url": "https://www.jspf.or.jp/PFR/PFR_articles/pfr2023/pfr2023_18-1405070.html",
+          "sourceType": "peer-reviewed component prototype"
+        },
+        {
+          "title": "Remote handling confirmed",
+          "year": 2018,
+          "url": "https://www.iter.org/node/20687/remote-handling-confirmed",
+          "sourceType": "official mock-up test report"
+        }
+      ],
+      "code": [
+        {
+          "name": "ITER RH/IVVS control and digital work instructions",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "production-software-or-configuration",
+          "access": "closed",
+          "relation": "生产机器人、视觉和流程软件受控。"
+        }
+      ],
+      "organizations": [
+        "ITER Organization"
+      ],
+      "tags": [
+        "remote-handling",
+        "robotics",
+        "metrology",
+        "visual-inspection"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "PDT-016",
+      "projectId": "iter-cooling-water-monitoring",
+      "primaryTask": "DG8",
+      "relatedTasks": [
+        "DG0",
+        "DG11"
+      ],
+      "techniqueFamilies": [
+        "PROBE_SAMPLING",
+        "ENGINEERING_SENSOR",
+        "COMPUTATIONAL"
+      ],
+      "title": "ITER 冷却水系统的热工、水化学、氚与环境排放监测",
+      "titleEn": "Thermal-hydraulic, chemistry, tritium and discharge monitoring for ITER cooling water",
+      "technique": "冷却水热工、水化学、氚与环境排放综合监测",
+      "problem": "多级闭式换热和开放式排热系统需监视巨大流量、温压、水化学与氚，既保障设备冷却也满足环境排放边界。",
+      "measurementPrinciple": "在 TCWS/CCWS/HRS 测量 flow、temperature、pressure 和设备状态；排放控制池检测温度、pH、hydrocarbon、chloride、sulphate 与 tritium，越界禁止排放。",
+      "quantities": [
+        "温度 [K]",
+        "压力 [Pa]",
+        "流量 [kg/s]",
+        "电导率/pH/溶解组分",
+        "氚活度 [Bq]",
+        "排放量"
+      ],
+      "region": [
+        "cooling-water",
+        "heat-rejection",
+        "plant"
+      ],
+      "hardware": [
+        "flowmeters",
+        "temperature/pressure",
+        "pH/conductivity/ion chemistry",
+        "hydrocarbon analyzers",
+        "tritium monitors"
+      ],
+      "calibration": "流量、温压、水化学和辐射监测器需按核设施计量链校准，并以取样实验室、质量/能量衡算和功能试验交叉验证。",
+      "inference": "质量/能量衡算、化学限值、泄漏/氚趋势和排放许可规则联合产生状态与报警；安全职责保持独立。",
+      "devices": [
+        {
+          "name": "ITER cooling-water plant",
+          "fit": "本工作所述系统、方法的目标装置或验证对象",
+          "validation": "官方系统设计/建设要求；截至报告日期尚无核运行性能证据。"
+        }
+      ],
+      "validation": "官方系统设计/建设要求；截至报告日期尚无核运行性能证据。",
+      "evidenceLevel": "E1",
+      "deploymentLevel": "D2",
+      "results": "定义从约 33 m3/s 循环水到受监管 blowdown 的多层监测对象和控制边界。",
+      "timescale": "秒—分钟过程控制；脉冲热负荷与季节性水质尺度",
+      "limitations": "官方设计参数不是运行统计；传感器冗余、校准、SIL/核安全分级和在线质量控制需项目文件确认。",
+      "twinRelevance": "电厂孪生需将 plasma pulse heat、组件热容、回路动态、冷却塔和排放许可统一计算，并保留测量不确定度。",
+      "papers": [
+        {
+          "title": "ITER Cooling Water",
+          "year": 2026,
+          "url": "https://www.iter.org/machine/supporting-systems/cooling-water",
+          "sourceType": "official system description"
+        }
+      ],
+      "code": [
+        {
+          "name": "ITER TCWS/CCWS/HRS I&C",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "production-software-or-configuration",
+          "access": "closed",
+          "relation": "生产 I&C 和 historian 未公开。"
+        }
+      ],
+      "organizations": [
+        "ITER Organization"
+      ],
+      "tags": [
+        "cooling-water",
+        "water-chemistry",
+        "tritium",
+        "environmental-monitoring"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "PDT-017",
+      "projectId": "eu-demo-bop-condition-monitoring-gap",
+      "primaryTask": "DG8",
+      "relatedTasks": [
+        "DG0",
+        "DG11"
+      ],
+      "techniqueFamilies": [
+        "ENGINEERING_SENSOR",
+        "COMPUTATIONAL"
+      ],
+      "title": "EU-DEMO 能量转换与 BOP 状态监测的公开证据缺口",
+      "titleEn": "Evidence gap for condition monitoring of EU-DEMO power conversion and balance of plant",
+      "technique": "能量转换/BOP 状态监测需求与证据缺口分析",
+      "problem": "脉冲聚变热源通过 PHTS、储能、蒸汽发生器、汽轮机/发电机转换为电力；转子振动、轴承、阀门、换热器污堵、热应力和效率退化需要监测，但当前没有运行中的聚变电厂验证。",
+      "measurementPrinciple": "公开 EU-DEMO 研究主要比较热力架构、脉冲缓冲和循环效率；未来需引入工业汽轮机振动/油液/温压、发电机局放/电气、换热器性能和阀泵健康，并用热力孪生做残差。",
+      "quantities": [
+        "蒸汽/工质温度与压力",
+        "流量",
+        "换热器温差",
+        "泵/汽轮机振动",
+        "发电功率与效率",
+        "储能状态"
+      ],
+      "region": [
+        "balance-of-plant",
+        "power-conversion",
+        "plant"
+      ],
+      "hardware": [
+        "shaft vibration/position",
+        "bearing temperature/oil debris",
+        "pressure/flow/temperature",
+        "generator electrical/partial discharge",
+        "valve/pump status",
+        "chemistry"
+      ],
+      "calibration": "公开研究尚未形成聚变电厂装置级标定方案；未来须按汽轮机、泵、换热器、储能和核级仪表标准建立可追溯校准。",
+      "inference": "概念上可用热力学残差、性能曲线、振动特征和寿命模型做健康估计，但本记录不声称已在聚变发电厂部署。",
+      "devices": [
+        {
+          "name": "EU-DEMO conceptual BOP; no fusion-plant deployment",
+          "fit": "本工作所述系统、方法的目标装置或验证对象",
+          "validation": "E0：系统设计/仿真；不存在聚变发电运行数据。"
+        }
+      ],
+      "validation": "E0：系统设计/仿真；不存在聚变发电运行数据。",
+      "evidenceLevel": "E0",
+      "deploymentLevel": "D1",
+      "results": "确认 BOP 已有系统热力设计，但公开文献尚未形成与物理/诊断专题同等成熟的 fusion-specific condition-monitoring V&V 基线。",
+      "timescale": "毫秒电气扰动、秒—小时热力动态、月—年退化",
+      "limitations": "不能用常规电厂传感器清单冒充 fusion validation；脉冲热源、核边界、氚渗透和高可用率会改变故障模式。",
+      "twinRelevance": "路线应从可校核热平衡和设备 residual 开始，逐步接入旋转设备与电气健康，而非直接训练无真值的全厂 AI。",
+      "papers": [
+        {
+          "title": "Water cooled lithium lead balance of plant indirectly coupled with power conversion system operated with small energy storage in EU DEMO",
+          "year": 2026,
+          "doi": "10.1016/j.fusengdes.2025.115517",
+          "url": "https://doi.org/10.1016/j.fusengdes.2025.115517",
+          "sourceType": "peer-reviewed conceptual system study",
+          "authors": "Andrea Burlando; Luciana Barucca; Fabio Giannetti; Cristiano Ciurluini; Francesco Colliva; Giorgio Mongiardini; Carlo Bima; Alberto Traverso; Amelia Tincani; Marco Mantero",
+          "venue": "Fusion Engineering and Design"
+        }
+      ],
+      "code": [
+        {
+          "name": "EU-DEMO BOP condition-monitoring implementation",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "production-software-or-configuration",
+          "access": "closed",
+          "relation": "未发现装置级公开实现或数据集。"
+        }
+      ],
+      "organizations": [
+        "EUROfusion"
+      ],
+      "tags": [
+        "BOP",
+        "power-conversion",
+        "evidence-gap",
+        "condition-monitoring"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "PDT-018",
+      "projectId": "w7x-coil-protection",
+      "primaryTask": "DG8",
+      "relatedTasks": [
+        "DG0",
+        "DG11"
+      ],
+      "techniqueFamilies": [
+        "ENGINEERING_SENSOR",
+        "COMPUTATIONAL"
+      ],
+      "title": "W7-X 超导线圈独立保护与设备状态链",
+      "titleEn": "Independent superconducting-coil protection and machine-state chain on W7-X",
+      "technique": "超导线圈独立保护与设备状态监测链",
+      "problem": "五十个非平面线圈和二十个平面线圈的复杂耦合需要可靠识别失超并快速释放能量，避免级联损伤。",
+      "measurementPrinciple": "独立保护系统监视线圈电压/电流与状态，触发断路/放电电阻；关键组件在系统集成前做试验。",
+      "quantities": [
+        "线圈差分电压 [V]",
+        "电流 [A]",
+        "温度 [K]",
+        "保护状态与触发时刻"
+      ],
+      "region": [
+        "magnet",
+        "cryogenic-system",
+        "plant"
+      ],
+      "hardware": [
+        "voltage taps",
+        "current transducers",
+        "temperature/pressure",
+        "breaker/discharge resistor state"
+      ],
+      "calibration": "通过通道注入、桥路平衡、组件试验和装置 commissioning 核对探测器、冗余逻辑与独立保护动作。",
+      "inference": "多通道电压残差、持续时间和冗余符合逻辑识别失超；最终动作由独立保护系统执行。",
+      "devices": [
+        {
+          "name": "Wendelstein 7-X",
+          "fit": "本工作所述系统、方法的目标装置或验证对象",
+          "validation": "保护系统组件试验和 W7-X 集成/运行；公开论文以设计和初步试验为主。"
+        }
+      ],
+      "validation": "保护系统组件试验和 W7-X 集成/运行；公开论文以设计和初步试验为主。",
+      "evidenceLevel": "E3",
+      "deploymentLevel": "D3",
+      "results": "建立与实验控制分离的磁体投资保护层，为长脉冲超导装置提供参照。",
+      "timescale": "失超毫秒—秒；冷却/恢复小时—天",
+      "limitations": "旧设计论文不覆盖全部后续修改和运行统计；保护系统的安全完整性不能由论文推断。",
+      "twinRelevance": "孪生只能旁路解释和预测，不能替代独立硬接线/安全仪表保护；应记录触发因果和恢复过程。",
+      "papers": [
+        {
+          "title": "Protection system for the superconducting coils in WENDELSTEIN 7-X",
+          "year": 2003,
+          "url": "https://www.sciencedirect.com/science/article/abs/pii/S0920379603002667",
+          "sourceType": "peer-reviewed protection-system paper"
+        }
+      ],
+      "code": [
+        {
+          "name": "W7-X coil protection logic",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "production-software-or-configuration",
+          "access": "closed",
+          "relation": "生产安全逻辑受控。"
+        }
+      ],
+      "organizations": [
+        "Max Planck Institute for Plasma Physics",
+        "W7-X Team"
+      ],
+      "tags": [
+        "quench",
+        "coil-protection",
+        "stellarator",
+        "safety-instrumentation"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "PDT-019",
+      "projectId": "nstxu-physics-engineering-data-archive",
+      "primaryTask": "DG8",
+      "relatedTasks": [
+        "DG0",
+        "DG10",
+        "DG11"
+      ],
+      "techniqueFamilies": [
+        "COMPUTATIONAL"
+      ],
+      "title": "NSTX-U 物理诊断与工程 EPICS 数据的统一可追溯归档",
+      "titleEn": "Traceable co-archiving of physics diagnostics and engineering EPICS data on NSTX-U",
+      "technique": "MDSplus/EPICS 物理—工程数据统一时间、配置与证据归档",
+      "problem": "设备故障、诊断异常和 plasma event 经常共享根因；若工程 EPICS、物理诊断、视频和分析产品分散，事后无法复原。",
+      "measurementPrinciple": "MDSplus 按 shot/tree 保存原始、约化和分析物理数据；EPICS archiver 保存工程运行数据；CAMDATA 保存高速视频；logbook/Web Tools 和数据负责人制度维护可解释性。",
+      "quantities": [
+        "统一时间戳",
+        "工程单位",
+        "通道质量标志",
+        "配置版本",
+        "shot/运行事件关联",
+        "数据可用性"
+      ],
+      "region": [
+        "data-platform",
+        "plant"
+      ],
+      "hardware": [
+        "all physics diagnostics",
+        "EPICS plant channels",
+        "fast cameras",
+        "analysis provenance"
+      ],
+      "calibration": "用时钟同步测试、通道映射审计、单位/量程核对、配置哈希与物理—工程事件对齐验证语义和时间一致性。",
+      "inference": "跨 tree/EPICS 数据联接、缺失/坏道规则和来源追踪形成可审计状态；平台本身不替代物理反演。",
+      "devices": [
+        {
+          "name": "NSTX-U",
+          "fit": "本工作所述系统、方法的目标装置或验证对象",
+          "validation": "官方数据管理计划和运行基础设施。"
+        }
+      ],
+      "validation": "官方数据管理计划证明了拟采用的归档、访问与治理架构；本记录没有提供相应版本在 NSTX-U 例行放电中的端到端运行或长期服务指标。",
+      "evidenceLevel": "E2",
+      "deploymentLevel": "D2",
+      "results": "形成物理/工程/视频多数据域的分层保存、共享和责任体系。",
+      "timescale": "实时/shot cycle 到长期归档",
+      "limitations": "共用 shot number 不自动保证单位、时钟、坐标、质量位和数据版本一致；不同仓库权限和生命周期仍需编排。",
+      "twinRelevance": "提供诊断数字孪生最低数据契约：原始信号、校准、约化值、权威分析、工程状态和责任人不可混成单一表。",
+      "papers": [
+        {
+          "title": "NSTX-U Data Management Plan",
+          "year": 2025,
+          "url": "https://sites.google.com/a/pppl.gov/nstx-u/research/data-management-plan",
+          "sourceType": "official facility data policy"
+        }
+      ],
+      "code": [
+        {
+          "name": "MDSplus",
+          "url": "https://github.com/MDSplus/mdsplus",
+          "status": "official-enabling",
+          "artifactType": "data-framework",
+          "access": "open-or-public-interface",
+          "relation": "官方使用的公共数据平台；NSTX-U trees/data separate."
+        },
+        {
+          "name": "NSTX-U Web Tools",
+          "url": "https://nstx.pppl.gov/software-tools/WebTools/index.html",
+          "status": "official-enabling",
+          "artifactType": "data-interface",
+          "access": "open-or-public-interface",
+          "relation": "装置官方可视化/访问入口。"
+        }
+      ],
+      "organizations": [
+        "Princeton Plasma Physics Laboratory",
+        "NSTX-U Team"
+      ],
+      "tags": [
+        "MDSplus",
+        "EPICS",
+        "provenance",
+        "data-governance"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "PDT-020",
+      "projectId": "sparc-diagnostic-environmental-qualification",
+      "primaryTask": "DG8",
+      "relatedTasks": [
+        "DG0",
+        "DG5",
+        "DG11"
+      ],
+      "techniqueFamilies": [
+        "ENGINEERING_SENSOR",
+        "COMPUTATIONAL"
+      ],
+      "title": "SPARC 诊断电子学与部件的强场、辐照、热、真空环境资格",
+      "titleEn": "Environmental qualification of SPARC diagnostic components and electronics",
+      "technique": "强磁、辐照、热、真空环境下的诊断部件资格与健康评估",
+      "problem": "高场紧凑 D-T 机器的诊断需在机械冲击/振动、强磁、中子、热、真空和长距离屏蔽穿透下保持增益、噪声和真空边界。",
+      "measurementPrinciple": "把 electronics/cameras/lasers 放在屏蔽墙外诊断实验室，端口内只保留必要部件；对 feedthrough、探测器和电子学进行 vibration/shock、magnetic-field/neutron exposure、thermal/vacuum tests，并以约五十套早期诊断统一系统工程。",
+      "quantities": [
+        "增益/零点漂移",
+        "噪声与带宽",
+        "绝缘/漏电",
+        "辐照剂量",
+        "温度/真空/磁场应力",
+        "资格裕量"
+      ],
+      "region": [
+        "diagnostic-port",
+        "electronics",
+        "plant"
+      ],
+      "hardware": [
+        "environmental test instrumentation",
+        "detector dark/gain/noise",
+        "vacuum leak",
+        "temperature",
+        "radiation dose",
+        "magnetic field"
+      ],
+      "calibration": "环境试验前后以可追溯信号源和参考传感器复测增益、噪声、绝缘和时延，并记录试件、批次与配置。",
+      "inference": "环境响应曲线、漂移预算和失效判据给出资格裕量；无 SPARC 等离子体运行前不得上升为在机可用率结论。",
+      "devices": [
+        {
+          "name": "SPARC diagnostic prototypes",
+          "fit": "本工作所述系统、方法的目标装置或验证对象",
+          "validation": "设计、样机和环境试验；无 SPARC plasma operation evidence。"
+        }
+      ],
+      "validation": "设计、样机和环境试验；无 SPARC plasma operation evidence。",
+      "evidenceLevel": "E2",
+      "deploymentLevel": "D2",
+      "results": "以设施布局、屏蔽、可更换端口和诊断实验室降低高场 D-T 环境风险。",
+      "timescale": "资格试验到 campaign 寿命；实时信号链微秒—秒",
+      "limitations": "单件环境试验不覆盖组合环境、长期活化和维护退化；设计成熟度不能写成 plasma 性能。",
+      "twinRelevance": "诊断孪生应包含 sensor transfer function 随剂量、温度、磁场和维护的漂移，而非只存理想标定系数。",
+      "papers": [
+        {
+          "title": "Overview of the early campaign diagnostics for the SPARC tokamak (invited)",
+          "year": 2024,
+          "doi": "10.1063/5.0218254",
+          "url": "https://doi.org/10.1063/5.0218254",
+          "sourceType": "peer-reviewed design/verification overview",
+          "authors": "M. L. Reinke; I. Abramovic; A. Albert; K. Asai; J. Ball; J. Batko; J. Brettingen; D. Brunner; M. Cario; J. Carmichael; C. Chrobak; A. Creely; et al. (87 authors)",
+          "venue": "Review of Scientific Instruments"
+        },
+        {
+          "title": "Progress on the design and prototyping of SPARC diagnostics",
+          "year": 2023,
+          "url": "https://meetings-archive.aps.org/dpp/2023/jp11/136/",
+          "sourceType": "APS primary conference abstract"
+        }
+      ],
+      "code": [
+        {
+          "name": "SPARC qualification database and diagnostic configuration",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "production-software-or-configuration",
+          "access": "closed",
+          "relation": "生产 V&V 证据库未公开。"
+        }
+      ],
+      "organizations": [
+        "Commonwealth Fusion Systems",
+        "MIT Plasma Science and Fusion Center"
+      ],
+      "tags": [
+        "qualification",
+        "radiation",
+        "magnetic-field",
+        "diagnostic-health"
+      ],
+      "asOf": "2026-08-12"
+    }
+  ]
+}

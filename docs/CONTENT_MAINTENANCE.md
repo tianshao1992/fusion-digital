@@ -15,7 +15,7 @@
 
 选择最接近的源文件：
 
-- `core_control_diagnostics.json`：物理模拟、集成控制、智能诊断
+- `core_control_diagnostics.json`：物理模拟、集成控制与 AI 赋能诊断（历史数据域名仍保持兼容）
 - `engineering_energy_aux.json`：工程仿真、能量转化、辅机模拟
 - `data_hmi_integration.json`：数据基座、人机交互、总体集成
 
@@ -36,6 +36,7 @@
 ```bash
 npm run research:ai
 npm run research:control
+npm run research:diagnostics
 npm run check
 ```
 
@@ -45,6 +46,11 @@ npm run check
 app/ai/aiResearch.ts
 public/data/fusion-ai-native-landscape.json
 public/fusion-ai-native-paper-code-index.csv
+app/diagnostics/diagnosticsResearch.ts
+public/data/fusion-diagnostics-landscape.json
+public/data/fusion-diagnostics-device-profiles.json
+public/fusion-diagnostics-paper-code-index.csv
+public/fusion-diagnostics-references.bib
 ```
 
 需要更新完整报告时：
@@ -53,6 +59,7 @@ public/fusion-ai-native-paper-code-index.csv
 python -m pip install -r requirements-research.txt
 npm run research:report
 npm run research:control:report
+npm run research:diagnostics:report
 ```
 
 Windows 且安装 Microsoft Word 时，可使用 `scripts/research/render_word_pdf.vbs` 将 DOCX 渲染为 PDF 进行逐页检查。其他平台可使用 LibreOffice 转 PDF，但分页可能与 Word 不同。

@@ -1,0 +1,3907 @@
+{
+  "schemaVersion": "1.0",
+  "dataset": "FusionDigital 聚变主等离子体诊断关键工作",
+  "scope": "DG1–DG7",
+  "asOf": "2026-08-12",
+  "evidenceScale": {
+    "E0": "需求/概念",
+    "E1": "数值或前向设计",
+    "E2": "台架标定/原型",
+    "E3": "装置安装、调试或离线装置数据",
+    "E4": "装置例行在线运行"
+  },
+  "deploymentScale": {
+    "D1": "概念",
+    "D2": "实验室/原型",
+    "D3": "已安装/调试/离线工作流",
+    "D4": "例行实验或实时服务",
+    "D5": "经正式安全/保护治理批准"
+  },
+  "records": [
+    {
+      "id": "DG1-001",
+      "projectId": "FD-DIAG-PLASMA-001",
+      "primaryTask": "DG1",
+      "relatedTasks": [
+        "DG0",
+        "DG10",
+        "DG11"
+      ],
+      "title": "感应式磁测量：磁通环、拾取线圈与罗戈夫斯基线圈",
+      "titleEn": "Inductive magnetics: flux loops, pickup coils and Rogowski coils",
+      "technique": {
+        "family": "MAGNETIC",
+        "name": "感应式磁测量 / inductive magnetics"
+      },
+      "problem": "为等离子体电流、位形控制和平衡反演提供高带宽外部磁约束。",
+      "measurementPrinciple": "法拉第感应电压经时间积分得到局部磁场或环向磁通；环绕电流的罗戈夫斯基线圈给出总电流。",
+      "quantities": [
+        "B_R",
+        "B_Z",
+        "poloidal flux",
+        "plasma current",
+        "loop voltage"
+      ],
+      "region": [
+        "真空室内外极向阵列",
+        "中心柱与外壁"
+      ],
+      "hardware/sensors": [
+        "mineral-insulated pickup coils",
+        "flux loops",
+        "Rogowski coils",
+        "integrators",
+        "radiation-hard cables"
+      ],
+      "calibration": "以几何测量、已知PF线圈电流和真空脉冲标定互感矩阵；逐炮检查零点、漂移和坏道。",
+      "inference": "去偏置并积分，补偿被动结构涡流后进入EFIT类反演；残差和冗余总电流通道用于质量控制。",
+      "devices": [
+        "ITER",
+        "DIII-D",
+        "EAST",
+        "JET"
+      ],
+      "validation": "本条直接来源覆盖 ITER 堆外磁诊断的设计、制造约束和预期平衡重建性能；通用现役装置做法未在本记录中以独立运行论文证明。",
+      "evidenceLevel": "E1",
+      "deploymentLevel": "D2",
+      "limitations": "感应线圈没有真正直流响应；积分漂移、涡流模型、辐照和不可维修性限制长期精度。",
+      "twinRelevance": "位形孪生的基础观测层；必须版本化几何、互感矩阵、积分器状态、时间同步和通道健康。",
+      "papers": [
+        {
+          "title": "Design and performance analysis of ITER ex-vessel magnetic diagnostics",
+          "authors": "Ph. Moreau; A. Le-Luyer; P. Hertout; F. Saint-Laurent; W. Zwingmann; J.M. Moret; Y. Martin",
+          "year": 2009,
+          "venue": "Fusion Engineering and Design",
+          "doi": "10.1016/j.fusengdes.2009.01.028",
+          "url": "https://doi.org/10.1016/j.fusengdes.2009.01.028",
+          "sourceType": "peer-reviewed-journal"
+        },
+        {
+          "title": "ITER diagnostics design and implementation",
+          "authors": "ITER Diagnostics Division",
+          "year": 2003,
+          "venue": "IAEA technical proceedings",
+          "doi": null,
+          "url": "https://www-pub.iaea.org/MTCD/Publications/PDF/csp_019c/pdf/ct_5.pdf",
+          "sourceType": "official-technical-document"
+        }
+      ],
+      "code": [
+        {
+          "name": "装置专有分析/标定软件",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "operational-analysis-pipeline",
+          "access": "not public",
+          "relation": "装置积分器、涡流补偿和PCS接口未公开。"
+        }
+      ],
+      "organizations": [
+        "ITER Organization",
+        "General Atomics",
+        "IPP CAS",
+        "UKAEA"
+      ],
+      "tags": [
+        "magnetics",
+        "equilibrium",
+        "plasma-current",
+        "real-time"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DG1-002",
+      "projectId": "FD-DIAG-PLASMA-002",
+      "primaryTask": "DG1",
+      "relatedTasks": [
+        "DG0",
+        "DG11"
+      ],
+      "title": "稳态霍尔磁测量：ITER OVSS与DEMO候选传感器",
+      "titleEn": "Steady-state Hall magnetics for ITER OVSS and DEMO",
+      "technique": {
+        "family": "MAGNETIC",
+        "name": "霍尔磁场测量 / Hall magnetics"
+      },
+      "problem": "补足长脉冲/连续运行时感应线圈的低频与直流盲区。",
+      "measurementPrinciple": "霍尔横向电压随磁场、驱动电流与材料霍尔系数变化；用磁场—温度标定函数补偿非线性。",
+      "quantities": [
+        "steady magnetic field",
+        "field drift",
+        "sensor temperature"
+      ],
+      "region": [
+        "ITER外真空容器",
+        "DEMO候选高温位置"
+      ],
+      "hardware/sensors": [
+        "bismuth Hall sensors",
+        "antimony/chromium Hall elements",
+        "temperature sensors",
+        "radiation-tolerant feedthroughs"
+      ],
+      "calibration": "在磁场—温度二维网格标定霍尔系数，并做中子嬗变/辐照评估和安装后零偏复核。",
+      "inference": "温度补偿与非线性拟合后，与感应线圈做带宽拼接和多传感器一致性检查。",
+      "devices": [
+        "ITER OVSS",
+        "DEMO",
+        "TEXTOR",
+        "Tore Supra"
+      ],
+      "validation": "ITER以材料表征、制造试验和误差预算验证；DEMO候选仍以台架/辐照外推为主。",
+      "evidenceLevel": "E3",
+      "deploymentLevel": "D3",
+      "limitations": "温度、辐照嬗变和远离等离子体的位置使灵敏度漂移及反演病态。",
+      "twinRelevance": "可作为长脉冲磁基线，但温度补偿模型、累积剂量和标定版本必须成为传感器状态。",
+      "papers": [
+        {
+          "title": "Status of steady-state magnetic diagnostic for ITER and outlook for possible materials of Hall sensors for DEMO",
+          "authors": "Ivan Ďuran; Slavomír Entler; Ondřej Grover; Inessa Bolshakova; Karel Výborný; Martin Kočan; Tomáš Jirman; George Vayakis; Oleksandr Vasyliev; Maksym Radishevskyi; Zhenxing Wang; Daniel Neumaier",
+          "year": 2019,
+          "venue": "Fusion Engineering and Design",
+          "doi": "10.1016/j.fusengdes.2019.03.201",
+          "url": "https://doi.org/10.1016/j.fusengdes.2019.03.201",
+          "sourceType": "peer-reviewed-journal"
+        },
+        {
+          "title": "Prospects for the steady-state magnetic diagnostic based on antimony Hall sensors for future fusion power reactors",
+          "authors": "S. Entler; I. Duran; M. Kocan; G. Vayakis; M. Kohout; J. Sebek; P. Sladek; O. Grover; K. Vyborny",
+          "year": 2019,
+          "venue": "Fusion Engineering and Design",
+          "doi": "10.1016/j.fusengdes.2019.01.013",
+          "url": "https://doi.org/10.1016/j.fusengdes.2019.01.013",
+          "sourceType": "peer-reviewed-journal"
+        }
+      ],
+      "code": [
+        {
+          "name": "装置专有分析/标定软件",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "operational-analysis-pipeline",
+          "access": "not public",
+          "relation": "OVSS补偿系数和运行软件由项目配置控制。"
+        }
+      ],
+      "organizations": [
+        "IPP Czech Academy",
+        "ITER Organization",
+        "EUROfusion",
+        "Lviv Polytechnic"
+      ],
+      "tags": [
+        "Hall",
+        "steady-state",
+        "ITER",
+        "DEMO",
+        "radiation"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DG1-003",
+      "projectId": "FD-DIAG-PLASMA-003",
+      "primaryTask": "DG1",
+      "relatedTasks": [
+        "DG0",
+        "DG11"
+      ],
+      "title": "光纤电流传感：EAST等离子体与PF母排电流",
+      "titleEn": "Fiber-optic current sensing for EAST plasma and PF currents",
+      "technique": {
+        "family": "OPTICAL",
+        "name": "法拉第光纤电流测量 / FOCS"
+      },
+      "problem": "无积分漂移地测量长脉冲等离子体与线圈电流，并隔离高压和电磁干扰。",
+      "measurementPrinciple": "环绕电流的光纤产生法拉第偏振旋转；反射式干涉仪把旋转转成电信号。",
+      "quantities": [
+        "plasma current",
+        "PF current",
+        "disruption transient"
+      ],
+      "region": [
+        "真空室内环绕等离子体",
+        "PF母排"
+      ],
+      "hardware/sensors": [
+        "polarization-maintaining fiber",
+        "Faraday mirror",
+        "reflection interferometer",
+        "optical feedthrough"
+      ],
+      "calibration": "已知电流标定比例系数；测量温漂、振动、冲击和磁串扰，PF通道在-5至55°C验证0.4%要求。",
+      "inference": "偏振解调、相位展开、温度/串扰补偿，并与罗戈夫斯基线圈逐炮比对。",
+      "devices": [
+        "EAST",
+        "ITER concept",
+        "CFETR concept"
+      ],
+      "validation": "EAST不同电流水平放电测得约800 kA并捕捉破裂瞬变；12个PF母排通道在装置运行验证。",
+      "evidenceLevel": "E4",
+      "deploymentLevel": "D4",
+      "limitations": "双折射、连接器/法拉第镜误差、振动和真空内光纤老化影响绝对精度。",
+      "twinRelevance": "可作为长脉冲绝对电流锚点，并在线校正感应磁通积分漂移。",
+      "papers": [
+        {
+          "title": "Fiber-optic current sensor for plasma current on experimental advanced superconducting tokamak",
+          "authors": "M.M. Xue; B. Shen; D.L. Chen; Y. Wang; T.H. Shi; H.H. Wang; Y.W. Sun; J.P. Qian; H. Xiao; B.J. Xiao",
+          "year": 2019,
+          "venue": "Fusion Engineering and Design",
+          "doi": "10.1016/j.fusengdes.2019.01.070",
+          "url": "https://doi.org/10.1016/j.fusengdes.2019.01.070",
+          "sourceType": "peer-reviewed-journal"
+        },
+        {
+          "title": "Upgrade of poloidal field coils current measurement system on Experimental Advanced Superconducting Tokamak",
+          "authors": "M.M. Xue; D.L. Chen; B. Shen; Y. Wang; T.H. Shi; H.H. Wang; Y.W. Sun; J.P. Qian; H. Xiao; B.J. Xiao",
+          "year": 2019,
+          "venue": "Fusion Engineering and Design",
+          "doi": "10.1016/j.fusengdes.2019.111264",
+          "url": "https://doi.org/10.1016/j.fusengdes.2019.111264",
+          "sourceType": "peer-reviewed-journal"
+        },
+        {
+          "title": "Effect of Faraday mirror imperfections in a fiber optic current sensor dedicated to ITER",
+          "authors": "Doğuş Karabulut; Anton Miazin; Andrei Gusarov; Philippe Moreau; Willem Leysen; Patrice Mégret; Marc Wuilpart",
+          "year": 2019,
+          "venue": "Fusion Engineering and Design",
+          "doi": "10.1016/j.fusengdes.2018.11.011",
+          "url": "https://doi.org/10.1016/j.fusengdes.2018.11.011",
+          "sourceType": "peer-reviewed-journal"
+        }
+      ],
+      "code": [
+        {
+          "name": "装置专有分析/标定软件",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "operational-analysis-pipeline",
+          "access": "not public",
+          "relation": "偏振解调与装置实时接口未发布。"
+        }
+      ],
+      "organizations": [
+        "IPP CAS",
+        "ITER Organization",
+        "SCK CEN",
+        "University of Mons"
+      ],
+      "tags": [
+        "FOCS",
+        "Faraday-effect",
+        "EAST",
+        "long-pulse"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DG1-004",
+      "projectId": "FD-DIAG-PLASMA-004",
+      "primaryTask": "DG1",
+      "relatedTasks": [
+        "DG2",
+        "DG10"
+      ],
+      "title": "动生斯塔克效应：内部磁场与电流密度剖面",
+      "titleEn": "Motional Stark effect for internal field and current profile",
+      "technique": {
+        "family": "OPTICAL",
+        "name": "动生斯塔克偏振谱 / MSE"
+      },
+      "problem": "为仅靠外部磁测量不可唯一确定的内部安全因子和电流密度提供局部约束。",
+      "measurementPrinciple": "中性束原子在v×B等效电场中发生斯塔克分裂；Dα偏振方向编码局部磁场倾角。",
+      "quantities": [
+        "magnetic pitch angle",
+        "q profile",
+        "current-density profile"
+      ],
+      "region": [
+        "中性束穿越的核心—边缘"
+      ],
+      "hardware/sensors": [
+        "neutral beam",
+        "polarization optics",
+        "photoelastic modulators",
+        "spectrometers",
+        "CCD/photodiodes"
+      ],
+      "calibration": "用旋转偏振片和Mueller矩阵做真空内外标定；束关闭测背景并控制视线/偏振零点。",
+      "inference": "锁相或Stokes解调得到偏振角，再作为EFIT内部约束；传播束几何、径向电场和零点误差。",
+      "devices": [
+        "DIII-D",
+        "MST",
+        "KSTAR"
+      ],
+      "validation": "DIII-D 装置在线 MSE 测量通过多视线重复性、原位偏振校准及与磁平衡、锯齿/MHD位置一致性验证。",
+      "evidenceLevel": "E4",
+      "deploymentLevel": "D4",
+      "limitations": "依赖中性束；背景Dα、窗双折射、径向电场和有限束宽形成系统误差。",
+      "twinRelevance": "将外部平衡升级为内部剖面状态；孪生应保存原始Stokes量与标定协方差。",
+      "papers": [
+        {
+          "title": "Motional Stark effect polarimetry for a current profile diagnostic in DIII-D",
+          "authors": "D. Wróblewski; K. H. Burrell; L. L. Lao; P. Politzer; W. P. West",
+          "year": 1990,
+          "venue": "Review of Scientific Instruments",
+          "doi": "10.1063/1.1141569",
+          "url": "https://doi.org/10.1063/1.1141569",
+          "sourceType": "peer-reviewed-journal"
+        },
+        {
+          "title": "Improved signal analysis for the calibration of the motional Stark effect diagnostic",
+          "authors": "Yuejiang Shi",
+          "year": 2006,
+          "venue": "Review of Scientific Instruments",
+          "doi": "10.1063/1.2166667",
+          "url": "https://doi.org/10.1063/1.2166667",
+          "sourceType": "peer-reviewed-journal"
+        }
+      ],
+      "code": [
+        {
+          "name": "装置专有分析/标定软件",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "operational-analysis-pipeline",
+          "access": "not public",
+          "relation": "DIII-D MSE生产分析与标定库受控。"
+        }
+      ],
+      "organizations": [
+        "General Atomics",
+        "LLNL",
+        "KFE",
+        "University of Wisconsin–Madison"
+      ],
+      "tags": [
+        "MSE",
+        "q-profile",
+        "polarimetry",
+        "neutral-beam"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DG1-005",
+      "projectId": "FD-DIAG-PLASMA-005",
+      "primaryTask": "DG1",
+      "relatedTasks": [
+        "DG10",
+        "DG11"
+      ],
+      "title": "实时磁平衡重建：rtEFIT与GPU实现",
+      "titleEn": "Real-time magnetic-equilibrium reconstruction: rtEFIT and GPU implementations",
+      "technique": {
+        "family": "COMPUTATIONAL",
+        "name": "实时Grad–Shafranov反演 / rtEFIT"
+      },
+      "problem": "把磁信号和电流观测转为位置、边界、X点和磁通面，供控制与场景评估。",
+      "measurementPrinciple": "在轴对称Grad–Shafranov方程下拟合电流基函数和导体响应，使预测磁信号匹配观测。",
+      "quantities": [
+        "LCFS",
+        "magnetic axis",
+        "X-point",
+        "shape",
+        "flux surfaces",
+        "q with internal constraints"
+      ],
+      "region": [
+        "全极向截面"
+      ],
+      "hardware/sensors": [
+        "magnetic channels",
+        "plasma/PF currents",
+        "real-time compute node",
+        "equilibrium model"
+      ],
+      "calibration": "真空场标定输入矩阵；用离线高精度重建与合成信号做回归测试。",
+      "inference": "加权正则化反演，可加入MSE/偏振约束；实时质量门控监测残差、边界偏差和超时。",
+      "devices": [
+        "DIII-D",
+        "HL-2A",
+        "EAST",
+        "KSTAR"
+      ],
+      "validation": "DIII-D rtEFIT 长期在装置 PCS 周期在线运行并与离线 EFIT 比对；HL-2A GPU实现以历史炮和时延/误差验证。",
+      "evidenceLevel": "E4",
+      "deploymentLevel": "D4",
+      "limitations": "轴对称、被动导体和有限观测导致不可辨识；低残差不证明内部剖面真实。",
+      "twinRelevance": "状态孪生核心；应输出配置、输入清单、残差、协方差和失效标志。",
+      "papers": [
+        {
+          "title": "Real time equilibrium reconstruction for tokamak discharge control",
+          "authors": "J.R Ferron; M.L Walker; L.L Lao; H.E. St John; D.A Humphreys; J.A Leuer",
+          "year": 1998,
+          "venue": "Nuclear Fusion",
+          "doi": "10.1088/0029-5515/38/7/308",
+          "url": "https://doi.org/10.1088/0029-5515/38/7/308",
+          "sourceType": "peer-reviewed-journal"
+        },
+        {
+          "title": "Acceleration optimization of real-time equilibrium reconstruction for HL-2A tokamak discharge control",
+          "authors": "Rui MA; Fan XIA; Fei LING; Jiaxian LI",
+          "year": 2018,
+          "venue": "Plasma Science and Technology",
+          "doi": "10.1088/2058-6272/aa9432",
+          "url": "https://doi.org/10.1088/2058-6272/aa9432",
+          "sourceType": "peer-reviewed-journal"
+        }
+      ],
+      "code": [
+        {
+          "name": "OMFIT EFIT module",
+          "url": "https://omfit.io/modules/mod_EFIT.html",
+          "status": "controlled-access",
+          "artifactType": "workflow-interface",
+          "access": "authorized OMFIT access",
+          "relation": "EFIT配置/工作流接口，不等同rtEFIT源代码。"
+        },
+        {
+          "name": "FreeGS",
+          "url": "https://github.com/ukaea/FreeGS",
+          "status": "official-enabling",
+          "artifactType": "open-source-equilibrium-solver",
+          "access": "public",
+          "relation": "开放的Grad–Shafranov与合成磁信号基线。"
+        },
+        {
+          "name": "装置专有分析/标定软件",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "operational-analysis-pipeline",
+          "access": "not public",
+          "relation": "rtEFIT与PCS集成源码未公开。"
+        }
+      ],
+      "organizations": [
+        "General Atomics",
+        "SWIP",
+        "UKAEA"
+      ],
+      "tags": [
+        "rtEFIT",
+        "equilibrium",
+        "GPU",
+        "state-estimation"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DG2-006",
+      "projectId": "FD-DIAG-PLASMA-006",
+      "primaryTask": "DG2",
+      "relatedTasks": [
+        "DG9",
+        "DG10"
+      ],
+      "title": "多点汤姆逊散射：核心与边缘电子剖面",
+      "titleEn": "Multipoint Thomson scattering for core and edge electron profiles",
+      "technique": {
+        "family": "LASER",
+        "name": "汤姆逊散射 / Thomson scattering"
+      },
+      "problem": "单激光脉冲获得局部电子温度/密度剖面，作为输运和跨诊断标尺。",
+      "measurementPrinciple": "自由电子散射谱的形状/展宽决定Te，绝对光子数结合几何与激光能量给ne。",
+      "quantities": [
+        "electron temperature",
+        "electron density",
+        "profile gradient"
+      ],
+      "region": [
+        "核心径向剖面",
+        "台基/边缘"
+      ],
+      "hardware/sensors": [
+        "pulsed Nd:YAG laser",
+        "collection optics",
+        "polychromators",
+        "APD/CCD",
+        "laser-energy monitor"
+      ],
+      "calibration": "拉曼/瑞利散射或标定灯求响应；逐通道测光谱响应、几何和激光能量，密度与干涉仪交叉。",
+      "inference": "背景扣除后拟合相对论散射谱；映射到磁坐标并传播统计、标定和几何不确定度。",
+      "devices": [
+        "DIII-D",
+        "EAST",
+        "Globus-M2",
+        "ITER"
+      ],
+      "validation": "Globus-M2 论文报告已安装系统的装置测量与性能，ITER 来源覆盖核心 TS 的设计推进；本记录未证明跨装置例行在线服务。",
+      "evidenceLevel": "E3",
+      "deploymentLevel": "D3",
+      "limitations": "采样受激光频率限制；低密度统计、杂散光和视线/激光偏移影响精度。",
+      "twinRelevance": "提供Te/ne锚点；原始谱和标定脉冲必须与反演剖面共同保存。",
+      "papers": [
+        {
+          "title": "Thomson scattering diagnostics at the Globus-M2 tokamak",
+          "authors": "N.S. Zhiltsov; G.S. Kurskiev; S.Yu. Tolstyakov; V.A. Solovey; A.N. Koval; E.E. Tkachenko; S.E. Aleksandrov; N.N. Bakharev; I.M. Balachenkov; A.N. Bazhenov; P.V. Chernakov; S.V. Filippov; et al. (36 authors)",
+          "year": 2025,
+          "venue": "Fusion Engineering and Design",
+          "doi": "10.1016/j.fusengdes.2024.114753",
+          "url": "https://doi.org/10.1016/j.fusengdes.2024.114753",
+          "sourceType": "peer-reviewed-journal"
+        },
+        {
+          "title": "Design advances of the Core Plasma Thomson Scattering diagnostic for ITER",
+          "authors": "R. Scannell; M. Maslov; G. Naylor; T. O'Gorman; M. Kempenaars; M. Carr; P. Bilkova; P. Bohm; L. Giudicotti; R. Pasqualotto; M. Bassan; G. Vayakis; et al. (14 authors)",
+          "year": 2017,
+          "venue": "Journal of Instrumentation",
+          "doi": "10.1088/1748-0221/12/11/c11010",
+          "url": "https://doi.org/10.1088/1748-0221/12/11/c11010",
+          "sourceType": "peer-reviewed-journal"
+        }
+      ],
+      "code": [
+        {
+          "name": "装置专有分析/标定软件",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "operational-analysis-pipeline",
+          "access": "not public",
+          "relation": "装置TS拟合、自动质量控制和实时发布代码未公开。"
+        }
+      ],
+      "organizations": [
+        "General Atomics",
+        "IPP CAS",
+        "Ioffe Institute",
+        "ITER Organization"
+      ],
+      "tags": [
+        "Thomson",
+        "Te",
+        "ne",
+        "profile",
+        "calibration"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DG2-007",
+      "projectId": "FD-DIAG-PLASMA-007",
+      "primaryTask": "DG2",
+      "relatedTasks": [
+        "DG10"
+      ],
+      "title": "LIDAR汤姆逊散射：JET长光程电子剖面",
+      "titleEn": "LIDAR Thomson scattering on JET",
+      "technique": {
+        "family": "LASER",
+        "name": "LIDAR汤姆逊散射 / LIDAR TS"
+      },
+      "problem": "在大尺寸装置用飞行时间区分径向位置，减少分布式真空内接收光学。",
+      "measurementPrinciple": "短激光脉冲的散射光返回时间编码位置，谱形/强度反演Te/ne。",
+      "quantities": [
+        "electron temperature",
+        "electron density",
+        "radial profile"
+      ],
+      "region": [
+        "JET主等离子体直径"
+      ],
+      "hardware/sensors": [
+        "short-pulse laser",
+        "large collection mirror",
+        "fast spectral channels",
+        "fast digitizers"
+      ],
+      "calibration": "以光学延迟、靶点和谱响应标定时间—空间映射；密度与独立线积分交叉。",
+      "inference": "分时间窗反卷积探测器/激光响应，再拟合相对论汤姆逊谱。",
+      "devices": [
+        "JET"
+      ],
+      "validation": "多年装置运行、硬件升级前后对比及与高分辨TS/ECE/干涉仪一致性评估。",
+      "evidenceLevel": "E4",
+      "deploymentLevel": "D4",
+      "limitations": "空间分辨受脉宽和探测响应限制；接收光学大，边缘细结构较弱。",
+      "twinRelevance": "必须在孪生中保留点扩散函数，不能把反卷积值当独立局部点。",
+      "papers": [
+        {
+          "title": "The JET LIDAR Thomson scattering diagnostic",
+          "authors": "JET LIDAR team",
+          "year": 2013,
+          "venue": "arXiv",
+          "doi": null,
+          "url": "https://arxiv.org/abs/1312.3109",
+          "sourceType": "preprint"
+        }
+      ],
+      "code": [
+        {
+          "name": "装置专有分析/标定软件",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "operational-analysis-pipeline",
+          "access": "not public",
+          "relation": "JET LIDAR反卷积和运行分析代码未公开。"
+        }
+      ],
+      "organizations": [
+        "EUROfusion JET contributors",
+        "UKAEA"
+      ],
+      "tags": [
+        "LIDAR",
+        "JET",
+        "time-of-flight",
+        "electron-profile"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DG2-008",
+      "projectId": "FD-DIAG-PLASMA-008",
+      "primaryTask": "DG2",
+      "relatedTasks": [
+        "DG1",
+        "DG10",
+        "DG11"
+      ],
+      "title": "多色干涉/偏振测量：ITER环向干涉偏振仪",
+      "titleEn": "Multicolor interferometry and polarimetry: ITER TIP",
+      "technique": {
+        "family": "LASER",
+        "name": "干涉偏振测量 / interferometry-polarimetry"
+      },
+      "problem": "提供高带宽线积分密度，并用法拉第旋转约束密度加权磁场。",
+      "measurementPrinciple": "相位延迟给∫ne dl；法拉第旋转给∫ne B_parallel dl；多波长分离机械振动。",
+      "quantities": [
+        "line-integrated electron density",
+        "Faraday rotation"
+      ],
+      "region": [
+        "穿过核心的弦积分视线"
+      ],
+      "hardware/sensors": [
+        "FIR/CO2 lasers",
+        "multiwavelength interferometer",
+        "polarimeter",
+        "retroreflectors",
+        "phase detectors"
+      ],
+      "calibration": "标定真空相位、振动通道与偏振零点；用已知光程/旋转元件验证并与TS密度积分比对。",
+      "inference": "多色相位组合、解缠和振动补偿；必要时进入联合层析/平衡反演。",
+      "devices": [
+        "ITER",
+        "DIII-D",
+        "EAST",
+        "KSTAR"
+      ],
+      "validation": "ITER 来源给出环向干涉/偏振系统设计，另一来源展示 Faraday 约束进入 EFIT 的装置数据方法；本记录不把方法验证外推为例行在线部署。",
+      "evidenceLevel": "E3",
+      "deploymentLevel": "D3",
+      "limitations": "线积分不可唯一给剖面；相位跳变、折射、窗双折射和视线偏移是主要风险。",
+      "twinRelevance": "密度控制高带宽观测；孪生需输出原始相位、解缠状态和几何。",
+      "papers": [
+        {
+          "title": "Toroidal interferometer/polarimeter density measurement system on ITER",
+          "authors": "T. Kondoh; A. E. Costley; T. Sugie; Y. Kawano; A. Malaquias; C. I. Walker",
+          "year": 2004,
+          "venue": "Review of Scientific Instruments",
+          "doi": "10.1063/1.1786640",
+          "url": "https://doi.org/10.1063/1.1786640",
+          "sourceType": "peer-reviewed-journal"
+        },
+        {
+          "title": "Implementing Faraday effect measurement constraints into the Grad–Shafranov equilibrium fitting code EFIT",
+          "authors": "T. E. Benedett; J. Chen; D. L. Brower; R. Yoneda; L. L. Lao; J. McClenaghan",
+          "year": 2023,
+          "venue": "Review of Scientific Instruments",
+          "doi": "10.1063/5.0129892",
+          "url": "https://doi.org/10.1063/5.0129892",
+          "sourceType": "peer-reviewed-journal"
+        }
+      ],
+      "code": [
+        {
+          "name": "装置专有分析/标定软件",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "operational-analysis-pipeline",
+          "access": "not public",
+          "relation": "实时解缠、振动补偿和PCS接口受控。"
+        }
+      ],
+      "organizations": [
+        "ITER Organization",
+        "General Atomics",
+        "IPP CAS",
+        "KFE"
+      ],
+      "tags": [
+        "interferometry",
+        "polarimetry",
+        "density",
+        "real-time"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DG2-009",
+      "projectId": "FD-DIAG-PLASMA-009",
+      "primaryTask": "DG2",
+      "relatedTasks": [
+        "DG6",
+        "DG11"
+      ],
+      "title": "电子回旋辐射：ECE温度剖面与事件监测",
+      "titleEn": "Electron-cyclotron emission radiometry for temperature profiles and events",
+      "technique": {
+        "family": "MICROWAVE",
+        "name": "电子回旋辐射测量 / ECE"
+      },
+      "problem": "连续快速测量电子温度剖面并识别锯齿、磁岛和热扰动。",
+      "measurementPrinciple": "光学厚近热平衡条件下ECE亮温近似局部Te；频率由回旋共振与磁场映射到位置。",
+      "quantities": [
+        "electron temperature",
+        "temperature fluctuations",
+        "sawtooth/island signatures"
+      ],
+      "region": [
+        "低场侧核心—边缘共振层"
+      ],
+      "hardware/sensors": [
+        "heterodyne radiometer",
+        "waveguide",
+        "blackbody calibration loads",
+        "fast digitizers"
+      ],
+      "calibration": "冷热负载/黑体绝对标定；测波导和中频响应，用平衡确定频率—半径映射。",
+      "inference": "功率解调后修正相对论展宽、光学厚度和视线卷积，并给非热/无效标志。",
+      "devices": [
+        "ITER",
+        "DIII-D",
+        "EAST",
+        "KSTAR"
+      ],
+      "validation": "本条直接来源是 ITER ECE 诊断设计与预期性能，覆盖合成谱、射线追踪和组件评估；未提供现役装置例行运行的独立来源。",
+      "evidenceLevel": "E1",
+      "deploymentLevel": "D2",
+      "limitations": "光学薄、非热电子、截止、相对论展宽和磁映射误差使亮温偏离Te。",
+      "twinRelevance": "提供高带宽热状态；适用性和频率—空间映射不确定度必须显式输出。",
+      "papers": [
+        {
+          "title": "Electron cyclotron emission diagnostic for ITER",
+          "authors": "W. Rowan; M. Austin; J. Beno; R. Ellis; R. Feder; A. Ouroua; A. Patel; P. Phillips",
+          "year": 2010,
+          "venue": "Review of Scientific Instruments",
+          "doi": "10.1063/1.3496978",
+          "url": "https://doi.org/10.1063/1.3496978",
+          "sourceType": "peer-reviewed-journal"
+        }
+      ],
+      "code": [
+        {
+          "name": "装置专有分析/标定软件",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "operational-analysis-pipeline",
+          "access": "not public",
+          "relation": "装置绝对标定库、射线追踪和实时事件算法未完整公开。"
+        }
+      ],
+      "organizations": [
+        "ITER Organization",
+        "General Atomics",
+        "IPP CAS",
+        "KFE"
+      ],
+      "tags": [
+        "ECE",
+        "Te",
+        "radiometry",
+        "MHD"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DG2-010",
+      "projectId": "FD-DIAG-PLASMA-010",
+      "primaryTask": "DG2",
+      "relatedTasks": [
+        "DG6",
+        "DG9",
+        "DG11"
+      ],
+      "title": "扫频/脉冲反射计：密度剖面和实时映射",
+      "titleEn": "Swept-frequency and pulsed reflectometry for density profiles",
+      "technique": {
+        "family": "MICROWAVE",
+        "name": "微波反射计 / reflectometry"
+      },
+      "problem": "非侵入重建边缘至核心密度剖面，并连续监测长脉冲边界变化。",
+      "measurementPrinciple": "微波在等离子体截止层反射；相位或群时延随频率变化编码截止层位置。",
+      "quantities": [
+        "electron-density profile",
+        "cutoff position",
+        "edge gradient"
+      ],
+      "region": [
+        "低场侧边缘—可达核心"
+      ],
+      "hardware/sensors": [
+        "swept-frequency source",
+        "O/X antennas",
+        "heterodyne receiver",
+        "fast digitizer"
+      ],
+      "calibration": "标定真空延迟、波导色散和系统相位；用已知反射面并与TS/干涉仪比较。",
+      "inference": "相位解缠、群时延积分或全波反演；实时采用预计算表或受约束剖面拟合。",
+      "devices": [
+        "SPARC",
+        "MAST Upgrade",
+        "WEST",
+        "EAST"
+      ],
+      "validation": "SPARC/MAST-U用合成诊断和硬件设计；WEST报告实时装置数据与其他密度诊断比对。",
+      "evidenceLevel": "E3",
+      "deploymentLevel": "D3",
+      "limitations": "多路径、湍流散射、密度空腔和相位跳变使反演非唯一。",
+      "twinRelevance": "边缘孪生连续观测；应保存复信号、解缠路径和前向模型版本。",
+      "papers": [
+        {
+          "title": "Edge scanning reflectometry for density profile measurement on the SPARC tokamak",
+          "authors": "Y. Lin; V. Nikolaeva; D. Hachmeister; E. Kowalski; M. L. Reinke",
+          "year": 2024,
+          "venue": "Review of Scientific Instruments",
+          "doi": "10.1063/5.0219533",
+          "url": "https://doi.org/10.1063/5.0219533",
+          "sourceType": "peer-reviewed-journal"
+        },
+        {
+          "title": "Design of a low frequency, density profile reflectometer system for the MAST-U spherical tokamak",
+          "authors": "T. L. Rhodes; W. A. Peebles; Lei Zeng; Valerian Hall-Chen; Kevin Ronald; S. Kubota; Yusong Meng; R. Lantsov; C. M. Michael; N. A. Crocker; R. Scannell",
+          "year": 2024,
+          "venue": "Review of Scientific Instruments",
+          "doi": "10.1063/5.0219578",
+          "url": "https://doi.org/10.1063/5.0219578",
+          "sourceType": "peer-reviewed-journal"
+        },
+        {
+          "title": "Implementation of real-time reflectometry for electronic density profile reconstruction on the WEST tokamak",
+          "authors": "Maylis Carrard; R Sabot; Y Moudden; F Clairet; C Jammes; C Bouchand; C Bottereau",
+          "year": 2025,
+          "venue": "Plasma Physics and Controlled Fusion",
+          "doi": "10.1088/1361-6587/ade62b",
+          "url": "https://doi.org/10.1088/1361-6587/ade62b",
+          "sourceType": "peer-reviewed-journal"
+        }
+      ],
+      "code": [
+        {
+          "name": "装置专有分析/标定软件",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "operational-analysis-pipeline",
+          "access": "not public",
+          "relation": "装置实时反演服务未作为可部署仓库发布。"
+        }
+      ],
+      "organizations": [
+        "CFS",
+        "MIT PSFC",
+        "UKAEA",
+        "CEA IRFM"
+      ],
+      "tags": [
+        "reflectometry",
+        "ne-profile",
+        "real-time",
+        "WEST",
+        "SPARC"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DG3-011",
+      "projectId": "FD-DIAG-PLASMA-011",
+      "primaryTask": "DG3",
+      "relatedTasks": [
+        "DG4",
+        "DG10"
+      ],
+      "title": "电荷交换复合谱：离子温度与转动",
+      "titleEn": "Charge-exchange recombination spectroscopy for ion temperature and rotation",
+      "technique": {
+        "family": "OPTICAL",
+        "name": "电荷交换复合光谱 / CXRS-CER"
+      },
+      "problem": "测量局部Ti、环/极向流和杂质密度，支撑动量输运与径向电场分析。",
+      "measurementPrinciple": "束中性与离子电荷交换后的谱线宽度、位移和绝对强度分别编码Ti、速度和密度。",
+      "quantities": [
+        "ion temperature",
+        "toroidal/poloidal rotation",
+        "impurity density",
+        "radial electric field"
+      ],
+      "region": [
+        "中性束路径的核心—边缘"
+      ],
+      "hardware/sensors": [
+        "neutral beam",
+        "high-throughput spectrometers",
+        "fiber views",
+        "CCD",
+        "wavelength lamps"
+      ],
+      "calibration": "标定波长、仪器函数和响应；束开/关分主动/被动光，原子数据版本受控。",
+      "inference": "物理谱模型拟合后投影视线速度，并以力平衡推断Er。",
+      "devices": [
+        "DIII-D",
+        "HL-2A",
+        "JET",
+        "KSTAR"
+      ],
+      "validation": "HL-2A 与 DIII-D 装置常规 CXRS/CER 测量用标定灯、束调制、重复视线和晶体谱/能量约束交叉验证。",
+      "evidenceLevel": "E4",
+      "deploymentLevel": "D4",
+      "limitations": "束衰减、有限寿命、谱重叠、视线积分和原子速率是主要系统误差。",
+      "twinRelevance": "提供离子热与动量状态；必须共存原始谱、束状态、原子数据和后验。",
+      "papers": [
+        {
+          "title": "Profile Measurement of Ion Temperature and Toroidal Rotation Velocity with Charge Exchange Recombination Spectroscopy Diagnostics in the HL-2A Tokamak",
+          "authors": "Jing Wu; Lieming Yao; Jianhua Zhu; Xiaoyu Han; Wenzhu Li",
+          "year": 2012,
+          "venue": "Plasma Science and Technology",
+          "doi": "10.1088/1009-0630/14/11/02",
+          "url": "https://doi.org/10.1088/1009-0630/14/11/02",
+          "sourceType": "peer-reviewed-journal"
+        },
+        {
+          "title": "Charge exchange recombination spectroscopy measurements of DIII-D poloidal rotation with poloidal asymmetry in angular rotation",
+          "authors": "C. Chrystal; S. R. Haskey; K. H. Burrell; B. A. Grierson; C. S. Collins",
+          "year": 2021,
+          "venue": "Review of Scientific Instruments",
+          "doi": "10.1063/5.0043087",
+          "url": "https://doi.org/10.1063/5.0043087",
+          "sourceType": "peer-reviewed-journal"
+        }
+      ],
+      "code": [
+        {
+          "name": "OpenADAS",
+          "url": "https://open.adas.ac.uk",
+          "status": "official-enabling",
+          "artifactType": "atomic-data-service",
+          "access": "public/registration",
+          "relation": "电荷交换与谱线原子数据，不是装置运行代码。"
+        },
+        {
+          "name": "装置专有分析/标定软件",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "operational-analysis-pipeline",
+          "access": "not public",
+          "relation": "生产谱拟合和几何库未公开。"
+        }
+      ],
+      "organizations": [
+        "SWIP",
+        "General Atomics",
+        "ADAS Project"
+      ],
+      "tags": [
+        "CXRS",
+        "CER",
+        "Ti",
+        "rotation"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DG3-012",
+      "projectId": "FD-DIAG-PLASMA-012",
+      "primaryTask": "DG3",
+      "relatedTasks": [
+        "DG4",
+        "DG10"
+      ],
+      "title": "成像X射线晶体谱：二维离子温度、流速与杂质",
+      "titleEn": "Imaging x-ray crystal spectroscopy for 2-D ion temperature and flow",
+      "technique": {
+        "family": "OPTICAL",
+        "name": "成像X射线晶体谱 / XICS"
+      },
+      "problem": "用高Z杂质线同时获取离子温度、流速和发射率，并层析极向结构。",
+      "measurementPrinciple": "弯晶Bragg色散；谱宽、谱移和强度分别编码Ti、视线速度和发射率。",
+      "quantities": [
+        "ion temperature",
+        "line-of-sight velocity",
+        "impurity emissivity",
+        "2-D profiles"
+      ],
+      "region": [
+        "核心/内台基极向截面"
+      ],
+      "hardware/sensors": [
+        "bent crystals",
+        "2-D x-ray detectors",
+        "geometry fiducials",
+        "thermal support"
+      ],
+      "calibration": "以已知X射线线、晶格常数、晶体温度和几何靶标标定波长/空间；测仪器展宽。",
+      "inference": "谱线簇拟合后做正则化几何反演，联合原子物理和旋转对称性。",
+      "devices": [
+        "EAST",
+        "KSTAR",
+        "SPARC",
+        "W7-X"
+      ],
+      "validation": "EAST/KSTAR以装置谱和CXRS比对；SPARC以射线追踪、计数统计和合成谱评估。",
+      "evidenceLevel": "E4",
+      "deploymentLevel": "D4",
+      "limitations": "依赖杂质电荷态和光子数；线混叠、晶体热漂移、视线积分限制二维反演。",
+      "twinRelevance": "连接离子热、流与杂质辐射；层析先验和晶体状态必须可追溯。",
+      "papers": [
+        {
+          "title": "Imaging x-ray crystal spectrometer on EAST",
+          "authors": "Yuejiang Shi; Fudi Wang; Baonian Wan; Manfred Bitter; Sanggon Lee; Jungyo Bak; Kennith Hill; Jia Fu; Yingying Li; Wei Zhang; Ang Ti; Bili Ling",
+          "year": 2010,
+          "venue": "Plasma Physics and Controlled Fusion",
+          "doi": "10.1088/0741-3335/52/8/085014",
+          "url": "https://doi.org/10.1088/0741-3335/52/8/085014",
+          "sourceType": "peer-reviewed-journal"
+        },
+        {
+          "title": "Inversion techniques to obtain local rotation velocity and ion temperature profiles for the x-ray crystal spectrometer on EAST",
+          "authors": "Zichao LIN; Hongming ZHANG; Fudi WANG; Cheonho BAE; Jia FU; Yifei JIN; Di’an LU; Shengyu FU; Jiankang LI; Bo LYU",
+          "year": 2023,
+          "venue": "Plasma Science and Technology",
+          "doi": "10.1088/2058-6272/acc503",
+          "url": "https://doi.org/10.1088/2058-6272/acc503",
+          "sourceType": "peer-reviewed-journal"
+        },
+        {
+          "title": "Performance predictions of the SPARC x-ray crystal spectrometers for ion temperature and toroidal rotation measurements",
+          "authors": "C. Perks; D. Vezinet; J. E. Rice; M. L. Reinke",
+          "year": 2024,
+          "venue": "Review of Scientific Instruments",
+          "doi": "10.1063/5.0219521",
+          "url": "https://doi.org/10.1063/5.0219521",
+          "sourceType": "peer-reviewed-journal"
+        }
+      ],
+      "code": [
+        {
+          "name": "OpenADAS",
+          "url": "https://open.adas.ac.uk",
+          "status": "official-enabling",
+          "artifactType": "atomic-data-service",
+          "access": "public",
+          "relation": "谱线与激发/电离数据。"
+        },
+        {
+          "name": "装置专有分析/标定软件",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "operational-analysis-pipeline",
+          "access": "not public",
+          "relation": "晶体射线追踪和生产层析代码未公开。"
+        }
+      ],
+      "organizations": [
+        "IPP CAS",
+        "KFE",
+        "CFS",
+        "PPPL"
+      ],
+      "tags": [
+        "XICS",
+        "x-ray",
+        "Ti",
+        "flow",
+        "tomography"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DG3-013",
+      "projectId": "FD-DIAG-PLASMA-013",
+      "primaryTask": "DG3",
+      "relatedTasks": [
+        "DG5",
+        "DG9"
+      ],
+      "title": "中性粒子分析器：逃逸中性谱与离子分布",
+      "titleEn": "Neutral-particle analysis of escaping neutrals and ion distributions",
+      "technique": {
+        "family": "NUCLEAR_PARTICLE",
+        "name": "中性粒子分析 / NPA"
+      },
+      "problem": "从电荷交换逃逸中性约束离子能谱、燃料离子比例和快离子尾部。",
+      "measurementPrinciple": "离子电荷交换后成为不受磁场约束的中性粒子；能量/质量分析器测其谱。",
+      "quantities": [
+        "neutral energy spectrum",
+        "ion distribution",
+        "fuel ratio",
+        "fast-ion tail"
+      ],
+      "region": [
+        "核心—边缘视线积分"
+      ],
+      "hardware/sensors": [
+        "electrostatic/magnetic analyzer",
+        "diamond/scintillator detectors",
+        "collimators",
+        "flight path"
+      ],
+      "calibration": "用单能离子束/源标定能量、质量、效率和几何因子；评估背景。",
+      "inference": "用响应矩阵反演能谱；定量分布需要中性密度、电荷交换截面和轨道前向模型。",
+      "devices": [
+        "ST40",
+        "ITER",
+        "EAST",
+        "LHD"
+      ],
+      "validation": "ST40给出装置谱；ITER样机以离子束和高通量台架验证。",
+      "evidenceLevel": "E3",
+      "deploymentLevel": "D3",
+      "limitations": "强依赖未知中性密度；视线积分、再电离、饱和及中子/伽马背景限制绝对反演。",
+      "twinRelevance": "应以带响应矩阵的观测算子接入快离子孪生，不能把能谱直接等同局部分布。",
+      "papers": [
+        {
+          "title": "Neutral particle analyzer for plasma diagnostics on tokamak ST40",
+          "authors": "S. Polosatkin; V. Belykh; A. Rovenskikh",
+          "year": 2025,
+          "venue": "Review of Scientific Instruments",
+          "doi": "10.1063/5.0269580",
+          "url": "https://doi.org/10.1063/5.0269580",
+          "sourceType": "peer-reviewed-journal"
+        },
+        {
+          "title": "Bench tests of a helium ion source for the neutral particle diagnostic system of the ITER tokamak",
+          "authors": "A. D. Melnik; V. I. Afanasyev; V. I. Davydenko; A. V. Kolmogorov; M. I. Mironov; A. S. Navolotsky; V. G. Nesenevich; M. P. Petrov; S. Ya. Petrov; F. V. Chernyshev",
+          "year": 2020,
+          "venue": "Review of Scientific Instruments",
+          "doi": "10.1063/5.0022149",
+          "url": "https://doi.org/10.1063/5.0022149",
+          "sourceType": "peer-reviewed-journal"
+        }
+      ],
+      "code": [
+        {
+          "name": "FIDASIM",
+          "url": "https://github.com/D3DEnergetic/FIDASIM",
+          "status": "official-direct",
+          "artifactType": "open-source-fast-ion-diagnostic-forward-model",
+          "access": "public",
+          "relation": "NPA/FIDA合成观测与中性响应。"
+        },
+        {
+          "name": "装置专有分析/标定软件",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "operational-analysis-pipeline",
+          "access": "not public",
+          "relation": "硬件控制和生产反演未公开。"
+        }
+      ],
+      "organizations": [
+        "Tokamak Energy",
+        "ITER Organization",
+        "D3D Energetic"
+      ],
+      "tags": [
+        "NPA",
+        "fast-ion",
+        "fuel-ratio",
+        "response"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DG3-014",
+      "projectId": "FD-DIAG-PLASMA-014",
+      "primaryTask": "DG3",
+      "relatedTasks": [
+        "DG5",
+        "DG10"
+      ],
+      "title": "主离子电荷交换谱：DIII-D氢同位素比例",
+      "titleEn": "Main-ion charge-exchange spectroscopy for isotope fraction",
+      "technique": {
+        "family": "OPTICAL",
+        "name": "主离子电荷交换谱 / MICER"
+      },
+      "problem": "测量主离子Ti、流速及H/D比例，服务燃料控制和同位素输运。",
+      "measurementPrinciple": "主动Hα/Dα谱的同位素移位、宽度和强度由束—主离子电荷交换及原子模型决定。",
+      "quantities": [
+        "main-ion temperature",
+        "main-ion rotation",
+        "isotope fraction"
+      ],
+      "region": [
+        "中性束交叉视线"
+      ],
+      "hardware/sensors": [
+        "MICER spectrometer",
+        "neutral beam",
+        "high-resolution visible optics",
+        "fast CCD"
+      ],
+      "calibration": "标定波长、仪器函数和相对响应；束调制分离被动背景。",
+      "inference": "多同位素谱联合拟合，并用FIDASIM计算束组分、有限寿命和光子发射。",
+      "devices": [
+        "DIII-D",
+        "JET relevance",
+        "ITER relevance"
+      ],
+      "validation": "DIII-D通过改变注气/束组分扫描，并与其他燃料指标和合成谱比对。",
+      "evidenceLevel": "E3",
+      "deploymentLevel": "D3",
+      "limitations": "同位素线重叠、回收光和束组分不确定度导致模型依赖。",
+      "twinRelevance": "为空间分辨燃料组成提供约束；原子数据和束状态必须可审计。",
+      "papers": [
+        {
+          "title": "Radially resolved active charge exchange measurements of the hydrogenic isotope fraction on DIII-D",
+          "authors": "S. R. Haskey; L. Stagner; B. A. Grierson; C. Chrystal; G. H. DeGrandchamp; W. W. Heidbrink; M. A. Van Zeeland; S. Vincena",
+          "year": 2021,
+          "venue": "Review of Scientific Instruments",
+          "doi": "10.1063/5.0043836",
+          "url": "https://doi.org/10.1063/5.0043836",
+          "sourceType": "peer-reviewed-journal"
+        },
+        {
+          "title": "Progress in modelling fast-ion D-alpha spectra and neutral particle analyzer fluxes using FIDASIM",
+          "authors": "B. Geiger; L. Stagner; W.W. Heidbrink; R. Dux; R. Fischer; Y. Fujiwara; A.V. Garcia; A. S. Jacobsen; A. Jansen van Vuuren; A. N. Karpushov; D. Liu; P. A. Schneider; et al. (15 authors)",
+          "year": 2020,
+          "venue": "Plasma Physics and Controlled Fusion",
+          "doi": "10.1088/1361-6587/aba8d7",
+          "url": "https://doi.org/10.1088/1361-6587/aba8d7",
+          "sourceType": "peer-reviewed-journal"
+        }
+      ],
+      "code": [
+        {
+          "name": "FIDASIM",
+          "url": "https://github.com/D3DEnergetic/FIDASIM",
+          "status": "official-direct",
+          "artifactType": "open-source-diagnostic-forward-model",
+          "access": "public",
+          "relation": "MICER/CER合成谱。"
+        },
+        {
+          "name": "OpenADAS",
+          "url": "https://open.adas.ac.uk",
+          "status": "official-enabling",
+          "artifactType": "atomic-data-service",
+          "access": "public",
+          "relation": "原子速率。"
+        }
+      ],
+      "organizations": [
+        "General Atomics",
+        "ORNL",
+        "D3D Energetic"
+      ],
+      "tags": [
+        "MICER",
+        "isotope",
+        "fueling",
+        "DIII-D"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DG3-015",
+      "projectId": "FD-DIAG-PLASMA-015",
+      "primaryTask": "DG3",
+      "relatedTasks": [
+        "DG4",
+        "DG5",
+        "DG9"
+      ],
+      "title": "ITER诊断中性束与氦灰CXRS",
+      "titleEn": "ITER diagnostic neutral beam and helium-ash CXRS",
+      "technique": {
+        "family": "OPTICAL",
+        "name": "诊断中性束CXRS / DNB-CXRS"
+      },
+      "problem": "在燃烧等离子体测氦灰、杂质、Ti和转动。",
+      "measurementPrinciple": "专用中性束提供可控电荷交换靶；He/杂质复合谱结合束衰减和原子速率给密度。",
+      "quantities": [
+        "helium-ash density",
+        "impurity density",
+        "ion temperature",
+        "rotation"
+      ],
+      "region": [
+        "ITER核心束路径"
+      ],
+      "hardware/sensors": [
+        "diagnostic neutral beam",
+        "CXRS optics",
+        "high-etendue spectrometers",
+        "beam-emission monitor"
+      ],
+      "calibration": "标定束能量/组分、视线几何和绝对光谱响应；束发射监控衰减。",
+      "inference": "分离主动/被动谱，联合束传播、halo中性、有限寿命和原子数据前向模型。",
+      "devices": [
+        "ITER",
+        "DIII-D/JET method heritage"
+      ],
+      "validation": "以束源试验、光学吞吐和合成信号评估；现役装置验证方法，但ITER氦灰闭环尚无运行证据。",
+      "evidenceLevel": "E2",
+      "deploymentLevel": "D2",
+      "limitations": "氦线弱、被动背景强；束衰减、辐照退化和端口可达性是风险。",
+      "twinRelevance": "将诊断束建模为带健康状态的执行器—传感器，是燃烧颗粒孪生关键。",
+      "papers": [
+        {
+          "title": "Status of the R&D activities to the design of an ITER core CXRS diagnostic system",
+          "authors": "Philippe Mertens; David A. Castaño Bardawil; Tétény Baross; Wolfgang Biel; Sebastian Friese; Nick Hawkes; Roger J.E. Jaspers; Vladislav Kotov; Yury Krasikov; Andreas Krimmer; Andrey Litnovsky; Oleksander Marchuk; et al. (18 authors)",
+          "year": 2015,
+          "venue": "Fusion Engineering and Design",
+          "doi": "10.1016/j.fusengdes.2015.05.039",
+          "url": "https://doi.org/10.1016/j.fusengdes.2015.05.039",
+          "sourceType": "peer-reviewed-journal"
+        },
+        {
+          "title": "Conceptual design and integration of a diagnostic neutral beam in ITER",
+          "authors": "E Di Pietro; A Costley; T Inoue; A Krylov; A Panasenkov; Y Utin; G Vayakis; M Von Hellerman; M Yamada",
+          "year": 2001,
+          "venue": "Fusion Engineering and Design",
+          "doi": "10.1016/s0920-3796(01)00423-9",
+          "url": "https://doi.org/10.1016/s0920-3796(01)00423-9",
+          "sourceType": "peer-reviewed-journal"
+        },
+        {
+          "title": "Testing neutral beam diagnostics",
+          "authors": "ITER Organization",
+          "year": 2023,
+          "venue": "ITER official website",
+          "doi": null,
+          "url": "https://www.iter.org/node/20687/testing-neutral-beam-diagnostics",
+          "sourceType": "official-facility-page"
+        }
+      ],
+      "code": [
+        {
+          "name": "FIDASIM",
+          "url": "https://github.com/D3DEnergetic/FIDASIM",
+          "status": "official-enabling",
+          "artifactType": "open-source-neutral-beam-forward-model",
+          "access": "public",
+          "relation": "束传播与CXRS合成信号；非ITER控制软件。"
+        },
+        {
+          "name": "装置专有分析/标定软件",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "operational-analysis-pipeline",
+          "access": "not public",
+          "relation": "ITER DNB控制/CXRS反演未公开。"
+        }
+      ],
+      "organizations": [
+        "ITER Organization",
+        "QST",
+        "Consorzio RFX"
+      ],
+      "tags": [
+        "ITER",
+        "DNB",
+        "helium-ash",
+        "CXRS"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DG4-016",
+      "projectId": "FD-DIAG-PLASMA-016",
+      "primaryTask": "DG4",
+      "relatedTasks": [
+        "DG9",
+        "DG10",
+        "DG11"
+      ],
+      "title": "测辐射热计：总辐射功率与功率平衡",
+      "titleEn": "Bolometry for total radiated power and power balance",
+      "technique": {
+        "family": "ENGINEERING_SENSOR",
+        "name": "测辐射热计 / bolometry"
+      },
+      "problem": "宽带测量总辐射与二维发射率，支撑功率平衡和辐射塌缩预警。",
+      "measurementPrinciple": "吸收膜把光功率转为温升；电阻桥或红外读出经热模型反卷积为视线积分功率。",
+      "quantities": [
+        "line-integrated radiation",
+        "total radiated power",
+        "2-D emissivity"
+      ],
+      "region": [
+        "全极向截面",
+        "核心/偏滤器多弦"
+      ],
+      "hardware/sensors": [
+        "resistive bolometers",
+        "metal-foil IR bolometers",
+        "collimators",
+        "bridge electronics",
+        "calibration heaters"
+      ],
+      "calibration": "电加热/光源标定吸收率、热容、热导和时间常数；辐照后复核灵敏度。",
+      "inference": "热反卷积后做Abel/正则化层析；总功率积分传播视线盲区与协方差。",
+      "devices": [
+        "ITER",
+        "JET",
+        "ASDEX Upgrade",
+        "EAST"
+      ],
+      "validation": "直接来源覆盖 ITER 测辐射热计性能估计、跨聚变实验的测量性能评估方法及 ITER 功率平衡需求；未证明该具体链条已例行在线部署。",
+      "evidenceLevel": "E2",
+      "deploymentLevel": "D2",
+      "limitations": "响应较慢；吸收膜老化、辐照漂移、漏电和有限视线限制局部尖峰恢复。",
+      "twinRelevance": "电厂功率孪生核心；需版本化热模型、层析先验和通道健康。",
+      "papers": [
+        {
+          "title": "Performance estimations for the ITER bolometer diagnostic",
+          "authors": "H. Meister; F. Penzel; Z. Szabo-Balint; R. Reichle; L.C. Ingesson",
+          "year": 2019,
+          "venue": "Fusion Engineering and Design",
+          "doi": "10.1016/j.fusengdes.2019.01.146",
+          "url": "https://doi.org/10.1016/j.fusengdes.2019.01.146",
+          "sourceType": "peer-reviewed-journal"
+        },
+        {
+          "title": "Generic approach to assess the measuring performance of total-radiated power quantities by multi-channel resistive bolometer diagnostics on fusion experiments",
+          "authors": "L. C. Ingesson; A. Doblas; A. Gandhi; S. Jahanbakhsh; H. Meister",
+          "year": 2024,
+          "venue": "Review of Scientific Instruments",
+          "doi": "10.1063/5.0177114",
+          "url": "https://doi.org/10.1063/5.0177114",
+          "sourceType": "peer-reviewed-journal"
+        },
+        {
+          "title": "Diagnostics: maintaining the power balance",
+          "authors": "ITER Organization",
+          "year": 2024,
+          "venue": "ITER official website",
+          "doi": null,
+          "url": "https://www.iter.org/node/20687/diagnostics-maintaining-power-balance",
+          "sourceType": "official-facility-page"
+        }
+      ],
+      "code": [
+        {
+          "name": "Cherab",
+          "url": "https://www.cherab.info/",
+          "status": "official-enabling",
+          "artifactType": "open-source-radiation-forward-model",
+          "access": "public",
+          "relation": "视线/辐射合成观测。"
+        },
+        {
+          "name": "装置专有分析/标定软件",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "operational-analysis-pipeline",
+          "access": "not public",
+          "relation": "实时层析和健康管理代码未公开。"
+        }
+      ],
+      "organizations": [
+        "ITER Organization",
+        "FZ Jülich",
+        "EUROfusion",
+        "IPP CAS"
+      ],
+      "tags": [
+        "bolometer",
+        "radiation",
+        "power-balance",
+        "tomography"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DG4-017",
+      "projectId": "FD-DIAG-PLASMA-017",
+      "primaryTask": "DG4",
+      "relatedTasks": [
+        "DG6",
+        "DG10",
+        "DG11"
+      ],
+      "title": "软X射线阵列与快速层析",
+      "titleEn": "Soft-x-ray arrays and fast tomography",
+      "technique": {
+        "family": "OPTICAL",
+        "name": "软X射线阵列 / SXR"
+      },
+      "problem": "高时间分辨监测核心杂质辐射、锯齿和磁岛，并重建二维发射率。",
+      "measurementPrinciple": "滤膜后的半导体二极管测视线积分SXR；多视角阵列经层析反演。",
+      "quantities": [
+        "SXR brightness",
+        "2-D emissivity",
+        "sawtooth radius",
+        "MHD structure"
+      ],
+      "region": [
+        "核心极向截面"
+      ],
+      "hardware/sensors": [
+        "silicon photodiodes",
+        "foil filters",
+        "pinhole arrays",
+        "fast ADCs"
+      ],
+      "calibration": "以X射线源/同步辐射或响应模型标定；测滤膜、几何、暗电流并逐炮检查饱和。",
+      "inference": "最小Fisher/SVD/Gaussian-process层析；多弦相位/幅值用于模态拟合。",
+      "devices": [
+        "DIII-D",
+        "ASDEX Upgrade",
+        "SPARC",
+        "EAST"
+      ],
+      "validation": "RTP演示实时层析；AUG用合成数据和交叉验证；SPARC做响应/计数设计。",
+      "evidenceLevel": "E4",
+      "deploymentLevel": "D4",
+      "limitations": "亮度卷积Te、ne和杂质；滤膜老化、视线积分和几何误差影响层析。",
+      "twinRelevance": "提供核心辐射/MHD高带宽状态，但需保留响应函数并避免单物理量误读。",
+      "papers": [
+        {
+          "title": "Soft x-ray tomography diagnostic at the RTP tokamak",
+          "authors": "D. F. da Cruz; A. J. H. Donné",
+          "year": 1994,
+          "venue": "Review of Scientific Instruments",
+          "doi": "10.1063/1.1144680",
+          "url": "https://doi.org/10.1063/1.1144680",
+          "sourceType": "peer-reviewed-journal"
+        },
+        {
+          "title": "Deep learning for Gaussian process soft x-ray tomography model selection in the ASDEX Upgrade tokamak",
+          "authors": "F. Matos; J. Svensson; A. Pavone; T. Odstrčil; F. Jenko",
+          "year": 2020,
+          "venue": "Review of Scientific Instruments",
+          "doi": "10.1063/5.0020680",
+          "url": "https://doi.org/10.1063/5.0020680",
+          "sourceType": "peer-reviewed-journal"
+        },
+        {
+          "title": "SPARC x-ray diagnostics: Technical and functional overview",
+          "authors": "D. Vezinet; C. J. Perks; E. Panontin; S. Normile; R. A. Tinguely; J. Rice; M. Reinke; M. Cario; J. Raimond; A. Hoffmann; E. Dubas; A. Saltos; et al. (13 authors)",
+          "year": 2024,
+          "venue": "Review of Scientific Instruments",
+          "doi": "10.1063/5.0219486",
+          "url": "https://doi.org/10.1063/5.0219486",
+          "sourceType": "peer-reviewed-journal"
+        }
+      ],
+      "code": [
+        {
+          "name": "Cherab",
+          "url": "https://www.cherab.info/",
+          "status": "official-enabling",
+          "artifactType": "open-source-forward-model",
+          "access": "public",
+          "relation": "几何与发射合成；SXR响应需扩展。"
+        },
+        {
+          "name": "装置专有分析/标定软件",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "operational-analysis-pipeline",
+          "access": "not public",
+          "relation": "实时生产层析/MHD代码未公开。"
+        }
+      ],
+      "organizations": [
+        "General Atomics",
+        "IPP Garching",
+        "CFS",
+        "IPP CAS"
+      ],
+      "tags": [
+        "SXR",
+        "tomography",
+        "MHD",
+        "real-time"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DG4-018",
+      "projectId": "FD-DIAG-PLASMA-018",
+      "primaryTask": "DG4",
+      "relatedTasks": [
+        "DG3",
+        "DG10"
+      ],
+      "title": "真空紫外杂质谱：电荷态与杂质输运",
+      "titleEn": "Vacuum-ultraviolet spectroscopy for impurity charge states and transport",
+      "technique": {
+        "family": "OPTICAL",
+        "name": "真空紫外光谱 / VUV"
+      },
+      "problem": "识别杂质元素/电荷态及输运时标，约束稀释和辐射损失。",
+      "measurementPrinciple": "光栅光谱仪测VUV/EUV特征线；线强由电荷态密度、电子参数和碰撞辐射系数决定。",
+      "quantities": [
+        "impurity species",
+        "charge-state brightness",
+        "transport time"
+      ],
+      "region": [
+        "核心/边缘视线积分"
+      ],
+      "hardware/sensors": [
+        "grazing-incidence spectrometers",
+        "VUV gratings",
+        "MCP/CCD"
+      ],
+      "calibration": "用标准灯/同步辐射或已知线标定波长/响应；跟踪光栅污染和增益。",
+      "inference": "谱线识别/拟合后用ADAS系数推断发射；输运解释需前向模型。",
+      "devices": [
+        "KSTAR",
+        "ITER",
+        "EAST",
+        "JET"
+      ],
+      "validation": "ITER原型在KSTAR以杂质注入和已知谱线验证覆盖与灵敏度。",
+      "evidenceLevel": "E3",
+      "deploymentLevel": "D3",
+      "limitations": "线混叠、原子数据、视线积分、污染和非平衡电离使密度反演不唯一。",
+      "twinRelevance": "为杂质孪生提供元素标签；原子库版本和识别置信度必须记录。",
+      "papers": [
+        {
+          "title": "Test of prototype ITER vacuum ultraviolet spectrometer and its application to impurity study in KSTAR plasmas",
+          "authors": "C. R. Seon; J. H. Hong; J. Jang; S. H. Lee; W. Choe; H. H. Lee; M. S. Cheon; S. Pak; H. G. Lee; W. Biel; R. Barnsley",
+          "year": 2014,
+          "venue": "Review of Scientific Instruments",
+          "doi": "10.1063/1.4886430",
+          "url": "https://doi.org/10.1063/1.4886430",
+          "sourceType": "peer-reviewed-journal"
+        },
+        {
+          "title": "VUV spectroscopy in impurity injection experiments at KSTAR using prototype ITER VUV spectrometer",
+          "authors": "C. R. Seon; J. H. Hong; I. Song; J. Jang; H. Y. Lee; Y. H. An; B. S. Kim; T. M. Jeon; J. S. Park; W. Choe; H. G. Lee; S. Pak; et al. (18 authors)",
+          "year": 2017,
+          "venue": "Review of Scientific Instruments",
+          "doi": "10.1063/1.4998970",
+          "url": "https://doi.org/10.1063/1.4998970",
+          "sourceType": "peer-reviewed-journal"
+        }
+      ],
+      "code": [
+        {
+          "name": "OpenADAS",
+          "url": "https://open.adas.ac.uk",
+          "status": "official-enabling",
+          "artifactType": "atomic-data-service",
+          "access": "public",
+          "relation": "VUV谱线/PEC/电离平衡。"
+        },
+        {
+          "name": "装置专有分析/标定软件",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "operational-analysis-pipeline",
+          "access": "not public",
+          "relation": "自动识别和仪器响应库未公开。"
+        }
+      ],
+      "organizations": [
+        "ITER Organization",
+        "KFE",
+        "NIFS",
+        "ADAS Project"
+      ],
+      "tags": [
+        "VUV",
+        "impurity",
+        "charge-state",
+        "KSTAR"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DG4-019",
+      "projectId": "FD-DIAG-PLASMA-019",
+      "primaryTask": "DG4",
+      "relatedTasks": [
+        "DG3",
+        "DG7",
+        "DG10"
+      ],
+      "title": "可见光杂质/燃料谱：Zeff、流入与回收",
+      "titleEn": "Visible spectroscopy for Zeff, impurity influx and recycling",
+      "technique": {
+        "family": "OPTICAL",
+        "name": "可见光谱 / visible spectroscopy"
+      },
+      "problem": "监测H同位素、低电荷杂质、Zeff代理、壁源与偏滤器回收。",
+      "measurementPrinciple": "测Dα/Hα、杂质线和连续谱；线强结合PEC/SXB给粒子源，轫致连续谱约束Zeff。",
+      "quantities": [
+        "line brightness",
+        "impurity influx",
+        "recycling flux",
+        "Zeff",
+        "isotope ratio"
+      ],
+      "region": [
+        "主腔边缘",
+        "偏滤器/PFC"
+      ],
+      "hardware/sensors": [
+        "survey spectrometers",
+        "filtered cameras",
+        "fiber bundles",
+        "calibration lamps"
+      ],
+      "calibration": "用波长灯、积分球/标准源标定绝对响应；跟踪光纤/窗口透过率。",
+      "inference": "多峰拟合分离线/连续谱，用ADAS换算；Zeff需Te/ne与几何约束。",
+      "devices": [
+        "JET",
+        "EAST",
+        "DIII-D",
+        "ITER"
+      ],
+      "validation": "JET 金属壁装置常规运行把可见谱线与材料变化、辐射/粒子诊断交叉。",
+      "evidenceLevel": "E4",
+      "deploymentLevel": "D4",
+      "limitations": "视线积分、反射光、非平衡激发、污染和原子系数限制绝对粒子源。",
+      "twinRelevance": "把壁—等离子体交换纳入孪生；绝对辐亮度和表面反射模型须可追溯。",
+      "papers": [
+        {
+          "title": "A new visible spectroscopy diagnostic for the JET ITER-like wall main chamber",
+          "authors": "C. F. Maggi; S. Brezinsek; M. F. Stamp; S. Griph; P. Heesterman; C. Hogben; A. Horton; A. Meigs; C. Morlock; W. Studholme; K.-D. Zastrow",
+          "year": 2012,
+          "venue": "Review of Scientific Instruments",
+          "doi": "10.1063/1.4733734",
+          "url": "https://doi.org/10.1063/1.4733734",
+          "sourceType": "peer-reviewed-journal"
+        },
+        {
+          "title": "Spectroscopic Diagnostics for ITER",
+          "authors": "Tatsuo SUGIE; Alan COSTLEY; Artur MALAQUIAS; Chris WALKER",
+          "year": 2003,
+          "venue": "Journal of Plasma and Fusion Research",
+          "doi": "10.1585/jspf.79.1051",
+          "url": "https://doi.org/10.1585/jspf.79.1051",
+          "sourceType": "peer-reviewed-journal"
+        }
+      ],
+      "code": [
+        {
+          "name": "OpenADAS",
+          "url": "https://open.adas.ac.uk",
+          "status": "official-enabling",
+          "artifactType": "atomic-data-service",
+          "access": "public",
+          "relation": "S/XB、PEC和连续谱系数。"
+        },
+        {
+          "name": "Cherab",
+          "url": "https://www.cherab.info/",
+          "status": "official-enabling",
+          "artifactType": "open-source-spectroscopy-forward-model",
+          "access": "public",
+          "relation": "几何/发射/壁反射合成。"
+        },
+        {
+          "name": "装置专有分析/标定软件",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "operational-analysis-pipeline",
+          "access": "not public",
+          "relation": "生产线拟合/Zeff代码未公开。"
+        }
+      ],
+      "organizations": [
+        "EUROfusion JET",
+        "ITER Organization",
+        "ADAS Project"
+      ],
+      "tags": [
+        "visible",
+        "Zeff",
+        "impurity-influx",
+        "recycling"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DG4-020",
+      "projectId": "FD-DIAG-PLASMA-020",
+      "primaryTask": "DG5",
+      "relatedTasks": [
+        "DG4",
+        "DG6",
+        "DG11"
+      ],
+      "title": "硬X射线：逃逸电子制动辐射监测",
+      "titleEn": "Hard-x-ray monitoring of runaway-electron bremsstrahlung",
+      "technique": {
+        "family": "NUCLEAR_PARTICLE",
+        "name": "硬X射线监测 / HXR"
+      },
+      "problem": "探测逃逸电子产生、能谱和壁撞击，为破裂缓解与损伤评估提供证据。",
+      "measurementPrinciple": "相对论电子在离子/材料中制动产生HXR；闪烁体或半导体记录能谱和方向。",
+      "quantities": [
+        "HXR spectrum",
+        "runaway onset",
+        "loss-location proxy"
+      ],
+      "region": [
+        "全装置视线",
+        "壁撞击区"
+      ],
+      "hardware/sensors": [
+        "scintillators",
+        "CdTe/CZT/diamond",
+        "collimators",
+        "pulse-height electronics",
+        "shielding"
+      ],
+      "calibration": "用放射源/加速器标定能量、效率、死时间和饱和；测中子/伽马本底。",
+      "inference": "脉冲高度去堆积/死时间修正，再用响应矩阵和制动前向模型约束电子分布。",
+      "devices": [
+        "J-TEXT",
+        "HL-2M",
+        "SPARC",
+        "ITER"
+      ],
+      "validation": "J-TEXT以放电事件和磁扰动/壁损失相关性验证；SPARC/ITER用蒙特卡洛响应设计。",
+      "evidenceLevel": "E3",
+      "deploymentLevel": "D3",
+      "limitations": "计数堆积、方向响应和中子/伽马串扰显著；电子相空间反演非唯一。",
+      "twinRelevance": "应作为高能风险事件证据，并与破裂、磁扰动和PFC热响应联动。",
+      "papers": [
+        {
+          "title": "Hard X-ray spatial array diagnostics on Joint Texas Experimental Tokamak",
+          "authors": "D. W. Huang; Z. Y. Chen; Y. H. Luo; R. H. Tong; W. Yan; W. Jin; G. Zhuang",
+          "year": 2014,
+          "venue": "Review of Scientific Instruments",
+          "doi": "10.1063/1.4891709",
+          "url": "https://doi.org/10.1063/1.4891709",
+          "sourceType": "peer-reviewed-journal"
+        },
+        {
+          "title": "Investigation of Light Transmission Efficiency in ITER Hard X-Ray Monitor",
+          "authors": "Shin KAJITA; Santosh P. PANDYA; Richard O'CONNOR; Robin BARNSLEY; Huxford ROGER",
+          "year": 2021,
+          "venue": "Plasma and Fusion Research",
+          "doi": "10.1585/pfr.16.1302106",
+          "url": "https://doi.org/10.1585/pfr.16.1302106",
+          "sourceType": "peer-reviewed-journal"
+        }
+      ],
+      "code": [
+        {
+          "name": "Geant4",
+          "url": "https://geant4.web.cern.ch/",
+          "status": "official-enabling",
+          "artifactType": "open-source-particle-transport",
+          "access": "public",
+          "relation": "探测器响应/屏蔽/背景模型。"
+        },
+        {
+          "name": "装置专有分析/标定软件",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "operational-analysis-pipeline",
+          "access": "not public",
+          "relation": "在线事件逻辑和反演未公开。"
+        }
+      ],
+      "organizations": [
+        "HUST",
+        "SWIP",
+        "CFS",
+        "ITER Organization"
+      ],
+      "tags": [
+        "HXR",
+        "runaway",
+        "disruption",
+        "risk"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DG5-021",
+      "projectId": "FD-DIAG-PLASMA-021",
+      "primaryTask": "DG5",
+      "relatedTasks": [
+        "DG0",
+        "DG11"
+      ],
+      "title": "微裂变室与中子通量监测：聚变功率基准",
+      "titleEn": "Micro-fission chambers and neutron-flux monitors for fusion power",
+      "technique": {
+        "family": "NUCLEAR_PARTICLE",
+        "name": "裂变室中子监测 / MFC-NFM"
+      },
+      "problem": "宽动态范围测总中子率和聚变功率，支撑燃烧控制与核计量。",
+      "measurementPrinciple": "中子在裂变层产生带电碎片；电离室脉冲/电流经响应模型映射为源强。",
+      "quantities": [
+        "total neutron rate",
+        "fusion power",
+        "fluence"
+      ],
+      "region": [
+        "容器内外固定位置"
+      ],
+      "hardware/sensors": [
+        "micro-fission chambers",
+        "neutron flux monitors",
+        "ionization electronics",
+        "shielding"
+      ],
+      "calibration": "用标定中子源/反应堆测效率，通过中子学模型传递到等离子体源；校准脉冲/电流模式重叠。",
+      "inference": "修正死时间/本底，结合响应矩阵估计源强，多探测器修正源分布变化。",
+      "devices": [
+        "ITER",
+        "JET",
+        "DIII-D",
+        "EAST"
+      ],
+      "validation": "两条直接来源均为 ITER 中子通量监视器的中子学分析、测量性能和在位标定规划；没有提供 ITER 真机运行或例行在线证据。",
+      "evidenceLevel": "E1",
+      "deploymentLevel": "D2",
+      "limitations": "响应依赖源分布/能谱/屏蔽；燃耗、辐照与高计数饱和需全寿命管理。",
+      "twinRelevance": "燃烧功率计量锚点；响应矩阵、燃耗和标定溯源应进入资产孪生。",
+      "papers": [
+        {
+          "title": "Neutron Transport Analysis of the Processes Affecting the in situ Calibration of ITER In-Vessel Neutron Flux Monitors Equipped with a Micro-Fission Chamber System",
+          "authors": "Masao ISHIKAWA; Takashi KONDOH; Keigo TAKEDA; Kiyoshi ITAMI",
+          "year": 2016,
+          "venue": "Plasma and Fusion Research",
+          "doi": "10.1585/pfr.11.1402118",
+          "url": "https://doi.org/10.1585/pfr.11.1402118",
+          "sourceType": "peer-reviewed-journal"
+        },
+        {
+          "title": "Neutronic analysis and measurement performance assessment of ITER neutron flux monitor system",
+          "authors": "Zuowei Wen; Guoliang Yuan; Yong Li; Qingwei Yang; Jun Li; Li Zhao; Lingfeng Wei; Jinwen Zhang",
+          "year": 2023,
+          "venue": "Fusion Engineering and Design",
+          "doi": "10.1016/j.fusengdes.2022.113364",
+          "url": "https://doi.org/10.1016/j.fusengdes.2022.113364",
+          "sourceType": "peer-reviewed-journal"
+        }
+      ],
+      "code": [
+        {
+          "name": "MCNP",
+          "url": "https://mcnp.lanl.gov/",
+          "status": "controlled-access",
+          "artifactType": "radiation-transport-code",
+          "access": "licensed/export-controlled",
+          "relation": "响应/屏蔽/标定传递。"
+        },
+        {
+          "name": "装置专有分析/标定软件",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "operational-analysis-pipeline",
+          "access": "not public",
+          "relation": "在线计量数据库与控制接口未公开。"
+        }
+      ],
+      "organizations": [
+        "ITER Organization",
+        "QST",
+        "LANL",
+        "EUROfusion JET"
+      ],
+      "tags": [
+        "neutron",
+        "fission-chamber",
+        "fusion-power",
+        "metrology"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DG5-022",
+      "projectId": "FD-DIAG-PLASMA-022",
+      "primaryTask": "DG5",
+      "relatedTasks": [
+        "DG9",
+        "DG10"
+      ],
+      "title": "径向中子相机：聚变反应率剖面",
+      "titleEn": "Radial neutron camera for fusion-reaction-rate profiles",
+      "technique": {
+        "family": "NUCLEAR_PARTICLE",
+        "name": "中子相机 / neutron camera"
+      },
+      "problem": "空间分辨聚变中子发射，约束反应率剖面、燃料分布和快离子行为。",
+      "measurementPrinciple": "屏蔽准直孔定义多条弦；探测器计数经中子输运响应和层析反演得到发射率。",
+      "quantities": [
+        "line-integrated neutron brightness",
+        "emissivity profile",
+        "source asymmetry"
+      ],
+      "region": [
+        "极向截面多弦",
+        "赤道/垂直端口"
+      ],
+      "hardware/sensors": [
+        "collimators",
+        "scintillators/fission chambers",
+        "fast electronics",
+        "massive shielding"
+      ],
+      "calibration": "用中子源做绝对效率/串扰标定，并以MCNP建立每弦响应；现场校准验证安装偏差。",
+      "inference": "死时间/散射本底修正后做正则层析或参数化源拟合，传播响应矩阵误差。",
+      "devices": [
+        "ITER",
+        "JET",
+        "DIII-D"
+      ],
+      "validation": "ITER RNC做详细中子学、原型和现场校准设计；JET中子相机与总中子率/谱仪交叉。",
+      "evidenceLevel": "E3",
+      "deploymentLevel": "D3",
+      "limitations": "厚屏蔽、散射串扰和有限弦使层析分辨有限；响应对材料配置敏感。",
+      "twinRelevance": "把总聚变功率扩展为空间状态；几何/屏蔽变更必须触发响应矩阵重算。",
+      "papers": [
+        {
+          "title": "The ITER radial neutron camera in-port system: Nuclear analyses in support of its design development",
+          "authors": "Fabio Moro; Basilio Esposito; Daniele Marocco; Salvatore Podda; Fulvio Pompili; Marco Riva; Davide Flammini; Andrea Colangeli; Ryszard Kantor",
+          "year": 2019,
+          "venue": "Fusion Engineering and Design",
+          "doi": "10.1016/j.fusengdes.2018.12.028",
+          "url": "https://doi.org/10.1016/j.fusengdes.2018.12.028",
+          "sourceType": "peer-reviewed-journal"
+        },
+        {
+          "title": "Strategy and guidelines for the calibration of the ITER Radial Neutron Camera",
+          "authors": "M. Cecconello; R. Miklaszewski; D. Marocco; S. Conroy; F. Moro; B. Esposito; S. Podda; B. Bienkowska; A. Szydlowski",
+          "year": 2019,
+          "venue": "Fusion Engineering and Design",
+          "doi": "10.1016/j.fusengdes.2019.03.099",
+          "url": "https://doi.org/10.1016/j.fusengdes.2019.03.099",
+          "sourceType": "peer-reviewed-journal"
+        }
+      ],
+      "code": [
+        {
+          "name": "MCNP",
+          "url": "https://mcnp.lanl.gov/",
+          "status": "controlled-access",
+          "artifactType": "radiation-transport-code",
+          "access": "licensed/export-controlled",
+          "relation": "相机响应和散射串扰。"
+        },
+        {
+          "name": "装置专有分析/标定软件",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "operational-analysis-pipeline",
+          "access": "not public",
+          "relation": "RNC生产层析代码未公开。"
+        }
+      ],
+      "organizations": [
+        "ITER Organization",
+        "ENEA",
+        "EUROfusion JET"
+      ],
+      "tags": [
+        "neutron-camera",
+        "tomography",
+        "fusion-rate",
+        "ITER"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DG5-023",
+      "projectId": "FD-DIAG-PLASMA-023",
+      "primaryTask": "DG5",
+      "relatedTasks": [
+        "DG3",
+        "DG9"
+      ],
+      "title": "高分辨中子能谱：燃料离子与快离子",
+      "titleEn": "High-resolution neutron spectroscopy for fuel ions and fast ions",
+      "technique": {
+        "family": "NUCLEAR_PARTICLE",
+        "name": "中子能谱 / neutron spectroscopy"
+      },
+      "problem": "由中子能谱宽度/形状诊断离子温度、D/T比例和快离子反应通道。",
+      "measurementPrinciple": "飞行时间、反冲质子或磁质子反冲谱仪测中子能量；多普勒展宽和非热尾部连接反应离子分布。",
+      "quantities": [
+        "neutron energy spectrum",
+        "ion temperature",
+        "fuel ratio",
+        "fast-ion contribution"
+      ],
+      "region": [
+        "全等离子体积分或准直视线"
+      ],
+      "hardware/sensors": [
+        "TOFOR",
+        "magnetic proton recoil spectrometer",
+        "thin-foil proton recoil telescope",
+        "fast timing detectors"
+      ],
+      "calibration": "用单能/已知谱中子源标定能量、效率与响应；装置上与总中子率和活化诊断核对。",
+      "inference": "响应矩阵反卷积和核反应谱模型拟合，分解热/非热组分并给后验。",
+      "devices": [
+        "JET TOFOR/MPR",
+        "ITER HRNS"
+      ],
+      "validation": "JET 在线中子谱系统以 D-D/D-T 装置放电和独立 Ti/CXRS 验证；ITER HRNS原型以束线/模拟评估。",
+      "evidenceLevel": "E4",
+      "deploymentLevel": "D4",
+      "limitations": "低计数统计、散射背景和响应反卷积限制时间分辨；快离子解释依赖反应模型。",
+      "twinRelevance": "为燃烧与快离子孪生提供能量维度；必须保存响应矩阵和核数据版本。",
+      "papers": [
+        {
+          "title": "New method for time alignment and time calibration of the TOFOR time-of-flight neutron spectrometer at JET",
+          "authors": "B. Eriksson; S. Conroy; G. Ericsson; J. Eriksson; L. Giacomelli; A. Hjalmarsson; M. Weiszflog",
+          "year": 2021,
+          "venue": "Review of Scientific Instruments",
+          "doi": "10.1063/5.0041126",
+          "url": "https://doi.org/10.1063/5.0041126",
+          "sourceType": "peer-reviewed-journal"
+        },
+        {
+          "title": "Gain stabilization control system of the upgraded magnetic proton recoil neutron spectrometer at JET",
+          "authors": "Henrik Sjöstrand; E. Andersson Sundén; S. Conroy; G. Ericsson; M. Gatu Johnson; L. Giacomelli; G. Gorini; C. Hellesen; A. Hjalmarsson; S. Popovichev; E. Ronchi; M. Tardocchi; et al. (13 authors)",
+          "year": 2009,
+          "venue": "Review of Scientific Instruments",
+          "doi": "10.1063/1.3109682",
+          "url": "https://doi.org/10.1063/1.3109682",
+          "sourceType": "peer-reviewed-journal"
+        },
+        {
+          "title": "Development and performance of the thin-foil proton recoil spectrometer for ITER plasma diagnostics",
+          "authors": "J. Dankowski; J. Bielecki; J. Błądek; S. Conroy; B. Coriton; G. Croci; D. Dworaka; G. Ericsson; J. Eriksson; A. Wójcik-Gargula; A. Hjalmarsson; A. Jardin; et al. (27 authors)",
+          "year": 2025,
+          "venue": "Fusion Engineering and Design",
+          "doi": "10.1016/j.fusengdes.2025.115263",
+          "url": "https://doi.org/10.1016/j.fusengdes.2025.115263",
+          "sourceType": "peer-reviewed-journal"
+        }
+      ],
+      "code": [
+        {
+          "name": "装置专有分析/标定软件",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "operational-analysis-pipeline",
+          "access": "not public",
+          "relation": "JET/ITER谱反卷积和核数据配置未作为完整仓库公开。"
+        }
+      ],
+      "organizations": [
+        "EUROfusion JET",
+        "Uppsala University",
+        "ITER Organization"
+      ],
+      "tags": [
+        "neutron-spectroscopy",
+        "TOFOR",
+        "MPR",
+        "HRNS",
+        "fast-ion"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DG5-024",
+      "projectId": "FD-DIAG-PLASMA-024",
+      "primaryTask": "DG5",
+      "relatedTasks": [
+        "DG0"
+      ],
+      "title": "中子活化系统：积分聚变中子产额与绝对校核",
+      "titleEn": "Neutron activation system for integral yield and absolute cross-check",
+      "technique": {
+        "family": "NUCLEAR_PARTICLE",
+        "name": "中子活化 / neutron activation"
+      },
+      "problem": "给出独立、时间积分的中子产额和能谱阈值信息，校核实时中子监测。",
+      "measurementPrinciple": "选定箔片发生阈值/俘获反应；照射后用伽马谱测活度，结合截面、衰变和输运求通量。",
+      "quantities": [
+        "shot-integrated neutron yield",
+        "fluence",
+        "spectral-index ratios"
+      ],
+      "region": [
+        "气动传输照射位置",
+        "容器外计数站"
+      ],
+      "hardware/sensors": [
+        "activation foils",
+        "pneumatic transfer",
+        "HPGe gamma spectrometer",
+        "dosimetry standards"
+      ],
+      "calibration": "箔质量/成分和HPGe效率溯源；用标准源校准伽马能量/效率并采用评价核数据。",
+      "inference": "活度峰拟合、衰变修正和响应折叠；多箔阈值比提供粗能谱约束。",
+      "devices": [
+        "ITER design",
+        "JET",
+        "EAST"
+      ],
+      "validation": "JET等以裂变室和总中子率交叉；ITER通过系统设计、核数据和输运不确定度预算。",
+      "evidenceLevel": "E3",
+      "deploymentLevel": "D3",
+      "limitations": "不是实时诊断；转运时间、箔位置、核截面和屏蔽模型决定误差。",
+      "twinRelevance": "提供独立计量闭环和长期漂移审计，适合做数字孪生定期真值检查。",
+      "papers": [
+        {
+          "title": "ITER neutron activation system technical specification",
+          "authors": "Fusion for Energy",
+          "year": 2020,
+          "venue": "Official procurement technical specification",
+          "doi": null,
+          "url": "https://fusionforenergy.europa.eu/downloads/procurements/itercalls/524/2.%20Technical_Spec_V9Z8DG_v1_3.pdf",
+          "sourceType": "official-technical-document"
+        }
+      ],
+      "code": [
+        {
+          "name": "MCNP",
+          "url": "https://mcnp.lanl.gov/",
+          "status": "controlled-access",
+          "artifactType": "radiation-transport-code",
+          "access": "licensed/export-controlled",
+          "relation": "活化位置响应与谱折叠。"
+        },
+        {
+          "name": "装置专有分析/标定软件",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "operational-analysis-pipeline",
+          "access": "not public",
+          "relation": "气动控制和活度分析生产代码未公开。"
+        }
+      ],
+      "organizations": [
+        "Fusion for Energy",
+        "ITER Organization",
+        "EUROfusion JET"
+      ],
+      "tags": [
+        "activation",
+        "neutron-yield",
+        "absolute-calibration",
+        "dosimetry"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DG5-025",
+      "projectId": "FD-DIAG-PLASMA-025",
+      "primaryTask": "DG5",
+      "relatedTasks": [
+        "DG3",
+        "DG9"
+      ],
+      "title": "伽马射线能谱：快离子核反应与逃逸电子",
+      "titleEn": "Gamma-ray spectroscopy for fast-ion nuclear reactions",
+      "technique": {
+        "family": "NUCLEAR_PARTICLE",
+        "name": "伽马射线能谱 / gamma spectroscopy"
+      },
+      "problem": "利用特征核伽马线诊断高能离子反应、快离子分布和燃料反应通道。",
+      "measurementPrinciple": "快离子与杂质/燃料发生核反应产生特征伽马；能量和多普勒展宽编码反应与离子运动。",
+      "quantities": [
+        "gamma spectrum",
+        "fast-ion reaction rate",
+        "energetic-ion distribution proxy"
+      ],
+      "region": [
+        "准直核心视线",
+        "全装置背景"
+      ],
+      "hardware/sensors": [
+        "LaBr3/BGO/HPGe detectors",
+        "collimators",
+        "pulse-height electronics",
+        "neutron shielding"
+      ],
+      "calibration": "标准伽马源校准能量/效率/非线性；以蒙特卡洛评估中子诱发背景和屏蔽。",
+      "inference": "死时间/堆积修正，峰形和核反应前向模型拟合；与中子谱/FIDA联合约束。",
+      "devices": [
+        "JET",
+        "ITER relevance"
+      ],
+      "validation": "JET 装置常规伽马谱测量在 ICRH/NBI 和 D-T 场景中与已知反应、快离子诊断及总中子率交叉。",
+      "evidenceLevel": "E4",
+      "deploymentLevel": "D4",
+      "limitations": "中子背景、峰重叠、低效率和核截面误差限制时间/空间分辨。",
+      "twinRelevance": "为快离子孪生增加核反应特异性，但必须带探测器响应与背景模型。",
+      "papers": [
+        {
+          "title": "Definition of the radiation fields for the JET gamma-ray spectrometer diagnostics",
+          "authors": "Vasile Zoita; Sorin Soare; Teddy Craciunescu; Marian Curuia; Vasily Kiptily; Nick Balshaw; Patrick Blanchard; David Croft; Andrea Murari; Brian Syme",
+          "year": 2013,
+          "venue": "Fusion Engineering and Design",
+          "doi": "10.1016/j.fusengdes.2013.01.083",
+          "url": "https://doi.org/10.1016/j.fusengdes.2013.01.083",
+          "sourceType": "peer-reviewed-journal"
+        }
+      ],
+      "code": [
+        {
+          "name": "Geant4",
+          "url": "https://geant4.web.cern.ch/",
+          "status": "official-enabling",
+          "artifactType": "particle-transport-toolkit",
+          "access": "public",
+          "relation": "探测器效率、屏蔽和背景响应。"
+        },
+        {
+          "name": "装置专有分析/标定软件",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "operational-analysis-pipeline",
+          "access": "not public",
+          "relation": "JET峰拟合/核反应反演未公开。"
+        }
+      ],
+      "organizations": [
+        "EUROfusion JET",
+        "ENEA",
+        "ITER Organization"
+      ],
+      "tags": [
+        "gamma",
+        "fast-ion",
+        "nuclear-reaction",
+        "JET"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DG5-026",
+      "projectId": "FD-DIAG-PLASMA-026",
+      "primaryTask": "DG5",
+      "relatedTasks": [
+        "DG3",
+        "DG9",
+        "DG10"
+      ],
+      "title": "FIDA与成像FIDA：快离子相空间",
+      "titleEn": "FIDA and imaging FIDA for fast-ion phase space",
+      "technique": {
+        "family": "OPTICAL",
+        "name": "快离子D-alpha光谱 / FIDA-IFIDA"
+      },
+      "problem": "测量中性束快离子分布、再分布和损失前兆。",
+      "measurementPrinciple": "快离子电荷交换后发射多普勒位移Dα；波长/视线选择采样速度空间，成像系统增加二维空间。",
+      "quantities": [
+        "fast-ion spectral radiance",
+        "phase-space projections",
+        "redistribution"
+      ],
+      "region": [
+        "中性束交叉核心—边缘"
+      ],
+      "hardware/sensors": [
+        "neutral beam",
+        "high-throughput spectrometers",
+        "filtered cameras",
+        "fiber views"
+      ],
+      "calibration": "绝对/相对辐亮度、波长、视线和仪器函数标定；束调制分离主动光并测背景。",
+      "inference": "FIDASIM联合束、原子和轨道模型生成权函数；谱拟合或正则反演快离子分布。",
+      "devices": [
+        "DIII-D",
+        "MAST",
+        "ASDEX Upgrade",
+        "LHD"
+      ],
+      "validation": "装置上与中子率、NPA、FILD及MHD事件交叉；合成信号闭环验证权函数。",
+      "evidenceLevel": "E4",
+      "deploymentLevel": "D4",
+      "limitations": "束发射/被动Dα/杂质重叠；中性密度、halo和相空间稀疏采样造成模型依赖。",
+      "twinRelevance": "是快离子孪生的核心局部观测；将权函数、束状态和背景后验纳入数据产品。",
+      "papers": [
+        {
+          "title": "A new fast-ion Dα diagnostic for DIII-D",
+          "authors": "W. W. Heidbrink; Y. Luo; C. M. Muscatello; Y. Zhu; K. H. Burrell",
+          "year": 2008,
+          "venue": "Review of Scientific Instruments",
+          "doi": "10.1063/1.2956828",
+          "url": "https://doi.org/10.1063/1.2956828",
+          "sourceType": "peer-reviewed-journal"
+        },
+        {
+          "title": "The imaging fast ion D-alpha diagnostic (IFIDA) on DIII-D",
+          "authors": "C. Marini; C. S. Collins; M. A. Van Zeeland; K. E. Thome; W. W. Heidbrink; D. Lin",
+          "year": 2021,
+          "venue": "Review of Scientific Instruments",
+          "doi": "10.1063/5.0041652",
+          "url": "https://doi.org/10.1063/5.0041652",
+          "sourceType": "peer-reviewed-journal"
+        },
+        {
+          "title": "Dual view FIDA measurements on MAST",
+          "authors": "C A Michael; N Conway; B Crowley; O Jones; W W Heidbrink; S Pinches; E Braeken; R Akers; C Challis; M Turnyanskiy; A Patel; D Muir; et al. (14 authors)",
+          "year": 2013,
+          "venue": "Plasma Physics and Controlled Fusion",
+          "doi": "10.1088/0741-3335/55/9/095007",
+          "url": "https://doi.org/10.1088/0741-3335/55/9/095007",
+          "sourceType": "peer-reviewed-journal"
+        }
+      ],
+      "code": [
+        {
+          "name": "FIDASIM",
+          "url": "https://github.com/D3DEnergetic/FIDASIM",
+          "status": "official-direct",
+          "artifactType": "open-source-FIDA-forward-model",
+          "access": "public",
+          "relation": "束、原子、权函数和合成FIDA谱。"
+        }
+      ],
+      "organizations": [
+        "General Atomics",
+        "ORNL",
+        "UKAEA",
+        "D3D Energetic"
+      ],
+      "tags": [
+        "FIDA",
+        "IFIDA",
+        "fast-ion",
+        "phase-space"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DG5-027",
+      "projectId": "FD-DIAG-PLASMA-027",
+      "primaryTask": "DG5",
+      "relatedTasks": [
+        "DG6",
+        "DG9"
+      ],
+      "title": "集体汤姆逊散射：快离子与离子回旋特征",
+      "titleEn": "Collective Thomson scattering for fast ions",
+      "technique": {
+        "family": "MICROWAVE",
+        "name": "集体汤姆逊散射 / CTS"
+      },
+      "problem": "非侵入测量快离子速度分布和离子回旋结构。",
+      "measurementPrinciple": "毫米波在等离子体集体涨落上散射；频移谱由离子速度分布和介电响应决定。",
+      "quantities": [
+        "fast-ion velocity projection",
+        "ion feature spectrum",
+        "bulk-ion parameters"
+      ],
+      "region": [
+        "毫米波束交叉散射体积"
+      ],
+      "hardware/sensors": [
+        "gyrotron/probe source",
+        "receiver heterodyne channels",
+        "quasi-optical mirrors",
+        "notch filters"
+      ],
+      "calibration": "热/冷负载标定接收功率与频率；测杂散探测束、传输和散射几何。",
+      "inference": "扣除ECE/杂散背景后用介电响应模型拟合；合成诊断给速度空间权函数。",
+      "devices": [
+        "ASDEX Upgrade",
+        "ITER design",
+        "W7-X"
+      ],
+      "validation": "AUG在装置上测背景/快离子谱；ITER以准光设计和合成性能评估。",
+      "evidenceLevel": "E3",
+      "deploymentLevel": "D3",
+      "limitations": "强杂散探测功率和ECE背景；折射、散射几何与模型误差限制反演。",
+      "twinRelevance": "为快离子孪生提供独立微波投影；需记录源频率、几何和背景分解。",
+      "papers": [
+        {
+          "title": "Collective Thomson scattering capabilities to diagnose fusion plasmas",
+          "authors": "S.B. Korsholm; H. Bindslev; V. Furtula; F. Leipold; F. Meo; P.K. Michelsen; D. Moseev; S.K. Nielsen; M. Salewski; M. Stejner",
+          "year": 2010,
+          "venue": "Nuclear Instruments and Methods in Physics Research Section A: Accelerators, Spectrometers, Detectors and Associated Equipment",
+          "doi": "10.1016/j.nima.2010.05.003",
+          "url": "https://doi.org/10.1016/j.nima.2010.05.003",
+          "sourceType": "peer-reviewed-journal"
+        },
+        {
+          "title": "Fast Ion Collective Thomson Scattering Diagnostic for ITER: Design Elements",
+          "authors": "E. Tsakadze; H. Bindslev; S. B. Korsholm; A. W. Larsen; F. Meo; P. K. Michelsen; S. Michelsen; A. H. Nielsen; S. Nimb; B. Lauritzen; E. Nonbøl; N. Dubois",
+          "year": 2008,
+          "venue": "Fusion Science and Technology",
+          "doi": "10.13182/fst08-a1654",
+          "url": "https://doi.org/10.13182/fst08-a1654",
+          "sourceType": "peer-reviewed-journal"
+        },
+        {
+          "title": "Robust monitoring of thermal and fast ions using collective Thomson scattering: Combining physics- and data-driven background estimation",
+          "authors": "T. Verdier; J. Rasmussen; J. Stober; S. K. Nielsen",
+          "year": 2025,
+          "venue": "Review of Scientific Instruments",
+          "doi": "10.1063/5.0238948",
+          "url": "https://doi.org/10.1063/5.0238948",
+          "sourceType": "peer-reviewed-journal"
+        }
+      ],
+      "code": [
+        {
+          "name": "装置专有分析/标定软件",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "operational-analysis-pipeline",
+          "access": "not public",
+          "relation": "CTS谱拟合、准光配置和运行代码未公开。"
+        }
+      ],
+      "organizations": [
+        "DTU",
+        "IPP Garching",
+        "ITER Organization"
+      ],
+      "tags": [
+        "CTS",
+        "fast-ion",
+        "microwave",
+        "velocity-space"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DG5-028",
+      "projectId": "FD-DIAG-PLASMA-028",
+      "primaryTask": "DG5",
+      "relatedTasks": [
+        "DG6",
+        "DG7"
+      ],
+      "title": "快离子损失探测器：轨道损失与MHD再分布",
+      "titleEn": "Fast-ion loss detectors for orbit losses and MHD redistribution",
+      "technique": {
+        "family": "NUCLEAR_PARTICLE",
+        "name": "闪烁快离子损失探测 / FILD"
+      },
+      "problem": "测量到达壁附近的快离子损失、回旋半径和俯仰角，评估PFC载荷。",
+      "measurementPrinciple": "磁狭缝按回旋轨道选择入射离子；闪烁屏位置映射回旋半径/俯仰角，光学读出时间演化。",
+      "quantities": [
+        "loss flux",
+        "gyroradius",
+        "pitch angle",
+        "loss timing"
+      ],
+      "region": [
+        "低场侧壁/偏滤器附近"
+      ],
+      "hardware/sensors": [
+        "collimator/slits",
+        "scintillator screen",
+        "fast camera",
+        "photomultiplier",
+        "retractable head"
+      ],
+      "calibration": "用离子束/几何测量标定映射与效率；磁场/轨道模型验证探头接受度。",
+      "inference": "图像去背景后转为相空间损失图；轨道追踪关联源区和MHD。",
+      "devices": [
+        "ASDEX Upgrade",
+        "DIII-D",
+        "MAST",
+        "KSTAR"
+      ],
+      "validation": "以可控NBI轨道损失、探头位置扫描和MHD同步事件验证；AUG有自适应探头装置运行。",
+      "evidenceLevel": "E4",
+      "deploymentLevel": "D4",
+      "limitations": "只采样局部壁位置；探头受热/中子载荷，闪烁退化且绝对通量困难。",
+      "twinRelevance": "把快离子相空间与PFC局部风险连接；需把探头几何、磁场和退化状态纳入孪生。",
+      "papers": [
+        {
+          "title": "Self-adaptive diagnostic of radial fast-ion loss measurements on the ASDEX Upgrade tokamak (invited)",
+          "authors": "J. Gonzalez-Martin; M. Garcia-Munoz; B. Sieglin; A. Herrmann; T. Lunt; J. Ayllon-Guerola; J. Galdon-Quiroga; J. Hidalgo-Salaverri; A. Kovacsik; J. F. Rivero-Rodriguez; L. Sanchis; D. Silvagni; et al. (14 authors)",
+          "year": 2021,
+          "venue": "Review of Scientific Instruments",
+          "doi": "10.1063/5.0043756",
+          "url": "https://doi.org/10.1063/5.0043756",
+          "sourceType": "peer-reviewed-journal"
+        }
+      ],
+      "code": [
+        {
+          "name": "装置专有分析/标定软件",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "operational-analysis-pipeline",
+          "access": "not public",
+          "relation": "FILD图像映射、轨道数据库与在线事件代码未公开。"
+        }
+      ],
+      "organizations": [
+        "IPP Garching",
+        "General Atomics",
+        "University of Seville"
+      ],
+      "tags": [
+        "FILD",
+        "fast-ion-loss",
+        "orbit",
+        "PFC"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DG6-029",
+      "projectId": "FD-DIAG-PLASMA-029",
+      "primaryTask": "DG6",
+      "relatedTasks": [
+        "DG1",
+        "DG11"
+      ],
+      "title": "Mirnov线圈阵列：MHD模态与锁模",
+      "titleEn": "Mirnov-coil arrays for MHD modes and locked modes",
+      "technique": {
+        "family": "MAGNETIC",
+        "name": "Mirnov磁扰动阵列 / Mirnov arrays"
+      },
+      "problem": "高时间分辨识别撕裂模、鱼骨、ELM、锁模和模态数。",
+      "measurementPrinciple": "小型拾取线圈测dB/dt；极向/环向阵列的相位与幅值给m/n及旋转频率。",
+      "quantities": [
+        "magnetic fluctuation",
+        "mode frequency",
+        "m/n numbers",
+        "mode amplitude"
+      ],
+      "region": [
+        "真空室壁周向阵列"
+      ],
+      "hardware/sensors": [
+        "Mirnov coils",
+        "saddle loops",
+        "integrators",
+        "fast digitizers"
+      ],
+      "calibration": "已知线圈/磁场注入标定幅相和通道延迟；测几何、频响和串扰。",
+      "inference": "积分/带通/时频分析后以阵列相位拟合m/n；锁模用低频非轴对称场。",
+      "devices": [
+        "J-TEXT",
+        "MAST",
+        "DIII-D",
+        "EAST",
+        "KSTAR"
+      ],
+      "validation": "装置上用阵列冗余、合成模态注入及与SXR/ECEI事件交叉。",
+      "evidenceLevel": "E4",
+      "deploymentLevel": "D4",
+      "limitations": "壁屏蔽、涡流和有限阵列导致模态混叠；局部线圈不直接给内部径向位置。",
+      "twinRelevance": "是MHD事件孪生的高带宽触发层；需保留复幅值、频响和模态置信度。",
+      "papers": [
+        {
+          "title": "A high resolution Mirnov array for the Mega Ampere Spherical Tokamak",
+          "authors": "M. J. Hole; L. C. Appel; R. Martin",
+          "year": 2009,
+          "venue": "Review of Scientific Instruments",
+          "doi": "10.1063/1.3272713",
+          "url": "https://doi.org/10.1063/1.3272713",
+          "sourceType": "peer-reviewed-journal"
+        },
+        {
+          "title": "Upgrade of the Mirnov probe arrays on the J-TEXT tokamak",
+          "authors": "Daojing Guo; Qiming Hu; Da Li; Chengshuo Shen; Nengchao Wang; Zhuo Huang; Mingxiang Huang; Yonghua Ding; Guo Xu; Qingquan Yu; Yuejin Tang; Ge Zhuang",
+          "year": 2017,
+          "venue": "Review of Scientific Instruments",
+          "doi": "10.1063/1.4996360",
+          "url": "https://doi.org/10.1063/1.4996360",
+          "sourceType": "peer-reviewed-journal"
+        }
+      ],
+      "code": [
+        {
+          "name": "装置专有分析/标定软件",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "operational-analysis-pipeline",
+          "access": "not public",
+          "relation": "实时模态识别和保护接口未公开。"
+        }
+      ],
+      "organizations": [
+        "UKAEA",
+        "HUST",
+        "General Atomics"
+      ],
+      "tags": [
+        "Mirnov",
+        "MHD",
+        "mode-number",
+        "locked-mode"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DG6-030",
+      "projectId": "FD-DIAG-PLASMA-030",
+      "primaryTask": "DG6",
+      "relatedTasks": [
+        "DG2",
+        "DG10"
+      ],
+      "title": "二维电子回旋辐射成像：磁岛与湍流",
+      "titleEn": "Electron-cyclotron-emission imaging of islands and turbulence",
+      "technique": {
+        "family": "MICROWAVE",
+        "name": "电子回旋辐射成像 / ECEI"
+      },
+      "problem": "二维成像电子温度扰动，解析磁岛、锯齿、ELM与湍流结构。",
+      "measurementPrinciple": "多通道天线/透镜同时采样多个频率和垂直位置；ECE亮温变化映射二维Te扰动。",
+      "quantities": [
+        "2-D Te fluctuation",
+        "island structure",
+        "sawtooth/ELM dynamics"
+      ],
+      "region": [
+        "低场侧极向小视场"
+      ],
+      "hardware/sensors": [
+        "microwave imaging optics",
+        "mixer arrays",
+        "LO distribution",
+        "fast digitizers"
+      ],
+      "calibration": "黑体/热源标定通道增益与相位；用磁平衡和射线追踪标定空间映射。",
+      "inference": "去公共模/增益后构造二维电影，做互谱/相干/模态追踪和合成视场卷积。",
+      "devices": [
+        "KSTAR",
+        "DIII-D",
+        "EAST"
+      ],
+      "validation": "用受控MHD事件、ECE一维剖面和磁探针交叉；KSTAR给出升级系统装置性能。",
+      "evidenceLevel": "E4",
+      "deploymentLevel": "D4",
+      "limitations": "局限于ECE光学厚可达区；折射、非热电子、通道串扰和视场映射误差。",
+      "twinRelevance": "为动态MHD孪生提供二维观测；每帧应带映射/PSF和有效性掩膜。",
+      "papers": [
+        {
+          "title": "Development of a toroidally resolved broadband ECE imaging system for measurement of turbulent fluctuations on the KSTAR",
+          "authors": "Dong-Kwon Kim; Jaehyun Lee; Dong Jae Lee; Gunsu S. Yun",
+          "year": 2024,
+          "venue": "Review of Scientific Instruments",
+          "doi": "10.1063/5.0219245",
+          "url": "https://doi.org/10.1063/5.0219245",
+          "sourceType": "peer-reviewed-journal"
+        }
+      ],
+      "code": [
+        {
+          "name": "装置专有分析/标定软件",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "operational-analysis-pipeline",
+          "access": "not public",
+          "relation": "ECEI成像校准、实时事件识别和射线追踪生产代码未公开。"
+        }
+      ],
+      "organizations": [
+        "KFE",
+        "POSTECH",
+        "General Atomics",
+        "IPP CAS"
+      ],
+      "tags": [
+        "ECEI",
+        "MHD",
+        "island",
+        "turbulence"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DG6-031",
+      "projectId": "FD-DIAG-PLASMA-031",
+      "primaryTask": "DG6",
+      "relatedTasks": [
+        "DG2",
+        "DG10"
+      ],
+      "title": "束发射光谱：密度湍流与径向相关",
+      "titleEn": "Beam-emission spectroscopy for density turbulence",
+      "technique": {
+        "family": "OPTICAL",
+        "name": "束发射光谱 / BES"
+      },
+      "problem": "测量局部密度涨落、相关长度、传播和湍流输运。",
+      "measurementPrinciple": "中性束Dα发射随局部ne变化；二维视线阵列经原子寿命和光学PSF形成密度涨落观测。",
+      "quantities": [
+        "delta-ne/ne",
+        "correlation length",
+        "phase velocity",
+        "turbulence spectrum"
+      ],
+      "region": [
+        "中性束路径核心—边缘"
+      ],
+      "hardware/sensors": [
+        "neutral beam",
+        "filtered avalanche photodiodes",
+        "fiber array",
+        "fast low-noise electronics"
+      ],
+      "calibration": "标定增益/噪声/频响、视线几何和PSF；束关闭与背景视线去除被动光。",
+      "inference": "去公共噪声后做互相关/互谱；合成诊断修正原子寿命、束衰减和视场卷积。",
+      "devices": [
+        "DIII-D",
+        "MAST",
+        "NSTX"
+      ],
+      "validation": "DIII-D多代BES以装置涨落、电子学噪声注入和合成诊断验证。",
+      "evidenceLevel": "E4",
+      "deploymentLevel": "D4",
+      "limitations": "依赖中性束；beam-imprinting、光子噪声、有限PSF和MHD污染影响湍流量。",
+      "twinRelevance": "连接湍流模型和输运系数；孪生需存PSF、噪声谱和束状态。",
+      "papers": [
+        {
+          "title": "Plasma Turbulence Imaging via Beam Emission Spectroscopy in the Core of the DIII-D Tokamak",
+          "authors": "George R. McKEE; Raymond J. FONCK; Deepak K. GUPTA; David J. SCHLOSSBERG; Morgan W. SHAFER; Réjean L. BOIVIN; Wayne SOLOMON",
+          "year": 2007,
+          "venue": "Plasma and Fusion Research",
+          "doi": "10.1585/pfr.2.s1025",
+          "url": "https://doi.org/10.1585/pfr.2.s1025",
+          "sourceType": "peer-reviewed-journal"
+        },
+        {
+          "title": "Wide-field turbulence imaging with beam emission spectroscopy",
+          "authors": "G. R. McKee; R. J. Fonck; M. W. Shafer; I. U. Uzun-Kaymak; Z. Yan",
+          "year": 2010,
+          "venue": "Review of Scientific Instruments",
+          "doi": "10.1063/1.3495788",
+          "url": "https://doi.org/10.1063/1.3495788",
+          "sourceType": "peer-reviewed-journal"
+        }
+      ],
+      "code": [
+        {
+          "name": "装置专有分析/标定软件",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "operational-analysis-pipeline",
+          "access": "not public",
+          "relation": "BES实时/离线湍流分析和PSF数据库未公开。"
+        }
+      ],
+      "organizations": [
+        "General Atomics",
+        "University of Wisconsin–Madison"
+      ],
+      "tags": [
+        "BES",
+        "density-fluctuation",
+        "turbulence",
+        "correlation"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DG6-032",
+      "projectId": "FD-DIAG-PLASMA-032",
+      "primaryTask": "DG6",
+      "relatedTasks": [
+        "DG2",
+        "DG9"
+      ],
+      "title": "多普勒反射与相关反射：湍流和E×B速度",
+      "titleEn": "Doppler and correlation reflectometry for turbulence and ExB velocity",
+      "technique": {
+        "family": "MICROWAVE",
+        "name": "多普勒/相关反射计 / DBS"
+      },
+      "problem": "测量选定波数密度湍流、垂直速度与剪切流。",
+      "measurementPrinciple": "倾斜微波在截止层发生Bragg背散射；频移给垂直速度，功率给湍流水平代理；多点相位给相关传播。",
+      "quantities": [
+        "Doppler shift",
+        "perpendicular velocity",
+        "turbulence wavenumber",
+        "correlation length"
+      ],
+      "region": [
+        "边缘/台基截止层"
+      ],
+      "hardware/sensors": [
+        "steerable microwave antennas",
+        "frequency sources",
+        "I/Q receivers",
+        "fast digitizers"
+      ],
+      "calibration": "标定I/Q幅相、频率、天线角度和真空延迟；用射线追踪确定散射位置/k。",
+      "inference": "时频谱拟合Doppler峰；结合磁几何估计E×B速度，合成射线/全波评估局域性。",
+      "devices": [
+        "ASDEX Upgrade",
+        "EAST",
+        "DIII-D",
+        "W7-X"
+      ],
+      "validation": "装置上与CXRS Er、GPI/BES和参数扫描比较；EAST相关反射计有装置验证。",
+      "evidenceLevel": "E4",
+      "deploymentLevel": "D4",
+      "limitations": "相速度贡献、折射、多散射和散射位置不确定导致速度解释偏差。",
+      "twinRelevance": "为边缘流剪切孪生提供高频观测；应保留散射位置和k空间后验。",
+      "papers": [
+        {
+          "title": "Multi-channel poloidal correlation reflectometry on experimental advanced superconducting tokamak",
+          "authors": "H. Qu; T. Zhang; X. Han; H. M. Xiang; F. Wen; K. N. Geng; Y. M. Wang; D. F. Kong; J. Q. Cai; C. B. Huang; Y. Gao; X. Gao; et al. (13 authors)",
+          "year": 2016,
+          "venue": "Review of Scientific Instruments",
+          "doi": "10.1063/1.4960162",
+          "url": "https://doi.org/10.1063/1.4960162",
+          "sourceType": "peer-reviewed-journal"
+        },
+        {
+          "title": "On turbulence-correlation analysis based on correlation reflectometry",
+          "authors": "N Teplova (Kosolapova); K Itoh; S-I Itoh; E Gusakov; S Heuraux; S Inagaki; M Sasaki; T Kobayashi; Y Nagashima; S Oldenbürger; A Fujisawa",
+          "year": 2013,
+          "venue": "Physica Scripta",
+          "doi": "10.1088/0031-8949/87/04/045502",
+          "url": "https://doi.org/10.1088/0031-8949/87/04/045502",
+          "sourceType": "peer-reviewed-journal"
+        }
+      ],
+      "code": [
+        {
+          "name": "装置专有分析/标定软件",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "operational-analysis-pipeline",
+          "access": "not public",
+          "relation": "射线追踪、实时谱拟合和角度配置代码未公开。"
+        }
+      ],
+      "organizations": [
+        "IPP CAS",
+        "IPP Garching",
+        "General Atomics"
+      ],
+      "tags": [
+        "DBS",
+        "reflectometry",
+        "ExB",
+        "turbulence"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DG6-033",
+      "projectId": "FD-DIAG-PLASMA-033",
+      "primaryTask": "DG9",
+      "relatedTasks": [
+        "DG6",
+        "DG10"
+      ],
+      "title": "W7-X 相位衬度成像合成诊断",
+      "titleEn": "Synthetic phase-contrast imaging diagnostic for W7-X",
+      "technique": {
+        "family": "LASER",
+        "name": "相位衬度成像 / PCI"
+      },
+      "problem": "测量宽波数/频率范围的线积分密度涨落和波传播。",
+      "measurementPrinciple": "穿过等离子体的激光相位由密度扰动调制；相位板把相位变化转为探测器强度。",
+      "quantities": [
+        "line-integrated density fluctuation",
+        "wavenumber-frequency spectrum",
+        "mode propagation"
+      ],
+      "region": [
+        "穿过核心/边缘的激光弦"
+      ],
+      "hardware/sensors": [
+        "CO2 laser",
+        "phase plate",
+        "imaging optics",
+        "detector array"
+      ],
+      "calibration": "标定光学传递函数、相位板位置、探测器增益和空间频率映射。",
+      "inference": "傅里叶/时频分析得到S(k,f)；合成诊断用线积分和光学传递函数比较模拟。",
+      "devices": [
+        "DIII-D",
+        "Alcator C-Mod",
+        "TCV",
+        "W7-X"
+      ],
+      "validation": "直接来源是在 W7-X 几何和预期湍流场上开发的合成 PCI 诊断，用于设计与传递函数研究；不证明物理 PCI 已在装置部署。",
+      "evidenceLevel": "E1",
+      "deploymentLevel": "D2",
+      "limitations": "线积分导致径向定位弱；振动、折射和有限光学传递函数改变谱。",
+      "twinRelevance": "适合直接验证湍流模拟的合成观测，不宜未经前向模型反演局部振幅。",
+      "papers": [
+        {
+          "title": "Development of a synthetic phase contrast imaging diagnostic for turbulence studies at Wendelstein 7-X",
+          "authors": "S K Hansen; M Porkolab; J-P Bähner; Z Huang; A von Stechow; O Grulke; E M Edlund; F Wilms; A Bañón Navarro; F Jenko; E Sánchez",
+          "year": 2022,
+          "venue": "Plasma Physics and Controlled Fusion",
+          "doi": "10.1088/1361-6587/ac7ad2",
+          "url": "https://doi.org/10.1088/1361-6587/ac7ad2",
+          "sourceType": "peer-reviewed-journal"
+        }
+      ],
+      "code": [
+        {
+          "name": "装置专有分析/标定软件",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "operational-analysis-pipeline",
+          "access": "not public",
+          "relation": "各装置PCI标定与谱分析流水线未公开。"
+        }
+      ],
+      "organizations": [
+        "MIT PSFC",
+        "General Atomics",
+        "EPFL",
+        "Max Planck IPP"
+      ],
+      "tags": [
+        "PCI",
+        "density-fluctuation",
+        "turbulence",
+        "synthetic-diagnostic"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DG6-034",
+      "projectId": "FD-DIAG-PLASMA-034",
+      "primaryTask": "DG6",
+      "relatedTasks": [
+        "DG2",
+        "DG10"
+      ],
+      "title": "重离子束探针：电势、密度与涨落",
+      "titleEn": "Heavy-ion-beam probe for potential and density fluctuations",
+      "technique": {
+        "family": "NUCLEAR_PARTICLE",
+        "name": "重离子束探针 / HIBP"
+      },
+      "problem": "直接局部测量等离子体电势及密度/磁涨落，研究径向电场和输运。",
+      "measurementPrinciple": "注入重离子在等离子体内二次电离；二次离子能量差给局部电势，电流给密度/电离信息。",
+      "quantities": [
+        "plasma potential",
+        "electric-field fluctuation",
+        "density fluctuation",
+        "magnetic fluctuation"
+      ],
+      "region": [
+        "由束轨道选择的核心/边缘采样体积"
+      ],
+      "hardware/sensors": [
+        "heavy-ion accelerator",
+        "electrostatic analyzers",
+        "beamline",
+        "secondary-ion detectors"
+      ],
+      "calibration": "标定束能量、分析器增益和轨道几何；用真空轨迹与磁场模型定位采样体积。",
+      "inference": "能量差/电流解算并用轨道追踪映射；多通道互谱获得涨落传播。",
+      "devices": [
+        "QUEST",
+        "JIPP T-IIU",
+        "T-10",
+        "TJ-II"
+      ],
+      "validation": "束线台架、真空轨道和装置电势/涨落与独立Er诊断交叉。",
+      "evidenceLevel": "E3",
+      "deploymentLevel": "D3",
+      "limitations": "系统大、束衰减强，轨道对磁场敏感；空间覆盖和端口可达性有限。",
+      "twinRelevance": "提供稀缺电势真值，可校准边缘电场孪生；轨道/束健康应作为观测算子状态。",
+      "papers": [
+        {
+          "title": "Conceptual design of a heavy ion beam probe for the QUEST spherical tokamak",
+          "authors": "T. Ido; M. Hasegawa; R. Ikezoe; T. Onchi; K. Hanada; H. Idei; K. Kuroda; Y. Nagashima",
+          "year": 2022,
+          "venue": "Review of Scientific Instruments",
+          "doi": "10.1063/5.0101770",
+          "url": "https://doi.org/10.1063/5.0101770",
+          "sourceType": "peer-reviewed-journal"
+        },
+        {
+          "title": "Density fluctuations in JIPP T-IIU tokamak plasmas measured by a heavy ion beam probe",
+          "authors": "Y Hamada; A Nishizawa; Y Kawasumi; A Fujisawa; K Narihara; K Ida; A Ejiri; S Ohdachi; K Kawahata; K Toi; K Sato; T Seki; et al. (31 authors)",
+          "year": 1997,
+          "venue": "Nuclear Fusion",
+          "doi": "10.1088/0029-5515/37/7/i08",
+          "url": "https://doi.org/10.1088/0029-5515/37/7/i08",
+          "sourceType": "peer-reviewed-journal"
+        }
+      ],
+      "code": [
+        {
+          "name": "装置专有分析/标定软件",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "operational-analysis-pipeline",
+          "access": "not public",
+          "relation": "HIBP轨道、分析器控制和装置反演代码未公开。"
+        }
+      ],
+      "organizations": [
+        "Kyushu University",
+        "NIFS",
+        "Kurchatov Institute"
+      ],
+      "tags": [
+        "HIBP",
+        "potential",
+        "electric-field",
+        "fluctuation"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DG6-035",
+      "projectId": "FD-DIAG-PLASMA-035",
+      "primaryTask": "DG6",
+      "relatedTasks": [
+        "DG7",
+        "DG10"
+      ],
+      "title": "气体喷注成像：边缘丝状体与湍流",
+      "titleEn": "Gas-puff imaging of edge filaments and turbulence",
+      "technique": {
+        "family": "OPTICAL",
+        "name": "气体喷注成像 / GPI"
+      },
+      "problem": "二维高速成像边缘/SOL密度结构、blob、ELM和传播。",
+      "measurementPrinciple": "局部中性气体喷注的谱线发射随ne/Te变化；高速相机测二维亮度电影。",
+      "quantities": [
+        "2-D emission fluctuation",
+        "filament velocity",
+        "size/lifetime",
+        "ELM structure"
+      ],
+      "region": [
+        "LCFS附近与SOL局部视场"
+      ],
+      "hardware/sensors": [
+        "gas manifold/nozzles",
+        "fast camera",
+        "interference filter",
+        "collection optics"
+      ],
+      "calibration": "标定相机增益/暗场/平场、视场几何和滤光片；测喷气波形与背景。",
+      "inference": "光流、互相关和结构追踪；碰撞辐射合成诊断把亮度与ne/Te涨落关联。",
+      "devices": [
+        "TCV",
+        "Alcator C-Mod",
+        "NSTX",
+        "DIII-D"
+      ],
+      "validation": "以标定靶/成像、不同喷气量扫描及与探针/BES交叉；TCV系统论文给装置性能。",
+      "evidenceLevel": "E4",
+      "deploymentLevel": "D4",
+      "limitations": "喷气扰动局部等离子体；亮度非线性依赖ne/Te和中性输运，不能直接视为密度。",
+      "twinRelevance": "提供可解释边缘电影；孪生应使用合成发射而不是直接比较密度场。",
+      "papers": [
+        {
+          "title": "Gas puff imaging on the TCV tokamak",
+          "authors": "N. Offeddu; C. Wüthrich; W. Han; C. Theiler; T. Golfinopoulos; J. L. Terry; E. Marmar; C. Galperti; Y. Andrebe; B. P. Duval; R. Bertizzolo; A. Clement; et al. (16 authors)",
+          "year": 2022,
+          "venue": "Review of Scientific Instruments",
+          "doi": "10.1063/5.0126398",
+          "url": "https://doi.org/10.1063/5.0126398",
+          "sourceType": "peer-reviewed-journal"
+        },
+        {
+          "title": "Invited Review Article: Gas puff imaging diagnostics of edge plasma turbulence in magnetic fusion devices",
+          "authors": "S. J. Zweben; J. L. Terry; D. P. Stotler; R. J. Maqueda",
+          "year": 2017,
+          "venue": "Review of Scientific Instruments",
+          "doi": "10.1063/1.4981873",
+          "url": "https://doi.org/10.1063/1.4981873",
+          "sourceType": "peer-reviewed-journal"
+        }
+      ],
+      "code": [
+        {
+          "name": "OpenADAS",
+          "url": "https://open.adas.ac.uk",
+          "status": "official-enabling",
+          "artifactType": "atomic-data-service",
+          "access": "public",
+          "relation": "GPI谱线碰撞辐射系数。"
+        },
+        {
+          "name": "装置专有分析/标定软件",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "operational-analysis-pipeline",
+          "access": "not public",
+          "relation": "中性输运、光流和装置实时分析未公开。"
+        }
+      ],
+      "organizations": [
+        "EPFL",
+        "MIT PSFC",
+        "PPPL",
+        "General Atomics"
+      ],
+      "tags": [
+        "GPI",
+        "filament",
+        "SOL",
+        "turbulence",
+        "imaging"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DG7-036",
+      "projectId": "FD-DIAG-PLASMA-036",
+      "primaryTask": "DG7",
+      "relatedTasks": [
+        "DG3",
+        "DG6",
+        "DG11"
+      ],
+      "title": "固定/往复式朗缪尔探针：SOL与偏滤器局部参数",
+      "titleEn": "Fixed and reciprocating Langmuir probes for SOL and divertor parameters",
+      "technique": {
+        "family": "PROBE_SAMPLING",
+        "name": "朗缪尔探针 / Langmuir probes"
+      },
+      "problem": "局部测量边界等离子体密度、电子温度、浮动电势、粒子通量和涨落。",
+      "measurementPrinciple": "I–V扫描或三探针模型由电子/离子收集电流推断Te、ne、Vf和离子饱和电流。",
+      "quantities": [
+        "Te",
+        "ne",
+        "floating/plasma potential",
+        "ion saturation current",
+        "particle flux"
+      ],
+      "region": [
+        "SOL",
+        "偏滤器靶板",
+        "往复式中平面"
+      ],
+      "hardware/sensors": [
+        "flush-mounted probes",
+        "reciprocating probe head",
+        "bias supplies",
+        "fast current-voltage electronics"
+      ],
+      "calibration": "标定电阻/电压/面积与电子学频响；用鞘层模型、探针温度和磁入射角修正。",
+      "inference": "I–V拟合或快速三探针解算，坏扫/电弧门控；阵列给靶板剖面和涨落统计。",
+      "devices": [
+        "EAST",
+        "DIII-D",
+        "ASDEX Upgrade",
+        "MAST-U"
+      ],
+      "validation": "以重复扫描、探针阵列一致性及与偏滤器TS/光谱/热流比对；EAST钨偏滤器有装置验证。",
+      "evidenceLevel": "E4",
+      "deploymentLevel": "D4",
+      "limitations": "侵入、易烧蚀；鞘模型、二次电子、强磁倾角和非Maxwell分布造成偏差。",
+      "twinRelevance": "边界孪生局部锚点；需同时记录表面状态、偏压波形和鞘模型版本。",
+      "papers": [
+        {
+          "title": "Development of Langmuir probe array for the new lower tungsten divertor in EAST",
+          "authors": "L.Y. Meng; J.C. Xu; J.B. Liu; L. Cao; P. Wang; A. Li; L. Yu; G.S. Xu; L. Wang",
+          "year": 2022,
+          "venue": "Fusion Engineering and Design",
+          "doi": "10.1016/j.fusengdes.2022.113011",
+          "url": "https://doi.org/10.1016/j.fusengdes.2022.113011",
+          "sourceType": "peer-reviewed-journal"
+        }
+      ],
+      "code": [
+        {
+          "name": "装置专有分析/标定软件",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "operational-analysis-pipeline",
+          "access": "not public",
+          "relation": "探针快速拟合、清洗和机器保护门控代码未公开。"
+        }
+      ],
+      "organizations": [
+        "IPP CAS",
+        "General Atomics",
+        "IPP Garching",
+        "UKAEA"
+      ],
+      "tags": [
+        "Langmuir",
+        "SOL",
+        "divertor",
+        "probe",
+        "particle-flux"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DG7-037",
+      "projectId": "FD-DIAG-PLASMA-037",
+      "primaryTask": "DG7",
+      "relatedTasks": [
+        "DG0",
+        "DG8",
+        "DG11"
+      ],
+      "title": "红外热成像：PFC表面温度与热流",
+      "titleEn": "Infrared thermography for PFC temperature and heat flux",
+      "technique": {
+        "family": "ENGINEERING_SENSOR",
+        "name": "红外热成像 / IR thermography"
+      },
+      "problem": "监测第一壁/偏滤器温度、热斑和热流，保护PFC并验证热负荷模型。",
+      "measurementPrinciple": "红外辐亮度经发射率/反射修正得到表面温度；热传导反问题由温度电影求表面热流。",
+      "quantities": [
+        "surface temperature",
+        "heat-flux density",
+        "hot-spot location",
+        "deposited energy"
+      ],
+      "region": [
+        "偏滤器靶板",
+        "第一壁与限流器"
+      ],
+      "hardware/sensors": [
+        "IR cameras",
+        "endoscopes",
+        "mirrors",
+        "blackbody reference",
+        "timing system"
+      ],
+      "calibration": "黑体多温点标定相机；现场用已知温度/热源估计发射率、反射和光学透过率。",
+      "inference": "坏像素/非均匀修正后，结合材料多层热模型反演热流；实时算法识别热斑。",
+      "devices": [
+        "ITER",
+        "ASDEX Upgrade",
+        "JET",
+        "WEST",
+        "EAST"
+      ],
+      "validation": "直接来源覆盖 ITER 偏滤器红外热成像的开发与成像诊断性能预测，属于设计/原型与测量性能评估，不是 ITER 例行运行。",
+      "evidenceLevel": "E2",
+      "deploymentLevel": "D2",
+      "limitations": "发射率随表面/沉积改变，反射等离子体辐射；热反演病态且材料参数不确定。",
+      "twinRelevance": "是PFC热数字孪生核心；必须把发射率、表面状态、相机标定和热模型协方差联动。",
+      "papers": [
+        {
+          "title": "Development of Divertor IR Thermography for ITER",
+          "authors": "Masaki TAKEUCHI; Tatsuo SUGIE; Hiroaki OGAWA; Masao ISHIKAWA; Takahiko SHIMADA; Yoshinori KUSAMA",
+          "year": 2013,
+          "venue": "Plasma and Fusion Research",
+          "doi": "10.1585/pfr.8.2402147",
+          "url": "https://doi.org/10.1585/pfr.8.2402147",
+          "sourceType": "peer-reviewed-journal"
+        },
+        {
+          "title": "Prediction and evaluation of measurement performances of imaging diagnostics for ITER wall protection",
+          "authors": "Marie-Helene Aumeunier; Alexis Juven; Priyanka Jena; Vincent Martin; Martin Kocan",
+          "year": 2025,
+          "venue": "Fusion Engineering and Design",
+          "doi": "10.1016/j.fusengdes.2025.114922",
+          "url": "https://doi.org/10.1016/j.fusengdes.2025.114922",
+          "sourceType": "peer-reviewed-journal"
+        }
+      ],
+      "code": [
+        {
+          "name": "装置专有分析/标定软件",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "operational-analysis-pipeline",
+          "access": "not public",
+          "relation": "实时热流反演、ROI和保护阈值配置未公开。"
+        }
+      ],
+      "organizations": [
+        "ITER Organization",
+        "IPP Garching",
+        "CEA IRFM",
+        "EUROfusion JET"
+      ],
+      "tags": [
+        "IR",
+        "thermography",
+        "heat-flux",
+        "PFC",
+        "hot-spot"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DG7-038",
+      "projectId": "FD-DIAG-PLASMA-038",
+      "primaryTask": "DG7",
+      "relatedTasks": [
+        "DG2",
+        "DG10"
+      ],
+      "title": "偏滤器汤姆逊散射：脱靶区电子参数",
+      "titleEn": "Divertor Thomson scattering for detached-plasma electron parameters",
+      "technique": {
+        "family": "LASER",
+        "name": "偏滤器汤姆逊散射 / DTS"
+      },
+      "problem": "在偏滤器和脱靶前沿测局部Te/ne，约束再结合、动量损失与功率耗散。",
+      "measurementPrinciple": "与常规TS相同，但在低Te、高ne、强杂散光和复杂几何下优化谱通道与收集。",
+      "quantities": [
+        "divertor Te",
+        "divertor ne",
+        "detachment-front profiles"
+      ],
+      "region": [
+        "偏滤器腿/靶板上方"
+      ],
+      "hardware/sensors": [
+        "pulsed laser",
+        "divertor collection optics",
+        "polychromators",
+        "radiation-hard fibers"
+      ],
+      "calibration": "拉曼/瑞利和光谱响应标定；精确测视线/激光交叉，密度与干涉/探针比较。",
+      "inference": "低温汤姆逊谱拟合、杂散光扣除并映射到磁通坐标。",
+      "devices": [
+        "DIII-D",
+        "KSTAR",
+        "ITER design"
+      ],
+      "validation": "DIII-D 论文给出装置偏滤器 TS 测量，KSTAR 论文给出优化收集光学设计；本记录支持装置数据/安装层级，不主张跨实验期例行在线服务。",
+      "evidenceLevel": "E3",
+      "deploymentLevel": "D3",
+      "limitations": "低Te谱窄且杂散光强；视线/激光偏移、辐照和偏滤器振动影响标定。",
+      "twinRelevance": "为脱靶孪生提供局部锚点；需和Balmer谱、探针与IR做联合反演。",
+      "papers": [
+        {
+          "title": "Divertor Thomson scattering on DIII-D",
+          "authors": "D.G Nilson; T.N Carlstrom; D.N Hill; C.L Hsieh; G.D Porter; R.E Stockdale; J.C Evans",
+          "year": 1997,
+          "venue": "Fusion Engineering and Design",
+          "doi": "10.1016/s0920-3796(96)00616-3",
+          "url": "https://doi.org/10.1016/s0920-3796(96)00616-3",
+          "sourceType": "peer-reviewed-journal"
+        },
+        {
+          "title": "Physical aspects of divertor Thomson scattering implementation on ITER",
+          "authors": "E.E. Mukhin; R.A. Pitts; P. Andrew; I.M. Bukreev; P.V. Chernakov; L. Giudicotti; G. Huijsmans; M.M. Kochergin; A.N. Koval; A.S. Kukushkin; G.S. Kurskiev; A.E. Litvinov; et al. (18 authors)",
+          "year": 2014,
+          "venue": "Nuclear Fusion",
+          "doi": "10.1088/0029-5515/54/4/043007",
+          "url": "https://doi.org/10.1088/0029-5515/54/4/043007",
+          "sourceType": "peer-reviewed-journal"
+        },
+        {
+          "title": "Optimized collection optic design for divertor Thomson scattering diagnostics in KSTAR",
+          "authors": "G. H. Park; H. J. Kim; J. H. Lee",
+          "year": 2024,
+          "venue": "Review of Scientific Instruments",
+          "doi": "10.1063/5.0218850",
+          "url": "https://doi.org/10.1063/5.0218850",
+          "sourceType": "peer-reviewed-journal"
+        }
+      ],
+      "code": [
+        {
+          "name": "装置专有分析/标定软件",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "operational-analysis-pipeline",
+          "access": "not public",
+          "relation": "DTS低温谱拟合和实时脱靶前沿代码未公开。"
+        }
+      ],
+      "organizations": [
+        "General Atomics",
+        "ITER Organization",
+        "KFE"
+      ],
+      "tags": [
+        "divertor",
+        "Thomson",
+        "detachment",
+        "Te",
+        "ne"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DG7-039",
+      "projectId": "FD-DIAG-PLASMA-039",
+      "primaryTask": "DG7",
+      "relatedTasks": [
+        "DG3",
+        "DG4",
+        "DG10"
+      ],
+      "title": "Balmer/Stark偏滤器谱：脱靶、再结合与中性压力",
+      "titleEn": "Balmer/Stark divertor spectroscopy for detachment and recombination",
+      "technique": {
+        "family": "OPTICAL",
+        "name": "Balmer/Stark偏滤器光谱"
+      },
+      "problem": "量化偏滤器电离、再结合、辐射和脱靶前沿演化。",
+      "measurementPrinciple": "Balmer线强/线比区分激发与再结合；高n线Stark展宽给ne，分子贡献需碰撞辐射模型。",
+      "quantities": [
+        "ionization rate",
+        "recombination rate",
+        "electron density",
+        "neutral/molecular contribution"
+      ],
+      "region": [
+        "偏滤器腿和靶板多弦"
+      ],
+      "hardware/sensors": [
+        "absolutely calibrated spectrometers",
+        "fiber views",
+        "filtered cameras",
+        "wavelength standards"
+      ],
+      "calibration": "绝对辐亮度、波长、仪器函数和视线几何标定；用灯源/积分球和TS ne交叉。",
+      "inference": "多线拟合与ADAS碰撞辐射模型分解激发/再结合；层析或磁通管映射定位前沿。",
+      "devices": [
+        "TCV",
+        "MAST Upgrade",
+        "DIII-D",
+        "JET"
+      ],
+      "validation": "TCV 装置脱靶实验中的在线光谱与探针、TS、IR和功率平衡交叉；合成谱检查反演偏差。",
+      "evidenceLevel": "E4",
+      "deploymentLevel": "D4",
+      "limitations": "视线积分、分子过程、光学厚度和非平衡效应导致强模型依赖。",
+      "twinRelevance": "为脱靶/粒子循环孪生提供过程分解；应存原始谱与原子/分子模型版本。",
+      "papers": [
+        {
+          "title": "Spectroscopic investigations of divertor detachment in TCV",
+          "authors": "K. Verhaegh; B. Lipschultz; B.P. Duval; J.R. Harrison; H. Reimerdes; C. Theiler; B. Labit; R. Maurizio; C. Marini; F. Nespoli; U. Sheikh; C.K. Tsui; et al. (14 authors)",
+          "year": 2017,
+          "venue": "Nuclear Materials and Energy",
+          "doi": "10.1016/j.nme.2017.01.004",
+          "url": "https://doi.org/10.1016/j.nme.2017.01.004",
+          "sourceType": "peer-reviewed-journal"
+        },
+        {
+          "title": "Inference of divertor ionisation and recombination from Balmer spectroscopy",
+          "authors": "Divertor spectroscopy team",
+          "year": 2019,
+          "venue": "arXiv",
+          "doi": null,
+          "url": "https://arxiv.org/abs/1903.08157",
+          "sourceType": "preprint"
+        }
+      ],
+      "code": [
+        {
+          "name": "OpenADAS",
+          "url": "https://open.adas.ac.uk",
+          "status": "official-enabling",
+          "artifactType": "atomic-data-service",
+          "access": "public",
+          "relation": "Balmer PEC/SXB与再结合系数。"
+        },
+        {
+          "name": "Cherab",
+          "url": "https://www.cherab.info/",
+          "status": "official-enabling",
+          "artifactType": "open-source-spectroscopy-forward-model",
+          "access": "public",
+          "relation": "视线和合成谱。"
+        },
+        {
+          "name": "装置专有分析/标定软件",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "operational-analysis-pipeline",
+          "access": "not public",
+          "relation": "生产反演/层析未公开。"
+        }
+      ],
+      "organizations": [
+        "EPFL",
+        "UKAEA",
+        "General Atomics",
+        "EUROfusion"
+      ],
+      "tags": [
+        "Balmer",
+        "Stark",
+        "detachment",
+        "recombination"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DG7-040",
+      "projectId": "FD-DIAG-PLASMA-040",
+      "primaryTask": "DG7",
+      "relatedTasks": [
+        "DG0",
+        "DG8"
+      ],
+      "title": "石英晶体微天平：侵蚀/沉积在线质量通量",
+      "titleEn": "Quartz-crystal microbalance for erosion and deposition",
+      "technique": {
+        "family": "ENGINEERING_SENSOR",
+        "name": "石英晶体微天平 / QMB"
+      },
+      "problem": "测量壁材料侵蚀/再沉积的局部质量变化，支撑PFC寿命与尘埃源项。",
+      "measurementPrinciple": "石英谐振频率随表面质量负载变化；温度/应力补偿后转为面积质量。",
+      "quantities": [
+        "areal mass change",
+        "deposition/erosion rate",
+        "cumulative inventory"
+      ],
+      "region": [
+        "第一壁/偏滤器附近受屏蔽监测位置"
+      ],
+      "hardware/sensors": [
+        "quartz resonators",
+        "reference crystal",
+        "temperature sensors",
+        "shutters",
+        "oscillator electronics"
+      ],
+      "calibration": "用已知薄膜沉积/去除标定Sauerbrey系数；双晶/温度扫描分离热漂移。",
+      "inference": "频率差、温度和黏弹性修正；与表面后分析和材料收支比较。",
+      "devices": [
+        "JET",
+        "EAST",
+        "laboratory PWI facilities"
+      ],
+      "validation": "JET/EAST通过装置暴露、参考晶体和拆卸后表面分析交叉验证。",
+      "evidenceLevel": "E3",
+      "deploymentLevel": "D3",
+      "limitations": "温度、应力、辐照和非刚性沉积破坏简单质量关系；仅局部采样。",
+      "twinRelevance": "提供PFC表面清单连续观测；晶体温度、暴露窗和材料模型需进入资产孪生。",
+      "papers": [
+        {
+          "title": "Quartz microbalance: a time resolved diagnostic to measure material deposition in JET",
+          "authors": "H.G Esser; G Neill; P Coad; G.F Matthews; D Jolovic; D Wilson; M Freisinger; V Philipps",
+          "year": 2003,
+          "venue": "Fusion Engineering and Design",
+          "doi": "10.1016/s0920-3796(03)00365-x",
+          "url": "https://doi.org/10.1016/s0920-3796(03)00365-x",
+          "sourceType": "peer-reviewed-journal"
+        },
+        {
+          "title": "Studies of the material erosion and deposition during the wall conditioning processes using quartz crystal microbalance in EAST",
+          "authors": "Yuming Liu; Rong Yan; Lei Mu; Yefan Zhu; Rui Ding; Yu Zhang; Jiao Peng; Niuxian Liu; Baoguo Wang; Chenxue Wang; Junling Chen",
+          "year": 2024,
+          "venue": "Nuclear Materials and Energy",
+          "doi": "10.1016/j.nme.2023.101576",
+          "url": "https://doi.org/10.1016/j.nme.2023.101576",
+          "sourceType": "peer-reviewed-journal"
+        }
+      ],
+      "code": [
+        {
+          "name": "装置专有分析/标定软件",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "operational-analysis-pipeline",
+          "access": "not public",
+          "relation": "QMB温度补偿、快门控制和库存融合代码未公开。"
+        }
+      ],
+      "organizations": [
+        "EUROfusion JET",
+        "IPP CAS"
+      ],
+      "tags": [
+        "QMB",
+        "erosion",
+        "deposition",
+        "inventory",
+        "PFC"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DG7-041",
+      "projectId": "FD-DIAG-PLASMA-041",
+      "primaryTask": "DG7",
+      "relatedTasks": [
+        "DG3",
+        "DG8",
+        "DG9"
+      ],
+      "title": "LIBS/LIDS：壁材料与氚/氘库存原位诊断",
+      "titleEn": "LIBS/LIDS for in-situ wall composition and fuel inventory",
+      "technique": {
+        "family": "OPTICAL",
+        "name": "激光诱导击穿/解吸光谱 / LIBS-LIDS"
+      },
+      "problem": "原位识别PFC表面元素、沉积层和滞留H同位素，支撑库存与维护决策。",
+      "measurementPrinciple": "LIBS用脉冲激光烧蚀微量材料并测等离子体发射；LIDS热/激光解吸氢同位素并由质谱/光谱定量。",
+      "quantities": [
+        "surface composition",
+        "D/T inventory",
+        "deposit thickness proxy",
+        "desorption yield"
+      ],
+      "region": [
+        "第一壁/偏滤器可视表面"
+      ],
+      "hardware/sensors": [
+        "pulsed laser",
+        "collection spectrometer",
+        "gated detector",
+        "mass spectrometer",
+        "scan optics"
+      ],
+      "calibration": "用已知成分/厚度样品标定谱线与烧蚀量；校准激光能量、焦点和解吸收集效率。",
+      "inference": "谱线多变量/碰撞辐射定量或解吸积分；与离线离子束分析/热脱附交叉。",
+      "devices": [
+        "DIII-D/LIDS studies",
+        "ITER R&D",
+        "linear plasma facilities"
+      ],
+      "validation": "在含氘/钨/碳参考样品和装置暴露样品上验证；尚非ITER例行运行。",
+      "evidenceLevel": "E2",
+      "deploymentLevel": "D2",
+      "limitations": "烧蚀具有微破坏性；基体效应、表面粗糙、光学污染和氚治理限制部署。",
+      "twinRelevance": "把表面成分与燃料库存纳入壁孪生，但需严格记录采样位置、烧蚀历史与校准样品。",
+      "papers": [
+        {
+          "title": "Deuterium detection and quantification by laser-induced breakdown spectroscopy and calibration-free analysis in ITER relevant samples",
+          "authors": "Salvatore Almaviva; Luisa Caneve; Francesco Colao; Giorgio Maddaluno",
+          "year": 2019,
+          "venue": "Fusion Engineering and Design",
+          "doi": "10.1016/j.fusengdes.2019.03.109",
+          "url": "https://doi.org/10.1016/j.fusengdes.2019.03.109",
+          "sourceType": "peer-reviewed-journal"
+        },
+        {
+          "title": "Time-resolved laser-induced desorption spectroscopy (LIDS) for quantified in-situ hydrogen isotope retention measurement and removal from plasma facing materials",
+          "authors": "J. H. Yu; M. J. Baldwin; M. J. Simmonds; A. Založnik",
+          "year": 2019,
+          "venue": "Review of Scientific Instruments",
+          "doi": "10.1063/1.5100162",
+          "url": "https://doi.org/10.1063/1.5100162",
+          "sourceType": "peer-reviewed-journal"
+        },
+        {
+          "title": "Review of the ITER diagnostics suite for erosion, deposition, dust and tritium measurements",
+          "authors": "R. Reichle; P. Andrew; P. Bates; O. Bede; N. Casal; C.H. Choi; R. Barnsley; C. Damiani; L. Bertalot; G. Dubus; J. Ferreol; G. Jagannathan; et al. (29 authors)",
+          "year": 2015,
+          "venue": "Journal of Nuclear Materials",
+          "doi": "10.1016/j.jnucmat.2015.01.039",
+          "url": "https://doi.org/10.1016/j.jnucmat.2015.01.039",
+          "sourceType": "peer-reviewed-journal"
+        }
+      ],
+      "code": [
+        {
+          "name": "装置专有分析/标定软件",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "operational-analysis-pipeline",
+          "access": "not public",
+          "relation": "LIBS/LIDS定量标定与氚治理工作流未公开。"
+        }
+      ],
+      "organizations": [
+        "ITER Organization",
+        "General Atomics",
+        "FZ Jülich",
+        "EUROfusion"
+      ],
+      "tags": [
+        "LIBS",
+        "LIDS",
+        "tritium",
+        "inventory",
+        "wall"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DG7-042",
+      "projectId": "FD-DIAG-PLASMA-042",
+      "primaryTask": "DG7",
+      "relatedTasks": [
+        "DG0",
+        "DG4",
+        "DG8"
+      ],
+      "title": "第一镜、尘埃与侵蚀/沉积综合监测",
+      "titleEn": "First-mirror, dust, erosion and deposition monitoring suite",
+      "technique": {
+        "family": "ENGINEERING_SENSOR",
+        "name": "壁材料综合诊断 / PWI monitoring"
+      },
+      "problem": "监测诊断第一镜反射率、尘埃、沉积/侵蚀和光学退化，保证长期可观测性。",
+      "measurementPrinciple": "反射计/椭偏测镜面光学，集尘/成像测尘埃，标记层/见证片与表面分析量化材料迁移。",
+      "quantities": [
+        "mirror reflectivity",
+        "deposit thickness",
+        "erosion depth",
+        "dust inventory",
+        "optical throughput"
+      ],
+      "region": [
+        "第一壁",
+        "诊断端口第一镜",
+        "偏滤器"
+      ],
+      "hardware/sensors": [
+        "first mirrors",
+        "reflectometers",
+        "witness samples",
+        "dust collectors/cameras",
+        "marker tiles"
+      ],
+      "calibration": "安装前光谱反射/表面形貌基线；定期用内置光源、见证片和拆卸后表面分析复核。",
+      "inference": "将光学吞吐漂移、材料样品与尘埃计数融合为健康指标；与所有光学诊断标定联动。",
+      "devices": [
+        "ITER R&D",
+        "JET",
+        "TEXTOR",
+        "DIII-D"
+      ],
+      "validation": "材料暴露设施和现役装置比较清洗/沉积前后反射率；ITER以多机构R&D和设计审查验证。",
+      "evidenceLevel": "E3",
+      "deploymentLevel": "D3",
+      "limitations": "测量稀疏且维护周期长；沉积非均匀、镜面清洗改变表面，尘埃计数代表性有限。",
+      "twinRelevance": "这是诊断系统自身的健康孪生；镜面吞吐必须反向校正所有光谱/成像数据。",
+      "papers": [
+        {
+          "title": "First mirror tests for ITER: Influence of material choice on the erosion/deposition mechanisms affecting optical reflectivity",
+          "authors": "G. De Temmerman; R.A. Pitts; V.S. Voitsenya; L. Marot; G. Veres; M. Maurer; P. Oelhafen",
+          "year": 2007,
+          "venue": "Journal of Nuclear Materials",
+          "doi": "10.1016/j.jnucmat.2007.01.024",
+          "url": "https://doi.org/10.1016/j.jnucmat.2007.01.024",
+          "sourceType": "peer-reviewed-journal"
+        },
+        {
+          "title": "Review of the ITER diagnostics suite for erosion, deposition, dust and tritium measurements",
+          "authors": "R. Reichle; P. Andrew; P. Bates; O. Bede; N. Casal; C.H. Choi; R. Barnsley; C. Damiani; L. Bertalot; G. Dubus; J. Ferreol; G. Jagannathan; et al. (29 authors)",
+          "year": 2015,
+          "venue": "Journal of Nuclear Materials",
+          "doi": "10.1016/j.jnucmat.2015.01.039",
+          "url": "https://doi.org/10.1016/j.jnucmat.2015.01.039",
+          "sourceType": "peer-reviewed-journal"
+        },
+        {
+          "title": "Plasma-Wall-Interaction Diagnostics in ITER: Dust, Erosion, and Tritium Retention",
+          "authors": "Junghee Kim; P. Andrew; R. Reichle",
+          "year": 2012,
+          "venue": "Fusion Science and Technology",
+          "doi": "10.13182/fst12-a13386",
+          "url": "https://doi.org/10.13182/fst12-a13386",
+          "sourceType": "peer-reviewed-journal"
+        }
+      ],
+      "code": [
+        {
+          "name": "装置专有分析/标定软件",
+          "url": null,
+          "status": "not-public",
+          "artifactType": "operational-analysis-pipeline",
+          "access": "not public",
+          "relation": "跨诊断光学吞吐健康融合与资产数据库未公开。"
+        }
+      ],
+      "organizations": [
+        "ITER Organization",
+        "FZ Jülich",
+        "EUROfusion JET",
+        "General Atomics"
+      ],
+      "tags": [
+        "first-mirror",
+        "dust",
+        "erosion",
+        "deposition",
+        "diagnostic-health"
+      ],
+      "asOf": "2026-08-12"
+    }
+  ]
+}

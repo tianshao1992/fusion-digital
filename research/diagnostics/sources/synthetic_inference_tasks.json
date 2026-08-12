@@ -1,0 +1,3395 @@
+{
+  "metadata": {
+    "title": "聚变诊断：系统工程、合成诊断、集成反演与实时智能链任务库",
+    "titleEn": "Fusion Diagnostics: Systems Engineering, Synthetic Diagnostics, Integrated Inference and Real-Time Intelligence",
+    "scope": "DG0/DG9/DG10/DG11；仅一手论文、机构官方文档与官方代码仓库。相关测量对象以 relatedTasks 指向 DG1–DG8。",
+    "asOf": "2026-08-12",
+    "recordCount": 35,
+    "primaryTaskCounts": {
+      "DG0": 8,
+      "DG9": 14,
+      "DG10": 8,
+      "DG11": 5
+    },
+    "techniqueFamilies": [
+      "MAGNETIC",
+      "MICROWAVE",
+      "LASER",
+      "OPTICAL",
+      "NUCLEAR_PARTICLE",
+      "PROBE_SAMPLING",
+      "ENGINEERING_SENSOR",
+      "COMPUTATIONAL"
+    ],
+    "evidenceScale": {
+      "E0": "概念/需求，无数值或装置验证",
+      "E1": "合成数据、数值、台架或预运行验证",
+      "E2": "装置相关离线验证或软件基准",
+      "E3": "真实装置数据/多装置验证、工程接入或影子运行",
+      "E4": "长期装置生产使用或实时/闭环实验证据"
+    },
+    "deploymentScale": {
+      "D1": "研究概念/预运行原型",
+      "D2": "离线分析、设计或研究工作流",
+      "D3": "装置集成、准实时、影子或受控生产服务",
+      "D4": "常规装置运行服务",
+      "D5": "经治理批准的保护/安全关键用途"
+    },
+    "sourcePolicy": "只收录论文原文/DOI、机构官方技术页、官方文档和作者/机构官方仓库；未用聚合站或媒体报道作为证据。",
+    "caution": "Evidence/Deployment 是本次调研的保守分级，不等同于 ITER 核安全、IEC/ISO 认证或监管批准。",
+    "codeRelationVocabulary": {
+      "official-direct": "论文/项目作者或机构维护，直接实现该记录的算法、框架或工作流",
+      "enabling": "官方可信的上游物理代码、运行时、数据底座或通用库，但不是该记录的直接实现"
+    },
+    "codeAccessVocabulary": {
+      "public": "有可核验公开 URL",
+      "not-public": "未核验到官方公共仓库；URL 必须为 null"
+    }
+  },
+  "items": [
+    {
+      "id": "DSI-001",
+      "projectId": "IMAS-IDS-DD",
+      "primaryTask": "DG0",
+      "relatedTasks": [
+        "DG1",
+        "DG2",
+        "DG3",
+        "DG4",
+        "DG5",
+        "DG6",
+        "DG7",
+        "DG8",
+        "DG9",
+        "DG10",
+        "DG11"
+      ],
+      "title": "IMAS 接口数据结构与数据字典",
+      "titleEn": "IMAS Interface Data Structures and Data Dictionary",
+      "technique": {
+        "family": "COMPUTATIONAL",
+        "methods": [
+          "IDS schema",
+          "machine description",
+          "ontology-like data dictionary",
+          "versioned APIs"
+        ]
+      },
+      "problem": "跨装置、跨代码与跨诊断的数据命名、单位、坐标、时间、误差和血缘不一致，使联合分析与长期可复现性失效。",
+      "measurementPrinciple": "不直接测量；把原始、处理后和模拟数据映射到版本化 IDS，并用机器描述和数据字典规定结构、单位、坐标及关系。",
+      "quantities": [
+        "signals",
+        "profiles",
+        "equilibrium",
+        "geometry",
+        "units",
+        "uncertainty",
+        "provenance"
+      ],
+      "region": "全装置、跨物理域与全放电时间轴",
+      "hardware": [
+        "HDF5/MDSplus/UDA compatible backends",
+        "analysis servers"
+      ],
+      "sensors": [
+        "任意经适配的诊断信号"
+      ],
+      "calibration": "契约可保存校准量、几何和误差，但校准算法与证书仍由各诊断负责；数据字典版本必须随结果固化。",
+      "inference": [
+        "schema validation",
+        "cross-code data mapping",
+        "integrated-workflow exchange"
+      ],
+      "devices": [
+        "ITER",
+        "EUROfusion devices",
+        "JET",
+        "ASDEX Upgrade",
+        "WEST",
+        "TCV",
+        "W7-X"
+      ],
+      "validation": "ITER 与 EUROfusion 的集成建模工作流持续使用；论文报告代码集成、数据核验和模型验证，2025 年基础设施与物理模型开放源代码。",
+      "evidenceLevel": "E3",
+      "deploymentLevel": "D3",
+      "limitations": "IDS 语义覆盖不等于源诊断可比；时间基准、几何误差、校准证书、质量位和后验协方差在不同适配器中仍可能丢失。",
+      "twinRelevance": "是数字孪生最接近跨域数据契约的现成基础，但还需事件语义、在线质量状态、模型版本和不确定度传播的强制规则。",
+      "papers": [
+        {
+          "title": "Code Integration, Data Verification, and Models Validation Using the ITER Integrated Modeling and Analysis System (IMAS) in EUROfusion",
+          "year": 2020,
+          "url": "https://doi.org/10.1080/15361055.2020.1819751",
+          "doi": "10.1080/15361055.2020.1819751",
+          "sourceType": "peer-reviewed primary framework report",
+          "authors": "M. Romanelli; R. Coelho; D. Coster; J. Ferreira; L. Fleury; S. Henderson; J. Hollocombe; F. Imbeaux; T. Jonsson; L. Kogan; O. Meneghini; A. Merle; et al. (19 authors)",
+          "venue": "Fusion Science and Technology"
+        },
+        {
+          "title": "Release of IMAS infrastructure and physics models as open source",
+          "year": 2025,
+          "url": "https://www.iter.org/node/20687/release-imas-infrastructure-and-physics-models-open-source",
+          "doi": null,
+          "sourceType": "ITER official announcement"
+        }
+      ],
+      "code": [
+        {
+          "name": "IMAS Data Dictionary",
+          "url": "https://github.com/iterorganization/IMAS-Data-Dictionary",
+          "relationship": "ITER Organization 维护的数据模式与生成资产。",
+          "relation": "official-direct",
+          "artifactType": "source-code",
+          "access": "public"
+        },
+        {
+          "name": "IMAS Python",
+          "url": "https://github.com/iterorganization/IMAS-Python",
+          "relationship": "IDS 的 Python 访问层。",
+          "relation": "official-direct",
+          "artifactType": "source-code",
+          "access": "public"
+        }
+      ],
+      "organizations": [
+        "ITER Organization",
+        "EUROfusion"
+      ],
+      "tags": [
+        "data-contract",
+        "IDS",
+        "schema",
+        "provenance",
+        "interoperability"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DSI-002",
+      "projectId": "MDSPLUS",
+      "primaryTask": "DG0",
+      "relatedTasks": [
+        "DG1",
+        "DG2",
+        "DG3",
+        "DG4",
+        "DG5",
+        "DG6",
+        "DG7",
+        "DG8",
+        "DG11"
+      ],
+      "title": "MDSplus 脉冲树、数据采集与时序数据管理",
+      "titleEn": "MDSplus Pulse Trees, Acquisition and Time-Series Data Management",
+      "technique": {
+        "family": "COMPUTATIONAL",
+        "methods": [
+          "hierarchical pulse tree",
+          "segmented time series",
+          "TDI expressions",
+          "distributed client/server"
+        ]
+      },
+      "problem": "聚变实验需要在一个可追溯脉冲上下文中配置采集硬件、并发写入高速时序并连接分析结果。",
+      "measurementPrinciple": "不改变传感器物理；以树节点保存配置、原始波形、时间基、表达式与派生结果，并支持分布式读写。",
+      "quantities": [
+        "waveforms",
+        "events",
+        "configuration",
+        "timebase",
+        "processed products"
+      ],
+      "region": "诊断机柜至装置级脉冲档案",
+      "hardware": [
+        "DAQ servers",
+        "storage arrays",
+        "timing interfaces"
+      ],
+      "sensors": [
+        "ADC/camera/spectrometer/magnetic channels via device models"
+      ],
+      "calibration": "可把校准系数与表达式绑定到树节点；若缺少不可变证书、有效期与原始 ADC 保留，仍不能构成计量追溯。",
+      "inference": [
+        "on-demand expressions",
+        "pulse replay",
+        "analysis orchestration"
+      ],
+      "devices": [
+        "Alcator C-Mod",
+        "RFX-mod",
+        "TCV",
+        "DIII-D",
+        "KSTAR",
+        "EAST",
+        "NSTX-U",
+        "SPIDER"
+      ],
+      "validation": "自 1990 年代在多装置长期运行；MARTe/MDSplus 组合自 2012 年用于 RFX-mod 数据采集与实时控制。",
+      "evidenceLevel": "E4",
+      "deploymentLevel": "D4",
+      "limitations": "树结构灵活但跨装置语义不自动一致；复杂表达式和外部依赖的版本冻结、细粒度质量标志及大规模对象存储需额外治理。",
+      "twinRelevance": "提供数字孪生所需的放电回放、原始证据保全和事件对齐底座。",
+      "papers": [
+        {
+          "title": "MDSplus yesterday, today and tomorrow",
+          "year": 2018,
+          "url": "https://doi.org/10.1016/j.fusengdes.2017.12.010",
+          "doi": "10.1016/j.fusengdes.2017.12.010",
+          "sourceType": "peer-reviewed primary framework report",
+          "authors": "T. Fredian; J. Stillerman; G. Manduchi; A. Rigoni; K. Erickson; T. Schröder",
+          "venue": "Fusion Engineering and Design"
+        },
+        {
+          "title": "The MDSplus data acquisition system, current status and future directions",
+          "year": 1999,
+          "url": "https://library.psfc.mit.edu/catalog/reports/1990/97ja/97ja017/97ja017_full.pdf",
+          "doi": null,
+          "sourceType": "MIT PSFC primary report",
+          "authors": "J.A. Stillerman and T.W. Fredian",
+          "venue": "Fusion Engineering and Design / MIT PSFC"
+        }
+      ],
+      "code": [
+        {
+          "name": "MDSplus",
+          "url": "https://github.com/MDSplus/mdsplus",
+          "relationship": "项目官方源代码与语言接口。",
+          "relation": "official-direct",
+          "artifactType": "source-code",
+          "access": "public"
+        }
+      ],
+      "organizations": [
+        "MIT Plasma Science and Fusion Center",
+        "Consorzio RFX",
+        "MDSplus collaboration"
+      ],
+      "tags": [
+        "DAQ",
+        "pulse-tree",
+        "time-series",
+        "archive",
+        "replay"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DSI-003",
+      "projectId": "UKAEA-UDA",
+      "primaryTask": "DG0",
+      "relatedTasks": [
+        "DG1",
+        "DG2",
+        "DG3",
+        "DG4",
+        "DG5",
+        "DG6",
+        "DG7",
+        "DG8",
+        "DG10"
+      ],
+      "title": "UDA 统一数据访问层",
+      "titleEn": "Universal Data Access (UDA)",
+      "technique": {
+        "family": "COMPUTATIONAL",
+        "methods": [
+          "plugin-driven access",
+          "client-server API",
+          "fat client",
+          "Cap'n Proto"
+        ]
+      },
+      "problem": "分析软件面对 MDSplus、文件、数据库和远端服务时容易把设备专用访问逻辑写进物理算法。",
+      "measurementPrinciple": "通过插件把不同数据源转换为统一对象并经网络或本地客户端返回，不修改源测量。",
+      "quantities": [
+        "arrays",
+        "scalars",
+        "metadata",
+        "errors",
+        "dimensions"
+      ],
+      "region": "实验数据源到分析与 IMAS 适配层",
+      "hardware": [
+        "data servers",
+        "network clients"
+      ],
+      "sensors": [
+        "由后端插件覆盖的任意诊断"
+      ],
+      "calibration": "只传递后端提供的校准和误差信息；统一 API 不会自动证明这些元数据完整。",
+      "inference": [
+        "data discovery",
+        "format abstraction",
+        "remote access"
+      ],
+      "devices": [
+        "JET",
+        "MAST Upgrade",
+        "ITER/IMAS workflows",
+        "UKAEA facilities"
+      ],
+      "validation": "官方仓库提供 C/C++/Python 客户端、构建测试和 ITER 培训材料；公开来源支持软件实现与设施数据链使用，但本记录没有证明给定版本的持续在线服务等级。",
+      "evidenceLevel": "E3",
+      "deploymentLevel": "D3",
+      "limitations": "可用性取决于站点插件、授权、网络和数据语义；统一对象不等于统一诊断本体。",
+      "twinRelevance": "把数字孪生服务与装置数据库解耦，是在线/离线共用数据入口，但需叠加契约、缓存和 SLA。",
+      "papers": [
+        {
+          "title": "Universal Data Access official repository and documentation",
+          "year": 2026,
+          "url": "https://github.com/ukaea/UDA",
+          "doi": null,
+          "sourceType": "UKAEA official repository"
+        }
+      ],
+      "code": [
+        {
+          "name": "UDA",
+          "url": "https://github.com/ukaea/UDA",
+          "relationship": "UKAEA 维护的统一数据访问核心。",
+          "relation": "official-direct",
+          "artifactType": "source-code",
+          "access": "public"
+        },
+        {
+          "name": "pyuda",
+          "url": "https://pypi.org/project/pyuda/",
+          "relationship": "UDA 官方 Python 客户端发行包。",
+          "relation": "official-direct",
+          "artifactType": "software-package",
+          "access": "public"
+        }
+      ],
+      "organizations": [
+        "UK Atomic Energy Authority"
+      ],
+      "tags": [
+        "data-access",
+        "plugin",
+        "network",
+        "IMAS",
+        "abstraction"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DSI-004",
+      "projectId": "GA-OMAS",
+      "primaryTask": "DG0",
+      "relatedTasks": [
+        "DG1",
+        "DG2",
+        "DG3",
+        "DG4",
+        "DG5",
+        "DG6",
+        "DG7",
+        "DG8",
+        "DG9",
+        "DG10"
+      ],
+      "title": "OMAS：轻量 IMAS 兼容数据对象与装置映射",
+      "titleEn": "OMAS: Lightweight IMAS-Compatible Data Objects",
+      "technique": {
+        "family": "COMPUTATIONAL",
+        "methods": [
+          "Python object mapping",
+          "IMAS schema validation",
+          "machine mappings",
+          "HDF5/JSON interchange"
+        ]
+      },
+      "problem": "研究者在没有完整 IMAS 安装的环境中仍需读写标准化 IDS、映射装置数据和搭建可测试工作流。",
+      "measurementPrinciple": "用 Python 对象实现 IMAS 数据结构和装置映射，支持一致路径、单位与格式转换。",
+      "quantities": [
+        "IDS fields",
+        "equilibrium",
+        "profiles",
+        "sources",
+        "diagnostics"
+      ],
+      "region": "分析工作站与跨代码工作流",
+      "hardware": [
+        "CPU workstations"
+      ],
+      "sensors": [
+        "经 OMAS machine mapping 接入的诊断"
+      ],
+      "calibration": "可承载校准后的数据与元数据；映射脚本必须单独进行通道、单位和时间验证。",
+      "inference": [
+        "schema checking",
+        "machine mapping",
+        "workflow exchange"
+      ],
+      "devices": [
+        "DIII-D",
+        "NSTX-U",
+        "ITER scenario studies",
+        "GA workflows"
+      ],
+      "validation": "官方仓库包含持续测试和多种格式示例，已用于 GA/跨机构建模工作流。",
+      "evidenceLevel": "E2",
+      "deploymentLevel": "D2",
+      "limitations": "不是实时总线或计量系统；部分 IDS 与机器映射覆盖随版本变化，需固定 schema 和映射提交。",
+      "twinRelevance": "适合孪生原型快速采用 IMAS 语义，也能作为源数据到正式 IDS 的过渡适配器。",
+      "papers": [
+        {
+          "title": "OMAS documentation",
+          "year": 2026,
+          "url": "https://gafusion.github.io/omas/",
+          "doi": null,
+          "sourceType": "official project documentation"
+        }
+      ],
+      "code": [
+        {
+          "name": "OMAS",
+          "url": "https://github.com/gafusion/omas",
+          "relationship": "General Atomics Fusion 官方开源实现。",
+          "relation": "official-direct",
+          "artifactType": "source-code",
+          "access": "public"
+        }
+      ],
+      "organizations": [
+        "General Atomics Fusion"
+      ],
+      "tags": [
+        "IMAS",
+        "Python",
+        "mapping",
+        "schema",
+        "prototype"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DSI-005",
+      "projectId": "FAIR4FUSION",
+      "primaryTask": "DG0",
+      "relatedTasks": [
+        "DG1",
+        "DG2",
+        "DG3",
+        "DG4",
+        "DG5",
+        "DG6",
+        "DG7",
+        "DG8",
+        "DG10"
+      ],
+      "title": "FAIR4Fusion 数据治理蓝图",
+      "titleEn": "FAIR4Fusion Data Governance Blueprint",
+      "technique": {
+        "family": "COMPUTATIONAL",
+        "methods": [
+          "FAIR metadata",
+          "data management plans",
+          "persistent identifiers",
+          "access classification"
+        ]
+      },
+      "problem": "聚变数据常缺少可发现元数据、许可、责任人、版本、保留期与跨设施访问规则。",
+      "measurementPrinciple": "以治理流程和元数据蓝图描述数据产品、访问等级、血缘及复用条件，不参与信号采集。",
+      "quantities": [
+        "dataset metadata",
+        "access policy",
+        "provenance",
+        "persistent identifiers"
+      ],
+      "region": "项目和设施全生命周期",
+      "hardware": [
+        "catalog services",
+        "repositories"
+      ],
+      "sensors": [
+        "所有诊断作为治理对象"
+      ],
+      "calibration": "要求把校准和处理血缘纳入元数据，但不提供具体计量实现。",
+      "inference": [
+        "cataloguing",
+        "policy enforcement",
+        "reproducibility governance"
+      ],
+      "devices": [
+        "EUROfusion facilities",
+        "ITER-adjacent research ecosystem"
+      ],
+      "validation": "项目发布蓝图和交付物，形成 open/embargo/restricted/closed 等访问分类；尚非统一生产平台。",
+      "evidenceLevel": "E1",
+      "deploymentLevel": "D1",
+      "limitations": "偏治理和蓝图；设施落地、机器可执行数据契约、审计日志和长期经费仍不一致。",
+      "twinRelevance": "补足数字孪生的责任体系和证据可追溯性，防止“可运行模型”与“可审计模型”混为一谈。",
+      "papers": [
+        {
+          "title": "FAIR4Fusion project and blueprint",
+          "year": 2026,
+          "url": "https://www.fair4fusion.eu/",
+          "doi": null,
+          "sourceType": "official project documentation"
+        }
+      ],
+      "code": [
+        {
+          "name": "FAIR4Fusion production platform",
+          "url": null,
+          "relationship": "项目公开交付物以蓝图和治理材料为主，未核验到一个可代表全项目的生产代码库。",
+          "relation": "official-direct",
+          "artifactType": "source-code",
+          "access": "not-public"
+        }
+      ],
+      "organizations": [
+        "FAIR4Fusion consortium",
+        "EUROfusion"
+      ],
+      "tags": [
+        "FAIR",
+        "governance",
+        "metadata",
+        "provenance",
+        "access-control"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DSI-006",
+      "projectId": "CALCAM",
+      "primaryTask": "DG0",
+      "relatedTasks": [
+        "DG4",
+        "DG7",
+        "DG8",
+        "DG9"
+      ],
+      "title": "Calcam 相机几何标定与像素—三维映射",
+      "titleEn": "Calcam Camera Calibration and Pixel-to-3D Mapping",
+      "technique": {
+        "family": "OPTICAL",
+        "methods": [
+          "CAD ray projection",
+          "camera calibration",
+          "pixel sightline mapping",
+          "synthetic view"
+        ]
+      },
+      "problem": "相机、热像仪和光谱成像的每个像素只有在视线、畸变、遮挡和 CAD 坐标被标定后才能与物理场对齐。",
+      "measurementPrinciple": "以标定图像和三维机器 CAD 求相机内外参，将像素映射为三维射线并生成合成相机视图。",
+      "quantities": [
+        "intrinsics",
+        "extrinsics",
+        "distortion",
+        "line of sight",
+        "surface intersection"
+      ],
+      "region": "第一壁、偏滤器、可见与红外视场",
+      "hardware": [
+        "visible/IR cameras",
+        "calibration targets",
+        "CAD workstations"
+      ],
+      "sensors": [
+        "camera pixels"
+      ],
+      "calibration": "图像特征与 CAD/标靶联合拟合；标定文件应记录版本、残差、有效期和机械变更。",
+      "inference": [
+        "geometric registration",
+        "ray intersection",
+        "synthetic projection"
+      ],
+      "devices": [
+        "JET",
+        "MAST Upgrade",
+        "fusion camera systems"
+      ],
+      "validation": "官方软件用于聚变装置相机几何标定，并可把三维 CAD 投影回图像检查残差与遮挡。",
+      "evidenceLevel": "E3",
+      "deploymentLevel": "D3",
+      "limitations": "机械热漂移、端口移动、镜面反射与不可见表面会使静态标定失效；几何协方差通常未贯穿后续反演。",
+      "twinRelevance": "是将诊断图像注册到三维孪生几何的关键基础，必须与 CAD 版本和时变形变联动。",
+      "papers": [
+        {
+          "title": "Calcam documentation",
+          "year": 2026,
+          "url": "https://euratom-software.github.io/calcam/",
+          "doi": null,
+          "sourceType": "official project documentation"
+        },
+        {
+          "title": "Calcam",
+          "year": 2026,
+          "url": "https://doi.org/10.5281/zenodo.18842405",
+          "doi": "10.5281/zenodo.18842405",
+          "sourceType": "official software archive",
+          "authors": "Scott Silburn; James Harrison; Tom Farley; Jordan Cavalier; Sam Van Stroud; Jamie McGowan; Augustin Marignier; Emily Nurse; Christian Gutschow; Mark Smithies; Alasdair Wynn; Rhys Doyle; et al. (15 authors)",
+          "venue": "Zenodo"
+        }
+      ],
+      "code": [
+        {
+          "name": "Calcam",
+          "url": "https://github.com/euratom-software/calcam",
+          "relationship": "EUROfusion/UKAEA 团队维护的几何标定软件。",
+          "relation": "official-direct",
+          "artifactType": "source-code",
+          "access": "public"
+        }
+      ],
+      "organizations": [
+        "UK Atomic Energy Authority",
+        "EUROfusion"
+      ],
+      "tags": [
+        "camera-calibration",
+        "geometry",
+        "CAD",
+        "line-of-sight",
+        "registration"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DSI-007",
+      "projectId": "MARTE2-MDSPLUS",
+      "primaryTask": "DG0",
+      "relatedTasks": [
+        "DG8",
+        "DG11"
+      ],
+      "title": "MARTe2–MDSplus 实时采集、配置与归档一体化",
+      "titleEn": "MARTe2–MDSplus Integrated Real-Time Acquisition and Archiving",
+      "technique": {
+        "family": "COMPUTATIONAL",
+        "methods": [
+          "deterministic real-time components",
+          "device abstraction",
+          "streaming archive",
+          "configuration generation"
+        ]
+      },
+      "problem": "实时控制配置与数据采集配置分离会产生接口漂移、重复配置和难以回放的实时链。",
+      "measurementPrinciple": "MARTe2 处理确定性实时数据流，MDSplus 设备模型描述采集与组件关系并保存流式数据和配置。",
+      "quantities": [
+        "real-time signals",
+        "configuration",
+        "reference waveforms",
+        "events"
+      ],
+      "region": "诊断电子学、实时网络与脉冲档案",
+      "hardware": [
+        "real-time Linux computers",
+        "ADC/camera systems",
+        "MDSplus servers"
+      ],
+      "sensors": [
+        "fast ADCs",
+        "cameras",
+        "plant sensors"
+      ],
+      "calibration": "校准参数可随配置读入并归档；实时路径还需独立验证数值精度、延迟和时间戳。",
+      "inference": [
+        "real-time preprocessing",
+        "configuration consistency checks",
+        "pulse replay"
+      ],
+      "devices": [
+        "RFX-mod",
+        "RFX-mod2",
+        "SPIDER",
+        "ITER NBTF",
+        "DTT",
+        "SPARC planned",
+        "SMART proof-of-concept"
+      ],
+      "validation": "RFX-mod 自 2012 年运行 MARTe/MDSplus；论文给出组件集成、配置生成和用例。",
+      "evidenceLevel": "E4",
+      "deploymentLevel": "D4",
+      "limitations": "框架确定性不等于端到端诊断确定性；驱动、网络、时钟、丢包、重启和模型推理 WCET 需逐系统证明。",
+      "twinRelevance": "提供实时孪生数据平面和可回放配置，是影子模式、硬件在环与在线估计的重要执行底座。",
+      "papers": [
+        {
+          "title": "MARTe2 and MDSplus integration for a comprehensive fast control and data acquisition system",
+          "year": 2020,
+          "url": "https://doi.org/10.1016/j.fusengdes.2020.111892",
+          "doi": "10.1016/j.fusengdes.2020.111892",
+          "sourceType": "peer-reviewed primary framework report",
+          "authors": "G. Manduchi; A. Rigonii; T.W. Fredian; J.A. Stillerman; A. Neto; F. Sartori",
+          "venue": "Fusion Engineering and Design"
+        }
+      ],
+      "code": [
+        {
+          "name": "MARTe2",
+          "url": "https://vcis-gitlab.f4e.europa.eu/aneto/MARTe2",
+          "relationship": "Fusion for Energy 维护的 MARTe2 核心。",
+          "relation": "official-direct",
+          "artifactType": "source-code",
+          "access": "public"
+        },
+        {
+          "name": "MDSplus",
+          "url": "https://github.com/MDSplus/mdsplus",
+          "relationship": "官方数据系统；为集成链提供设备模型和归档，不是 MARTe2 本身。",
+          "relation": "enabling",
+          "artifactType": "source-code",
+          "access": "public"
+        }
+      ],
+      "organizations": [
+        "Fusion for Energy",
+        "Consorzio RFX",
+        "MIT PSFC"
+      ],
+      "tags": [
+        "real-time",
+        "DAQ",
+        "configuration",
+        "archive",
+        "replay"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DSI-008",
+      "projectId": "ITER-DIAGNOSTIC-CODAC-CAL",
+      "primaryTask": "DG0",
+      "relatedTasks": [
+        "DG5",
+        "DG8",
+        "DG11"
+      ],
+      "title": "ITER 诊断 Plant I&C、CODAC 接口与中子计量校准治理",
+      "titleEn": "ITER Diagnostic Plant I&C, CODAC Interfaces and Neutron Metrology",
+      "technique": {
+        "family": "ENGINEERING_SENSOR",
+        "methods": [
+          "standardized plant I&C",
+          "time/network interfaces",
+          "reference-source calibration",
+          "cross-calibration"
+        ]
+      },
+      "problem": "59 个诊断 plant 由多方交付且处于核环境，必须以统一状态机、网络、时间、保护边界和校准链获得可比且可维护的测量。",
+      "measurementPrinciple": "Plant I&C 遵循 CODAC 标准网络与运行状态；中子诊断用嵌入源、参考脉冲、原位中子源和诊断间交叉校准建立功率测量。",
+      "quantities": [
+        "fusion power",
+        "neutron rate",
+        "timestamp",
+        "plant state",
+        "quality/interlock state"
+      ],
+      "region": "真空室诊断至诊断楼、CODAC、PCS、联锁和安全系统",
+      "hardware": [
+        "RNC",
+        "fission chambers",
+        "activation systems",
+        "DAQ",
+        "CODAC networks",
+        "calibration neutron sources"
+      ],
+      "sensors": [
+        "neutron detectors",
+        "diagnostic plant sensors"
+      ],
+      "calibration": "RNC 方案结合内置源、参考脉冲、裂变室/活化系统交叉校准与 MCNP/OpenMC 响应；需保存源证书、照射几何、衰变修正和不确定度预算。",
+      "inference": [
+        "neutron response unfolding",
+        "cross-calibration",
+        "plant-state orchestration"
+      ],
+      "devices": [
+        "ITER"
+      ],
+      "validation": "接口架构来自 ITER Plant Control Design 方法；RNC 校准论文提出约 10% 功率精度、10 ms 时间分辨及 a/10 空间分辨目标，原位源校准仍属 ITER 建设/投运任务。",
+      "evidenceLevel": "E2",
+      "deploymentLevel": "D2",
+      "limitations": "大部分端到端等离子体环境验证尚待 ITER 投运；辐照老化、漂移、端口集成和多诊断相关误差会破坏独立误差假设。",
+      "twinRelevance": "定义了孪生走向电厂时必须具备的状态机、时间权威、接口控制文件、校准证据和保护分区。",
+      "papers": [
+        {
+          "title": "Integration of the ITER diagnostic plant systems with CODAC",
+          "year": 2011,
+          "url": "https://doi.org/10.1016/j.fusengdes.2011.01.101",
+          "doi": "10.1016/j.fusengdes.2011.01.101",
+          "sourceType": "peer-reviewed ITER primary architecture report",
+          "authors": "S. Simrock; R. Barnsley; L. Bertalot; C. Hansalia; W.D. Klotz; P. Makijarvi; R. Reichle; G. Vayakis; I. Yonekawa; C. Walker; A. Wallander; M. Walsh; et al. (13 authors)",
+          "venue": "Fusion Engineering and Design"
+        },
+        {
+          "title": "Strategy and guidelines for the calibration of the ITER Radial Neutron Camera",
+          "year": 2019,
+          "url": "https://doi.org/10.1016/j.fusengdes.2019.03.099",
+          "doi": "10.1016/j.fusengdes.2019.03.099",
+          "sourceType": "peer-reviewed ITER primary design report",
+          "authors": "M. Cecconello; R. Miklaszewski; D. Marocco; S. Conroy; F. Moro; B. Esposito; S. Podda; B. Bienkowska; A. Szydlowski",
+          "venue": "Fusion Engineering and Design"
+        },
+        {
+          "title": "How ITER quantifies fusion power",
+          "year": 2025,
+          "url": "https://www.iter.org/node/20687/how-iter-quantifies-fusion-power",
+          "doi": null,
+          "sourceType": "ITER official technical page"
+        }
+      ],
+      "code": [
+        {
+          "name": "ITER CODAC core/configuration assets",
+          "url": null,
+          "relationship": "生产 CODAC 与 Plant I&C 配置未作为一个可核验公共代码库开放。",
+          "relation": "official-direct",
+          "artifactType": "configuration-and-source",
+          "access": "not-public"
+        },
+        {
+          "name": "OpenMC",
+          "url": "https://github.com/openmc-dev/openmc",
+          "relationship": "中子响应与校准场计算的开源蒙特卡洛工具；不是 ITER RNC 校准工作流本体。",
+          "relation": "enabling",
+          "artifactType": "source-code",
+          "access": "public"
+        }
+      ],
+      "organizations": [
+        "ITER Organization",
+        "Fusion for Energy",
+        "ITER Domestic Agencies"
+      ],
+      "tags": [
+        "CODAC",
+        "calibration",
+        "metrology",
+        "neutron",
+        "plant-I&C"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DSI-009",
+      "projectId": "CHERAB-RAYSECT",
+      "primaryTask": "DG9",
+      "relatedTasks": [
+        "DG3",
+        "DG4",
+        "DG7"
+      ],
+      "title": "CHERAB–Raysect 三维光谱与辐射合成诊断",
+      "titleEn": "CHERAB–Raysect 3D Spectroscopic and Radiation Synthetic Diagnostics",
+      "technique": {
+        "family": "OPTICAL",
+        "methods": [
+          "Monte Carlo ray tracing",
+          "spectral emission models",
+          "CAD geometry",
+          "instrument function"
+        ]
+      },
+      "problem": "单射线近似忽略有限孔径、视场、遮挡、渐晕和复杂三维结构，会系统性偏置光谱与辐射反演矩阵。",
+      "measurementPrinciple": "从等离子体发射率与原子过程出发，经 Raysect 在 CAD 场景中追踪光子，积分孔径、光学与探测器响应生成像素/通道级信号。",
+      "quantities": [
+        "spectra",
+        "radiance",
+        "bolometer power",
+        "line-integrated emission",
+        "etendue"
+      ],
+      "region": "核心、边界、偏滤器及复杂端口视线",
+      "hardware": [
+        "spectrometers",
+        "bolometers",
+        "cameras",
+        "CAD geometry"
+      ],
+      "sensors": [
+        "pixels",
+        "foils",
+        "spectral channels"
+      ],
+      "calibration": "支持仪器函数与几何响应；绝对灵敏度、镜面反射率和污染演化需从实验校准输入。",
+      "inference": [
+        "forward operator",
+        "geometry matrix",
+        "synthetic images/spectra"
+      ],
+      "devices": [
+        "ASDEX Upgrade",
+        "JET",
+        "MAST Upgrade",
+        "ITER design studies"
+      ],
+      "validation": "AUG bolometer有限体积射线追踪与解析几何基准对比，并显示单射线近似在强梯度区不足。",
+      "evidenceLevel": "E3",
+      "deploymentLevel": "D2",
+      "limitations": "计算成本受光子数与复杂 CAD 影响；表面反射、原子数据和时变光学污染的不确定度常未联合传播。",
+      "twinRelevance": "可作为三维孪生的观测算子，把物理状态变成与真实通道同构的合成数据。",
+      "papers": [
+        {
+          "title": "Description of complex viewing geometries of fusion tomography diagnostics by ray-tracing",
+          "year": 2018,
+          "url": "https://doi.org/10.1063/1.5031087",
+          "doi": "10.1063/1.5031087",
+          "sourceType": "peer-reviewed primary validation",
+          "authors": "M. Carr; A. Meakins; M. Bernert; P. David; C. Giroud; J. Harrison; S. Henderson; B. Lipschultz; F. Reimold",
+          "venue": "Review of Scientific Instruments"
+        },
+        {
+          "title": "CHERAB Spectroscopy Modelling Framework",
+          "year": 2018,
+          "url": "https://doi.org/10.5281/zenodo.1206142",
+          "doi": "10.5281/zenodo.1206142",
+          "sourceType": "official software archive",
+          "authors": "Dr Carine Giroud; Dr Alex Meakins; Dr Matthew Carr; Dr Alfonso Baciero; Mr Corentin Bertrand",
+          "venue": "Zenodo"
+        }
+      ],
+      "code": [
+        {
+          "name": "CHERAB Core",
+          "url": "https://github.com/cherab/core",
+          "relationship": "CHERAB 团队维护的等离子体发射与观测建模核心。",
+          "relation": "official-direct",
+          "artifactType": "source-code",
+          "access": "public"
+        },
+        {
+          "name": "Raysect",
+          "url": "https://github.com/raysect/source",
+          "relationship": "CHERAB 使用的官方科学射线追踪底座。",
+          "relation": "enabling",
+          "artifactType": "source-code",
+          "access": "public"
+        },
+        {
+          "name": "CHERAB-IMAS",
+          "url": "https://github.com/cherab/imas",
+          "relationship": "将 IMAS 数据映射到 CHERAB 场景的项目官方适配层。",
+          "relation": "official-direct",
+          "artifactType": "source-code",
+          "access": "public"
+        }
+      ],
+      "organizations": [
+        "UK Atomic Energy Authority",
+        "EUROfusion",
+        "CHERAB collaboration"
+      ],
+      "tags": [
+        "synthetic-diagnostic",
+        "ray-tracing",
+        "spectroscopy",
+        "bolometry",
+        "CAD"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DSI-010",
+      "projectId": "CHERAB-TS",
+      "primaryTask": "DG9",
+      "relatedTasks": [
+        "DG2"
+      ],
+      "title": "CHERAB 汤姆孙散射合成诊断模块",
+      "titleEn": "CHERAB Thomson Scattering Synthetic Diagnostic Module",
+      "technique": {
+        "family": "LASER",
+        "methods": [
+          "Selden spectrum",
+          "ray tracing",
+          "spectrometer response",
+          "photon statistics"
+        ]
+      },
+      "problem": "TS 系统设计与分析需要把激光几何、散射谱、收集光学、滤波通道和噪声共同纳入，而非只评估理想散射强度。",
+      "measurementPrinciple": "沿激光束计算电子散射谱，经三维光学与多通道探测响应得到合成光电子计数，再以与实验相同算法反演 Te/ne。",
+      "quantities": [
+        "electron temperature",
+        "electron density",
+        "channel photon counts",
+        "spectral response"
+      ],
+      "region": "核心或边界激光散射体积",
+      "hardware": [
+        "pulsed laser",
+        "collection optics",
+        "polychromator",
+        "photodetectors"
+      ],
+      "sensors": [
+        "spectral channels"
+      ],
+      "calibration": "需要激光能量、相对/绝对光谱响应、暗噪声和几何标定；合成链可用于闭合测试这些量的影响。",
+      "inference": [
+        "spectral fitting",
+        "Te/ne retrieval",
+        "design sensitivity"
+      ],
+      "devices": [
+        "COMPASS",
+        "generic tokamak TS designs"
+      ],
+      "validation": "模块用 COMPASS 边缘 TS 几何和参数展示设计与性能评估，并对物理与数值部件进行模块化核验。",
+      "evidenceLevel": "E2",
+      "deploymentLevel": "D2",
+      "limitations": "真实杂散光、探测器非线性、辐照退化和脉冲间漂移需要装置特定模型；示例不构成多装置绝对计量验证。",
+      "twinRelevance": "展示了“前向观测算子—噪声—同算法反演”的完整闭合环，可直接作为诊断 VVUQ 模板。",
+      "papers": [
+        {
+          "title": "Thomson scattering synthetic diagnostic module for the Cherab framework",
+          "year": 2021,
+          "url": "https://doi.org/10.1063/5.0043786",
+          "doi": "10.1063/5.0043786",
+          "sourceType": "peer-reviewed primary method report",
+          "authors": "M. Tomes; M. Carr; A. Meakins; M. Sos; P. Bohm; P. Bilkova; M. Imrisek; F. Jaulmes; I. Borodkina; J. Hecko; M. Hron; R. Panek",
+          "venue": "Review of Scientific Instruments"
+        }
+      ],
+      "code": [
+        {
+          "name": "CHERAB Thomson scattering module",
+          "url": "https://github.com/cherab/core",
+          "relationship": "TS 物理与光学实现属于 CHERAB 官方代码体系。",
+          "relation": "official-direct",
+          "artifactType": "source-code",
+          "access": "public"
+        }
+      ],
+      "organizations": [
+        "Budapest University of Technology and Economics",
+        "UK Atomic Energy Authority",
+        "COMPASS team"
+      ],
+      "tags": [
+        "Thomson-scattering",
+        "synthetic-diagnostic",
+        "Te",
+        "ne",
+        "optics"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DSI-011",
+      "projectId": "FIDASIM",
+      "primaryTask": "DG9",
+      "relatedTasks": [
+        "DG3",
+        "DG5"
+      ],
+      "title": "FIDASIM 快离子 Dα 与中性粒子分析器合成诊断",
+      "titleEn": "FIDASIM Synthetic FIDA and Neutral Particle Analyzer",
+      "technique": {
+        "family": "NUCLEAR_PARTICLE",
+        "methods": [
+          "neutral-beam deposition",
+          "collisional-radiative model",
+          "Monte Carlo halo neutrals",
+          "spectral forward model"
+        ]
+      },
+      "problem": "FIDA/NPA 信号同时受快离子相空间、束中性化、荷交换、原子过程、视线和仪器函数影响，不能直接解释为局部快离子密度。",
+      "measurementPrinciple": "从平衡、背景等离子体、束和快离子分布出发，计算中性束/halo 与荷交换发射，沿真实视线生成光谱或粒子通量。",
+      "quantities": [
+        "FIDA spectra",
+        "NPA flux",
+        "fast-ion phase-space sensitivity",
+        "neutron-related sources"
+      ],
+      "region": "中性束路径与快离子可观测相空间",
+      "hardware": [
+        "FIDA spectrometers",
+        "NPA",
+        "neutral beam injectors"
+      ],
+      "sensors": [
+        "spectral pixels",
+        "particle energy channels"
+      ],
+      "calibration": "要求波长、绝对辐射、视线、NBI 功率/组分和 NPA 能量响应校准；代码本身不替代实验标定。",
+      "inference": [
+        "weight functions",
+        "forward spectra",
+        "fast-ion distribution comparison"
+      ],
+      "devices": [
+        "DIII-D",
+        "ASDEX Upgrade",
+        "MAST",
+        "NSTX-U",
+        "W7-X and others"
+      ],
+      "validation": "论文报告 FIDA 光谱与 NPA 通量建模进展，并在多个装置与实验光谱、其他代码和已知原子过程比较；属于真实装置数据的离线交叉验证，不等同常规在线诊断服务。",
+      "evidenceLevel": "E3",
+      "deploymentLevel": "D3",
+      "limitations": "原子截面、halo neutrals、3D 场、被动背景和相空间欠定性限制反演；运行成本高于实时需求。",
+      "twinRelevance": "是快离子孪生的高保真观测算子，可为代理模型、诊断设计和多诊断贝叶斯融合生成训练/验证数据。",
+      "papers": [
+        {
+          "title": "Progress in modelling fast-ion D-alpha spectra and neutral particle analyzer fluxes using FIDASIM",
+          "year": 2020,
+          "url": "https://doi.org/10.1088/1361-6587/aba8d7",
+          "doi": "10.1088/1361-6587/aba8d7",
+          "sourceType": "peer-reviewed primary multi-device report",
+          "authors": "B. Geiger; L. Stagner; W.W. Heidbrink; R. Dux; R. Fischer; Y. Fujiwara; A.V. Garcia; A. S. Jacobsen; A. Jansen van Vuuren; A. N. Karpushov; D. Liu; P. A. Schneider; et al. (15 authors)",
+          "venue": "Plasma Physics and Controlled Fusion"
+        }
+      ],
+      "code": [
+        {
+          "name": "FIDASIM",
+          "url": "https://github.com/D3DEnergetic/FIDASIM",
+          "relationship": "DIII-D Energetic Particle Physics 团队维护的官方仓库。",
+          "relation": "official-direct",
+          "artifactType": "source-code",
+          "access": "public"
+        }
+      ],
+      "organizations": [
+        "General Atomics DIII-D Energetic Particle Physics",
+        "international FIDA collaboration"
+      ],
+      "tags": [
+        "FIDA",
+        "NPA",
+        "fast-ion",
+        "neutral-beam",
+        "forward-model"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DSI-012",
+      "projectId": "SOFT",
+      "primaryTask": "DG9",
+      "relatedTasks": [
+        "DG5",
+        "DG7"
+      ],
+      "title": "SOFT 逃逸电子同步辐射合成诊断",
+      "titleEn": "SOFT Synthetic Synchrotron Diagnostic for Runaway Electrons",
+      "technique": {
+        "family": "OPTICAL",
+        "methods": [
+          "guiding-center orbit following",
+          "synchrotron emission",
+          "camera/spectrometer projection",
+          "Green functions"
+        ]
+      },
+      "problem": "同步辐射图像强烈依赖磁场、观测方向和逃逸电子能量—俯仰—空间分布，简单局部发射模型会误判电子相空间。",
+      "measurementPrinciple": "在给定磁平衡中追踪导引中心，计算相对论同步辐射的角度/频谱分布并投影到相机或光谱仪。",
+      "quantities": [
+        "synchrotron images",
+        "spectra",
+        "runaway energy/pitch sensitivity",
+        "emission Green functions"
+      ],
+      "region": "逃逸电子束及可见/红外视场",
+      "hardware": [
+        "visible/IR cameras",
+        "spectrometers"
+      ],
+      "sensors": [
+        "pixels",
+        "wavelength channels"
+      ],
+      "calibration": "依赖相机几何、光谱响应、绝对灵敏度和背景标定；前向模型需要与校准后的图像同单位比较。",
+      "inference": [
+        "parameter scans",
+        "distribution-function fitting",
+        "design assessment"
+      ],
+      "devices": [
+        "Alcator C-Mod",
+        "TCV",
+        "ASDEX Upgrade",
+        "JT-60SA design",
+        "SPARC design",
+        "FTU",
+        "EAST"
+      ],
+      "validation": "原始论文重现 C-Mod 图像；TCV 垂直移动束实验与预测吻合；SPARC/JT-60SA 用于诊断设计可行性。",
+      "evidenceLevel": "E3",
+      "deploymentLevel": "D2",
+      "limitations": "逃逸电子分布通常外部给定且反演不唯一；壁反射、背景、3D 扰动和碰撞/辐射动力学误差需联合评估。",
+      "twinRelevance": "把灾变快电子状态映射为真实相机信号，可用于风险场景回放、观测器设计和异常解释。",
+      "papers": [
+        {
+          "title": "SOFT: a synthetic synchrotron diagnostic for runaway electrons",
+          "year": 2018,
+          "url": "https://doi.org/10.1088/1741-4326/aa9abb",
+          "doi": "10.1088/1741-4326/aa9abb",
+          "sourceType": "peer-reviewed primary validation",
+          "authors": "M. Hoppe; O. Embréus; R.A. Tinguely; R.S. Granetz; A. Stahl; T. Fülöp",
+          "venue": "Nuclear Fusion"
+        },
+        {
+          "title": "Synthetic measurements of runaway electron synchrotron emission in the SPARC tokamak",
+          "year": 2024,
+          "url": "https://doi.org/10.1063/5.0219477",
+          "doi": "10.1063/5.0219477",
+          "sourceType": "peer-reviewed primary design study",
+          "authors": "R. A. Tinguely; A. M. Rosenthal; M. Silva Sa; M. Jean; I. Abramovic",
+          "venue": "Review of Scientific Instruments"
+        }
+      ],
+      "code": [
+        {
+          "name": "SOFT",
+          "url": "https://github.com/hoppe93/SOFT",
+          "relationship": "主要作者维护的官方公开仓库。",
+          "relation": "official-direct",
+          "artifactType": "source-code",
+          "access": "public"
+        }
+      ],
+      "organizations": [
+        "Chalmers University of Technology",
+        "MIT PSFC",
+        "EPFL",
+        "Commonwealth Fusion Systems"
+      ],
+      "tags": [
+        "runaway-electron",
+        "synchrotron",
+        "camera",
+        "spectrum",
+        "synthetic-diagnostic"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DSI-013",
+      "projectId": "TOFU",
+      "primaryTask": "DG9",
+      "relatedTasks": [
+        "DG4",
+        "DG7",
+        "DG10"
+      ],
+      "title": "ToFu 三维几何、辐射前向模型与层析工具箱",
+      "titleEn": "ToFu 3D Geometry, Radiation Forward Modelling and Tomography",
+      "technique": {
+        "family": "OPTICAL",
+        "methods": [
+          "3D diagnostic geometry",
+          "line integration",
+          "visibility matrix",
+          "tomographic inversion"
+        ]
+      },
+      "problem": "辐射诊断需要在同一工具中管理装置 CAD、孔径/探测器几何、视线矩阵、合成信号和反演。",
+      "measurementPrinciple": "从三维几何建立通道可见性与积分算子，将二维/三维发射率投影为通道信号，并提供逆问题算法。",
+      "quantities": [
+        "emissivity",
+        "line-integrated brightness",
+        "visibility matrices",
+        "tomographic maps"
+      ],
+      "region": "核心、边界、偏滤器和任意三维视线",
+      "hardware": [
+        "bolometers",
+        "soft-x-ray arrays",
+        "cameras",
+        "spectrometers"
+      ],
+      "sensors": [
+        "chords",
+        "pixels"
+      ],
+      "calibration": "可保存通道几何与响应；绝对标定、坏道和时变遮挡仍需作为数据输入和误差模型。",
+      "inference": [
+        "forward projection",
+        "tomographic inversion",
+        "geometry optimisation"
+      ],
+      "devices": [
+        "WEST",
+        "JET/ITER-oriented geometries",
+        "generic tokamaks and stellarators"
+      ],
+      "validation": "官方仓库包含几何、合成信号和反演示例及测试；被用于聚变诊断设计与分析工作流。",
+      "evidenceLevel": "E2",
+      "deploymentLevel": "D2",
+      "limitations": "物理发射模型覆盖不如专用光谱代码；复杂反射、非线性探测器和完整协方差需外接。",
+      "twinRelevance": "适合建立可版本化的“几何—观测矩阵—反演”资产，并在 CAD 更新后自动重算。",
+      "papers": [
+        {
+          "title": "ToFu official documentation",
+          "year": 2026,
+          "url": "https://tofuproject.github.io/tofu/index.html",
+          "doi": null,
+          "sourceType": "official project documentation"
+        }
+      ],
+      "code": [
+        {
+          "name": "ToFu",
+          "url": "https://github.com/ToFuProject/tofu",
+          "relationship": "ToFuProject 官方公开仓库，含几何、前向与反演实现。",
+          "relation": "official-direct",
+          "artifactType": "source-code",
+          "access": "public"
+        }
+      ],
+      "organizations": [
+        "CEA IRFM",
+        "ToFuProject contributors"
+      ],
+      "tags": [
+        "tomography",
+        "geometry",
+        "forward-model",
+        "bolometry",
+        "WEST"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DSI-014",
+      "projectId": "TRIPPY",
+      "primaryTask": "DG10",
+      "relatedTasks": [
+        "DG9",
+        "DG4",
+        "DG7"
+      ],
+      "title": "TRIPPy 环形辐射视线与反演协议",
+      "titleEn": "TRIPPy Toroidal Radiation Inversion Protocol in Python",
+      "technique": {
+        "family": "OPTICAL",
+        "methods": [
+          "ray tracing in toroidal geometry",
+          "equilibrium mapping",
+          "response matrix",
+          "radiation inversion"
+        ]
+      },
+      "problem": "球形托卡马克和常规托卡马克的辐射通道需与磁平衡及三维容器几何一致映射。",
+      "measurementPrinciple": "利用装置几何和 eqtools 平衡对象追踪视线，构造辐射前向矩阵并支持反演。",
+      "quantities": [
+        "line-integrated emission",
+        "emissivity geometry matrix",
+        "flux-coordinate mapping"
+      ],
+      "region": "核心与边界辐射视线",
+      "hardware": [
+        "soft-x-ray arrays",
+        "bolometers",
+        "spectroscopic chords"
+      ],
+      "sensors": [
+        "line-of-sight channels"
+      ],
+      "calibration": "通道响应和几何来自装置配置；时间匹配的平衡、坏道和绝对灵敏度需外部提供。",
+      "inference": [
+        "geometry matrix",
+        "flux-surface projection",
+        "tomographic inversion"
+      ],
+      "devices": [
+        "Alcator C-Mod",
+        "NSTX-U"
+      ],
+      "validation": "由 MIT PSFC 工具链用于 C-Mod/NSTX-U 数据分析，并与 eqtools 的装置独立平衡接口结合。",
+      "evidenceLevel": "E3",
+      "deploymentLevel": "D2",
+      "limitations": "维护活跃度、文档和现代测试覆盖有限；本质是几何/反演工具，不含完整原子辐射物理。",
+      "twinRelevance": "提供轻量的装置几何到诊断矩阵映射，但生产孪生需补版本、CI 与误差传播。",
+      "papers": [
+        {
+          "title": "eqtools: Modular, extensible, open-source, cross-machine Python tools for working with magnetic equilibria",
+          "year": 2017,
+          "url": "https://doi.org/10.1016/j.cpc.2016.09.011",
+          "doi": "10.1016/j.cpc.2016.09.011",
+          "sourceType": "peer-reviewed primary toolchain report",
+          "authors": "M.A. Chilenski; I.C. Faust; J.R. Walk",
+          "venue": "Computer Physics Communications"
+        }
+      ],
+      "code": [
+        {
+          "name": "TRIPPy",
+          "url": "https://github.com/icfaust/TRIPPy",
+          "relationship": "作者发布的 TRIPPy 实现。",
+          "relation": "official-direct",
+          "artifactType": "source-code",
+          "access": "public"
+        },
+        {
+          "name": "eqtools",
+          "url": "https://github.com/PSFCPlasmaTools/eqtools",
+          "relationship": "提供平衡和坐标映射，不是辐射前向模型本身。",
+          "relation": "enabling",
+          "artifactType": "source-code",
+          "access": "public"
+        }
+      ],
+      "organizations": [
+        "MIT Plasma Science and Fusion Center"
+      ],
+      "tags": [
+        "ray-tracing",
+        "tomography",
+        "equilibrium",
+        "C-Mod",
+        "NSTX-U"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DSI-015",
+      "projectId": "XICSRT",
+      "primaryTask": "DG9",
+      "relatedTasks": [
+        "DG3",
+        "DG4"
+      ],
+      "title": "XICSRT 晶体 X 射线成像光谱射线追踪",
+      "titleEn": "XICSRT X-ray Crystal Imaging Spectrometer Ray Tracing",
+      "technique": {
+        "family": "OPTICAL",
+        "methods": [
+          "photon Monte Carlo",
+          "Bragg diffraction",
+          "crystal rocking curve",
+          "detector projection"
+        ]
+      },
+      "problem": "XICS/XRCS 的弯晶、像差、空间—光谱耦合和有限探测器几何难以用解析公式充分描述。",
+      "measurementPrinciple": "发射光子在三维场景中传播，经晶体 Bragg 反射与摇摆曲线采样后到达探测器，生成合成二维谱图。",
+      "quantities": [
+        "x-ray spectral images",
+        "instrument function",
+        "Bragg response",
+        "spatial/spectral resolution"
+      ],
+      "region": "核心高温离子与杂质观测视场",
+      "hardware": [
+        "bent crystals",
+        "x-ray detectors",
+        "collimators"
+      ],
+      "sensors": [
+        "2D detector pixels"
+      ],
+      "calibration": "需要晶体曲率/取向、晶格常数、摇摆曲线、探测器像素和能量响应；可用已知线源或装置谱线闭合。",
+      "inference": [
+        "instrument response",
+        "spectral image synthesis",
+        "design optimisation"
+      ],
+      "devices": [
+        "W7-X",
+        "ITER XRCS-Core design",
+        "NIF-related crystal systems"
+      ],
+      "validation": "官方项目包含分析基准和装置几何示例；ITER XRCS-Core 工作用其评估成像和光谱性能。",
+      "evidenceLevel": "E2",
+      "deploymentLevel": "D2",
+      "limitations": "等离子体发射与原子模型需外部输入；晶体缺陷、辐照漂移和背景散射模型有限。",
+      "twinRelevance": "把核心离子/杂质状态变为真实探测器平面的二维证据，是晶体光谱孪生的观测算子。",
+      "papers": [
+        {
+          "title": "XICSRT documentation",
+          "year": 2026,
+          "url": "https://xicsrt.readthedocs.io/",
+          "doi": null,
+          "sourceType": "official project documentation"
+        },
+        {
+          "title": "Synthetic modeling of ITER XRCS-Core diagnostic",
+          "year": 2020,
+          "url": "https://meetings-archive.aps.org/dpp/2020/jp13/96/",
+          "doi": null,
+          "sourceType": "APS primary conference abstract"
+        }
+      ],
+      "code": [
+        {
+          "name": "XICSRT",
+          "url": "https://github.com/PrincetonUniversity/xicsrt",
+          "relationship": "Princeton University 官方组织下的开源仓库。",
+          "relation": "official-direct",
+          "artifactType": "source-code",
+          "access": "public"
+        }
+      ],
+      "organizations": [
+        "Princeton Plasma Physics Laboratory",
+        "Princeton University",
+        "ITER XRCS team"
+      ],
+      "tags": [
+        "XICS",
+        "x-ray",
+        "Bragg",
+        "ray-tracing",
+        "ITER"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DSI-016",
+      "projectId": "ECRAD",
+      "primaryTask": "DG9",
+      "relatedTasks": [
+        "DG2"
+      ],
+      "title": "ECRad 电子回旋辐射输运与 ECE 合成诊断",
+      "titleEn": "ECRad Electron Cyclotron Radiation Transport and Synthetic ECE",
+      "technique": {
+        "family": "MICROWAVE",
+        "methods": [
+          "geometrical optics",
+          "radiative transfer",
+          "relativistic absorption/emission",
+          "warm resonance"
+        ]
+      },
+      "problem": "高温、斜视、低光学厚度或非热电子条件下，ECE 亮温不再简单等于局部电子温度。",
+      "measurementPrinciple": "沿 ECE 视线求解回旋辐射传输，计算发射、吸收、偏振和共振展宽，生成频率通道的合成辐射温度。",
+      "quantities": [
+        "ECE spectra",
+        "radiation temperature",
+        "birthplace distribution",
+        "optical depth"
+      ],
+      "region": "核心到边缘回旋共振层",
+      "hardware": [
+        "ECE radiometers",
+        "ECE imaging optics"
+      ],
+      "sensors": [
+        "frequency channels",
+        "imaging pixels"
+      ],
+      "calibration": "需绝对辐射、频率响应、视线和磁场标定；模型可预测每通道出生位置与非局域响应。",
+      "inference": [
+        "Te interpretation",
+        "forward spectra",
+        "diagnostic design",
+        "non-thermal sensitivity"
+      ],
+      "devices": [
+        "ASDEX Upgrade",
+        "TCV",
+        "ITER-oriented studies",
+        "various ECE systems"
+      ],
+      "validation": "参考论文对常规、斜视和成像 ECE 情况进行核验，并与既有模型/实验数据应用比较；支持真实装置数据的分析验证，但未证明常规在线部署。",
+      "evidenceLevel": "E3",
+      "deploymentLevel": "D3",
+      "limitations": "几何光学在强衍射/模式转换条件受限；分布函数、壁反射和磁场误差会产生结构性偏差。",
+      "twinRelevance": "是电子温度孪生连接微波观测的高保真前向模型，可生成通道响应和模型失配指标。",
+      "papers": [
+        {
+          "title": "ECRad: An electron cyclotron radiation transport solver for advanced data analysis in thermal and non-thermal fusion plasmas",
+          "year": 2020,
+          "url": "https://doi.org/10.1016/j.cpc.2020.107175",
+          "doi": "10.1016/j.cpc.2020.107175",
+          "sourceType": "peer-reviewed primary code report",
+          "authors": "S.S. Denk; R. Fischer; E. Poli; O. Maj; S.K. Nielsen; J. Rasmussen; M. Stejner; M. Willensdorfer",
+          "venue": "Computer Physics Communications"
+        }
+      ],
+      "code": [
+        {
+          "name": "ECRad",
+          "url": "https://github.com/AreWeDreaming/ECRad",
+          "relationship": "主要开发团队维护的公开代码。",
+          "relation": "official-direct",
+          "artifactType": "source-code",
+          "access": "public"
+        }
+      ],
+      "organizations": [
+        "Max Planck Institute for Plasma Physics",
+        "EPFL"
+      ],
+      "tags": [
+        "ECE",
+        "radiative-transfer",
+        "Te",
+        "microwave",
+        "forward-model"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DSI-017",
+      "projectId": "REFMUL-FAMILY",
+      "primaryTask": "DG9",
+      "relatedTasks": [
+        "DG2",
+        "DG6"
+      ],
+      "title": "REFMUL 系列反射计全波合成诊断",
+      "titleEn": "REFMUL Family Full-Wave Reflectometry Synthetic Diagnostics",
+      "technique": {
+        "family": "MICROWAVE",
+        "methods": [
+          "2D/3D FDTD",
+          "full-wave propagation",
+          "turbulent density fields",
+          "antenna response"
+        ]
+      },
+      "problem": "反射计相位/幅度受截止层、湍流、多重散射、曲率和天线几何影响，几何光学在强涨落下失效。",
+      "measurementPrinciple": "在给定密度场和磁/介电模型中用 FDTD 推进电磁波，记录天线处复信号并按实验链解调。",
+      "quantities": [
+        "complex reflected field",
+        "phase",
+        "amplitude",
+        "Doppler spectrum",
+        "correlation"
+      ],
+      "region": "边缘至核心截止层与湍流区",
+      "hardware": [
+        "launch/receive antennas",
+        "waveguides",
+        "reflectometers"
+      ],
+      "sensors": [
+        "I/Q microwave channels"
+      ],
+      "calibration": "需频率扫掠、I/Q、延迟、波导和天线方向图标定；FDTD 网格/边界的数值色散也需基准。",
+      "inference": [
+        "density-profile interpretation",
+        "turbulence response",
+        "Doppler reflectometry synthetic signal"
+      ],
+      "devices": [
+        "ASDEX Upgrade",
+        "JET",
+        "DIII-D/KSTAR imaging-reflectometry studies",
+        "DEMO design studies"
+      ],
+      "validation": "综述记录 REFMUL、REFMULF、REFMUL3 与实验/其他全波代码的长期比较；DEMO 研究用于可测性评估。",
+      "evidenceLevel": "E3",
+      "deploymentLevel": "D2",
+      "limitations": "3D 全波计算昂贵；边界条件、天线近场和湍流输入决定结果，专用实现未发现可核验公共仓库。",
+      "twinRelevance": "为密度/湍流孪生提供强非线性观测算子，也适合作为实时代理模型的教师模型。",
+      "papers": [
+        {
+          "title": "An overview of the evolution of the modeling of reflectometry diagnostics in fusion plasmas using finite-difference time-domain codes",
+          "year": 2024,
+          "url": "https://doi.org/10.1016/j.fusengdes.2024.114354",
+          "doi": "10.1016/j.fusengdes.2024.114354",
+          "sourceType": "peer-reviewed author review of primary code family",
+          "authors": "F. da Silva; S. Heuraux; T. Ribeiro; E. Ricardo; J. Santos; A. Silva; J. Ferreira; J. Vicente; G. De Masi; O. Tudisco; R. Cavazzana; G. Marchiori; et al. (14 authors)",
+          "venue": "Fusion Engineering and Design"
+        },
+        {
+          "title": "On the edge turbulence effects on the density profile reconstruction using O-mode reflectometers",
+          "year": 2021,
+          "url": "https://doi.org/10.1016/j.fusengdes.2021.112652",
+          "doi": "10.1016/j.fusengdes.2021.112652",
+          "sourceType": "peer-reviewed primary simulation",
+          "authors": "E. Ricardo; F. da Silva; S. Heuraux; A. Silva",
+          "venue": "Fusion Engineering and Design"
+        }
+      ],
+      "code": [
+        {
+          "name": "REFMUL/REFMULF/REFMUL3",
+          "url": null,
+          "relationship": "未核验到开发团队公开的可下载生产仓库；论文仅描述代码。",
+          "relation": "official-direct",
+          "artifactType": "source-code",
+          "access": "not-public"
+        }
+      ],
+      "organizations": [
+        "Instituto de Plasmas e Fusão Nuclear",
+        "EUROfusion"
+      ],
+      "tags": [
+        "reflectometry",
+        "FDTD",
+        "full-wave",
+        "density",
+        "turbulence"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DSI-018",
+      "projectId": "XGC1-SYNTHETIC-BES",
+      "primaryTask": "DG9",
+      "relatedTasks": [
+        "DG2",
+        "DG6"
+      ],
+      "title": "XGC1—BES 全光学合成诊断",
+      "titleEn": "XGC1 Synthetic Beam Emission Spectroscopy",
+      "technique": {
+        "family": "OPTICAL",
+        "methods": [
+          "gyrokinetic turbulence input",
+          "beam emission model",
+          "3D optical integration",
+          "detector point-spread function"
+        ]
+      },
+      "problem": "BES 测得的密度涨落会被有限束宽、寿命效应、视场重叠和光学点扩散卷积，不能直接等同于局部模拟密度。",
+      "measurementPrinciple": "把 XGC1 边缘湍流映射到中性束发射，经真实三维束和光学系统积分到探测通道。",
+      "quantities": [
+        "BES intensity fluctuations",
+        "cross-correlation",
+        "wavenumber response",
+        "apparent velocity"
+      ],
+      "region": "边缘/台基中性束截面",
+      "hardware": [
+        "neutral beam",
+        "collection optics",
+        "photodetector array"
+      ],
+      "sensors": [
+        "BES channels"
+      ],
+      "calibration": "需束几何、滤光片、光学 PSF、通道增益和噪声标定；合成链可闭合检查空间分辨。",
+      "inference": [
+        "turbulence validation",
+        "synthetic correlation",
+        "diagnostic transfer function"
+      ],
+      "devices": [
+        "DIII-D-like BES geometry with XGC1 edge simulations"
+      ],
+      "validation": "论文对光学集成、现实束模型和 XGC1 数据进行端到端合成，量化诊断卷积对湍流统计的影响。",
+      "evidenceLevel": "E2",
+      "deploymentLevel": "D2",
+      "limitations": "验证依赖特定模拟和诊断几何；XGC1/原子发射/光学误差未形成统一后验，专用流水线未公开。",
+      "twinRelevance": "是“模拟场不能直接与诊断量比较”的典型案例，要求孪生在观测空间做 V&V。",
+      "papers": [
+        {
+          "title": "Synthetic diagnostic for the beam emission spectroscopy diagnostic using a full optical integration",
+          "year": 2017,
+          "url": "https://doi.org/10.1088/1361-6587/aa5234",
+          "doi": "10.1088/1361-6587/aa5234",
+          "sourceType": "peer-reviewed primary synthetic-diagnostic study",
+          "authors": "L Hausammann; R M Churchill; L Shi",
+          "venue": "Plasma Physics and Controlled Fusion"
+        }
+      ],
+      "code": [
+        {
+          "name": "XGC1-BES synthetic diagnostic workflow",
+          "url": null,
+          "relationship": "论文专用端到端实现未发现公开仓库。",
+          "relation": "official-direct",
+          "artifactType": "source-code",
+          "access": "not-public"
+        },
+        {
+          "name": "XGC",
+          "url": null,
+          "relationship": "XGC1 是物理输入代码；访问受协作与许可约束，且不是 BES 观测算子本体。",
+          "relation": "enabling",
+          "artifactType": "source-code",
+          "access": "not-public"
+        }
+      ],
+      "organizations": [
+        "Princeton Plasma Physics Laboratory",
+        "DIII-D collaboration"
+      ],
+      "tags": [
+        "BES",
+        "XGC1",
+        "turbulence",
+        "optics",
+        "validation"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DSI-019",
+      "projectId": "ASCOT5-SYNTHETIC-FI",
+      "primaryTask": "DG9",
+      "relatedTasks": [
+        "DG5"
+      ],
+      "title": "ASCOT5 快离子轨道与多诊断合成响应",
+      "titleEn": "ASCOT5 Fast-Ion Orbit Following and Synthetic Diagnostic Responses",
+      "technique": {
+        "family": "NUCLEAR_PARTICLE",
+        "methods": [
+          "Monte Carlo orbit following",
+          "collisions",
+          "wall intersections",
+          "diagnostic weight functions"
+        ]
+      },
+      "problem": "快离子诊断对相空间的采样高度选择性，且受三维磁场、碰撞、损失轨道和壁几何共同影响。",
+      "measurementPrinciple": "在平衡/三维场中推进快离子轨道与碰撞，计算分布和损失，再通过诊断权重或专用接口生成 CTS、NPA、FILD、IR、核反应等可观测量。",
+      "quantities": [
+        "fast-ion distribution",
+        "losses",
+        "synthetic CTS/NPA/FILD/neutron responses"
+      ],
+      "region": "核心快离子相空间至第一壁",
+      "hardware": [
+        "CTS",
+        "NPA",
+        "FILD",
+        "IR camera",
+        "neutron camera/activation probe"
+      ],
+      "sensors": [
+        "spectral/particle/scintillator/camera channels"
+      ],
+      "calibration": "各下游诊断需独立响应和几何校准；ASCOT5 主要校验轨道/碰撞物理与壁交点。",
+      "inference": [
+        "forward distribution",
+        "diagnostic comparison",
+        "loss mapping"
+      ],
+      "devices": [
+        "ASDEX Upgrade",
+        "DIII-D",
+        "JET",
+        "ITER",
+        "SPARC",
+        "W7-X"
+      ],
+      "validation": "ASCOT5 对新经典输运解析结果和 ASCOT4 做验证；多装置研究比较多种快离子诊断的相空间覆盖。",
+      "evidenceLevel": "E3",
+      "deploymentLevel": "D2",
+      "limitations": "它是粒子物理教师模型而非统一仪器模拟器；诊断响应常由外部代码完成，计算成本高且输入场误差显著。",
+      "twinRelevance": "支撑快离子状态—壁载荷—诊断响应的跨域闭环，可生成代理训练集和场景证据。",
+      "papers": [
+        {
+          "title": "High-performance orbit-following code ASCOT5 for Monte Carlo simulations in fusion plasmas",
+          "year": 2019,
+          "url": "https://arxiv.org/abs/1908.02482",
+          "doi": null,
+          "sourceType": "author primary preprint"
+        },
+        {
+          "title": "Comparative study of fast-ion diagnostics using orbit-following simulations",
+          "year": 2019,
+          "url": "https://arxiv.org/abs/1910.03284",
+          "doi": null,
+          "sourceType": "author primary preprint"
+        }
+      ],
+      "code": [
+        {
+          "name": "ASCOT5",
+          "url": "https://github.com/ascot4fusion/ascot5",
+          "relationship": "ASCOT 开发团队官方公开仓库。",
+          "relation": "official-direct",
+          "artifactType": "source-code",
+          "access": "public"
+        }
+      ],
+      "organizations": [
+        "Aalto University",
+        "VTT",
+        "EUROfusion fast-ion community"
+      ],
+      "tags": [
+        "ASCOT5",
+        "fast-ion",
+        "orbit-following",
+        "wall-loss",
+        "synthetic-diagnostic"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DSI-020",
+      "projectId": "DRESS-PYDRESS",
+      "primaryTask": "DG9",
+      "relatedTasks": [
+        "DG5"
+      ],
+      "title": "DRESS/pydress 任意反应物分布的聚变中子谱合成",
+      "titleEn": "DRESS/pydress Fusion Neutron Spectra from Arbitrary Reactant Distributions",
+      "technique": {
+        "family": "NUCLEAR_PARTICLE",
+        "methods": [
+          "fusion kinematics",
+          "Monte Carlo velocity distributions",
+          "differential cross sections",
+          "spectral synthesis"
+        ]
+      },
+      "problem": "非麦克斯韦、各向异性和快离子尾会改变中子能谱，仅用温度展宽公式无法解释燃烧等离子体。",
+      "measurementPrinciple": "从任意反应物速度分布采样双体反应运动学与微分截面，生成观察方向相关的中子/产物能谱。",
+      "quantities": [
+        "neutron energy spectrum",
+        "reaction rate",
+        "spectral moments",
+        "anisotropy"
+      ],
+      "region": "核心 D-D/D-T 反应体积",
+      "hardware": [
+        "neutron spectrometers"
+      ],
+      "sensors": [
+        "energy bins",
+        "time-of-flight or proton-recoil channels"
+      ],
+      "calibration": "代码输出源谱；与探测数据比较前还需探测器响应矩阵、能标、效率、散射背景和绝对通量校准。",
+      "inference": [
+        "ion-temperature interpretation",
+        "fast-ion tail sensitivity",
+        "source-spectrum prediction"
+      ],
+      "devices": [
+        "MAST",
+        "generic D-D/D-T devices",
+        "ITER/DEMO scenario studies"
+      ],
+      "validation": "方法论文给出运动学/截面核验；后续在 MAST 与实测中子谱和快离子模型比较。",
+      "evidenceLevel": "E3",
+      "deploymentLevel": "D2",
+      "limitations": "不含完整装置中子输运和探测器响应；反应物分布误差、核数据与背景会耦合。",
+      "twinRelevance": "为聚变功率和燃料离子孪生提供源项观测算子，应与 OpenMC/MCNP 探测器输运串联。",
+      "papers": [
+        {
+          "title": "Calculating fusion neutron energy spectra from arbitrary reactant distributions",
+          "year": 2016,
+          "url": "https://doi.org/10.1016/j.cpc.2015.10.010",
+          "doi": "10.1016/j.cpc.2015.10.010",
+          "sourceType": "peer-reviewed primary method report",
+          "authors": "J. Eriksson; S. Conroy; E. Andersson Sundén; C. Hellesen",
+          "venue": "Computer Physics Communications"
+        },
+        {
+          "title": "Validation of neutron emission and neutron energy spectrum calculations on a Mega Ampere Spherical Tokamak with directional relativistic spectrum simulator",
+          "year": 2021,
+          "url": "https://doi.org/10.1088/1361-6587/abca7d",
+          "doi": "10.1088/1361-6587/abca7d",
+          "sourceType": "peer-reviewed primary experimental validation",
+          "authors": "A Sperduti; I Klimek; S Conroy; M Cecconello; M Gorelenkova; A Snicker",
+          "venue": "Plasma Physics and Controlled Fusion"
+        }
+      ],
+      "code": [
+        {
+          "name": "pydress",
+          "url": "https://github.com/jacob-eri/pydress",
+          "relationship": "DRESS 作者发布的 Python 实现。",
+          "relation": "official-direct",
+          "artifactType": "source-code",
+          "access": "public"
+        }
+      ],
+      "organizations": [
+        "Uppsala University",
+        "MAST collaboration"
+      ],
+      "tags": [
+        "neutron-spectrum",
+        "fusion-products",
+        "kinematics",
+        "MAST",
+        "forward-model"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DSI-021",
+      "projectId": "SCINTSUITE-FILDSIM",
+      "primaryTask": "DG9",
+      "relatedTasks": [
+        "DG5",
+        "DG7"
+      ],
+      "title": "ScintSuite/FILDSIM 快离子损失探针合成诊断",
+      "titleEn": "ScintSuite/FILDSIM Synthetic Fast-Ion Loss Diagnostics",
+      "technique": {
+        "family": "NUCLEAR_PARTICLE",
+        "methods": [
+          "charged-particle orbit tracing",
+          "collimator geometry",
+          "scintillator strike map",
+          "camera response"
+        ]
+      },
+      "problem": "FILD 闪烁图案由三维磁场、孔口、回旋半径/俯仰选择、闪烁屏响应与相机光学共同形成。",
+      "measurementPrinciple": "从探针口前粒子分布追踪通过狭缝/针孔的轨道，在闪烁屏计算打击位置与响应并生成合成相机图。",
+      "quantities": [
+        "pitch/gyroradius strike map",
+        "loss flux",
+        "synthetic scintillator image"
+      ],
+      "region": "等离子体边缘至壁内 FILD 探针",
+      "hardware": [
+        "FILD head",
+        "collimator",
+        "scintillator",
+        "camera"
+      ],
+      "sensors": [
+        "camera pixels"
+      ],
+      "calibration": "需探针位姿、狭缝尺寸、磁场、闪烁效率、光学畸变与相机增益标定。",
+      "inference": [
+        "phase-space mapping",
+        "strike-map inversion",
+        "fast-ion loss interpretation"
+      ],
+      "devices": [
+        "ASDEX Upgrade",
+        "W7-X",
+        "DIII-D and other FILD-equipped devices"
+      ],
+      "validation": "FILDSIM 新模型与数值/几何基准及装置数据比较；W7-X 工作与 ASCOT5 串联构建合成响应。",
+      "evidenceLevel": "E3",
+      "deploymentLevel": "D2",
+      "limitations": "探针扰动、材料退化、饱和和真实入射分布不确定；相机强度的绝对通量解释仍困难。",
+      "twinRelevance": "将快离子损失和壁部件几何直接连接，适用于数字孪生中的局部风险和传感器响应评估。",
+      "papers": [
+        {
+          "title": "A new FILDSIM model for improved velocity-space sensitivity modelling and reconstructions",
+          "year": 2024,
+          "url": "https://doi.org/10.1088/1361-6587/ad268f",
+          "doi": "10.1088/1361-6587/ad268f",
+          "sourceType": "peer-reviewed primary method/validation",
+          "authors": "Bo S Schmidt; Jesús Poley-Sanjuán; José Rueda-Rueda; Joaquín Galdon-Quíroga; Marcelo Baquero-Ruiz; Henrik Järleblad; Bernard C G Reman; Mads Rud; Andrea Valentini; Manuel García-Muñoz; Mirko Salewski",
+          "venue": "Plasma Physics and Controlled Fusion"
+        },
+        {
+          "title": "Development of a scintillator based fast-ion loss detector for the Wendelstein 7-X stellarator",
+          "year": 2024,
+          "url": "https://doi.org/10.1016/j.fusengdes.2024.114520",
+          "doi": "10.1016/j.fusengdes.2024.114520",
+          "sourceType": "peer-reviewed primary device study",
+          "authors": "A. Jansen van Vuuren; J. Garcia-Dominguez; J. Hidalgo-Salaverri; J. Segado-Fernandez; A. LeViness; J. Ayllon-Guerola; J. Rueda-Rueda; S.A. Lazerson; J. Galdon-Quiroga; M. Garcia-Munoz; N. Pablant",
+          "venue": "Fusion Engineering and Design"
+        },
+        {
+          "title": "Validation of a synthetic fast ion loss detector model for Wendelstein 7-X",
+          "year": 2024,
+          "url": "https://doi.org/10.1088/1741-4326/ad6885",
+          "doi": "10.1088/1741-4326/ad6885",
+          "sourceType": "peer-reviewed primary experimental validation",
+          "authors": "A. LeViness; S.A. Lazerson; A. Jansen van Vuuren; J. Rueda-Rueda; M. Beurskens; S. Bozhenkov; K.J. Brunner; O.P. Ford; G. Fuchert; M. Garcìa-Muñoz; M. Isobe; C. Killer; et al. (18 authors)",
+          "venue": "Nuclear Fusion"
+        }
+      ],
+      "code": [
+        {
+          "name": "ScintSuite",
+          "url": "https://github.com/JoseRuedaRueda/ScintSuite",
+          "relationship": "主要开发者公开的 FILD/INPA 分析与合成诊断套件。",
+          "relation": "official-direct",
+          "artifactType": "source-code",
+          "access": "public"
+        },
+        {
+          "name": "ASCOT5",
+          "url": "https://github.com/ascot4fusion/ascot5",
+          "relationship": "为 W7-X 合成链提供到探针口的粒子分布，不是探针仪器模型。",
+          "relation": "enabling",
+          "artifactType": "source-code",
+          "access": "public"
+        }
+      ],
+      "organizations": [
+        "University of Seville",
+        "Max Planck Institute for Plasma Physics",
+        "W7-X team"
+      ],
+      "tags": [
+        "FILD",
+        "fast-ion-loss",
+        "scintillator",
+        "camera",
+        "wall"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DSI-022",
+      "projectId": "RENATE",
+      "primaryTask": "DG9",
+      "relatedTasks": [
+        "DG2",
+        "DG6"
+      ],
+      "title": "RENATE 三维束发射光谱合成诊断",
+      "titleEn": "RENATE 3D Beam Emission Spectroscopy Synthetic Diagnostic",
+      "technique": {
+        "family": "OPTICAL",
+        "methods": [
+          "collisional-radiative rate equations",
+          "beam attenuation",
+          "3D optics",
+          "detector integration"
+        ]
+      },
+      "problem": "BES 信号受束原子布居、衰减、寿命、光学体积和背景共同影响，需端到端模型解释密度与湍流。",
+      "measurementPrinciple": "沿束解原子态速率方程，计算发射和束衰减，再通过三维观测光学积分到通道。",
+      "quantities": [
+        "BES intensity",
+        "beam attenuation",
+        "density profile",
+        "fluctuation transfer"
+      ],
+      "region": "边缘/核心束路径和观测体积",
+      "hardware": [
+        "diagnostic/heating neutral beam",
+        "collection optics",
+        "photodetectors"
+      ],
+      "sensors": [
+        "BES channels"
+      ],
+      "calibration": "需束电流/能量、滤光片、通道增益、光学几何、原子数据和背景校准。",
+      "inference": [
+        "density retrieval",
+        "fluctuation interpretation",
+        "diagnostic design"
+      ],
+      "devices": [
+        "KSTAR",
+        "EAST",
+        "HSX studies",
+        "ITER neutral beam test facilities"
+      ],
+      "validation": "关键模块与其他代码基准比较；原始论文用 KSTAR 实验数据进行验证。",
+      "evidenceLevel": "E3",
+      "deploymentLevel": "D2",
+      "limitations": "原始实现与后续 RENATE-OD 的公开可复现性有限；高阶原子态和复杂束组分带来核数据偏差。",
+      "twinRelevance": "为密度/湍流孪生提供包含原子与光学响应的观测算子，能校正“模拟密度到 BES 强度”的差距。",
+      "papers": [
+        {
+          "title": "Three-dimensional modeling of beam emission spectroscopy measurements in fusion plasmas",
+          "year": 2012,
+          "url": "https://doi.org/10.1063/1.4764564",
+          "doi": "10.1063/1.4764564",
+          "sourceType": "peer-reviewed primary experimental validation",
+          "authors": "D. Guszejnov; G. I. Pokol; I. Pusztai; D. Refy; S. Zoletnik; M. Lampert; Y. U. Nam",
+          "venue": "Review of Scientific Instruments"
+        }
+      ],
+      "code": [
+        {
+          "name": "RENATE/RENATE-OD",
+          "url": null,
+          "relationship": "未核验到作者团队维护的公共生产仓库；论文与后续工作描述实现。",
+          "relation": "official-direct",
+          "artifactType": "source-code",
+          "access": "not-public"
+        }
+      ],
+      "organizations": [
+        "Budapest University of Technology and Economics",
+        "KSTAR team"
+      ],
+      "tags": [
+        "BES",
+        "rate-equation",
+        "beam",
+        "optics",
+        "KSTAR"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DSI-023",
+      "projectId": "MINERVA",
+      "primaryTask": "DG10",
+      "relatedTasks": [
+        "DG1",
+        "DG2",
+        "DG3",
+        "DG4"
+      ],
+      "title": "Minerva 贝叶斯诊断建模与模型数据融合框架",
+      "titleEn": "Minerva Bayesian Diagnostic Modelling and Model Data Fusion",
+      "technique": {
+        "family": "COMPUTATIONAL",
+        "methods": [
+          "Bayesian graphical models",
+          "forward models",
+          "probabilistic programming",
+          "joint posterior"
+        ]
+      },
+      "problem": "单诊断顺序处理无法一致处理共享校准参数、相关误差、互相依赖的物理量和模型选择。",
+      "measurementPrinciple": "把每个诊断写成条件概率与前向模型，在共同图模型中联合推断状态、校准、几何和模型参数。",
+      "quantities": [
+        "posterior plasma state",
+        "calibration parameters",
+        "uncertainties",
+        "model evidence"
+      ],
+      "region": "跨核心、边界和平衡的联合状态空间",
+      "hardware": [
+        "analysis/HPC servers"
+      ],
+      "sensors": [
+        "magnetics",
+        "ECE",
+        "reflectometry",
+        "TS",
+        "CXRS",
+        "XICS and others"
+      ],
+      "calibration": "校准量可作为随机变量与状态联合估计；前提是先验、相关结构和可辨识性明确。",
+      "inference": [
+        "Bayesian inversion",
+        "joint likelihood",
+        "model comparison",
+        "marginalisation"
+      ],
+      "devices": [
+        "JET",
+        "W7-X",
+        "MAST and framework applications"
+      ],
+      "validation": "JET 电流层析奠定概率框架；W7-X 团队将 Minerva 用于 XICS、CXRS、XMCTS、TS、ECE、Zeff 等联合分析。",
+      "evidenceLevel": "E3",
+      "deploymentLevel": "D2",
+      "limitations": "专有/合作代码未公开；复杂前向模型导致采样昂贵，模型误差常被简化为高斯噪声，难以实时化。",
+      "twinRelevance": "体现数字孪生应输出状态分布和证据而非单一最佳值，并可把校准漂移纳入在线状态。",
+      "papers": [
+        {
+          "title": "Current tomography for axisymmetric plasmas",
+          "year": 2008,
+          "url": "https://doi.org/10.1088/0741-3335/50/8/085002",
+          "doi": "10.1088/0741-3335/50/8/085002",
+          "sourceType": "peer-reviewed primary Bayesian framework",
+          "authors": "J Svensson; A Werner",
+          "venue": "Plasma Physics and Controlled Fusion"
+        },
+        {
+          "title": "Model data fusion",
+          "year": 2010,
+          "url": "https://arxiv.org/abs/1002.3189",
+          "doi": null,
+          "sourceType": "author primary preprint"
+        },
+        {
+          "title": "Integrated data analysis with Minerva at W7-X",
+          "year": 2021,
+          "url": "https://conferences.iaea.org/event/251/contributions/20678/",
+          "doi": null,
+          "sourceType": "IAEA primary conference contribution"
+        }
+      ],
+      "code": [
+        {
+          "name": "Minerva",
+          "url": null,
+          "relationship": "未核验到项目团队公开的完整通用框架仓库。",
+          "relation": "official-direct",
+          "artifactType": "source-code",
+          "access": "not-public"
+        }
+      ],
+      "organizations": [
+        "Max Planck Institute for Plasma Physics",
+        "JET contributors",
+        "W7-X team"
+      ],
+      "tags": [
+        "Bayesian",
+        "IDA",
+        "joint-inference",
+        "uncertainty",
+        "calibration"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DSI-024",
+      "projectId": "AUG-IDA",
+      "primaryTask": "DG10",
+      "relatedTasks": [
+        "DG2"
+      ],
+      "title": "ASDEX Upgrade 电子温度—密度集成数据分析",
+      "titleEn": "ASDEX Upgrade Integrated Data Analysis of Electron Temperature and Density",
+      "technique": {
+        "family": "COMPUTATIONAL",
+        "methods": [
+          "Bayesian integrated data analysis",
+          "joint profile inference",
+          "diagnostic alignment",
+          "nuisance parameters"
+        ]
+      },
+      "problem": "ECE、TS、干涉仪和锂束各有局部/积分、时空分辨和系统偏差，独立拟合会产生不一致 Te/ne 剖面。",
+      "measurementPrinciple": "把多个诊断的前向模型、误差和几何共同写入贝叶斯模型，联合推断 Te/ne 及对准/校准等干扰参数。",
+      "quantities": [
+        "electron temperature profile",
+        "electron density profile",
+        "credible intervals",
+        "alignment parameters"
+      ],
+      "region": "磁通面坐标下的核心至边缘剖面",
+      "hardware": [
+        "ECE radiometer",
+        "Thomson scattering",
+        "interferometer",
+        "lithium beam"
+      ],
+      "sensors": [
+        "frequency",
+        "spectral",
+        "line-integral",
+        "beam-emission channels"
+      ],
+      "calibration": "通过共同状态约束对准和部分校准参数；仍需保留各诊断原始绝对校准与相关误差。",
+      "inference": [
+        "Bayesian profile reconstruction",
+        "multi-diagnostic consistency",
+        "nuisance marginalisation"
+      ],
+      "devices": [
+        "ASDEX Upgrade"
+      ],
+      "validation": "论文在 AUG 实验数据上联合 Li-beam、干涉仪、ECE 和 TS，给出 Te/ne 与不确定度并处理诊断依赖；这是装置数据离线集成分析证据，不是常规在线服务证明。",
+      "evidenceLevel": "E3",
+      "deploymentLevel": "D3",
+      "limitations": "计算与前向模型维护成本高；磁面假设、异常分布和模型失配会使可信区间过窄。",
+      "twinRelevance": "是跨诊断状态估计的成熟参考，应将联合后验作为孪生状态而非把各诊断先压缩成独立点估计。",
+      "papers": [
+        {
+          "title": "Integrated Data Analysis of Profile Diagnostics at ASDEX Upgrade",
+          "year": 2010,
+          "url": "https://doi.org/10.13182/fst10-110",
+          "doi": "10.13182/fst10-110",
+          "sourceType": "peer-reviewed primary device application",
+          "authors": "R. Fischer; C. J. Fuchs; B. Kurzan; W. Suttrop; E. Wolfrum",
+          "venue": "Fusion Science and Technology"
+        }
+      ],
+      "code": [
+        {
+          "name": "ASDEX Upgrade IDA/Minerva workflow",
+          "url": null,
+          "relationship": "装置专用集成分析工作流未发现公共生产仓库。",
+          "relation": "official-direct",
+          "artifactType": "source-code",
+          "access": "not-public"
+        }
+      ],
+      "organizations": [
+        "Max Planck Institute for Plasma Physics",
+        "ASDEX Upgrade team"
+      ],
+      "tags": [
+        "AUG",
+        "IDA",
+        "Te",
+        "ne",
+        "Bayesian"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DSI-025",
+      "projectId": "JET-MICROWAVE-MINERVA",
+      "primaryTask": "DG10",
+      "relatedTasks": [
+        "DG2"
+      ],
+      "title": "JET 微波诊断联合贝叶斯反演",
+      "titleEn": "Bayesian Inference Using JET's Microwave Diagnostic System",
+      "technique": {
+        "family": "MICROWAVE",
+        "methods": [
+          "joint ECE/reflectometry forward models",
+          "Bayesian inference",
+          "wall-reflection nuisance model"
+        ]
+      },
+      "problem": "多套 ECE 与反射计对 Te/ne 的响应互相依赖，并受磁场偏差、壁反射和灵敏度校准影响。",
+      "measurementPrinciple": "在 Minerva 中联合三套 ECE 与反射计前向模型，同时推断 Te/ne、磁场修正、壁反射和诊断灵敏度参数。",
+      "quantities": [
+        "electron temperature",
+        "electron density",
+        "magnetic-field correction",
+        "wall reflection",
+        "sensitivity"
+      ],
+      "region": "JET 核心至边缘微波可达区域",
+      "hardware": [
+        "ECE radiometers",
+        "microwave reflectometer"
+      ],
+      "sensors": [
+        "frequency/IQ channels"
+      ],
+      "calibration": "将部分灵敏度、场修正和反射项作为随机参数；绝对校准先验仍决定可辨识性。",
+      "inference": [
+        "joint posterior",
+        "nuisance-parameter estimation",
+        "model consistency"
+      ],
+      "devices": [
+        "JET"
+      ],
+      "validation": "论文在 Ohmic JET 等离子体上联合推断，展示诊断间一致性和系统参数估计。",
+      "evidenceLevel": "E3",
+      "deploymentLevel": "D2",
+      "limitations": "SPECE 等高保真前向模型较慢；墙反射和非热分布模型简化，难以直接实时部署。",
+      "twinRelevance": "证明孪生必须把仪器环境参数与等离子体状态一起估计，而不能假设传感器响应恒定。",
+      "papers": [
+        {
+          "title": "Bayesian inference using JET’s microwave diagnostic system",
+          "year": 2020,
+          "url": "https://doi.org/10.1088/1741-4326/ab7d51",
+          "doi": "10.1088/1741-4326/ab7d51",
+          "sourceType": "peer-reviewed primary device application",
+          "authors": "S. Schmuck; J. Svensson; L. Figini; D. Micheletti; R.B. Morales",
+          "venue": "Nuclear Fusion"
+        }
+      ],
+      "code": [
+        {
+          "name": "JET Minerva microwave workflow",
+          "url": null,
+          "relationship": "论文所用联合推断与装置接口未公开。",
+          "relation": "official-direct",
+          "artifactType": "source-code",
+          "access": "not-public"
+        },
+        {
+          "name": "SPECE",
+          "url": null,
+          "relationship": "ECE 前向模型作为 enabling 组件；未核验公共仓库。",
+          "relation": "enabling",
+          "artifactType": "source-code",
+          "access": "not-public"
+        }
+      ],
+      "organizations": [
+        "Max Planck Institute for Plasma Physics",
+        "EUROfusion JET",
+        "CNR"
+      ],
+      "tags": [
+        "JET",
+        "ECE",
+        "reflectometry",
+        "Bayesian",
+        "joint-inference"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DSI-026",
+      "projectId": "TOMOTOK",
+      "primaryTask": "DG10",
+      "relatedTasks": [
+        "DG4",
+        "DG7"
+      ],
+      "title": "Tomotok 辐射层析 Python 工具包",
+      "titleEn": "Tomotok Python Package for Tokamak Radiation Tomography",
+      "technique": {
+        "family": "COMPUTATIONAL",
+        "methods": [
+          "minimum Fisher regularisation",
+          "SVD",
+          "generalised eigenvalue",
+          "biorthogonal basis",
+          "synthetic tests"
+        ]
+      },
+      "problem": "不同装置辐射层析需要可复用的几何接口、多个正则化算法和一致基准，而不是不可维护的单次脚本。",
+      "measurementPrinciple": "给定通道几何矩阵与测量向量，用多种线性正则化方法重建二维发射率，并提供合成测试。",
+      "quantities": [
+        "2D emissivity",
+        "regularisation parameter",
+        "reprojection residual"
+      ],
+      "region": "托卡马克截面核心与边界辐射",
+      "hardware": [
+        "bolometer/SXR arrays"
+      ],
+      "sensors": [
+        "line-integrated channels"
+      ],
+      "calibration": "输入必须包含通道增益、噪声、坏道和几何；工具不提供绝对辐射校准。",
+      "inference": [
+        "linear tomography",
+        "regularisation",
+        "reprojection"
+      ],
+      "devices": [
+        "COMPASS and generic tokamaks"
+      ],
+      "validation": "论文描述包结构与算法；官方仓库含测试、几何和合成示例。",
+      "evidenceLevel": "E2",
+      "deploymentLevel": "D2",
+      "limitations": "主要是线性二维层析；复杂 3D、非高斯误差、反射和完整不确定度需扩展。",
+      "twinRelevance": "适合建立可测试的层析基线和重投影残差监控，但不是全状态估计器。",
+      "papers": [
+        {
+          "title": "Tomotok: python package for tomography of tokamak plasma radiation",
+          "year": 2021,
+          "url": "https://doi.org/10.1088/1748-0221/16/12/c12015",
+          "doi": "10.1088/1748-0221/16/12/c12015",
+          "sourceType": "peer-reviewed primary software report",
+          "authors": "J. Svoboda; J. Cavalier; O. Ficker; M. Imríšek; J. Mlynář; M. Hron",
+          "venue": "Journal of Instrumentation"
+        }
+      ],
+      "code": [
+        {
+          "name": "Tomotok",
+          "url": "https://github.com/Tomotok/core",
+          "relationship": "作者团队公开的核心仓库。",
+          "relation": "official-direct",
+          "artifactType": "source-code",
+          "access": "public"
+        }
+      ],
+      "organizations": [
+        "Institute of Plasma Physics of the Czech Academy of Sciences"
+      ],
+      "tags": [
+        "tomography",
+        "radiation",
+        "regularisation",
+        "Python",
+        "COMPASS"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DSI-027",
+      "projectId": "FAST-ION-VSPACE-TOMO",
+      "primaryTask": "DG10",
+      "relatedTasks": [
+        "DG5"
+      ],
+      "title": "快离子速度空间贝叶斯层析",
+      "titleEn": "Bayesian Velocity-Space Tomography of Fast Ions",
+      "technique": {
+        "family": "NUCLEAR_PARTICLE",
+        "methods": [
+          "diagnostic weight functions",
+          "Tikhonov Bayesian inversion",
+          "multi-diagnostic tomography"
+        ]
+      },
+      "problem": "FIDA、CTS、NPA、γ/中子谱等只投影快离子速度空间的一部分，单诊断反演严重欠定。",
+      "measurementPrinciple": "将各诊断权重函数组装为联合线性/弱非线性观测算子，以贝叶斯正则化重建速度空间分布。",
+      "quantities": [
+        "fast-ion velocity-space distribution",
+        "credible structure",
+        "reprojected signals"
+      ],
+      "region": "选定空间区域内的速度/能量—俯仰空间",
+      "hardware": [
+        "FIDA",
+        "CTS",
+        "NPA",
+        "gamma/neutron spectrometers"
+      ],
+      "sensors": [
+        "spectral/energy channels"
+      ],
+      "calibration": "需要跨诊断绝对尺度、时间窗、空间响应和协方差；尺度误差应作为干扰参数而非预先归一化。",
+      "inference": [
+        "velocity-space tomography",
+        "multi-diagnostic regularisation",
+        "uncertainty analysis"
+      ],
+      "devices": [
+        "ASDEX Upgrade",
+        "JET"
+      ],
+      "validation": "论文在 AUG/JET 快离子测量上展示联合层析与后验解释。",
+      "evidenceLevel": "E3",
+      "deploymentLevel": "D2",
+      "limitations": "权重函数依赖平衡、背景等离子体和原子/核模型；正则化可制造平滑结构，空间—速度联合反演仍昂贵。",
+      "twinRelevance": "是快离子孪生把异构诊断融合为共同状态的直接原型，需同时保留观测覆盖和不可辨识区。",
+      "papers": [
+        {
+          "title": "Bayesian Integrated Data Analysis of Fast-Ion Measurements by Velocity-Space Tomography",
+          "year": 2018,
+          "url": "https://doi.org/10.1080/15361055.2017.1380482",
+          "doi": "10.1080/15361055.2017.1380482",
+          "sourceType": "peer-reviewed primary multi-device application",
+          "authors": "M. Salewski; M. Nocente; A. S. Jacobsen; F. Binda; C. Cazzaniga; J. Eriksson; B. Geiger; G. Gorini; C. Hellesen; V. G. Kiptily; T. Koskela; S. B. Korsholm; et al. (24 authors)",
+          "venue": "Fusion Science and Technology"
+        }
+      ],
+      "code": [
+        {
+          "name": "Fast-ion velocity-space tomography workflow",
+          "url": null,
+          "relationship": "论文专用代码未发现官方公共仓库。",
+          "relation": "official-direct",
+          "artifactType": "source-code",
+          "access": "not-public"
+        },
+        {
+          "name": "FIDASIM",
+          "url": "https://github.com/D3DEnergetic/FIDASIM",
+          "relationship": "可生成 FIDA 权重/前向响应，但不是联合层析求解器。",
+          "relation": "enabling",
+          "artifactType": "source-code",
+          "access": "public"
+        }
+      ],
+      "organizations": [
+        "Technical University of Denmark",
+        "ASDEX Upgrade",
+        "EUROfusion JET"
+      ],
+      "tags": [
+        "fast-ion",
+        "velocity-space",
+        "tomography",
+        "Bayesian",
+        "multi-diagnostic"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DSI-028",
+      "projectId": "BITE-AURORA",
+      "primaryTask": "DG10",
+      "relatedTasks": [
+        "DG3",
+        "DG4"
+      ],
+      "title": "BITE/Aurora 贝叶斯杂质输运与多谱线反演",
+      "titleEn": "BITE/Aurora Bayesian Impurity Transport and Multi-Line Inference",
+      "technique": {
+        "family": "COMPUTATIONAL",
+        "methods": [
+          "nested sampling",
+          "impurity transport forward model",
+          "atomic emission synthesis",
+          "Bayesian model selection"
+        ]
+      },
+      "problem": "由多条谱线反推杂质扩散 D、对流 V 和密度受输运、原子数据、Te/ne、锯齿及诊断响应共同制约且多解。",
+      "measurementPrinciple": "前向求解杂质电荷态输运与谱线辐射，把 XICS/VUV 信号纳入似然，用嵌套采样比较输运参数化和模型。",
+      "quantities": [
+        "impurity diffusion",
+        "convection",
+        "charge-state density",
+        "line brightness",
+        "model evidence"
+      ],
+      "region": "核心至台基杂质输运",
+      "hardware": [
+        "XICS",
+        "VUV spectrometers",
+        "laser blow-off"
+      ],
+      "sensors": [
+        "spectral lines/channels"
+      ],
+      "calibration": "需谱仪绝对强度、波长、仪器函数和 LBO 注入量；原子率系数与背景剖面不确定度应进入后验。",
+      "inference": [
+        "Bayesian parameter estimation",
+        "model selection",
+        "posterior predictive checks"
+      ],
+      "devices": [
+        "Alcator C-Mod"
+      ],
+      "validation": "BITE 在 C-Mod 钙 LBO 实验的 XICS/VUV 多线数据上推断 D/V，并与新经典、gyrofluid、gyrokinetic预测比较。",
+      "evidenceLevel": "E3",
+      "deploymentLevel": "D2",
+      "limitations": "参数化和父模型偏差可主导结果；嵌套采样昂贵，原子数据相关误差难以完整表示。",
+      "twinRelevance": "展示了以模型证据和后验预测检查连接实验、输运和原子物理，是诊断驱动模型校准范式。",
+      "papers": [
+        {
+          "title": "Inference of experimental radial impurity transport on Alcator C-Mod: Bayesian parameter estimation and model selection",
+          "year": 2020,
+          "url": "https://doi.org/10.1088/1741-4326/abae85",
+          "doi": "10.1088/1741-4326/abae85",
+          "sourceType": "peer-reviewed primary experiment",
+          "authors": "F. Sciortino; N.T. Howard; E.S. Marmar; T. Odstrcil; N.M. Cao; R. Dux; A.E. Hubbard; J.W. Hughes; J.H. Irby; Y.M. Marzouk; L.M. Milanese; M.L. Reinke; et al. (14 authors)",
+          "venue": "Nuclear Fusion"
+        },
+        {
+          "title": "Particle transport constraints via Bayesian spectral fitting of multiple atomic lines",
+          "year": 2021,
+          "url": "https://doi.org/10.1063/5.0043765",
+          "doi": "10.1063/5.0043765",
+          "sourceType": "peer-reviewed primary method/application",
+          "authors": "F. Sciortino; N. M. Cao; N. T. Howard; E. S. Marmar; J. E. Rice",
+          "venue": "Review of Scientific Instruments"
+        }
+      ],
+      "code": [
+        {
+          "name": "BITE",
+          "url": null,
+          "relationship": "论文所述完整 Bayesian Impurity Transport InferencE 工作流未核验到公共仓库。",
+          "relation": "official-direct",
+          "artifactType": "source-code",
+          "access": "not-public"
+        },
+        {
+          "name": "Aurora",
+          "url": "https://github.com/fsciortino/Aurora",
+          "relationship": "作者团队的杂质输运/原子前向模型库；不是 BITE 采样与模型选择本体。",
+          "relation": "enabling",
+          "artifactType": "source-code",
+          "access": "public"
+        }
+      ],
+      "organizations": [
+        "MIT Plasma Science and Fusion Center",
+        "Max Planck Institute for Plasma Physics",
+        "Oak Ridge National Laboratory"
+      ],
+      "tags": [
+        "impurity",
+        "transport",
+        "Bayesian",
+        "XICS",
+        "C-Mod"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DSI-029",
+      "projectId": "INDICA",
+      "primaryTask": "DG10",
+      "relatedTasks": [
+        "DG1",
+        "DG2",
+        "DG3",
+        "DG4"
+      ],
+      "title": "InDiCA 集成诊断分析框架",
+      "titleEn": "InDiCA Integrated DiagnostiC Analysis",
+      "technique": {
+        "family": "COMPUTATIONAL",
+        "methods": [
+          "xarray data model",
+          "coordinate transforms",
+          "provenance",
+          "Bayesian workflows",
+          "diagnostic operators"
+        ]
+      },
+      "problem": "集成分析代码常重复实现数据容器、坐标变换、平衡访问、单位、血缘和诊断算子，难以组合与审计。",
+      "measurementPrinciple": "以统一数据类型和 operator 把诊断读取、坐标映射、前向/逆算子和工作流组合；首个应用推断多杂质核心组分。",
+      "quantities": [
+        "diagnostic data arrays",
+        "equilibrium-mapped profiles",
+        "impurity composition",
+        "Zeff",
+        "radiation",
+        "dilution"
+      ],
+      "region": "核心二维截面与多诊断工作流",
+      "hardware": [
+        "analysis servers"
+      ],
+      "sensors": [
+        "spectroscopy",
+        "Thomson scattering",
+        "equilibrium and other adapted diagnostics"
+      ],
+      "calibration": "数据类型可携带误差、单位、血缘与时间分辨；源诊断校准证书和相关协方差仍需接入。",
+      "inference": [
+        "integrated composition inference",
+        "coordinate transformations",
+        "provenance tracking"
+      ],
+      "devices": [
+        "MAST Upgrade/UKAEA-oriented development",
+        "generic magnetic-confinement devices"
+      ],
+      "validation": "官方文档给出核心多杂质组成的范围、输入输出、溯源模式和教程；PyPI 由 GitHub trusted publishing 发布。",
+      "evidenceLevel": "E2",
+      "deploymentLevel": "D2",
+      "limitations": "仍处活跃开发，API 和装置适配覆盖变化；尚无公开证据表明成为多装置实时生产 IDA。",
+      "twinRelevance": "把数据契约、坐标与可组合诊断算子放在同一 Python 框架，是面向孪生的工程化 IDA 候选。",
+      "papers": [
+        {
+          "title": "InDiCA official documentation",
+          "year": 2026,
+          "url": "https://indica-ukaea.readthedocs.io/",
+          "doi": null,
+          "sourceType": "official project documentation"
+        },
+        {
+          "title": "InDiCA package release",
+          "year": 2026,
+          "url": "https://pypi.org/project/indica/",
+          "doi": null,
+          "sourceType": "official package registry with verified provenance"
+        }
+      ],
+      "code": [
+        {
+          "name": "InDiCA",
+          "url": "https://github.com/indica-mcf/Indica",
+          "relationship": "PyPI verified provenance指向的项目官方公开仓库。",
+          "relation": "official-direct",
+          "artifactType": "source-code",
+          "access": "public"
+        }
+      ],
+      "organizations": [
+        "UK Atomic Energy Authority",
+        "InDiCA maintainers"
+      ],
+      "tags": [
+        "IDA",
+        "xarray",
+        "provenance",
+        "composition",
+        "workflow"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DSI-030",
+      "projectId": "BEAST-MAST",
+      "primaryTask": "DG10",
+      "relatedTasks": [
+        "DG1"
+      ],
+      "title": "BEAST/MAST 贝叶斯平衡推断与证据交叉验证",
+      "titleEn": "BEAST Bayesian Equilibrium Inference and Evidence Cross-Validation on MAST",
+      "technique": {
+        "family": "MAGNETIC",
+        "methods": [
+          "current-beam tomography",
+          "Bayesian evidence",
+          "outlier diagnostics",
+          "Biot-Savart forward model"
+        ]
+      },
+      "problem": "磁探针、磁通环和 MSE 可能失标或异常；单一正则化平衡不给出可靠的不确定度或坏通道诊断。",
+      "measurementPrinciple": "把等离子体电流离散为轴对称电流束，经 Biot–Savart 预测磁测量，联合 pickup coil、flux loop、MSE 形成后验并用证据识别离群通道。",
+      "quantities": [
+        "current density",
+        "LCFS",
+        "flux surfaces",
+        "q profile",
+        "Shafranov shift",
+        "uncertainty"
+      ],
+      "region": "MAST 等离子体截面",
+      "hardware": [
+        "magnetic pickup coils",
+        "flux loops",
+        "MSE"
+      ],
+      "sensors": [
+        "magnetic/MSE channels"
+      ],
+      "calibration": "可将失校或故障通道作为离群观测识别；绝对增益、线圈几何和 MSE 偏置仍需先验/干扰参数。",
+      "inference": [
+        "Bayesian equilibrium",
+        "evidence cross-validation",
+        "outlier removal"
+      ],
+      "devices": [
+        "MAST"
+      ],
+      "validation": "论文用 MAST 放电数据并与 EFIT++/力平衡等佐证比较，直接预测边界、q 与误差。",
+      "evidenceLevel": "E3",
+      "deploymentLevel": "D2",
+      "limitations": "轴对称电流束与先验决定分辨；计算开销和非轴对称/铁磁结构使实时推广困难。",
+      "twinRelevance": "展示了平衡孪生应同时输出状态、不确定度和传感器健康，而非只提供一个磁面。",
+      "papers": [
+        {
+          "title": "Evidence cross-validation and Bayesian inference of MAST plasma equilibria",
+          "year": 2012,
+          "url": "https://doi.org/10.1063/1.3677362",
+          "doi": "10.1063/1.3677362",
+          "sourceType": "peer-reviewed primary device validation",
+          "authors": "G. T. von Nessi; M. J. Hole; J. Svensson; L. Appel",
+          "venue": "Physics of Plasmas"
+        }
+      ],
+      "code": [
+        {
+          "name": "BEAST equilibrium inference code",
+          "url": null,
+          "relationship": "论文实现未发现官方公开仓库。",
+          "relation": "official-direct",
+          "artifactType": "source-code",
+          "access": "not-public"
+        }
+      ],
+      "organizations": [
+        "Australian National University",
+        "MAST team",
+        "Max Planck Institute for Plasma Physics"
+      ],
+      "tags": [
+        "equilibrium",
+        "Bayesian",
+        "sensor-health",
+        "MAST",
+        "MSE"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DSI-031",
+      "projectId": "RAPTOR-OBSERVER",
+      "primaryTask": "DG11",
+      "relatedTasks": [
+        "DG1",
+        "DG2"
+      ],
+      "title": "RAPTOR 实时剖面状态观测器",
+      "titleEn": "RAPTOR Real-Time Profile State Observer",
+      "technique": {
+        "family": "COMPUTATIONAL",
+        "methods": [
+          "control-oriented transport model",
+          "extended Kalman filter",
+          "real-time state estimation",
+          "MARTe integration"
+        ]
+      },
+      "problem": "反馈控制所需 Te、ne、电流/q 剖面无法只靠高频直接测量，需要在诊断间隔之间以模型推进并同化稀疏观测。",
+      "measurementPrinciple": "用低阶输运模型预测剖面状态，以 EKF/观测器吸收 TS、ECE、磁平衡等观测并输出实时状态及协方差。",
+      "quantities": [
+        "electron temperature",
+        "electron density",
+        "current density",
+        "q profile",
+        "state covariance"
+      ],
+      "region": "磁通面坐标下核心剖面",
+      "hardware": [
+        "real-time computers",
+        "MARTe interfaces"
+      ],
+      "sensors": [
+        "Thomson scattering",
+        "ECE",
+        "equilibrium/actuator signals"
+      ],
+      "calibration": "状态估计依赖通道时间对齐、坐标映射与噪声协方差；模型偏差需过程噪声或在线参数校正。",
+      "inference": [
+        "EKF",
+        "model-based observer",
+        "real-time prediction"
+      ],
+      "devices": [
+        "RFX-mod",
+        "TCV",
+        "DIII-D-oriented control studies"
+      ],
+      "validation": "RAPTOR 已集成 RFX-mod MARTe 实时环境并有装置联调/实时可运行证据；后续工作在 TCV 用 TS 同化重建 Te/ne/j_parallel，并有实时可运行预测论文，但来源不足以证明它已成为常规运行服务。",
+      "evidenceLevel": "E3",
+      "deploymentLevel": "D3",
+      "limitations": "低阶输运与轴对称假设在 MHD、ELM、异常加热时失配；没有经过 D5 保护资格。",
+      "twinRelevance": "是诊断到控制之间最接近在线物理孪生的状态层，但需残差门控、失效降级和证据治理。",
+      "papers": [
+        {
+          "title": "Integration of the state observer RAPTOR in the real-time MARTe framework at RFX-mod",
+          "year": 2017,
+          "url": "https://doi.org/10.1016/j.fusengdes.2017.02.093",
+          "doi": "10.1016/j.fusengdes.2017.02.093",
+          "sourceType": "peer-reviewed primary real-time deployment",
+          "authors": "Chiara Piron; Gabriele Manduchi; Paolo Bettini; Federico Felici; Claudio Finotti; Paolo Franz; Ondrej Kudlacek; Giuseppe Marchiori; Lionello Marrelli; J.-M. Moret; Paolo Piovesan; Olivier Sauter; et al. (13 authors)",
+          "venue": "Fusion Engineering and Design"
+        },
+        {
+          "title": "Real-time-capable prediction of temperature and density profiles in a tokamak using RAPTOR and a first-principle-based transport model",
+          "year": 2018,
+          "url": "https://doi.org/10.1088/1741-4326/aac8f0",
+          "doi": "10.1088/1741-4326/aac8f0",
+          "sourceType": "peer-reviewed primary method/device validation",
+          "authors": "F. Felici; J. Citrin; A.A. Teplukhina; J. Redondo; C. Bourdelle; F. Imbeaux; O. Sauter",
+          "venue": "Nuclear Fusion"
+        }
+      ],
+      "code": [
+        {
+          "name": "RAPTOR production observer",
+          "url": null,
+          "relationship": "装置实时实现未发现可核验公共生产仓库。",
+          "relation": "official-direct",
+          "artifactType": "source-code",
+          "access": "not-public"
+        },
+        {
+          "name": "MARTe2",
+          "url": "https://vcis-gitlab.f4e.europa.eu/aneto/MARTe2",
+          "relationship": "RFX-mod 实时宿主框架，不是 RAPTOR 物理观测器。",
+          "relation": "enabling",
+          "artifactType": "source-code",
+          "access": "public"
+        }
+      ],
+      "organizations": [
+        "EPFL",
+        "Consorzio RFX",
+        "TCV team"
+      ],
+      "tags": [
+        "state-estimation",
+        "EKF",
+        "real-time",
+        "profiles",
+        "control-interface"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DSI-032",
+      "projectId": "FRNN",
+      "primaryTask": "DG11",
+      "relatedTasks": [
+        "DG1",
+        "DG6"
+      ],
+      "title": "FRNN 跨装置破裂风险预测",
+      "titleEn": "Fusion Recurrent Neural Network for Cross-Machine Disruption Risk Prediction",
+      "technique": {
+        "family": "COMPUTATIONAL",
+        "methods": [
+          "LSTM/recurrent neural networks",
+          "multi-signal sequence model",
+          "transfer learning",
+          "real-time inference"
+        ]
+      },
+      "problem": "破裂前兆多变量、时间尺度不同且装置分布漂移明显；手工阈值难以兼顾提前量与误报率。",
+      "measurementPrinciple": "将磁、辐射、密度、控制等时间序列输入循环神经网络，输出随时间变化的破裂风险分数。",
+      "quantities": [
+        "disruption probability/risk score",
+        "alarm time",
+        "feature trajectories"
+      ],
+      "region": "全等离子体放电与装置状态",
+      "hardware": [
+        "GPU training cluster",
+        "candidate CPU/GPU inference target"
+      ],
+      "sensors": [
+        "device-dependent magnetics",
+        "radiation",
+        "density",
+        "control signals"
+      ],
+      "calibration": "需统一信号定义、采样、缺失值和装置间尺度；概率分数需按运行域重新校准。",
+      "inference": [
+        "sequence classification",
+        "transfer learning",
+        "early warning"
+      ],
+      "devices": [
+        "DIII-D",
+        "JET"
+      ],
+      "validation": "Nature 论文在 DIII-D/JET 历史数据上评估跨装置预测，PPPL 团队公开了研究代码；该来源没有证明 FRNN 已作为装置 PCS 的常规实时闭环服务。",
+      "evidenceLevel": "E3",
+      "deploymentLevel": "D2",
+      "limitations": "历史数据标签、运行策略变化和稀有场景造成分布漂移；高 AUC 不等于保护可用性，未证明 D5。",
+      "twinRelevance": "可作为孪生风险层，但必须由状态估计、OOD 检测、校准曲线和可验证安全门约束。",
+      "papers": [
+        {
+          "title": "Predicting disruptive instabilities in controlled fusion plasmas through deep learning",
+          "year": 2019,
+          "url": "https://doi.org/10.1038/s41586-019-1116-4",
+          "doi": "10.1038/s41586-019-1116-4",
+          "sourceType": "peer-reviewed primary multi-machine validation",
+          "authors": "Julian Kates-Harbeck; Alexey Svyatkovskiy; William Tang",
+          "venue": "Nature"
+        }
+      ],
+      "code": [
+        {
+          "name": "FRNN plasma-python",
+          "url": "https://github.com/PPPLDeepLearning/plasma-python",
+          "relationship": "论文团队维护的 plasma-python 研究仓库；软件介绍页只作出处线索，不作为代码链接。",
+          "relation": "official-direct",
+          "artifactType": "source-code",
+          "access": "public"
+        }
+      ],
+      "organizations": [
+        "Princeton Plasma Physics Laboratory",
+        "DIII-D",
+        "EUROfusion JET"
+      ],
+      "tags": [
+        "disruption",
+        "LSTM",
+        "cross-machine",
+        "real-time",
+        "risk"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DSI-033",
+      "projectId": "DISRUPTIONPY",
+      "primaryTask": "DG11",
+      "relatedTasks": [
+        "DG1",
+        "DG2",
+        "DG4",
+        "DG6",
+        "DG8"
+      ],
+      "title": "DisruptionPy 多装置破裂特征提取与基准数据流水线",
+      "titleEn": "DisruptionPy Multi-Machine Disruption Data and Feature Pipeline",
+      "technique": {
+        "family": "COMPUTATIONAL",
+        "methods": [
+          "MDSplus extraction",
+          "physics feature engineering",
+          "xarray datasets",
+          "machine adapters",
+          "reproducible pipelines"
+        ]
+      },
+      "problem": "破裂 ML 研究经常因装置专用脚本、不同标签、泄漏特征和不可追溯预处理而无法比较。",
+      "measurementPrinciple": "从装置档案按统一配置抽取信号和物理特征，保留时间轴、缺失状态和装置适配逻辑，生成可复现训练数据。",
+      "quantities": [
+        "raw signals",
+        "engineered physics features",
+        "disruption labels",
+        "data-quality flags"
+      ],
+      "region": "全放电、多装置数据域",
+      "hardware": [
+        "MDSplus servers",
+        "analysis compute"
+      ],
+      "sensors": [
+        "各装置可用诊断与控制信号"
+      ],
+      "calibration": "不重新标定物理传感器；必须记录源节点、单位、版本、填补和时间对齐以避免隐性漂移。",
+      "inference": [
+        "feature extraction",
+        "dataset construction",
+        "quality filtering"
+      ],
+      "devices": [
+        "Alcator C-Mod",
+        "DIII-D",
+        "EAST",
+        "HBT-EP",
+        "MAST"
+      ],
+      "validation": "官方仓库提供多装置适配、测试与文档；实际数据访问仍受各设施权限和节点可用性约束。",
+      "evidenceLevel": "E3",
+      "deploymentLevel": "D2",
+      "limitations": "它不是预测器、实时服务或权威标签库；统一特征名不保证诊断等价，数据许可限制完全复现。",
+      "twinRelevance": "为孪生 AI 层提供可审计数据产品和装置适配范式，能把模型性能追溯到源信号与处理版本。",
+      "papers": [
+        {
+          "title": "DisruptionPy official repository and documentation",
+          "year": 2026,
+          "url": "https://github.com/MIT-PSFC/disruption-py",
+          "doi": null,
+          "sourceType": "MIT PSFC official repository"
+        }
+      ],
+      "code": [
+        {
+          "name": "DisruptionPy",
+          "url": "https://github.com/MIT-PSFC/disruption-py",
+          "relationship": "MIT PSFC 维护的多装置破裂数据流水线。",
+          "relation": "official-direct",
+          "artifactType": "source-code",
+          "access": "public"
+        }
+      ],
+      "organizations": [
+        "MIT Plasma Science and Fusion Center",
+        "multi-device contributors"
+      ],
+      "tags": [
+        "disruption",
+        "data-pipeline",
+        "MDSplus",
+        "provenance",
+        "benchmark"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DSI-034",
+      "projectId": "DIAG2DIAG",
+      "primaryTask": "DG10",
+      "relatedTasks": [
+        "DG11",
+        "DG2",
+        "DG4",
+        "DG6"
+      ],
+      "title": "Diag2Diag 多模态诊断超分辨与代理观测",
+      "titleEn": "Diag2Diag Multimodal Diagnostic Super-Resolution",
+      "technique": {
+        "family": "COMPUTATIONAL",
+        "methods": [
+          "deep multimodal translation",
+          "spatiotemporal super-resolution",
+          "cross-diagnostic representation learning"
+        ]
+      },
+      "problem": "高分辨诊断往往覆盖窄、采样慢或停机，而互补诊断连续但信息贫化；需要从相关模态恢复可用代理。",
+      "measurementPrinciple": "从同步的多诊断数据学习低分辨/替代输入到目标诊断高分辨表示的映射，并用保留实验验证。",
+      "quantities": [
+        "super-resolved diagnostic signal/image",
+        "prediction uncertainty proxies",
+        "latent multimodal features"
+      ],
+      "region": "由目标诊断决定的剖面或二维观测区域",
+      "hardware": [
+        "training GPUs",
+        "existing diagnostics"
+      ],
+      "sensors": [
+        "DIII-D synchronized diagnostic modalities"
+      ],
+      "calibration": "训练前必须时间/空间注册和强度标定；模型输出不能获得超出训练域的计量溯源。",
+      "inference": [
+        "multimodal reconstruction",
+        "super-resolution",
+        "surrogate diagnostic"
+      ],
+      "devices": [
+        "DIII-D"
+      ],
+      "validation": "Nature Communications 论文在 DIII-D 多模态数据上展示隐藏物理与诊断超分辨，并公开项目代码。",
+      "evidenceLevel": "E3",
+      "deploymentLevel": "D2",
+      "limitations": "可能生成貌似真实但物理错误的细节；跨工况/硬件升级 OOD、置信校准和实时延迟尚不足以替代权威诊断。",
+      "twinRelevance": "适合填充孪生观测空洞和构建虚拟传感器，但只能作为带质量位的估计，不得覆盖原始证据。",
+      "papers": [
+        {
+          "title": "Multimodal super-resolution: discovering hidden physics and its application to fusion plasmas",
+          "year": 2025,
+          "url": "https://doi.org/10.1038/s41467-025-63492-1",
+          "doi": "10.1038/s41467-025-63492-1",
+          "sourceType": "peer-reviewed primary device validation",
+          "authors": "Azarakhsh Jalalvand; SangKyeun Kim; Jaemin Seo; Qiming Hu; Max Curie; Peter Steiner; Andrew Oakleigh Nelson; Yong-Su Na; Egemen Kolemen",
+          "venue": "Nature Communications"
+        }
+      ],
+      "code": [
+        {
+          "name": "Diag2Diag-SRTS",
+          "url": "https://github.com/PlasmaControl/Diag2Diag-SRTS",
+          "relationship": "论文团队公开的模型与实验代码仓库。",
+          "relation": "official-direct",
+          "artifactType": "source-code",
+          "access": "public"
+        }
+      ],
+      "organizations": [
+        "General Atomics",
+        "DIII-D",
+        "PlasmaControl collaboration"
+      ],
+      "tags": [
+        "virtual-sensor",
+        "super-resolution",
+        "multimodal",
+        "DIII-D",
+        "AI"
+      ],
+      "asOf": "2026-08-12"
+    },
+    {
+      "id": "DSI-035",
+      "projectId": "ITER-TSM-ANOMALY",
+      "primaryTask": "DG8",
+      "relatedTasks": [
+        "DG0",
+        "DG11"
+      ],
+      "title": "ITER Tokamak Systems Monitor 工程系统机器学习异常检测",
+      "titleEn": "Machine-Learning Anomaly Detection in the ITER Tokamak Systems Monitor",
+      "technique": {
+        "family": "COMPUTATIONAL",
+        "methods": [
+          "modular anomaly detection",
+          "inter-shot monitoring",
+          "time-localised detection",
+          "health indicators"
+        ]
+      },
+      "problem": "ITER 将有数千个工程与运行通道，异常可能表现为未越过传统阈值的跨通道漂移、短时偏离或整脉冲模式变化，人工逐通道诊断不可扩展。",
+      "measurementPrinciple": "Tokamak Systems Monitor 在统一 MonApp/AlgorithmAdapter 接口中运行 Python 异常算法：一类对完整回旋管脉冲做降维与聚类，另一类以物理模型上下文条件化可逆神经网络，定位磁体电源电压的短时异常。",
+      "quantities": [
+        "anomaly score",
+        "pulse cluster / atypical-cycle label",
+        "time-localised voltage deviation",
+        "engineering health warning",
+        "expert review state"
+      ],
+      "region": "ITER 工程系统、Plant Operation Zone 与 CODAC 数据接口",
+      "hardware": [
+        "gyrotron collector thermocouples",
+        "magnet power-supply voltage and command channels",
+        "TSM C++ MonApp / AlgorithmAdapter",
+        "Python tsmadkit / tsmadalg processes",
+        "EPICS PON, DAN and UDA interfaces"
+      ],
+      "sensors": [
+        "thermal, electrical and other operational instrumentation",
+        "future visible / infrared image streams"
+      ],
+      "calibration": "健康模型需要正常运行基线、模型/硬件版本、维护事件和专家标注；阈值应随调试阶段、误报代价与工况漂移重新标定，且不得替代独立报警和保护阈值。",
+      "inference": [
+        "anomaly detection",
+        "health monitoring",
+        "maintenance decision support"
+      ],
+      "devices": [
+        "ITER Tokamak Systems Monitor (pre-operational software and prototype-data context)"
+      ],
+      "validation": "2026 同行评审论文给出已实现的软件接口，并以欧洲回旋管原型脉冲和磁体电源模型/信号展示两类算法；ITER 仍处于投运前，完整专家反馈、事件数据库和长期运行部署尚未完成。",
+      "evidenceLevel": "E2",
+      "deploymentLevel": "D2",
+      "limitations": "当前证据是预运行原型与案例验证，不是 ITER 常规运行或安全资格；训练域覆盖、OOD、误报、网络安全、专家复核闭环和模型更新治理仍待投运验证。",
+      "twinRelevance": "它展示了资产健康孪生应有的稳定执行契约、异构数据接入、标准化结果和专家反馈接口，但输出只能作为操作员早期预警，不能绕过 CODAC 报警、机器保护或核安全链。",
+      "papers": [
+        {
+          "title": "Design and implementation of machine learning-based anomaly detection in the ITER Tokamak Systems Monitor",
+          "year": 2026,
+          "url": "https://doi.org/10.3389/fphy.2026.1824578",
+          "doi": "10.3389/fphy.2026.1824578",
+          "sourceType": "peer-reviewed primary ITER-oriented method report",
+          "authors": "Joris Paret; Brian Sammuli; Víctor Costa Pérez; Nathaniel Saura; Laura Hernández Cubo; Daniel Iglesias",
+          "venue": "Frontiers in Physics"
+        }
+      ],
+      "code": [
+        {
+          "name": "ITER TSM tsmadkit / tsmadalg implementation",
+          "url": null,
+          "relationship": "论文明确说明 TSM、tsmadkit 与 tsmadalg 为 ITER Organization 专有知识产权，提交时不能公开。",
+          "relation": "official-direct",
+          "artifactType": "source-code",
+          "access": "not-public"
+        }
+      ],
+      "organizations": [
+        "ITER Organization",
+        "General Atomics",
+        "VERSE EUROPA"
+      ],
+      "tags": [
+        "anomaly-detection",
+        "health-monitoring",
+        "ITER",
+        "Tokamak-Systems-Monitor",
+        "engineering-health",
+        "MLOps",
+        "AI"
+      ],
+      "asOf": "2026-08-12"
+    }
+  ]
+}

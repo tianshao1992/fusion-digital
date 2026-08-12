@@ -40,10 +40,10 @@ jobs:
         run: npm ci
 
       - name: Rebuild and audit research data
-        run: npm run research:ai && npm run research:control
+        run: npm run research:ai && npm run research:control && npm run research:diagnostics
 
       - name: Confirm generated data is committed
-        run: git diff --exit-code -- app/ai/aiResearch.ts public/data/fusion-ai-native-landscape.json public/fusion-ai-native-paper-code-index.csv app/control/controlResearch.ts public/data/fusion-control-landscape.json public/data/fusion-control-device-profiles.json public/fusion-control-paper-code-index.csv public/fusion-control-references.bib
+        run: git diff --exit-code -- app/ai/aiResearch.ts public/data/fusion-ai-native-landscape.json public/fusion-ai-native-paper-code-index.csv app/control/controlResearch.ts public/data/fusion-control-landscape.json public/data/fusion-control-device-profiles.json public/fusion-control-paper-code-index.csv public/fusion-control-references.bib app/diagnostics/diagnosticsResearch.ts public/data/fusion-diagnostics-landscape.json public/data/fusion-diagnostics-device-profiles.json public/fusion-diagnostics-paper-code-index.csv public/fusion-diagnostics-references.bib
 
       - name: Run code, build and rendering checks
         run: npm run check

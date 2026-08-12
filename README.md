@@ -1,6 +1,6 @@
 # FusionDigital
 
-FusionDigital 是由新奥聚变人工智能团队维护的聚变数字孪生知识与协作平台。项目把聚变物理、工程仿真、集成控制、智能诊断、能量转化、辅机模拟、数据基座、人机交互、总体集成与智能原生工作组织为可检索、可引用、可持续更新的网站。
+FusionDigital 是由新奥聚变人工智能团队维护的聚变数字孪生知识与协作平台。项目把聚变物理、工程仿真、集成控制、诊断感知、能量转化、辅机模拟、数据基座、人机交互、总体集成与智能原生工作组织为可检索、可引用、可持续更新的网站。
 
 - 在线站点：[fusion-physics-atlas-2026.tianyuanliu1992.chatgpt.site](https://fusion-physics-atlas-2026.tianyuanliu1992.chatgpt.site)
 - 开发团队：新奥聚变人工智能团队
@@ -16,6 +16,7 @@ FusionDigital 是由新奥聚变人工智能团队维护的聚变数字孪生知
 | 物理模拟 | `/physics` | 多尺度物理、代码图谱、集成模拟与数字孪生差距 |
 | 工程仿真 | `/engineering` | 电磁、结构、热流体、中子、材料及实验验证链 |
 | 集成控制 | `/control` | T0–T9 控制任务、装置/PCS、论文代码、证据分级与数字孪生路线 |
+| 诊断感知 | `/diagnostics` | DG0–DG11 诊断任务、技术/装置双索引、论文代码、证据分级与孪生接口 |
 | 智能原生 | `/ai` | 九域 AI 工作、论文、代码、装置与证据分级检索 |
 | 全球装置 | `/facilities` | 装置建设与运行状态、原始来源链接 |
 
@@ -42,6 +43,9 @@ npm run research:report  # 重新生成智能原生 Word 报告（需要 Python�
 npm run research:control # 重建并审计集成控制 JSON、CSV、BIB 与 TypeScript 数据
 npm run research:control:audit  # 单独审计控制工作与装置档案
 npm run research:control:report # 生成集成控制 Word 报告（需要 Python）
+npm run research:diagnostics   # 重建并审计诊断 JSON、CSV、BIB 与 TypeScript 数据
+npm run research:diagnostics:audit  # 单独审计诊断工作与装置档案
+npm run research:diagnostics:report # 生成诊断感知 Word 报告与科学图（需要 Python）
 ```
 
 `dev`、`build` 与 `start` 命令不依赖 POSIX 环境变量写法，可在 Windows PowerShell、macOS 和 Linux 使用。

@@ -1,0 +1,16 @@
+{
+  "schemaVersion": "1.0",
+  "editionDate": "2026-08-12",
+  "workSources": [
+    "plasma_tasks.json",
+    "synthetic_inference_tasks.json",
+    "plant_diagnostics_tasks.json"
+  ],
+  "deviceSource": "device_profiles.json",
+  "notes": [
+    "plasma_tasks_notes.md",
+    "synthetic_inference_tasks_notes.md",
+    "devices_plant_notes.md",
+    "synthesis_notes.md"
+  ]
+}

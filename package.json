@@ -19,6 +19,9 @@
     "research:control": "node scripts/research/control.mjs rebuild",
     "research:control:audit": "node scripts/research/control.mjs audit",
     "research:control:report": "node scripts/research/control.mjs report",
+    "research:diagnostics": "node scripts/research/diagnostics.mjs rebuild",
+    "research:diagnostics:audit": "node scripts/research/diagnostics.mjs audit",
+    "research:diagnostics:report": "node scripts/research/diagnostics.mjs report",
     "db:generate": "drizzle-kit generate"
   },
   "dependencies": {

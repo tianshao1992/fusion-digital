@@ -43,7 +43,7 @@ DOMAIN_META = {
     "physics": ("物理模拟", "PHYSICS", "domain-physics-dark-image2.png"),
     "engineering": ("工程仿真", "ENGINEERING", "domain-engineering-dark-image2.png"),
     "control": ("集成控制", "INTEGRATED CONTROL", "domain-integrated-control-dark-image2.png"),
-    "diagnostics": ("智能诊断", "INTELLIGENT DIAGNOSTICS", "domain-intelligent-diagnostics-dark-image2.png"),
+    "diagnostics": ("诊断感知", "DIAGNOSTICS & SENSING", "domain-intelligent-diagnostics-dark-image2.png"),
     "energy": ("能量转化", "ENERGY CONVERSION", "domain-energy-conversion-dark-image2.png"),
     "auxiliary": ("辅机模拟", "AUXILIARY SYSTEMS", "domain-auxiliary-systems-dark-image2.png"),
     "data": ("数据基座", "DATA FOUNDATION", "domain-data-foundation-dark-image2.png"),

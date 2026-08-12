@@ -1,7 +1,7 @@
 'use client';
 
 import type { EChartsCoreOption, EChartsType } from 'echarts/core';
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import './scientific-chart.css';
 
 type ChartClickHandler = (params: unknown) => void;
@@ -17,6 +17,7 @@ type ScientificChartProps = {
   eager?: boolean;
   dark?: boolean;
   onChartClick?: ChartClickHandler;
+  fallback?: ReactNode;
 };
 
 export default function ScientificChart({
@@ -30,6 +31,7 @@ export default function ScientificChart({
   eager = false,
   dark = false,
   onChartClick,
+  fallback,
 }: ScientificChartProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const mountRef = useRef<HTMLDivElement>(null);
@@ -128,7 +130,11 @@ export default function ScientificChart({
       style={{ '--scientific-chart-height': `${height}px` } as CSSProperties}
       data-echart={id}
     >
-      <img className="scientificChartFallback" src={fallbackSrc} alt={fallbackAlt} aria-hidden={ready || undefined} loading={eager ? 'eager' : 'lazy'} decoding="async" />
+      {fallback ? (
+        <div className="scientificChartFallback scientificChartFallbackContent" style={{ overflow: 'auto', objectFit: 'initial' }} aria-hidden={ready || undefined}>{fallback}</div>
+      ) : (
+        <img className="scientificChartFallback" src={fallbackSrc} alt={fallbackAlt} aria-hidden={ready || undefined} loading={eager ? 'eager' : 'lazy'} decoding="async" />
+      )}
       <div ref={mountRef} className="scientificChartMount" role="img" aria-label={ariaLabel} aria-hidden={!ready || undefined} />
       {!ready && !failed && <span className="scientificChartStatus">交互图加载中…</span>}
       {failed && <span className="scientificChartStatus">交互组件未加载，当前显示可读静态图。</span>}

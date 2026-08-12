@@ -366,7 +366,7 @@ export const domainMeta: Record<AIDomain, { index: string; label: string; short:
   physics: { index: '01', label: '物理模拟', short: '物理', en: 'PHYSICS', color: '#ff8738' },
   engineering: { index: '02', label: '工程仿真', short: '工程', en: 'ENGINEERING', color: '#f5b65d' },
   control: { index: '03', label: '集成控制', short: '控制', en: 'INTEGRATED CONTROL', color: '#65e6d2' },
-  diagnostics: { index: '04', label: '智能诊断', short: '诊断', en: 'INTELLIGENT DIAGNOSTICS', color: '#68c7ff' },
+  diagnostics: { index: '04', label: '诊断感知', short: '诊断', en: 'DIAGNOSTICS & SENSING', color: '#68c7ff' },
   energy: { index: '05', label: '能量转化', short: '能量', en: 'ENERGY CONVERSION', color: '#ffd166' },
   auxiliary: { index: '06', label: '辅机模拟', short: '辅机', en: 'AUXILIARY SYSTEMS', color: '#9fe0c2' },
   data: { index: '07', label: '数据基座', short: '数据', en: 'DATA FOUNDATION', color: '#9da7ff' },
