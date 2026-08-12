@@ -1,8 +1,131 @@
 {
-  "schemaVersion": "1.0",
+  "$schema": "/models/device-manifest.schema.json",
+  "schemaVersion": "1.1",
   "id": "paramak-tokamak-demo",
   "title": "Generic Paramak tokamak with PF/TF magnets and divertor",
   "asOf": "2026-08-11",
+  "devicePackage": {
+    "kind": "public-demonstrator",
+    "deviceClass": "generic parameterized tokamak",
+    "authority": "illustrative",
+    "replacementContract": [
+      "device identity and data classification",
+      "browser-safe GLB derivative and poster",
+      "stable system and part identifiers mapped to GLB node names",
+      "coordinate frame, unit and source-to-web scale",
+      "asset hashes, provenance, licence and engineering-use statement"
+    ]
+  },
+  "access": {
+    "classification": "PUBLIC",
+    "redistributionAllowed": true,
+    "engineeringUseAllowed": false,
+    "statement": "Public open-source demonstration derivative. No ITER or EXL-50U controlled geometry, dimensions, materials, sensor positions or CAE results are included."
+  },
+  "coordinateSystem": {
+    "linearUnit": "metre",
+    "upAxis": "Y",
+    "handedness": "right",
+    "sourceToWebScale": 0.001
+  },
+  "assets": {
+    "webModel": {
+      "path": "/models/paramak-tokamak-demo/paramak-tokamak-demo.glb",
+      "format": "glTF 2.0 binary",
+      "bytes": 1088432,
+      "sha256": "B2504989723247CE86D84B45E705FE8B9AFDBBD0E30A416F1EF5670C86647FA0"
+    },
+    "sourceCad": {
+      "path": "/models/paramak-tokamak-demo/paramak-tokamak-demo.step",
+      "format": "STEP",
+      "bytes": 3121474,
+      "sha256": "1BB205E32B6506705A33CDC0F01EF01924EF0C11B9ECA0E5D74A12AB2BAC9492"
+    },
+    "poster": {
+      "path": "/models/paramak-tokamak-demo/paramak-tokamak-demo-poster.png",
+      "bytes": 789642,
+      "sha256": "40C28C621A2F92C9450DF93B2B97FB49B547A9D88C62EDDC2CFE5240A4A5268A"
+    }
+  },
+  "systems": [
+    {
+      "id": "plasma-volume",
+      "title": "等离子体体积",
+      "shortTitle": "PLASMA",
+      "category": "plasma",
+      "color": "#FF6A1E",
+      "description": "用于空间关系表达的参数化等离子体边界，不代表平衡重建或实验测量。",
+      "parts": [
+        { "id": "PLS-001", "title": "等离子体边界", "nodeName": "plasma", "description": "参数化等离子体体积。", "engineeringTag": "PLASMA.VOLUME" }
+      ]
+    },
+    {
+      "id": "toroidal-field",
+      "title": "环向场磁体",
+      "shortTitle": "TF COILS",
+      "category": "tf",
+      "color": "#42D9C8",
+      "description": "参数化环向场线圈阵列的网页派生网格。",
+      "parts": [
+        { "id": "MAG-TF-001", "title": "TF 线圈阵列", "nodeName": "toroidal_field_coil_1", "description": "环向场线圈阵列合并节点。", "engineeringTag": "MAGNET.TF.ARRAY" }
+      ]
+    },
+    {
+      "id": "poloidal-field",
+      "title": "极向场磁体",
+      "shortTitle": "PF COILS",
+      "category": "pf",
+      "color": "#9476FF",
+      "description": "四组参数化极向场线圈。",
+      "parts": [
+        { "id": "MAG-PF-002", "title": "PF 线圈 02", "nodeName": "poloidal_field_coil_2", "description": "上部外侧 PF 线圈。", "engineeringTag": "MAGNET.PF.02" },
+        { "id": "MAG-PF-004", "title": "PF 线圈 04", "nodeName": "poloidal_field_coil_4", "description": "上部内侧 PF 线圈。", "engineeringTag": "MAGNET.PF.04" },
+        { "id": "MAG-PF-006", "title": "PF 线圈 06", "nodeName": "poloidal_field_coil_6", "description": "下部内侧 PF 线圈。", "engineeringTag": "MAGNET.PF.06" },
+        { "id": "MAG-PF-008", "title": "PF 线圈 08", "nodeName": "poloidal_field_coil_8", "description": "下部外侧 PF 线圈。", "engineeringTag": "MAGNET.PF.08" }
+      ]
+    },
+    {
+      "id": "poloidal-field-cases",
+      "title": "极向场线圈壳体",
+      "shortTitle": "PF CASES",
+      "category": "structure",
+      "color": "#8CA69B",
+      "description": "PF 线圈壳体的参数化结构占位。",
+      "parts": [
+        { "id": "STR-PFC-003", "title": "PF 壳体 03", "nodeName": "poloidal_field_coil_case_3", "description": "PF 02 配套壳体。", "engineeringTag": "STRUCTURE.PF.CASE.03" },
+        { "id": "STR-PFC-005", "title": "PF 壳体 05", "nodeName": "poloidal_field_coil_case_5", "description": "PF 04 配套壳体。", "engineeringTag": "STRUCTURE.PF.CASE.05" },
+        { "id": "STR-PFC-007", "title": "PF 壳体 07", "nodeName": "poloidal_field_coil_case_7", "description": "PF 06 配套壳体。", "engineeringTag": "STRUCTURE.PF.CASE.07" },
+        { "id": "STR-PFC-009", "title": "PF 壳体 09", "nodeName": "poloidal_field_coil_case_9", "description": "PF 08 配套壳体。", "engineeringTag": "STRUCTURE.PF.CASE.09" }
+      ]
+    },
+    {
+      "id": "radial-build",
+      "title": "径向构造层",
+      "shortTitle": "RADIAL BUILD",
+      "category": "layer",
+      "color": "#D2AA74",
+      "description": "六层通用径向构造，仅表达拓扑和浏览交互，不映射特定装置材料。",
+      "parts": [
+        { "id": "RBL-001", "title": "径向构造层 01", "nodeName": "layer_1", "description": "通用径向层 01。", "engineeringTag": "RADIAL_BUILD.LAYER.01" },
+        { "id": "RBL-002", "title": "径向构造层 02", "nodeName": "layer_2", "description": "通用径向层 02。", "engineeringTag": "RADIAL_BUILD.LAYER.02" },
+        { "id": "RBL-003", "title": "径向构造层 03", "nodeName": "layer_3", "description": "通用径向层 03。", "engineeringTag": "RADIAL_BUILD.LAYER.03" },
+        { "id": "RBL-004", "title": "径向构造层 04", "nodeName": "layer_4", "description": "通用径向层 04。", "engineeringTag": "RADIAL_BUILD.LAYER.04" },
+        { "id": "RBL-005", "title": "径向构造层 05", "nodeName": "layer_5", "description": "通用径向层 05。", "engineeringTag": "RADIAL_BUILD.LAYER.05" },
+        { "id": "RBL-006", "title": "径向构造层 06", "nodeName": "layer_6", "description": "通用径向层 06。", "engineeringTag": "RADIAL_BUILD.LAYER.06" }
+      ]
+    },
+    {
+      "id": "divertor-placeholder",
+      "title": "偏滤器区域",
+      "shortTitle": "DIVERTOR",
+      "category": "structure",
+      "color": "#63B9E9",
+      "description": "参数化几何相交后形成的下部偏滤器区域占位。",
+      "parts": [
+        { "id": "DIV-001", "title": "下部偏滤器区域", "nodeName": "extra_intersect_shapes_1", "description": "通用下部偏滤器区域。", "engineeringTag": "PFC.DIVERTOR.LOWER" }
+      ]
+    }
+  ],
   "generator": {
     "name": "Paramak",
     "version": "0.9.11",

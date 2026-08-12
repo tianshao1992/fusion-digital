@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fusiondigital.example/schemas/device-manifest-1.1.json",
+  "title": "FusionDigital browser-safe device package manifest",
+  "description": "Public metadata contract for a derived 3D asset. Authoritative CAD/CAE files remain in the controlled engineering data zone.",
+  "type": "object",
+  "required": ["schemaVersion", "id", "title", "asOf", "devicePackage", "access", "coordinateSystem", "assets", "systems", "generator", "disclaimer"],
+  "properties": {
+    "schemaVersion": { "const": "1.1" },
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]+$" },
+    "title": { "type": "string", "minLength": 1 },
+    "asOf": { "type": "string", "format": "date" },
+    "devicePackage": {
+      "type": "object",
+      "required": ["kind", "deviceClass", "authority", "replacementContract"],
+      "properties": {
+        "kind": { "enum": ["public-demonstrator", "controlled-engineering"] },
+        "deviceClass": { "type": "string" },
+        "authority": { "enum": ["illustrative", "engineering-reference", "authoritative"] },
+        "replacementContract": { "type": "array", "items": { "type": "string" }, "minItems": 1 }
+      },
+      "additionalProperties": false
+    },
+    "access": {
+      "type": "object",
+      "required": ["classification", "redistributionAllowed", "engineeringUseAllowed", "statement"],
+      "properties": {
+        "classification": { "enum": ["PUBLIC", "INTERNAL", "CONTROLLED", "RESTRICTED"] },
+        "redistributionAllowed": { "type": "boolean" },
+        "engineeringUseAllowed": { "type": "boolean" },
+        "statement": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "coordinateSystem": {
+      "type": "object",
+      "required": ["linearUnit", "upAxis", "handedness", "sourceToWebScale"],
+      "properties": {
+        "linearUnit": { "type": "string" },
+        "upAxis": { "enum": ["X", "Y", "Z"] },
+        "handedness": { "enum": ["right", "left"] },
+        "sourceToWebScale": { "type": "number", "exclusiveMinimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "assets": {
+      "type": "object",
+      "required": ["webModel"],
+      "properties": {
+        "webModel": { "$ref": "#/$defs/asset" },
+        "sourceCad": { "$ref": "#/$defs/asset" },
+        "poster": { "$ref": "#/$defs/assetWithoutFormat" }
+      },
+      "additionalProperties": false
+    },
+    "systems": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "shortTitle", "category", "color", "description", "parts"],
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "shortTitle": { "type": "string" },
+          "category": { "enum": ["plasma", "tf", "pf", "layer", "structure"] },
+          "color": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+          "description": { "type": "string" },
+          "parts": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["id", "title", "nodeName", "description", "engineeringTag"],
+              "properties": {
+                "id": { "type": "string" },
+                "title": { "type": "string" },
+                "nodeName": { "type": "string" },
+                "description": { "type": "string" },
+                "engineeringTag": { "type": "string" }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "generator": { "type": "object" },
+    "disclaimer": { "type": "string", "minLength": 30 }
+  },
+  "$defs": {
+    "asset": {
+      "type": "object",
+      "required": ["path", "format", "sha256", "bytes"],
+      "properties": {
+        "path": { "type": "string", "pattern": "^/" },
+        "format": { "type": "string" },
+        "sha256": { "type": "string", "pattern": "^[A-Fa-f0-9]{64}$" },
+        "bytes": { "type": "integer", "minimum": 1 }
+      },
+      "additionalProperties": false
+    },
+    "assetWithoutFormat": {
+      "type": "object",
+      "required": ["path", "sha256", "bytes"],
+      "properties": {
+        "path": { "type": "string", "pattern": "^/" },
+        "sha256": { "type": "string", "pattern": "^[A-Fa-f0-9]{64}$" },
+        "bytes": { "type": "integer", "minimum": 1 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": true
+}

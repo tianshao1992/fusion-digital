@@ -19,6 +19,7 @@ FusionDigital 是由新奥聚变人工智能团队维护的聚变数字孪生知
 | 诊断感知 | `/diagnostics` | DG0–DG11 诊断任务、技术/装置双索引、论文代码、证据分级与孪生接口 |
 | 智能原生 | `/ai` | 九域 AI 工作、论文、代码、装置与证据分级检索 |
 | 全球装置 | `/facilities` | 装置建设与运行状态、原始来源链接 |
+| 数字样机 | `/digital-prototype` | 360° 公开装置包、装配树、剖切、部件属性、CAD/CAE 数据主线与 EXL‑50U 替换合同 |
 
 ## 快速开始
 
@@ -115,6 +116,7 @@ app/                         网站路由、组件、样式与页面数据
 public/                      报告、图片、CSV/JSON 与下载资源
 research/ai-native/sources/  智能原生调研源数据和研究说明
 research/control/sources/    集成控制任务、PCS、装置档案与专题说明
+research/3d/                 公开三维演示模型生成脚本与可复现说明
 scripts/research/            数据生成、审计与 Word 报告脚本
 tests/                       服务端渲染与关键内容断言
 docs/                        架构、内容维护与协作说明

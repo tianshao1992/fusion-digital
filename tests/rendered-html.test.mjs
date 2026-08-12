@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { readFile, stat } from 'node:fs/promises';
 import test from 'node:test';
 
@@ -44,6 +45,10 @@ test('ships non-empty reports and structured download assets', async () => {
     '../public/models/paramak-tokamak-demo/paramak-tokamak-demo-poster.png',
     '../public/models/paramak-tokamak-demo/PARAMAK-LICENSE.txt',
     '../public/models/paramak-tokamak-demo/model-manifest.json',
+    '../public/models/paramak-full-device/paramak-full-device.step',
+    '../public/models/paramak-full-device/paramak-full-device.glb',
+    '../public/models/paramak-full-device/PARAMAK-LICENSE.txt',
+    '../public/models/paramak-full-device/model-manifest.json',
   ];
   for (const asset of assets) {
     const info = await stat(new URL(asset, import.meta.url));
@@ -123,9 +128,35 @@ test('ships non-empty reports and structured download assets', async () => {
   assert.equal(modelManifest.generator.name, 'Paramak');
   assert.equal(modelManifest.generator.version, '0.9.11');
   assert.equal(modelManifest.generator.license, 'MIT');
+  assert.equal(modelManifest.schemaVersion, '1.1');
+  assert.equal(modelManifest.access.classification, 'PUBLIC');
+  assert.equal(modelManifest.devicePackage.authority, 'illustrative');
+  assert.ok(modelManifest.systems.length >= 5);
+  assert.ok(modelManifest.systems.flatMap((system) => system.parts).length >= 10);
   assert.ok(modelManifest.webModel.triangles > 0);
   assert.equal(modelManifest.webModel.linearUnit, 'metre');
   assert.match(modelManifest.disclaimer, /not an engineering model of EXL-50U/);
+});
+
+test('ships a closed, public DeviceManifest for the CAD viewer', async () => {
+  const manifest = JSON.parse(await readFile(
+    new URL('../public/models/paramak-tokamak-demo/model-manifest.json', import.meta.url),
+    'utf8',
+  ));
+  const schema = JSON.parse(await readFile(
+    new URL('../public/models/device-manifest.schema.json', import.meta.url),
+    'utf8',
+  ));
+  assert.equal(manifest.schemaVersion, '1.1');
+  assert.equal(manifest.access.classification, 'PUBLIC');
+  assert.equal(manifest.access.redistributionAllowed, true);
+  assert.equal(schema.properties.schemaVersion.const, '1.1');
+  const parts = manifest.systems.flatMap((system) => system.parts);
+  assert.equal(parts.length, 17);
+  assert.equal(new Set(parts.map((part) => part.id)).size, parts.length);
+  assert.equal(new Set(parts.map((part) => part.nodeName)).size, parts.length);
+  assert.match(manifest.assets.webModel.sha256, /^[A-F0-9]{64}$/i);
+  assert.ok(manifest.assets.webModel.bytes > 0);
 });
 
 test('server-renders the FusionDigital community portal', async () => {
@@ -138,6 +169,7 @@ test('server-renders the FusionDigital community portal', async () => {
   assert.match(html, /href="\/diagnostics"[^>]*>诊断感知<\/a>/);
   assert.match(html, /href="\/ai"/);
   assert.match(html, /href="\/facilities"/);
+  assert.match(html, /href="\/digital-prototype"/);
   assert.match(html, /fusiondigital-mark\.png/);
   assert.match(html, /class="brandWordmark"/);
   assert.match(html, /class="brandFusion">Fusion/);
@@ -151,6 +183,10 @@ test('server-renders the FusionDigital community portal', async () => {
   assert.match(html, /href="\/models\/paramak-tokamak-demo\/paramak-tokamak-demo\.glb"/);
   assert.match(html, /href="\/models\/paramak-tokamak-demo\/model-manifest\.json"/);
   assert.match(html, /PF COILS \/ CASES/);
+  assert.match(html, /DEVICE PACKAGE VIEWER/);
+  assert.match(html, /MANIFEST-DRIVEN DIGITAL ASSET/);
+  assert.match(html, /DEVICE-AGNOSTIC \/ EXL-ADAPTABLE PACKAGE CONTRACT/);
+  assert.match(html, /查看清单 Schema/);
   assert.match(html, /href="\/licenses\/THREE-LICENSE\.txt"/);
   assert.match(html, /Paramak 0\.9\.11/);
   assert.match(html, /它不是 EXL-50U、EHL-2 或其他在役装置的工程权威模型/);
@@ -203,6 +239,45 @@ test('server-renders the FusionDigital community portal', async () => {
     'domain-ai-native-dark-image2.png',
   ]) assert.match(html, new RegExp(figure.replaceAll('.', '\\.')));
   assert.doesNotMatch(html, /发电系统|POWER SYSTEMS|本质安全/);
+});
+
+test('server-renders the public full-device digital-prototype workspace', async () => {
+  const html = await htmlFor('/digital-prototype');
+  assert.match(html, /CAD \/ CAE DIGITAL PROTOTYPE WORKSPACE/);
+  assert.match(html, /href="\/digital-prototype"[^>]*class="active"|class="active"[^>]*href="\/digital-prototype"/);
+  assert.equal((html.match(/id="prototype-workspace"/g) ?? []).length, 1);
+  assert.match(html, /data-three-viewer="paramak-full-device"/);
+  assert.match(html, /Paramak/);
+  assert.match(html, /360°/);
+  assert.match(html, /不代表 ITER 或 EXL(?:‑|-)?50U 的工程几何/);
+  assert.match(html, /按需加载约 (?:<!-- -->)?2\.2(?:<!-- -->)? MB/);
+  assert.doesNotMatch(html, /paramak-tokamak-demo-poster\.png/);
+  assert.match(html, /中央螺线管 \/ 真空室/);
+  assert.match(html, /低温恒温器 \/ 热屏蔽/);
+  assert.match(html, /href="\/models\/paramak-full-device\/model-manifest\.json"/);
+  assert.match(html, /href="\/models\/device-manifest\.schema\.json"/);
+  assert.doesNotMatch(html, /iter-cad-private|127\.0\.0\.1|\/models\/iter[^"']*\.glb/i);
+
+  const manifest = JSON.parse(await readFile(
+    new URL('../public/models/paramak-full-device/model-manifest.json', import.meta.url),
+    'utf8',
+  ));
+  assert.equal(manifest.schemaVersion, '1.1');
+  assert.equal(manifest.access.classification, 'PUBLIC');
+  assert.equal(manifest.access.redistributionAllowed, true);
+  assert.equal(manifest.devicePackage.authority, 'illustrative');
+  assert.equal(manifest.generator.script.path, 'research/3d/generate_paramak_full_device.py');
+  assert.match(manifest.generator.script.sha256, /^[A-F0-9]{64}$/);
+  const generatorScript = await readFile(
+    new URL('../research/3d/generate_paramak_full_device.py', import.meta.url),
+  );
+  assert.equal(createHash('sha256').update(generatorScript).digest('hex').toUpperCase(), manifest.generator.script.sha256);
+  assert.equal(manifest.generator.conversion.converterVersion, '0.1.0');
+  assert.equal(manifest.systems.flatMap((system) => system.parts).length, 17);
+  assert.equal(manifest.assets.webModel.bytes, 2169812);
+  assert.match(manifest.assets.webModel.sha256, /^[A-F0-9]{64}$/);
+  assert.ok(manifest.coverage.notIncluded.includes('central solenoid'));
+  assert.match(manifest.disclaimer, /not an engineering model of ITER, EXL-50U/);
 });
 
 test('server-renders the integrated-control and PCS research atlas', async () => {

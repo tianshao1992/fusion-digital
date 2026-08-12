@@ -2,7 +2,7 @@ import Link from 'next/link';
 import BrandWordmark from './BrandWordmark';
 
 type SiteNavProps = {
-  active?: 'home' | 'physics' | 'engineering' | 'control' | 'diagnostics' | 'ai' | 'facilities';
+  active?: 'home' | 'physics' | 'engineering' | 'control' | 'diagnostics' | 'ai' | 'facilities' | 'prototype';
 };
 
 const links = [
@@ -13,6 +13,7 @@ const links = [
   ['diagnostics', '/diagnostics', '诊断感知'],
   ['ai', '/ai', '智能原生'],
   ['facilities', '/facilities', '全球装置'],
+  ['prototype', '/digital-prototype', '数字样机'],
 ] as const;
 
 export default function SiteNav({active = 'home'}: SiteNavProps) {

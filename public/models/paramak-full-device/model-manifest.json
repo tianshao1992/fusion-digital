@@ -1,0 +1,90 @@
+{
+  "$schema": "/models/device-manifest.schema.json",
+  "schemaVersion": "1.1",
+  "id": "paramak-full-device",
+  "title": "Generic 360-degree Paramak tokamak demonstrator",
+  "asOf": "2026-08-12",
+  "devicePackage": {
+    "kind": "public-demonstrator",
+    "deviceClass": "generic parameterized tokamak full-device demonstrator",
+    "authority": "illustrative",
+    "replacementContract": [
+      "device identity and data classification",
+      "browser-safe GLB derivative and source STEP",
+      "stable system and part identifiers mapped to GLB node names",
+      "coordinate frame, unit and source-to-web scale",
+      "asset hashes, provenance, licence and engineering-use statement"
+    ]
+  },
+  "access": {
+    "classification": "PUBLIC",
+    "redistributionAllowed": true,
+    "engineeringUseAllowed": false,
+    "statement": "Public MIT-licensed Paramak demonstrator. No ITER or EXL-50U controlled geometry, dimensions, materials, sensor positions or CAE results are included."
+  },
+  "coordinateSystem": { "linearUnit": "metre", "upAxis": "Y", "handedness": "right", "sourceToWebScale": 0.001 },
+  "assets": {
+    "webModel": { "path": "/models/paramak-full-device/paramak-full-device.glb", "format": "glTF 2.0 binary", "bytes": 2169812, "sha256": "E9D4E05FDD1F99955A52F13DC742A31156470B386C247D8C299A905FA1C4F971" },
+    "sourceCad": { "path": "/models/paramak-full-device/paramak-full-device.step", "format": "STEP", "bytes": 3687167, "sha256": "7F6069EA2A66A108933C551D7AB74CBA7EBC0B2577E6A1F804800CFFD5D59F51" }
+  },
+  "systems": [
+    { "id": "plasma-volume", "title": "等离子体体积", "shortTitle": "PLASMA", "category": "plasma", "color": "#FF6A1E", "description": "用于空间关系表达的参数化等离子体边界，不代表平衡重建或实验测量。", "parts": [
+      { "id": "PLS-001", "title": "等离子体边界", "nodeName": "plasma", "description": "参数化等离子体体积。", "engineeringTag": "PLASMA.VOLUME" }
+    ] },
+    { "id": "toroidal-field", "title": "环向场磁体", "shortTitle": "TF COILS", "category": "tf", "color": "#42D9C8", "description": "参数化环向场线圈阵列的网页派生网格。", "parts": [
+      { "id": "MAG-TF-001", "title": "TF 线圈阵列", "nodeName": "toroidal_field_coil_1", "description": "环向场线圈阵列合并节点。", "engineeringTag": "MAGNET.TF.ARRAY" }
+    ] },
+    { "id": "poloidal-field", "title": "极向场磁体", "shortTitle": "PF COILS", "category": "pf", "color": "#9476FF", "description": "四组参数化极向场线圈。", "parts": [
+      { "id": "MAG-PF-002", "title": "PF 线圈 02", "nodeName": "poloidal_field_coil_2", "description": "上部外侧 PF 线圈。", "engineeringTag": "MAGNET.PF.02" },
+      { "id": "MAG-PF-004", "title": "PF 线圈 04", "nodeName": "poloidal_field_coil_4", "description": "上部内侧 PF 线圈。", "engineeringTag": "MAGNET.PF.04" },
+      { "id": "MAG-PF-006", "title": "PF 线圈 06", "nodeName": "poloidal_field_coil_6", "description": "下部内侧 PF 线圈。", "engineeringTag": "MAGNET.PF.06" },
+      { "id": "MAG-PF-008", "title": "PF 线圈 08", "nodeName": "poloidal_field_coil_8", "description": "下部外侧 PF 线圈。", "engineeringTag": "MAGNET.PF.08" }
+    ] },
+    { "id": "poloidal-field-cases", "title": "极向场线圈壳体", "shortTitle": "PF CASES", "category": "structure", "color": "#8CA69B", "description": "PF 线圈壳体的参数化结构占位。", "parts": [
+      { "id": "STR-PFC-003", "title": "PF 壳体 03", "nodeName": "poloidal_field_coil_case_3", "description": "PF 02 配套壳体。", "engineeringTag": "STRUCTURE.PF.CASE.03" },
+      { "id": "STR-PFC-005", "title": "PF 壳体 05", "nodeName": "poloidal_field_coil_case_5", "description": "PF 04 配套壳体。", "engineeringTag": "STRUCTURE.PF.CASE.05" },
+      { "id": "STR-PFC-007", "title": "PF 壳体 07", "nodeName": "poloidal_field_coil_case_7", "description": "PF 06 配套壳体。", "engineeringTag": "STRUCTURE.PF.CASE.07" },
+      { "id": "STR-PFC-009", "title": "PF 壳体 09", "nodeName": "poloidal_field_coil_case_9", "description": "PF 08 配套壳体。", "engineeringTag": "STRUCTURE.PF.CASE.09" }
+    ] },
+    { "id": "radial-build", "title": "径向构造层", "shortTitle": "RADIAL BUILD", "category": "layer", "color": "#D2AA74", "description": "六层通用径向构造，仅表达拓扑与浏览交互，不映射特定装置材料。", "parts": [
+      { "id": "RBL-001", "title": "径向构造层 01", "nodeName": "layer_1", "description": "通用径向层 01。", "engineeringTag": "RADIAL_BUILD.LAYER.01" },
+      { "id": "RBL-002", "title": "径向构造层 02", "nodeName": "layer_2", "description": "通用径向层 02。", "engineeringTag": "RADIAL_BUILD.LAYER.02" },
+      { "id": "RBL-003", "title": "径向构造层 03", "nodeName": "layer_3", "description": "通用径向层 03。", "engineeringTag": "RADIAL_BUILD.LAYER.03" },
+      { "id": "RBL-004", "title": "径向构造层 04", "nodeName": "layer_4", "description": "通用径向层 04。", "engineeringTag": "RADIAL_BUILD.LAYER.04" },
+      { "id": "RBL-005", "title": "径向构造层 05", "nodeName": "layer_5", "description": "通用径向层 05。", "engineeringTag": "RADIAL_BUILD.LAYER.05" },
+      { "id": "RBL-006", "title": "径向构造层 06", "nodeName": "layer_6", "description": "通用径向层 06。", "engineeringTag": "RADIAL_BUILD.LAYER.06" }
+    ] },
+    { "id": "divertor-placeholder", "title": "偏滤器区域", "shortTitle": "DIVERTOR", "category": "structure", "color": "#63B9E9", "description": "参数化几何相交后形成的下部偏滤器区域占位。", "parts": [
+      { "id": "DIV-001", "title": "下部偏滤器区域", "nodeName": "extra_intersect_shapes_1", "description": "通用下部偏滤器区域。", "engineeringTag": "PFC.DIVERTOR.LOWER" }
+    ] }
+  ],
+  "generator": {
+    "name": "Paramak",
+    "version": "0.9.11",
+    "repository": "https://github.com/fusion-energy/paramak/tree/0.9.11",
+    "license": "MIT",
+    "licenseUrl": "https://github.com/fusion-energy/paramak/blob/0.9.11/LICENSE",
+    "paper": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7983317/",
+    "script": {
+      "path": "research/3d/generate_paramak_full_device.py",
+      "sha256": "62DD86D94934AE71A1977E6389F6C19977DEDDDA064BDF783D7EBD521B2E8FEB"
+    },
+    "environment": {
+      "python": "3.12.13",
+      "cadquery": "2.8.0",
+      "cadqueryOcp": "7.9.3.1.1"
+    },
+    "conversion": {
+      "pipeline": "CadQuery Assembly.importStep -> OpenCascade tessellation -> glTF",
+      "converter": "FusionDigital controlled CAD converter",
+      "converterVersion": "0.1.0",
+      "linearToleranceSourceUnits": 0.1,
+      "angularToleranceRadians": 0.1
+    }
+  },
+  "coverage": {
+    "included": ["parameterized plasma volume", "TF coil array", "four PF coil groups and cases", "six radial-build layers", "lower divertor region"],
+    "notIncluded": ["central solenoid", "vacuum vessel engineering geometry", "cryostat", "thermal shield", "ports and diagnostics", "buildings and plant systems", "materials and CAE fields"]
+  },
+  "disclaimer": "Generic open 360-degree parametric demonstration geometry. It is not an engineering model of ITER, EXL-50U or any specific device and must not be used for manufacturing, dimensional verification, physics calculation, CAE analysis or safety decisions."
+}
