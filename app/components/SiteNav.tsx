@@ -2,7 +2,7 @@ import Link from 'next/link';
 import BrandWordmark from './BrandWordmark';
 
 type SiteNavProps = {
-  active?: 'home' | 'physics' | 'engineering' | 'control' | 'diagnostics' | 'ai' | 'facilities' | 'prototype';
+  active?: 'home' | 'physics' | 'engineering' | 'control' | 'diagnostics' | 'ai' | 'facilities' | 'prototype' | 'knowledge' | 'account';
 };
 
 const links = [
@@ -12,6 +12,7 @@ const links = [
   ['control', '/control', '集成控制'],
   ['diagnostics', '/diagnostics', '诊断感知'],
   ['ai', '/ai', '智能原生'],
+  ['knowledge', '/search', '知识智能'],
   ['facilities', '/facilities', '全球装置'],
   ['prototype', '/digital-prototype', '数字样机'],
 ] as const;
@@ -27,9 +28,10 @@ export default function SiteNav({active = 'home'}: SiteNavProps) {
       <Link href="/#resources">工具链条</Link>
       <Link href="/#roadmap">路线图</Link>
     </div>
+    <Link className={`siteAccountAccess${active === 'account' ? ' active' : ''}`} href="/account" aria-label="账户中心">账户</Link>
     <details className="mobileNav">
       <summary aria-label="打开导航">菜单</summary>
-      <div>{links.map(([key, href, label]) => <Link className={active === key ? 'active' : ''} href={href} key={key}>{label}</Link>)}<Link href="/#resources">工具链条</Link><Link href="/#roadmap">路线图</Link></div>
+      <div>{links.map(([key, href, label]) => <Link className={active === key ? 'active' : ''} href={href} key={key}>{label}</Link>)}<Link href="/#resources">工具链条</Link><Link href="/#roadmap">路线图</Link><Link className={active === 'account' ? 'active' : ''} href="/account">账户中心</Link></div>
     </details>
   </nav>;
 }

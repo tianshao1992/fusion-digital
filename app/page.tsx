@@ -66,6 +66,21 @@ export default function Home() {
 
     <FusionTwinSystemMap />
 
+    <section className="aiNativePortal" aria-labelledby="ai-native-portal-title">
+      <div className="aiNativePortalIntro">
+        <p className="sectionIndex">AI-NATIVE KNOWLEDGE OPERATING SYSTEM</p>
+        <h2 id="ai-native-portal-title">让调研、证据、关系与更新，成为一套可持续运行的知识基础设施。</h2>
+        <p>大模型只负责连接问题与已核验资料；论文、代码、装置和结论仍由结构化来源、权限、配额、审核与版本记录共同约束。模型不可用时，系统自动回退到确定性检索。</p>
+      </div>
+      <div className="aiNativePortalGrid">
+        <a href="/search"><span>01 / SEARCH & ASK</span><h3>证据检索与问答</h3><p>跨知识域检索论文、代码、装置与工作，并以来源白名单约束模型回答。</p><b>开始检索 →</b></a>
+        <a href="/knowledge-graph"><span>02 / KNOWLEDGE GRAPH</span><h3>关系与证据图谱</h3><p>从装置或任务展开一至两跳邻域，追溯论文、代码、机构和验证关系。</p><b>探索图谱 →</b></a>
+        <a href="/research-review"><span>03 / HUMAN REVIEW</span><h3>智能体候选审核</h3><p>一期已建立候选生成与职责分离审核；联网发现仍处于安全演练阶段，任何接受项也不会自动发布。</p><b>进入审核台 →</b></a>
+        <a href="/account"><span>04 / IDENTITY & GOVERNANCE</span><h3>账户、角色与配额</h3><p>使用可信平台身份，统一管理成员角色、模型额度、使用记录和审计边界。</p><b>查看账户 →</b></a>
+      </div>
+      <div className="aiNativeGuardrail"><span>RETRIEVAL</span><i>→</i><span>CITATION GATE</span><i>→</i><span>MODEL SYNTHESIS</span><i>→</i><span>HUMAN REVIEW</span><i>→</i><span>VERSIONED PUBLISH</span></div>
+    </section>
+
     <section className="domainSection" id="domains">
       <div className="sectionIntro"><p className="sectionIndex">02 / KNOWLEDGE DOMAINS</p><h2>从专业孪生走向总体集成与智能原生</h2><p>十个知识域共同覆盖聚变电厂的物理规律、工程系统、运行认知、能量链、辅机、人机协同、数据与智能；总体集成和智能原生作为并列重点，将各域组织为可验证的整体能力。</p></div>
       <div className="domainCards">{domains.map(domain=><a href={domain.href} key={domain.id} className={`domainCard${domain.featured?` featuredDomainCard ${domain.featured}Featured`:''}`}><div className="domainFigure">{domain.figure?<img src={domain.figure} alt={`${domain.title}核心结构科学信息图`} loading="lazy" decoding="async"/>:<div className="aiDomainVisual" aria-hidden="true"><span className="miniPlasma"/><span className="miniTwin">Δt</span><span className="miniAgent">A</span><i/><i/></div>}<span>{domain.status}</span></div><div className="domainBody"><p>{domain.id} / {domain.en}</p><h3>{domain.title}</h3><div>{domain.copy}</div><b>{domain.meta}</b><i>进入知识域 ↗</i></div></a>)}</div>

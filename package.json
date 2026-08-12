@@ -22,7 +22,11 @@
     "research:diagnostics": "node scripts/research/diagnostics.mjs rebuild",
     "research:diagnostics:audit": "node scripts/research/diagnostics.mjs audit",
     "research:diagnostics:report": "node scripts/research/diagnostics.mjs report",
-    "db:generate": "drizzle-kit generate"
+    "research:graph": "node scripts/research/build-knowledge-graph.mjs",
+    "search:build": "node scripts/search/build-index.mjs",
+    "db:generate": "drizzle-kit generate",
+    "research:agent:dry-run": "node scripts/research/agent/discover.mjs --dry-run --scope all",
+    "test:research-agent": "node --test tests/research-agent.test.mjs"
   },
   "dependencies": {
     "drizzle-orm": "0.45.2",

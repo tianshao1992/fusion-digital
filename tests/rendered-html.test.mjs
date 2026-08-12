@@ -422,3 +422,75 @@ test('server-renders the AI-native fusion digital twin research page', async () 
   assert.match(html, /FUSION · TWIN · AGENT LOOP/);
   assert.match(html, /target="_blank"/);
 });
+
+test('ships and server-renders the evidence-first knowledge graph', async () => {
+  const snapshot = JSON.parse(await readFile(
+    new URL('../public/data/fusion-knowledge-graph.json', import.meta.url),
+    'utf8',
+  ));
+  assert.equal(snapshot.schemaVersion, '1.0');
+  assert.equal(snapshot.statistics.nodes, snapshot.nodes.length);
+  assert.equal(snapshot.statistics.edges, snapshot.edges.length);
+  assert.ok(snapshot.nodes.length >= 1200);
+  assert.ok(snapshot.edges.length >= 2000);
+  assert.equal(new Set(snapshot.nodes.map((node) => node.id)).size, snapshot.nodes.length);
+  assert.equal(new Set(snapshot.edges.map((edge) => edge.id)).size, snapshot.edges.length);
+  assert.ok(snapshot.edges.every((edge) => snapshot.nodes.some((node) => node.id === edge.source)));
+  assert.ok(snapshot.edges.every((edge) => snapshot.nodes.some((node) => node.id === edge.target)));
+  for (const type of ['research', 'paper', 'code', 'device', 'tool', 'task', 'organization']) {
+    assert.ok(snapshot.statistics.byType[type] > 0, `missing graph node type ${type}`);
+  }
+  for (const name of ['ITER', 'DIII-D', 'EXL-50U', 'EHL-2']) {
+    assert.ok(snapshot.nodes.some((node) => node.type === 'device' && node.label === name), `missing graph device ${name}`);
+  }
+  assert.ok(snapshot.nodes.some((node) => node.type === 'tool' && node.label === 'DINA'));
+  assert.ok(snapshot.nodes.some((node) => node.type === 'tool' && node.label.includes('CATIA')));
+  assert.ok(snapshot.edges.some((edge) => edge.relation === 'SUPPORTED_BY' && edge.evidenceUrl));
+
+  const html = await htmlFor('/knowledge-graph');
+  assert.match(html, /FUSION KNOWLEDGE GRAPH/);
+  assert.match(html, /data-echart="fusion-knowledge-graph"/);
+  assert.match(html, /论文、代码与装置证据/);
+  assert.match(html, /href="\/data\/fusion-knowledge-graph\.json"/);
+  assert.match(html, /节点上限/);
+  assert.match(html, /1 跳 · 直接关系/);
+});
+
+test('ships and server-renders evidence-grounded knowledge search', async () => {
+  const snapshot = JSON.parse(await readFile(
+    new URL('../public/data/fusion-knowledge-index.json', import.meta.url),
+    'utf8',
+  ));
+  assert.equal(snapshot.schemaVersion, '1.0.0');
+  assert.equal(snapshot.statistics.total, snapshot.entries.length);
+  assert.ok(snapshot.entries.length >= 1300);
+  assert.ok(snapshot.statistics.byType.paper >= 400);
+  assert.ok(snapshot.statistics.byType.code >= 300);
+  assert.ok(snapshot.entries.some((entry) => entry.title === 'EXL-50U'));
+
+  const html = await htmlFor('/search');
+  assert.match(html, /AI-NATIVE KNOWLEDGE/);
+  assert.match(html, /确定性检索/);
+  assert.match(html, /询问 FusionDigital/);
+  assert.match(html, /证据不足则拒答/);
+});
+
+test('server-renders the identity-aware account entry without exposing credentials', async () => {
+  const html = await htmlFor('/account');
+  assert.match(html, /ACCOUNT &amp; ACCESS/);
+  assert.match(html, /REGISTER &amp; SIGN IN/);
+  assert.match(html, /href="\/signin-with-chatgpt\?return_to=%2Faccount"/);
+  assert.match(html, /使用 ChatGPT 注册 \/ 登录/);
+  assert.match(html, /模型密钥始终保留在服务端/);
+  assert.match(html, /href="\/account"[^>]*aria-label="账户中心"/);
+  assert.doesNotMatch(html, /OPENAI_API_KEY|sk-[A-Za-z0-9_-]{16,}/);
+});
+
+test('server-renders the signed-out research review boundary without D1 access', async () => {
+  const html = await htmlFor('/research-review');
+  assert.match(html, /GOVERNED RESEARCH AGENT/);
+  assert.match(html, /智能体负责发现/);
+  assert.match(html, /href="\/signin-with-chatgpt\?return_to=%2Fresearch-review"/);
+  assert.match(html, /“接受”不等于“发布”|接受.*不等于.*发布/);
+  assert.doesNotMatch(html, /OPENAI_API_KEY|sk-[A-Za-z0-9_-]{16,}/);
+});

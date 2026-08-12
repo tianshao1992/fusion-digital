@@ -1,0 +1,11 @@
+[
+  {
+    "sourceId": "crossref",
+    "sourceUrl": "https://api.crossref.org/works/10.0000/demo",
+    "externalId": "10.0000/demo",
+    "targetType": "paper",
+    "title": "Offline candidate contract demonstration",
+    "content": "Fixture data only; it is never published.",
+    "cursor": "demo-cursor-1"
+  }
+]

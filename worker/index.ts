@@ -2,9 +2,9 @@
 import { handleImageOptimization, DEFAULT_DEVICE_SIZES, DEFAULT_IMAGE_SIZES } from "vinext/server/image-optimization";
 import handler from "vinext/server/app-router-entry";
 
-interface Env {
+export interface Env {
   ASSETS: Fetcher;
-  DB: D1Database;
+  DB: NonNullable<Cloudflare.Env["DB"]>;
   IMAGES: {
     input(stream: ReadableStream): {
       transform(options: Record<string, unknown>): {
@@ -12,6 +12,13 @@ interface Env {
       };
     };
   };
+}
+
+declare global {
+  // A binding is immutable for the lifetime of a Worker isolate. Storing only
+  // the D1 capability (rather than a request-scoped Env object) keeps the Node
+  // SSR bundle free of `cloudflare:workers` and avoids cross-request mutation.
+  var __FUSIONDIGITAL_DB__: Env["DB"] | undefined;
 }
 
 interface ExecutionContext {
@@ -27,6 +34,18 @@ interface ExecutionContext {
 
 const worker = {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+    // vinext's local production server does not inject platform bindings. Keep
+    // public pages available there; database-backed routes will fail closed in
+    // `requireD1Binding()` instead of crashing the whole server.
+    if (env?.DB) {
+      if (
+        globalThis.__FUSIONDIGITAL_DB__ &&
+        globalThis.__FUSIONDIGITAL_DB__ !== env.DB
+      ) {
+        throw new Error("D1 binding changed within an active Worker isolate");
+      }
+      globalThis.__FUSIONDIGITAL_DB__ = env.DB;
+    }
     const url = new URL(request.url);
 
     if (url.pathname === "/_vinext/image") {

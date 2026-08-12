@@ -1,0 +1,10 @@
+{
+  "schemaVersion": "1.0",
+  "candidateOnly": true,
+  "sources": [
+    { "id": "crossref", "kind": "paper-metadata", "origins": ["https://api.crossref.org"], "scopes": ["all", "physics", "engineering", "control", "diagnostics", "ai-native"], "enabled": true },
+    { "id": "arxiv", "kind": "preprint-metadata", "origins": ["https://export.arxiv.org"], "scopes": ["all", "physics", "engineering", "control", "diagnostics", "ai-native"], "enabled": true },
+    { "id": "github", "kind": "code-metadata", "origins": ["https://api.github.com"], "scopes": ["all", "physics", "engineering", "control", "diagnostics", "ai-native"], "enabled": true },
+    { "id": "iter-official", "kind": "official-device", "origins": ["https://www.iter.org"], "scopes": ["all", "facilities", "engineering", "control", "diagnostics"], "enabled": true }
+  ]
+}

@@ -38,7 +38,9 @@ work-dev*.log
 
 # typescript
 next-env.d.ts
+*.tsbuildinfo
 /dist/
 /.wrangler/
 /outputs/
 /work/
+/research/agent/artifacts/

@@ -1,0 +1,39 @@
+name: nightly-research-candidates
+
+on:
+  schedule:
+    - cron: "17 18 * * *"
+  workflow_dispatch:
+    inputs:
+      scope:
+        description: Candidate discovery scope
+        default: all
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nightly-research-candidates
+  cancel-in-progress: false
+
+jobs:
+  candidate-bundle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.13.0
+      - name: Generate offline candidate-only bundle
+        run: node scripts/research/agent/discover.mjs --dry-run --scope "${{ inputs.scope || 'all' }}" --output work/research-agent/nightly.json
+      - name: Verify production data is unchanged
+        run: git diff --exit-code -- app public db drizzle research/ai-native research/control research/diagnostics
+      - name: Upload review artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: research-candidates-${{ github.run_id }}
+          path: work/research-agent/nightly.json
+          retention-days: 30
+          if-no-files-found: error
