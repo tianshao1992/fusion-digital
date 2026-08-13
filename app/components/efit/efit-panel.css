@@ -1,0 +1,405 @@
+.efitPanel {
+  --efit-ink: #d9f2ed;
+  --efit-muted: #86a9a2;
+  --efit-line: rgba(97, 183, 171, 0.22);
+  --efit-panel: rgba(6, 23, 27, 0.9);
+  --efit-accent: #2bd8c0;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  color: var(--efit-ink);
+  background:
+    radial-gradient(circle at 73% -12%, rgba(37, 214, 192, 0.13), transparent 36%),
+    linear-gradient(145deg, #06181c 0%, #081f23 48%, #07171b 100%);
+  border: 1px solid rgba(70, 180, 164, 0.28);
+  border-radius: 24px;
+  box-shadow: 0 28px 70px rgba(0, 11, 14, 0.28), inset 0 1px rgba(170, 255, 242, 0.06);
+  padding: clamp(18px, 2.6vw, 34px);
+  outline: none;
+}
+
+.efitPanel::before,
+.efitPanel::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.efitPanel::before {
+  inset: 0;
+  opacity: 0.3;
+  background-image:
+    linear-gradient(rgba(111, 217, 201, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(111, 217, 201, 0.055) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: linear-gradient(to bottom, black, transparent 72%);
+}
+
+.efitPanel::after {
+  width: 420px;
+  height: 420px;
+  top: -280px;
+  right: 8%;
+  border: 1px solid rgba(64, 220, 199, 0.18);
+  border-radius: 50%;
+  box-shadow: 0 0 80px rgba(24, 180, 160, 0.08);
+}
+
+.efitPanel:focus-visible {
+  box-shadow: 0 0 0 3px rgba(43, 216, 192, 0.3), 0 28px 70px rgba(0, 11, 14, 0.28);
+}
+
+.efitPanelHeader {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 18px;
+}
+
+.efitEyebrow {
+  display: block;
+  margin-bottom: 8px;
+  color: #3ee0c8;
+  font: 700 0.68rem/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0.17em;
+}
+
+.efitPanel h2,
+.efitPanel h3,
+.efitPanel p {
+  margin: 0;
+}
+
+.efitPanel h2 {
+  color: #ecfbf7;
+  font-size: clamp(1.45rem, 2.5vw, 2.35rem);
+  font-weight: 520;
+  letter-spacing: -0.035em;
+}
+
+.efitPanelHeader p {
+  max-width: 720px;
+  margin-top: 8px;
+  color: var(--efit-muted);
+  font-size: 0.83rem;
+  line-height: 1.65;
+}
+
+.efitShotSelect {
+  display: grid;
+  flex: 0 0 auto;
+  gap: 6px;
+  min-width: 160px;
+  color: var(--efit-muted);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.efitShotSelect select,
+.efitTransportSettings select {
+  appearance: none;
+  color: var(--efit-ink);
+  background: rgba(4, 18, 21, 0.9);
+  border: 1px solid rgba(85, 189, 174, 0.32);
+  border-radius: 8px;
+  padding: 9px 28px 9px 10px;
+  font: inherit;
+  background-image: linear-gradient(45deg, transparent 50%, #53cbb9 50%), linear-gradient(135deg, #53cbb9 50%, transparent 50%);
+  background-position: calc(100% - 12px) 50%, calc(100% - 8px) 50%;
+  background-size: 4px 4px;
+  background-repeat: no-repeat;
+}
+
+.efitShotSelect select:focus-visible,
+.efitTransportSettings select:focus-visible,
+.efitPanel button:focus-visible,
+.efitScrubber input:focus-visible {
+  outline: 2px solid #63ebd7;
+  outline-offset: 2px;
+}
+
+.efitStatusRail {
+  display: flex;
+  min-height: 28px;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-bottom: 12px;
+}
+
+.efitStatusPill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 4px 9px;
+  border: 1px solid rgba(79, 195, 177, 0.27);
+  border-radius: 999px;
+  background: rgba(38, 170, 151, 0.09);
+  color: #9ed7ce;
+  font-size: 0.65rem;
+}
+
+.efitStatusPill::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.efitStatusPill.isLoading::before {
+  animation: efitPulse 1.2s ease-in-out infinite;
+}
+
+.efitStatusPill.quality-good { color: #51ddae; }
+.efitStatusPill.quality-warning,
+.efitStatusPill.isWarning { color: #f2bd72; border-color: rgba(242, 189, 114, 0.32); background: rgba(242, 189, 114, 0.08); }
+.efitStatusPill.quality-invalid,
+.efitStatusPill.quality-missing { color: #ff806e; border-color: rgba(255, 128, 110, 0.34); background: rgba(255, 128, 110, 0.08); }
+
+.efitStatusText {
+  color: #bd9d70;
+  font-size: 0.66rem;
+}
+
+.efitError {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #ff9b8d;
+  font-size: 0.72rem;
+}
+
+.efitError button {
+  color: #d9f2ed;
+  background: transparent;
+  border: 1px solid rgba(255, 155, 141, 0.38);
+  border-radius: 6px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.efitMetricStrip {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  margin-bottom: 14px;
+  border: 1px solid var(--efit-line);
+  border-radius: 12px;
+  background: rgba(5, 20, 23, 0.68);
+}
+
+.efitMetricStrip > div {
+  display: grid;
+  gap: 4px;
+  padding: 11px 14px;
+  border-right: 1px solid var(--efit-line);
+}
+
+.efitMetricStrip > div:last-child { border-right: 0; }
+.efitMetricStrip span { color: #638e87; font: 600 0.58rem/1.2 ui-monospace, monospace; letter-spacing: 0.08em; text-transform: uppercase; }
+.efitMetricStrip strong { color: #d5f2ec; font: 500 0.82rem/1.2 ui-monospace, monospace; white-space: nowrap; }
+
+.efitChartGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.04fr) minmax(0, 0.96fr);
+  gap: 12px;
+}
+
+.efitChartCard {
+  position: relative;
+  overflow: hidden;
+  min-width: 0;
+  background: rgba(4, 17, 20, 0.76);
+  border: 1px solid var(--efit-line);
+  border-radius: 15px;
+}
+
+.efitChartCard::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  box-shadow: inset 0 1px rgba(183, 255, 244, 0.045);
+}
+
+.efitCardHeading {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 14px 16px 0;
+}
+
+.efitCardHeading > span {
+  color: #31cdb7;
+  font: 700 0.58rem/1 ui-monospace, monospace;
+}
+
+.efitCardHeading h3 {
+  color: #dbf4ef;
+  font-size: 0.82rem;
+  font-weight: 570;
+}
+
+.efitCardHeading p {
+  margin-top: 3px;
+  color: #617f79;
+  font-size: 0.62rem;
+}
+
+.efitChart {
+  position: relative;
+  height: clamp(300px, 35vw, 430px);
+  min-height: 280px;
+}
+
+.efitChartMount,
+.efitChartFallback {
+  position: absolute;
+  inset: 0;
+}
+
+.efitChartMount { z-index: 2; }
+.efitChartFallback { display: grid; place-items: center; z-index: 1; padding: 60px 20px 20px; }
+.efitChart.isReady .efitChartFallback { visibility: hidden; }
+
+.efitChartTextFallback {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  color: #769991;
+  font: 0.72rem/1.4 ui-monospace, monospace;
+  text-align: center;
+}
+
+.efitChartTextFallback strong { color: #badbd4; font-size: 0.86rem; font-weight: 550; }
+
+.efitChartStatus {
+  position: absolute;
+  z-index: 3;
+  right: 12px;
+  bottom: 10px;
+  color: #6f9991;
+  font-size: 0.58rem;
+}
+
+.efitTransport {
+  display: grid;
+  grid-template-columns: auto minmax(260px, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  margin-top: 12px;
+  padding: 13px 14px;
+  background: rgba(4, 17, 20, 0.82);
+  border: 1px solid var(--efit-line);
+  border-radius: 13px;
+}
+
+.efitTransportTopline {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.efitTransportButtons { display: flex; align-items: center; gap: 6px; }
+.efitTransport button { min-height: 36px; cursor: pointer; }
+.efitTransport button:disabled { cursor: not-allowed; opacity: 0.38; }
+
+.efitIconButton,
+.efitPlayButton {
+  color: #cfeee8;
+  background: rgba(21, 75, 70, 0.32);
+  border: 1px solid rgba(88, 208, 190, 0.26);
+  border-radius: 8px;
+}
+
+.efitIconButton { min-width: 36px; padding: 6px; font: 600 1rem/1 ui-monospace, monospace; }
+.efitPlayButton { display: inline-flex; align-items: center; gap: 7px; min-width: 82px; justify-content: center; padding: 7px 11px; font-size: 0.72rem; }
+
+.efitTimeReadout { display: grid; gap: 2px; min-width: 68px; }
+.efitTimeReadout strong { color: #e4faf5; font: 550 0.8rem/1.2 ui-monospace, monospace; }
+.efitTimeReadout span { color: #688a84; font: 0.58rem/1.2 ui-monospace, monospace; }
+
+.efitScrubber { display: grid; gap: 5px; min-width: 0; }
+.efitScrubber input { width: 100%; height: 20px; margin: 0; accent-color: #30d9c0; cursor: pointer; }
+.efitScrubberLabels { display: flex; justify-content: space-between; gap: 10px; color: #5f827c; font: 0.55rem/1.2 ui-monospace, monospace; }
+.efitScrubberLabels span:nth-child(2) { color: #729c95; text-transform: uppercase; letter-spacing: 0.08em; }
+
+.efitTransportSettings { display: flex; align-items: center; justify-content: flex-end; gap: 12px; }
+.efitTransportSettings > label { display: flex; align-items: center; gap: 6px; color: #7d9f99; font-size: 0.62rem; white-space: nowrap; }
+.efitTransportSettings select { padding: 6px 25px 6px 8px; min-width: 66px; }
+.efitLoopToggle input { accent-color: #30d9c0; }
+.efitKeyboardHint { display: none; color: #55756f; font-size: 0.55rem; }
+
+.efitNoScript {
+  margin-top: 12px !important;
+  padding: 12px;
+  color: #d8b178;
+  background: rgba(210, 150, 70, 0.09);
+  border: 1px solid rgba(210, 150, 70, 0.24);
+  border-radius: 8px;
+  font-size: 0.72rem;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@keyframes efitPulse {
+  0%, 100% { opacity: 0.45; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+
+@media (min-width: 1180px) {
+  .efitTransport { grid-template-columns: auto minmax(320px, 1fr) auto; }
+}
+
+@media (max-width: 1040px) {
+  .efitTransport { grid-template-columns: auto minmax(220px, 1fr); }
+  .efitTransportSettings { grid-column: 1 / -1; justify-content: flex-start; }
+  .efitKeyboardHint { display: inline; margin-left: auto; }
+}
+
+@media (max-width: 760px) {
+  .efitPanel { border-radius: 17px; padding: 16px; }
+  .efitPanelHeader { align-items: stretch; flex-direction: column; gap: 14px; }
+  .efitShotSelect { width: 100%; }
+  .efitMetricStrip { grid-template-columns: repeat(3, 1fr); }
+  .efitMetricStrip > div:nth-child(3) { border-right: 0; }
+  .efitMetricStrip > div:nth-child(-n+3) { border-bottom: 1px solid var(--efit-line); }
+  .efitChartGrid { grid-template-columns: 1fr; }
+  .efitChart { height: min(88vw, 390px); }
+  .efitSignalsChart { height: 300px; }
+  .efitTransport { grid-template-columns: 1fr; gap: 10px; }
+  .efitTransportTopline { justify-content: space-between; }
+  .efitTransportSettings { grid-column: auto; justify-content: space-between; flex-wrap: wrap; }
+  .efitKeyboardHint { display: none; }
+  .efitScrubber { grid-row: 2; }
+}
+
+@media (max-width: 420px) {
+  .efitMetricStrip { grid-template-columns: repeat(2, 1fr); }
+  .efitMetricStrip > div:nth-child(2n) { border-right: 0; }
+  .efitMetricStrip > div:nth-child(3) { border-right: 1px solid var(--efit-line); }
+  .efitMetricStrip > div:nth-child(-n+4) { border-bottom: 1px solid var(--efit-line); }
+  .efitTransportTopline { align-items: flex-start; flex-direction: column; }
+  .efitTransportButtons { width: 100%; }
+  .efitPlayButton { flex: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .efitStatusPill.isLoading::before { animation: none; }
+}

@@ -19,6 +19,10 @@ const localBindingConfig = {
     run_worker_first: [
       "/device-assets/exl50u-interactive/*",
       "/models/exl50u-interactive/*",
+      "/device-data/exl50u-efit",
+      "/device-data/exl50u-efit/*",
+      "/data/exl50u-efit",
+      "/data/exl50u-efit/*",
     ],
   },
   d1_databases: d1

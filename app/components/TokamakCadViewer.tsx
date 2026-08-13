@@ -10,6 +10,14 @@ import type {
   WebGLRenderer,
 } from 'three';
 import type { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import type {
+  EfitAlignmentContract,
+  EfitRenderableFrame,
+  EfitStoreLike,
+  EfitThreeOverlay,
+  EfitThreeOverlayOptions,
+} from './device-viewer/EfitThreeOverlay';
+import type { EfitFrame, EfitStore } from './efit';
 import {
   parseDeviceManifest,
   type DeviceManifest,
@@ -19,13 +27,27 @@ import './tokamak-cad-viewer.css';
 
 const DEFAULT_MANIFEST_URL = '/models/paramak-tokamak-demo/model-manifest.json';
 
-type TokamakCadViewerProps = {
+export type TokamakCadViewerProps = {
   manifestUrl?: string;
   viewerId?: string;
   sectionId?: string;
   workspace?: boolean;
   showDownloadActions?: boolean;
   securityNotice?: string;
+  efitFrame?: EfitFrame | EfitRenderableFrame | null;
+  efitStore?: EfitStore | EfitStoreLike | null;
+  efitAlignment?: EfitAlignmentContract;
+  efitOptions?: EfitThreeOverlayOptions;
+  efitControls?: {
+    mode: 'physical' | 'xray';
+    showSection: boolean;
+    showSurface: boolean;
+    showMagneticAxis: boolean;
+    onModeChange: (mode: 'physical' | 'xray') => void;
+    onShowSectionChange: (visible: boolean) => void;
+    onShowSurfaceChange: (visible: boolean) => void;
+    onShowMagneticAxisChange: (visible: boolean) => void;
+  };
 };
 
 type ViewerStatus = 'idle' | 'loading' | 'ready' | 'error';
@@ -58,6 +80,7 @@ type ViewerApi = {
   captureView: () => ViewSnapshot;
   applyView: (snapshot: ViewSnapshot) => void;
   resize: (refit?: boolean) => void;
+  efitOverlay: EfitThreeOverlay | null;
 };
 
 function formatCount(value: number) {
@@ -75,6 +98,13 @@ function supportsWebGL2() {
 
 function materialList(material: Material | Material[]) {
   return Array.isArray(material) ? material : [material];
+}
+
+function currentEfitFrame(store: EfitStoreLike | null | undefined): EfitRenderableFrame | null {
+  const snapshot = store?.getSnapshot();
+  if (!snapshot) return null;
+  if ('currentFrame' in snapshot) return snapshot.currentFrame ?? null;
+  return 'timeMs' in snapshot ? snapshot : null;
 }
 
 function disposeObject(root: Object3D) {
@@ -127,10 +157,21 @@ export default function TokamakCadViewer({
   workspace = false,
   showDownloadActions = true,
   securityNotice,
+  efitFrame = null,
+  efitStore = null,
+  efitAlignment,
+  efitOptions,
+  efitControls,
 }: TokamakCadViewerProps = {}) {
   const mountRef = useRef<HTMLDivElement>(null);
   const fullscreenRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<ViewerApi | null>(null);
+  const efitStateRef = useRef({
+    frame: efitFrame,
+    store: efitStore,
+    alignment: efitAlignment,
+    options: efitOptions,
+  });
   const pointerDownRef = useRef<{ x: number; y: number } | null>(null);
   const selectedPartIdsRef = useRef<Set<string>>(new Set());
   const hiddenPartIdsRef = useRef<Set<string>>(new Set());
@@ -169,6 +210,16 @@ export default function TokamakCadViewer({
   const [hiddenPartIds, setHiddenPartIds] = useState<Set<string>>(() => new Set());
   const [isolatedPartIds, setIsolatedPartIds] = useState<Set<string>>(() => new Set());
   const [openSystems, setOpenSystems] = useState<Set<string>>(() => new Set());
+
+  useEffect(() => {
+    const nextState = { frame: efitFrame, store: efitStore, alignment: efitAlignment, options: efitOptions };
+    efitStateRef.current = nextState;
+    const overlay = viewerRef.current?.efitOverlay;
+    if (!overlay) return;
+    overlay.setAlignment(nextState.alignment);
+    overlay.setOptions(nextState.options);
+    overlay.setFrame(nextState.frame ?? currentEfitFrame(nextState.store));
+  }, [efitAlignment, efitFrame, efitOptions, efitStore]);
 
   const availableModels = useMemo(() => webModelVariants(manifest), [manifest]);
   const selectedModel = availableModels.find((asset) => asset.id === selectedModelId)
@@ -241,6 +292,7 @@ export default function TokamakCadViewer({
     let localControls: OrbitControls | null = null;
     let localScene: Scene | null = null;
     let localModel: Object3D | null = null;
+    let localEfitOverlay: EfitThreeOverlay | null = null;
     let localDisposableMaterials: Set<Material> | null = null;
     let resourcesReleased = false;
 
@@ -255,6 +307,8 @@ export default function TokamakCadViewer({
       if (pointerDownHandler) localRenderer?.domElement.removeEventListener('pointerdown', pointerDownHandler);
       if (pointerUpHandler) localRenderer?.domElement.removeEventListener('pointerup', pointerUpHandler);
       localControls?.dispose();
+      localEfitOverlay?.dispose();
+      localEfitOverlay = null;
       if (localModel && localModel.parent !== localScene) disposeObject(localModel);
       localScene?.traverse((node) => {
         const renderable = node as Object3D & { geometry?: { dispose: () => void } };
@@ -278,11 +332,12 @@ export default function TokamakCadViewer({
     async function initialise() {
       if (!supportsWebGL2()) throw new Error('当前浏览器或显卡未启用 WebGL 2，无法启动三维视图。');
 
-      const [THREE, controlsModule, loaderModule, meshoptModule] = await Promise.all([
+      const [THREE, controlsModule, loaderModule, meshoptModule, efitOverlayModule] = await Promise.all([
         import('three'),
         import('three/examples/jsm/controls/OrbitControls.js'),
         import('three/examples/jsm/loaders/GLTFLoader.js'),
         import('three/examples/jsm/libs/meshopt_decoder.module.js'),
+        import('./device-viewer/EfitThreeOverlay'),
       ]);
       if (disposed || !mountRef.current) return;
       if (!manifest || !selectedModel) throw new Error('模型清单或质量版本尚未就绪。');
@@ -439,6 +494,18 @@ export default function TokamakCadViewer({
       };
 
       const clippingPlane = new THREE.Plane(new THREE.Vector3(-1, 0, 0), 0);
+      const initialEfitState = efitStateRef.current;
+      // `model` began as the identity glTF scene wrapper and now owns only the
+      // viewer fit. Its CAD child owns the source mm -> web-metre transform,
+      // while EFIT points are already web metres. Adding the overlay to the
+      // wrapper makes both inherit the same displayScale/sourceCenter fit
+      // without applying the CAD conversion twice.
+      localEfitOverlay = efitOverlayModule.createEfitThreeOverlay(
+        { physicalWebMetresRoot: model, renderer, clippingPlane },
+        initialEfitState.alignment,
+        initialEfitState.options,
+      );
+      localEfitOverlay.setFrame(initialEfitState.frame ?? currentEfitFrame(initialEfitState.store));
       const highlightMaterial = new THREE.MeshPhysicalMaterial({ color: 0xffd06b, emissive: 0xff6a1e, emissiveIntensity: 1.8, roughness: 0.22, metalness: 0.56, transparent: false, opacity: 1, side: THREE.DoubleSide });
       disposableMaterials.add(highlightMaterial);
       const baseOpacity = new Map<Material, number>();
@@ -497,6 +564,7 @@ export default function TokamakCadViewer({
         const height = Math.max(1, mountRef.current.clientHeight);
         camera.aspect = width / height;
         renderer.setSize(width, height, false);
+        localEfitOverlay?.resize(width, height);
         if (preserveViewOnResize && !refit) {
           camera.updateProjectionMatrix();
           controls.update();
@@ -576,6 +644,7 @@ export default function TokamakCadViewer({
           viewerMaterials.forEach((material) => { material.clippingPlanes = enabled ? [clippingPlane] : null; material.needsUpdate = true; });
           highlightMaterial.clippingPlanes = enabled ? [clippingPlane] : null;
           highlightMaterial.needsUpdate = true;
+          localEfitOverlay?.setClippingEnabled(enabled);
         },
         setOpacity,
         applyVisibility,
@@ -596,6 +665,7 @@ export default function TokamakCadViewer({
           preserveViewOnResize = true;
         },
         resize,
+        efitOverlay: localEfitOverlay,
       };
       selectParts(selectedPartIdsRef.current);
       applyVisibility(hiddenPartIdsRef.current, isolatedPartIdsRef.current);
@@ -631,6 +701,14 @@ export default function TokamakCadViewer({
 
     return () => { disposed = true; releaseResources(); viewerRef.current = null; };
   }, [activated, attempt, manifest, selectedModel]);
+
+  useEffect(() => {
+    const overlay = viewerRef.current?.efitOverlay;
+    if (!overlay || !efitStore) return;
+    const sync = () => overlay.setFrame(efitStateRef.current.frame ?? currentEfitFrame(efitStore));
+    sync();
+    return efitStore.subscribe(sync);
+  }, [efitStore, selectedModelId, status]);
 
   useEffect(() => {
     const onFullscreenChange = () => {
@@ -861,6 +939,13 @@ export default function TokamakCadViewer({
           </div>
           <div className="tokamakCadTools"><button type="button" disabled={!ready} onClick={resetView}>复位</button><button type="button" disabled={!ready} className={autoRotate ? 'active' : ''} aria-pressed={autoRotate} onClick={toggleAutoRotate}>自转</button><button type="button" disabled={!ready} className={wireframe ? 'active' : ''} aria-pressed={wireframe} onClick={toggleWireframe}>线框</button><button type="button" disabled={!ready} className={clipping ? 'active' : ''} aria-pressed={clipping} onClick={toggleClipping}>剖切</button><button type="button" disabled={!ready} className={fullscreen ? 'active' : ''} aria-pressed={fullscreen} onClick={toggleFullscreen}>全屏</button></div>
         </div>
+        {efitControls && <div className="tokamakCadEfitControls" aria-label="EFIT 三维叠加设置">
+          <span>EFIT OVERLAY</span>
+          <button type="button" className={efitControls.mode === 'xray' ? 'active' : ''} aria-pressed={efitControls.mode === 'xray'} onClick={() => efitControls.onModeChange(efitControls.mode === 'xray' ? 'physical' : 'xray')}>{efitControls.mode === 'xray' ? '透视可见' : '物理遮挡'}</button>
+          <label><input type="checkbox" checked={efitControls.showSection} onChange={(event) => efitControls.onShowSectionChange(event.currentTarget.checked)} />剖面磁面</label>
+          <label><input type="checkbox" checked={efitControls.showSurface} onChange={(event) => efitControls.onShowSurfaceChange(event.currentTarget.checked)} />LCFS 旋转面</label>
+          <label><input type="checkbox" checked={efitControls.showMagneticAxis} onChange={(event) => efitControls.onShowMagneticAxisChange(event.currentTarget.checked)} />磁轴</label>
+        </div>}
       </div>
 
       <div className="tokamakCadFootnotes">

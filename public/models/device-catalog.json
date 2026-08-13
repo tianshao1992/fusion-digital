@@ -29,7 +29,8 @@
         "manifestEndpoint": "/models/paramak-full-device/model-manifest.json",
         "turntableManifestEndpoint": null,
         "overlayEligible": true
-      }
+      },
+      "physicsOverlays": []
     },
     {
       "id": "exl-50u-2026-upgrade",
@@ -38,8 +39,8 @@
       "eyebrow": "AUTHORIZED · REAL-TIME 3D",
       "state": "简化派生实时三维",
       "tone": "controlled",
-      "facts": ["用户授权公开展示", "12 个主要系统组件", "65 万 / 180 万三角形自适应精度"],
-      "copy": "公开加载经授权、脱敏和轻量化的简化派生几何；标准与高清两档均采用细化曲面离散、锐边法线与 Meshopt 传输压缩，桌面优先高清，移动端或节省流量场景自动选择标准版。原装配合并为 12 个主要系统组件，支持各组件选择、显隐、隔离、透明度与 X/Y/Z 剖切，但不代表原始 1,519 个产品定义的逐件交付。原始 CAD、STEP 和工程权威模型不会由网站下发。",
+      "facts": ["用户授权公开展示", "12 个主要系统组件", "4 炮 / 2,358 帧 EFIT 位形"],
+      "copy": "公开加载经授权、脱敏和轻量化的简化派生几何；标准与高清两档均采用细化曲面离散、锐边法线与 Meshopt 传输压缩。原装配合并为 12 个主要系统组件，支持组件选择、显隐、隔离、透明度与 X/Y/Z 剖切；新增四炮 EFIT 轴对称磁面、LCFS、磁轴和放电时序的联动播放。原始 CAD、STEP、完整磁通网格和工程权威模型不会由网站下发。",
       "availability": "online-public-simplified",
       "delivery": "public-static",
       "comparisonFrame": null,
@@ -49,7 +50,18 @@
         "manifestEndpoint": "/device-assets/exl50u-interactive/model-manifest.json",
         "turntableManifestEndpoint": null,
         "overlayEligible": false
-      }
+      },
+      "physicsOverlays": [
+        {
+          "id": "efit-equilibrium",
+          "kind": "axisymmetric-equilibrium",
+          "manifestEndpoint": "/device-data/exl50u-efit/index.json",
+          "defaultShot": 18301,
+          "coordinateFrame": "EXL50U_WEB_METRES_PROVISIONAL_V1",
+          "authority": "visualization-derived",
+          "statement": "Visualization-derived axisymmetric EFIT flux surfaces for four reviewed shots. The CAD registration is provisional and is not an engineering metrology or real-time control result."
+        }
+      ]
     },
     {
       "id": "iter-educational-model",
@@ -69,7 +81,8 @@
         "manifestEndpoint": null,
         "turntableManifestEndpoint": null,
         "overlayEligible": false
-      }
+      },
+      "physicsOverlays": []
     }
   ]
 }

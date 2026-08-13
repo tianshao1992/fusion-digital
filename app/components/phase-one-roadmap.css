@@ -1,0 +1,72 @@
+.phaseOneRoadmap{
+  --road-bg:#07100d;
+  --road-panel:#0b1712;
+  --road-line:rgba(126,171,150,.24);
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  padding:clamp(78px,8vw,126px) 5.5vw clamp(88px,9vw,140px);
+  color:#f2fff8;
+  background:
+    radial-gradient(circle at 16% 6%,rgba(255,135,56,.14),transparent 28%),
+    radial-gradient(circle at 82% 12%,rgba(101,230,210,.09),transparent 31%),
+    var(--road-bg);
+}
+.phaseOneRoadmap::before{position:absolute;z-index:-1;inset:0;content:'';opacity:.2;background-image:linear-gradient(rgba(128,181,158,.12) 1px,transparent 1px),linear-gradient(90deg,rgba(128,181,158,.12) 1px,transparent 1px);background-size:52px 52px;mask-image:linear-gradient(to bottom,transparent,#000 10%,#000 90%,transparent)}
+.phaseOneRoadmapIntro{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(300px,.55fr);gap:clamp(36px,6vw,96px);align-items:end;width:min(1480px,100%);margin:0 auto clamp(42px,5vw,72px)}
+.phaseOneRoadmapIntro .sectionIndex{margin:0 0 20px;color:#65e6d2;font-size:10px;font-weight:900;letter-spacing:.18em}
+.phaseOneRoadmapIntro h2{margin:0;font-size:clamp(36px,4.5vw,72px);font-weight:330;line-height:1.11;letter-spacing:-.052em}
+.phaseOneRoadmapIntro>div>p:not(.sectionIndex){max-width:960px;margin:28px 0 0;color:#b7cbc0;font-size:clamp(14px,1.3vw,19px);line-height:1.88}
+.phaseOneRoadmapIntro aside{padding:25px;border:1px solid rgba(255,135,56,.48);background:linear-gradient(145deg,rgba(255,135,56,.1),rgba(7,16,13,.74));box-shadow:inset 3px 0 #ff8738,0 28px 70px rgba(0,0,0,.22)}
+.phaseOneRoadmapIntro aside>strong{color:#ffad76;font-size:9px;letter-spacing:.17em}
+.phaseOneRoadmapIntro aside>p{margin:13px 0 20px;color:#d6e3dc;font-size:13px;line-height:1.75}
+.phaseOneRoadmapIntro aside>div{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--road-line)}
+.phaseOneRoadmapIntro aside span{display:block;min-height:72px;padding:10px 7px;color:#769084;background:#0b1712;font-size:8px;line-height:1.45;text-align:center}
+.phaseOneRoadmapIntro aside b{display:block;margin-bottom:5px;color:#f4fff9;font-size:19px}
+.phaseOneStages{position:relative;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));width:min(1480px,100%);margin:0 auto 30px;padding:0;list-style:none;border:1px solid var(--road-line);background:#08130f}
+.phaseOneStages::before{position:absolute;z-index:0;top:42px;right:7%;left:7%;height:1px;content:'';background:linear-gradient(90deg,#65e6d2,#ff8738 34%,#6e8a7c 72%,#41564d)}
+.phaseOneStages li{position:relative;z-index:1;min-height:225px;padding:26px clamp(18px,2.3vw,34px);border-right:1px solid var(--road-line);background:rgba(7,16,13,.78)}
+.phaseOneStages li:last-child{border-right:0}
+.phaseOneStages li.isPhaseOne{background:linear-gradient(155deg,rgba(255,135,56,.17),rgba(8,19,15,.94));box-shadow:inset 0 3px #ff8738}
+.phaseOneStages li>span{display:grid;width:32px;height:32px;place-items:center;border:1px solid #597368;border-radius:50%;color:#c7d8cf;background:#0a1712;font-size:9px;font-weight:900}
+.phaseOneStages li.isPhaseOne>span{border-color:#ff8738;color:#ffd4b7;box-shadow:0 0 20px rgba(255,135,56,.28)}
+.phaseOneStages small{display:block;margin-top:24px;color:#65e6d2;font-size:8px;font-weight:900;letter-spacing:.14em}
+.phaseOneStages .isPhaseOne small{color:#ff9e5d}
+.phaseOneStages h3{margin:10px 0 10px;font-size:clamp(17px,1.5vw,23px);font-weight:520;line-height:1.35}
+.phaseOneStages p{margin:0;color:#829b8f;font-size:11px;line-height:1.72}
+.phaseOneMainline{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px 24px;align-items:center;width:min(1480px,100%);margin:0 auto 30px;padding:18px 22px;border:1px solid rgba(255,135,56,.42);background:linear-gradient(100deg,rgba(255,135,56,.12),rgba(7,16,13,.86) 62%)}
+.phaseOneMainline>b{color:#ffab72;font-size:8px;letter-spacing:.16em}.phaseOneMainline p{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin:0}.phaseOneMainline p span{padding:7px 9px;border:1px solid rgba(101,230,210,.26);color:#dff6eb;background:#0b1914;font-size:9px;font-weight:800}.phaseOneMainline p i{color:#ff8738;font-size:12px;font-style:normal}.phaseOneMainline small{grid-column:2;color:#789286;font-size:9px;line-height:1.65}.phaseOneMainline small strong{color:#b8d5c7}
+.phaseOneRoadmapWorkspace{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(300px,.5fr);width:min(1480px,100%);margin:0 auto;border:1px solid var(--road-line);background:rgba(7,16,13,.9);box-shadow:0 45px 110px rgba(0,0,0,.3)}
+.phaseOneChartPanel{min-width:0;border-right:1px solid var(--road-line)}
+.phaseOneChartPanel>header{display:flex;gap:24px;align-items:center;justify-content:space-between;min-height:92px;padding:20px 26px;border-bottom:1px solid var(--road-line)}
+.phaseOneChartPanel>header p{margin:0 0 6px;color:#65e6d2;font-size:8px;font-weight:900;letter-spacing:.16em}
+.phaseOneChartPanel>header h3{margin:0;font-size:22px;font-weight:500}
+.phaseOneLegend{display:flex;flex-wrap:wrap;gap:10px 18px;justify-content:flex-end}
+.phaseOneLegend span{position:relative;padding-left:18px;color:#9bb0a5;font-size:9px;font-weight:700}
+.phaseOneLegend span::before{position:absolute;top:50%;left:0;width:11px;height:11px;content:'';transform:translateY(-50%);background:var(--legend-color)}
+.phaseOneLegend .baseline{--legend-color:#65e6d2}.phaseOneLegend .phase{--legend-color:#ff8738}.phaseOneLegend .gap{--legend-color:#263a32}
+.phaseOneEchart,.phaseOneEchart .scientificChartFallback{background:transparent!important}
+.phaseOneEchart .scientificChartExport{color:#dcebe4;background:#0b1511e8;border-color:#385047}
+.phaseOneChartFallback{display:grid;gap:1px;margin:0;padding:20px;list-style:none;background:var(--road-line)}
+.phaseOneChartFallback li{display:grid;grid-template-columns:170px 85px 1fr;gap:15px;align-items:center;min-height:48px;padding:9px 13px;background:#0b1712}
+.phaseOneChartFallback b{color:#e8f7ef;font-size:10px}.phaseOneChartFallback span{color:#ff9d5c;font-size:8px;font-weight:800}.phaseOneChartFallback p{margin:0;color:#82998e;font-size:9px;line-height:1.5}
+.phaseOneScaleNote{margin:0;padding:13px 24px;border-top:1px solid var(--road-line);color:#617b6f;font-size:8px;line-height:1.65}
+.phaseOneModuleNav{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));border-top:1px solid var(--road-line);overflow-x:auto;scrollbar-color:#34574a #0a1511;scrollbar-width:thin}
+.phaseOneModuleNav button{position:relative;min-width:82px;min-height:72px;padding:10px 5px;border:0;border-right:1px solid rgba(126,171,150,.14);color:#94a99f;background:#08130f;cursor:pointer}
+.phaseOneModuleNav button:last-child{border-right:0}.phaseOneModuleNav button:hover,.phaseOneModuleNav button:focus-visible,.phaseOneModuleNav button.isActive{color:#fff;outline:none;background:rgba(101,230,210,.07);box-shadow:inset 0 -3px #65e6d2}.phaseOneModuleNav button.isActive.support{box-shadow:inset 0 -3px #ff8738}.phaseOneModuleNav button.isActive.future{box-shadow:inset 0 -3px #70887d}
+.phaseOneModuleNav b,.phaseOneModuleNav span{display:block}.phaseOneModuleNav b{color:#65e6d2;font-size:8px}.phaseOneModuleNav .support b{color:#ff9d5c}.phaseOneModuleNav .future b{color:#81998d}.phaseOneModuleNav span{margin-top:5px;font-size:9px;font-weight:700;white-space:nowrap}
+.phaseOneModuleDetail{display:flex;min-width:0;flex-direction:column;padding:clamp(27px,3vw,42px);background:linear-gradient(165deg,rgba(255,135,56,.07),transparent 36%)}
+.phaseOneModuleHeading{display:flex;gap:17px;align-items:flex-start;padding-bottom:25px;border-bottom:1px solid var(--road-line)}
+.phaseOneModuleHeading>span{display:grid;flex:0 0 48px;height:48px;place-items:center;border:1px solid #ff8738;color:#ffad76;font-size:12px;font-weight:900}
+.phaseOneModuleHeading small{color:#65e6d2;font-size:8px;font-weight:900;letter-spacing:.14em}.phaseOneModuleHeading h3{margin:6px 0 2px;font-size:29px;font-weight:500}.phaseOneModuleHeading p{margin:0;color:#718b7f;font-size:8px;font-weight:800;letter-spacing:.08em}
+.phaseOneModuleDetail section{position:relative;margin-top:23px;padding-left:21px}
+.phaseOneModuleDetail section::before{position:absolute;top:2px;bottom:2px;left:0;width:3px;content:'';background:var(--status-color)}
+.phaseOneModuleDetail section.isDelivered{--status-color:#65e6d2}.phaseOneModuleDetail section.isPhase{--status-color:#ff8738}.phaseOneModuleDetail section.isGap{--status-color:#536b60}
+.phaseOneModuleDetail section b{color:var(--status-color);font-size:9px;letter-spacing:.1em}.phaseOneModuleDetail section p{margin:8px 0 0;color:#a8bdb2;font-size:12px;line-height:1.77}
+.phaseOneModuleDetail>a{align-self:flex-start;margin-top:auto;padding-top:32px;color:#ff9d5c;font-size:10px;font-weight:800;text-decoration:none}.phaseOneModuleDetail>a:hover,.phaseOneModuleDetail>a:focus-visible{color:#ffd3b6;outline:none;text-decoration:underline}
+.phaseOneBoundary{display:grid;grid-template-columns:210px 1fr;gap:30px;width:min(1480px,100%);margin:25px auto 0;padding:22px 25px;border:1px solid rgba(255,135,56,.26);background:rgba(255,135,56,.04)}
+.phaseOneBoundary b{color:#ff9e5d;font-size:9px;letter-spacing:.13em}.phaseOneBoundary p{margin:0;color:#789186;font-size:10px;line-height:1.7}
+@media(max-width:1120px){.phaseOneRoadmapIntro{grid-template-columns:1fr}.phaseOneRoadmapIntro aside{max-width:720px}.phaseOneStages{grid-template-columns:repeat(2,1fr)}.phaseOneStages li:nth-child(2){border-right:0}.phaseOneStages li:nth-child(-n+2){border-bottom:1px solid var(--road-line)}.phaseOneStages::before{display:none}.phaseOneRoadmapWorkspace{grid-template-columns:1fr}.phaseOneChartPanel{border-right:0;border-bottom:1px solid var(--road-line)}.phaseOneModuleDetail{min-height:480px}.phaseOneModuleDetail>a{margin-top:20px}}
+@media(max-width:680px){.phaseOneRoadmap{padding:68px 18px 82px}.phaseOneRoadmapIntro{gap:28px;margin-bottom:35px}.phaseOneRoadmapIntro h2{font-size:clamp(34px,10vw,49px)}.phaseOneRoadmapIntro aside>div{grid-template-columns:repeat(2,1fr)}.phaseOneStages{grid-template-columns:1fr}.phaseOneStages li{min-height:0;border-right:0;border-bottom:1px solid var(--road-line)}.phaseOneStages li:last-child{border-bottom:0}.phaseOneMainline{grid-template-columns:1fr}.phaseOneMainline small{grid-column:1}.phaseOneChartPanel>header{align-items:flex-start;flex-direction:column}.phaseOneLegend{justify-content:flex-start}.phaseOneChartFallback li{grid-template-columns:1fr 80px}.phaseOneChartFallback p{grid-column:1/-1}.phaseOneModuleNav{display:flex}.phaseOneModuleNav button{flex:0 0 88px}.phaseOneModuleDetail{min-height:0}.phaseOneBoundary{grid-template-columns:1fr;gap:9px}}
+@media(prefers-reduced-motion:reduce){.phaseOneModuleNav button{scroll-behavior:auto}}
+@media print{.phaseOneRoadmap{color:#111;background:#fff}.phaseOneRoadmap::before{display:none}.phaseOneRoadmapIntro>div>p:not(.sectionIndex),.phaseOneStages p,.phaseOneModuleDetail section p,.phaseOneBoundary p{color:#333}.phaseOneStages,.phaseOneRoadmapWorkspace,.phaseOneBoundary{border-color:#999;box-shadow:none}.phaseOneStages li,.phaseOneModuleDetail,.phaseOneChartFallback li{color:#111;background:#fff}}

@@ -1,6 +1,16 @@
 export type DeviceTone = 'online' | 'controlled' | 'restricted';
 export type DeviceViewerMode = 'real-3d' | 'turntable-3d' | 'metadata-only';
 
+export type DevicePhysicsOverlay = {
+  id: string;
+  kind: 'axisymmetric-equilibrium';
+  manifestEndpoint: string;
+  defaultShot: number;
+  coordinateFrame: string;
+  authority: 'visualization-derived';
+  statement: string;
+};
+
 export type DeviceCatalogEntry = {
   id: string;
   index: string;
@@ -20,6 +30,7 @@ export type DeviceCatalogEntry = {
     turntableManifestEndpoint: string | null;
     overlayEligible: boolean;
   };
+  physicsOverlays: DevicePhysicsOverlay[];
 };
 
 export type DeviceCatalog = {
@@ -52,6 +63,15 @@ function nullablePublicPath(value: unknown, path: string) {
   const result = stringValue(value, path);
   if (!(result.startsWith('/models/') || result.startsWith('/device-assets/exl50u-interactive/')) || result.includes('..') || result.includes('%') || result.includes('//') || /^[a-z]+:/i.test(result)) {
     throw new Error(`${path} must be a safe /models/ or controlled EXL device-asset path, or null`);
+  }
+  return result;
+}
+
+function controlledPhysicsPath(value: unknown, path: string) {
+  const result = stringValue(value, path);
+  if (!/^\/device-data\/[a-z0-9-]+\/[a-z0-9._-]+$/i.test(result)
+    || result.includes('..') || result.includes('%') || result.includes('//') || /^[a-z]+:/i.test(result)) {
+    throw new Error(`${path} must be a canonical controlled device-data path`);
   }
   return result;
 }
@@ -95,6 +115,36 @@ export function parseDeviceCatalog(input: unknown): DeviceCatalog {
     if (mode === 'turntable-3d' && item.delivery !== 'public-static-preview') throw new Error(`${id} turntable-3d must be public-static-preview`);
     if (mode === 'metadata-only' && item.delivery !== 'local-only') throw new Error(`${id} metadata-only must fail closed as local-only`);
 
+    const overlayIds = new Set<string>();
+    const physicsOverlays = (item.physicsOverlays === undefined ? [] : (() => {
+      if (!Array.isArray(item.physicsOverlays)) throw new Error(`${id}.physicsOverlays must be an array`);
+      return item.physicsOverlays;
+    })()).map((candidate, overlayIndex): DevicePhysicsOverlay => {
+      const overlay = record(candidate, `${id}.physicsOverlays[${overlayIndex}]`);
+      const overlayId = stringValue(overlay.id, `${id}.physicsOverlays[${overlayIndex}].id`);
+      if (!/^[a-z0-9][a-z0-9-]*$/.test(overlayId) || overlayIds.has(overlayId)) {
+        throw new Error(`${id} has an invalid or duplicate physics overlay id: ${overlayId}`);
+      }
+      overlayIds.add(overlayId);
+      const kind = stringValue(overlay.kind, `${id}.${overlayId}.kind`);
+      if (kind !== 'axisymmetric-equilibrium') throw new Error(`${id}.${overlayId}.kind is unsupported`);
+      const authority = stringValue(overlay.authority, `${id}.${overlayId}.authority`);
+      if (authority !== 'visualization-derived') throw new Error(`${id}.${overlayId}.authority is unsupported`);
+      const defaultShot = finiteInteger(overlay.defaultShot, `${id}.${overlayId}.defaultShot`);
+      return {
+        id: overlayId,
+        kind,
+        manifestEndpoint: controlledPhysicsPath(overlay.manifestEndpoint, `${id}.${overlayId}.manifestEndpoint`),
+        defaultShot,
+        coordinateFrame: stringValue(overlay.coordinateFrame, `${id}.${overlayId}.coordinateFrame`),
+        authority,
+        statement: stringValue(overlay.statement, `${id}.${overlayId}.statement`),
+      };
+    });
+    if (physicsOverlays.length > 0 && mode !== 'real-3d') {
+      throw new Error(`${id} physics overlays require a real-3d viewer`);
+    }
+
     return {
       id,
       index: stringValue(item.index, `${id}.index`),
@@ -114,6 +164,7 @@ export function parseDeviceCatalog(input: unknown): DeviceCatalog {
         turntableManifestEndpoint,
         overlayEligible: booleanValue(viewer.overlayEligible, `${id}.viewer.overlayEligible`),
       },
+      physicsOverlays,
     };
   });
 
@@ -139,4 +190,11 @@ export function parseDeviceCatalog(input: unknown): DeviceCatalog {
     },
     devices,
   };
+}
+
+function finiteInteger(value: unknown, path: string) {
+  if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 0) {
+    throw new Error(`${path} must be a non-negative safe integer`);
+  }
+  return value;
 }

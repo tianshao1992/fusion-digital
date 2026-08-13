@@ -1,5 +1,6 @@
 import BrandWordmark from './components/BrandWordmark';
 import FusionTwinSystemMap from './components/FusionTwinSystemMap';
+import PhaseOneRoadmap from './components/PhaseOneRoadmap';
 import SiteFooter from './components/SiteFooter';
 import SiteNav from './components/SiteNav';
 import TokamakCadViewer from './components/TokamakCadViewer';
@@ -23,13 +24,6 @@ const plantValues = [
   {id:'02', cn:'高效运行', en:'EFFICIENT OPERATION', copy:'联动等离子体、热循环、辅机与电网约束，持续优化净电功率、可控工况和资源利用。'},
   {id:'03', cn:'可靠可用', en:'RELIABLE & AVAILABLE', copy:'以状态估计、寿命预测和预测性维护提升任务成功率、设备可靠性与电厂可用率。'},
   {id:'04', cn:'安全可证', en:'EVIDENCE-BASED SAFETY', copy:'以可信模型、实体试验和 V&V 共同形成可追溯的安全证据；数字孪生增强安全论证，但不替代实体验证。'},
-];
-
-const roadmap = [
-  ['R0','控制服务化','当前','冻结 DINA / MEQ 接口、装置资产包、回放基线与证据门。'],
-  ['R1','窄域数字影子','近期','连接合成/历史诊断、工程限值和确定性场景回放。'],
-  ['R2','预测型装置孪生','中期','接入快速输运、边界风险、状态估计、代理模型与持续 V&V。'],
-  ['R3','聚变堆与电厂孪生','长期','贯通中子、包层、氚、寿命、RAMI、维护、经济与电网。'],
 ];
 
 export default function Home() {
@@ -96,11 +90,7 @@ export default function Home() {
       <div className="resourceGrid"><a href="/physics#catalog"><span>P</span><h3>物理预测链</h3><p>平衡 → 输运 → MHD → 边界 → 中子与燃料循环。</p><b>浏览物理工具链 ↗</b></a><a href="/engineering#tools"><span>E</span><h3>工程裕量链</h3><p>载荷 → 电磁 → 结构/热流 → 损伤 → 寿命与维护。</p><b>浏览工程工具链 ↗</b></a><a href="/control"><span>C</span><h3>集成控制链</h3><p>状态 → 位形/剖面/MHD/排热 → 多执行器协调 → PCS → SIL/HIL 与闭环证据。</p><b>进入集成控制图谱 ↗</b></a><a href="/diagnostics"><span>D</span><h3>诊断证据链</h3><p>传感器/标定 → 采集与质控 → 反演/合成诊断 → 同化 → 实时决策接口。</p><b>进入诊断感知图谱 ↗</b></a><a href="/ai"><span>A</span><h3>智能原生链</h3><p>数据 → 表征 → 代理模型 → 智能体 → 权限与安全门。</p><b>进入智能原生 ↗</b></a></div>
     </section>
 
-    <section className="portalRoadmap" id="roadmap">
-      <div className="sectionIntro"><p className="sectionIndex">05 / EVOLUTION ROADMAP</p><h2>从 DINA / MEQ 控制服务，走向聚变电厂数字孪生</h2><p>每一级都以可验证的决策能力作为交付门，而不是以“接入更多代码”作为完成标志。</p></div>
-      <img src="/figures/roadmap-image2-v2.png" alt="FusionDigital 聚变数字孪生演进路线图" />
-      <div className="roadmapCards">{roadmap.map(item=><article key={item[0]}><span>{item[0]}<small>{item[2]}</small></span><h3>{item[1]}</h3><p>{item[3]}</p></article>)}</div>
-    </section>
+    <PhaseOneRoadmap />
 
     <section className="communityBand" id="community"><div><p className="sectionIndex">06 / BUILD WITH US</p><h2>让聚变模型、实验与工程经验真正互相理解。</h2></div><div><p><BrandWordmark className="brandWordmarkInline" /> 将逐步开放装置、控制、诊断、数据、AI、VVUQ 与社区协作模块。欢迎研究机构、装置团队、软件开发者和工业伙伴共同完善工具条目、验证证据与装置案例。</p><a href="mailto:tianshao1992@gmail.com">联系新奥聚变人工智能团队 →</a></div></section>
     <SiteFooter />

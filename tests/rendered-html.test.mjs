@@ -235,6 +235,18 @@ test('server-renders the FusionDigital community portal', async () => {
   assert.match(html, /安全与授权门/);
   assert.match(html, /AI 加速感知、代理建模、优化与知识协同/);
   assert.match(html, /人工智能不得直接连接装置执行器/);
+  assert.match(html, /data-echart="phase-one-roadmap"/);
+  assert.match(html, /一期先闭合一条可信数字线程/);
+  assert.match(html, /EXL(?:‑|-)?50U 可验证窄域孪生/);
+  assert.match(html, /R0 控制服务化到 R1 窄域数字影子之间/);
+  assert.match(html, /现有基线/);
+  assert.match(html, /一期建设/);
+  assert.match(html, /一期后缺口/);
+  assert.match(html, /G0—G2/);
+  assert.match(html, /08 数据基座/);
+  assert.match(html, /六个能力门表达依赖顺序与建设边界/);
+  assert.equal((html.match(/data-roadmap-module-id=/g) ?? []).length, 10);
+  assert.doesNotMatch(html, /roadmap-image2-v2\.png|class="roadmapCards"/);
   assert.doesNotMatch(html, /COMMUNITY THESIS|DIGITAL TWIN MAINLINE|一炮一链：聚变数字孪生的共同主线/);
   assert.match(html, /fusion-twin-ai-native-overview\.png/);
   assert.match(html, /class="heroTitleValues">成本可控/);
@@ -309,12 +321,18 @@ test('server-renders the public full-device digital-prototype workspace', async 
   assert.equal(exl.viewer.manifestEndpoint, '/device-assets/exl50u-interactive/model-manifest.json');
   assert.equal(exl.viewer.turntableManifestEndpoint, null);
   assert.equal(exl.viewer.overlayEligible, false);
+  assert.equal(exl.physicsOverlays.length, 1);
+  assert.equal(exl.physicsOverlays[0].kind, 'axisymmetric-equilibrium');
+  assert.equal(exl.physicsOverlays[0].manifestEndpoint, '/device-data/exl50u-efit/index.json');
+  assert.equal(exl.physicsOverlays[0].defaultShot, 18301);
   assert.ok(exl.facts.includes('12 个主要系统组件'));
+  assert.ok(exl.facts.includes('4 炮 / 2,358 帧 EFIT 位形'));
   assert.match(exl.copy, /12 个主要系统组件/);
-  assert.match(exl.copy, /原始 CAD、STEP 和工程权威模型不会由网站下发/);
+  assert.match(exl.copy, /原始 CAD、STEP、完整磁通网格和工程权威模型不会由网站下发/);
   assert.match(exl.statement, /Browser-delivered geometry can be technically saved/);
   assert.equal(catalog.devices.find((device) => device.id === 'iter-educational-model').viewer.mode, 'metadata-only');
   assert.equal(catalog.devices.find((device) => device.id === 'iter-educational-model').delivery, 'local-only');
+  assert.ok(catalog.devices.filter((device) => device.id !== exl.id).every((device) => device.physicsOverlays.length === 0));
   assert.ok(catalog.devices.every((device) => !JSON.stringify(device).match(/iter-cad-private|127\.0\.0\.1|[A-Z]:\\/i)));
   assert.doesNotMatch(html, /下载 (?:STEP|GLB)/);
 

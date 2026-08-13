@@ -33,6 +33,40 @@ const controlledDeviceAssets = new Map([
   ["/device-assets/exl50u-interactive/poster.webp", "/models/exl50u-interactive/poster.webp"],
 ]);
 
+const controlledEfitAssets = new Map([
+  ["/device-data/exl50u-efit/index.json", "/data/exl50u-efit/index.json"],
+  ["/device-data/exl50u-efit/shot-18301.bin", "/data/exl50u-efit/shot-18301.bin"],
+  ["/device-data/exl50u-efit/shot-18303.bin", "/data/exl50u-efit/shot-18303.bin"],
+  ["/device-data/exl50u-efit/shot-18304.bin", "/data/exl50u-efit/shot-18304.bin"],
+  ["/device-data/exl50u-efit/shot-18308.bin", "/data/exl50u-efit/shot-18308.bin"],
+]);
+
+function isControlledEfitNamespace(pathname: string): boolean {
+  return (
+    pathname === "/device-data/exl50u-efit" ||
+    pathname.startsWith("/device-data/exl50u-efit/") ||
+    pathname === "/data/exl50u-efit" ||
+    pathname.startsWith("/data/exl50u-efit/")
+  );
+}
+
+function secureInlineHeaders(source: Headers): Headers {
+  const headers = new Headers(source);
+  headers.set("Cache-Control", "no-store, private, max-age=0");
+  headers.set("Referrer-Policy", "no-referrer");
+  headers.set("X-Content-Type-Options", "nosniff");
+  headers.set("Cross-Origin-Resource-Policy", "same-origin");
+  headers.set("Content-Disposition", "inline");
+  return headers;
+}
+
+function controlledNotFound(): Response {
+  return new Response("Not found", {
+    status: 404,
+    headers: secureInlineHeaders(new Headers({ "Content-Type": "text/plain; charset=utf-8" })),
+  });
+}
+
 // Image security config. SVG sources with .svg extension auto-skip the
 // optimization endpoint on the client side (served directly, no proxy).
 // To route SVGs through the optimizer (with security headers), set
@@ -54,6 +88,29 @@ const worker = {
       globalThis.__FUSIONDIGITAL_DB__ = env.DB;
     }
     const url = new URL(request.url);
+
+    const controlledEfitPath = controlledEfitAssets.get(url.pathname);
+    if (controlledEfitPath && (request.method === "GET" || request.method === "HEAD")) {
+      const assetUrl = new URL(controlledEfitPath, request.url);
+      const assetRequest = new Request(assetUrl, request);
+      const assetResponse = await env.ASSETS.fetch(assetRequest);
+      const headers = secureInlineHeaders(assetResponse.headers);
+      headers.set("Accept-Ranges", "bytes");
+      headers.set(
+        "Content-Type",
+        controlledEfitPath.endsWith(".json")
+          ? "application/json; charset=utf-8"
+          : "application/octet-stream",
+      );
+      return new Response(request.method === "HEAD" ? null : assetResponse.body, {
+        status: assetResponse.status,
+        statusText: assetResponse.statusText,
+        headers,
+      });
+    }
+    if (isControlledEfitNamespace(url.pathname)) {
+      return controlledNotFound();
+    }
 
     const controlledAssetPath = controlledDeviceAssets.get(url.pathname);
     if (controlledAssetPath && (request.method === "GET" || request.method === "HEAD")) {

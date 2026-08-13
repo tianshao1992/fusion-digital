@@ -1,0 +1,2 @@
+numpy>=1.26,<3
+contourpy>=1.2,<2

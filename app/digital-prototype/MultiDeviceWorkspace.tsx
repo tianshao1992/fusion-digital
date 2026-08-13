@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import TokamakCadViewer from '../components/TokamakCadViewer';
-import type { DeviceCatalog, DeviceCatalogEntry } from './deviceCatalog';
+import { createEfitBinaryDataSource, createEfitStore, EfitPanel, type EfitStore } from '../components/efit';
+import type { DeviceCatalog, DeviceCatalogEntry, DevicePhysicsOverlay } from './deviceCatalog';
 import TurntableDeviceViewer from './TurntableDeviceViewer';
 
 function MetadataViewer({ device }: { device: DeviceCatalogEntry }) {
@@ -16,7 +17,20 @@ function MetadataViewer({ device }: { device: DeviceCatalogEntry }) {
   </div>;
 }
 
-function DeviceViewer({ device }: { device: DeviceCatalogEntry }) {
+function DeviceViewer({
+  device,
+  efitOverlay,
+  efitStore,
+}: {
+  device: DeviceCatalogEntry;
+  efitOverlay?: DevicePhysicsOverlay;
+  efitStore: EfitStore | null;
+}) {
+  const [showEfitSection, setShowEfitSection] = useState(true);
+  const [showEfitSurface, setShowEfitSurface] = useState(true);
+  const [showEfitAxis, setShowEfitAxis] = useState(true);
+  const [efitMode, setEfitMode] = useState<'physical' | 'xray'>('xray');
+
   if (device.viewer.mode === 'real-3d' && device.viewer.manifestEndpoint) return <TokamakCadViewer
     manifestUrl={device.viewer.manifestEndpoint}
     viewerId={device.id}
@@ -24,12 +38,52 @@ function DeviceViewer({ device }: { device: DeviceCatalogEntry }) {
     workspace
     showDownloadActions={false}
     securityNotice={device.statement}
+    efitStore={efitStore}
+    efitAlignment={efitOverlay ? {
+      originWebMetres: [0, 0, 0],
+      eRAtPhi0Web: [1, 0, 0],
+      ePhiPositiveAtPhi0Web: [0, 0, -1],
+      eZWeb: [0, 1, 0],
+    } : undefined}
+    efitOptions={efitOverlay ? {
+      mode: efitMode,
+      showSection: showEfitSection,
+      showSurface: showEfitSurface,
+      showMagneticAxis: showEfitAxis,
+    } : undefined}
+    efitControls={efitOverlay ? {
+      mode: efitMode,
+      showSection: showEfitSection,
+      showSurface: showEfitSurface,
+      showMagneticAxis: showEfitAxis,
+      onModeChange: setEfitMode,
+      onShowSectionChange: setShowEfitSection,
+      onShowSurfaceChange: setShowEfitSurface,
+      onShowMagneticAxisChange: setShowEfitAxis,
+    } : undefined}
   />;
   if (device.viewer.mode === 'turntable-3d' && device.viewer.turntableManifestEndpoint) return <TurntableDeviceViewer
     title={device.title}
     manifestEndpoint={device.viewer.turntableManifestEndpoint}
   />;
   return <MetadataViewer device={device} />;
+}
+
+function DeviceExperience({ device }: { device: DeviceCatalogEntry }) {
+  const efitOverlay = device.physicsOverlays.find((overlay) => overlay.kind === 'axisymmetric-equilibrium');
+  const endpoint = efitOverlay?.manifestEndpoint ?? null;
+  const efitStore = useMemo(() => endpoint
+    ? createEfitStore(createEfitBinaryDataSource({ indexUrl: endpoint }))
+    : null, [endpoint]);
+
+  useEffect(() => () => efitStore?.destroy(), [efitStore]);
+
+  return <>
+    <div className={`deviceViewport${efitOverlay ? ' hasPhysicsOverlay' : ''}`}>
+      <DeviceViewer device={device} efitOverlay={efitOverlay} efitStore={efitStore} />
+    </div>
+    {efitOverlay && efitStore && <DevicePhysicsPanel device={device} overlay={efitOverlay} store={efitStore} />}
+  </>;
 }
 
 export default function MultiDeviceWorkspace({ catalog }: { catalog: DeviceCatalog }) {
@@ -84,7 +138,7 @@ export default function MultiDeviceWorkspace({ catalog }: { catalog: DeviceCatal
           ? '仅获授权、采用实时三维模式且共享同一比较坐标系的装置可以叠加。'
           : '当前没有两套同时获批且坐标一致的实时三维资产；转台帧与纯信息模式不会进入几何叠加。'}</span></div>
       </aside>
-      <div className="deviceViewport"><DeviceViewer device={current} /></div>
+      <DeviceExperience device={current} />
     </div>
 
     <div className="devicePreviewPolicy" role="note">
@@ -93,4 +147,23 @@ export default function MultiDeviceWorkspace({ catalog }: { catalog: DeviceCatal
       <small>REQUEST POLICY: CACHE {catalog.securityPolicy.cacheRequestPolicy.toUpperCase()} · REFERRER {catalog.securityPolicy.referrerPolicy.toUpperCase()}</small>
     </div>
   </section>;
+}
+
+function DevicePhysicsPanel({
+  device,
+  overlay,
+  store,
+}: {
+  device: DeviceCatalogEntry;
+  overlay: DeviceCatalogEntry['physicsOverlays'][number];
+  store: EfitStore;
+}) {
+  return <aside className="devicePhysicsPanel" aria-label={`${device.title} EFIT 位形与时序`}>
+    <EfitPanel store={store} preferredShot={overlay.defaultShot} title="EFIT 位形与放电时序" />
+    <div className="devicePhysicsBoundary" role="note">
+      <b>AXISYMMETRIC FLUX SURFACE / VISUALIZATION-DERIVED</b>
+      <span>{overlay.statement}</span>
+      <small>坐标合同 {overlay.coordinateFrame} · 当前为轴对称磁通面重建，不是三维磁力线或 MHD 场。</small>
+    </div>
+  </aside>;
 }

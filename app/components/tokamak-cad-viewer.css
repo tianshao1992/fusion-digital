@@ -162,5 +162,10 @@
 .tokamakCadClipControl label b{color:#a8bbb3;font:8px/1 ui-monospace,monospace;text-align:right}
 .tokamakCadClipControl input{grid-column:1/-1}
 .tokamakCadOpacityControl.global{margin:0}
+.tokamakCadEfitControls{display:flex;align-items:center;gap:8px;padding:10px 20px;border-top:1px solid #ff7a2f32;background:linear-gradient(90deg,#1a120d,#091511)}
+.tokamakCadEfitControls>span{margin-right:auto;color:var(--cad-orange);font:900 8px/1 ui-monospace,Consolas,monospace;letter-spacing:.14em}
+.tokamakCadEfitControls button{min-height:34px;padding:7px 12px;border:1px solid #ff7a2f55;color:#c4a18e;background:#20150f;font:800 8px/1 "Microsoft YaHei UI","Microsoft YaHei",sans-serif;cursor:pointer}
+.tokamakCadEfitControls button.active{color:#1b0f09;background:var(--cad-orange)}
+.tokamakCadEfitControls label{display:flex;align-items:center;gap:5px;min-height:34px;padding:0 8px;border:1px solid #759c8d2d;color:#91aa9f;font-size:8px;font-weight:800;white-space:nowrap}.tokamakCadEfitControls input{accent-color:var(--cad-orange)}
 @media(max-width:1100px){.tokamakCadControls{grid-template-columns:1fr auto}.tokamakCadPrecisionControls{grid-column:1/-1;grid-row:2;grid-template-columns:auto minmax(140px,1fr) minmax(110px,.7fr) minmax(110px,.7fr)}.tokamakCadTools{grid-column:2;grid-row:1}}
-@media(max-width:650px){.tokamakCadTreeScroll{height:calc(100% - 220px)}.tokamakCadControls{display:flex}.tokamakCadPrecisionControls{display:grid;grid-template-columns:auto 1fr}.tokamakCadOpacityControl.global{grid-column:1/-1}.tokamakCadClipAxes{align-self:end}}
+@media(max-width:650px){.tokamakCadTreeScroll{height:calc(100% - 220px)}.tokamakCadControls{display:flex}.tokamakCadPrecisionControls{display:grid;grid-template-columns:auto 1fr}.tokamakCadOpacityControl.global{grid-column:1/-1}.tokamakCadClipAxes{align-self:end}.tokamakCadEfitControls{align-items:stretch;flex-wrap:wrap;padding:10px 14px}.tokamakCadEfitControls>span{width:100%;margin:0}.tokamakCadEfitControls button,.tokamakCadEfitControls label{flex:1;justify-content:center}}
