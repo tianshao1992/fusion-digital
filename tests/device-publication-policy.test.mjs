@@ -10,6 +10,8 @@ const repositoryRoot = fileURLToPath(new URL('../', import.meta.url));
 const publicRoot = resolve(repositoryRoot, 'public');
 
 const protectedDeviceTokens = new Set(['exl', 'exl50u', 'iter']);
+const exlDeviceTokens = new Set(['exl', 'exl50u']);
+const iterDeviceTokens = new Set(['iter']);
 const geometryOrSourceExtensions = new Set([
   '.3mf', '.7z', '.brep', '.fbx', '.glb', '.gltf', '.iges', '.igs',
   '.obj', '.ppt', '.pptx', '.rar', '.step', '.stl', '.stp', '.zip',
@@ -17,6 +19,7 @@ const geometryOrSourceExtensions = new Set([
 const rasterExtensions = new Set(['.avif', '.jpeg', '.jpg', '.png', '.webp']);
 const allowedViewerModes = new Set(['real-3d', 'turntable-3d', 'metadata-only']);
 const maxParamakWebModelBytes = 3 * 1024 * 1024;
+const maxExlPublicDerivativeBytes = 20 * 1024 * 1024;
 const maxTurntableFrames = 36;
 const maxTurntableFrameBytes = 64 * 1024;
 const maxTurntableModeBytes = 1024 * 1024;
@@ -30,6 +33,14 @@ function pathTokens(pathname) {
 
 function identifiesProtectedDevice(pathname) {
   return pathTokens(pathname).some((token) => protectedDeviceTokens.has(token));
+}
+
+function identifiesExlDevice(pathname) {
+  return pathTokens(pathname).some((token) => exlDeviceTokens.has(token));
+}
+
+function identifiesIterDevice(pathname) {
+  return pathTokens(pathname).some((token) => iterDeviceTokens.has(token));
 }
 
 function hasGeometryOrSourceExtension(pathname) {
@@ -54,6 +65,11 @@ function endpointToPublicPath(endpoint) {
   assert.match(endpoint, /^\/models\/[a-z0-9_./-]+$/i, `${endpoint} must be a same-origin /models/ endpoint`);
   assert.doesNotMatch(endpoint, /(?:^|\/)\.\.(?:\/|$)/, `${endpoint} must not traverse directories`);
   assert.doesNotMatch(endpoint, /\/\//, `${endpoint} must use a canonical single-slash path`);
+  return resolve(publicRoot, endpoint.slice(1));
+}
+
+function exactPublicPath(endpoint, expected) {
+  assert.equal(endpoint, expected, `${endpoint} is not the approved public policy document`);
   return resolve(publicRoot, endpoint.slice(1));
 }
 
@@ -89,7 +105,21 @@ async function fetchFromWorker(pathname) {
   );
 }
 
-test('never publishes protected EXL-50U or ITER geometry and source archives', async () => {
+test('publishes only the catalog-authorized EXL simplified GLB and no ITER geometry or protected sources', async () => {
+  const catalog = JSON.parse(await readFile(resolve(publicRoot, 'models/device-catalog.json'), 'utf8'));
+  const exl = catalog.devices.find((device) => identifiesExlDevice(device.id));
+  assert.equal(exl?.viewer?.mode, 'real-3d', 'EXL public geometry requires an explicit real-3d catalog entry');
+  const exlManifestEndpoint = exl?.viewer?.manifestEndpoint;
+  assert.equal(typeof exlManifestEndpoint, 'string');
+  const exlManifest = JSON.parse(await readFile(endpointToPublicPath(exlManifestEndpoint), 'utf8'));
+  const authorizedWebModelEndpoint = exlManifest.assets?.webModel?.path;
+  assert.equal(typeof authorizedWebModelEndpoint, 'string');
+  assert.equal(extname(authorizedWebModelEndpoint).toLowerCase(), '.glb');
+  endpointToPublicPath(authorizedWebModelEndpoint);
+  const publicModelPath = `public/${authorizedWebModelEndpoint.slice(1)}`.toLowerCase();
+  const builtModelPath = `dist/client/${authorizedWebModelEndpoint.slice(1)}`.toLowerCase();
+  const allowedExlGeometry = new Set([publicModelPath, builtModelPath]);
+
   const tracked = execFileSync('git', ['ls-files', '-z'], {
     cwd: repositoryRoot,
     encoding: 'utf8',
@@ -100,14 +130,17 @@ test('never publishes protected EXL-50U or ITER geometry and source archives', a
   ].map((path) => relative(repositoryRoot, path).replaceAll('\\', '/'));
 
   for (const pathname of new Set([...tracked, ...published])) {
-    assert.ok(
-      !(identifiesProtectedDevice(pathname) && hasGeometryOrSourceExtension(pathname)),
-      `protected device geometry/source must not be tracked or published: ${pathname}`,
-    );
+    if (!hasGeometryOrSourceExtension(pathname)) continue;
+    if (identifiesIterDevice(pathname)) {
+      assert.fail(`ITER geometry/source must not be tracked or published: ${pathname}`);
+    }
+    if (identifiesExlDevice(pathname)) {
+      assert.ok(allowedExlGeometry.has(pathname.toLowerCase()), `undeclared EXL geometry/source must not be tracked or published: ${pathname}`);
+    }
   }
 });
 
-test('public device catalog is fail-closed and turntables reference raster frames only', async () => {
+test('public device catalog is fail-closed and authorizes only bounded, verifiable browser assets', async () => {
   const catalog = JSON.parse(await readFile(resolve(publicRoot, 'models/device-catalog.json'), 'utf8'));
   assert.ok(Array.isArray(catalog.devices) && catalog.devices.length >= 3);
 
@@ -124,11 +157,93 @@ test('public device catalog is fail-closed and turntables reference raster frame
       const manifest = JSON.parse(await readFile(endpointToPublicPath(manifestEndpoint), 'utf8'));
       assert.equal(manifest.access?.classification, 'PUBLIC');
       assert.equal(manifest.access?.redistributionAllowed, true);
-      assert.ok(manifest.assets?.webModel?.bytes > 0 && manifest.assets.webModel.bytes <= maxParamakWebModelBytes,
-        `${device.id} browser model exceeds the ${maxParamakWebModelBytes}-byte budget`);
+      assert.equal(manifest.access?.engineeringUseAllowed, false);
+      const isExlDerivative = identifiesExlDevice(device.id);
+      const byteBudget = isExlDerivative ? maxExlPublicDerivativeBytes : maxParamakWebModelBytes;
+      assert.ok(manifest.assets?.webModel?.bytes > 0 && manifest.assets.webModel.bytes <= byteBudget,
+        `${device.id} browser model exceeds the ${byteBudget}-byte budget`);
+      assert.match(manifest.assets.webModel.path, /^\/models\/[a-z0-9_./-]+\.glb$/i);
+      assert.ok(manifest.assets.webModel.path.startsWith(`${manifestEndpoint.slice(0, manifestEndpoint.lastIndexOf('/') + 1)}`),
+        `${device.id} web model must stay inside its declared public package`);
+      assert.match(manifest.assets.webModel.sha256, /^[a-f0-9]{64}$/i);
       const webModelPath = endpointToPublicPath(manifest.assets.webModel.path);
-      assert.equal((await stat(webModelPath)).size, manifest.assets.webModel.bytes,
+      const webModel = await readFile(webModelPath);
+      assert.equal(webModel.byteLength, manifest.assets.webModel.bytes,
         `${device.id} manifest byte count must match the shipped browser model`);
+      assert.equal(createHash('sha256').update(webModel).digest('hex'), manifest.assets.webModel.sha256.toLowerCase(),
+        `${device.id} manifest hash must match the shipped browser model`);
+      assert.equal(webModel.subarray(0, 4).toString('ascii'), 'glTF', `${device.id} webModel must be a real binary glTF asset`);
+      assert.equal(webModel.readUInt32LE(4), 2, `${device.id} webModel must use glTF 2.0`);
+      assert.equal(webModel.readUInt32LE(8), webModel.byteLength, `${device.id} GLB header length must match the file`);
+
+      const glbJsonLength = webModel.readUInt32LE(12);
+      assert.equal(webModel.readUInt32LE(16), 0x4e4f534a, `${device.id} GLB must begin with a JSON chunk`);
+      const glb = JSON.parse(webModel.subarray(20, 20 + glbJsonLength).toString('utf8').trim());
+
+      if (manifest.assets.poster) {
+        const posterPath = endpointToPublicPath(manifest.assets.poster.path);
+        const poster = await readFile(posterPath);
+        assert.ok(rasterExtensions.has(extname(posterPath).toLowerCase()), `${device.id} poster must be a raster image`);
+        assert.equal(poster.byteLength, manifest.assets.poster.bytes, `${device.id} poster byte count must match its declaration`);
+        assert.equal(createHash('sha256').update(poster).digest('hex'), manifest.assets.poster.sha256.toLowerCase(),
+          `${device.id} poster hash must match its declaration`);
+      }
+
+      if (isExlDerivative) {
+        assert.equal(manifest.devicePackage?.kind, 'public-simplified-derivative');
+        assert.equal(manifest.devicePackage?.authority, 'illustrative');
+        assert.equal(manifest.assets.sourceCad, undefined, 'EXL public derivative must never declare source CAD');
+        assert.match(manifest.access.statement, /(?:user(?:\s+explicitly)?[- ]authorized|用户授权)/i);
+        assert.match(manifest.access.statement, /(?:simplified(?:\s+browser)?\s+derivative|简化派生)/i);
+        assert.match(manifest.disclaimer, /(?:not\s+(?:an?\s+)?engineering\s+authority|non-engineering-authority|非工程权威)/i);
+        assert.equal(viewer.overlayEligible, false, 'EXL derivative must not be presented as comparison-grade geometry');
+        assert.match(device.statement, /(?:technically saved|技术性保存|无法从技术上)/i,
+          'catalog must disclose that browser-delivered geometry can be saved');
+        const systems = Array.isArray(manifest.systems) ? manifest.systems : [];
+        const parts = systems.flatMap((system) => Array.isArray(system.parts) ? system.parts : []);
+        assert.equal(systems.length, 12, 'EXL public derivative must expose the 12 approved top-level systems');
+        assert.equal(parts.length, 12, 'EXL public derivative must expose one selectable mesh for each approved system');
+        assert.equal(new Set(parts.map((part) => part.id)).size, parts.length, 'EXL public derivative part IDs must be unique');
+        assert.equal(new Set(parts.map((part) => part.nodeName)).size, parts.length, 'EXL public derivative node mappings must be unique');
+
+        const approvedNodeNames = new Set(parts.map((part) => part.nodeName));
+        const meshNodes = glb.nodes.filter((node) => Number.isInteger(node.mesh));
+        assert.equal(glb.meshes.length, 12, 'EXL GLB must contain the 12 approved system meshes');
+        assert.equal(meshNodes.length, 12, 'EXL GLB must contain one mesh node per approved system');
+        assert.deepEqual(new Set(meshNodes.map((node) => node.name)), approvedNodeNames,
+          'EXL GLB mesh node names must exactly match the manifest');
+        const rootNode = glb.nodes.find((node) => node.name === 'EXL50U_Simplified_Public_Derivative');
+        assert.deepEqual(rootNode?.scale, [0.001, 0.001, 0.001], 'EXL root must convert source millimetres to metres');
+        assert.deepEqual(rootNode?.rotation, [-Math.SQRT1_2, 0, 0, Math.SQRT1_2], 'EXL root must convert source Z-up to web Y-up');
+        assert.equal(rootNode?.extras?.sourceToWebScale, manifest.coordinateSystem.sourceToWebScale);
+        assert.equal(rootNode?.extras?.webCoordinateUnit, manifest.coordinateSystem.linearUnit);
+        assert.equal(glb.asset?.extras?.engineeringAuthority, false);
+        assert.equal(glb.asset?.extras?.sourceUnit, 'millimetre after XCAF transfer',
+          'EXL derivative must preserve its source-unit provenance');
+        const bounds = glb.accessors.filter((accessor) => accessor.type === 'VEC3' && Array.isArray(accessor.min) && Array.isArray(accessor.max));
+        const sourceMin = bounds.reduce((result, accessor) => result.map((value, index) => Math.min(value, accessor.min[index])), [Infinity, Infinity, Infinity]);
+        const sourceMax = bounds.reduce((result, accessor) => result.map((value, index) => Math.max(value, accessor.max[index])), [-Infinity, -Infinity, -Infinity]);
+        const worldMin = [sourceMin[0], sourceMin[2], -sourceMax[1]].map((value) => value * 0.001);
+        const worldMax = [sourceMax[0], sourceMax[2], -sourceMin[1]].map((value) => value * 0.001);
+        const worldExtents = worldMax.map((value, index) => value - worldMin[index]);
+        assert.ok(worldExtents.every((extent) => extent > 1 && extent < 12), `EXL transformed world extents are implausible: ${worldExtents.join(', ')}`);
+
+        const packageFiles = await walkFiles(resolve(endpointToPublicPath(manifestEndpoint), '..'));
+        const licenseNoticePath = exactPublicPath(manifest.generator.licenseUrl, '/licenses/EXL50U-PUBLIC-DERIVATIVE.txt');
+        assert.equal(extname(licenseNoticePath).toLowerCase(), '.txt');
+        assert.match(await readFile(licenseNoticePath, 'utf8'), /user explicitly authorized public web delivery/i);
+        const allowedPackageFiles = new Set([
+          endpointToPublicPath(manifestEndpoint),
+          webModelPath,
+          ...(manifest.assets.poster?.path?.startsWith(`${manifestEndpoint.slice(0, manifestEndpoint.lastIndexOf('/') + 1)}`)
+            ? [endpointToPublicPath(manifest.assets.poster.path)] : []),
+        ].map((pathname) => resolve(pathname).toLowerCase()));
+        for (const pathname of packageFiles) {
+          assert.ok(allowedPackageFiles.has(resolve(pathname).toLowerCase()),
+            `EXL public derivative package contains an undeclared asset: ${relative(publicRoot, pathname)}`);
+        }
+        assert.equal(packageFiles.length, allowedPackageFiles.size, 'EXL package files must exactly match its declared public assets');
+      }
     } else {
       assert.equal(viewer.manifestEndpoint ?? device.manifestEndpoint ?? null, null, `${device.id} non-real viewer must not expose geometry`);
     }
@@ -230,20 +345,21 @@ test('public device catalog is fail-closed and turntables reference raster frame
       assert.equal(device.delivery, 'local-only');
     }
 
-    if (identifiesProtectedDevice(device.id)) {
-      assert.notEqual(viewer.mode, 'real-3d', `${device.id} is protected and must not send geometry to a public browser`);
+    if (identifiesIterDevice(device.id)) {
+      assert.equal(viewer.mode, 'metadata-only', `${device.id} must remain metadata-only`);
+      assert.equal(device.delivery, 'local-only', `${device.id} must keep all geometry local-only`);
     }
 
     for (const value of collectStrings(device)) {
       assert.doesNotMatch(value, localPathPattern, `${device.id} catalog entry leaks a local path`);
-      if (identifiesProtectedDevice(device.id)) {
+      if (identifiesIterDevice(device.id)) {
         assert.ok(!hasGeometryOrSourceExtension(value), `${device.id} catalog entry exposes geometry/source: ${value}`);
       }
     }
   }
 });
 
-test('digital-prototype HTML exposes no protected model link or private filesystem path', async () => {
+test('digital-prototype HTML exposes no direct EXL/ITER model download link or private filesystem path', async () => {
   const response = await renderDigitalPrototype();
   assert.equal(response.status, 200);
   const html = await response.text();
@@ -252,17 +368,25 @@ test('digital-prototype HTML exposes no protected model link or private filesyst
   const publicUrls = [...html.matchAll(/\b(?:href|src|data-[\w-]*(?:src|url))=["']([^"']+)["']/gi)]
     .map((match) => match[1]);
   for (const url of publicUrls) {
-    assert.ok(
-      !(identifiesProtectedDevice(url) && hasGeometryOrSourceExtension(url)),
-      `digital-prototype exposes a protected model/source link: ${url}`,
-    );
+    if (!identifiesProtectedDevice(url) || !hasGeometryOrSourceExtension(url)) continue;
+    assert.fail(`digital-prototype must not server-render a direct protected model/source URL: ${url}`);
   }
+  assert.doesNotMatch(html, /<a\b[^>]*(?:href=["'][^"']*\.(?:glb|gltf|step|stp|zip|pptx?)[^"']*["']|\bdownload\b)[^>]*>/i,
+    'digital-prototype must expose no direct model/source download UI');
+  assert.match(html, /(?:technically saved|技术性保存|无法从技术上(?:阻止|保证))/i,
+    'page must disclose that browser-delivered geometry cannot be made non-copyable');
 });
 
-test('controlled raster previews receive defense-in-depth response headers', async () => {
+test('controlled raster previews and authorized EXL browser geometry receive defense-in-depth response headers', async () => {
+  const catalog = JSON.parse(await readFile(resolve(publicRoot, 'models/device-catalog.json'), 'utf8'));
+  const exlManifestEndpoint = catalog.devices.find((device) => identifiesExlDevice(device.id))?.viewer?.manifestEndpoint;
+  assert.equal(typeof exlManifestEndpoint, 'string');
+  const exlManifest = JSON.parse(await readFile(endpointToPublicPath(exlManifestEndpoint), 'utf8'));
   for (const pathname of [
     '/models/exl50u-secure-preview/turntable-manifest.json',
     '/models/exl50u-secure-preview/frame-00.webp',
+    exlManifestEndpoint,
+    exlManifest.assets.webModel.path,
   ]) {
     const response = await fetchFromWorker(pathname);
     assert.equal(response.status, 200, `${pathname} must be served`);
@@ -276,6 +400,8 @@ test('controlled raster previews receive defense-in-depth response headers', asy
 
 test('Paramak interaction controls remain public-only and expose consistent accessible state', async () => {
   const source = await readFile(resolve(repositoryRoot, 'app/components/TokamakCadViewer.tsx'), 'utf8');
+  const manifestParser = await readFile(resolve(repositoryRoot, 'app/components/deviceManifest.ts'), 'utf8');
+  const catalogParser = await readFile(resolve(repositoryRoot, 'app/digital-prototype/deviceCatalog.ts'), 'utf8');
   const workspace = await readFile(resolve(repositoryRoot, 'app/digital-prototype/MultiDeviceWorkspace.tsx'), 'utf8');
   const turntableSource = await readFile(resolve(repositoryRoot, 'app/digital-prototype/TurntableDeviceViewer.tsx'), 'utf8');
 
@@ -297,6 +423,25 @@ test('Paramak interaction controls remain public-only and expose consistent acce
   assert.match(await readFile(resolve(repositoryRoot, 'app/digital-prototype/TurntableDeviceViewer.tsx'), 'utf8'), /!value\.includes\('%'\)[\s\S]{0,80}!value\.includes\('\/\/'\)/);
   assert.match(source, /selectedPartIdsRef\.current\s*=\s*next/);
   assert.match(source, /highlightMaterial[^\n]*opacity:\s*1/);
+  assert.match(source, /opacityRef\.current\.global\s*=\s*value[\s\S]*?setOpacity\(value,\s*opacityRef\.current\.selected\)/,
+    'global opacity must use the latest selected-opacity value rather than a render-time closure');
+  assert.match(source, /opacityRef\.current\.selected\s*=\s*value[\s\S]*?setOpacity\(opacityRef\.current\.global,\s*value\)/,
+    'selected opacity must use the latest global-opacity value rather than a render-time closure');
+  for (const independentInteraction of [
+    /updateClipAxis\s*=\s*\([^)]*\)\s*=>\s*\{[^}]*setClipping/,
+    /toggleClipping\s*=\s*\(\)\s*=>\s*\{[^}]*setClipping/,
+    /togglePartVisibility\s*=\s*\([^)]*\)\s*=>\s*\{[\s\S]*?applyVisibility/,
+  ]) {
+    const handler = source.match(independentInteraction)?.[0] ?? '';
+    assert.doesNotMatch(handler, /setGlobalOpacity|setSelectedOpacity|setOpacity\(/,
+      'clip-axis, clipping and visibility handlers must not reset opacity');
+  }
+
+  assert.match(manifestParser, /asset\.path\.startsWith\(['"]\/models\/['"]\)/);
+  for (const rejectedPathToken of ["'..'", "'%'", "'//'" ]) {
+    assert.ok(manifestParser.includes(`asset.path.includes(${rejectedPathToken})`), `manifest parser must reject ${rejectedPathToken}`);
+    assert.ok(catalogParser.includes(`result.includes(${rejectedPathToken})`), `catalog parser must reject ${rejectedPathToken}`);
+  }
 
   assert.match(workspace, /device\.viewer\.mode === ['"]real-3d['"]/);
   assert.match(workspace, /showDownloadActions=\{false\}/);

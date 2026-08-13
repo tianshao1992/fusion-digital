@@ -23,6 +23,7 @@ function DeviceViewer({ device }: { device: DeviceCatalogEntry }) {
     sectionId={`${device.id}-workspace`}
     workspace
     showDownloadActions={false}
+    securityNotice={device.statement}
   />;
   if (device.viewer.mode === 'turntable-3d' && device.viewer.turntableManifestEndpoint) return <TurntableDeviceViewer
     title={device.title}
@@ -47,8 +48,8 @@ export default function MultiDeviceWorkspace({ catalog }: { catalog: DeviceCatal
     <div className="multiDeviceIntro">
       <p>02 / MULTI-DEVICE WORKSPACE</p>
       <div>
-        <h2 id="multi-device-title">三套装置，三种安全展示能力。</h2>
-        <span>设备选择与展示方式由同一目录驱动；后续补充装置只需新增经过校验的目录项。实时几何、转台帧和纯信息模式始终保持各自的数据边界。</span>
+        <h2 id="multi-device-title">三套装置，分级交互的数字样机入口。</h2>
+        <span>设备选择与展示方式由同一目录驱动；已获公开展示授权的简化派生几何可进入实时三维，受限装置保持纯信息模式。发送到浏览器的几何无法从技术上保证不可保存，原始工程 CAD 始终不由网站交付。</span>
       </div>
       <div className="multiDeviceModes" aria-label="查看模式">
         <button className={!compare ? 'active' : ''} type="button" onClick={() => setCompare(false)} aria-pressed={!compare}>单装置切换</button>

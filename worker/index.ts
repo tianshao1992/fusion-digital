@@ -48,7 +48,10 @@ const worker = {
     }
     const url = new URL(request.url);
 
-    if (url.pathname.startsWith("/models/exl50u-secure-preview/")) {
+    if (
+      url.pathname.startsWith("/models/exl50u-secure-preview/") ||
+      url.pathname.startsWith("/models/exl50u-interactive/")
+    ) {
       const assetResponse = await env.ASSETS.fetch(request);
       const headers = new Headers(assetResponse.headers);
       headers.set("Cache-Control", "no-store, private, max-age=0");

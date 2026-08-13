@@ -52,15 +52,15 @@ export default function DigitalPrototypePage() {
       </div>
       <aside className="prototypeMission" aria-label="工作台当前状态">
         <div><span>DEVICE CATALOG</span><b>EXL‑50U / ITER / PARAMAK</b></div>
-        <div><span>ONLINE GEOMETRY</span><b>PARAMAK / PUBLIC</b></div>
-        <div><span>CONTROLLED SOURCE</span><b>EXL‑50U / RASTER PREVIEW</b></div>
+        <div><span>ONLINE GEOMETRY</span><b>PARAMAK + EXL‑50U DERIVATIVE</b></div>
+        <div><span>CONTROLLED SOURCE</span><b>EXL‑50U / SOURCE CAD WITHHELD</b></div>
         <div><span>RESTRICTED SOURCE</span><b>ITER / LOCAL ONLY</b></div>
         <p>LICENCE-AWARE DEVICE CATALOG<br/>FAIL-CLOSED ASSET DELIVERY</p>
       </aside>
     </header>
 
     <section className="prototypeCoverage" aria-labelledby="coverage-title">
-      <div className="prototypeSectionIntro"><p>01 / MODEL COVERAGE</p><h2 id="coverage-title">“主体装置”在这里有明确边界。</h2><div>下表描述当前可在线加载的 Paramak 演示包。EXL‑50U 与 ITER 使用各自独立的覆盖清单与授权状态；视觉完整感不能替代工程完整性。</div></div>
+      <div className="prototypeSectionIntro"><p>01 / MODEL COVERAGE</p><h2 id="coverage-title">“主体装置”在这里有明确边界。</h2><div>下表描述 Paramak 通用演示包的覆盖基线；EXL‑50U 另以获授权的 12 个主要系统简化派生包进入实时三维，ITER 保持纯信息模式。视觉完整感不能替代工程完整性。</div></div>
       <div className="prototypeCoverageGrid">{coverage.map(([state, system, note]) => <article className={state === '已包含' ? 'included' : 'missing'} key={system}><span>{state}</span><h3>{system}</h3><p>{note}</p></article>)}</div>
     </section>
 

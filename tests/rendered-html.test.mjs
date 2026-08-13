@@ -31,8 +31,9 @@ async function listFiles(root) {
 
 test('deployment surface contains no controlled CAD or engineering mesh', async () => {
   const publicFiles = await listFiles(new URL('../public/', import.meta.url));
-  const controlledGeometry = publicFiles.filter((file) => /(?:exl|iter)[^/]*\.(?:glb|gltf|step|stp|iges|igs|stl|obj|fbx)$/i.test(decodeURIComponent(file.pathname)));
-  assert.deepEqual(controlledGeometry, []);
+  const protectedGeometry = publicFiles.filter((file) => /(?:exl|iter)[^/]*\.(?:glb|gltf|step|stp|iges|igs|stl|obj|fbx)$/i.test(decodeURIComponent(file.pathname)));
+  const authorizedExlDerivative = new URL('../public/models/exl50u-interactive/exl50u-interactive.glb', import.meta.url).href;
+  assert.deepEqual(protectedGeometry.map((file) => file.href), [authorizedExlDerivative]);
 
   const serverFiles = (await listFiles(new URL('../dist/server/', import.meta.url)))
     .filter((file) => /\.(?:js|mjs|json|html|css)$/i.test(file.pathname));
@@ -199,7 +200,7 @@ test('server-renders the FusionDigital community portal', async () => {
   assert.match(html, /TOOLCHAINS/);
   assert.match(html, /data-three-viewer="paramak-tokamak-demo"/);
   assert.match(html, /id="device-3d"/);
-  assert.match(html, /GENERIC PARAMAK TOKAMAK/);
+  assert.match(html, /MANIFEST-DRIVEN TOKAMAK PACKAGE/);
   assert.match(html, /paramak-tokamak-demo-poster\.png/);
   assert.match(html, /href="\/models\/paramak-tokamak-demo\/paramak-tokamak-demo\.step"/);
   assert.match(html, /href="\/models\/paramak-tokamak-demo\/paramak-tokamak-demo\.glb"/);
@@ -207,11 +208,11 @@ test('server-renders the FusionDigital community portal', async () => {
   assert.match(html, /PF COILS \/ CASES/);
   assert.match(html, /DEVICE PACKAGE VIEWER/);
   assert.match(html, /MANIFEST-DRIVEN DIGITAL ASSET/);
-  assert.match(html, /DEVICE-AGNOSTIC \/ EXL-ADAPTABLE PACKAGE CONTRACT/);
+  assert.match(html, /DEVICE-AGNOSTIC \/ LICENCE-AWARE PACKAGE CONTRACT/);
   assert.match(html, /查看清单 Schema/);
   assert.match(html, /href="\/licenses\/THREE-LICENSE\.txt"/);
   assert.match(html, /Paramak 0\.9\.11/);
-  assert.match(html, /它不是 EXL-50U、EHL-2 或其他在役装置的工程权威模型/);
+  assert.match(html, /不能用于制造、尺寸校核、仿真计算或安全决策/);
   assert.match(html, /data-echart="fusion-twin-system-map"/);
   assert.match(html, /一个装置 · 一条数字主线 · 十项协同能力/);
   assert.match(html, /ONE ASSET · ONE DIGITAL THREAD · TEN COORDINATED CAPABILITIES/);
@@ -272,12 +273,13 @@ test('server-renders the public full-device digital-prototype workspace', async 
   assert.match(html, /Paramak/);
   assert.match(html, /EXL(?:‑|-)?50U 2026 升级版/);
   assert.match(html, /ITER 教育简化模型/);
-  assert.match(html, /三套装置，三种安全展示能力/);
-  assert.match(html, /受控三维预览/);
+  assert.match(html, /三套装置，分级交互的数字样机入口/);
+  assert.match(html, /简化派生实时三维/);
   assert.match(html, /仅展示装置信息/);
   assert.match(html, /叠加比较/);
   assert.match(html, /360°/);
-  assert.match(html, /不代表 ITER 或 EXL(?:‑|-)?50U 的工程几何/);
+  assert.match(html, /已获公开展示授权的简化派生几何/);
+  assert.match(html, /原始工程 CAD 始终不由网站交付/);
   assert.match(html, /按需加载约 (?:<!-- -->)?2\.2(?:<!-- -->)? MB/);
   assert.doesNotMatch(html, /paramak-tokamak-demo-poster\.png/);
   assert.match(html, /中央螺线管 \/ 真空室/);
@@ -295,26 +297,35 @@ test('server-renders the public full-device digital-prototype workspace', async 
   assert.equal(catalog.schemaVersion, '2.0');
   assert.equal(catalog.securityPolicy.showDownloadActions, false);
   assert.equal(catalog.securityPolicy.sourceCadDelivered, false);
-  assert.equal(catalog.devices.filter((device) => device.viewer.manifestEndpoint !== null).length, 1);
-  assert.equal(catalog.devices.find((device) => device.id === 'exl-50u-2026-upgrade').delivery, 'public-static-preview');
-  assert.equal(catalog.devices.find((device) => device.id === 'exl-50u-2026-upgrade').viewer.mode, 'turntable-3d');
+  assert.equal(catalog.devices.filter((device) => device.viewer.manifestEndpoint !== null).length, 2);
+  const exl = catalog.devices.find((device) => device.id === 'exl-50u-2026-upgrade');
+  assert.equal(exl.delivery, 'public-static');
+  assert.equal(exl.viewer.mode, 'real-3d');
+  assert.equal(exl.viewer.manifestEndpoint, '/models/exl50u-interactive/model-manifest.json');
+  assert.equal(exl.viewer.turntableManifestEndpoint, null);
+  assert.equal(exl.viewer.overlayEligible, false);
+  assert.ok(exl.facts.includes('12 个主要系统组件'));
+  assert.match(exl.copy, /12 个主要系统组件/);
+  assert.match(exl.copy, /原始 CAD、STEP 和工程权威模型不会由网站下发/);
+  assert.match(exl.statement, /Browser-delivered geometry can be technically saved/);
   assert.equal(catalog.devices.find((device) => device.id === 'iter-educational-model').viewer.mode, 'metadata-only');
   assert.equal(catalog.devices.find((device) => device.id === 'iter-educational-model').delivery, 'local-only');
   assert.ok(catalog.devices.every((device) => !JSON.stringify(device).match(/iter-cad-private|127\.0\.0\.1|[A-Z]:\\/i)));
   assert.doesNotMatch(html, /下载 (?:STEP|GLB)/);
 
-  const turntable = JSON.parse(await readFile(
-    new URL('../public/models/exl50u-secure-preview/turntable-manifest.json', import.meta.url),
+  const exlManifest = JSON.parse(await readFile(
+    new URL('../public/models/exl50u-interactive/model-manifest.json', import.meta.url),
     'utf8',
   ));
-  assert.equal(turntable.schemaVersion, '1.1');
-  assert.equal(turntable.defaultMode, 'exterior');
-  assert.deepEqual(turntable.modes.map((mode) => mode.id), [
-    'exterior', 'transparent', 'section-x', 'section-y', 'section-z',
-    'detail-center', 'detail-upper', 'detail-lower',
-  ]);
-  assert.equal(turntable.modes.reduce((total, mode) => total + mode.frames.length, 0), 75);
-  assert.ok(turntable.modes.flatMap((mode) => mode.frames).every((frame) => /^\/models\/exl50u-secure-preview\/[^/]/.test(frame.src)));
+  assert.equal(exlManifest.devicePackage.kind, 'public-simplified-derivative');
+  assert.equal(exlManifest.devicePackage.authority, 'illustrative');
+  assert.equal(exlManifest.access.classification, 'PUBLIC');
+  assert.equal(exlManifest.access.redistributionAllowed, true);
+  assert.equal(exlManifest.access.engineeringUseAllowed, false);
+  assert.equal(exlManifest.assets.sourceCad, undefined);
+  assert.equal(exlManifest.systems.length, 12);
+  assert.equal(exlManifest.systems.flatMap((system) => system.parts).length, 12);
+  assert.equal(new Set(exlManifest.systems.flatMap((system) => system.parts.map((part) => part.nodeName))).size, 12);
 
   const manifest = JSON.parse(await readFile(
     new URL('../public/models/paramak-full-device/model-manifest.json', import.meta.url),

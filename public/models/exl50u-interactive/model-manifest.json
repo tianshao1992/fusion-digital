@@ -1,0 +1,284 @@
+{
+  "$schema": "/models/device-manifest.schema.json",
+  "schemaVersion": "1.1",
+  "id": "exl50u-interactive-v1",
+  "title": "EXL-50U simplified interactive browser derivative",
+  "asOf": "2026-08-13",
+  "devicePackage": {
+    "kind": "public-simplified-derivative",
+    "deviceClass": "EXL-50U compact spherical tokamak host and in-vessel systems visualization",
+    "authority": "illustrative",
+    "replacementContract": [
+      "user authorization for public display of the simplified browser derivative",
+      "source CAD remains private and is not part of this package",
+      "stable system identifiers mapped to every GLB mesh node",
+      "metre-scale Y-up right-handed web coordinate frame",
+      "asset hash, byte size and non-engineering-use boundary"
+    ]
+  },
+  "access": {
+    "classification": "PUBLIC",
+    "redistributionAllowed": true,
+    "engineeringUseAllowed": false,
+    "statement": "The user explicitly authorized public delivery of this simplified browser derivative. The original STEP/PPTX, B-Rep topology, dimensions, full assembly tree and engineering metadata remain private and are not redistributed."
+  },
+  "coordinateSystem": {
+    "linearUnit": "metre",
+    "upAxis": "Y",
+    "handedness": "right",
+    "sourceToWebScale": 0.001
+  },
+  "assets": {
+    "webModel": {
+      "path": "/models/exl50u-interactive/exl50u-interactive.glb",
+      "format": "glTF 2.0 binary",
+      "bytes": 11415884,
+      "sha256": "BAD6C72F29C415FD2C804FA1AA736AB2DECF8EFB8E7CCEC6202C6B197257F7AE"
+    },
+    "poster": {
+      "path": "/models/exl50u-interactive/poster.webp",
+      "bytes": 23752,
+      "sha256": "7B2C8E5F53A708359076D0FD8FD5F6FAFC7B42F6B71B97E930F2A49D237D4D2E"
+    }
+  },
+  "systems": [
+    {
+      "id": "coil-support",
+      "title": "线圈支撑",
+      "shortTitle": "COIL SUPPORT",
+      "category": "structure",
+      "color": "#69C9D0",
+      "description": "来自源装配树的系统级简化合并网格，仅用于网页显隐、透明与剖切交互。",
+      "parts": [
+        {
+          "id": "EXL-01",
+          "title": "线圈支撑",
+          "nodeName": "exl_coil_support",
+          "description": "系统级可选节点；内部零件和紧固件已合并。",
+          "engineeringTag": "EXL.WEB.COIL_SUPPORT"
+        }
+      ]
+    },
+    {
+      "id": "coil",
+      "title": "磁体线圈",
+      "shortTitle": "COILS",
+      "category": "tf",
+      "color": "#E5A64E",
+      "description": "来自源装配树的系统级简化合并网格，仅用于网页显隐、透明与剖切交互。",
+      "parts": [
+        {
+          "id": "EXL-02",
+          "title": "磁体线圈",
+          "nodeName": "exl_coils",
+          "description": "系统级可选节点；内部零件和紧固件已合并。",
+          "engineeringTag": "EXL.WEB.COILS"
+        }
+      ]
+    },
+    {
+      "id": "torsional-support",
+      "title": "抗扭支撑",
+      "shortTitle": "TORSIONAL",
+      "category": "structure",
+      "color": "#87A6C3",
+      "description": "来自源装配树的系统级简化合并网格，仅用于网页显隐、透明与剖切交互。",
+      "parts": [
+        {
+          "id": "EXL-03",
+          "title": "抗扭支撑",
+          "nodeName": "exl_torsional_support",
+          "description": "系统级可选节点；内部零件和紧固件已合并。",
+          "engineeringTag": "EXL.WEB.TORSIONAL_SUPPORT"
+        }
+      ]
+    },
+    {
+      "id": "vacuum-vessel",
+      "title": "真空室",
+      "shortTitle": "VESSEL",
+      "category": "structure",
+      "color": "#B1B7C2",
+      "description": "来自源装配树的系统级简化合并网格，仅用于网页显隐、透明与剖切交互。",
+      "parts": [
+        {
+          "id": "EXL-04",
+          "title": "真空室",
+          "nodeName": "exl_vacuum_vessel",
+          "description": "系统级可选节点；内部零件和紧固件已合并。",
+          "engineeringTag": "EXL.WEB.VACUUM_VESSEL"
+        }
+      ]
+    },
+    {
+      "id": "divertor-support",
+      "title": "偏滤器支撑",
+      "shortTitle": "DIV SUPPORT",
+      "category": "structure",
+      "color": "#7DA2B8",
+      "description": "来自源装配树的系统级简化合并网格，仅用于网页显隐、透明与剖切交互。",
+      "parts": [
+        {
+          "id": "EXL-05",
+          "title": "偏滤器支撑",
+          "nodeName": "exl_divertor_support",
+          "description": "系统级可选节点；内部零件和紧固件已合并。",
+          "engineeringTag": "EXL.WEB.DIVERTOR_SUPPORT"
+        }
+      ]
+    },
+    {
+      "id": "cfc-limiter",
+      "title": "CFC 限制器",
+      "shortTitle": "CFC LIMITER",
+      "category": "structure",
+      "color": "#D65D48",
+      "description": "来自源装配树的系统级简化合并网格，仅用于网页显隐、透明与剖切交互。",
+      "parts": [
+        {
+          "id": "EXL-06",
+          "title": "CFC 限制器",
+          "nodeName": "exl_cfc_limiter",
+          "description": "系统级可选节点；内部零件和紧固件已合并。",
+          "engineeringTag": "EXL.WEB.CFC_LIMITER"
+        }
+      ]
+    },
+    {
+      "id": "passive-stabilizer",
+      "title": "无源稳定板",
+      "shortTitle": "STABILIZER",
+      "category": "structure",
+      "color": "#C8A56D",
+      "description": "来自源装配树的系统级简化合并网格，仅用于网页显隐、透明与剖切交互。",
+      "parts": [
+        {
+          "id": "EXL-07",
+          "title": "无源稳定板",
+          "nodeName": "exl_passive_stabilizer",
+          "description": "系统级可选节点；内部零件和紧固件已合并。",
+          "engineeringTag": "EXL.WEB.PASSIVE_STABILIZER"
+        }
+      ]
+    },
+    {
+      "id": "fast-control-coil",
+      "title": "快速控制线圈",
+      "shortTitle": "FAST COIL",
+      "category": "pf",
+      "color": "#F28C45",
+      "description": "来自源装配树的系统级简化合并网格，仅用于网页显隐、透明与剖切交互。",
+      "parts": [
+        {
+          "id": "EXL-08",
+          "title": "快速控制线圈",
+          "nodeName": "exl_fast_control_coil",
+          "description": "系统级可选节点；内部零件和紧固件已合并。",
+          "engineeringTag": "EXL.WEB.FAST_CONTROL_COIL"
+        }
+      ]
+    },
+    {
+      "id": "cfc-protecting-block",
+      "title": "CFC 保护块",
+      "shortTitle": "CFC BLOCK",
+      "category": "structure",
+      "color": "#C04A55",
+      "description": "来自源装配树的系统级简化合并网格，仅用于网页显隐、透明与剖切交互。",
+      "parts": [
+        {
+          "id": "EXL-09",
+          "title": "CFC 保护块",
+          "nodeName": "exl_cfc_protecting_block",
+          "description": "系统级可选节点；内部零件和紧固件已合并。",
+          "engineeringTag": "EXL.WEB.CFC_PROTECTING_BLOCK"
+        }
+      ]
+    },
+    {
+      "id": "divertor",
+      "title": "偏滤器",
+      "shortTitle": "DIVERTOR",
+      "category": "structure",
+      "color": "#E45756",
+      "description": "来自源装配树的系统级简化合并网格，仅用于网页显隐、透明与剖切交互。",
+      "parts": [
+        {
+          "id": "EXL-10",
+          "title": "偏滤器",
+          "nodeName": "exl_divertor",
+          "description": "系统级可选节点；内部零件和紧固件已合并。",
+          "engineeringTag": "EXL.WEB.DIVERTOR"
+        }
+      ]
+    },
+    {
+      "id": "cryopump",
+      "title": "低温泵",
+      "shortTitle": "CRYOPUMP",
+      "category": "structure",
+      "color": "#68B0AB",
+      "description": "来自源装配树的系统级简化合并网格，仅用于网页显隐、透明与剖切交互。",
+      "parts": [
+        {
+          "id": "EXL-11",
+          "title": "低温泵",
+          "nodeName": "exl_cryopump",
+          "description": "系统级可选节点；内部零件和紧固件已合并。",
+          "engineeringTag": "EXL.WEB.CRYOPUMP"
+        }
+      ]
+    },
+    {
+      "id": "vde-coil-supports",
+      "title": "VDE 线圈与支撑",
+      "shortTitle": "VDE COILS",
+      "category": "pf",
+      "color": "#9C89B8",
+      "description": "来自源装配树的系统级简化合并网格，仅用于网页显隐、透明与剖切交互。",
+      "parts": [
+        {
+          "id": "EXL-12",
+          "title": "VDE 线圈与支撑",
+          "nodeName": "exl_vde_coil_supports",
+          "description": "系统级可选节点；内部零件和紧固件已合并。",
+          "engineeringTag": "EXL.WEB.VDE_COIL_SUPPORTS"
+        }
+      ]
+    }
+  ],
+  "generator": {
+    "name": "FusionDigital EXL system derivative",
+    "version": "1.0.0",
+    "repository": "private controlled conversion pipeline",
+    "license": "User-authorized public simplified derivative",
+    "licenseUrl": "/licenses/EXL50U-PUBLIC-DERIVATIVE.txt",
+    "environment": {
+      "python": "3.12.13",
+      "cadquery": "2.8.0",
+      "cadqueryOcp": "7.9.3.1.1"
+    },
+    "conversion": {
+      "pipeline": "STEP AP214 XCAF assembly -> depth-2 system grouping -> OpenCascade coarse tessellation -> VTK quadric decimation -> glTF 2.0",
+      "converter": "FusionDigital controlled derivative builder",
+      "converterVersion": "1.0.0",
+      "linearToleranceSourceUnits": 0.12,
+      "angularToleranceRadians": 1.15
+    }
+  },
+  "coverage": {
+    "sourceDefinitions": 1518,
+    "sourceOccurrences": 16748,
+    "publishedSelectableSystems": 12,
+    "webMeshes": 12,
+    "webTriangles": 483555,
+    "notPublished": [
+      "source STEP and PPTX",
+      "B-Rep and PMI",
+      "full 1518-definition tree",
+      "16748 occurrence transforms and names",
+      "manufacturing tolerances and materials"
+    ]
+  },
+  "disclaimer": "Authorized public simplified visualization derivative only. It is not an engineering authority and must not be used for manufacturing, dimensional verification, physics calculation, CAE analysis, configuration control, safety decisions or reverse engineering of the private source CAD."
+}

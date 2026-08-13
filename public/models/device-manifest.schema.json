@@ -14,7 +14,7 @@
       "type": "object",
       "required": ["kind", "deviceClass", "authority", "replacementContract"],
       "properties": {
-        "kind": { "enum": ["public-demonstrator", "controlled-engineering"] },
+        "kind": { "enum": ["public-demonstrator", "public-simplified-derivative", "controlled-engineering"] },
         "deviceClass": { "type": "string" },
         "authority": { "enum": ["illustrative", "engineering-reference", "authoritative"] },
         "replacementContract": { "type": "array", "items": { "type": "string" }, "minItems": 1 }

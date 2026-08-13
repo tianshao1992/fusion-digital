@@ -25,7 +25,7 @@ export type DeviceManifest = {
   title: string;
   asOf: string;
   devicePackage: {
-    kind: 'public-demonstrator' | 'controlled-engineering';
+    kind: 'public-demonstrator' | 'public-simplified-derivative' | 'controlled-engineering';
     deviceClass: string;
     authority: 'illustrative' | 'engineering-reference' | 'authoritative';
     replacementContract: string[];
@@ -72,8 +72,10 @@ function isAsset(value: unknown): value is DeviceManifest['assets']['webModel'] 
   if (!value || typeof value !== 'object') return false;
   const asset = value as Record<string, unknown>;
   return typeof asset.path === 'string'
-    && asset.path.startsWith('/')
-    && !asset.path.startsWith('//')
+    && asset.path.startsWith('/models/')
+    && !asset.path.includes('..')
+    && !asset.path.includes('%')
+    && !asset.path.includes('//')
     && typeof asset.format === 'string'
     && typeof asset.sha256 === 'string'
     && /^[a-f0-9]{64}$/i.test(asset.sha256)
@@ -91,7 +93,7 @@ export function parseDeviceManifest(value: unknown): DeviceManifest {
   if (!manifest.id || !manifest.title || !manifest.schemaVersion) throw new Error('装置清单缺少 id、title 或 schemaVersion。');
   if (manifest.schemaVersion !== '1.1') throw new Error(`不支持的装置清单版本：${manifest.schemaVersion}。`);
   if (!manifest.devicePackage
-    || !['public-demonstrator', 'controlled-engineering'].includes(manifest.devicePackage.kind)
+    || !['public-demonstrator', 'public-simplified-derivative', 'controlled-engineering'].includes(manifest.devicePackage.kind)
     || !['illustrative', 'engineering-reference', 'authoritative'].includes(manifest.devicePackage.authority)
     || !Array.isArray(manifest.devicePackage.replacementContract)
     || manifest.devicePackage.replacementContract.length === 0) {

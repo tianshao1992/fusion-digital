@@ -21,6 +21,7 @@ type TokamakCadViewerProps = {
   sectionId?: string;
   workspace?: boolean;
   showDownloadActions?: boolean;
+  securityNotice?: string;
 };
 
 type ViewerStatus = 'idle' | 'loading' | 'ready' | 'error';
@@ -88,12 +89,14 @@ export default function TokamakCadViewer({
   sectionId,
   workspace = false,
   showDownloadActions = true,
+  securityNotice,
 }: TokamakCadViewerProps = {}) {
   const mountRef = useRef<HTMLDivElement>(null);
   const fullscreenRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<ViewerApi | null>(null);
   const pointerDownRef = useRef<{ x: number; y: number } | null>(null);
   const selectedPartIdsRef = useRef<Set<string>>(new Set());
+  const opacityRef = useRef({ global: 1, selected: 1 });
   const [activated, setActivated] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [status, setStatus] = useState<ViewerStatus>('idle');
@@ -218,7 +221,7 @@ export default function TokamakCadViewer({
       renderer.toneMappingExposure = 1.2;
       renderer.setClearColor(0x07110e, 0);
       renderer.localClippingEnabled = true;
-      renderer.domElement.setAttribute('aria-label', '可旋转、缩放并选择部件的通用 Tokamak 三维模型');
+      renderer.domElement.setAttribute('aria-label', `可旋转、缩放并选择部件的${loadedManifest.title}三维模型`);
       renderer.domElement.setAttribute('role', 'img');
       renderer.domElement.tabIndex = 0;
       mount.replaceChildren(renderer.domElement);
@@ -482,6 +485,7 @@ export default function TokamakCadViewer({
         pickPart,
       };
       setOpacity(1, 1);
+      opacityRef.current = { global: 1, selected: 1 };
       setSelectedPartId(null);
       setSelectedPartIds(new Set());
       setHiddenPartIds(new Set());
@@ -518,13 +522,22 @@ export default function TokamakCadViewer({
   const toggleClipping = () => { const next = !clipping; viewerRef.current?.setClipping(next, clipAxis, clipOffset); setClipping(next); };
   const updateClipAxis = (axis: ClipAxis) => { setClipAxis(axis); viewerRef.current?.setClipping(clipping, axis, clipOffset); };
   const updateClipOffset = (value: number) => { setClipOffset(value); viewerRef.current?.setClipping(clipping, clipAxis, value); };
-  const updateGlobalOpacity = (value: number) => { setGlobalOpacity(value); viewerRef.current?.setOpacity(value, selectedOpacity); };
-  const updateSelectedOpacity = (value: number) => { setSelectedOpacity(value); viewerRef.current?.setOpacity(globalOpacity, value); };
+  const updateGlobalOpacity = (value: number) => {
+    opacityRef.current.global = value;
+    setGlobalOpacity(value);
+    viewerRef.current?.setOpacity(value, opacityRef.current.selected);
+  };
+  const updateSelectedOpacity = (value: number) => {
+    opacityRef.current.selected = value;
+    setSelectedOpacity(value);
+    viewerRef.current?.setOpacity(opacityRef.current.global, value);
+  };
   const resetView = () => {
     viewerRef.current?.reset();
     if (viewerRef.current) { viewerRef.current.controls.autoRotate = false; viewerRef.current.setWireframe(false); }
     selectedPartIdsRef.current = new Set();
     setActiveView('iso'); setAutoRotate(false); setWireframe(false); setSelectedPartId(null); setSelectedPartIds(new Set()); setIsolatedPartIds(new Set()); setHiddenPartIds(new Set());
+    opacityRef.current = { global: 1, selected: 1 };
     setClipAxis('x'); setClipOffset(0); setClipping(false); setGlobalOpacity(1); setSelectedOpacity(1);
     viewerRef.current?.selectParts(new Set()); viewerRef.current?.applyVisibility(new Set(), new Set());
     viewerRef.current?.setClipping(false, 'x', 0); viewerRef.current?.setOpacity(1, 1);
@@ -575,7 +588,9 @@ export default function TokamakCadViewer({
   const sourceCadPath = manifest?.assets.sourceCad?.path ?? `${packageBase}/${viewerId}.step`;
   const webModelPath = manifest?.assets.webModel.path ?? `${packageBase}/${viewerId}.glb`;
   const posterPath = manifest?.assets.poster?.path ?? (workspace ? null : '/models/paramak-tokamak-demo/paramak-tokamak-demo-poster.png');
-  const licensePath = `${packageBase}/PARAMAK-LICENSE.txt`;
+  const isParamakPackage = manifest?.devicePackage.kind === 'public-demonstrator' || viewerId.includes('paramak');
+  const estimatedMegabytes = manifest?.assets.webModel.bytes ? Math.max(0.1, manifest.assets.webModel.bytes / 1_000_000).toFixed(1) : workspace ? '2.2' : '1.1';
+  const applicabilityStatement = manifest?.disclaimer ?? '该浏览器派生模型仅用于网页预览，不能用于制造、尺寸校核、仿真计算或安全决策。';
 
   return (
     <section id={sectionId ?? (workspace ? 'prototype-workspace' : 'device-3d')} className={`tokamakCadSection${workspace ? ' tokamakCadSection--workspace' : ''}`} data-three-viewer={viewerId} aria-labelledby={`${viewerId}-title`}>
@@ -583,13 +598,13 @@ export default function TokamakCadViewer({
         <p className="tokamakCadIndex">{workspace ? 'WORKSPACE / FULL-DEVICE DIGITAL MOCK-UP' : '03D / DEVICE PACKAGE VIEWER'}</p>
         <div>
           <h2 id={`${viewerId}-title`}>{workspace ? '浏览完整主体装置，并保持每个部件可追溯' : '从网页三维样机，进入可替换的装置数据包'}</h2>
-          <p>{workspace ? '当前工作台展示公开 Paramak 生成的 360° 通用 Tokamak 主体装置。装配树、稳定部件 ID、单位、坐标系、数据分级与许可均由 DeviceManifest 统一驱动；它验证数字样机工作流，不代表 ITER 或 EXL-50U 的工程几何。' : '查看器由 DeviceManifest 驱动：几何、单位、坐标系、许可分级、稳定部件 ID 与装配树均来自同一份清单。当前仅加载公开 Paramak 演示资产；未来 ITER 参考包或 EXL-50U 受控包沿用接口，但真实工程数据不进入公共站点。'}</p>
+          <p>{manifest ? `${manifest.title}由 DeviceManifest 驱动装配树、稳定部件 ID、单位、坐标系、数据分级与许可；当前交付的是浏览器派生几何，不等同于原始工程 CAD。` : '查看器由 DeviceManifest 驱动：几何、单位、坐标系、许可分级、稳定部件 ID 与装配树均来自同一份清单。'}</p>
         </div>
       </div>
 
       <div className={`tokamakCadShell status-${status}`} ref={fullscreenRef}>
         <div className="tokamakCadTopbar">
-          <div className="tokamakCadIdentity"><span className="tokamakCadPulse" aria-hidden="true" /><div><b>{manifest?.title.toUpperCase() ?? (workspace ? 'GENERIC FULL-DEVICE PARAMAK TOKAMAK' : 'GENERIC PARAMAK TOKAMAK')}</b><small>DEVICE-AGNOSTIC / EXL-ADAPTABLE PACKAGE CONTRACT</small></div></div>
+          <div className="tokamakCadIdentity"><span className="tokamakCadPulse" aria-hidden="true" /><div><b>{manifest?.title.toUpperCase() ?? 'MANIFEST-DRIVEN TOKAMAK PACKAGE'}</b><small>DEVICE-AGNOSTIC / LICENCE-AWARE PACKAGE CONTRACT</small></div></div>
           <div className="tokamakCadStatus" aria-live="polite"><span>{ready ? `${manifest?.access.classification ?? 'PUBLIC'} · MODEL ONLINE` : status === 'loading' ? `STREAMING ${progress}%` : status === 'error' ? 'FALLBACK MODE' : 'STANDBY'}</span><i aria-hidden="true" /></div>
         </div>
 
@@ -625,11 +640,11 @@ export default function TokamakCadViewer({
           <div className="tokamakCadViewportShell">
             {posterPath && <>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img className="tokamakCadPoster" src={posterPath} alt="通用 Paramak Tokamak 三维模型预览" loading="lazy" decoding="async" />
+              <img className="tokamakCadPoster" src={posterPath} alt={`${manifest?.title ?? 'Tokamak'}三维模型预览`} loading="lazy" decoding="async" />
             </>}
             <div className="tokamakCadViewport" ref={mountRef} />
             <div className="tokamakCadScan" aria-hidden="true" /><div className="tokamakCadReticle" aria-hidden="true"><i /><i /></div>
-            {status === 'idle' && <div className="tokamakCadLaunch"><div className="tokamakCadLaunchGlyph" aria-hidden="true"><span /><i /><b /></div><p>MANIFEST-DRIVEN DIGITAL ASSET / 01</p><h3>启动装置数据包查看器</h3><span>按需加载约 {workspace ? '2.2' : '1.1'} MB 的公开 GLB 派生资产。可浏览装配树、点选部件、显隐/隔离、剖切、线框与属性信息。</span><button type="button" onClick={activate}>启动 3D VIEWER <i>→</i></button></div>}
+            {status === 'idle' && <div className="tokamakCadLaunch"><div className="tokamakCadLaunchGlyph" aria-hidden="true"><span /><i /><b /></div><p>MANIFEST-DRIVEN DIGITAL ASSET / 01</p><h3>启动装置数据包查看器</h3><span>按需加载约 {estimatedMegabytes} MB 的公开浏览器派生资产。可浏览装配树、点选部件、显隐/隔离、透明度、X/Y/Z 剖切、线框与属性信息。</span><button type="button" onClick={activate}>启动 3D VIEWER <i>→</i></button></div>}
             {status === 'loading' && <div className="tokamakCadLoading" role="status"><span>MANIFEST → GLB → GPU</span><div><i style={{ width: `${Math.max(6, progress)}%` }} /></div><b>{progress > 0 ? `${progress}%` : '正在验证装置清单与数据分级'}</b></div>}
             {status === 'error' && <div className="tokamakCadFallback"><div className="tokamakFallbackTorus" aria-hidden="true"><span /><i /><b /></div><p>WEBGL FALLBACK</p><h3>三维视图暂不可用</h3><span>{errorMessage}</span><div><button type="button" onClick={activate}>重新载入</button>{showDownloadActions && <a href={sourceCadPath} download>下载 STEP</a>}</div></div>}
             <div className="tokamakCadLegend" aria-label="部件颜色图例"><span><i className="plasma" />PLASMA</span><span><i className="tf" />TF COILS</span><span><i className="pf" />PF COILS / CASES</span><span><i className="structure" />STRUCTURE</span></div>
@@ -661,8 +676,8 @@ export default function TokamakCadViewer({
       </div>
 
       <div className="tokamakCadFootnotes">
-        <p><b>科学与安全边界</b>当前模型是 Paramak 生成的通用 Tokamak 参数化几何，仅验证网页交互和装置包契约；它不是 EXL-50U、EHL-2 或其他在役装置的工程权威模型，也不是 ITER 工程 CAD，不能用于制造、尺寸校核、仿真计算或安全决策。</p>
-        <p><b>开放来源与可替换接口</b>模型基于 MIT 许可的 <a href="https://github.com/fusion-energy/paramak/tree/0.9.11" target="_blank" rel="noreferrer">Paramak 0.9.11</a> 工作流；渲染采用 MIT 许可的 Three.js。{showDownloadActions && <><a href={sourceCadPath} download>下载 STEP</a><a href={webModelPath} download>下载 GLB</a></>}<a href={manifestUrl}>查看 DeviceManifest</a><a href="/models/device-manifest.schema.json">查看清单 Schema</a><a href={licensePath}>Paramak 许可</a><a href="/licenses/THREE-LICENSE.txt">Three.js 许可</a></p>
+        <p><b>科学与安全边界</b>{applicabilityStatement}</p>
+        <p><b>预览交付与可替换接口</b>{securityNotice ?? '模型以浏览器派生资产发送到用户设备；界面可隐藏下载操作，但无法从技术上阻止浏览器缓存、网络调试或复制已传输的数据。原始工程 CAD 不由此查看器交付。'}<a href={manifestUrl}>查看 DeviceManifest</a><a href="/models/device-manifest.schema.json">查看清单 Schema</a>{isParamakPackage && <a href="https://github.com/fusion-energy/paramak/tree/0.9.11" target="_blank" rel="noreferrer">Paramak 0.9.11</a>}<a href="/licenses/THREE-LICENSE.txt">Three.js 许可</a>{showDownloadActions && <><a href={sourceCadPath} download>下载 STEP</a><a href={webModelPath} download>下载 GLB</a></>}</p>
       </div>
     </section>
   );

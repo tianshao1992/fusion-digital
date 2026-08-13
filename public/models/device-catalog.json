@@ -8,7 +8,7 @@
     "engineeringMeshDelivered": false,
     "cacheRequestPolicy": "no-store",
     "referrerPolicy": "no-referrer",
-    "notice": "受控装置仅交付网页预览帧，不交付源 CAD、STEP 或工程 GLB。页面不提供下载入口，并请求浏览器不缓存、不发送来源页；但任何发送到浏览器的预览帧仍可能被用户设备或中间网络短暂保存，不能承诺绝对不可复制。"
+    "notice": "网站仅交付获授权的公开简化派生几何或预览帧，不交付原始 CAD、STEP 或工程权威模型。页面不提供下载入口，并请求浏览器不缓存、不发送来源页；但任何发送到浏览器的几何或图像仍可被浏览器缓存、网络调试或用户设备保存，不能承诺绝对不可复制。"
   },
   "devices": [
     {
@@ -35,19 +35,19 @@
       "id": "exl-50u-2026-upgrade",
       "index": "02",
       "title": "EXL‑50U 2026 升级版",
-      "eyebrow": "CONTROLLED · TURNTABLE 3D",
-      "state": "受控三维预览",
+      "eyebrow": "AUTHORIZED · REAL-TIME 3D",
+      "state": "简化派生实时三维",
       "tone": "controlled",
-      "facts": ["1,519 个产品定义", "16,748 个装配实例", "仅发布渲染帧"],
-      "copy": "以真实模型预渲染的多角度帧形成可旋转的三维观感，并提供透明外壳、X/Y/Z 剖切与内部细节预设；源 CAD、STEP、装配树和工程 GLB 不会由公网网站下发。",
-      "availability": "controlled-preview",
-      "delivery": "public-static-preview",
+      "facts": ["用户授权公开展示", "12 个主要系统组件", "≤20 MB 简化派生包"],
+      "copy": "公开加载经授权、脱敏和轻量化的简化派生几何；首版把原装配合并为 12 个主要系统组件，支持各组件选择、显隐、隔离、透明度与 X/Y/Z 剖切，不代表原始 1,519 个产品定义的逐件交付。原始 CAD、STEP 和工程权威模型不会由网站下发。",
+      "availability": "online-public-simplified",
+      "delivery": "public-static",
       "comparisonFrame": null,
-      "statement": "Preview-only derivative. Source CAD and engineering geometry are not delivered.",
+      "statement": "User-authorized public simplified derivative for interactive web preview. Browser-delivered geometry can be technically saved; source STEP and authoritative engineering CAD are not published.",
       "viewer": {
-        "mode": "turntable-3d",
-        "manifestEndpoint": null,
-        "turntableManifestEndpoint": "/models/exl50u-secure-preview/turntable-manifest.json",
+        "mode": "real-3d",
+        "manifestEndpoint": "/models/exl50u-interactive/model-manifest.json",
+        "turntableManifestEndpoint": null,
         "overlayEligible": false
       }
     },
