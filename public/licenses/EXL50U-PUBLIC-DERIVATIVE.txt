@@ -2,4 +2,6 @@ EXL-50U PUBLIC SIMPLIFIED DERIVATIVE NOTICE
 
 The user explicitly authorized public web delivery of this simplified browser geometry derivative.
 The original STEP/PPTX, B-Rep topology, dimensions, full assembly tree and engineering metadata are not included.
-This derivative is illustrative and is not an engineering authority. Engineering use and reverse engineering are prohibited.
+The public package may provide standard and higher-detail browser LODs of the same twelve merged system meshes.
+Higher visual tessellation improves silhouettes and surface shading but does not restore B-Rep surfaces, product definitions, dimensions, tolerances, materials or manufacturing metadata.
+These derivatives are illustrative and are not an engineering authority. Engineering use and reverse engineering are prohibited.

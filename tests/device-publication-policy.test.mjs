@@ -20,6 +20,10 @@ const rasterExtensions = new Set(['.avif', '.jpeg', '.jpg', '.png', '.webp']);
 const allowedViewerModes = new Set(['real-3d', 'turntable-3d', 'metadata-only']);
 const maxParamakWebModelBytes = 3 * 1024 * 1024;
 const maxExlPublicDerivativeBytes = 20 * 1024 * 1024;
+const maxExlHighDerivativeBytes = 30 * 1024 * 1024;
+const maxExlPreviewTriangles = 750_000;
+const maxExlHighTriangles = 2_000_000;
+const maxExlMobileDecodedGpuBytes = 160 * 1024 * 1024;
 const maxTurntableFrames = 36;
 const maxTurntableFrameBytes = 64 * 1024;
 const maxTurntableModeBytes = 1024 * 1024;
@@ -72,7 +76,7 @@ function endpointToPublicPath(endpoint) {
   const controlledPrefix = '/device-assets/exl50u-interactive/';
   assert.ok(endpoint.startsWith(controlledPrefix), `${endpoint} is not an approved controlled device-asset endpoint`);
   const filename = endpoint.slice(controlledPrefix.length);
-  assert.ok(['model-manifest.json', 'exl50u-interactive.glb', 'poster.webp'].includes(filename),
+  assert.ok(['model-manifest.json', 'exl50u-interactive.glb', 'exl50u-interactive-high.meshopt.glb', 'poster.webp'].includes(filename),
     `${endpoint} is not on the controlled device-asset allowlist`);
   return resolve(publicRoot, 'models/exl50u-interactive', filename);
 }
@@ -89,6 +93,72 @@ function collectStrings(value, strings = []) {
   return strings;
 }
 
+function parseGlb(buffer, label) {
+  assert.equal(buffer.subarray(0, 4).toString('ascii'), 'glTF', `${label} must be a real binary glTF asset`);
+  assert.equal(buffer.readUInt32LE(4), 2, `${label} must use glTF 2.0`);
+  assert.equal(buffer.readUInt32LE(8), buffer.byteLength, `${label} GLB header length must match the file`);
+  const jsonLength = buffer.readUInt32LE(12);
+  assert.equal(buffer.readUInt32LE(16), 0x4e4f534a, `${label} GLB must begin with a JSON chunk`);
+  return JSON.parse(buffer.subarray(20, 20 + jsonLength).toString('utf8').trim());
+}
+
+function decodedAttributeBytes(glb) {
+  const componentBytes = new Map([[5120, 1], [5121, 1], [5122, 2], [5123, 2], [5125, 4], [5126, 4]]);
+  const components = new Map([['SCALAR', 1], ['VEC2', 2], ['VEC3', 3], ['VEC4', 4], ['MAT2', 4], ['MAT3', 9], ['MAT4', 16]]);
+  return (glb.accessors ?? []).reduce((total, accessor) => total
+    + (componentBytes.get(accessor.componentType) ?? 0) * (components.get(accessor.type) ?? 0) * (accessor.count ?? 0), 0);
+}
+
+function glbGeometryCounts(glb) {
+  let triangles = 0;
+  let vertices = 0;
+  for (const mesh of glb.meshes ?? []) {
+    for (const primitive of mesh.primitives ?? []) {
+      const position = glb.accessors?.[primitive.attributes?.POSITION];
+      const indices = Number.isInteger(primitive.indices) ? glb.accessors?.[primitive.indices] : null;
+      vertices += position?.count ?? 0;
+      triangles += (indices?.count ?? position?.count ?? 0) / 3;
+    }
+  }
+  return { triangles, vertices };
+}
+
+function accessorVector(accessor, vector) {
+  if (!accessor.normalized) return vector;
+  const divisors = new Map([[5120, 127], [5121, 255], [5122, 32767], [5123, 65535]]);
+  const divisor = divisors.get(accessor.componentType);
+  assert.ok(divisor, `unsupported normalized component type ${accessor.componentType}`);
+  return vector.map((value) => Math.max(-1, value / divisor));
+}
+
+function meshNodeBounds(glb, node) {
+  assert.equal(node.matrix, undefined, `${node.name} must not use an opaque matrix transform`);
+  assert.equal(node.rotation, undefined, `${node.name} mesh transform must not rotate independently across LODs`);
+  const scale = node.scale ?? [1, 1, 1];
+  const translation = node.translation ?? [0, 0, 0];
+  const mesh = glb.meshes[node.mesh];
+  const bounds = mesh.primitives.map((primitive) => {
+    const accessor = glb.accessors[primitive.attributes.POSITION];
+    return { min: accessorVector(accessor, accessor.min), max: accessorVector(accessor, accessor.max) };
+  });
+  const rawMin = bounds.reduce((result, bound) => result.map((value, index) => Math.min(value, bound.min[index])), [Infinity, Infinity, Infinity]);
+  const rawMax = bounds.reduce((result, bound) => result.map((value, index) => Math.max(value, bound.max[index])), [-Infinity, -Infinity, -Infinity]);
+  const transformed = rawMin.map((value, axis) => [value * scale[axis] + translation[axis], rawMax[axis] * scale[axis] + translation[axis]]);
+  return {
+    min: transformed.map((pair) => Math.min(...pair)),
+    max: transformed.map((pair) => Math.max(...pair)),
+  };
+}
+
+function meshNodeSignatures(glb) {
+  return new Map(glb.nodes.filter((node) => Number.isInteger(node.mesh)).map((node) => {
+    const { min, max } = meshNodeBounds(glb, node);
+    const center = min.map((value, index) => (value + max[index]) / 2);
+    const extent = min.map((value, index) => max[index] - value);
+    return [node.name, { center, extent }];
+  }));
+}
+
 async function renderDigitalPrototype() {
   const workerUrl = new URL('../dist/server/index.js', import.meta.url);
   workerUrl.searchParams.set('publication-policy-test', `${process.pid}-${Date.now()}`);
@@ -100,12 +170,12 @@ async function renderDigitalPrototype() {
   );
 }
 
-async function fetchFromWorker(pathname) {
+async function fetchFromWorker(pathname, init) {
   const workerUrl = new URL('../dist/server/index.js', import.meta.url);
   workerUrl.searchParams.set('publication-header-test', `${process.pid}-${Date.now()}-${pathname}`);
   const { default: worker } = await import(workerUrl.href);
   return worker.fetch(
-    new Request(`http://localhost${pathname}`),
+    new Request(`http://localhost${pathname}`, init),
     { ASSETS: { fetch: async (request) => {
       const path = fileURLToPath(new URL(new URL(request.url).pathname.slice(1), new URL('../public/', import.meta.url)));
       try { return new Response(await readFile(path), { status: 200 }); } catch { return new Response('Not found', { status: 404 }); }
@@ -121,13 +191,12 @@ test('publishes only the catalog-authorized EXL simplified GLB and no ITER geome
   const exlManifestEndpoint = exl?.viewer?.manifestEndpoint;
   assert.equal(typeof exlManifestEndpoint, 'string');
   const exlManifest = JSON.parse(await readFile(endpointToPublicPath(exlManifestEndpoint), 'utf8'));
-  const authorizedWebModelEndpoint = exlManifest.assets?.webModel?.path;
-  assert.equal(typeof authorizedWebModelEndpoint, 'string');
-  assert.equal(extname(authorizedWebModelEndpoint).toLowerCase(), '.glb');
-  endpointToPublicPath(authorizedWebModelEndpoint);
-  const publicModelPath = relative(repositoryRoot, endpointToPublicPath(authorizedWebModelEndpoint)).replaceAll('\\', '/').toLowerCase();
-  const builtModelPath = publicModelPath.replace(/^public\//, 'dist/client/');
-  const allowedExlGeometry = new Set([publicModelPath, builtModelPath]);
+  assert.ok(Array.isArray(exlManifest.assets?.webModels));
+  const allowedExlGeometry = new Set(exlManifest.assets.webModels.flatMap((asset) => {
+    assert.equal(extname(asset.path).toLowerCase(), '.glb');
+    const publicModelPath = relative(repositoryRoot, endpointToPublicPath(asset.path)).replaceAll('\\', '/').toLowerCase();
+    return [publicModelPath, publicModelPath.replace(/^public\//, 'dist/client/')];
+  }));
 
   const tracked = execFileSync('git', ['ls-files', '-z'], {
     cwd: repositoryRoot,
@@ -181,13 +250,7 @@ test('public device catalog is fail-closed and authorizes only bounded, verifiab
         `${device.id} manifest byte count must match the shipped browser model`);
       assert.equal(createHash('sha256').update(webModel).digest('hex'), manifest.assets.webModel.sha256.toLowerCase(),
         `${device.id} manifest hash must match the shipped browser model`);
-      assert.equal(webModel.subarray(0, 4).toString('ascii'), 'glTF', `${device.id} webModel must be a real binary glTF asset`);
-      assert.equal(webModel.readUInt32LE(4), 2, `${device.id} webModel must use glTF 2.0`);
-      assert.equal(webModel.readUInt32LE(8), webModel.byteLength, `${device.id} GLB header length must match the file`);
-
-      const glbJsonLength = webModel.readUInt32LE(12);
-      assert.equal(webModel.readUInt32LE(16), 0x4e4f534a, `${device.id} GLB must begin with a JSON chunk`);
-      const glb = JSON.parse(webModel.subarray(20, 20 + glbJsonLength).toString('utf8').trim());
+      const glb = parseGlb(webModel, `${device.id} webModel`);
 
       if (manifest.assets.poster) {
         const posterPath = endpointToPublicPath(manifest.assets.poster.path);
@@ -216,6 +279,64 @@ test('public device catalog is fail-closed and authorizes only bounded, verifiab
         assert.equal(new Set(parts.map((part) => part.nodeName)).size, parts.length, 'EXL public derivative node mappings must be unique');
 
         const approvedNodeNames = new Set(parts.map((part) => part.nodeName));
+        assert.ok(Array.isArray(manifest.assets.webModels), 'EXL must declare preview and high LODs in one manifest');
+        assert.equal(manifest.assets.webModels.length, 2, 'EXL must declare exactly two GLB LODs');
+        assert.deepEqual(new Set(manifest.assets.webModels.map((asset) => asset.quality)), new Set(['preview', 'high']));
+        assert.equal(new Set(manifest.assets.webModels.map((asset) => asset.id)).size, 2, 'EXL LOD IDs must be unique');
+        const preview = manifest.assets.webModels.find((asset) => asset.quality === 'preview');
+        const high = manifest.assets.webModels.find((asset) => asset.quality === 'high');
+        assert.ok(preview && high);
+        for (const field of ['path', 'format', 'bytes', 'sha256']) assert.equal(preview[field], manifest.assets.webModel[field], `compatibility webModel.${field} must equal preview`);
+        assert.equal(manifest.assets.webModels.filter((asset) => asset.default === true).length, 1, 'EXL must declare exactly one desktop default LOD');
+        assert.equal(high.default, true, 'desktop default must select the approved high LOD');
+        assert.ok(preview.bytes <= maxExlPublicDerivativeBytes && preview.triangles <= maxExlPreviewTriangles);
+        assert.ok(high.bytes <= maxExlHighDerivativeBytes && high.triangles <= maxExlHighTriangles);
+        assert.equal(preview.path, '/device-assets/exl50u-interactive/exl50u-interactive.glb');
+        assert.equal(high.path, '/device-assets/exl50u-interactive/exl50u-interactive-high.meshopt.glb');
+
+        const parsedLods = [];
+        for (const asset of manifest.assets.webModels) {
+          assert.match(asset.sha256, /^[a-f0-9]{64}$/i);
+          const pathname = endpointToPublicPath(asset.path);
+          const contents = await readFile(pathname);
+          assert.equal(contents.byteLength, asset.bytes, `${asset.id} byte count must match`);
+          assert.equal(createHash('sha256').update(contents).digest('hex'), asset.sha256.toLowerCase(), `${asset.id} hash must match`);
+          const parsed = parseGlb(contents, asset.id);
+          assert.deepEqual(glbGeometryCounts(parsed), { triangles: asset.triangles, vertices: asset.vertices },
+            `${asset.id} declared geometry counts must match the GLB`);
+          const meshNodesForLod = parsed.nodes.filter((node) => Number.isInteger(node.mesh));
+          assert.equal(parsed.meshes.length, 12, `${asset.id} must contain 12 meshes`);
+          assert.equal(meshNodesForLod.length, 12, `${asset.id} must contain 12 mesh nodes`);
+          assert.deepEqual(new Set(meshNodesForLod.map((node) => node.name)), approvedNodeNames, `${asset.id} node mapping must match manifest`);
+          const decodedBytes = decodedAttributeBytes(parsed);
+          assert.ok(decodedBytes > 0 && decodedBytes <= maxExlMobileDecodedGpuBytes,
+            `${asset.id} decoded attribute/index estimate exceeds the mobile GPU budget: ${decodedBytes}`);
+          parsedLods.push({ asset, parsed });
+        }
+        const highGlb = parsedLods.find(({ asset }) => asset.quality === 'high').parsed;
+        const previewGlb = parsedLods.find(({ asset }) => asset.quality === 'preview').parsed;
+        assert.ok(highGlb.extensionsRequired?.includes('EXT_meshopt_compression'), 'high LOD must require EXT_meshopt_compression');
+        const previewSignatures = meshNodeSignatures(previewGlb);
+        const highSignatures = meshNodeSignatures(highGlb);
+        for (const nodeName of approvedNodeNames) {
+          const previewSignature = previewSignatures.get(nodeName);
+          const highSignature = highSignatures.get(nodeName);
+          assert.ok(previewSignature && highSignature);
+          for (const field of ['center', 'extent']) {
+            for (let axis = 0; axis < 3; axis += 1) {
+              const baseline = previewSignature[field][axis];
+              const delta = Math.abs(highSignature[field][axis] - baseline);
+              assert.ok(delta <= Math.max(2, Math.abs(baseline) * 0.01),
+                `${nodeName} ${field}[${axis}] changed across LODs; possible semantic mesh-name mismatch`);
+            }
+          }
+        }
+        const conversion = manifest.generator.conversion;
+        assert.equal(conversion.highLodAbsoluteDeflectionMillimetres, 0.35, 'manifest must record high LOD absolute deflection of 0.35 mm');
+        assert.equal(conversion.highLodAngularDeflectionRadians, 0.25, 'manifest must record high LOD angular deflection of 0.25 rad');
+        assert.equal(conversion.highLodSharpEdgeNormals, true, 'manifest must record sharp-edge normal handling');
+        assert.match(manifest.disclaimer, /(?:non-engineering|not\s+(?:an?\s+)?engineering|非工程)/i, 'both LODs must remain non-engineering visualizations');
+
         const meshNodes = glb.nodes.filter((node) => Number.isInteger(node.mesh));
         assert.equal(glb.meshes.length, 12, 'EXL GLB must contain the 12 approved system meshes');
         assert.equal(meshNodes.length, 12, 'EXL GLB must contain one mesh node per approved system');
@@ -229,9 +350,9 @@ test('public device catalog is fail-closed and authorizes only bounded, verifiab
         assert.equal(glb.asset?.extras?.engineeringAuthority, false);
         assert.equal(glb.asset?.extras?.sourceUnit, 'millimetre after XCAF transfer',
           'EXL derivative must preserve its source-unit provenance');
-        const bounds = glb.accessors.filter((accessor) => accessor.type === 'VEC3' && Array.isArray(accessor.min) && Array.isArray(accessor.max));
-        const sourceMin = bounds.reduce((result, accessor) => result.map((value, index) => Math.min(value, accessor.min[index])), [Infinity, Infinity, Infinity]);
-        const sourceMax = bounds.reduce((result, accessor) => result.map((value, index) => Math.max(value, accessor.max[index])), [-Infinity, -Infinity, -Infinity]);
+        const nodeBounds = glb.nodes.filter((node) => Number.isInteger(node.mesh)).map((node) => meshNodeBounds(glb, node));
+        const sourceMin = nodeBounds.reduce((result, bounds) => result.map((value, index) => Math.min(value, bounds.min[index])), [Infinity, Infinity, Infinity]);
+        const sourceMax = nodeBounds.reduce((result, bounds) => result.map((value, index) => Math.max(value, bounds.max[index])), [-Infinity, -Infinity, -Infinity]);
         const worldMin = [sourceMin[0], sourceMin[2], -sourceMax[1]].map((value) => value * 0.001);
         const worldMax = [sourceMax[0], sourceMax[2], -sourceMin[1]].map((value) => value * 0.001);
         const worldExtents = worldMax.map((value, index) => value - worldMin[index]);
@@ -243,7 +364,7 @@ test('public device catalog is fail-closed and authorizes only bounded, verifiab
         assert.match(await readFile(licenseNoticePath, 'utf8'), /user explicitly authorized public web delivery/i);
         const allowedPackageFiles = new Set([
           endpointToPublicPath(manifestEndpoint),
-          webModelPath,
+          ...manifest.assets.webModels.map((asset) => endpointToPublicPath(asset.path)),
           ...(manifest.assets.poster?.path?.startsWith(`${manifestEndpoint.slice(0, manifestEndpoint.lastIndexOf('/') + 1)}`)
             ? [endpointToPublicPath(manifest.assets.poster.path)] : []),
         ].map((pathname) => resolve(pathname).toLowerCase()));
@@ -391,19 +512,22 @@ test('controlled raster previews and authorized EXL browser geometry receive def
   const exlManifestEndpoint = catalog.devices.find((device) => identifiesExlDevice(device.id))?.viewer?.manifestEndpoint;
   assert.equal(typeof exlManifestEndpoint, 'string');
   const exlManifest = JSON.parse(await readFile(endpointToPublicPath(exlManifestEndpoint), 'utf8'));
-  for (const pathname of [exlManifestEndpoint, exlManifest.assets.webModel.path, exlManifest.assets.poster.path]) {
-    const response = await fetchFromWorker(pathname);
-    assert.equal(response.status, 200, `${pathname} must be served`);
-    assert.match(response.headers.get('cache-control') ?? '', /(?:^|,)\s*(?:private\s*,\s*)?no-store(?:\s*,|$)/i);
-    assert.equal(response.headers.get('referrer-policy'), 'no-referrer');
-    assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
-    assert.equal(response.headers.get('cross-origin-resource-policy'), 'same-origin');
-    assert.match(response.headers.get('content-disposition') ?? '', /^inline\b/i);
+  for (const pathname of [exlManifestEndpoint, ...exlManifest.assets.webModels.map((asset) => asset.path), exlManifest.assets.poster.path]) {
+    for (const init of [{ method: 'GET' }, { method: 'HEAD' }, { method: 'GET', headers: { Range: 'bytes=0-63' } }]) {
+      const response = await fetchFromWorker(pathname, init);
+      assert.ok([200, 206].includes(response.status), `${init.method} ${pathname} must be served`);
+      assert.match(response.headers.get('cache-control') ?? '', /(?:^|,)\s*(?:private\s*,\s*)?no-store(?:\s*,|$)/i);
+      assert.equal(response.headers.get('referrer-policy'), 'no-referrer');
+      assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
+      assert.equal(response.headers.get('cross-origin-resource-policy'), 'same-origin');
+      assert.match(response.headers.get('content-disposition') ?? '', /^inline\b/i);
+    }
   }
   for (const pathname of [
     '/device-assets/exl50u-interactive/not-allowed.glb',
     '/device-assets/other-device/model-manifest.json',
     '/models/exl50u-interactive/exl50u-interactive.glb',
+    '/models/exl50u-interactive/exl50u-interactive-high.meshopt.glb',
   ]) {
     const response = await fetchFromWorker(pathname);
     assert.equal(response.status, 404, `${pathname} must fail closed`);

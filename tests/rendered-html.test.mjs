@@ -32,8 +32,11 @@ async function listFiles(root) {
 test('deployment surface contains no controlled CAD or engineering mesh', async () => {
   const publicFiles = await listFiles(new URL('../public/', import.meta.url));
   const protectedGeometry = publicFiles.filter((file) => /(?:exl|iter)[^/]*\.(?:glb|gltf|step|stp|iges|igs|stl|obj|fbx)$/i.test(decodeURIComponent(file.pathname)));
-  const authorizedExlDerivative = new URL('../public/models/exl50u-interactive/exl50u-interactive.glb', import.meta.url).href;
-  assert.deepEqual(protectedGeometry.map((file) => file.href), [authorizedExlDerivative]);
+  const authorizedExlDerivatives = [
+    new URL('../public/models/exl50u-interactive/exl50u-interactive-high.meshopt.glb', import.meta.url).href,
+    new URL('../public/models/exl50u-interactive/exl50u-interactive.glb', import.meta.url).href,
+  ];
+  assert.deepEqual(protectedGeometry.map((file) => file.href), authorizedExlDerivatives);
 
   const serverFiles = (await listFiles(new URL('../dist/server/', import.meta.url)))
     .filter((file) => /\.(?:js|mjs|json|html|css)$/i.test(file.pathname));

@@ -29,6 +29,7 @@ interface ExecutionContext {
 const controlledDeviceAssets = new Map([
   ["/device-assets/exl50u-interactive/model-manifest.json", "/models/exl50u-interactive/model-manifest.json"],
   ["/device-assets/exl50u-interactive/exl50u-interactive.glb", "/models/exl50u-interactive/exl50u-interactive.glb"],
+  ["/device-assets/exl50u-interactive/exl50u-interactive-high.meshopt.glb", "/models/exl50u-interactive/exl50u-interactive-high.meshopt.glb"],
   ["/device-assets/exl50u-interactive/poster.webp", "/models/exl50u-interactive/poster.webp"],
 ]);
 

@@ -48,6 +48,23 @@
       "required": ["webModel"],
       "properties": {
         "webModel": { "$ref": "#/$defs/asset" },
+        "webModels": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/webModelVariant" },
+          "allOf": [
+            {
+              "contains": { "type": "object", "required": ["quality"], "properties": { "quality": { "const": "preview" } } },
+              "minContains": 1,
+              "maxContains": 1
+            },
+            {
+              "contains": { "type": "object", "required": ["default"], "properties": { "default": { "const": true } } },
+              "minContains": 0,
+              "maxContains": 1
+            }
+          ]
+        },
         "sourceCad": { "$ref": "#/$defs/asset" },
         "poster": { "$ref": "#/$defs/assetWithoutFormat" }
       },
@@ -108,6 +125,23 @@
         "path": { "type": "string", "pattern": "^/" },
         "sha256": { "type": "string", "pattern": "^[A-Fa-f0-9]{64}$" },
         "bytes": { "type": "integer", "minimum": 1 }
+      },
+      "additionalProperties": false
+    },
+    "webModelVariant": {
+      "type": "object",
+      "required": ["id", "label", "quality", "path", "format", "sha256", "bytes"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "label": { "type": "string", "minLength": 1 },
+        "quality": { "enum": ["preview", "high"] },
+        "path": { "type": "string", "pattern": "^/" },
+        "format": { "type": "string", "minLength": 1 },
+        "sha256": { "type": "string", "pattern": "^[A-Fa-f0-9]{64}$" },
+        "bytes": { "type": "integer", "minimum": 1 },
+        "triangles": { "type": "integer", "minimum": 1 },
+        "vertices": { "type": "integer", "minimum": 1 },
+        "default": { "type": "boolean" }
       },
       "additionalProperties": false
     }

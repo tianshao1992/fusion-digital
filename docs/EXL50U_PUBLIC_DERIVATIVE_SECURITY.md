@@ -69,3 +69,18 @@ CDN/WAF 可以对异常高频请求、枚举和热链设置速率限制并记录
 6. EXL 清单与 GLB 的防御性响应头存在；未知 viewer mode、未知 EXL 网格或缺字段条目必须 fail closed。
 7. 构建后的 `dist/` 再执行同一白名单检查，防止构建或复制步骤引入越界文件。
 
+## 7. Preview / High 双 LOD 发布合同
+
+EXL 浏览器派生包可以提供 preview 与 high 两档，但两档属于同一份公开授权和同一 DeviceManifest 的原子交付，不得通过第二份清单、隐藏 URL 或目录枚举绕过发布门禁：
+
+- preview 与 high 必须位于同一受控包，分别声明稳定角色、规范化同源路径、实际字节数、SHA-256 和三角形数；不得存在第三个未声明 GLB；
+- preview 不超过 20 MiB 和 750,000 个三角形；high 不超过 30 MiB 和 2,000,000 个三角形；
+- 两档都必须只包含同一组 12 个系统网格，mesh 数、可选 node 名称与 manifest 部件映射完全一致，不得以 high 档夹带额外装配树、工程属性或隐藏节点；
+- high 必须使用 `EXT_meshopt_compression`，并声明绝对挠度 0.35 mm、角挠度 0.25 rad、锐边法线保留策略；这些参数描述派生过程，不构成尺寸精度、CAD 对比或工程权威声明；
+- manifest 和界面必须继续说明两档均为非工程可视化派生物，不可用于制造、尺寸校核、CAE、安全决策或配置控制；
+- manifest 只能声明一个默认档且桌面默认 high；当视口不超过 650 px、`saveData=true` 或 `deviceMemory<4` 时，运行时必须在首次请求几何前降级 preview。切换不得同时长期驻留两档的几何、材质和 GPU buffer；
+- 估算 GPU 解析占用必须进入清单或构建时 QA：至少统计解压后的 position、normal、index 及其他 attribute/accessor buffer，再加纹理和合理的运行时余量。移动端单装置增量建议不超过 160 MiB，桌面端不超过 300 MiB；无法证明预算时 high 必须 fail closed；
+- `/device-assets/exl50u-interactive/` 只允许 manifest、poster 和两项 GLB 的精确白名单。GET、HEAD 与 Range/206 必须经过 Worker 并带相同安全响应头；旧 `/models/exl50u-interactive/*` 及任何未知、编码或遍历路径必须返回 404；
+- SSR HTML 不得直出任一 GLB URL、下载属性或模型下载链接。浏览器运行时从 manifest 选择资产不改变“已发送数据可被技术性保存”的既有边界。
+
+双 LOD 自动回归至少验证：同一 manifest 原子声明、固定路径和唯一角色、两档 bytes/hash/GLB header、各自三角形预算、12 mesh/node 映射等价、high 的 meshopt required extension 与派生参数、GPU 解析估计门禁、Worker GET/HEAD/Range 安全头、旧路径和恶意路径 404、SSR 无直链/下载，以及构建产物中不存在未声明 EXL 几何。

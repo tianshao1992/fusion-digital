@@ -1,8 +1,8 @@
 {
   "$schema": "/models/device-manifest.schema.json",
   "schemaVersion": "1.1",
-  "id": "exl50u-interactive-v1",
-  "title": "EXL-50U simplified interactive browser derivative",
+  "id": "exl50u-interactive-v2",
+  "title": "EXL-50U quality-adaptive interactive browser derivative",
   "asOf": "2026-08-13",
   "devicePackage": {
     "kind": "public-simplified-derivative",
@@ -31,10 +31,35 @@
   "assets": {
     "webModel": {
       "path": "/device-assets/exl50u-interactive/exl50u-interactive.glb",
-      "format": "glTF 2.0 binary",
-      "bytes": 11415884,
-      "sha256": "BAD6C72F29C415FD2C804FA1AA736AB2DECF8EFB8E7CCEC6202C6B197257F7AE"
+      "format": "glTF 2.0 binary + EXT_meshopt_compression",
+      "bytes": 5643452,
+      "sha256": "D8B88358398D006F019142B7F38B1C4459C5EC882FF092FD2B7D3B4B048D7844"
     },
+    "webModels": [
+      {
+        "id": "preview",
+        "label": "标准",
+        "quality": "preview",
+        "path": "/device-assets/exl50u-interactive/exl50u-interactive.glb",
+        "format": "glTF 2.0 binary + EXT_meshopt_compression",
+        "bytes": 5643452,
+        "sha256": "D8B88358398D006F019142B7F38B1C4459C5EC882FF092FD2B7D3B4B048D7844",
+        "triangles": 649992,
+        "vertices": 843923
+      },
+      {
+        "id": "high",
+        "label": "高清",
+        "quality": "high",
+        "default": true,
+        "path": "/device-assets/exl50u-interactive/exl50u-interactive-high.meshopt.glb",
+        "format": "glTF 2.0 binary + EXT_meshopt_compression",
+        "bytes": 13372196,
+        "sha256": "35BDECC122C4D74EE82E696F372C14EE4FEE67CE02596EB05590A1C6BD288AA3",
+        "triangles": 1797492,
+        "vertices": 2077387
+      }
+    ],
     "poster": {
       "path": "/device-assets/exl50u-interactive/poster.webp",
       "bytes": 23752,
@@ -249,7 +274,7 @@
   ],
   "generator": {
     "name": "FusionDigital EXL system derivative",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "repository": "private controlled conversion pipeline",
     "license": "User-authorized public simplified derivative",
     "licenseUrl": "/licenses/EXL50U-PUBLIC-DERIVATIVE.txt",
@@ -259,11 +284,15 @@
       "cadqueryOcp": "7.9.3.1.1"
     },
     "conversion": {
-      "pipeline": "STEP AP214 XCAF assembly -> depth-2 system grouping -> OpenCascade coarse tessellation -> VTK quadric decimation -> glTF 2.0",
+      "pipeline": "STEP AP214 XCAF assembly -> absolute-deflection OpenCascade tessellation -> depth-2 system grouping -> complexity-weighted VTK quadric decimation -> degenerate removal -> feature-aware normals -> glTF 2.0 Meshopt LODs",
       "converter": "FusionDigital controlled derivative builder",
-      "converterVersion": "1.0.0",
-      "linearToleranceSourceUnits": 0.12,
-      "angularToleranceRadians": 1.15
+      "converterVersion": "2.0.0",
+      "highLodAbsoluteDeflectionMillimetres": 0.35,
+      "highLodAngularDeflectionRadians": 0.25,
+      "highLodSharpEdgeNormals": true,
+      "normalFeatureAngleDegrees": 60,
+      "decimation": "VTK quadric with volume preservation and system-complexity budgets",
+      "compression": "glTF-Transform 4.4.2 Meshopt high; position 16 bits; normal 12 bits"
     }
   },
   "coverage": {
@@ -271,7 +300,10 @@
     "sourceOccurrences": 16748,
     "publishedSelectableSystems": 12,
     "webMeshes": 12,
-    "webTriangles": 483555,
+    "webTriangles": 1797492,
+    "previewTriangles": 649992,
+    "highTriangles": 1797492,
+    "qualityBoundary": "The high LOD improves visual tessellation and surface shading only; neither LOD contains B-Rep surfaces or engineering dimensional authority.",
     "notPublished": [
       "source STEP and PPTX",
       "B-Rep and PMI",

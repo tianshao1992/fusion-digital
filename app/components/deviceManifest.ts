@@ -18,6 +18,22 @@ export type DeviceManifestSystem = {
   parts: DeviceManifestPart[];
 };
 
+export type DeviceWebModel = {
+  path: string;
+  format: string;
+  sha256: string;
+  bytes: number;
+};
+
+export type DeviceWebModelVariant = DeviceWebModel & {
+  id: string;
+  label: string;
+  quality: 'preview' | 'high';
+  triangles?: number;
+  vertices?: number;
+  default?: boolean;
+};
+
 export type DeviceManifest = {
   $schema?: string;
   schemaVersion: string;
@@ -43,7 +59,8 @@ export type DeviceManifest = {
     sourceToWebScale: number;
   };
   assets: {
-    webModel: { path: string; format: string; sha256: string; bytes: number };
+    webModel: DeviceWebModel;
+    webModels?: DeviceWebModelVariant[];
     sourceCad?: { path: string; format: string; sha256: string; bytes: number };
     poster?: { path: string; sha256: string; bytes: number };
   };
@@ -61,14 +78,20 @@ export type DeviceManifest = {
       pipeline: string;
       converter: string;
       converterVersion: string;
-      linearToleranceSourceUnits: number;
-      angularToleranceRadians: number;
+      linearToleranceSourceUnits?: number;
+      angularToleranceRadians?: number;
+      highLodAbsoluteDeflectionMillimetres?: number;
+      highLodAngularDeflectionRadians?: number;
+      highLodSharpEdgeNormals?: boolean;
+      normalFeatureAngleDegrees?: number;
+      decimation?: string;
+      compression?: string;
     };
   };
   disclaimer: string;
 };
 
-function isAsset(value: unknown): value is DeviceManifest['assets']['webModel'] {
+function isAsset(value: unknown): boolean {
   if (!value || typeof value !== 'object') return false;
   const asset = value as Record<string, unknown>;
   return typeof asset.path === 'string'
@@ -81,6 +104,47 @@ function isAsset(value: unknown): value is DeviceManifest['assets']['webModel'] 
     && /^[a-f0-9]{64}$/i.test(asset.sha256)
     && Number.isInteger(asset.bytes)
     && Number(asset.bytes) > 0;
+}
+
+function sameAsset(left: DeviceWebModel, right: DeviceWebModel) {
+  return left.path === right.path
+    && left.format === right.format
+    && left.bytes === right.bytes
+    && left.sha256.toLowerCase() === right.sha256.toLowerCase();
+}
+
+function validateWebModels(value: unknown, compatibilityAsset: DeviceWebModel) {
+  if (!Array.isArray(value) || value.length === 0) throw new Error('装置清单的 webModels 必须是非空数组。');
+  const ids = new Set<string>();
+  let defaultCount = 0;
+  const previewAssets: DeviceWebModelVariant[] = [];
+  const allowedKeys = new Set(['id', 'label', 'quality', 'path', 'format', 'sha256', 'bytes', 'triangles', 'vertices', 'default']);
+
+  for (const candidate of value) {
+    if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) throw new Error('装置清单包含无效的 LOD 资产。');
+    const record = candidate as Record<string, unknown>;
+    if (Object.keys(record).some((key) => !allowedKeys.has(key))
+      || !isAsset(record)
+      || typeof record.id !== 'string'
+      || !/^[a-z0-9][a-z0-9-]*$/.test(record.id)
+      || ids.has(record.id)
+      || typeof record.label !== 'string'
+      || record.label.trim() === ''
+      || !['preview', 'high'].includes(String(record.quality))
+      || (record.default !== undefined && typeof record.default !== 'boolean')
+      || (record.triangles !== undefined && (!Number.isInteger(record.triangles) || Number(record.triangles) <= 0))
+      || (record.vertices !== undefined && (!Number.isInteger(record.vertices) || Number(record.vertices) <= 0))) {
+      throw new Error(`装置清单包含无效或重复的 LOD 资产：${String(record.id ?? 'unknown')}。`);
+    }
+    const asset = record as unknown as DeviceWebModelVariant;
+    ids.add(asset.id);
+    if (asset.default === true) defaultCount += 1;
+    if (asset.quality === 'preview') previewAssets.push(asset as unknown as DeviceWebModelVariant);
+  }
+
+  if (defaultCount > 1) throw new Error('装置清单最多只能指定一个默认 LOD。');
+  if (previewAssets.length !== 1) throw new Error('双 LOD 装置清单必须且只能包含一个 preview 资产。');
+  if (!sameAsset(compatibilityAsset, previewAssets[0])) throw new Error('兼容 webModel 必须与 preview LOD 完全一致。');
 }
 
 /**
@@ -116,6 +180,7 @@ export function parseDeviceManifest(value: unknown): DeviceManifest {
     throw new Error('装置清单缺少有效的单位或坐标系。');
   }
   if (!manifest.assets || !isAsset(manifest.assets.webModel)) throw new Error('装置清单缺少可加载的 webModel 资产。');
+  if (manifest.assets.webModels !== undefined) validateWebModels(manifest.assets.webModels, manifest.assets.webModel);
   if (!Array.isArray(manifest.systems) || manifest.systems.length === 0) throw new Error('装置清单没有系统/部件映射。');
   const partIds = new Set<string>();
   const nodeNames = new Set<string>();
@@ -140,6 +205,14 @@ export function parseDeviceManifest(value: unknown): DeviceManifest {
   if (manifest.generator.script && (!manifest.generator.script.path
     || !/^[a-f0-9]{64}$/i.test(manifest.generator.script.sha256))) {
     throw new Error('装置清单的生成脚本血缘无效。');
+  }
+  const conversion = manifest.generator.conversion;
+  if (manifest.assets.webModels?.some((asset) => asset.quality === 'high')
+    && (!conversion
+      || !(Number(conversion.highLodAbsoluteDeflectionMillimetres) > 0)
+      || !(Number(conversion.highLodAngularDeflectionRadians) > 0)
+      || conversion.highLodSharpEdgeNormals !== true)) {
+    throw new Error('高清 LOD 缺少离散化精度或锐边法线声明。');
   }
   if (!manifest.disclaimer || manifest.disclaimer.trim().length < 30) throw new Error('装置清单缺少适用性边界声明。');
   return manifest as DeviceManifest;

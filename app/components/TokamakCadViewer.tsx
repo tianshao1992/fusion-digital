@@ -10,7 +10,11 @@ import type {
   WebGLRenderer,
 } from 'three';
 import type { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { parseDeviceManifest, type DeviceManifest } from './deviceManifest';
+import {
+  parseDeviceManifest,
+  type DeviceManifest,
+  type DeviceWebModelVariant,
+} from './deviceManifest';
 import './tokamak-cad-viewer.css';
 
 const DEFAULT_MANIFEST_URL = '/models/paramak-tokamak-demo/model-manifest.json';
@@ -28,6 +32,11 @@ type ViewerStatus = 'idle' | 'loading' | 'ready' | 'error';
 type ViewPreset = 'iso' | 'front' | 'top';
 type ClipAxis = 'x' | 'y' | 'z';
 type ViewerStats = { meshes: number; triangles: number; renderer: string; parts: number };
+type ViewSnapshot = {
+  position: [number, number, number];
+  target: [number, number, number];
+  up: [number, number, number];
+};
 type ViewerApi = {
   controls: OrbitControls;
   renderer: WebGLRenderer;
@@ -46,6 +55,9 @@ type ViewerApi = {
   applyVisibility: (hidden: Set<string>, isolated: Set<string>) => void;
   selectParts: (partIds: Set<string>) => void;
   pickPart: (event: PointerEvent) => string | null;
+  captureView: () => ViewSnapshot;
+  applyView: (snapshot: ViewSnapshot) => void;
+  resize: (refit?: boolean) => void;
 };
 
 function formatCount(value: number) {
@@ -83,6 +95,31 @@ function allMeshes(root: Object3D) {
   return meshes;
 }
 
+function webModelVariants(manifest: DeviceManifest | null): DeviceWebModelVariant[] {
+  if (!manifest) return [];
+  return manifest.assets.webModels ?? [{
+    ...manifest.assets.webModel,
+    id: 'standard',
+    label: '标准',
+    quality: 'preview',
+    default: true,
+  }];
+}
+
+function megabytes(bytes: number) {
+  return Math.max(0.1, bytes / 1_000_000).toFixed(1);
+}
+
+function shouldPreferPreview() {
+  const hintedNavigator = navigator as Navigator & {
+    deviceMemory?: number;
+    connection?: { saveData?: boolean };
+  };
+  return window.matchMedia('(max-width: 650px)').matches
+    || hintedNavigator.connection?.saveData === true
+    || (typeof hintedNavigator.deviceMemory === 'number' && hintedNavigator.deviceMemory < 4);
+}
+
 export default function TokamakCadViewer({
   manifestUrl = DEFAULT_MANIFEST_URL,
   viewerId = 'paramak-tokamak-demo',
@@ -96,12 +133,25 @@ export default function TokamakCadViewer({
   const viewerRef = useRef<ViewerApi | null>(null);
   const pointerDownRef = useRef<{ x: number; y: number } | null>(null);
   const selectedPartIdsRef = useRef<Set<string>>(new Set());
+  const hiddenPartIdsRef = useRef<Set<string>>(new Set());
+  const isolatedPartIdsRef = useRef<Set<string>>(new Set());
   const opacityRef = useRef({ global: 1, selected: 1 });
+  const viewSnapshotRef = useRef<ViewSnapshot | null>(null);
+  const interactionRef = useRef({
+    activeView: 'iso' as ViewPreset,
+    autoRotate: false,
+    wireframe: false,
+    clipping: false,
+    clipAxis: 'x' as ClipAxis,
+    clipOffset: 0,
+  });
   const [activated, setActivated] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [status, setStatus] = useState<ViewerStatus>('idle');
   const [progress, setProgress] = useState(0);
   const [manifest, setManifest] = useState<DeviceManifest | null>(null);
+  const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
+  const [lodNotice, setLodNotice] = useState('');
   const [autoRotate, setAutoRotate] = useState(false);
   const [wireframe, setWireframe] = useState(false);
   const [clipping, setClipping] = useState(false);
@@ -120,6 +170,11 @@ export default function TokamakCadViewer({
   const [isolatedPartIds, setIsolatedPartIds] = useState<Set<string>>(() => new Set());
   const [openSystems, setOpenSystems] = useState<Set<string>>(() => new Set());
 
+  const availableModels = useMemo(() => webModelVariants(manifest), [manifest]);
+  const selectedModel = availableModels.find((asset) => asset.id === selectedModelId)
+    ?? availableModels[0]
+    ?? null;
+
   const parts = useMemo(() => manifest?.systems.flatMap((system) => system.parts.map((part) => ({
     ...part,
     systemId: system.id,
@@ -136,12 +191,41 @@ export default function TokamakCadViewer({
     setErrorMessage('');
     setProgress(0);
     setStatus('loading');
-    if (activated) setAttempt((value) => value + 1);
-    else setActivated(true);
-  }, [activated]);
+    if (!activated) setActivated(true);
+    if (activated || status === 'error') setAttempt((value) => value + 1);
+  }, [activated, status]);
 
   useEffect(() => {
-    if (!activated || !mountRef.current) return;
+    const controller = new AbortController();
+    fetch(manifestUrl, { cache: 'no-store', signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) throw new Error(`装置清单载入失败（HTTP ${response.status}）。`);
+        const loadedManifest = parseDeviceManifest(await response.json());
+        if (loadedManifest.access.classification !== 'PUBLIC') throw new Error('当前网页只允许加载 PUBLIC 级的浏览器派生资产。');
+        if (!loadedManifest.access.redistributionAllowed) throw new Error('该装置包未授予公开再分发权，已拒绝在公网站点加载。');
+        if (controller.signal.aborted) return;
+        const variants = webModelVariants(loadedManifest);
+        const preview = variants.find((asset) => asset.quality === 'preview') ?? variants[0];
+        const declaredDefault = variants.find((asset) => asset.default === true) ?? preview;
+        const constrained = variants.length > 1 && shouldPreferPreview();
+        const preferred = constrained ? preview : declaredDefault;
+        setManifest(loadedManifest);
+        setOpenSystems(new Set(loadedManifest.systems.map((system) => system.id)));
+        setSelectedModelId((current) => variants.some((asset) => asset.id === current) ? current : preferred.id);
+        setLodNotice(constrained && preferred.id !== declaredDefault.id
+          ? '已根据窄屏、节省流量或低内存设备自动选择标准模型；可手动切换高清。'
+          : '');
+      })
+      .catch((error: unknown) => {
+        if (controller.signal.aborted) return;
+        setStatus('error');
+        setErrorMessage(error instanceof Error ? error.message : '装置清单载入失败。');
+      });
+    return () => controller.abort();
+  }, [attempt, manifestUrl]);
+
+  useEffect(() => {
+    if (!activated || !mountRef.current || !manifest || !selectedModel) return;
 
     let disposed = false;
     let frame = 0;
@@ -194,19 +278,16 @@ export default function TokamakCadViewer({
     async function initialise() {
       if (!supportsWebGL2()) throw new Error('当前浏览器或显卡未启用 WebGL 2，无法启动三维视图。');
 
-      const [manifestResponse, THREE, controlsModule, loaderModule] = await Promise.all([
-        fetch(manifestUrl, { cache: 'no-store' }),
+      const [THREE, controlsModule, loaderModule, meshoptModule] = await Promise.all([
         import('three'),
         import('three/examples/jsm/controls/OrbitControls.js'),
         import('three/examples/jsm/loaders/GLTFLoader.js'),
+        import('three/examples/jsm/libs/meshopt_decoder.module.js'),
       ]);
-      if (!manifestResponse.ok) throw new Error(`装置清单载入失败（HTTP ${manifestResponse.status}）。`);
-      const loadedManifest = parseDeviceManifest(await manifestResponse.json());
-      if (loadedManifest.access.classification !== 'PUBLIC') throw new Error('当前网页只允许加载 PUBLIC 级的浏览器派生资产。');
-      if (!loadedManifest.access.redistributionAllowed) throw new Error('该装置包未授予公开再分发权，已拒绝在公网站点加载。');
       if (disposed || !mountRef.current) return;
-      setManifest(loadedManifest);
-      setOpenSystems(new Set(loadedManifest.systems.map((system) => system.id)));
+      if (!manifest || !selectedModel) throw new Error('模型清单或质量版本尚未就绪。');
+      const loadedManifest = manifest;
+      const loadedModel = selectedModel;
 
       const mount = mountRef.current;
       const scene = new THREE.Scene();
@@ -260,7 +341,8 @@ export default function TokamakCadViewer({
       localDisposableMaterials = disposableMaterials;
 
       const loader = new loaderModule.GLTFLoader();
-      const gltf = await loader.loadAsync(loadedManifest.assets.webModel.path, (event) => {
+      loader.setMeshoptDecoder(meshoptModule.MeshoptDecoder);
+      const gltf = await loader.loadAsync(loadedModel.path, (event) => {
         if (!disposed && event.total > 0) setProgress(Math.min(99, Math.round((event.loaded / event.total) * 100)));
       });
       if (disposed) {
@@ -332,9 +414,11 @@ export default function TokamakCadViewer({
 
       const target = fittedSphere.center.clone();
       const modelRadius = Math.max(fittedSphere.radius, 0.1);
-      let currentPreset: ViewPreset = 'iso';
+      let currentPreset: ViewPreset = interactionRef.current.activeView;
+      let preserveViewOnResize = false;
       const setView = (preset: ViewPreset) => {
         currentPreset = preset;
+        preserveViewOnResize = false;
         const verticalHalfFov = THREE.MathUtils.degToRad(camera.fov * 0.5);
         const horizontalHalfFov = Math.atan(Math.tan(verticalHalfFov) * Math.max(camera.aspect, 0.1));
         const limitingHalfFov = Math.max(0.08, Math.min(verticalHalfFov, horizontalHalfFov));
@@ -407,17 +491,31 @@ export default function TokamakCadViewer({
         return null;
       };
 
-      const resize = () => {
+      const resize = (refit = false) => {
         if (!mountRef.current) return;
         const width = Math.max(1, mountRef.current.clientWidth);
         const height = Math.max(1, mountRef.current.clientHeight);
         camera.aspect = width / height;
         renderer.setSize(width, height, false);
-        setView(currentPreset);
+        if (preserveViewOnResize && !refit) {
+          camera.updateProjectionMatrix();
+          controls.update();
+        } else {
+          setView(currentPreset);
+        }
       };
       resize();
-      if (typeof ResizeObserver !== 'undefined') { resizeObserver = new ResizeObserver(resize); resizeObserver.observe(mount); }
-      else { resizeFallback = resize; window.addEventListener('resize', resizeFallback); }
+      if (viewSnapshotRef.current) {
+        camera.position.fromArray(viewSnapshotRef.current.position);
+        controls.target.fromArray(viewSnapshotRef.current.target);
+        camera.up.fromArray(viewSnapshotRef.current.up);
+        camera.lookAt(controls.target);
+        camera.updateProjectionMatrix();
+        controls.update();
+        preserveViewOnResize = true;
+      }
+      if (typeof ResizeObserver !== 'undefined') { resizeObserver = new ResizeObserver(() => resize()); resizeObserver.observe(mount); }
+      else { resizeFallback = () => resize(); window.addEventListener('resize', resizeFallback); }
       if (typeof IntersectionObserver !== 'undefined') {
         intersectionObserver = new IntersectionObserver(([entry]) => { inViewport = entry.isIntersecting; }, { rootMargin: '120px' });
         intersectionObserver.observe(mount);
@@ -483,45 +581,100 @@ export default function TokamakCadViewer({
         applyVisibility,
         selectParts,
         pickPart,
+        captureView: () => ({
+          position: camera.position.toArray() as [number, number, number],
+          target: controls.target.toArray() as [number, number, number],
+          up: camera.up.toArray() as [number, number, number],
+        }),
+        applyView: (snapshot) => {
+          camera.position.fromArray(snapshot.position);
+          controls.target.fromArray(snapshot.target);
+          camera.up.fromArray(snapshot.up);
+          camera.lookAt(controls.target);
+          camera.updateProjectionMatrix();
+          controls.update();
+          preserveViewOnResize = true;
+        },
+        resize,
       };
-      setOpacity(1, 1);
-      opacityRef.current = { global: 1, selected: 1 };
-      setSelectedPartId(null);
-      setSelectedPartIds(new Set());
-      setHiddenPartIds(new Set());
-      setIsolatedPartIds(new Set());
-      setGlobalOpacity(1);
-      setSelectedOpacity(1);
-      setClipAxis('x');
-      setClipOffset(0);
-      setClipping(false);
+      selectParts(selectedPartIdsRef.current);
+      applyVisibility(hiddenPartIdsRef.current, isolatedPartIdsRef.current);
+      setOpacity(opacityRef.current.global, opacityRef.current.selected);
+      viewerRef.current.setWireframe(interactionRef.current.wireframe);
+      viewerRef.current.setClipping(
+        interactionRef.current.clipping,
+        interactionRef.current.clipAxis,
+        interactionRef.current.clipOffset,
+      );
+      controls.autoRotate = interactionRef.current.autoRotate;
       setStats({ meshes, triangles: Math.round(triangles), renderer: renderer.capabilities.isWebGL2 ? 'WEBGL 2' : 'WEBGL', parts: nodeByPartId.size });
       setProgress(100);
       setStatus('ready');
+      setLodNotice((notice) => notice.startsWith('正在切换到') ? '' : notice);
     }
 
     initialise().catch((error: unknown) => {
       if (disposed) return;
       releaseResources();
+      const preview = manifest.assets.webModels?.find((asset) => asset.quality === 'preview');
+      if (selectedModel.quality === 'high' && preview && preview.id !== selectedModel.id) {
+        const reason = error instanceof Error ? error.message : '未知加载错误';
+        setLodNotice(`高清模型加载失败，已回退标准模型：${reason}`);
+        setProgress(0);
+        setStatus('loading');
+        setSelectedModelId(preview.id);
+        return;
+      }
       setStatus('error');
       setErrorMessage(error instanceof Error ? error.message : '模型载入失败，请稍后重试。');
     });
 
     return () => { disposed = true; releaseResources(); viewerRef.current = null; };
-  }, [activated, attempt, manifestUrl]);
+  }, [activated, attempt, manifest, selectedModel]);
 
   useEffect(() => {
-    const onFullscreenChange = () => setFullscreen(document.fullscreenElement === fullscreenRef.current);
+    const onFullscreenChange = () => {
+      setFullscreen(document.fullscreenElement === fullscreenRef.current);
+      requestAnimationFrame(() => requestAnimationFrame(() => viewerRef.current?.resize(true)));
+    };
     document.addEventListener('fullscreenchange', onFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
   }, []);
 
-  const selectView = (preset: ViewPreset) => { viewerRef.current?.setView(preset); setActiveView(preset); };
-  const toggleAutoRotate = () => { const next = !autoRotate; if (viewerRef.current) viewerRef.current.controls.autoRotate = next; setAutoRotate(next); };
-  const toggleWireframe = () => { const next = !wireframe; viewerRef.current?.setWireframe(next); setWireframe(next); };
-  const toggleClipping = () => { const next = !clipping; viewerRef.current?.setClipping(next, clipAxis, clipOffset); setClipping(next); };
-  const updateClipAxis = (axis: ClipAxis) => { setClipAxis(axis); viewerRef.current?.setClipping(clipping, axis, clipOffset); };
-  const updateClipOffset = (value: number) => { setClipOffset(value); viewerRef.current?.setClipping(clipping, clipAxis, value); };
+  const selectView = (preset: ViewPreset) => {
+    viewSnapshotRef.current = null;
+    interactionRef.current.activeView = preset;
+    viewerRef.current?.setView(preset);
+    setActiveView(preset);
+  };
+  const toggleAutoRotate = () => {
+    const next = !autoRotate;
+    interactionRef.current.autoRotate = next;
+    if (viewerRef.current) viewerRef.current.controls.autoRotate = next;
+    setAutoRotate(next);
+  };
+  const toggleWireframe = () => {
+    const next = !wireframe;
+    interactionRef.current.wireframe = next;
+    viewerRef.current?.setWireframe(next);
+    setWireframe(next);
+  };
+  const toggleClipping = () => {
+    const next = !clipping;
+    interactionRef.current.clipping = next;
+    viewerRef.current?.setClipping(next, clipAxis, clipOffset);
+    setClipping(next);
+  };
+  const updateClipAxis = (axis: ClipAxis) => {
+    interactionRef.current.clipAxis = axis;
+    setClipAxis(axis);
+    viewerRef.current?.setClipping(clipping, axis, clipOffset);
+  };
+  const updateClipOffset = (value: number) => {
+    interactionRef.current.clipOffset = value;
+    setClipOffset(value);
+    viewerRef.current?.setClipping(clipping, clipAxis, value);
+  };
   const updateGlobalOpacity = (value: number) => {
     opacityRef.current.global = value;
     setGlobalOpacity(value);
@@ -536,6 +689,10 @@ export default function TokamakCadViewer({
     viewerRef.current?.reset();
     if (viewerRef.current) { viewerRef.current.controls.autoRotate = false; viewerRef.current.setWireframe(false); }
     selectedPartIdsRef.current = new Set();
+    hiddenPartIdsRef.current = new Set();
+    isolatedPartIdsRef.current = new Set();
+    viewSnapshotRef.current = null;
+    interactionRef.current = { activeView: 'iso', autoRotate: false, wireframe: false, clipping: false, clipAxis: 'x', clipOffset: 0 };
     setActiveView('iso'); setAutoRotate(false); setWireframe(false); setSelectedPartId(null); setSelectedPartIds(new Set()); setIsolatedPartIds(new Set()); setHiddenPartIds(new Set());
     opacityRef.current = { global: 1, selected: 1 };
     setClipAxis('x'); setClipOffset(0); setClipping(false); setGlobalOpacity(1); setSelectedOpacity(1);
@@ -547,32 +704,40 @@ export default function TokamakCadViewer({
     if (additive && next.has(partId)) next.delete(partId); else next.add(partId);
     selectedPartIdsRef.current = next;
     setSelectedPartIds(next); setSelectedPartId(next.has(partId) ? partId : next.values().next().value ?? null);
-    setIsolatedPartIds(new Set()); viewerRef.current?.selectParts(next); viewerRef.current?.applyVisibility(hiddenPartIds, new Set());
+    isolatedPartIdsRef.current = new Set();
+    setIsolatedPartIds(new Set()); viewerRef.current?.selectParts(next); viewerRef.current?.applyVisibility(hiddenPartIdsRef.current, new Set());
   };
   const selectFilteredParts = () => {
     const next = new Set(filteredPartIds);
     selectedPartIdsRef.current = next;
+    isolatedPartIdsRef.current = new Set();
     setSelectedPartIds(next); setSelectedPartId(next.values().next().value ?? null); setIsolatedPartIds(new Set());
-    viewerRef.current?.selectParts(next); viewerRef.current?.applyVisibility(hiddenPartIds, new Set());
+    viewerRef.current?.selectParts(next); viewerRef.current?.applyVisibility(hiddenPartIdsRef.current, new Set());
   };
   const clearSelection = () => {
     selectedPartIdsRef.current = new Set();
+    isolatedPartIdsRef.current = new Set();
     setSelectedPartIds(new Set()); setSelectedPartId(null); setIsolatedPartIds(new Set());
-    viewerRef.current?.selectParts(new Set()); viewerRef.current?.applyVisibility(hiddenPartIds, new Set());
+    viewerRef.current?.selectParts(new Set()); viewerRef.current?.applyVisibility(hiddenPartIdsRef.current, new Set());
   };
   const setPartIdsVisibility = (partIds: Set<string>, visible: boolean) => {
     const next = new Set(hiddenPartIds);
     partIds.forEach((partId) => visible ? next.delete(partId) : next.add(partId));
+    hiddenPartIdsRef.current = next;
+    isolatedPartIdsRef.current = new Set();
     setHiddenPartIds(next); setIsolatedPartIds(new Set()); viewerRef.current?.applyVisibility(next, new Set());
   };
   const togglePartVisibility = (partId: string) => {
     const next = new Set(hiddenPartIds);
     if (next.has(partId)) next.delete(partId); else next.add(partId);
+    hiddenPartIdsRef.current = next;
+    isolatedPartIdsRef.current = new Set();
     setHiddenPartIds(next); setIsolatedPartIds(new Set()); viewerRef.current?.applyVisibility(next, new Set());
   };
   const isolateSelection = () => {
     const next = isolatedPartIds.size > 0 ? new Set<string>() : new Set(selectedPartIds);
-    setIsolatedPartIds(next); viewerRef.current?.applyVisibility(hiddenPartIds, next);
+    isolatedPartIdsRef.current = next;
+    setIsolatedPartIds(next); viewerRef.current?.applyVisibility(hiddenPartIdsRef.current, next);
   };
   const toggleSystem = (systemId: string) => {
     const next = new Set(openSystems);
@@ -583,13 +748,22 @@ export default function TokamakCadViewer({
     try { if (document.fullscreenElement) await document.exitFullscreen(); else await fullscreenRef.current?.requestFullscreen(); }
     catch { setFullscreen(false); }
   };
+  const selectModel = (modelId: string) => {
+    const next = availableModels.find((asset) => asset.id === modelId);
+    if (!next || next.id === selectedModel?.id) return;
+    viewSnapshotRef.current = viewerRef.current?.captureView() ?? viewSnapshotRef.current;
+    setLodNotice(`正在切换到${next.label}模型（约 ${megabytes(next.bytes)} MB）…`);
+    setProgress(0);
+    if (activated) setStatus('loading');
+    setSelectedModelId(next.id);
+  };
   const ready = status === 'ready';
   const packageBase = manifestUrl.slice(0, manifestUrl.lastIndexOf('/'));
   const sourceCadPath = manifest?.assets.sourceCad?.path ?? `${packageBase}/${viewerId}.step`;
-  const webModelPath = manifest?.assets.webModel.path ?? `${packageBase}/${viewerId}.glb`;
+  const webModelPath = selectedModel?.path ?? manifest?.assets.webModel.path ?? `${packageBase}/${viewerId}.glb`;
   const posterPath = manifest?.assets.poster?.path ?? (workspace ? null : '/models/paramak-tokamak-demo/paramak-tokamak-demo-poster.png');
   const isParamakPackage = manifest?.devicePackage.kind === 'public-demonstrator' || viewerId.includes('paramak');
-  const estimatedMegabytes = manifest?.assets.webModel.bytes ? Math.max(0.1, manifest.assets.webModel.bytes / 1_000_000).toFixed(1) : workspace ? '2.2' : '1.1';
+  const estimatedMegabytes = selectedModel?.bytes ? megabytes(selectedModel.bytes) : manifest?.assets.webModel.bytes ? megabytes(manifest.assets.webModel.bytes) : workspace ? '2.2' : '1.1';
   const applicabilityStatement = manifest?.disclaimer ?? '该浏览器派生模型仅用于网页预览，不能用于制造、尺寸校核、仿真计算或安全决策。';
 
   return (
@@ -605,7 +779,21 @@ export default function TokamakCadViewer({
       <div className={`tokamakCadShell status-${status}`} ref={fullscreenRef}>
         <div className="tokamakCadTopbar">
           <div className="tokamakCadIdentity"><span className="tokamakCadPulse" aria-hidden="true" /><div><b>{manifest?.title.toUpperCase() ?? 'MANIFEST-DRIVEN TOKAMAK PACKAGE'}</b><small>DEVICE-AGNOSTIC / LICENCE-AWARE PACKAGE CONTRACT</small></div></div>
-          <div className="tokamakCadStatus" aria-live="polite"><span>{ready ? `${manifest?.access.classification ?? 'PUBLIC'} · MODEL ONLINE` : status === 'loading' ? `STREAMING ${progress}%` : status === 'error' ? 'FALLBACK MODE' : 'STANDBY'}</span><i aria-hidden="true" /></div>
+          <div className="tokamakCadTopbarActions">
+            {availableModels.length > 1 && <fieldset className="tokamakCadLodSelector" aria-label="模型精度">
+              <legend className="srOnly">模型精度</legend>
+              {availableModels.map((asset) => <button
+                type="button"
+                key={asset.id}
+                className={selectedModel?.id === asset.id ? 'active' : ''}
+                aria-pressed={selectedModel?.id === asset.id}
+                disabled={status === 'loading'}
+                onClick={() => selectModel(asset.id)}
+                title={`${asset.label} · ${megabytes(asset.bytes)} MB${asset.triangles ? ` · ${formatCount(asset.triangles)} triangles` : ''}`}
+              >{asset.quality === 'high' ? '高清' : '标准'} <small>{megabytes(asset.bytes)} MB</small></button>)}
+            </fieldset>}
+            <div className="tokamakCadStatus" aria-live="polite"><span>{ready ? `${selectedModel?.label ?? 'STANDARD'} · MODEL ONLINE` : status === 'loading' ? `STREAMING ${progress}%` : status === 'error' ? 'FALLBACK MODE' : 'STANDBY'}</span><i aria-hidden="true" /></div>
+          </div>
         </div>
 
         <div className="tokamakCadWorkspace">
@@ -644,11 +832,11 @@ export default function TokamakCadViewer({
             </>}
             <div className="tokamakCadViewport" ref={mountRef} />
             <div className="tokamakCadScan" aria-hidden="true" /><div className="tokamakCadReticle" aria-hidden="true"><i /><i /></div>
-            {status === 'idle' && <div className="tokamakCadLaunch"><div className="tokamakCadLaunchGlyph" aria-hidden="true"><span /><i /><b /></div><p>MANIFEST-DRIVEN DIGITAL ASSET / 01</p><h3>启动装置数据包查看器</h3><span>按需加载约 {estimatedMegabytes} MB 的公开浏览器派生资产。可浏览装配树、点选部件、显隐/隔离、透明度、X/Y/Z 剖切、线框与属性信息。</span><button type="button" onClick={activate}>启动 3D VIEWER <i>→</i></button></div>}
-            {status === 'loading' && <div className="tokamakCadLoading" role="status"><span>MANIFEST → GLB → GPU</span><div><i style={{ width: `${Math.max(6, progress)}%` }} /></div><b>{progress > 0 ? `${progress}%` : '正在验证装置清单与数据分级'}</b></div>}
+            {status === 'idle' && <div className="tokamakCadLaunch"><div className="tokamakCadLaunchGlyph" aria-hidden="true"><span /><i /><b /></div><p>MANIFEST-DRIVEN DIGITAL ASSET / 01</p><h3>启动装置数据包查看器</h3><span>当前选择{selectedModel?.label ?? '标准'}质量，按需加载约 {estimatedMegabytes} MB。可浏览装配树、点选部件、显隐/隔离、透明度、X/Y/Z 剖切、线框与属性信息。</span>{lodNotice && <em className="tokamakCadLodNotice">{lodNotice}</em>}<button type="button" onClick={activate} disabled={!manifest || !selectedModel}>启动 3D VIEWER <i>→</i></button></div>}
+            {status === 'loading' && <div className="tokamakCadLoading" role="status"><span>MANIFEST → {selectedModel?.quality === 'high' ? 'HIGH LOD' : 'PREVIEW LOD'} → GPU</span><div><i style={{ width: `${Math.max(6, progress)}%` }} /></div><b>{progress > 0 ? `${progress}% · ${selectedModel?.label ?? '模型'} ${estimatedMegabytes} MB` : `正在载入${selectedModel?.label ?? '选定'}模型`}</b>{lodNotice && <em className="tokamakCadLodNotice">{lodNotice}</em>}</div>}
             {status === 'error' && <div className="tokamakCadFallback"><div className="tokamakFallbackTorus" aria-hidden="true"><span /><i /><b /></div><p>WEBGL FALLBACK</p><h3>三维视图暂不可用</h3><span>{errorMessage}</span><div><button type="button" onClick={activate}>重新载入</button>{showDownloadActions && <a href={sourceCadPath} download>下载 STEP</a>}</div></div>}
             <div className="tokamakCadLegend" aria-label="部件颜色图例"><span><i className="plasma" />PLASMA</span><span><i className="tf" />TF COILS</span><span><i className="pf" />PF COILS / CASES</span><span><i className="structure" />STRUCTURE</span></div>
-            <div className="tokamakCadReadout" aria-label="三维模型统计"><span><small>FORMAT</small><b>{manifest?.assets.webModel.format ?? 'GLB 2.0'}</b></span><span><small>MESHES</small><b>{ready ? formatCount(stats.meshes) : '—'}</b></span><span><small>TRIANGLES</small><b>{ready ? formatCount(stats.triangles) : '—'}</b></span><span><small>RENDER</small><b>{ready ? stats.renderer : 'ON DEMAND'}</b></span></div>
+            <div className="tokamakCadReadout" aria-label="三维模型统计"><span><small>QUALITY</small><b>{selectedModel?.label ?? 'STANDARD'} · {estimatedMegabytes} MB</b></span><span><small>MESHES</small><b>{ready ? formatCount(stats.meshes) : '—'}</b></span><span><small>TRIANGLES</small><b>{ready ? formatCount(stats.triangles) : selectedModel?.triangles ? formatCount(selectedModel.triangles) : '—'}</b></span><span><small>RENDER</small><b>{ready ? stats.renderer : 'ON DEMAND'}</b></span></div>
           </div>
 
           <aside className="tokamakCadProperties" aria-label="部件属性">
