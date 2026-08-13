@@ -25,6 +25,7 @@ type TokamakCadViewerProps = {
 
 type ViewerStatus = 'idle' | 'loading' | 'ready' | 'error';
 type ViewPreset = 'iso' | 'front' | 'top';
+type ClipAxis = 'x' | 'y' | 'z';
 type ViewerStats = { meshes: number; triangles: number; renderer: string; parts: number };
 type ViewerApi = {
   controls: OrbitControls;
@@ -39,9 +40,10 @@ type ViewerApi = {
   setView: (preset: ViewPreset) => void;
   reset: () => void;
   setWireframe: (enabled: boolean) => void;
-  setClipping: (enabled: boolean, offset: number) => void;
-  applyVisibility: (hidden: Set<string>, isolated: string | null) => void;
-  selectPart: (partId: string | null) => void;
+  setClipping: (enabled: boolean, axis: ClipAxis, offset: number) => void;
+  setOpacity: (globalOpacity: number, selectedOpacity: number) => void;
+  applyVisibility: (hidden: Set<string>, isolated: Set<string>) => void;
+  selectParts: (partIds: Set<string>) => void;
   pickPart: (event: PointerEvent) => string | null;
 };
 
@@ -91,6 +93,7 @@ export default function TokamakCadViewer({
   const fullscreenRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<ViewerApi | null>(null);
   const pointerDownRef = useRef<{ x: number; y: number } | null>(null);
+  const selectedPartIdsRef = useRef<Set<string>>(new Set());
   const [activated, setActivated] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [status, setStatus] = useState<ViewerStatus>('idle');
@@ -99,15 +102,19 @@ export default function TokamakCadViewer({
   const [autoRotate, setAutoRotate] = useState(false);
   const [wireframe, setWireframe] = useState(false);
   const [clipping, setClipping] = useState(false);
+  const [clipAxis, setClipAxis] = useState<ClipAxis>('x');
   const [clipOffset, setClipOffset] = useState(0);
+  const [globalOpacity, setGlobalOpacity] = useState(1);
+  const [selectedOpacity, setSelectedOpacity] = useState(1);
   const [fullscreen, setFullscreen] = useState(false);
   const [activeView, setActiveView] = useState<ViewPreset>('iso');
   const [stats, setStats] = useState<ViewerStats>({ meshes: 0, triangles: 0, renderer: 'WEBGL 2', parts: 0 });
   const [errorMessage, setErrorMessage] = useState('');
   const [query, setQuery] = useState('');
   const [selectedPartId, setSelectedPartId] = useState<string | null>(null);
+  const [selectedPartIds, setSelectedPartIds] = useState<Set<string>>(() => new Set());
   const [hiddenPartIds, setHiddenPartIds] = useState<Set<string>>(() => new Set());
-  const [isolatedPartId, setIsolatedPartId] = useState<string | null>(null);
+  const [isolatedPartIds, setIsolatedPartIds] = useState<Set<string>>(() => new Set());
   const [openSystems, setOpenSystems] = useState<Set<string>>(() => new Set());
 
   const parts = useMemo(() => manifest?.systems.flatMap((system) => system.parts.map((part) => ({
@@ -119,6 +126,8 @@ export default function TokamakCadViewer({
   const partById = useMemo(() => new Map(parts.map((part) => [part.id, part])), [parts]);
   const selectedPart = selectedPartId ? partById.get(selectedPartId) ?? null : null;
   const normalizedQuery = query.trim().toLocaleLowerCase('zh-CN');
+  const filteredPartIds = useMemo(() => new Set(parts.filter((part) => !normalizedQuery
+    || `${part.title} ${part.id} ${part.engineeringTag}`.toLocaleLowerCase('zh-CN').includes(normalizedQuery)).map((part) => part.id)), [normalizedQuery, parts]);
 
   const activate = useCallback(() => {
     setErrorMessage('');
@@ -343,17 +352,32 @@ export default function TokamakCadViewer({
       };
 
       const clippingPlane = new THREE.Plane(new THREE.Vector3(-1, 0, 0), 0);
-      const highlightMaterial = new THREE.MeshPhysicalMaterial({ color: 0xffd06b, emissive: 0xff6a1e, emissiveIntensity: 1.8, roughness: 0.22, metalness: 0.56, transparent: true, opacity: 0.96, side: THREE.DoubleSide });
+      const highlightMaterial = new THREE.MeshPhysicalMaterial({ color: 0xffd06b, emissive: 0xff6a1e, emissiveIntensity: 1.8, roughness: 0.22, metalness: 0.56, transparent: false, opacity: 1, side: THREE.DoubleSide });
       disposableMaterials.add(highlightMaterial);
-      const applyVisibility = (hidden: Set<string>, isolated: string | null) => {
-        nodeByPartId.forEach((node, partId) => { node.visible = isolated ? partId === isolated : !hidden.has(partId); });
+      const baseOpacity = new Map<Material, number>();
+      viewerMaterials.forEach((material) => baseOpacity.set(material, material.opacity));
+      const applyVisibility = (hidden: Set<string>, isolated: Set<string>) => {
+        nodeByPartId.forEach((node, partId) => { node.visible = isolated.size > 0 ? isolated.has(partId) : !hidden.has(partId); });
       };
-      const selectPart = (partId: string | null) => {
+      let highlightedPartIds = new Set<string>();
+      const selectParts = (partIds: Set<string>) => {
+        highlightedPartIds = new Set(partIds);
         originalMaterials.forEach((material, mesh) => { mesh.material = material; });
-        if (!partId) return;
-        const node = nodeByPartId.get(partId);
-        if (!node) return;
-        allMeshes(node).forEach((mesh) => { mesh.material = highlightMaterial; });
+        partIds.forEach((partId) => {
+          const node = nodeByPartId.get(partId);
+          if (node) allMeshes(node).forEach((mesh) => { mesh.material = highlightMaterial; });
+        });
+      };
+      const applyMaterialOpacity = (material: Material, opacity: number) => {
+        material.opacity = Math.max(0.04, Math.min(1, opacity));
+        material.transparent = material.opacity < 0.999;
+        material.depthWrite = material.opacity >= 0.999;
+        material.needsUpdate = true;
+      };
+      const setOpacity = (overall: number, selected: number) => {
+        viewerMaterials.forEach((material) => applyMaterialOpacity(material, (baseOpacity.get(material) ?? 1) * overall));
+        applyMaterialOpacity(highlightMaterial, selected);
+        selectParts(highlightedPartIds);
       };
       const raycaster = new THREE.Raycaster();
       const pointer = new THREE.Vector2();
@@ -403,8 +427,16 @@ export default function TokamakCadViewer({
         pointerDownRef.current = null;
         if (!start || Math.hypot(event.clientX - start.x, event.clientY - start.y) > 5) return;
         const partId = pickPart(event);
-        setSelectedPartId(partId);
-        selectPart(partId);
+        const additive = event.ctrlKey || event.metaKey || event.shiftKey;
+        const next = additive ? new Set(selectedPartIdsRef.current) : new Set<string>();
+        if (partId) {
+          if (next.has(partId) && additive) next.delete(partId);
+          else next.add(partId);
+        }
+        selectedPartIdsRef.current = next;
+        setSelectedPartIds(next);
+        setSelectedPartId(partId && next.has(partId) ? partId : next.values().next().value ?? null);
+        selectParts(next);
       };
       renderer.domElement.addEventListener('pointerdown', pointerDownHandler);
       renderer.domElement.addEventListener('pointerup', pointerUpHandler);
@@ -434,19 +466,31 @@ export default function TokamakCadViewer({
         disposableMaterials,
         setView,
         reset: () => setView('iso'),
-        setWireframe: (enabled) => viewerMaterials.forEach((material) => {
+        setWireframe: (enabled) => [...viewerMaterials, highlightMaterial].forEach((material) => {
           if ('wireframe' in material) { (material as Material & { wireframe: boolean }).wireframe = enabled; material.needsUpdate = true; }
         }),
-        setClipping: (enabled, offset) => {
+        setClipping: (enabled, axis, offset) => {
+          clippingPlane.normal.set(axis === 'x' ? -1 : 0, axis === 'y' ? -1 : 0, axis === 'z' ? -1 : 0);
           clippingPlane.constant = offset * modelRadius;
           viewerMaterials.forEach((material) => { material.clippingPlanes = enabled ? [clippingPlane] : null; material.needsUpdate = true; });
           highlightMaterial.clippingPlanes = enabled ? [clippingPlane] : null;
           highlightMaterial.needsUpdate = true;
         },
+        setOpacity,
         applyVisibility,
-        selectPart,
+        selectParts,
         pickPart,
       };
+      setOpacity(1, 1);
+      setSelectedPartId(null);
+      setSelectedPartIds(new Set());
+      setHiddenPartIds(new Set());
+      setIsolatedPartIds(new Set());
+      setGlobalOpacity(1);
+      setSelectedOpacity(1);
+      setClipAxis('x');
+      setClipOffset(0);
+      setClipping(false);
       setStats({ meshes, triangles: Math.round(triangles), renderer: renderer.capabilities.isWebGL2 ? 'WEBGL 2' : 'WEBGL', parts: nodeByPartId.size });
       setProgress(100);
       setStatus('ready');
@@ -471,23 +515,51 @@ export default function TokamakCadViewer({
   const selectView = (preset: ViewPreset) => { viewerRef.current?.setView(preset); setActiveView(preset); };
   const toggleAutoRotate = () => { const next = !autoRotate; if (viewerRef.current) viewerRef.current.controls.autoRotate = next; setAutoRotate(next); };
   const toggleWireframe = () => { const next = !wireframe; viewerRef.current?.setWireframe(next); setWireframe(next); };
-  const toggleClipping = () => { const next = !clipping; viewerRef.current?.setClipping(next, clipOffset); setClipping(next); };
-  const updateClipOffset = (value: number) => { setClipOffset(value); viewerRef.current?.setClipping(clipping, value); };
+  const toggleClipping = () => { const next = !clipping; viewerRef.current?.setClipping(next, clipAxis, clipOffset); setClipping(next); };
+  const updateClipAxis = (axis: ClipAxis) => { setClipAxis(axis); viewerRef.current?.setClipping(clipping, axis, clipOffset); };
+  const updateClipOffset = (value: number) => { setClipOffset(value); viewerRef.current?.setClipping(clipping, clipAxis, value); };
+  const updateGlobalOpacity = (value: number) => { setGlobalOpacity(value); viewerRef.current?.setOpacity(value, selectedOpacity); };
+  const updateSelectedOpacity = (value: number) => { setSelectedOpacity(value); viewerRef.current?.setOpacity(globalOpacity, value); };
   const resetView = () => {
     viewerRef.current?.reset();
-    if (viewerRef.current) viewerRef.current.controls.autoRotate = false;
-    setActiveView('iso'); setAutoRotate(false); setSelectedPartId(null); setIsolatedPartId(null); setHiddenPartIds(new Set());
-    viewerRef.current?.selectPart(null); viewerRef.current?.applyVisibility(new Set(), null);
+    if (viewerRef.current) { viewerRef.current.controls.autoRotate = false; viewerRef.current.setWireframe(false); }
+    selectedPartIdsRef.current = new Set();
+    setActiveView('iso'); setAutoRotate(false); setWireframe(false); setSelectedPartId(null); setSelectedPartIds(new Set()); setIsolatedPartIds(new Set()); setHiddenPartIds(new Set());
+    setClipAxis('x'); setClipOffset(0); setClipping(false); setGlobalOpacity(1); setSelectedOpacity(1);
+    viewerRef.current?.selectParts(new Set()); viewerRef.current?.applyVisibility(new Set(), new Set());
+    viewerRef.current?.setClipping(false, 'x', 0); viewerRef.current?.setOpacity(1, 1);
   };
-  const selectPart = (partId: string) => { setSelectedPartId(partId); setIsolatedPartId(null); viewerRef.current?.selectPart(partId); viewerRef.current?.applyVisibility(hiddenPartIds, null); };
+  const selectPart = (partId: string, additive = false) => {
+    const next = additive ? new Set(selectedPartIds) : new Set<string>();
+    if (additive && next.has(partId)) next.delete(partId); else next.add(partId);
+    selectedPartIdsRef.current = next;
+    setSelectedPartIds(next); setSelectedPartId(next.has(partId) ? partId : next.values().next().value ?? null);
+    setIsolatedPartIds(new Set()); viewerRef.current?.selectParts(next); viewerRef.current?.applyVisibility(hiddenPartIds, new Set());
+  };
+  const selectFilteredParts = () => {
+    const next = new Set(filteredPartIds);
+    selectedPartIdsRef.current = next;
+    setSelectedPartIds(next); setSelectedPartId(next.values().next().value ?? null); setIsolatedPartIds(new Set());
+    viewerRef.current?.selectParts(next); viewerRef.current?.applyVisibility(hiddenPartIds, new Set());
+  };
+  const clearSelection = () => {
+    selectedPartIdsRef.current = new Set();
+    setSelectedPartIds(new Set()); setSelectedPartId(null); setIsolatedPartIds(new Set());
+    viewerRef.current?.selectParts(new Set()); viewerRef.current?.applyVisibility(hiddenPartIds, new Set());
+  };
+  const setPartIdsVisibility = (partIds: Set<string>, visible: boolean) => {
+    const next = new Set(hiddenPartIds);
+    partIds.forEach((partId) => visible ? next.delete(partId) : next.add(partId));
+    setHiddenPartIds(next); setIsolatedPartIds(new Set()); viewerRef.current?.applyVisibility(next, new Set());
+  };
   const togglePartVisibility = (partId: string) => {
     const next = new Set(hiddenPartIds);
     if (next.has(partId)) next.delete(partId); else next.add(partId);
-    setHiddenPartIds(next); setIsolatedPartId(null); viewerRef.current?.applyVisibility(next, null);
+    setHiddenPartIds(next); setIsolatedPartIds(new Set()); viewerRef.current?.applyVisibility(next, new Set());
   };
-  const isolatePart = (partId: string) => {
-    const next = isolatedPartId === partId ? null : partId;
-    setIsolatedPartId(next); setSelectedPartId(partId); viewerRef.current?.selectPart(partId); viewerRef.current?.applyVisibility(hiddenPartIds, next);
+  const isolateSelection = () => {
+    const next = isolatedPartIds.size > 0 ? new Set<string>() : new Set(selectedPartIds);
+    setIsolatedPartIds(next); viewerRef.current?.applyVisibility(hiddenPartIds, next);
   };
   const toggleSystem = (systemId: string) => {
     const next = new Set(openSystems);
@@ -525,6 +597,13 @@ export default function TokamakCadViewer({
           <aside className="tokamakCadTree" aria-label="装配树">
             <div className="tokamakCadPanelHead"><span>ASSEMBLY TREE</span><b>{ready ? `${stats.parts} PARTS` : 'MANIFEST'}</b></div>
             <label className="tokamakCadSearch"><span className="srOnly">搜索部件</span><input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索名称、ID 或工程标签" disabled={!ready} /></label>
+            <div className="tokamakCadTreeActions" aria-label="装配树批量操作">
+              <button type="button" disabled={!ready || filteredPartIds.size === 0} onClick={selectFilteredParts}>选择筛选项</button>
+              <button type="button" disabled={!ready || selectedPartIds.size === 0} onClick={clearSelection}>清除选择</button>
+              <button type="button" disabled={!ready || filteredPartIds.size === 0} onClick={() => setPartIdsVisibility(filteredPartIds, false)}>隐藏筛选项</button>
+              <button type="button" disabled={!ready || hiddenPartIds.size === 0} onClick={() => setPartIdsVisibility(new Set(hiddenPartIds), true)}>全部显示</button>
+              <button type="button" className={isolatedPartIds.size > 0 ? 'active' : ''} disabled={!ready || selectedPartIds.size === 0} onClick={isolateSelection}>{isolatedPartIds.size > 0 ? '退出隔离' : '隔离选中'}</button>
+            </div>
             <div className="tokamakCadTreeScroll">
               {manifest?.systems.map((system) => {
                 const visibleParts = system.parts.filter((part) => !normalizedQuery || `${part.title} ${part.id} ${part.engineeringTag}`.toLocaleLowerCase('zh-CN').includes(normalizedQuery));
@@ -532,8 +611,9 @@ export default function TokamakCadViewer({
                 const expanded = normalizedQuery ? true : openSystems.has(system.id);
                 return <div className="tokamakCadSystem" key={system.id}>
                   <button type="button" className="tokamakCadSystemButton" aria-expanded={expanded} onClick={() => toggleSystem(system.id)}><i style={{ background: system.color }} /><span>{system.title}<small>{system.shortTitle} · {system.parts.length}</small></span><b>{expanded ? '−' : '+'}</b></button>
-                  {expanded && <div className="tokamakCadParts">{visibleParts.map((part) => <div className={`tokamakCadPart${selectedPartId === part.id ? ' active' : ''}`} key={part.id}>
-                    <button type="button" className="tokamakCadPartSelect" onClick={() => selectPart(part.id)} aria-pressed={selectedPartId === part.id}><span>{part.title}</span><small>{part.id}</small></button>
+                  {expanded && <div className="tokamakCadParts">{visibleParts.map((part) => <div className={`tokamakCadPart${selectedPartIds.has(part.id) ? ' active' : ''}${hiddenPartIds.has(part.id) ? ' hidden' : ''}`} key={part.id}>
+                    <button type="button" className="tokamakCadPartToggle" onClick={() => selectPart(part.id, true)} aria-label={`${selectedPartIds.has(part.id) ? '取消选择' : '加入选择'}${part.title}`} aria-pressed={selectedPartIds.has(part.id)}>{selectedPartIds.has(part.id) ? '✓' : ''}</button>
+                    <button type="button" className="tokamakCadPartSelect" onClick={(event) => selectPart(part.id, event.ctrlKey || event.metaKey || event.shiftKey)} aria-pressed={selectedPartIds.has(part.id)}><span>{part.title}</span><small>{part.id}</small></button>
                     <button type="button" className="tokamakCadIconButton" onClick={() => togglePartVisibility(part.id)} aria-label={`${hiddenPartIds.has(part.id) ? '显示' : '隐藏'}${part.title}`} aria-pressed={hiddenPartIds.has(part.id)}>{hiddenPartIds.has(part.id) ? '○' : '●'}</button>
                   </div>)}</div>}
                 </div>;
@@ -557,11 +637,12 @@ export default function TokamakCadViewer({
           </div>
 
           <aside className="tokamakCadProperties" aria-label="部件属性">
-            <div className="tokamakCadPanelHead"><span>PROPERTIES</span><b>{selectedPart ? selectedPart.id : 'NO SELECTION'}</b></div>
+            <div className="tokamakCadPanelHead"><span>PROPERTIES</span><b>{selectedPartIds.size > 1 ? `${selectedPartIds.size} SELECTED` : selectedPart ? selectedPart.id : 'NO SELECTION'}</b></div>
             {selectedPart ? <div className="tokamakCadPropertyBody">
               <p className="tokamakCadPropertyKicker" style={{ color: selectedPart.color }}>{selectedPart.systemTitle}</p><h3>{selectedPart.title}</h3><p>{selectedPart.description}</p>
               <dl><div><dt>稳定部件 ID</dt><dd>{selectedPart.id}</dd></div><div><dt>工程标签</dt><dd>{selectedPart.engineeringTag}</dd></div><div><dt>GLB 节点</dt><dd>{selectedPart.nodeName}</dd></div><div><dt>数据级别</dt><dd>{manifest?.access.classification}</dd></div></dl>
-              <div className="tokamakCadPropertyActions"><button type="button" onClick={() => togglePartVisibility(selectedPart.id)}>{hiddenPartIds.has(selectedPart.id) ? '显示部件' : '隐藏部件'}</button><button type="button" className={isolatedPartId === selectedPart.id ? 'active' : ''} onClick={() => isolatePart(selectedPart.id)}>{isolatedPartId === selectedPart.id ? '退出隔离' : '隔离部件'}</button></div>
+              {selectedPartIds.size > 1 && <p className="tokamakCadSelectionSummary">已多选 {selectedPartIds.size} 个部件；按 Ctrl / ⌘ / Shift 点击可增减选择。</p>}
+              <div className="tokamakCadPropertyActions"><button type="button" onClick={() => togglePartVisibility(selectedPart.id)}>{hiddenPartIds.has(selectedPart.id) ? '显示当前部件' : '隐藏当前部件'}</button><button type="button" className={isolatedPartIds.size > 0 ? 'active' : ''} onClick={isolateSelection}>{isolatedPartIds.size > 0 ? '退出隔离' : `隔离选中（${selectedPartIds.size}）`}</button></div>
             </div> : <div className="tokamakCadPropertyEmpty"><span>◎</span><p>在装配树或三维视图中选择部件，查看稳定 ID、工程标签与数据级别。</p></div>}
             <div className="tokamakCadTrust"><b>PUBLIC DERIVATIVE</b><p>{manifest?.access.statement ?? '该演示不包含 ITER 或 EXL-50U 受限工程数据。'}</p></div>
           </aside>
@@ -569,7 +650,12 @@ export default function TokamakCadViewer({
 
         <div className="tokamakCadControls" aria-label="三维视图控制">
           <div className="tokamakCadPresets"><span>VIEW</span>{(['iso', 'front', 'top'] as const).map((preset) => <button type="button" key={preset} disabled={!ready} className={activeView === preset ? 'active' : ''} aria-pressed={activeView === preset} onClick={() => selectView(preset)}>{preset === 'iso' ? '3/4' : preset === 'front' ? '前视' : '俯视'}</button>)}</div>
-          <div className="tokamakCadClipControl"><label><span>剖切 X</span><input type="range" min="-0.9" max="0.9" step="0.02" value={clipOffset} disabled={!ready || !clipping} onChange={(event) => updateClipOffset(Number(event.target.value))} /></label></div>
+          <div className="tokamakCadPrecisionControls">
+            <div className="tokamakCadClipAxes" aria-label="剖切轴">{(['x', 'y', 'z'] as const).map((axis) => <button type="button" key={axis} disabled={!ready} className={clipAxis === axis ? 'active' : ''} aria-pressed={clipAxis === axis} onClick={() => updateClipAxis(axis)}>{axis.toUpperCase()}</button>)}</div>
+            <div className="tokamakCadClipControl"><label><span>切面 {clipAxis.toUpperCase()}</span><b>{Math.round(clipOffset * 100)}%</b><input type="range" min="-0.9" max="0.9" step="0.02" value={clipOffset} disabled={!ready || !clipping} onChange={(event) => updateClipOffset(Number(event.target.value))} /></label></div>
+            <div className="tokamakCadOpacityControl global"><label><span>全局透明度</span><b>{Math.round(globalOpacity * 100)}%</b><input type="range" min="0.1" max="1" step="0.05" value={globalOpacity} disabled={!ready} onChange={(event) => updateGlobalOpacity(Number(event.target.value))} /></label></div>
+            <div className="tokamakCadOpacityControl global"><label><span>选中透明度</span><b>{Math.round(selectedOpacity * 100)}%</b><input type="range" min="0.1" max="1" step="0.05" value={selectedOpacity} disabled={!ready || selectedPartIds.size === 0} onChange={(event) => updateSelectedOpacity(Number(event.target.value))} /></label></div>
+          </div>
           <div className="tokamakCadTools"><button type="button" disabled={!ready} onClick={resetView}>复位</button><button type="button" disabled={!ready} className={autoRotate ? 'active' : ''} aria-pressed={autoRotate} onClick={toggleAutoRotate}>自转</button><button type="button" disabled={!ready} className={wireframe ? 'active' : ''} aria-pressed={wireframe} onClick={toggleWireframe}>线框</button><button type="button" disabled={!ready} className={clipping ? 'active' : ''} aria-pressed={clipping} onClick={toggleClipping}>剖切</button><button type="button" disabled={!ready} className={fullscreen ? 'active' : ''} aria-pressed={fullscreen} onClick={toggleFullscreen}>全屏</button></div>
         </div>
       </div>

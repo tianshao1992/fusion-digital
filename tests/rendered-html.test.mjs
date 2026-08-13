@@ -303,6 +303,19 @@ test('server-renders the public full-device digital-prototype workspace', async 
   assert.ok(catalog.devices.every((device) => !JSON.stringify(device).match(/iter-cad-private|127\.0\.0\.1|[A-Z]:\\/i)));
   assert.doesNotMatch(html, /下载 (?:STEP|GLB)/);
 
+  const turntable = JSON.parse(await readFile(
+    new URL('../public/models/exl50u-secure-preview/turntable-manifest.json', import.meta.url),
+    'utf8',
+  ));
+  assert.equal(turntable.schemaVersion, '1.1');
+  assert.equal(turntable.defaultMode, 'exterior');
+  assert.deepEqual(turntable.modes.map((mode) => mode.id), [
+    'exterior', 'transparent', 'section-x', 'section-y', 'section-z',
+    'detail-center', 'detail-upper', 'detail-lower',
+  ]);
+  assert.equal(turntable.modes.reduce((total, mode) => total + mode.frames.length, 0), 75);
+  assert.ok(turntable.modes.flatMap((mode) => mode.frames).every((frame) => /^\/models\/exl50u-secure-preview\/[^/]/.test(frame.src)));
+
   const manifest = JSON.parse(await readFile(
     new URL('../public/models/paramak-full-device/model-manifest.json', import.meta.url),
     'utf8',

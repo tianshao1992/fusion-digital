@@ -125,3 +125,32 @@
 @media(prefers-reduced-motion:reduce){
   .tokamakCadPulse,.tokamakCadScan,.tokamakCadLaunchGlyph:after,.tokamakFallbackTorus:after{animation:none!important}
 }
+
+/* Precision assembly controls */
+.tokamakCadTreeActions{display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:8px 10px;border-bottom:1px solid var(--cad-line);background:#091511}
+.tokamakCadTreeActions button{min-height:29px;border:1px solid #759c8d35;padding:5px;color:#839c91;background:#07120e;font:7px/1.2 "Microsoft YaHei UI","Microsoft YaHei",sans-serif;cursor:pointer}
+.tokamakCadTreeActions button:hover:not(:disabled),.tokamakCadTreeActions button:focus-visible:not(:disabled){border-color:var(--cad-cyan);color:var(--cad-cyan)}
+.tokamakCadTreeActions button:disabled{opacity:.3;cursor:not-allowed}
+.tokamakCadTreeActions button.active{border-color:var(--cad-cyan);color:#06110d;background:var(--cad-cyan)}
+.tokamakCadTreeActions button:last-child{grid-column:1/-1}
+.tokamakCadTreeScroll{height:calc(100% - 220px)}
+.tokamakCadPart.hidden{opacity:.48}
+.tokamakCadPart{grid-template-columns:27px minmax(0,1fr) 34px}
+.tokamakCadPartToggle{align-self:center;width:16px;height:16px;margin-left:8px;border:1px solid #759c8d4a;padding:0;color:#06110d;background:transparent;font:900 9px/1 ui-monospace,monospace;cursor:pointer}
+.tokamakCadPartToggle[aria-pressed="true"]{border-color:var(--cad-orange);background:var(--cad-orange);box-shadow:0 0 12px #ff7a2f33}
+.tokamakCadSelectionSummary{padding:9px;border:1px solid #ff7a2f31;color:#b49a8a!important;background:#ff7a2f0b}
+.tokamakCadOpacityControl{margin-top:15px}
+.tokamakCadOpacityControl label{display:grid;grid-template-columns:1fr auto;gap:7px;align-items:center;color:#718d82;font-size:8px;font-weight:800;letter-spacing:.08em}
+.tokamakCadOpacityControl b{color:#b9cec5;font:8px/1 ui-monospace,monospace}
+.tokamakCadOpacityControl input{grid-column:1/-1;width:100%;accent-color:var(--cad-orange)}
+.tokamakCadControls{display:grid;grid-template-columns:auto minmax(340px,1fr) auto;gap:18px}
+.tokamakCadPrecisionControls{display:grid;grid-template-columns:auto minmax(140px,1fr) minmax(110px,.7fr) minmax(110px,.7fr);gap:11px;align-items:center}
+.tokamakCadClipAxes{display:flex;gap:3px}
+.tokamakCadClipAxes button{min-width:34px;padding:7px}
+.tokamakCadClipControl{min-width:0;max-width:none}
+.tokamakCadClipControl label{grid-template-columns:auto auto;gap:5px 10px}
+.tokamakCadClipControl label b{color:#a8bbb3;font:8px/1 ui-monospace,monospace;text-align:right}
+.tokamakCadClipControl input{grid-column:1/-1}
+.tokamakCadOpacityControl.global{margin:0}
+@media(max-width:1100px){.tokamakCadControls{grid-template-columns:1fr auto}.tokamakCadPrecisionControls{grid-column:1/-1;grid-row:2;grid-template-columns:auto minmax(140px,1fr) minmax(110px,.7fr) minmax(110px,.7fr)}.tokamakCadTools{grid-column:2;grid-row:1}}
+@media(max-width:650px){.tokamakCadTreeScroll{height:calc(100% - 220px)}.tokamakCadControls{display:flex}.tokamakCadPrecisionControls{display:grid;grid-template-columns:auto 1fr}.tokamakCadOpacityControl.global{grid-column:1/-1}.tokamakCadClipAxes{align-self:end}}

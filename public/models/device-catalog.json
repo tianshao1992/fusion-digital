@@ -39,7 +39,7 @@
       "state": "受控三维预览",
       "tone": "controlled",
       "facts": ["1,519 个产品定义", "16,748 个装配实例", "仅发布渲染帧"],
-      "copy": "以多角度渲染帧形成可旋转的三维观感；源 CAD、STEP、装配树和工程 GLB 不会由公网网站下发。",
+      "copy": "以真实模型预渲染的多角度帧形成可旋转的三维观感，并提供透明外壳、X/Y/Z 剖切与内部细节预设；源 CAD、STEP、装配树和工程 GLB 不会由公网网站下发。",
       "availability": "controlled-preview",
       "delivery": "public-static-preview",
       "comparisonFrame": null,

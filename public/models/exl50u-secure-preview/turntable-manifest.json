@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "1.0",
+  "schemaVersion": "1.1",
   "assetId": "exl50u-secure-turntable-v1",
   "deviceId": "exl-50u",
   "title": "EXL-50U secure raster turntable preview",
@@ -7,36 +7,518 @@
   "width": 720,
   "height": 540,
   "frames": [
-    { "src": "/models/exl50u-secure-preview/frame-00.webp", "azimuthDeg": 0 },
-    { "src": "/models/exl50u-secure-preview/frame-01.webp", "azimuthDeg": 15 },
-    { "src": "/models/exl50u-secure-preview/frame-02.webp", "azimuthDeg": 30 },
-    { "src": "/models/exl50u-secure-preview/frame-03.webp", "azimuthDeg": 45 },
-    { "src": "/models/exl50u-secure-preview/frame-04.webp", "azimuthDeg": 60 },
-    { "src": "/models/exl50u-secure-preview/frame-05.webp", "azimuthDeg": 75 },
-    { "src": "/models/exl50u-secure-preview/frame-06.webp", "azimuthDeg": 90 },
-    { "src": "/models/exl50u-secure-preview/frame-07.webp", "azimuthDeg": 105 },
-    { "src": "/models/exl50u-secure-preview/frame-08.webp", "azimuthDeg": 120 },
-    { "src": "/models/exl50u-secure-preview/frame-09.webp", "azimuthDeg": 135 },
-    { "src": "/models/exl50u-secure-preview/frame-10.webp", "azimuthDeg": 150 },
-    { "src": "/models/exl50u-secure-preview/frame-11.webp", "azimuthDeg": 165 },
-    { "src": "/models/exl50u-secure-preview/frame-12.webp", "azimuthDeg": 180 },
-    { "src": "/models/exl50u-secure-preview/frame-13.webp", "azimuthDeg": 195 },
-    { "src": "/models/exl50u-secure-preview/frame-14.webp", "azimuthDeg": 210 },
-    { "src": "/models/exl50u-secure-preview/frame-15.webp", "azimuthDeg": 225 },
-    { "src": "/models/exl50u-secure-preview/frame-16.webp", "azimuthDeg": 240 },
-    { "src": "/models/exl50u-secure-preview/frame-17.webp", "azimuthDeg": 255 },
-    { "src": "/models/exl50u-secure-preview/frame-18.webp", "azimuthDeg": 270 },
-    { "src": "/models/exl50u-secure-preview/frame-19.webp", "azimuthDeg": 285 },
-    { "src": "/models/exl50u-secure-preview/frame-20.webp", "azimuthDeg": 300 },
-    { "src": "/models/exl50u-secure-preview/frame-21.webp", "azimuthDeg": 315 },
-    { "src": "/models/exl50u-secure-preview/frame-22.webp", "azimuthDeg": 330 },
-    { "src": "/models/exl50u-secure-preview/frame-23.webp", "azimuthDeg": 345 }
+    {
+      "src": "/models/exl50u-secure-preview/frame-00.webp",
+      "azimuthDeg": 0
+    },
+    {
+      "src": "/models/exl50u-secure-preview/frame-01.webp",
+      "azimuthDeg": 15
+    },
+    {
+      "src": "/models/exl50u-secure-preview/frame-02.webp",
+      "azimuthDeg": 30
+    },
+    {
+      "src": "/models/exl50u-secure-preview/frame-03.webp",
+      "azimuthDeg": 45
+    },
+    {
+      "src": "/models/exl50u-secure-preview/frame-04.webp",
+      "azimuthDeg": 60
+    },
+    {
+      "src": "/models/exl50u-secure-preview/frame-05.webp",
+      "azimuthDeg": 75
+    },
+    {
+      "src": "/models/exl50u-secure-preview/frame-06.webp",
+      "azimuthDeg": 90
+    },
+    {
+      "src": "/models/exl50u-secure-preview/frame-07.webp",
+      "azimuthDeg": 105
+    },
+    {
+      "src": "/models/exl50u-secure-preview/frame-08.webp",
+      "azimuthDeg": 120
+    },
+    {
+      "src": "/models/exl50u-secure-preview/frame-09.webp",
+      "azimuthDeg": 135
+    },
+    {
+      "src": "/models/exl50u-secure-preview/frame-10.webp",
+      "azimuthDeg": 150
+    },
+    {
+      "src": "/models/exl50u-secure-preview/frame-11.webp",
+      "azimuthDeg": 165
+    },
+    {
+      "src": "/models/exl50u-secure-preview/frame-12.webp",
+      "azimuthDeg": 180
+    },
+    {
+      "src": "/models/exl50u-secure-preview/frame-13.webp",
+      "azimuthDeg": 195
+    },
+    {
+      "src": "/models/exl50u-secure-preview/frame-14.webp",
+      "azimuthDeg": 210
+    },
+    {
+      "src": "/models/exl50u-secure-preview/frame-15.webp",
+      "azimuthDeg": 225
+    },
+    {
+      "src": "/models/exl50u-secure-preview/frame-16.webp",
+      "azimuthDeg": 240
+    },
+    {
+      "src": "/models/exl50u-secure-preview/frame-17.webp",
+      "azimuthDeg": 255
+    },
+    {
+      "src": "/models/exl50u-secure-preview/frame-18.webp",
+      "azimuthDeg": 270
+    },
+    {
+      "src": "/models/exl50u-secure-preview/frame-19.webp",
+      "azimuthDeg": 285
+    },
+    {
+      "src": "/models/exl50u-secure-preview/frame-20.webp",
+      "azimuthDeg": 300
+    },
+    {
+      "src": "/models/exl50u-secure-preview/frame-21.webp",
+      "azimuthDeg": 315
+    },
+    {
+      "src": "/models/exl50u-secure-preview/frame-22.webp",
+      "azimuthDeg": 330
+    },
+    {
+      "src": "/models/exl50u-secure-preview/frame-23.webp",
+      "azimuthDeg": 345
+    }
+  ],
+  "defaultMode": "exterior",
+  "modes": [
+    {
+      "id": "exterior",
+      "label": "完整外观",
+      "description": "完整模型外观的安全光栅转台预览。",
+      "poster": "/models/exl50u-secure-preview/frame-00.webp",
+      "width": 720,
+      "height": 540,
+      "frames": [
+        {
+          "src": "/models/exl50u-secure-preview/frame-00.webp",
+          "azimuthDeg": 0
+        },
+        {
+          "src": "/models/exl50u-secure-preview/frame-01.webp",
+          "azimuthDeg": 15
+        },
+        {
+          "src": "/models/exl50u-secure-preview/frame-02.webp",
+          "azimuthDeg": 30
+        },
+        {
+          "src": "/models/exl50u-secure-preview/frame-03.webp",
+          "azimuthDeg": 45
+        },
+        {
+          "src": "/models/exl50u-secure-preview/frame-04.webp",
+          "azimuthDeg": 60
+        },
+        {
+          "src": "/models/exl50u-secure-preview/frame-05.webp",
+          "azimuthDeg": 75
+        },
+        {
+          "src": "/models/exl50u-secure-preview/frame-06.webp",
+          "azimuthDeg": 90
+        },
+        {
+          "src": "/models/exl50u-secure-preview/frame-07.webp",
+          "azimuthDeg": 105
+        },
+        {
+          "src": "/models/exl50u-secure-preview/frame-08.webp",
+          "azimuthDeg": 120
+        },
+        {
+          "src": "/models/exl50u-secure-preview/frame-09.webp",
+          "azimuthDeg": 135
+        },
+        {
+          "src": "/models/exl50u-secure-preview/frame-10.webp",
+          "azimuthDeg": 150
+        },
+        {
+          "src": "/models/exl50u-secure-preview/frame-11.webp",
+          "azimuthDeg": 165
+        },
+        {
+          "src": "/models/exl50u-secure-preview/frame-12.webp",
+          "azimuthDeg": 180
+        },
+        {
+          "src": "/models/exl50u-secure-preview/frame-13.webp",
+          "azimuthDeg": 195
+        },
+        {
+          "src": "/models/exl50u-secure-preview/frame-14.webp",
+          "azimuthDeg": 210
+        },
+        {
+          "src": "/models/exl50u-secure-preview/frame-15.webp",
+          "azimuthDeg": 225
+        },
+        {
+          "src": "/models/exl50u-secure-preview/frame-16.webp",
+          "azimuthDeg": 240
+        },
+        {
+          "src": "/models/exl50u-secure-preview/frame-17.webp",
+          "azimuthDeg": 255
+        },
+        {
+          "src": "/models/exl50u-secure-preview/frame-18.webp",
+          "azimuthDeg": 270
+        },
+        {
+          "src": "/models/exl50u-secure-preview/frame-19.webp",
+          "azimuthDeg": 285
+        },
+        {
+          "src": "/models/exl50u-secure-preview/frame-20.webp",
+          "azimuthDeg": 300
+        },
+        {
+          "src": "/models/exl50u-secure-preview/frame-21.webp",
+          "azimuthDeg": 315
+        },
+        {
+          "src": "/models/exl50u-secure-preview/frame-22.webp",
+          "azimuthDeg": 330
+        },
+        {
+          "src": "/models/exl50u-secure-preview/frame-23.webp",
+          "azimuthDeg": 345
+        }
+      ],
+      "controls": {
+        "type": "appearance"
+      }
+    },
+    {
+      "id": "transparent",
+      "label": "透明观察",
+      "description": "整机表面透明化预渲染，用于观察重叠轮廓；不提供部件选择或测量。",
+      "poster": "/models/exl50u-secure-preview/modes/transparent/frame-00.webp",
+      "width": 720,
+      "height": 540,
+      "frames": [
+        {
+          "src": "/models/exl50u-secure-preview/modes/transparent/frame-00.webp",
+          "azimuthDeg": 0
+        },
+        {
+          "src": "/models/exl50u-secure-preview/modes/transparent/frame-01.webp",
+          "azimuthDeg": 30
+        },
+        {
+          "src": "/models/exl50u-secure-preview/modes/transparent/frame-02.webp",
+          "azimuthDeg": 60
+        },
+        {
+          "src": "/models/exl50u-secure-preview/modes/transparent/frame-03.webp",
+          "azimuthDeg": 90
+        },
+        {
+          "src": "/models/exl50u-secure-preview/modes/transparent/frame-04.webp",
+          "azimuthDeg": 120
+        },
+        {
+          "src": "/models/exl50u-secure-preview/modes/transparent/frame-05.webp",
+          "azimuthDeg": 150
+        },
+        {
+          "src": "/models/exl50u-secure-preview/modes/transparent/frame-06.webp",
+          "azimuthDeg": 180
+        },
+        {
+          "src": "/models/exl50u-secure-preview/modes/transparent/frame-07.webp",
+          "azimuthDeg": 210
+        },
+        {
+          "src": "/models/exl50u-secure-preview/modes/transparent/frame-08.webp",
+          "azimuthDeg": 240
+        },
+        {
+          "src": "/models/exl50u-secure-preview/modes/transparent/frame-09.webp",
+          "azimuthDeg": 270
+        },
+        {
+          "src": "/models/exl50u-secure-preview/modes/transparent/frame-10.webp",
+          "azimuthDeg": 300
+        },
+        {
+          "src": "/models/exl50u-secure-preview/modes/transparent/frame-11.webp",
+          "azimuthDeg": 330
+        }
+      ],
+      "controls": {
+        "type": "appearance"
+      }
+    },
+    {
+      "id": "section-x",
+      "label": "X向剖切",
+      "description": "真实模型经过 X 向固定裁剪平面预渲染；裁剪坐标不公开。",
+      "poster": "/models/exl50u-secure-preview/modes/section-x/frame-00.webp",
+      "width": 720,
+      "height": 540,
+      "frames": [
+        {
+          "src": "/models/exl50u-secure-preview/modes/section-x/frame-00.webp",
+          "azimuthDeg": 0
+        },
+        {
+          "src": "/models/exl50u-secure-preview/modes/section-x/frame-01.webp",
+          "azimuthDeg": 30
+        },
+        {
+          "src": "/models/exl50u-secure-preview/modes/section-x/frame-02.webp",
+          "azimuthDeg": 60
+        },
+        {
+          "src": "/models/exl50u-secure-preview/modes/section-x/frame-03.webp",
+          "azimuthDeg": 90
+        },
+        {
+          "src": "/models/exl50u-secure-preview/modes/section-x/frame-04.webp",
+          "azimuthDeg": 120
+        },
+        {
+          "src": "/models/exl50u-secure-preview/modes/section-x/frame-05.webp",
+          "azimuthDeg": 150
+        },
+        {
+          "src": "/models/exl50u-secure-preview/modes/section-x/frame-06.webp",
+          "azimuthDeg": 180
+        },
+        {
+          "src": "/models/exl50u-secure-preview/modes/section-x/frame-07.webp",
+          "azimuthDeg": 210
+        },
+        {
+          "src": "/models/exl50u-secure-preview/modes/section-x/frame-08.webp",
+          "azimuthDeg": 240
+        },
+        {
+          "src": "/models/exl50u-secure-preview/modes/section-x/frame-09.webp",
+          "azimuthDeg": 270
+        },
+        {
+          "src": "/models/exl50u-secure-preview/modes/section-x/frame-10.webp",
+          "azimuthDeg": 300
+        },
+        {
+          "src": "/models/exl50u-secure-preview/modes/section-x/frame-11.webp",
+          "azimuthDeg": 330
+        }
+      ],
+      "controls": {
+        "type": "section",
+        "axis": "x"
+      }
+    },
+    {
+      "id": "section-y",
+      "label": "Y向剖切",
+      "description": "真实模型经过 Y 向固定裁剪平面预渲染；裁剪坐标不公开。",
+      "poster": "/models/exl50u-secure-preview/modes/section-y/frame-00.webp",
+      "width": 720,
+      "height": 540,
+      "frames": [
+        {
+          "src": "/models/exl50u-secure-preview/modes/section-y/frame-00.webp",
+          "azimuthDeg": 0
+        },
+        {
+          "src": "/models/exl50u-secure-preview/modes/section-y/frame-01.webp",
+          "azimuthDeg": 30
+        },
+        {
+          "src": "/models/exl50u-secure-preview/modes/section-y/frame-02.webp",
+          "azimuthDeg": 60
+        },
+        {
+          "src": "/models/exl50u-secure-preview/modes/section-y/frame-03.webp",
+          "azimuthDeg": 90
+        },
+        {
+          "src": "/models/exl50u-secure-preview/modes/section-y/frame-04.webp",
+          "azimuthDeg": 120
+        },
+        {
+          "src": "/models/exl50u-secure-preview/modes/section-y/frame-05.webp",
+          "azimuthDeg": 150
+        },
+        {
+          "src": "/models/exl50u-secure-preview/modes/section-y/frame-06.webp",
+          "azimuthDeg": 180
+        },
+        {
+          "src": "/models/exl50u-secure-preview/modes/section-y/frame-07.webp",
+          "azimuthDeg": 210
+        },
+        {
+          "src": "/models/exl50u-secure-preview/modes/section-y/frame-08.webp",
+          "azimuthDeg": 240
+        },
+        {
+          "src": "/models/exl50u-secure-preview/modes/section-y/frame-09.webp",
+          "azimuthDeg": 270
+        },
+        {
+          "src": "/models/exl50u-secure-preview/modes/section-y/frame-10.webp",
+          "azimuthDeg": 300
+        },
+        {
+          "src": "/models/exl50u-secure-preview/modes/section-y/frame-11.webp",
+          "azimuthDeg": 330
+        }
+      ],
+      "controls": {
+        "type": "section",
+        "axis": "y"
+      }
+    },
+    {
+      "id": "section-z",
+      "label": "Z向剖切",
+      "description": "真实模型经过 Z 向固定裁剪平面预渲染；裁剪坐标不公开。",
+      "poster": "/models/exl50u-secure-preview/modes/section-z/frame-00.webp",
+      "width": 720,
+      "height": 540,
+      "frames": [
+        {
+          "src": "/models/exl50u-secure-preview/modes/section-z/frame-00.webp",
+          "azimuthDeg": 0
+        },
+        {
+          "src": "/models/exl50u-secure-preview/modes/section-z/frame-01.webp",
+          "azimuthDeg": 30
+        },
+        {
+          "src": "/models/exl50u-secure-preview/modes/section-z/frame-02.webp",
+          "azimuthDeg": 60
+        },
+        {
+          "src": "/models/exl50u-secure-preview/modes/section-z/frame-03.webp",
+          "azimuthDeg": 90
+        },
+        {
+          "src": "/models/exl50u-secure-preview/modes/section-z/frame-04.webp",
+          "azimuthDeg": 120
+        },
+        {
+          "src": "/models/exl50u-secure-preview/modes/section-z/frame-05.webp",
+          "azimuthDeg": 150
+        },
+        {
+          "src": "/models/exl50u-secure-preview/modes/section-z/frame-06.webp",
+          "azimuthDeg": 180
+        },
+        {
+          "src": "/models/exl50u-secure-preview/modes/section-z/frame-07.webp",
+          "azimuthDeg": 210
+        },
+        {
+          "src": "/models/exl50u-secure-preview/modes/section-z/frame-08.webp",
+          "azimuthDeg": 240
+        },
+        {
+          "src": "/models/exl50u-secure-preview/modes/section-z/frame-09.webp",
+          "azimuthDeg": 270
+        },
+        {
+          "src": "/models/exl50u-secure-preview/modes/section-z/frame-10.webp",
+          "azimuthDeg": 300
+        },
+        {
+          "src": "/models/exl50u-secure-preview/modes/section-z/frame-11.webp",
+          "azimuthDeg": 330
+        }
+      ],
+      "controls": {
+        "type": "section",
+        "axis": "z"
+      }
+    },
+    {
+      "id": "detail-center",
+      "label": "中心细节",
+      "description": "裁剪后中心区域镜头预设；不是独立部件或工程剖面。",
+      "poster": "/models/exl50u-secure-preview/modes/detail-center/frame-00.webp",
+      "width": 720,
+      "height": 540,
+      "frames": [
+        {
+          "src": "/models/exl50u-secure-preview/modes/detail-center/frame-00.webp",
+          "azimuthDeg": 0
+        }
+      ],
+      "controls": {
+        "type": "detail"
+      }
+    },
+    {
+      "id": "detail-upper",
+      "label": "上部细节",
+      "description": "裁剪后上部区域镜头预设；不是独立部件或工程剖面。",
+      "poster": "/models/exl50u-secure-preview/modes/detail-upper/frame-00.webp",
+      "width": 720,
+      "height": 540,
+      "frames": [
+        {
+          "src": "/models/exl50u-secure-preview/modes/detail-upper/frame-00.webp",
+          "azimuthDeg": 0
+        }
+      ],
+      "controls": {
+        "type": "detail"
+      }
+    },
+    {
+      "id": "detail-lower",
+      "label": "下部细节",
+      "description": "裁剪后下部区域镜头预设；不是独立部件或工程剖面。",
+      "poster": "/models/exl50u-secure-preview/modes/detail-lower/frame-00.webp",
+      "width": 720,
+      "height": 540,
+      "frames": [
+        {
+          "src": "/models/exl50u-secure-preview/modes/detail-lower/frame-00.webp",
+          "azimuthDeg": 0
+        }
+      ],
+      "controls": {
+        "type": "detail"
+      }
+    }
   ],
   "renderedAt": "2026-08-13",
   "sourceIntegrity": {
     "algorithm": "SHA-256",
     "digest": "A3A28277F4B1093983568FD45F0B9ED5BECD03E8CE2458664E881A2FAF4BD2A6",
-    "note": "Digest identifies the controlled render source; the source filename and local path are intentionally omitted."
+    "note": "Digest identifies the controlled render source; source filename and filesystem location are intentionally omitted."
   },
   "presentation": {
     "type": "raster-turntable",
@@ -49,7 +531,17 @@
     "poster": "frame-00.webp",
     "azimuthStepDegrees": 15,
     "loop": true,
-    "recommendedInteraction": "horizontal-drag"
+    "recommendedInteraction": "horizontal-drag",
+    "availableModes": [
+      "exterior",
+      "transparent",
+      "section-x",
+      "section-y",
+      "section-z",
+      "detail-center",
+      "detail-upper",
+      "detail-lower"
+    ]
   },
   "securityBoundary": {
     "geometryPublished": false,
@@ -60,7 +552,10 @@
     "cadMetadataPublished": false,
     "measurementEnabled": false,
     "reverseEngineeringPermitted": false,
-    "watermarkEmbeddedInEveryFrame": true
+    "watermarkEmbeddedInEveryFrame": true,
+    "interactiveGeometryDelivered": false,
+    "sectionCoordinatesPublished": false,
+    "modeFramesOnly": true
   },
   "assetDeclaration": {
     "authorization": "The project operator has authorized web visualization of this device model.",
@@ -92,7 +587,68 @@
       "6B31C0F2FE07F4CFC9AF39114F50B00BFF6AC2C3E21AF3549B4E8E8CBBFD340B",
       "A6E2B5D6C6E917BC83CB36A19DD90CD3949327F24DA8773C6DB45C43207A6E6C",
       "D9D44DB88E7841E08353F6AFAF9C635627C213F6C8B587B76E614C35DD545383",
-      "71E8D6D8B323E6F2E82F0EF06EE92A528257AFDBFA502E1D53D9DB93A8BBED58"
-    ]
+      "71E8D6D8B323E6F2E82F0EF06EE92A528257AFDBFA502E1D53D9DB93A8BBED58",
+      "719F03917574B215DC590B56DBCF530F00E1655AF320AFAB45AF574C20D20E91",
+      "C261C1A9CE39B9CE661BCC72FC95138466CA92E64C33A077F97B0B4FCE20FAB1",
+      "6C2F3777CC18F441F4E76A94B29279952E4E82D14BE3C1DC109563CB0D5BAFCA",
+      "D220892E7AC0CBC723C1DA629BF47EC3C48ED3B36602437E82A51F71A84D595D",
+      "E8D6D75D7AF5BE3E9882B8AE33B875AF0CC50AD6CAEB7AB4FBC98B5FA7F9CB43",
+      "A69AFDED6792B72F4644D988FAED076E08902B55722BF90AB3D0C747E8D7F6B3",
+      "52A110DA94C4D27D20EFA7C7120CA2412146C3A044B46B400BF3A7F9D2339094",
+      "E97DD15A09FC7E090E349781320883EAE80FF4EAE183185AEBB337FD402F3BBD",
+      "96F1E22669BEE1702C517A7BEA373243292B29903D04240E619051887440D58A",
+      "F97661C9B38776EB4031740BA7952F84E041CB4C47E1EAE97745A0C8FCD9B1E1",
+      "EAC2526B7FD147D11C7E74962107DAED6906406C3134920F5DF5CA0A291D859A",
+      "07B38CAABFC86EFF0B8A8C0AE35FB069A80C65EF7CB2E25D227149540E337848",
+      "44DC8E62E4A284FB0BFB36DDB1D82DA8C7C3EA6F1B33D23CB57950E05F5E8162",
+      "B65C25EF6C39A56B5EAC4152475E9D1B5447448D1EAAC925F322FA602C50C543",
+      "62EBAD4BB9DB1CCE07BDE92AA06A933E7A71C80CD5D38A99B1B0018D01AA4523",
+      "881BDD0D07968CDDE59130FD8F1A021DEBCC8ED6D8D5AC3E1F166CC02CA6CECF",
+      "118DCAE747B48BCEA014B05874275438C2145C0FBE4F5D1AE06F33C1DC887A95",
+      "E9E2356FB2F97B1C749CE502FF2F9CD07F0A303EBF8A994CF6EE5FC36892353C",
+      "7C8808AE441E764AED4971E058DAB92AD03AEAF15EC5EC66CABCA3B477747B17",
+      "0D989BF7A6F5213A18DBC7664DC8CE994F5F94C70F36E33B78DD6A6EFB428C62",
+      "D9E919B9EDDD051B878250853519015ECE9F3D33F0D270FB90C3219B77F3C17A",
+      "E7A19F048CE8B8099318ED5325B395B72058FA64FE29A8803F97C5C1D34A279C",
+      "FFCF72172571DC50669DCE1685FF68883B351010AABB4B1C5ECAD919F568852E",
+      "A0BF6C54A9F74AEAB55D0448FE852A55D6C64238042D6F647BAA25332E5A5255",
+      "A354611AE62C450521C3FAAB3C0B9E435740FE8905FBCB7719DC6CEB4E984CB5",
+      "5C4A41710B62F96E951CB8E9EBF38496C1F969B497FC04BEC312685ADF683028",
+      "EBF99BE054E98D95EA263907F119DE7F864E74B0051E3619A20EA31B52C9D4AF",
+      "AC872B9909D76747698481A81052D0AB31AE56D2A1F86C98D80C4ECA273F5691",
+      "CFD9EC3EA14A11A5EC43445F25748A6FA88BEBDA2EDCC25EFBA49FB82FC18BEF",
+      "792E99DC4623DF3F2FEC07B257B61D5435B0E4B0D915AB82D5F20098979B84B1",
+      "F8B77DDE2539A9C470969D3D13C3B651610921F4E51CBA54B8270A6563AFE58D",
+      "C8DB8CD09ABFBFB3244072FA9B3295C949956CD19A8AC26F1068911F6D67FF7E",
+      "2BB40BBE6E3F19927CA552FCBBDC95D3F95F3550172E161C304813A59EFE6D76",
+      "398BDA3EE739A555965EADF550C2AC7C90E58F93D64A005589B059B7D9225198",
+      "58A928667D61DA7C6DBF35A1C70E7F41760F3E167F8F3293347CA044B18E97B2",
+      "A7317A3301502C159C266C055C850F41A2C128EA2FB5E74C7F4DF9B6AB5491DD",
+      "A05ECD4C3CBE86787EAF65A405DBB45496E89FF2FF189052F3F9A774EEF6F6D6",
+      "61ED2D79107AFED0C29C3FB86BBE6BFCB583DF8987711A25857306DF83B1E112",
+      "BADB64659AF9FE1F6F50D9175E1D13B7A7AB3005D1051137E9AACE40DB35A597",
+      "DE013F3CEB48C2EC09B4481187084DB531114AAE6C78AB13F06941E6FB47F232",
+      "332A8D2E92D8171A10E660966447FCF457DBBE19444561F58F6484D0CACCE53E",
+      "2CA42205D257E6B0200BF23E165DDC6F6F4931596B6CC56F8DF38B9A7A074BC8",
+      "6CAC280D8AF5CEDCB506700C2834F7B645CDAAB096C2C4C5A41E0915925FB72B",
+      "FF5337651145870C2BFBB85E1CB414485696E773F1B9B31F53755DC8711C65D0",
+      "E4FD03B21F2FD018FCE0062BD7F94809D0C49F039C41C531819E728693FAE7A9",
+      "41E9316742814BFE8394E5B61736CE5CB6A3EEA3767241333CF0255035A545C3",
+      "56197D8F8C4E7A2D62C00CB87D6A068CB021D260BD15EFB0C7708D9F1E0026F9",
+      "C874B8786D328FE97B908C45AE39C9CFE84A4D6209B7A3EDD890132DBE830FE5",
+      "FDC11E0EB310E2EED20A8158A992D9746D3BC3839C2E4657ED14529DE4873959",
+      "7FCCE290BA3F1FC39399515345D8AECEF86878B2DE30FE12CDFF3881B9FE069B",
+      "5E91397C93E36D9C30E37C9CA61130347DDF2314BACAD10450CFF0F844ED48B1"
+    ],
+    "modeFrameCounts": {
+      "exterior": 24,
+      "transparent": 12,
+      "section-x": 12,
+      "section-y": 12,
+      "section-z": 12,
+      "detail-center": 1,
+      "detail-upper": 1,
+      "detail-lower": 1
+    }
   }
 }
