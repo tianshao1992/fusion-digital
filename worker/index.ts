@@ -26,6 +26,12 @@ interface ExecutionContext {
   passThroughOnException(): void;
 }
 
+const controlledDeviceAssets = new Map([
+  ["/device-assets/exl50u-interactive/model-manifest.json", "/models/exl50u-interactive/model-manifest.json"],
+  ["/device-assets/exl50u-interactive/exl50u-interactive.glb", "/models/exl50u-interactive/exl50u-interactive.glb"],
+  ["/device-assets/exl50u-interactive/poster.webp", "/models/exl50u-interactive/poster.webp"],
+]);
+
 // Image security config. SVG sources with .svg extension auto-skip the
 // optimization endpoint on the client side (served directly, no proxy).
 // To route SVGs through the optimizer (with security headers), set
@@ -48,11 +54,11 @@ const worker = {
     }
     const url = new URL(request.url);
 
-    if (
-      url.pathname.startsWith("/models/exl50u-secure-preview/") ||
-      url.pathname.startsWith("/models/exl50u-interactive/")
-    ) {
-      const assetResponse = await env.ASSETS.fetch(request);
+    const controlledAssetPath = controlledDeviceAssets.get(url.pathname);
+    if (controlledAssetPath && (request.method === "GET" || request.method === "HEAD")) {
+      const assetUrl = new URL(controlledAssetPath, request.url);
+      const assetRequest = new Request(assetUrl, request);
+      const assetResponse = await env.ASSETS.fetch(assetRequest);
       const headers = new Headers(assetResponse.headers);
       headers.set("Cache-Control", "no-store, private, max-age=0");
       headers.set("Referrer-Policy", "no-referrer");
@@ -65,7 +71,20 @@ const worker = {
         headers,
       });
     }
-
+    if (
+      url.pathname.startsWith("/device-assets/") ||
+      url.pathname.startsWith("/models/exl50u-interactive/")
+    ) {
+      return new Response("Not found", {
+        status: 404,
+        headers: {
+          "Cache-Control": "no-store, private, max-age=0",
+          "Referrer-Policy": "no-referrer",
+          "X-Content-Type-Options": "nosniff",
+          "Cross-Origin-Resource-Policy": "same-origin",
+        },
+      });
+    }
     if (url.pathname === "/_vinext/image") {
       const allowedWidths = [...DEFAULT_DEVICE_SIZES, ...DEFAULT_IMAGE_SIZES];
       return handleImageOptimization(request, {

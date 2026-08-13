@@ -30,13 +30,13 @@
   },
   "assets": {
     "webModel": {
-      "path": "/models/exl50u-interactive/exl50u-interactive.glb",
+      "path": "/device-assets/exl50u-interactive/exl50u-interactive.glb",
       "format": "glTF 2.0 binary",
       "bytes": 11415884,
       "sha256": "BAD6C72F29C415FD2C804FA1AA736AB2DECF8EFB8E7CCEC6202C6B197257F7AE"
     },
     "poster": {
-      "path": "/models/exl50u-interactive/poster.webp",
+      "path": "/device-assets/exl50u-interactive/poster.webp",
       "bytes": 23752,
       "sha256": "7B2C8E5F53A708359076D0FD8FD5F6FAFC7B42F6B71B97E930F2A49D237D4D2E"
     }

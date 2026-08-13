@@ -50,8 +50,8 @@ function stringValue(value: unknown, path: string) {
 function nullablePublicPath(value: unknown, path: string) {
   if (value === null) return null;
   const result = stringValue(value, path);
-  if (!result.startsWith('/models/') || result.includes('..') || result.includes('%') || result.includes('//') || /^[a-z]+:/i.test(result)) {
-    throw new Error(`${path} must be a safe /models/ public path or null`);
+  if (!(result.startsWith('/models/') || result.startsWith('/device-assets/exl50u-interactive/')) || result.includes('..') || result.includes('%') || result.includes('//') || /^[a-z]+:/i.test(result)) {
+    throw new Error(`${path} must be a safe /models/ or controlled EXL device-asset path, or null`);
   }
   return result;
 }

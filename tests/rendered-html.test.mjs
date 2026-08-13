@@ -301,7 +301,7 @@ test('server-renders the public full-device digital-prototype workspace', async 
   const exl = catalog.devices.find((device) => device.id === 'exl-50u-2026-upgrade');
   assert.equal(exl.delivery, 'public-static');
   assert.equal(exl.viewer.mode, 'real-3d');
-  assert.equal(exl.viewer.manifestEndpoint, '/models/exl50u-interactive/model-manifest.json');
+  assert.equal(exl.viewer.manifestEndpoint, '/device-assets/exl50u-interactive/model-manifest.json');
   assert.equal(exl.viewer.turntableManifestEndpoint, null);
   assert.equal(exl.viewer.overlayEligible, false);
   assert.ok(exl.facts.includes('12 个主要系统组件'));

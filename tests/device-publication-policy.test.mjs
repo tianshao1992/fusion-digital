@@ -62,10 +62,19 @@ async function walkFiles(root) {
 }
 
 function endpointToPublicPath(endpoint) {
-  assert.match(endpoint, /^\/models\/[a-z0-9_./-]+$/i, `${endpoint} must be a same-origin /models/ endpoint`);
   assert.doesNotMatch(endpoint, /(?:^|\/)\.\.(?:\/|$)/, `${endpoint} must not traverse directories`);
+  assert.doesNotMatch(endpoint, /%/, `${endpoint} must not contain encoded path input`);
   assert.doesNotMatch(endpoint, /\/\//, `${endpoint} must use a canonical single-slash path`);
-  return resolve(publicRoot, endpoint.slice(1));
+  if (endpoint.startsWith('/models/')) {
+    assert.match(endpoint, /^\/models\/[a-z0-9_./-]+$/i, `${endpoint} must be a canonical /models/ endpoint`);
+    return resolve(publicRoot, endpoint.slice(1));
+  }
+  const controlledPrefix = '/device-assets/exl50u-interactive/';
+  assert.ok(endpoint.startsWith(controlledPrefix), `${endpoint} is not an approved controlled device-asset endpoint`);
+  const filename = endpoint.slice(controlledPrefix.length);
+  assert.ok(['model-manifest.json', 'exl50u-interactive.glb', 'poster.webp'].includes(filename),
+    `${endpoint} is not on the controlled device-asset allowlist`);
+  return resolve(publicRoot, 'models/exl50u-interactive', filename);
 }
 
 function exactPublicPath(endpoint, expected) {
@@ -116,8 +125,8 @@ test('publishes only the catalog-authorized EXL simplified GLB and no ITER geome
   assert.equal(typeof authorizedWebModelEndpoint, 'string');
   assert.equal(extname(authorizedWebModelEndpoint).toLowerCase(), '.glb');
   endpointToPublicPath(authorizedWebModelEndpoint);
-  const publicModelPath = `public/${authorizedWebModelEndpoint.slice(1)}`.toLowerCase();
-  const builtModelPath = `dist/client/${authorizedWebModelEndpoint.slice(1)}`.toLowerCase();
+  const publicModelPath = relative(repositoryRoot, endpointToPublicPath(authorizedWebModelEndpoint)).replaceAll('\\', '/').toLowerCase();
+  const builtModelPath = publicModelPath.replace(/^public\//, 'dist/client/');
   const allowedExlGeometry = new Set([publicModelPath, builtModelPath]);
 
   const tracked = execFileSync('git', ['ls-files', '-z'], {
@@ -162,7 +171,7 @@ test('public device catalog is fail-closed and authorizes only bounded, verifiab
       const byteBudget = isExlDerivative ? maxExlPublicDerivativeBytes : maxParamakWebModelBytes;
       assert.ok(manifest.assets?.webModel?.bytes > 0 && manifest.assets.webModel.bytes <= byteBudget,
         `${device.id} browser model exceeds the ${byteBudget}-byte budget`);
-      assert.match(manifest.assets.webModel.path, /^\/models\/[a-z0-9_./-]+\.glb$/i);
+      assert.match(manifest.assets.webModel.path, /^\/(?:models|device-assets\/exl50u-interactive)\/[a-z0-9_./-]+\.glb$/i);
       assert.ok(manifest.assets.webModel.path.startsWith(`${manifestEndpoint.slice(0, manifestEndpoint.lastIndexOf('/') + 1)}`),
         `${device.id} web model must stay inside its declared public package`);
       assert.match(manifest.assets.webModel.sha256, /^[a-f0-9]{64}$/i);
@@ -382,12 +391,7 @@ test('controlled raster previews and authorized EXL browser geometry receive def
   const exlManifestEndpoint = catalog.devices.find((device) => identifiesExlDevice(device.id))?.viewer?.manifestEndpoint;
   assert.equal(typeof exlManifestEndpoint, 'string');
   const exlManifest = JSON.parse(await readFile(endpointToPublicPath(exlManifestEndpoint), 'utf8'));
-  for (const pathname of [
-    '/models/exl50u-secure-preview/turntable-manifest.json',
-    '/models/exl50u-secure-preview/frame-00.webp',
-    exlManifestEndpoint,
-    exlManifest.assets.webModel.path,
-  ]) {
+  for (const pathname of [exlManifestEndpoint, exlManifest.assets.webModel.path, exlManifest.assets.poster.path]) {
     const response = await fetchFromWorker(pathname);
     assert.equal(response.status, 200, `${pathname} must be served`);
     assert.match(response.headers.get('cache-control') ?? '', /(?:^|,)\s*(?:private\s*,\s*)?no-store(?:\s*,|$)/i);
@@ -395,6 +399,15 @@ test('controlled raster previews and authorized EXL browser geometry receive def
     assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
     assert.equal(response.headers.get('cross-origin-resource-policy'), 'same-origin');
     assert.match(response.headers.get('content-disposition') ?? '', /^inline\b/i);
+  }
+  for (const pathname of [
+    '/device-assets/exl50u-interactive/not-allowed.glb',
+    '/device-assets/other-device/model-manifest.json',
+    '/models/exl50u-interactive/exl50u-interactive.glb',
+  ]) {
+    const response = await fetchFromWorker(pathname);
+    assert.equal(response.status, 404, `${pathname} must fail closed`);
+    assert.match(response.headers.get('cache-control') ?? '', /no-store/i);
   }
 });
 
@@ -438,6 +451,8 @@ test('Paramak interaction controls remain public-only and expose consistent acce
   }
 
   assert.match(manifestParser, /asset\.path\.startsWith\(['"]\/models\/['"]\)/);
+  assert.match(manifestParser, /asset\.path\.startsWith\(['"]\/device-assets\/exl50u-interactive\/['"]\)/);
+  assert.match(catalogParser, /result\.startsWith\(['"]\/device-assets\/exl50u-interactive\/['"]\)/);
   for (const rejectedPathToken of ["'..'", "'%'", "'//'" ]) {
     assert.ok(manifestParser.includes(`asset.path.includes(${rejectedPathToken})`), `manifest parser must reject ${rejectedPathToken}`);
     assert.ok(catalogParser.includes(`result.includes(${rejectedPathToken})`), `catalog parser must reject ${rejectedPathToken}`);

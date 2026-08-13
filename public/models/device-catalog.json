@@ -46,7 +46,7 @@
       "statement": "User-authorized public simplified derivative for interactive web preview. Browser-delivered geometry can be technically saved; source STEP and authoritative engineering CAD are not published.",
       "viewer": {
         "mode": "real-3d",
-        "manifestEndpoint": "/models/exl50u-interactive/model-manifest.json",
+        "manifestEndpoint": "/device-assets/exl50u-interactive/model-manifest.json",
         "turntableManifestEndpoint": null,
         "overlayEligible": false
       }

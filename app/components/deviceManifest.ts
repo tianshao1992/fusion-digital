@@ -72,7 +72,7 @@ function isAsset(value: unknown): value is DeviceManifest['assets']['webModel'] 
   if (!value || typeof value !== 'object') return false;
   const asset = value as Record<string, unknown>;
   return typeof asset.path === 'string'
-    && asset.path.startsWith('/models/')
+    && (asset.path.startsWith('/models/') || asset.path.startsWith('/device-assets/exl50u-interactive/'))
     && !asset.path.includes('..')
     && !asset.path.includes('%')
     && !asset.path.includes('//')
