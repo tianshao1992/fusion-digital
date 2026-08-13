@@ -74,7 +74,7 @@ export default function Home() {
       </div>
       <div className="aiNativePortalGrid">
         <a href="/search"><span>01 / SEARCH & ASK</span><h3>证据检索与问答</h3><p>跨知识域检索论文、代码、装置与工作，并以来源白名单约束模型回答。</p><b>开始检索 →</b></a>
-        <a href="/knowledge-graph"><span>02 / KNOWLEDGE GRAPH</span><h3>关系与证据图谱</h3><p>从装置或任务展开一至两跳邻域，追溯论文、代码、机构和验证关系。</p><b>探索图谱 →</b></a>
+        <a href="/knowledge-graph"><span>02 / KNOWLEDGE GRAPH</span><h3>知识图谱</h3><p>从装置或任务展开一至两跳邻域，追溯论文、代码、机构和验证关系。</p><b>探索图谱 →</b></a>
         <a href="/research-review"><span>03 / HUMAN REVIEW</span><h3>智能体候选审核</h3><p>一期已建立候选生成与职责分离审核；联网发现仍处于安全演练阶段，任何接受项也不会自动发布。</p><b>进入审核台 →</b></a>
         <a href="/account"><span>04 / IDENTITY & GOVERNANCE</span><h3>账户、角色与配额</h3><p>使用可信平台身份，统一管理成员角色、模型额度、使用记录和审计边界。</p><b>查看账户 →</b></a>
       </div>

@@ -28,6 +28,8 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 work-dev*.log
+repro-*.log
+gcm-diagnose.log
 
 # env files (can opt-in for committing if needed)
 .env*

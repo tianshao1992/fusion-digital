@@ -196,6 +196,8 @@ test('server-renders the FusionDigital community portal', async () => {
   assert.match(html, /href="\/ai"/);
   assert.match(html, /href="\/facilities"/);
   assert.match(html, /href="\/digital-prototype"/);
+  assert.equal((html.match(/href="\/knowledge-graph"[^>]*>知识图谱<\/a>/g) ?? []).length, 2, 'desktop and mobile navigation must use the 知识图谱 primary label');
+  assert.doesNotMatch(html, /知识智能/);
   assert.match(html, /fusiondigital-mark\.png/);
   assert.match(html, /class="brandWordmark"/);
   assert.match(html, /class="brandFusion">Fusion/);

@@ -12,7 +12,7 @@ const links = [
   ['control', '/control', '集成控制'],
   ['diagnostics', '/diagnostics', '诊断感知'],
   ['ai', '/ai', '智能原生'],
-  ['knowledge', '/search', '知识智能'],
+  ['knowledge', '/knowledge-graph', '知识图谱'],
   ['facilities', '/facilities', '全球装置'],
   ['prototype', '/digital-prototype', '数字样机'],
 ] as const;

@@ -25,6 +25,8 @@
     "research:graph": "node scripts/research/build-knowledge-graph.mjs",
     "search:build": "node scripts/search/build-index.mjs",
     "db:generate": "drizzle-kit generate",
+    "db:local:migrate": "wrangler d1 migrations apply DB --local --config wrangler.local.jsonc --persist-to .wrangler/state",
+    "db:local:verify": "wrangler d1 execute DB --local --config wrangler.local.jsonc --command \"SELECT name FROM sqlite_schema WHERE type = 'table' AND name NOT LIKE '_cf_%' ORDER BY name; PRAGMA foreign_key_check;\" --persist-to .wrangler/state --json",
     "research:agent:dry-run": "node scripts/research/agent/discover.mjs --dry-run --scope all",
     "test:research-agent": "node --test tests/research-agent.test.mjs"
   },

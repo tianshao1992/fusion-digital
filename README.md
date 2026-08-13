@@ -3,6 +3,7 @@
 FusionDigital 是由新奥聚变人工智能团队维护的聚变数字孪生知识与协作平台。项目把聚变物理、工程仿真、集成控制、诊断感知、能量转化、辅机模拟、数据基座、人机交互、总体集成与智能原生工作组织为可检索、可引用、可持续更新的网站。
 
 - 在线站点：[fusion-physics-atlas-2026.tianyuanliu1992.chatgpt.site](https://fusion-physics-atlas-2026.tianyuanliu1992.chatgpt.site)
+- GitHub 源码：[tianshao1992/fusion-physics-atlas](https://github.com/tianshao1992/fusion-physics-atlas)
 - 开发团队：新奥聚变人工智能团队
 - 联系人：tianshao1992@gmail.com
 
@@ -18,6 +19,8 @@ FusionDigital 是由新奥聚变人工智能团队维护的聚变数字孪生知
 | 集成控制 | `/control` | T0–T9 控制任务、装置/PCS、论文代码、证据分级与数字孪生路线 |
 | 诊断感知 | `/diagnostics` | DG0–DG11 诊断任务、技术/装置双索引、论文代码、证据分级与孪生接口 |
 | 智能原生 | `/ai` | 九域 AI 工作、论文、代码、装置与证据分级检索 |
+| 知识图谱 | `/knowledge-graph` | 论文、代码、装置、工具、任务与机构的一至两跳证据关系 |
+| 证据检索 | `/search` | 站内确定性检索，以及配置服务端模型后启用的引用约束问答 |
 | 全球装置 | `/facilities` | 装置建设与运行状态、原始来源链接 |
 | 数字样机 | `/digital-prototype` | Paramak、EXL‑50U、ITER 多装置目录；公开模型交互、受控资产边界、CAD/CAE 数据主线与装置包合同 |
 
@@ -29,6 +32,8 @@ FusionDigital 是由新奥聚变人工智能团队维护的聚变数字孪生知
 npm ci
 npm run dev
 ```
+
+需要从一台干净电脑完整复现安装、数据库、检查、生产构建与本地启动时，请直接使用[本地部署与复现手册](docs/LOCAL_DEPLOYMENT.md)。
 
 常用命令：
 
