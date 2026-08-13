@@ -48,6 +48,21 @@ const worker = {
     }
     const url = new URL(request.url);
 
+    if (url.pathname.startsWith("/models/exl50u-secure-preview/")) {
+      const assetResponse = await env.ASSETS.fetch(request);
+      const headers = new Headers(assetResponse.headers);
+      headers.set("Cache-Control", "no-store, private, max-age=0");
+      headers.set("Referrer-Policy", "no-referrer");
+      headers.set("X-Content-Type-Options", "nosniff");
+      headers.set("Cross-Origin-Resource-Policy", "same-origin");
+      headers.set("Content-Disposition", "inline");
+      return new Response(assetResponse.body, {
+        status: assetResponse.status,
+        statusText: assetResponse.statusText,
+        headers,
+      });
+    }
+
     if (url.pathname === "/_vinext/image") {
       const allowedWidths = [...DEFAULT_DEVICE_SIZES, ...DEFAULT_IMAGE_SIZES];
       return handleImageOptimization(request, {

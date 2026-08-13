@@ -1,33 +1,75 @@
 {
-  "schemaVersion": "1.0",
+  "schemaVersion": "2.0",
   "asOf": "2026-08-13",
+  "securityPolicy": {
+    "previewOnly": true,
+    "showDownloadActions": false,
+    "sourceCadDelivered": false,
+    "engineeringMeshDelivered": false,
+    "cacheRequestPolicy": "no-store",
+    "referrerPolicy": "no-referrer",
+    "notice": "受控装置仅交付网页预览帧，不交付源 CAD、STEP 或工程 GLB。页面不提供下载入口，并请求浏览器不缓存、不发送来源页；但任何发送到浏览器的预览帧仍可能被用户设备或中间网络短暂保存，不能承诺绝对不可复制。"
+  },
   "devices": [
     {
       "id": "paramak-full-device",
-      "title": "Generic Paramak tokamak demonstrator",
+      "index": "01",
+      "title": "Paramak 通用 Tokamak",
+      "eyebrow": "PUBLIC · REAL-TIME 3D",
+      "state": "实时三维可交互",
+      "tone": "online",
+      "facts": ["MIT 公开许可", "17 个稳定部件", "2.2 MB 浏览器模型"],
+      "copy": "参数化 360° 主体示意，用于验证装配树、剖切、显隐和后续多装置比较。它不代表任何真实装置的工程权威模型。",
       "availability": "online-public",
       "delivery": "public-static",
-      "manifestEndpoint": "/models/paramak-full-device/model-manifest.json",
       "comparisonFrame": "FUSIONDIGITAL_GENERIC_Y_UP_METRE",
-      "statement": "MIT-licensed public demonstrator; illustrative only."
+      "statement": "MIT-licensed public demonstrator; illustrative only.",
+      "viewer": {
+        "mode": "real-3d",
+        "manifestEndpoint": "/models/paramak-full-device/model-manifest.json",
+        "turntableManifestEndpoint": null,
+        "overlayEligible": true
+      }
     },
     {
       "id": "exl-50u-2026-upgrade",
-      "title": "EXL-50U 2026 upgraded main machine",
-      "availability": "controlled-local",
-      "delivery": "local-only",
-      "manifestEndpoint": null,
+      "index": "02",
+      "title": "EXL‑50U 2026 升级版",
+      "eyebrow": "CONTROLLED · TURNTABLE 3D",
+      "state": "受控三维预览",
+      "tone": "controlled",
+      "facts": ["1,519 个产品定义", "16,748 个装配实例", "仅发布渲染帧"],
+      "copy": "以多角度渲染帧形成可旋转的三维观感；源 CAD、STEP、装配树和工程 GLB 不会由公网网站下发。",
+      "availability": "controlled-preview",
+      "delivery": "public-static-preview",
       "comparisonFrame": null,
-      "statement": "User-supplied engineering CAD detected and audited. Public redistribution and browser delivery are disabled until written authorization and derivative approval are recorded."
+      "statement": "Preview-only derivative. Source CAD and engineering geometry are not delivered.",
+      "viewer": {
+        "mode": "turntable-3d",
+        "manifestEndpoint": null,
+        "turntableManifestEndpoint": "/models/exl50u-secure-preview/turntable-manifest.json",
+        "overlayEligible": false
+      }
     },
     {
       "id": "iter-educational-model",
-      "title": "ITER educational simplified model",
-      "availability": "restricted-local",
+      "index": "03",
+      "title": "ITER 教育简化模型",
+      "eyebrow": "RESTRICTED · INFORMATION",
+      "state": "仅展示装置信息",
+      "tone": "restricted",
+      "facts": ["18 个部件身份", "17 个本地派生件", "官方条款限制再分发"],
+      "copy": "网页只展示装置库存、覆盖范围与许可状态，不请求或下发任何 ITER 几何；受控本地工作台与公网严格隔离。",
+      "availability": "restricted-metadata",
       "delivery": "local-only",
-      "manifestEndpoint": null,
       "comparisonFrame": null,
-      "statement": "Local non-commercial evaluation only. ITER source and derived geometry are not redistributed by this public site."
+      "statement": "Metadata only. ITER source and derived geometry are not redistributed by this public site.",
+      "viewer": {
+        "mode": "metadata-only",
+        "manifestEndpoint": null,
+        "turntableManifestEndpoint": null,
+        "overlayEligible": false
+      }
     }
   ]
 }

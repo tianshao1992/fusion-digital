@@ -2,7 +2,7 @@
 
 ## Multi-device catalog
 
-The public `/digital-prototype` route now presents one licence-aware catalog for Paramak, EXL-50U and ITER. Paramak is the only online geometry package because its generator and derivative are redistributable. The detected EXL-50U 2026-upgrade assembly remains `controlled-local` until written public-display authority and a reviewed desensitized derivative are recorded. ITER remains `restricted-local` and its geometry is never requested by the public route. The browser-safe catalog is `public/models/device-catalog.json`; it contains no local path, signed URL, source CAD or restricted derivative.
+The public `/digital-prototype` route now presents one licence-aware catalog for Paramak, EXL-50U and ITER. Paramak is the only online geometry package because its generator and derivative are redistributable. EXL-50U uses a permanently watermarked raster turntable: it provides a 360-degree visual preview without delivering CAD, STEP, GLB, assembly hierarchy, dimensions or engineering metadata. ITER remains metadata-only and its geometry is never requested by the public route. The browser-safe catalog is `public/models/device-catalog.json`; it contains no local path, signed URL, source CAD or restricted geometry derivative.
 
 Switch and overlay are separate capabilities. Public switching may show the metadata and authority state of every device, but overlay accepts only online packages with an approved common coordinate frame. The local controlled workbench may compare the three sources without copying their geometry into this repository or the deployment archive.
 

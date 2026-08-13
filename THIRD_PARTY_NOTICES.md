@@ -26,6 +26,10 @@ The homepage Tokamak model is generated from the Paramak 0.9.11 example `tokamak
 
 The interactive viewer uses Three.js, distributed under the MIT License. The complete upstream license text is retained at [`public/licenses/THREE-LICENSE.txt`](public/licenses/THREE-LICENSE.txt) and is publicly served at `/licenses/THREE-LICENSE.txt`. Model provenance, transformation details and SHA-256 hashes are recorded in `public/models/paramak-tokamak-demo/model-manifest.json` and `public/models/paramak-full-device/model-manifest.json`. The full-device demonstrator's exact generation source is retained at `research/3d/generate_paramak_full_device.py`.
 
+## EXL-50U controlled visualization
+
+The project operator has authorized web visualization of the supplied EXL-50U device model but has not authorized distribution of the source CAD, converted mesh, assembly tree, dimensions, or engineering metadata. The public website therefore receives only a low-resolution, permanently watermarked raster turntable under `public/models/exl50u-secure-preview/`. These images are a presentation preview, not an engineering authority. Authorization to display the raster preview does not grant download, extraction, measurement, reverse-engineering, redistribution, sublicensing, or source-model access rights. The controlled CAD and GLB remain outside the public repository and deployment package.
+
 ## Papers and datasets
 
 The repository stores links and bibliographic metadata. It does not grant rights to republish linked papers or datasets. Do not add paywalled PDFs, restricted experimental data or partner materials without written authorization.

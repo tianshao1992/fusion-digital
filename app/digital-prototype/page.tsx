@@ -2,7 +2,10 @@ import type { Metadata } from 'next';
 import SiteFooter from '../components/SiteFooter';
 import SiteNav from '../components/SiteNav';
 import MultiDeviceWorkspace from './MultiDeviceWorkspace';
+import { parseDeviceCatalog } from './deviceCatalog';
+import deviceCatalogJson from '../../public/models/device-catalog.json';
 import './prototype.css';
+import './turntable.css';
 
 export const metadata: Metadata = {
   title: '数字样机与 CAD·CAE 工作台',
@@ -36,6 +39,7 @@ const caeLanes = [
 ] as const;
 
 export default function DigitalPrototypePage() {
+  const deviceCatalog = parseDeviceCatalog(deviceCatalogJson);
   return <main className="prototypePage">
     <SiteNav active="prototype" />
 
@@ -49,7 +53,7 @@ export default function DigitalPrototypePage() {
       <aside className="prototypeMission" aria-label="工作台当前状态">
         <div><span>DEVICE CATALOG</span><b>EXL‑50U / ITER / PARAMAK</b></div>
         <div><span>ONLINE GEOMETRY</span><b>PARAMAK / PUBLIC</b></div>
-        <div><span>CONTROLLED SOURCE</span><b>EXL‑50U / LOCAL</b></div>
+        <div><span>CONTROLLED SOURCE</span><b>EXL‑50U / RASTER PREVIEW</b></div>
         <div><span>RESTRICTED SOURCE</span><b>ITER / LOCAL ONLY</b></div>
         <p>LICENCE-AWARE DEVICE CATALOG<br/>FAIL-CLOSED ASSET DELIVERY</p>
       </aside>
@@ -60,7 +64,7 @@ export default function DigitalPrototypePage() {
       <div className="prototypeCoverageGrid">{coverage.map(([state, system, note]) => <article className={state === '已包含' ? 'included' : 'missing'} key={system}><span>{state}</span><h3>{system}</h3><p>{note}</p></article>)}</div>
     </section>
 
-    <MultiDeviceWorkspace />
+    <MultiDeviceWorkspace catalog={deviceCatalog} />
 
     <section className="prototypeArchitecture" id="package-contract">
       <div className="prototypeSectionIntro"><p>02 / DIGITAL ASSET THREAD</p><h2>从模型版本到结果分析，一条可审计的数据主线。</h2><div>查看器只消费浏览器派生包；权威 CAD、原始网格、材料参数和受控 CAE 结果仍留在工程数据区。两者通过稳定部件 ID、装置基线与哈希互相校验。</div></div>

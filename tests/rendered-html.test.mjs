@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { readFile, stat } from 'node:fs/promises';
+import { readFile, readdir, stat } from 'node:fs/promises';
 import test from 'node:test';
 
 async function render(pathname = '/') {
@@ -20,6 +20,27 @@ async function htmlFor(pathname) {
   assert.match(response.headers.get('content-type') ?? '', /^text\/html\b/i);
   return response.text();
 }
+
+async function listFiles(root) {
+  const entries = await readdir(root, { withFileTypes: true });
+  return (await Promise.all(entries.map(async (entry) => {
+    const url = new URL(`${entry.name}${entry.isDirectory() ? '/' : ''}`, root);
+    return entry.isDirectory() ? listFiles(url) : [url];
+  }))).flat();
+}
+
+test('deployment surface contains no controlled CAD or engineering mesh', async () => {
+  const publicFiles = await listFiles(new URL('../public/', import.meta.url));
+  const controlledGeometry = publicFiles.filter((file) => /(?:exl|iter)[^/]*\.(?:glb|gltf|step|stp|iges|igs|stl|obj|fbx)$/i.test(decodeURIComponent(file.pathname)));
+  assert.deepEqual(controlledGeometry, []);
+
+  const serverFiles = (await listFiles(new URL('../dist/server/', import.meta.url)))
+    .filter((file) => /\.(?:js|mjs|json|html|css)$/i.test(file.pathname));
+  for (const file of serverFiles) {
+    const body = await readFile(file, 'utf8');
+    assert.doesNotMatch(body, /iter-cad-private|exl50u-cad-private|[A-Z]:\\(?:Users|Downloads|work)\\/i, `private path leaked in ${file.pathname}`);
+  }
+});
 
 test('ships non-empty reports and structured download assets', async () => {
   const assets = [
@@ -251,9 +272,9 @@ test('server-renders the public full-device digital-prototype workspace', async 
   assert.match(html, /Paramak/);
   assert.match(html, /EXL(?:‑|-)?50U 2026 升级版/);
   assert.match(html, /ITER 教育简化模型/);
-  assert.match(html, /三套装置，同一数字样机契约/);
-  assert.match(html, /受控转换中/);
-  assert.match(html, /禁止公网加载/);
+  assert.match(html, /三套装置，三种安全展示能力/);
+  assert.match(html, /受控三维预览/);
+  assert.match(html, /仅展示装置信息/);
   assert.match(html, /叠加比较/);
   assert.match(html, /360°/);
   assert.match(html, /不代表 ITER 或 EXL(?:‑|-)?50U 的工程几何/);
@@ -271,10 +292,16 @@ test('server-renders the public full-device digital-prototype workspace', async 
     'utf8',
   ));
   assert.equal(catalog.devices.length, 3);
-  assert.equal(catalog.devices.filter((device) => device.manifestEndpoint !== null).length, 1);
-  assert.equal(catalog.devices.find((device) => device.id === 'exl-50u-2026-upgrade').delivery, 'local-only');
+  assert.equal(catalog.schemaVersion, '2.0');
+  assert.equal(catalog.securityPolicy.showDownloadActions, false);
+  assert.equal(catalog.securityPolicy.sourceCadDelivered, false);
+  assert.equal(catalog.devices.filter((device) => device.viewer.manifestEndpoint !== null).length, 1);
+  assert.equal(catalog.devices.find((device) => device.id === 'exl-50u-2026-upgrade').delivery, 'public-static-preview');
+  assert.equal(catalog.devices.find((device) => device.id === 'exl-50u-2026-upgrade').viewer.mode, 'turntable-3d');
+  assert.equal(catalog.devices.find((device) => device.id === 'iter-educational-model').viewer.mode, 'metadata-only');
   assert.equal(catalog.devices.find((device) => device.id === 'iter-educational-model').delivery, 'local-only');
   assert.ok(catalog.devices.every((device) => !JSON.stringify(device).match(/iter-cad-private|127\.0\.0\.1|[A-Z]:\\/i)));
+  assert.doesNotMatch(html, /下载 (?:STEP|GLB)/);
 
   const manifest = JSON.parse(await readFile(
     new URL('../public/models/paramak-full-device/model-manifest.json', import.meta.url),

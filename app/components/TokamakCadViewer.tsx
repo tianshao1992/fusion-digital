@@ -20,6 +20,7 @@ type TokamakCadViewerProps = {
   viewerId?: string;
   sectionId?: string;
   workspace?: boolean;
+  showDownloadActions?: boolean;
 };
 
 type ViewerStatus = 'idle' | 'loading' | 'ready' | 'error';
@@ -84,6 +85,7 @@ export default function TokamakCadViewer({
   viewerId = 'paramak-tokamak-demo',
   sectionId,
   workspace = false,
+  showDownloadActions = true,
 }: TokamakCadViewerProps = {}) {
   const mountRef = useRef<HTMLDivElement>(null);
   const fullscreenRef = useRef<HTMLDivElement>(null);
@@ -549,7 +551,7 @@ export default function TokamakCadViewer({
             <div className="tokamakCadScan" aria-hidden="true" /><div className="tokamakCadReticle" aria-hidden="true"><i /><i /></div>
             {status === 'idle' && <div className="tokamakCadLaunch"><div className="tokamakCadLaunchGlyph" aria-hidden="true"><span /><i /><b /></div><p>MANIFEST-DRIVEN DIGITAL ASSET / 01</p><h3>启动装置数据包查看器</h3><span>按需加载约 {workspace ? '2.2' : '1.1'} MB 的公开 GLB 派生资产。可浏览装配树、点选部件、显隐/隔离、剖切、线框与属性信息。</span><button type="button" onClick={activate}>启动 3D VIEWER <i>→</i></button></div>}
             {status === 'loading' && <div className="tokamakCadLoading" role="status"><span>MANIFEST → GLB → GPU</span><div><i style={{ width: `${Math.max(6, progress)}%` }} /></div><b>{progress > 0 ? `${progress}%` : '正在验证装置清单与数据分级'}</b></div>}
-            {status === 'error' && <div className="tokamakCadFallback"><div className="tokamakFallbackTorus" aria-hidden="true"><span /><i /><b /></div><p>WEBGL FALLBACK</p><h3>三维视图暂不可用</h3><span>{errorMessage}</span><div><button type="button" onClick={activate}>重新载入</button><a href={sourceCadPath} download>下载 STEP</a></div></div>}
+            {status === 'error' && <div className="tokamakCadFallback"><div className="tokamakFallbackTorus" aria-hidden="true"><span /><i /><b /></div><p>WEBGL FALLBACK</p><h3>三维视图暂不可用</h3><span>{errorMessage}</span><div><button type="button" onClick={activate}>重新载入</button>{showDownloadActions && <a href={sourceCadPath} download>下载 STEP</a>}</div></div>}
             <div className="tokamakCadLegend" aria-label="部件颜色图例"><span><i className="plasma" />PLASMA</span><span><i className="tf" />TF COILS</span><span><i className="pf" />PF COILS / CASES</span><span><i className="structure" />STRUCTURE</span></div>
             <div className="tokamakCadReadout" aria-label="三维模型统计"><span><small>FORMAT</small><b>{manifest?.assets.webModel.format ?? 'GLB 2.0'}</b></span><span><small>MESHES</small><b>{ready ? formatCount(stats.meshes) : '—'}</b></span><span><small>TRIANGLES</small><b>{ready ? formatCount(stats.triangles) : '—'}</b></span><span><small>RENDER</small><b>{ready ? stats.renderer : 'ON DEMAND'}</b></span></div>
           </div>
@@ -574,7 +576,7 @@ export default function TokamakCadViewer({
 
       <div className="tokamakCadFootnotes">
         <p><b>科学与安全边界</b>当前模型是 Paramak 生成的通用 Tokamak 参数化几何，仅验证网页交互和装置包契约；它不是 EXL-50U、EHL-2 或其他在役装置的工程权威模型，也不是 ITER 工程 CAD，不能用于制造、尺寸校核、仿真计算或安全决策。</p>
-        <p><b>开放来源与可替换接口</b>模型基于 MIT 许可的 <a href="https://github.com/fusion-energy/paramak/tree/0.9.11" target="_blank" rel="noreferrer">Paramak 0.9.11</a> 工作流；渲染采用 MIT 许可的 Three.js。<a href={sourceCadPath} download>下载 STEP</a><a href={webModelPath} download>下载 GLB</a><a href={manifestUrl}>查看 DeviceManifest</a><a href="/models/device-manifest.schema.json">查看清单 Schema</a><a href={licensePath}>Paramak 许可</a><a href="/licenses/THREE-LICENSE.txt">Three.js 许可</a></p>
+        <p><b>开放来源与可替换接口</b>模型基于 MIT 许可的 <a href="https://github.com/fusion-energy/paramak/tree/0.9.11" target="_blank" rel="noreferrer">Paramak 0.9.11</a> 工作流；渲染采用 MIT 许可的 Three.js。{showDownloadActions && <><a href={sourceCadPath} download>下载 STEP</a><a href={webModelPath} download>下载 GLB</a></>}<a href={manifestUrl}>查看 DeviceManifest</a><a href="/models/device-manifest.schema.json">查看清单 Schema</a><a href={licensePath}>Paramak 许可</a><a href="/licenses/THREE-LICENSE.txt">Three.js 许可</a></p>
       </div>
     </section>
   );
