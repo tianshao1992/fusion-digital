@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "1.0",
+  "asOf": "2026-08-13",
+  "devices": [
+    {
+      "id": "paramak-full-device",
+      "title": "Generic Paramak tokamak demonstrator",
+      "availability": "online-public",
+      "delivery": "public-static",
+      "manifestEndpoint": "/models/paramak-full-device/model-manifest.json",
+      "comparisonFrame": "FUSIONDIGITAL_GENERIC_Y_UP_METRE",
+      "statement": "MIT-licensed public demonstrator; illustrative only."
+    },
+    {
+      "id": "exl-50u-2026-upgrade",
+      "title": "EXL-50U 2026 upgraded main machine",
+      "availability": "controlled-local",
+      "delivery": "local-only",
+      "manifestEndpoint": null,
+      "comparisonFrame": null,
+      "statement": "User-supplied engineering CAD detected and audited. Public redistribution and browser delivery are disabled until written authorization and derivative approval are recorded."
+    },
+    {
+      "id": "iter-educational-model",
+      "title": "ITER educational simplified model",
+      "availability": "restricted-local",
+      "delivery": "local-only",
+      "manifestEndpoint": null,
+      "comparisonFrame": null,
+      "statement": "Local non-commercial evaluation only. ITER source and derived geometry are not redistributed by this public site."
+    }
+  ]
+}

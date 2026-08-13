@@ -49,6 +49,7 @@ test('ships non-empty reports and structured download assets', async () => {
     '../public/models/paramak-full-device/paramak-full-device.glb',
     '../public/models/paramak-full-device/PARAMAK-LICENSE.txt',
     '../public/models/paramak-full-device/model-manifest.json',
+    '../public/models/device-catalog.json',
   ];
   for (const asset of assets) {
     const info = await stat(new URL(asset, import.meta.url));
@@ -248,6 +249,12 @@ test('server-renders the public full-device digital-prototype workspace', async 
   assert.equal((html.match(/id="prototype-workspace"/g) ?? []).length, 1);
   assert.match(html, /data-three-viewer="paramak-full-device"/);
   assert.match(html, /Paramak/);
+  assert.match(html, /EXL(?:‑|-)?50U 2026 升级版/);
+  assert.match(html, /ITER 教育简化模型/);
+  assert.match(html, /三套装置，同一数字样机契约/);
+  assert.match(html, /受控转换中/);
+  assert.match(html, /禁止公网加载/);
+  assert.match(html, /叠加比较/);
   assert.match(html, /360°/);
   assert.match(html, /不代表 ITER 或 EXL(?:‑|-)?50U 的工程几何/);
   assert.match(html, /按需加载约 (?:<!-- -->)?2\.2(?:<!-- -->)? MB/);
@@ -256,7 +263,18 @@ test('server-renders the public full-device digital-prototype workspace', async 
   assert.match(html, /低温恒温器 \/ 热屏蔽/);
   assert.match(html, /href="\/models\/paramak-full-device\/model-manifest\.json"/);
   assert.match(html, /href="\/models\/device-manifest\.schema\.json"/);
+  assert.match(html, /href="\/models\/device-catalog\.json"/);
   assert.doesNotMatch(html, /iter-cad-private|127\.0\.0\.1|\/models\/iter[^"']*\.glb/i);
+
+  const catalog = JSON.parse(await readFile(
+    new URL('../public/models/device-catalog.json', import.meta.url),
+    'utf8',
+  ));
+  assert.equal(catalog.devices.length, 3);
+  assert.equal(catalog.devices.filter((device) => device.manifestEndpoint !== null).length, 1);
+  assert.equal(catalog.devices.find((device) => device.id === 'exl-50u-2026-upgrade').delivery, 'local-only');
+  assert.equal(catalog.devices.find((device) => device.id === 'iter-educational-model').delivery, 'local-only');
+  assert.ok(catalog.devices.every((device) => !JSON.stringify(device).match(/iter-cad-private|127\.0\.0\.1|[A-Z]:\\/i)));
 
   const manifest = JSON.parse(await readFile(
     new URL('../public/models/paramak-full-device/model-manifest.json', import.meta.url),
