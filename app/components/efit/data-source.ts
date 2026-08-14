@@ -227,6 +227,9 @@ function normalizeShot(raw: unknown, layout: JsonRecord, indexUrl: string): Efit
   frames.forEach((frame, frameIndex) => {
     const expectedOffset = binary.fileHeaderBytes + frameIndex * binary.frameStrideBytes;
     if (frame.offsetBytes !== expectedOffset) throw new Error(`EFIT shot ${shot} frame ${frameIndex} has an invalid byte offset.`);
+    if (rawTimes.length > 0 && integer(rawTimes[frameIndex], Number.NaN) !== frame.timeMs) {
+      throw new Error(`EFIT shot ${shot} availableTimesMs does not match frame ${frameIndex}.`);
+    }
     if (frameIndex > 0 && frame.timeMs <= frames[frameIndex - 1].timeMs) {
       throw new Error(`EFIT shot ${shot} frame times must be strictly increasing.`);
     }

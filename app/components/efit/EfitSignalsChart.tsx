@@ -3,6 +3,7 @@
 import type { EChartsCoreOption } from 'echarts/core';
 import { useMemo } from 'react';
 import EfitCanvasChart from './EfitCanvasChart';
+import { buildGapAwareSignalSeries } from './signal-series';
 import type { EfitFrameSummary } from './types';
 
 type EfitSignalsChartProps = {
@@ -11,12 +12,6 @@ type EfitSignalsChartProps = {
   onSeekTimeMs?: (timeMs: number) => void;
 };
 
-function finiteSeries(timeline: readonly EfitFrameSummary[], value: (frame: EfitFrameSummary) => number): number[][] {
-  return timeline.flatMap((frame) => {
-    const result = value(frame);
-    return Number.isFinite(result) ? [[frame.timeMs, result]] : [];
-  });
-}
 function chartTimeFromClick(params: unknown): number | null {
   if (!params || typeof params !== 'object' || !('value' in params)) return null;
   const value = (params as { value?: unknown }).value;
@@ -97,7 +92,8 @@ export default function EfitSignalsChart({ timeline, currentTimeMs, onSeekTimeMs
         {
           name: 'Ip',
           type: 'line',
-          data: finiteSeries(timeline, (frame) => frame.currentA / 1000),
+          data: buildGapAwareSignalSeries(timeline, (frame) => frame.currentA / 1000),
+          connectNulls: false,
           showSymbol: false,
           lineStyle: { width: 1.8 },
           sampling: 'lttb',
@@ -108,7 +104,8 @@ export default function EfitSignalsChart({ timeline, currentTimeMs, onSeekTimeMs
           name: 'Raxis',
           type: 'line',
           yAxisIndex: 1,
-          data: finiteSeries(timeline, (frame) => frame.rAxisM),
+          data: buildGapAwareSignalSeries(timeline, (frame) => frame.rAxisM),
+          connectNulls: false,
           showSymbol: false,
           lineStyle: { width: 1.4 },
           sampling: 'lttb',
@@ -118,7 +115,8 @@ export default function EfitSignalsChart({ timeline, currentTimeMs, onSeekTimeMs
           name: 'Zaxis',
           type: 'line',
           yAxisIndex: 1,
-          data: finiteSeries(timeline, (frame) => frame.zAxisM),
+          data: buildGapAwareSignalSeries(timeline, (frame) => frame.zAxisM),
+          connectNulls: false,
           showSymbol: false,
           lineStyle: { width: 1.4 },
           sampling: 'lttb',

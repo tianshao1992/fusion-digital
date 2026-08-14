@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
 import { createEfitBinaryDataSource, createInMemoryEfitDataSource } from '../app/components/efit/data-source.ts';
+import { buildGapAwareSignalSeries } from '../app/components/efit/signal-series.ts';
 import { createEfitStore } from '../app/components/efit/store.ts';
 
 function frame(shot, index, timeMs) {
@@ -88,4 +89,22 @@ test('EFIT index rejects cross-origin assets and inconsistent frame offsets', as
   badOffset.shots[0].frames[0].offsetBytes += 1;
   const badOffsetSource = createEfitBinaryDataSource({ fetch: fetchIndex(badOffset) });
   await assert.rejects(badOffsetSource.loadManifest(), /invalid byte offset/);
+
+  const mismatchedTimes = structuredClone(original);
+  mismatchedTimes.shots[0].availableTimesMs[1] += 1;
+  const mismatchedTimesSource = createEfitBinaryDataSource({ fetch: fetchIndex(mismatchedTimes) });
+  await assert.rejects(mismatchedTimesSource.loadManifest(), /availableTimesMs does not match frame 1/);
+});
+
+test('EFIT signal series preserves time order and leaves real frame gaps unconnected', () => {
+  const timeline = shotManifest(303, [100, 101, 105]).frames;
+  const series = buildGapAwareSignalSeries(timeline, (item) => item.currentA / 1000);
+
+  assert.deepEqual(series, [
+    [100, 300],
+    [101, 300.001],
+    [102, null],
+    [105, 300.002],
+  ]);
+  assert.ok(series.every((point, index) => index === 0 || point[0] > series[index - 1][0]));
 });

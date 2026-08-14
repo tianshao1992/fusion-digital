@@ -140,6 +140,12 @@ test('EFIT panel exposes shot selection, real time scrubbing, playback and quali
   assert.match(equilibrium, /磁轴/);
 });
 
+test('EFIT Ip and magnetic-axis curves break across missing source frames', async () => {
+  const signals = await source('app/components/efit/EfitSignalsChart.tsx');
+  assert.equal((signals.match(/buildGapAwareSignalSeries\(timeline,/g) ?? []).length, 3);
+  assert.equal((signals.match(/connectNulls:\s*false/g) ?? []).length, 3);
+});
+
 test('EFIT plasma colour field is a contour-constrained psiN display in both 2D and 3D', async () => {
   const panel = await source('app/components/efit/EfitPanel.tsx');
   const equilibrium = await source('app/components/efit/EfitEquilibriumChart.tsx');
