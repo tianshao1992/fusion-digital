@@ -40,10 +40,12 @@ test('EXL device package declares a typed EFIT physics overlay', async () => {
   assert.ok(exl);
   assert.deepEqual(exl.physicsOverlays.map((overlay) => overlay.id), ['efit-equilibrium']);
   assert.equal(exl.physicsOverlays[0].kind, 'axisymmetric-equilibrium');
-  assert.equal(exl.physicsOverlays[0].manifestEndpoint, '/device-data/exl50u-efit/index.json');
+  assert.equal(exl.physicsOverlays[0].manifestEndpoint, '/device-data/exl50u-efit-v2/index.json');
   assert.equal(exl.physicsOverlays[0].defaultShot, 18303);
   assert.equal(exl.physicsOverlays[0].defaultTimeMs, 350);
   assert.equal(exl.physicsOverlays[0].authority, 'visualization-derived');
+  assert.ok(exl.facts.includes('10 炮 / 5,804 帧 EFIT · 18303 + 6 炮偏滤器拓扑'));
+  assert.match(exl.copy, /未经审查的开放区域只显示线框，不生成 SOL 或偏滤器体积/);
   assert.ok(catalog.devices.filter((device) => device.id !== exl.id).every((device) => device.physicsOverlays.length === 0));
 });
 
@@ -54,7 +56,8 @@ test('EFIT controls, store and Three overlay share one external frame state', as
   const dataSource = await source('app/components/efit/data-source.ts');
   const overlay = await source('app/components/device-viewer/EfitThreeOverlay.ts');
 
-  assert.match(workspace, /createEfitStore\(createEfitBinaryDataSource/);
+  assert.match(workspace, /createEfitStore\(createEfitHybridDataSource/);
+  assert.match(workspace, /createEfitHybridDataSource\(\{ indexUrl: endpoint \}\)/);
   assert.match(workspace, /<EfitPanel[\s\S]*?store=\{store\}/);
   assert.match(workspace, /efitStore=\{efitStore\}/);
   assert.match(workspace, /onShowSurfaceChange/);
@@ -219,7 +222,9 @@ test('optional divertor topology renders as open scientific overlays without con
   assert.match(equilibrium, /name: 'X 点'/);
   assert.match(equilibrium, /name: 'Limiter 交点'/);
   assert.match(equilibrium, /近双零位形/);
-  assert.match(equilibrium, /point\.role === 'secondary' \|\| point\.primary === false/);
+  assert.match(equilibrium, /activityRole === 'secondary'/);
+  assert.match(equilibrium, /topologyGraph\?\.edges/);
+  assert.match(equilibrium, /near-boundary/);
 
   assert.match(panel, /DIVERTOR TOPOLOGY \/ VISUALIZATION-DERIVED/);
   assert.match(panel, /不等同于严格双零平衡/);
@@ -230,17 +235,27 @@ test('optional divertor topology renders as open scientific overlays without con
   assert.match(overlay, /EFIT_SEPARATRIX_LEGS_RZ/);
   assert.match(overlay, /EFIT_PRIMARY_X_POINT_MARKERS_AND_LINES/);
   assert.match(overlay, /EFIT_SECONDARY_X_POINT_MARKERS_AND_LINES/);
+  assert.match(overlay, /EFIT_NEAR_BOUNDARY_X_POINT_EVIDENCE_MARKERS/);
   assert.match(overlay, /EFIT_LIMITER_INTERSECTION_MARKERS_AND_RINGS/);
   assert.match(overlay, /const sectionPhis = \[phi, phi \+ Math\.PI\]/,
     'topology must appear on both sides of the axisymmetric section');
+  assert.match(overlay, /frame\.topologyGraphPayload\?\.topologyGraph/,
+    'the Three overlay must render arbitrary v2 graph nodes and edges directly');
+  assert.match(overlay, /Never[\s\S]*?synthesize a divertor volume from graph edges/,
+    'unreviewed v2 open regions must remain wireframe-only');
   assert.match(overlay, /hideTopology\(\);[\s\S]*?frameUsable/,
     'every frame update must clear stale topology before validating the next frame');
   const clippingBlock = overlay.slice(overlay.indexOf('const applyClipping'), overlay.indexOf('setLineResolution(context.renderer'));
   assert.match(clippingBlock, /material\.clippingPlanes/);
-  for (const material of ['separatrixMaterial', 'primaryXMaterial', 'secondaryXMaterial', 'strikeMaterial']) {
+  for (const material of ['separatrixMaterial', 'primaryXMaterial', 'secondaryXMaterial', 'candidateXMaterial', 'strikeMaterial']) {
     assert.match(clippingBlock, new RegExp(material));
     assert.match(overlay, new RegExp(`${material}\\.dispose\\(\\)`));
   }
+  assert.match(overlay, /evidenceRole:\s*node\.role/);
+  assert.match(overlay, /point\.evidenceRole\s*===\s*'near-boundary'/);
+  assert.match(overlay, /markerRole\s*=\s*efitXPointMarkerRole\(point\)/);
+  assert.match(overlay, /showTopologyRings\s*&&\s*!candidate/,
+    'only active boundary X points may receive a toroidal activity ring');
 });
 
 test('reviewed divertor region closes only through one unambiguous published limiter arc', () => {
@@ -335,7 +350,7 @@ test('divertor region has independent honest 2D and 3D rendering lifecycles', as
     assert.match(clipping, new RegExp(material));
     assert.match(overlay, new RegExp(`${material}\\.dispose\\(\\)`));
   }
-  assert.match(viewer, /snapshot\.manifest\?\.geometry\?\.limiterRzM/);
+  assert.match(viewer, /resolveShotGeometry\(snapshot\.manifest, shotId\)\?\.limiterRzM/);
   assert.match(viewer, /return limiterRzM \? \{ \.\.\.frame, limiterRzM \} : frame/);
 });
 

@@ -25,7 +25,7 @@ import {
   resolveIndustrialMaterialSpec,
   type TokamakAppearancePreset,
 } from './device-viewer/industrialAppearance';
-import type { EfitFrame, EfitStore } from './efit';
+import { resolveShotGeometry, type EfitFrame, type EfitStore } from './efit';
 import {
   parseDeviceManifest,
   type DeviceManifest,
@@ -126,7 +126,8 @@ function currentEfitFrame(store: EfitStoreLike | null | undefined): EfitRenderab
   if ('currentFrame' in snapshot) {
     const frame = snapshot.currentFrame;
     if (!frame) return null;
-    const limiterRzM = snapshot.manifest?.geometry?.limiterRzM;
+    const shotId = snapshot.activeShot ?? (typeof frame.shot === 'number' ? frame.shot : null);
+    const limiterRzM = resolveShotGeometry(snapshot.manifest, shotId)?.limiterRzM;
     // The 3D renderer needs the exact published limiter arc to close a
     // divertor region. Add it as render-only frame context without mutating
     // the EFIT frame, store or public binary contract.

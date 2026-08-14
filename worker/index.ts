@@ -33,7 +33,7 @@ const controlledDeviceAssets = new Map([
   ["/device-assets/exl50u-interactive/poster.webp", "/models/exl50u-interactive/poster.webp"],
 ]);
 
-const controlledEfitAssets = new Map([
+const controlledEfitAssets = new Map<string, string>([
   ["/device-data/exl50u-efit/index.json", "/data/exl50u-efit/index.json"],
   ["/device-data/exl50u-efit/shot-18301.bin", "/data/exl50u-efit/shot-18301.bin"],
   ["/device-data/exl50u-efit/shot-18303.bin", "/data/exl50u-efit/shot-18303.bin"],
@@ -42,13 +42,43 @@ const controlledEfitAssets = new Map([
   ["/device-data/exl50u-efit/shot-18308.bin", "/data/exl50u-efit/shot-18308.bin"],
 ]);
 
+// This is an exact reviewed allow-list, generated from the immutable 16-frame
+// chunk contract. It deliberately does not authorize a directory prefix.
+const controlledEfitV2ChunkCounts = [
+  [20213, 33],
+  [20289, 4],
+  [20666, 45],
+  [20669, 57],
+  [20707, 38],
+  [20708, 42],
+] as const;
+controlledEfitAssets.set(
+  "/device-data/exl50u-efit-v2/index.json",
+  "/data/exl50u-efit-v2/index.json",
+);
+for (const [shot, partCount] of controlledEfitV2ChunkCounts) {
+  for (let part = 0; part < partCount; part += 1) {
+    const filename = `shot-${shot}-part-${String(part).padStart(3, "0")}.jsonl.gz`;
+    controlledEfitAssets.set(
+      `/device-data/exl50u-efit-v2/${filename}`,
+      `/data/exl50u-efit-v2/${filename}`,
+    );
+  }
+}
+
 function isControlledEfitNamespace(pathname: string): boolean {
-  return (
-    pathname === "/device-data/exl50u-efit" ||
-    pathname.startsWith("/device-data/exl50u-efit/") ||
-    pathname === "/data/exl50u-efit" ||
-    pathname.startsWith("/data/exl50u-efit/")
-  );
+  return [
+    "/device-data/exl50u-efit",
+    "/device-data/exl50u-efit-v2",
+    "/data/exl50u-efit",
+    "/data/exl50u-efit-v2",
+  ].some((root) => pathname === root || pathname.startsWith(`${root}/`));
+}
+
+function controlledEfitContentType(pathname: string): string {
+  if (pathname.endsWith(".json")) return "application/json; charset=utf-8";
+  if (pathname.endsWith(".jsonl.gz")) return "application/gzip";
+  return "application/octet-stream";
 }
 
 function secureInlineHeaders(source: Headers): Headers {
@@ -97,12 +127,10 @@ const worker = {
       const assetResponse = await env.ASSETS.fetch(assetRequest);
       const headers = secureInlineHeaders(assetResponse.headers);
       headers.set("Accept-Ranges", "bytes");
-      headers.set(
-        "Content-Type",
-        controlledEfitPath.endsWith(".json")
-          ? "application/json; charset=utf-8"
-          : "application/octet-stream",
-      );
+      headers.set("Content-Type", controlledEfitContentType(controlledEfitPath));
+      // The v2 manifest hashes the compressed bytes. Browser fetch must receive
+      // those bytes verbatim and perform its own verified decompression.
+      if (controlledEfitPath.endsWith(".jsonl.gz")) headers.delete("Content-Encoding");
       return new Response(request.method === "HEAD" ? null : assetResponse.body, {
         status: assetResponse.status,
         statusText: assetResponse.statusText,

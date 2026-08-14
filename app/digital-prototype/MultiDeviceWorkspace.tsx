@@ -10,7 +10,7 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from 'react';
 import TokamakCadViewer from '../components/TokamakCadViewer';
-import { createEfitBinaryDataSource, createEfitStore, EfitPanel, type EfitStore } from '../components/efit';
+import { createEfitHybridDataSource, createEfitStore, EfitPanel, type EfitStore } from '../components/efit';
 import type { DeviceCatalog, DeviceCatalogEntry, DevicePhysicsOverlay } from './deviceCatalog';
 import TurntableDeviceViewer from './TurntableDeviceViewer';
 
@@ -226,7 +226,7 @@ function DeviceExperience({ device }: { device: DeviceCatalogEntry }) {
   const efitOverlay = device.physicsOverlays.find((overlay) => overlay.kind === 'axisymmetric-equilibrium');
   const endpoint = efitOverlay?.manifestEndpoint ?? null;
   const efitStore = useMemo(() => endpoint
-    ? createEfitStore(createEfitBinaryDataSource({ indexUrl: endpoint }))
+    ? createEfitStore(createEfitHybridDataSource({ indexUrl: endpoint }))
     : null, [endpoint]);
 
   useEffect(() => () => efitStore?.destroy(), [efitStore]);

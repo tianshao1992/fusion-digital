@@ -57,3 +57,52 @@ The viewer reads the `shots[]` catalog dynamically, so no React component change
 Frames are selected by their real `timeMs`; gaps are surfaced to the operator and no missing
 source frame is synthesized. The current CAD/EFIT registration is visualization-provisional.
 A versioned, landmark-validated transform is required before claiming engineering alignment.
+
+## Topology graph v2 pipeline
+
+`derive_topology_graph_v2.py` is the device-agnostic successor used for reviewed G-EQDSK
+series with arbitrary limiter/divertor outlines. It retains closed flux surfaces and expresses
+active topology as nodes, resolved constant-flux branch edges, canonical wall intersections,
+wall arcs and regions. The graph does not assume two X points or four legs, so future X-point
+target, Super-X, snowflake and other multi-null families can be represented without changing
+the core identity model.
+
+The workflow is deliberately two-stage. `build-candidate` writes only below the private
+`work/efit-new-data-private` review root. `publish-reviewed` accepts only the reviewed source
+digests and exact six-shot inventory, revalidates every frame, strips candidate-only metadata,
+rebuilds deterministic gzip chunks and writes the single public catalog at
+`public/data/exl50u-efit-v2/index.json`. The public command also verifies that the four v1 base
+binaries are byte-for-byte unchanged.
+
+```powershell
+python scripts/efit/derive_topology_graph_v2.py audit `
+  --archive "C:\private\reviewed.zip" `
+  --report "C:\workspace\work\efit-new-data-private\audit\report.json"
+
+python scripts/efit/derive_topology_graph_v2.py build-candidate `
+  --archive "C:\private\reviewed.zip" `
+  --expected-sha256 <approved-digest> `
+  --device-id EXL-50U `
+  --shot <shot-number> `
+  --output "C:\workspace\work\efit-new-data-private\candidates\shot-<shot>"
+
+python scripts/efit/derive_topology_graph_v2.py publish-reviewed `
+  --candidate "C:\workspace\work\efit-new-data-private\candidates\set-a" `
+  --candidate "C:\workspace\work\efit-new-data-private\candidates\set-b" `
+  --confirm-derived-publication
+```
+
+Public graph chunks are 16-frame deterministic gzip files. The Worker must return the raw
+compressed bytes with `Content-Type: application/gzip` and omit `Content-Encoding`; the client
+checks the compressed-byte SHA-256 before using `DecompressionStream`. A closed flux surface
+contains 128 unique equal-arc samples and closes implicitly from its last point to its first.
+In contrast, the canonical limiter coordinate list repeats its first point explicitly, and all
+wall segment indices refer to that canonical list.
+
+The exact contracts are documented in
+[`docs/EFIT_TOPOLOGY_GRAPH_V2.md`](../../docs/EFIT_TOPOLOGY_GRAPH_V2.md) and validated by the
+JSON Schemas under [`docs/schemas`](../../docs/schemas). Run:
+
+```powershell
+python -m unittest discover -s scripts/efit/tests -v
+```

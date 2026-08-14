@@ -1,2 +1,4 @@
 numpy>=1.26,<3
 contourpy>=1.2,<2
+fastjsonschema>=2.16,<3
+jsonschema>=4.23,<5

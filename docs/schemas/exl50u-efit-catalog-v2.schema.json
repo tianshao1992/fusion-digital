@@ -1,0 +1,242 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fusion-physics-atlas.example/schemas/exl50u-efit-catalog-v2.schema.json",
+  "title": "EXL-50U hybrid EFIT catalog v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "graphSchemaVersion", "status", "device", "generatedBy", "coordinateSystem", "gridExtentM", "geometries", "datasets", "algorithm", "shots", "distributionPolicy", "compatibility"],
+  "properties": {
+    "schemaVersion": {"const": "fusion.efit.catalog.v2"},
+    "graphSchemaVersion": {"const": "fusion.efit.topology-graph.v2"},
+    "status": {"const": "reviewed-derived-publication"},
+    "device": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "displayName", "defaultGeometryId"],
+      "properties": {
+        "id": {"const": "EXL-50U"},
+        "displayName": {"const": "EXL-50U"},
+        "defaultGeometryId": {"type": "string", "minLength": 1}
+      }
+    },
+    "generatedBy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["publisher", "algorithmId", "algorithmVersion", "algorithmSourceSha256"],
+      "properties": {
+        "publisher": {"const": "scripts/efit/derive_topology_graph_v2.py"},
+        "algorithmId": {"const": "fusion.efit.topology-graph"},
+        "algorithmVersion": {"type": "string", "minLength": 1},
+        "algorithmSourceSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      }
+    },
+    "coordinateSystem": {"$ref": "#/$defs/coordinateSystem"},
+    "gridExtentM": {"$ref": "#/$defs/gridExtent"},
+    "geometries": {"type": "array", "minItems": 2, "items": {"oneOf": [{"$ref": "#/$defs/legacyGeometry"}, {"$ref": "#/$defs/canonicalGeometry"}]}},
+    "datasets": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/dataset"}},
+    "algorithm": {"$ref": "#/$defs/algorithm"},
+    "shots": {"type": "array", "minItems": 1, "items": {"oneOf": [{"$ref": "#/$defs/legacyShot"}, {"$ref": "#/$defs/graphShot"}]}},
+    "distributionPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["derivedOnly", "sourceArchivesIncluded", "sourcePsiGridsIncluded", "rawGFilesIncluded", "auxiliaryARecordsIncluded", "chunkFrames", "chunkTransport"],
+      "properties": {
+        "derivedOnly": {"const": true},
+        "sourceArchivesIncluded": {"const": false},
+        "sourcePsiGridsIncluded": {"const": false},
+        "rawGFilesIncluded": {"const": false},
+        "auxiliaryARecordsIncluded": {"const": false},
+        "chunkFrames": {"const": 16},
+        "chunkTransport": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["httpContentType", "httpContentEncoding", "compressedBytesSha256BeforeDecompression", "uncompressedMediaType"],
+          "properties": {
+            "httpContentType": {"const": "application/gzip"},
+            "httpContentEncoding": {"const": "identity (header omitted)"},
+            "compressedBytesSha256BeforeDecompression": {"const": true},
+            "uncompressedMediaType": {"const": "application/x-ndjson"}
+          }
+        }
+      }
+    },
+    "compatibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["legacyV1AssetsUnchanged", "legacyManifestUrl", "dispatchBy", "unknownOrInvalidV2"],
+      "properties": {
+        "legacyV1AssetsUnchanged": {"const": true},
+        "legacyManifestUrl": {"const": "/device-data/exl50u-efit/index.json"},
+        "dispatchBy": {"const": "shots[].sourceKind"},
+        "unknownOrInvalidV2": {"type": "string", "minLength": 1}
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "timeRange": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "integer"}},
+    "coordinateSystem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "units", "threeJsMapping", "cadRegistration"],
+      "properties": {
+        "source": {"type": "string"},
+        "units": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["R", "Z", "time", "psi"],
+          "properties": {"R": {"const": "m"}, "Z": {"const": "m"}, "time": {"const": "ms"}, "psi": {"const": "Wb/rad"}}
+        },
+        "threeJsMapping": {"type": "string"},
+        "cadRegistration": {"type": "string"}
+      }
+    },
+    "gridExtent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["r", "z"],
+      "properties": {"r": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "number"}}, "z": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "number"}}}
+    },
+    "legacyGeometry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "contractKind", "closed", "pointCount", "segmentCount", "limiterSha256F64LE", "segmentIndexBasis", "limiterRzM"],
+      "properties": {
+        "id": {"type": "string"}, "kind": {"type": "string"}, "contractKind": {"const": "legacy-source-order-v1"}, "closed": {"type": "boolean"},
+        "pointCount": {"type": "integer", "minimum": 3}, "segmentCount": {"type": "integer", "minimum": 2}, "limiterSha256F64LE": {"$ref": "#/$defs/sha256"},
+        "segmentIndexBasis": {"type": "string"}, "limiterRzM": {"type": "array", "minItems": 6, "items": {"type": "number"}}
+      }
+    },
+    "canonicalGeometry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "contractKind", "closed", "sourcePointCount", "canonicalPointCount", "segmentCount", "sourceLimiterSha256F64LE", "canonicalSha256F64LE", "orientation", "startPointRule", "closureRule", "segmentIndexBasis", "sourceOrderPreserved", "limiterRzM"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^wall-[a-f0-9]{20}$"}, "kind": {"type": "string"}, "contractKind": {"const": "canonical-graph-v2"}, "closed": {"const": true},
+        "sourcePointCount": {"type": "integer", "minimum": 3}, "canonicalPointCount": {"type": "integer", "minimum": 4}, "segmentCount": {"type": "integer", "minimum": 3},
+        "sourceLimiterSha256F64LE": {"$ref": "#/$defs/sha256"}, "canonicalSha256F64LE": {"$ref": "#/$defs/sha256"}, "orientation": {"const": "counter-clockwise"},
+        "startPointRule": {"type": "string"}, "closureRule": {"type": "string"}, "segmentIndexBasis": {"type": "string"}, "sourceOrderPreserved": {"const": false},
+        "limiterRzM": {"type": "array", "minItems": 8, "items": {"type": "number"}}
+      }
+    },
+    "dataset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["datasetId", "sourceKind", "approvedSourceDigestSha256", "sourceGFileCount", "shotNumbers", "matlabCrossValidation", "auxiliaryAEqdskEvidence"],
+      "properties": {
+        "datasetId": {"type": "string", "minLength": 1}, "sourceKind": {"const": "approved-private-g-eqdsk-set"}, "approvedSourceDigestSha256": {"$ref": "#/$defs/sha256"},
+        "sourceGFileCount": {"type": "integer", "minimum": 1}, "shotNumbers": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "integer"}},
+        "matlabCrossValidation": {
+          "type": "object", "additionalProperties": false, "required": ["schemaVersion", "sha256", "result"],
+          "properties": {"schemaVersion": {"const": "exl50u-efit-private-matlab-validation-v1"}, "sha256": {"$ref": "#/$defs/sha256"}, "result": {"type": "string"}}
+        },
+        "auxiliaryAEqdskEvidence": {
+          "oneOf": [
+            {"type": "null"},
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["state", "reason", "crossCheckPolicy"],
+              "properties": {
+                "state": {"const": "candidate-only-not-used-for-active-topology"},
+                "reason": {"type": "string", "minLength": 1},
+                "crossCheckPolicy": {"type": "string", "minLength": 1}
+              }
+            }
+          ]
+        }
+      }
+    },
+    "algorithm": {
+      "type": "object", "additionalProperties": false,
+      "required": ["algorithmId", "algorithmVersion", "surfacePsiN", "pointsPerClosedLoop", "pointsPerBranch", "limits", "gates", "criticalPointAcceptance", "topologySemantics"],
+      "properties": {
+        "algorithmId": {"const": "fusion.efit.topology-graph"}, "algorithmVersion": {"type": "string"},
+        "surfacePsiN": {"type": "array", "items": {"type": "number"}}, "pointsPerClosedLoop": {"const": 128}, "pointsPerBranch": {"const": 64},
+        "limits": {
+          "type": "object", "additionalProperties": false, "required": ["maxLoopsPerLevel", "maxCriticalPoints"],
+          "properties": {"maxLoopsPerLevel": {"type": "integer", "minimum": 1}, "maxCriticalPoints": {"type": "integer", "minimum": 1}}
+        },
+        "gates": {
+          "type": "object", "additionalProperties": false, "required": ["minimumAbsCurrentA", "minimumAbsPsiSpanWbPerRad", "requiredIconvr"],
+          "properties": {"minimumAbsCurrentA": {"type": "number", "minimum": 0}, "minimumAbsPsiSpanWbPerRad": {"type": "number", "minimum": 0}, "requiredIconvr": {"type": "integer"}}
+        },
+        "criticalPointAcceptance": {
+          "type": "object", "additionalProperties": false,
+          "required": ["searchAbsPsiNMinusOneMax", "boundaryAbsPsiNMinusOneMax", "nearBoundaryAbsPsiNMinusOneMax", "fit", "fitRmsMax", "hessianDeterminantMaxInGridCoordinates", "rootMaxGridOffset", "boundaryLcfsDistanceMaxGridDiagonals", "nearBoundaryLcfsDistanceMaxGridDiagonals"],
+          "properties": {
+            "searchAbsPsiNMinusOneMax": {"type": "number", "minimum": 0}, "boundaryAbsPsiNMinusOneMax": {"type": "number", "minimum": 0}, "nearBoundaryAbsPsiNMinusOneMax": {"type": "number", "minimum": 0},
+            "fit": {"type": "string"}, "fitRmsMax": {"type": "number", "minimum": 0}, "hessianDeterminantMaxInGridCoordinates": {"type": "number", "exclusiveMaximum": 0},
+            "rootMaxGridOffset": {"type": "number", "minimum": 0}, "boundaryLcfsDistanceMaxGridDiagonals": {"type": "number", "minimum": 0}, "nearBoundaryLcfsDistanceMaxGridDiagonals": {"type": "number", "minimum": 0}
+          }
+        },
+        "topologySemantics": {
+          "type": "object", "additionalProperties": false,
+          "required": ["canonicalForm", "fixedSingleNullAssumption", "multiXPointReady", "secondaryNullReady", "unresolvedArmsAreNotExtrapolated", "activeBranchesRequireBoundaryRole", "nearBoundaryPointsAreMarkerEvidenceOnly", "outputPathPsiNResidualMax", "futureFamilies"],
+          "properties": {
+            "canonicalForm": {"type": "string"}, "fixedSingleNullAssumption": {"const": false}, "multiXPointReady": {"const": true}, "secondaryNullReady": {"const": true},
+            "unresolvedArmsAreNotExtrapolated": {"const": true}, "activeBranchesRequireBoundaryRole": {"const": true}, "nearBoundaryPointsAreMarkerEvidenceOnly": {"const": true},
+            "outputPathPsiNResidualMax": {"type": "number", "minimum": 0}, "futureFamilies": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string"}}
+          }
+        }
+      }
+    },
+    "legacyShot": {
+      "type": "object", "additionalProperties": false,
+      "required": ["shot", "shotId", "sourceKind", "geometryId", "frameCount", "timeRangeMs", "manifestUrl", "manifestShot", "baseBinaryUrl", "baseBinarySha256", "topologyBinaryUrl", "topologyAvailability"],
+      "properties": {
+        "shot": {"type": "integer"}, "shotId": {"type": "string"}, "sourceKind": {"const": "legacy-contours-v1"}, "geometryId": {"type": "string"},
+        "frameCount": {"type": "integer", "minimum": 1}, "timeRangeMs": {"$ref": "#/$defs/timeRange"}, "manifestUrl": {"const": "/device-data/exl50u-efit/index.json"},
+        "manifestShot": {"type": "integer"}, "baseBinaryUrl": {"type": "string"}, "baseBinarySha256": {"$ref": "#/$defs/sha256"},
+        "topologyBinaryUrl": {"type": ["string", "null"]}, "topologyAvailability": {"enum": ["reviewed-v1-sidecar", "contours-only"]}
+      }
+    },
+    "gap": {
+      "type": "object", "additionalProperties": false, "required": ["afterMs", "beforeMs", "deltaMs", "estimatedMissingFrames", "alignedToNominalCadence"],
+      "properties": {"afterMs": {"type": "integer"}, "beforeMs": {"type": "integer"}, "deltaMs": {"type": "integer", "minimum": 1}, "estimatedMissingFrames": {"type": "integer", "minimum": 0}, "alignedToNominalCadence": {"type": "boolean"}}
+    },
+    "frameSummary": {
+      "type": "object", "additionalProperties": false,
+      "required": ["timeMs", "currentA", "rAxisM", "zAxisM", "bcentrT", "q95", "qualityValidity", "qualityFlags"],
+      "properties": {"timeMs": {"type": "integer"}, "currentA": {"type": "number"}, "rAxisM": {"type": "number"}, "zAxisM": {"type": "number"}, "bcentrT": {"type": "number"}, "q95": {"type": ["number", "null"]}, "qualityValidity": {"enum": ["usable", "partial", "unavailable"]}, "qualityFlags": {"type": "array", "items": {"type": "string", "pattern": "^[A-Z0-9_]+$"}}}
+    },
+    "asset": {
+      "type": "object", "additionalProperties": false,
+      "required": ["chunkIndex", "frameStart", "frameCount", "timeRangeMs", "availableTimesMs", "url", "contentType", "uncompressedContentType", "compression", "httpContentEncoding", "byteLength", "sha256"],
+      "properties": {
+        "chunkIndex": {"type": "integer", "minimum": 0}, "frameStart": {"type": "integer", "minimum": 0}, "frameCount": {"type": "integer", "minimum": 1, "maximum": 16},
+        "timeRangeMs": {"$ref": "#/$defs/timeRange"}, "availableTimesMs": {"type": "array", "minItems": 1, "maxItems": 16, "items": {"type": "integer"}},
+        "url": {"type": "string", "pattern": "^/device-data/exl50u-efit-v2/shot-[0-9]+-part-[0-9]{3}\\.jsonl\\.gz$"},
+        "contentType": {"const": "application/gzip"}, "uncompressedContentType": {"const": "application/x-ndjson"}, "compression": {"const": "gzip-mtime-zero"},
+        "httpContentEncoding": {"const": "identity"}, "byteLength": {"type": "integer", "minimum": 1}, "sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "qualitySummary": {
+      "type": "object", "additionalProperties": false, "required": ["validityFrameCounts", "flagFrameCounts"],
+      "properties": {
+        "validityFrameCounts": {"type": "object", "propertyNames": {"enum": ["usable", "partial", "unavailable"]}, "additionalProperties": {"type": "integer", "minimum": 0}},
+        "flagFrameCounts": {"type": "object", "propertyNames": {"pattern": "^[A-Z0-9_]+$"}, "additionalProperties": {"type": "integer", "minimum": 0}}
+      }
+    },
+    "topologySummary": {
+      "type": "object", "additionalProperties": false, "required": ["recordTotals", "maxPerFrame", "canonicalLabels"],
+      "properties": {
+        "recordTotals": {"type": "object", "propertyNames": {"enum": ["xPointCount", "activeXPointCount", "candidateXPointCount", "boundaryXPointCount", "nearBoundaryXPointCount", "wallIntersectionCount", "resolvedBranchCount", "unresolvedArmCount", "framesWithNullClusters", "framesWithExtendedLegCandidates", "wallArcCount", "closedRegionCount", "unresolvedRegionCount"]}, "additionalProperties": {"type": "integer", "minimum": 0}},
+        "maxPerFrame": {"type": "object", "propertyNames": {"enum": ["xPointCount", "activeXPointCount", "candidateXPointCount", "boundaryXPointCount", "nearBoundaryXPointCount", "wallIntersectionCount", "resolvedBranchCount", "unresolvedArmCount"]}, "additionalProperties": {"type": "integer", "minimum": 0}},
+        "canonicalLabels": {"const": "graph-only; no fixed USN/LSN classification"}
+      }
+    },
+    "graphShot": {
+      "type": "object", "additionalProperties": false,
+      "required": ["shot", "shotId", "sourceKind", "datasetId", "geometryId", "reconstructionId", "reconstructionDigest", "frameCount", "timeRangeMs", "strictlyIncreasing", "nominalCadenceMs", "availableTimesMs", "gaps", "frames", "qualitySummary", "topologySummary", "frameAssets"],
+      "properties": {
+        "shot": {"type": "integer"}, "shotId": {"type": "string", "pattern": "^EXL-50U:shot:[0-9]{6}$"}, "sourceKind": {"const": "topology-graph-v2"}, "datasetId": {"type": "string"}, "geometryId": {"type": "string"},
+        "reconstructionId": {"type": "string", "pattern": "^exl-50u:efit:[0-9]{6}:[a-f0-9]{20}$"}, "reconstructionDigest": {"$ref": "#/$defs/sha256"}, "frameCount": {"type": "integer", "minimum": 1},
+        "timeRangeMs": {"$ref": "#/$defs/timeRange"}, "strictlyIncreasing": {"const": true}, "nominalCadenceMs": {"type": "integer", "minimum": 1},
+        "availableTimesMs": {"type": "array", "minItems": 1, "items": {"type": "integer"}}, "gaps": {"type": "array", "items": {"$ref": "#/$defs/gap"}},
+        "frames": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/frameSummary"}}, "qualitySummary": {"$ref": "#/$defs/qualitySummary"},
+        "topologySummary": {"$ref": "#/$defs/topologySummary"}, "frameAssets": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/asset"}}
+      }
+    }
+  }
+}

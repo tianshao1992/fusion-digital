@@ -5,6 +5,7 @@ import { deriveReviewedDivertorRegion } from './divertor-region';
 import EfitEquilibriumChart, { efitTopologyLabel } from './EfitEquilibriumChart';
 import EfitSignalsChart from './EfitSignalsChart';
 import EfitTimelineControls from './EfitTimelineControls';
+import { efitShotOptionLabel, resolveShotGeometry } from './shot-geometry';
 import type { EfitStore } from './store';
 import { useEfitStore } from './use-efit-store';
 import './efit-panel.css';
@@ -69,9 +70,16 @@ export default function EfitPanel({
   const frame = snapshot.currentFrame;
   const quality = frame?.quality;
   const topology = frame?.topology;
+  const topologyGraph = frame?.topologyGraphPayload?.topologyGraph;
+  const graphXPoints = topologyGraph?.nodes.filter((node) => node.kind === 'x-point') ?? [];
+  const graphBoundaryXPoints = graphXPoints.filter((node) => node.role === 'boundary');
+  const graphCandidateXPoints = graphXPoints.filter((node) => node.role === 'near-boundary');
+  const graphWallPoints = topologyGraph?.nodes.filter((node) => node.kind === 'wall-intersection') ?? [];
+  const graphIsPartial = Boolean(topologyGraph && (topologyGraph.unresolvedArms.length > 0 || topologyGraph.unresolvedRegions.length > 0));
+  const activeGeometry = resolveShotGeometry(snapshot.manifest, snapshot.activeShot);
   const divertorRegion = deriveReviewedDivertorRegion(
     topology,
-    snapshot.manifest?.geometry.limiterRzM,
+    activeGeometry?.limiterRzM,
     frame ? { rM: frame.rAxisM, zM: frame.zAxisM } : undefined,
   );
 
@@ -97,7 +105,7 @@ export default function EfitPanel({
           >
             {!snapshot.manifest && <option value="">加载中</option>}
             {snapshot.manifest?.shots.map((shot) => (
-              <option key={shot.shot} value={shot.shot}>#{shot.shot}</option>
+              <option key={shot.shot} value={shot.shot}>{efitShotOptionLabel(shot)}</option>
             ))}
           </select>
         </label>
@@ -108,12 +116,23 @@ export default function EfitPanel({
           <span className="efitStatusPill isLoading">{snapshot.status === 'loading-index' ? '读取 EFIT 索引' : snapshot.status === 'loading-shot' ? '准备放电数据' : '读取位形帧'}</span>
         )}
         {quality && <span className={`efitStatusPill quality-${quality.state}`}>质量 · {quality.state === 'good' ? '有效' : quality.state === 'warning' ? '需关注' : '不可用'}</span>}
+        {snapshot.activeShot !== null && !activeGeometry && (
+          <span className="efitStatusPill quality-invalid">几何合同 · 缺失</span>
+        )}
         {topology && (
           <span
             className={`efitStatusPill topology-${topology.kind}`}
             title={topology.kind === 'near-double-null' ? '包含主、次 X 点；次 X 点不等同于严格双零平衡。' : undefined}
           >
             拓扑 · {efitTopologyLabel(topology.kind)} · X {topology.xPoints.length}
+          </span>
+        )}
+        {topologyGraph && (
+          <span
+            className={`efitStatusPill ${graphIsPartial ? 'divertor-region-wireframe' : 'quality-good'}`}
+            title={graphIsPartial ? '存在未解析分离臂或未经科学审查的开放区域；界面仅显示已发布线框证据。' : '拓扑图通过帧级结构、引用与几何边界校验。'}
+          >
+            拓扑图 v2 · 边界 X {graphBoundaryXPoints.length} · 候选 {graphCandidateXPoints.length} · 分支 {topologyGraph.edges.length}
           </span>
         )}
         {topology && divertorRegion.state !== 'unavailable' && (
@@ -154,7 +173,7 @@ export default function EfitPanel({
       <div className="efitChartGrid">
         <article className="efitChartCard efitEquilibriumCard">
           <div className="efitCardHeading"><span>01</span><div><h3>R–Z 磁通分带云图与偏滤器拓扑</h3><p>归一化极向磁通 ψN 分带 · LCFS / 分离支 · X 点 · limiter 交点 · 非温度/密度</p></div></div>
-          <EfitEquilibriumChart frame={frame} manifest={snapshot.manifest} />
+          <EfitEquilibriumChart frame={frame} geometry={activeGeometry} />
         </article>
         <article className="efitChartCard efitSignalsCard">
           <div className="efitCardHeading"><span>02</span><div><h3>放电时序</h3><p>Ip · Raxis · Zaxis；点击曲线定位时间</p></div></div>
@@ -162,14 +181,16 @@ export default function EfitPanel({
         </article>
       </div>
 
-      <div className={`efitTopologyBoundary${divertorRegion.state === 'wireframe' ? ' isPartial' : ''}`} role="note">
+      <div className={`efitTopologyBoundary${divertorRegion.state === 'wireframe' || graphIsPartial ? ' isPartial' : ''}`} role="note">
         <b>DIVERTOR TOPOLOGY / VISUALIZATION-DERIVED</b>
         <span>
-          {topology
+          {topologyGraph
+            ? `拓扑图 v2：已发布 ${graphBoundaryXPoints.length} 个边界 X 点、${graphCandidateXPoints.length} 个近边界候选证据、${topologyGraph.edges.length} 条已解析恒磁通分离支和 ${graphWallPoints.length} 个 canonical limiter 交点；另有 ${topologyGraph.unresolvedArms.length} 条未解析分离臂。三维中的灰蓝小叉仅表示候选证据，不显示活动环。开放偏滤器区域尚未完成科学审查，因此只显示线框，不生成或填充 SOL / 偏滤器区域。`
+            : topology
             ? `${efitTopologyLabel(topology.kind)}：已发布 ${topology.xPoints.length} 个 X 点、${topology.separatrixLegs.length} 条开放分离支和 ${topology.strikePoints.length} 个 limiter 交点。`
             : '当前帧未发布经校验的偏滤器拓扑；界面不会由 LCFS 猜测 X 点或分离支。'}
           {topology?.kind === 'near-double-null' && ' 近双零标记区分主、次 X 点，不表示严格平衡双零。'}
-          {' '}{divertorRegion.message}
+          {!topologyGraph && <> {divertorRegion.message}</>}
           {' '}橙色填充只表示上述边界构造区域，不表示温度、密度、真实 SOL 宽度或物理场。交点仅表示分离支与已发布 limiter 轮廓的交会，不等同于经 CAD 配准校核的真实偏滤器靶板打击点。
         </span>
       </div>

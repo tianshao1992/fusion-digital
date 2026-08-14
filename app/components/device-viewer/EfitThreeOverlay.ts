@@ -25,6 +25,7 @@ import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js';
 import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js';
 import { deriveReviewedDivertorRegion } from '../efit/divertor-region';
 import { colorForPsiN } from '../efit/psi-n-palette';
+import type { EfitGeometryCatalog } from '../efit/shot-geometry';
 
 type Vec3Tuple = readonly [number, number, number];
 
@@ -57,8 +58,19 @@ export type EfitRenderableXPoint = {
   psiN?: number;
   gradientResidual?: number;
   role?: 'primary' | 'secondary' | string;
+  /** Scientific evidence role is independent from the primary/secondary activity role. */
+  evidenceRole?: 'boundary' | 'near-boundary' | string;
+  evidenceOnly?: boolean;
   primary?: boolean;
 };
+
+export type EfitXPointMarkerRole = 'active-primary' | 'active-secondary' | 'near-boundary-evidence';
+
+/** Keeps evidence classification from being conflated with primary/secondary activity. */
+export function efitXPointMarkerRole(point: EfitRenderableXPoint): EfitXPointMarkerRole {
+  if (point.evidenceRole === 'near-boundary' || point.evidenceOnly === true) return 'near-boundary-evidence';
+  return point.role === 'secondary' || point.primary === false ? 'active-secondary' : 'active-primary';
+}
 
 export type EfitRenderableStrikePoint = {
   rM: number;
@@ -79,6 +91,23 @@ export type EfitRenderableTopology = {
   separatrixLegs?: readonly EfitRenderableSeparatrixLeg[];
 };
 
+export type EfitRenderableTopologyGraph = {
+  nodes: readonly ({
+    kind: 'magnetic-axis' | 'x-point' | 'wall-intersection' | string;
+    rM: number;
+    zM: number;
+    role?: 'boundary' | 'near-boundary' | string;
+    activityRole?: 'primary' | 'secondary' | string;
+    wallSegment?: number;
+  })[];
+  edges: readonly ({
+    pointsRzM: ArrayLike<number>;
+    closed?: boolean;
+  })[];
+  unresolvedArms?: readonly unknown[];
+  unresolvedRegions?: readonly unknown[];
+};
+
 export type EfitRenderableFrame = {
   shot?: number | string;
   index?: number;
@@ -91,15 +120,15 @@ export type EfitRenderableFrame = {
   lcfs?: EfitRzCurve | ArrayLike<number> | null;
   contours?: readonly EfitRzCurve[];
   topology?: EfitRenderableTopology;
+  topologyGraphPayload?: { topologyGraph: EfitRenderableTopologyGraph };
   /** Render-only context copied from the published manifest; never inferred. */
   limiterRzM?: EfitRzCurve;
 };
 
 export type EfitStoreSnapshotLike = {
   currentFrame?: EfitRenderableFrame | null;
-  manifest?: {
-    geometry?: { limiterRzM?: EfitRzCurve };
-  } | null;
+  activeShot?: number | null;
+  manifest?: EfitGeometryCatalog | null;
 };
 
 export type EfitStoreLike = {
@@ -419,6 +448,22 @@ export function createEfitThreeOverlay(
   root.add(secondaryXMarkers);
   secondaryXGeometry.setPositions(new Float32Array([0, 0, 0, 0, 0, 0]));
 
+  const candidateXGeometry = new LineSegmentsGeometry();
+  const candidateXMaterial = new LineMaterial({
+    color: 0x8292aa,
+    linewidth: 1.7,
+    transparent: true,
+    opacity: 0.66,
+    depthWrite: false,
+  });
+  const candidateXMarkers = new LineSegments2(candidateXGeometry, candidateXMaterial);
+  candidateXMarkers.name = 'EFIT_NEAR_BOUNDARY_X_POINT_EVIDENCE_MARKERS';
+  candidateXMarkers.frustumCulled = false;
+  candidateXMarkers.renderOrder = 25;
+  candidateXMarkers.visible = false;
+  root.add(candidateXMarkers);
+  candidateXGeometry.setPositions(new Float32Array([0, 0, 0, 0, 0, 0]));
+
   const strikeGeometry = new LineSegmentsGeometry();
   const strikeMaterial = new LineMaterial({
     color: 0xff704d,
@@ -499,6 +544,7 @@ export function createEfitThreeOverlay(
     separatrixMaterial.resolution.set(safeWidth, safeHeight);
     primaryXMaterial.resolution.set(safeWidth, safeHeight);
     secondaryXMaterial.resolution.set(safeWidth, safeHeight);
+    candidateXMaterial.resolution.set(safeWidth, safeHeight);
     strikeMaterial.resolution.set(safeWidth, safeHeight);
     axisMaterial.resolution.set(safeWidth, safeHeight);
   };
@@ -795,6 +841,7 @@ export function createEfitThreeOverlay(
     divertorRevolvedRegion.visible = false;
     primaryXMarkers.visible = false;
     secondaryXMarkers.visible = false;
+    candidateXMarkers.visible = false;
     strikeMarkers.visible = false;
   };
 
@@ -842,20 +889,47 @@ export function createEfitThreeOverlay(
     // retain X points or divertor legs from the previously rendered frame.
     hideTopology();
     const topology = frame.topology;
-    if (!topology || topology.kind === 'limited' || !options.showDivertorTopology) return;
+    const topologyGraph = frame.topologyGraphPayload?.topologyGraph;
+    if ((!topology && !topologyGraph) || topology?.kind === 'limited' || !options.showDivertorTopology) return;
+
+    const separatrixLegs: readonly EfitRenderableSeparatrixLeg[] = topologyGraph
+      ? topologyGraph.edges.map((edge) => ({ pointsRzM: edge.pointsRzM, closed: false }))
+      : topology?.separatrixLegs ?? [];
+    const xPoints: readonly EfitRenderableXPoint[] = topologyGraph
+      ? topologyGraph.nodes.filter((node) => node.kind === 'x-point').map((node) => ({
+        rM: node.rM,
+        zM: node.zM,
+        role: node.activityRole,
+        evidenceRole: node.role,
+        evidenceOnly: node.role === 'near-boundary',
+      }))
+      : topology?.xPoints ?? [];
+    const strikePoints: readonly EfitRenderableStrikePoint[] = topologyGraph
+      ? topologyGraph.nodes.filter((node) => node.kind === 'wall-intersection').map((node) => ({
+        rM: node.rM,
+        zM: node.zM,
+        wallSegment: node.wallSegment,
+      }))
+      : topology?.strikePoints ?? [];
 
     const rAxis = frame.rAxisM ?? frame.magneticAxis?.rM;
     const zAxis = frame.zAxisM ?? frame.magneticAxis?.zM;
     const magneticAxis = Number.isFinite(rAxis) && Number.isFinite(zAxis)
       ? { rM: Number(rAxis), zM: Number(zAxis) }
       : undefined;
-    const region = deriveReviewedDivertorRegion(topology, frame.limiterRzM, magneticAxis);
-    if (region.state === 'filled') updateDivertorRegionGeometry(region.polygon, phi);
+    // The v2 graph currently publishes resolved branches and explicit
+    // unresolved open regions, not a reviewed open-field face cycle. Never
+    // synthesize a divertor volume from graph edges. Legacy v1 may still use
+    // the independently reviewed limiter-arc closure helper.
+    if (topology) {
+      const region = deriveReviewedDivertorRegion(topology, frame.limiterRzM, magneticAxis);
+      if (region.state === 'filled') updateDivertorRegionGeometry(region.polygon, phi);
+    }
     if (!options.showSection) return;
 
     const sectionPhis = [phi, phi + Math.PI] as const;
     const separatrixPositions: number[] = [];
-    (topology.separatrixLegs ?? []).forEach((leg) => {
+    separatrixLegs.forEach((leg) => {
       const sampled = sampleCurve(curvePoints(leg), MathUtils.clamp(Math.round(options.maxPoloidalPoints), 24, 384));
       if (sampled.length < 2) return;
       sectionPhis.forEach((sectionPhi) => {
@@ -878,16 +952,21 @@ export function createEfitThreeOverlay(
 
     const primaryXPositions: number[] = [];
     const secondaryXPositions: number[] = [];
-    const xMarkerHalfSizeM = 0.026;
-    (topology.xPoints ?? []).forEach((point) => {
+    const candidateXPositions: number[] = [];
+    xPoints.forEach((point) => {
       if (!Number.isFinite(point.rM) || !Number.isFinite(point.zM) || point.rM < 0) return;
-      const secondary = point.role === 'secondary' || point.primary === false;
-      const positions = secondary ? secondaryXPositions : primaryXPositions;
+      const markerRole = efitXPointMarkerRole(point);
+      const candidate = markerRole === 'near-boundary-evidence';
+      const secondary = markerRole === 'active-secondary';
+      const positions = candidate ? candidateXPositions : secondary ? secondaryXPositions : primaryXPositions;
+      const xMarkerHalfSizeM = candidate ? 0.019 : 0.026;
       sectionPhis.forEach((sectionPhi) => {
         appendRzSegment(positions, point.rM - xMarkerHalfSizeM, point.zM - xMarkerHalfSizeM, point.rM + xMarkerHalfSizeM, point.zM + xMarkerHalfSizeM, sectionPhi);
         appendRzSegment(positions, point.rM - xMarkerHalfSizeM, point.zM + xMarkerHalfSizeM, point.rM + xMarkerHalfSizeM, point.zM - xMarkerHalfSizeM, sectionPhi);
       });
-      if (options.showTopologyRings) appendToroidalRing(positions, point.rM, point.zM);
+      // A toroidal ring visually denotes an active boundary X point. Evidence-
+      // only near-boundary candidates remain muted section markers.
+      if (options.showTopologyRings && !candidate) appendToroidalRing(positions, point.rM, point.zM);
     });
     if (primaryXPositions.length > 0) {
       primaryXGeometry.setPositions(new Float32Array(primaryXPositions));
@@ -897,10 +976,14 @@ export function createEfitThreeOverlay(
       secondaryXGeometry.setPositions(new Float32Array(secondaryXPositions));
       secondaryXMarkers.visible = true;
     }
+    if (candidateXPositions.length > 0) {
+      candidateXGeometry.setPositions(new Float32Array(candidateXPositions));
+      candidateXMarkers.visible = true;
+    }
 
     const strikePositions: number[] = [];
     const strikeMarkerHalfSizeM = 0.022;
-    (topology.strikePoints ?? []).forEach((point) => {
+    strikePoints.forEach((point) => {
       if (!Number.isFinite(point.rM) || !Number.isFinite(point.zM) || point.rM < 0) return;
       const top: RzPoint = [point.rM, point.zM + strikeMarkerHalfSizeM];
       const lowerLeft: RzPoint = [point.rM - strikeMarkerHalfSizeM, point.zM - strikeMarkerHalfSizeM];
@@ -1025,6 +1108,7 @@ export function createEfitThreeOverlay(
       divertorRevolvedMaterial,
       primaryXMaterial,
       secondaryXMaterial,
+      candidateXMaterial,
       strikeMaterial,
       axisMaterial,
       axisMarkerMaterial,
@@ -1049,6 +1133,7 @@ export function createEfitThreeOverlay(
       divertorRevolvedMaterial,
       primaryXMaterial,
       secondaryXMaterial,
+      candidateXMaterial,
       strikeMaterial,
       axisMaterial,
       axisMarkerMaterial,
@@ -1097,6 +1182,7 @@ export function createEfitThreeOverlay(
         divertorRevolvedRegion,
         primaryXMarkers,
         secondaryXMarkers,
+        candidateXMarkers,
         strikeMarkers,
         axisRing,
         axisMarker,
@@ -1113,6 +1199,7 @@ export function createEfitThreeOverlay(
       divertorRevolvedGeometry.dispose();
       primaryXGeometry.dispose();
       secondaryXGeometry.dispose();
+      candidateXGeometry.dispose();
       strikeGeometry.dispose();
       axisGeometry.dispose();
       surfaceGeometry.dispose();
@@ -1125,6 +1212,7 @@ export function createEfitThreeOverlay(
       divertorRevolvedMaterial.dispose();
       primaryXMaterial.dispose();
       secondaryXMaterial.dispose();
+      candidateXMaterial.dispose();
       strikeMaterial.dispose();
       axisMaterial.dispose();
       axisMarkerMaterial.dispose();

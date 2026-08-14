@@ -61,11 +61,189 @@ export type EfitTopology = {
   separatrixLegs: readonly EfitSeparatrixLeg[];
 };
 
+/** Hard safety ceilings for the variable-length v2 topology graph runtime. */
+export const EFIT_TOPOLOGY_GRAPH_LIMITS = Object.freeze({
+  nodes: 512,
+  edges: 1_024,
+  wallArcs: 1_024,
+  unresolvedArms: 512,
+  unresolvedRegions: 128,
+  regions: 128,
+  closedFluxSurfaces: 128,
+  pointsPerCurve: 4_096,
+  totalCurvePoints: 262_144,
+  idCharacters: 96,
+});
+
+export type EfitGraphEvidence = {
+  source: string;
+  state: string;
+  confidence: string;
+  flags: readonly string[];
+  reason?: string;
+};
+
+export type EfitTopologyGraphMagneticAxisNode = {
+  nodeId: string;
+  kind: 'magnetic-axis';
+  rM: number;
+  zM: number;
+  evidence?: EfitGraphEvidence;
+};
+
+export type EfitTopologyGraphXPointNode = {
+  nodeId: string;
+  kind: 'x-point';
+  role: 'boundary' | 'near-boundary';
+  activityRole: 'primary' | 'secondary';
+  activeBranchEligible: boolean;
+  evidenceOnly: boolean;
+  evidence: EfitGraphEvidence;
+  rM: number;
+  zM: number;
+  psiN: number;
+  absPsiNMinusOne: number;
+  gradientResidual: number;
+  fitRms: number;
+  lcfsDistanceM: number;
+  hessianEigenvaluesPerM2: readonly [number, number];
+  positionUncertaintyM: number;
+};
+
+export type EfitTopologyGraphWallNode = {
+  nodeId: string;
+  kind: 'wall-intersection';
+  geometryId: string;
+  wallSegment: number;
+  wallSegmentFraction: number;
+  wallSNormalized: number;
+  rM: number;
+  zM: number;
+  positionUncertaintyM: number;
+  evidence?: EfitGraphEvidence;
+};
+
+export type EfitTopologyGraphNode = EfitTopologyGraphMagneticAxisNode
+  | EfitTopologyGraphXPointNode
+  | EfitTopologyGraphWallNode;
+
+export type EfitTopologyGraphEdge = {
+  edgeId: string;
+  kind: 'constant-flux-separatrix-branch';
+  status: 'active-derived';
+  sourceArmIndex: number;
+  fromNodeId: string;
+  toNodeId: string;
+  psiN: number;
+  closed: boolean;
+  arcLengthM: number;
+  directDistanceM: number;
+  extensionRatio: number | null;
+  maxPsiNResidual: number;
+  pointsRzM: EfitNumericVector;
+};
+
+export type EfitTopologyGraphWallArc = {
+  wallArcId: string;
+  geometryId: string;
+  fromNodeId: string;
+  toNodeId: string;
+  direction: 'canonical-forward';
+  wrapsCanonicalStart: boolean;
+  startSNormalized: number;
+  endSNormalized: number;
+  arcLengthM: number;
+  pointsRzM: EfitNumericVector;
+};
+
+export type EfitTopologyGraphUnresolvedArm = {
+  unresolvedArmId: string;
+  xPointNodeId: string;
+  armIndex: number;
+  state: 'unresolved';
+  reason: string;
+  extrapolated: false;
+};
+
+export type EfitTopologyGraphRegion = {
+  regionId: string;
+  kind: 'closed-flux-region';
+  state: 'derived';
+  psiN: number;
+  containsMagneticAxis: boolean;
+  areaM2: number;
+  boundary: readonly {
+    order: number;
+    referenceKind: 'closed-surface';
+    referenceId: string;
+    direction: 'counter-clockwise';
+  }[];
+  evidence: EfitGraphEvidence;
+};
+
+export type EfitTopologyGraphUnresolvedRegion = {
+  unresolvedRegionId: string;
+  kind: 'open-field-separatrix-region';
+  state: 'unresolved';
+  reason: string;
+  edgeIds: readonly string[];
+  wallArcIds: readonly string[];
+  fabricated: false;
+};
+
+export type EfitTopologyGraphFeatures = {
+  xPointCount: number;
+  activeXPointCount: number;
+  candidateXPointCount: number;
+  boundaryXPointCount: number;
+  nearBoundaryXPointCount: number;
+  wallIntersectionCount: number;
+  resolvedBranchCount: number;
+  unresolvedArmCount: number;
+  nullClusters: readonly {
+    nodeIds: readonly [string, string];
+    distanceM: number;
+    deltaPsiN: number;
+    interpretation: 'multi-null-cluster-candidate';
+  }[];
+  extendedLegCandidateEdgeIds: readonly string[];
+};
+
+export type EfitTopologyGraph = {
+  canonicalRepresentation: {
+    kind: 'node-edge-region-topology-graph';
+    schemaVersion: 'fusion.efit.topology-graph.v2';
+    coordinateSpace: string;
+    geometryId: string;
+  };
+  nodes: readonly EfitTopologyGraphNode[];
+  edges: readonly EfitTopologyGraphEdge[];
+  wallArcs: readonly EfitTopologyGraphWallArc[];
+  regions: readonly EfitTopologyGraphRegion[];
+  unresolvedArms: readonly EfitTopologyGraphUnresolvedArm[];
+  unresolvedRegions: readonly EfitTopologyGraphUnresolvedRegion[];
+  features: EfitTopologyGraphFeatures;
+};
+
+export type EfitClosedFluxSurface = {
+  surfaceId: string;
+  source: 'derived-contour' | 'g-eqdsk-boundary-polyline';
+  psiN: number;
+  closed: true;
+  containsMagneticAxis: boolean;
+  areaM2: number;
+  pointsRzM: EfitNumericVector;
+  evidence: EfitGraphEvidence;
+};
+
 export type EfitFrameSummary = {
   shot: EfitShotId;
   index: number;
   timeMs: number;
   quality: EfitQuality;
+  /** Exact v2 publisher evidence retained for chunk-versus-index binding. */
+  qualityValidity?: 'unavailable' | 'partial' | 'usable';
+  qualityFlags?: readonly string[];
   currentA: number;
   rAxisM: number;
   zAxisM: number;
@@ -89,6 +267,43 @@ export type EfitFrame = EfitFrameSummary & {
   contours: readonly EfitContour[];
   /** Optional reviewed divertor-topology derivative; absent in the v1 contour package. */
   topology?: EfitTopology;
+  /** Exact reviewed v2 graph payload used by variable-topology 2D/3D renderers. */
+  topologyGraphPayload?: EfitTopologyGraphFramePayload;
+};
+
+export type EfitTopologyGraphFramePayload = {
+  frameId: string;
+  shotId: string;
+  reconstructionId: string;
+  timeMs: number;
+  geometryId: string;
+  quality: {
+    validity: 'unavailable' | 'partial' | 'usable';
+    flags: readonly string[];
+    positionUncertaintyFloorM: number;
+    sourceGrid: {
+      nr: number;
+      nz: number;
+      rMinM: number;
+      rMaxM: number;
+      zMinM: number;
+      zMaxM: number;
+    };
+    algorithmVersion: string;
+  };
+  scalars: {
+    currentA: number;
+    rAxisM: number;
+    zAxisM: number;
+    bcentrT: number;
+    psiAxisWbPerRad: number;
+    psiBoundaryWbPerRad: number;
+    q95: number | null;
+    efitError: number | null;
+    iconvr: number | null;
+  };
+  closedFluxSurfaces: readonly EfitClosedFluxSurface[];
+  topologyGraph: EfitTopologyGraph;
 };
 
 export type EfitGap = {
@@ -124,15 +339,40 @@ export type EfitTopologyBinaryDescriptor = {
   maxStrikePoints: 4;
 };
 
+export type EfitTopologyGraphChunkDescriptor = {
+  chunkIndex: number;
+  frameStart: number;
+  frameCount: number;
+  timeRangeMs: readonly [number, number];
+  availableTimesMs: readonly number[];
+  url: string;
+  contentType: 'application/gzip';
+  uncompressedContentType: 'application/x-ndjson';
+  compression: 'gzip-mtime-zero';
+  httpContentEncoding: 'identity';
+  byteLength: number;
+  sha256: string;
+};
+
+export type EfitTopologyGraphShotDescriptor = {
+  shotId: string;
+  reconstructionId: string;
+  chunks: readonly EfitTopologyGraphChunkDescriptor[];
+};
+
 export type EfitShotManifest = {
   shot: EfitShotId;
+  sourceKind?: 'legacy-contours-v1' | 'topology-graph-v2';
+  geometryId?: string;
+  catalog?: EfitShotCatalogMetadata;
   frameCount: number;
   minTimeMs: number;
   maxTimeMs: number;
   gaps: readonly EfitGap[];
   frames: readonly EfitFrameSummary[];
-  binary: EfitBinaryDescriptor;
+  binary?: EfitBinaryDescriptor;
   topologyBinary?: EfitTopologyBinaryDescriptor;
+  topologyGraph?: EfitTopologyGraphShotDescriptor;
 };
 
 export type EfitCadRegistration = {
@@ -141,17 +381,38 @@ export type EfitCadRegistration = {
   [key: string]: unknown;
 };
 
+export type EfitShotCatalogMetadata = {
+  datasetId?: string;
+  datasetLabel?: string;
+  reconstructionLabel?: string;
+  qualityLabel?: string;
+  qualityState?: EfitQualityState;
+};
+
+export type EfitGeometry = {
+  geometryId?: string;
+  limiterRzM: EfitRzPolyline;
+  closed?: boolean;
+  canonicalSegmentCount?: number;
+  canonicalSha256F64LE?: string;
+  canonicalPointCount?: number;
+  sourceLimiterSha256F64LE?: string;
+  sourcePointCount?: number;
+  orientation?: 'counter-clockwise' | 'clockwise';
+  startPointRule?: string;
+  gridExtentM?: readonly [number, number, number, number];
+  coordinateSystem?: string;
+  cadRegistration?: EfitCadRegistration;
+};
+
 export type EfitManifest = {
   schema: string;
   device: string;
   generatedAt?: string;
   psiNLevels: readonly number[];
-  geometry: {
-    limiterRzM: EfitRzPolyline;
-    gridExtentM?: readonly [number, number, number, number];
-    coordinateSystem?: string;
-    cadRegistration?: EfitCadRegistration;
-  };
+  /** Legacy/default geometry. Per-shot geometryId takes precedence when set. */
+  geometry: EfitGeometry;
+  geometries?: readonly EfitGeometry[];
   shots: readonly EfitShotManifest[];
 };
 

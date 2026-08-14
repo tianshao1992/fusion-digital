@@ -15,6 +15,27 @@ const approvedFiles = new Set([
   "shot-18308.bin",
 ]);
 const approvedRoutes = [...approvedFiles].map((name) => `/device-data/exl50u-efit/${name}`);
+const v2ChunkCounts = new Map([
+  [20213, 33],
+  [20289, 4],
+  [20666, 45],
+  [20669, 57],
+  [20707, 38],
+  [20708, 42],
+]);
+const approvedV2Files = new Set(["index.json"]);
+for (const [shot, count] of v2ChunkCounts) {
+  for (let part = 0; part < count; part += 1) {
+    approvedV2Files.add(`shot-${shot}-part-${String(part).padStart(3, "0")}.jsonl.gz`);
+  }
+}
+const representativeV2Routes = [
+  "/device-data/exl50u-efit-v2/index.json",
+  ...[...v2ChunkCounts].flatMap(([shot, count]) => [
+    `/device-data/exl50u-efit-v2/shot-${shot}-part-000.jsonl.gz`,
+    `/device-data/exl50u-efit-v2/shot-${shot}-part-${String(count - 1).padStart(3, "0")}.jsonl.gz`,
+  ]),
+];
 
 async function walkFiles(root) {
   try {
@@ -152,6 +173,36 @@ test("EFIT Worker preserves byte ranges and secures partial/error responses", as
   }
 });
 
+test("EFIT v2 Worker serves only raw-gzip reviewed chunks with no HTTP content decoding", async () => {
+  for (const route of representativeV2Routes) {
+    const getResult = await fetchFromWorker(route);
+    assert.equal(getResult.response.status, 200, `GET ${route}`);
+    assert.equal(getResult.assetRequests.length, 1);
+    assert.equal(getResult.assetRequests[0].pathname, route.replace("/device-data/", "/data/"));
+    secureHeaders(getResult.response);
+    assert.equal(getResult.response.headers.get("content-encoding"), null);
+    assert.match(
+      getResult.response.headers.get("content-type") ?? "",
+      route.endsWith(".json") ? /^application\/json\b/ : /^application\/gzip\b/,
+    );
+    const payload = Buffer.from(await getResult.response.arrayBuffer());
+    assert.ok(payload.byteLength > 0);
+    if (route.endsWith(".jsonl.gz")) assert.deepEqual([...payload.subarray(0, 2)], [0x1f, 0x8b]);
+
+    const headResult = await fetchFromWorker(route, { method: "HEAD" });
+    assert.equal(headResult.response.status, 200, `HEAD ${route}`);
+    assert.equal(headResult.response.headers.get("content-encoding"), null);
+    assert.equal((await headResult.response.arrayBuffer()).byteLength, 0);
+  }
+
+  const chunkRoute = representativeV2Routes.find((route) => route.endsWith(".jsonl.gz"));
+  const ranged = await fetchFromWorker(chunkRoute, { headers: { Range: "bytes=0-63" } });
+  assert.equal(ranged.response.status, 206);
+  assert.equal(ranged.response.headers.get("content-encoding"), null);
+  assert.match(ranged.response.headers.get("content-type") ?? "", /^application\/gzip\b/);
+  assert.deepEqual([...Buffer.from(await ranged.response.arrayBuffer()).subarray(0, 2)], [0x1f, 0x8b]);
+});
+
 test("EFIT Worker blocks direct storage paths, unknown files, directories, and write methods", async () => {
   const denied = [
     "/device-data/exl50u-efit",
@@ -178,6 +229,29 @@ test("EFIT Worker blocks direct storage paths, unknown files, directories, and w
     assert.equal(assetRequests.length, 0);
     secureHeaders(response);
   }
+
+  const deniedV2 = [
+    "/device-data/exl50u-efit-v2",
+    "/device-data/exl50u-efit-v2/",
+    "/device-data/exl50u-efit-v2/private.zip",
+    "/device-data/exl50u-efit-v2/g020289.00110",
+    "/data/exl50u-efit-v2/index.json",
+    ...[...v2ChunkCounts].flatMap(([shot, count]) => [
+      `/device-data/exl50u-efit-v2/shot-${shot}-part-${String(count).padStart(3, "0")}.jsonl.gz`,
+      `/data/exl50u-efit-v2/shot-${shot}-part-000.jsonl.gz`,
+    ]),
+  ];
+  for (const route of deniedV2) {
+    const { response, assetRequests } = await fetchFromWorker(route);
+    assert.equal(response.status, 404, route);
+    assert.equal(assetRequests.length, 0, `${route} must not touch the asset binding`);
+    secureHeaders(response);
+  }
+  for (const method of ["POST", "PUT", "DELETE", "OPTIONS"]) {
+    const { response, assetRequests } = await fetchFromWorker(representativeV2Routes[1], { method });
+    assert.equal(response.status, 404, `${method} v2 chunk`);
+    assert.equal(assetRequests.length, 0);
+  }
 });
 
 test("public and built EFIT packages contain only reviewed derivatives and no raw experimental formats", async () => {
@@ -191,8 +265,14 @@ test("public and built EFIT packages contain only reviewed derivatives and no ra
     }
     const derivedRoot = resolve(root, root === resolve(repositoryRoot, "public") ? "data/exl50u-efit" : "client/data/exl50u-efit");
     const derived = await walkFiles(derivedRoot);
-    assert.deepEqual(new Set(derived.map((path) => basename(path))), approvedFiles, `${derivedRoot} must contain exactly the six reviewed derivatives`);
+    const derivedRelative = derived.map((path) => relative(derivedRoot, path).replaceAll("\\", "/")).sort();
+    assert.deepEqual(derivedRelative, [...approvedFiles].sort(), `${derivedRoot} must contain exactly the six reviewed derivatives`);
     for (const path of derived) assert.ok((await stat(path)).size > 0);
+    const v2Root = resolve(root, root === resolve(repositoryRoot, "public") ? "data/exl50u-efit-v2" : "client/data/exl50u-efit-v2");
+    const v2Derived = await walkFiles(v2Root);
+    const v2Relative = v2Derived.map((path) => relative(v2Root, path).replaceAll("\\", "/")).sort();
+    assert.deepEqual(v2Relative, [...approvedV2Files].sort(), `${v2Root} must contain exactly the reviewed v2 catalog and chunks`);
+    for (const path of v2Derived) assert.ok((await stat(path)).size > 0);
   }
 });
 
@@ -203,6 +283,10 @@ test("Vite run_worker_first covers both controlled proxy and direct storage name
     "/device-data/exl50u-efit/*",
     "/data/exl50u-efit",
     "/data/exl50u-efit/*",
+    "/device-data/exl50u-efit-v2",
+    "/device-data/exl50u-efit-v2/*",
+    "/data/exl50u-efit-v2",
+    "/data/exl50u-efit-v2/*",
   ]) {
     assert.ok(source.includes(JSON.stringify(path)), `${path} must run through the Worker first`);
   }

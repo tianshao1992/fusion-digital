@@ -6,9 +6,11 @@ import type {
   EfitFrame,
   EfitFrameSummary,
   EfitGap,
+  EfitGeometry,
   EfitManifest,
   EfitQuality,
   EfitRzPolyline,
+  EfitShotCatalogMetadata,
   EfitShotId,
   EfitShotManifest,
   EfitTopology,
@@ -59,6 +61,16 @@ const QUALITY_FLAGS = Object.freeze([
 
 type FetchLike = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 type JsonRecord = Record<string, unknown>;
+type LegacyShotManifest = EfitShotManifest & { binary: EfitBinaryDescriptor };
+
+function resolvedShotGeometry(
+  manifest: Pick<EfitManifest, 'geometry' | 'geometries'>,
+  shot: Pick<EfitShotManifest, 'geometryId'>,
+): EfitGeometry | null {
+  if (!shot.geometryId) return manifest.geometry;
+  if (manifest.geometry.geometryId === shot.geometryId) return manifest.geometry;
+  return manifest.geometries?.find((geometry) => geometry.geometryId === shot.geometryId) ?? null;
+}
 
 export type EfitBinaryDataSourceOptions = {
   indexUrl?: string;
@@ -90,8 +102,9 @@ function finiteNumber(value: unknown, fallback = Number.NaN): number {
 }
 
 function integer(value: unknown, fallback = 0): number {
-  const parsed = finiteNumber(value, fallback);
-  return Number.isFinite(parsed) ? Math.trunc(parsed) : fallback;
+  if (value === undefined || value === null) return fallback;
+  if (typeof value === 'number' && Number.isFinite(value) && Number.isSafeInteger(value)) return value;
+  throw new Error('EFIT integer field is malformed.');
 }
 
 function optionalFinite(value: unknown): number | undefined {
@@ -111,6 +124,31 @@ function optionalUnsignedInteger(value: unknown, maximum = 0xffff_ffff): number 
 
 function stringValue(value: unknown, fallback: string): string {
   return typeof value === 'string' && value.trim() ? value : fallback;
+}
+
+function optionalBoundedString(value: unknown, maximum = 120): string | undefined {
+  if (typeof value !== 'string') return undefined;
+  const trimmed = value.trim();
+  return trimmed && trimmed.length <= maximum ? trimmed : undefined;
+}
+
+function geometryId(value: unknown): string | undefined {
+  const id = optionalBoundedString(value, 64);
+  return id && /^[a-z0-9][a-z0-9._-]*$/i.test(id) ? id : undefined;
+}
+
+function normalizeShotCatalog(raw: JsonRecord): EfitShotCatalogMetadata {
+  const nested = isRecord(raw.catalog) ? raw.catalog : {};
+  const qualityState = optionalBoundedString(nested.qualityState ?? raw.qualityState, 16);
+  return {
+    datasetId: geometryId(nested.datasetId ?? raw.datasetId),
+    datasetLabel: optionalBoundedString(nested.datasetLabel ?? raw.datasetLabel),
+    reconstructionLabel: optionalBoundedString(nested.reconstructionLabel ?? raw.reconstructionLabel),
+    qualityLabel: optionalBoundedString(nested.qualityLabel ?? raw.qualityLabel),
+    qualityState: qualityState === 'good' || qualityState === 'warning' || qualityState === 'invalid' || qualityState === 'missing'
+      ? qualityState
+      : undefined,
+  };
 }
 
 function canonicalIndexUrl(value: string): string {
@@ -145,7 +183,10 @@ function qualityFrom(flags: number, surfaceMask: number, lcfsValidPoints: number
 }
 
 function parseFlatRz(value: unknown): EfitRzPolyline {
-  const flat = Array.isArray(value) ? value : [];
+  if (!Array.isArray(value) || value.length % 2 !== 0) {
+    throw new Error('EFIT geometry must contain complete R-Z coordinate pairs.');
+  }
+  const flat = value;
   const count = Math.floor(flat.length / 2);
   const rM = new Float32Array(count);
   const zM = new Float32Array(count);
@@ -291,10 +332,14 @@ function normalizeSummary(raw: unknown, shot: EfitShotId, index: number, binary:
   };
 }
 
-function normalizeShot(raw: unknown, layout: JsonRecord, indexUrl: string): EfitShotManifest {
+function normalizeShot(raw: unknown, layout: JsonRecord, indexUrl: string): LegacyShotManifest {
   if (!isRecord(raw)) throw new Error('EFIT index contains an invalid shot record.');
   const shot = integer(raw.shot, Number.NaN);
   if (!Number.isFinite(shot)) throw new Error('EFIT shot number is missing.');
+  const shotGeometryId = geometryId(raw.geometryId);
+  if (raw.geometryId !== undefined && !shotGeometryId) {
+    throw new Error(`EFIT shot ${shot} has an invalid geometry id.`);
+  }
   const binary = normalizeBinary(raw, layout, indexUrl, shot);
   const rawFrames = Array.isArray(raw.frames) ? raw.frames : [];
   const rawTimes = Array.isArray(raw.availableTimesMs) ? raw.availableTimesMs : [];
@@ -343,6 +388,9 @@ function normalizeShot(raw: unknown, layout: JsonRecord, indexUrl: string): Efit
 
   return {
     shot,
+    sourceKind: 'legacy-contours-v1',
+    geometryId: shotGeometryId,
+    catalog: normalizeShotCatalog(raw),
     frameCount: frames.length,
     minTimeMs,
     maxTimeMs,
@@ -351,6 +399,84 @@ function normalizeShot(raw: unknown, layout: JsonRecord, indexUrl: string): Efit
     binary,
     topologyBinary,
   };
+}
+
+function normalizeGeometry(
+  raw: JsonRecord,
+  fallback: {
+    geometryId?: string;
+    extent?: readonly [number, number, number, number];
+    coordinateSystem?: string;
+    cadRegistration?: EfitGeometry['cadRegistration'];
+  } = {},
+): EfitGeometry {
+  const limiterRzM = parseFlatRz(raw.coordinatesRzM ?? raw.limiterRzM);
+  const flatExtent = Array.isArray(raw.gridExtentM) ? raw.gridExtentM : [];
+  const extent = flatExtent.length >= 4
+    ? [finiteNumber(flatExtent[0]), finiteNumber(flatExtent[1]), finiteNumber(flatExtent[2]), finiteNumber(flatExtent[3])] as const
+    : fallback.extent;
+  const first: readonly [number, number] | undefined = limiterRzM.validPoints > 0
+    ? [Number(limiterRzM.rM[0]), Number(limiterRzM.zM[0])]
+    : undefined;
+  const lastIndex = limiterRzM.validPoints - 1;
+  const last: readonly [number, number] | undefined = lastIndex >= 0
+    ? [Number(limiterRzM.rM[lastIndex]), Number(limiterRzM.zM[lastIndex])]
+    : undefined;
+  const inferredClosed = Boolean(first && last && Math.hypot(first[0] - last[0], first[1] - last[1]) <= 1e-7);
+  const declaredClosed = typeof raw.closed === 'boolean'
+    ? raw.closed
+    : typeof raw.limiterClosed === 'boolean' ? raw.limiterClosed : undefined;
+  const limiterClosed = declaredClosed ?? inferredClosed;
+  const declaredSegments = optionalUnsignedInteger(raw.canonicalSegmentCount ?? raw.segmentCount ?? raw.limiterSegmentCount, 65_535);
+  const canonicalSegmentCount = declaredSegments ?? Math.max(0, limiterRzM.validPoints - 1);
+  const canonicalSha256F64LE = optionalBoundedString(raw.canonicalSha256F64LE ?? raw.canonicalSha256 ?? raw.sha256, 64);
+  const canonicalPointCount = optionalUnsignedInteger(raw.canonicalPointCount ?? raw.pointCount, 8_192);
+  const sourceLimiterSha256F64LE = optionalBoundedString(raw.sourceLimiterSha256F64LE, 64);
+  const sourcePointCount = optionalUnsignedInteger(raw.sourcePointCount, 65_535);
+  const orientation = raw.orientation === 'counter-clockwise' || raw.orientation === 'clockwise' ? raw.orientation : undefined;
+  const startPointRule = optionalBoundedString(raw.startPointRule ?? raw.startRule);
+  const cadRegistration = typeof raw.cadRegistration === 'string'
+    ? { description: raw.cadRegistration }
+    : isRecord(raw.cadRegistration) ? raw.cadRegistration : fallback.cadRegistration;
+  const normalized: EfitGeometry = {
+    geometryId: geometryId(raw.geometryId ?? raw.id) ?? fallback.geometryId,
+    limiterRzM,
+    closed: limiterClosed,
+    canonicalSegmentCount,
+    canonicalSha256F64LE,
+    canonicalPointCount,
+    sourceLimiterSha256F64LE,
+    sourcePointCount,
+    orientation,
+    startPointRule,
+    gridExtentM: extent,
+    coordinateSystem: optionalBoundedString(raw.coordinateSystem) ?? fallback.coordinateSystem,
+    cadRegistration,
+  };
+  if (limiterRzM.validPoints < 2 || limiterRzM.validPoints > 8_192
+    || Array.from(limiterRzM.rM).some((value) => !Number.isFinite(value) || value < 0)
+    || Array.from(limiterRzM.zM).some((value) => !Number.isFinite(value))) {
+    throw new Error(`EFIT geometry ${normalized.geometryId ?? '(default)'} has an invalid limiter polyline.`);
+  }
+  if (declaredClosed !== undefined && declaredClosed !== inferredClosed) {
+    throw new Error(`EFIT geometry ${normalized.geometryId ?? '(default)'} limiter closure disagrees with its published coordinate order.`);
+  }
+  if (!Number.isInteger(canonicalSegmentCount) || canonicalSegmentCount !== limiterRzM.validPoints - 1) {
+    throw new Error(`EFIT geometry ${normalized.geometryId ?? '(default)'} has an invalid limiter segment count.`);
+  }
+  if (canonicalPointCount !== undefined && canonicalPointCount !== limiterRzM.validPoints) {
+    throw new Error(`EFIT geometry ${normalized.geometryId ?? '(default)'} canonical point count disagrees with its coordinates.`);
+  }
+  if ([canonicalSha256F64LE, sourceLimiterSha256F64LE].some((hash) => hash !== undefined && !/^[a-f0-9]{64}$/i.test(hash))) {
+    throw new Error(`EFIT geometry ${normalized.geometryId ?? '(default)'} has an invalid limiter SHA-256.`);
+  }
+  if (sourcePointCount !== undefined && sourcePointCount < limiterRzM.validPoints - 1) {
+    throw new Error(`EFIT geometry ${normalized.geometryId ?? '(default)'} has an invalid source point count.`);
+  }
+  if (extent && (extent.some((value) => !Number.isFinite(value)) || extent[1] <= extent[0] || extent[3] <= extent[2])) {
+    throw new Error(`EFIT geometry ${normalized.geometryId ?? '(default)'} has invalid grid bounds.`);
+  }
+  return normalized;
 }
 
 function normalizeManifest(raw: unknown, indexUrl: string): EfitManifest {
@@ -382,29 +508,66 @@ function normalizeManifest(raw: unknown, indexUrl: string): EfitManifest {
     : isRecord(coordinateSystem.cadRegistration)
       ? coordinateSystem.cadRegistration
       : isRecord(geometry.cadRegistration)
-        ? geometry.cadRegistration
-        : undefined;
+      ? geometry.cadRegistration
+      : undefined;
 
-  if (shots.some((shot) => shot.topologyBinary)
-    && (!extent || extent.some((value) => !Number.isFinite(value))
-      || extent[1] <= extent[0] || extent[3] <= extent[2]
-      || parseFlatRz(geometry.limiterRzM).validPoints < 2)) {
-    throw new Error('EFIT topology delivery requires finite grid bounds and a reviewed limiter polyline.');
+  const defaultGeometry = normalizeGeometry(geometry, {
+    geometryId: geometryId(geometry.geometryId ?? geometry.id) ?? 'default',
+    extent,
+    coordinateSystem: typeof coordinateSystem.source === 'string'
+      ? coordinateSystem.source
+      : typeof geometry.coordinateSystem === 'string' ? geometry.coordinateSystem : undefined,
+    cadRegistration,
+  });
+  const rawGeometryCatalog = raw.geometryCatalog ?? raw.geometries;
+  const rawGeometries = Array.isArray(rawGeometryCatalog)
+    ? rawGeometryCatalog
+    : isRecord(rawGeometryCatalog)
+      ? Object.entries(rawGeometryCatalog).map(([id, candidate]) => isRecord(candidate)
+        ? { ...candidate, geometryId: candidate.geometryId ?? candidate.id ?? id }
+        : candidate)
+      : [];
+  if (rawGeometries.length > 64) throw new Error('EFIT index contains too many geometry contracts.');
+  const geometries = rawGeometries.map((candidate, index) => {
+    if (!isRecord(candidate) || !geometryId(candidate.geometryId ?? candidate.id)) {
+      throw new Error(`EFIT geometry ${index} is missing a valid id.`);
+    }
+    const normalized = normalizeGeometry(candidate, {
+      extent,
+      coordinateSystem: defaultGeometry.coordinateSystem,
+      cadRegistration,
+    });
+    if (!normalized.closed
+      || !normalized.canonicalSha256F64LE
+      || normalized.canonicalPointCount === undefined
+      || !normalized.sourceLimiterSha256F64LE
+      || normalized.sourcePointCount === undefined
+      || !normalized.orientation
+      || !normalized.startPointRule) {
+      throw new Error(`EFIT geometry ${normalized.geometryId} is missing its canonical limiter identity contract.`);
+    }
+    return normalized;
+  });
+  const geometryIds = [defaultGeometry.geometryId, ...geometries.map((candidate) => candidate.geometryId)];
+  if (geometryIds.some((id) => !id) || new Set(geometryIds).size !== geometryIds.length) {
+    throw new Error('EFIT index contains duplicate or missing geometry ids.');
   }
+  const geometryCatalog = { geometry: defaultGeometry, geometries, shots };
+  shots.forEach((shot) => {
+    const shotGeometry = resolvedShotGeometry(geometryCatalog, shot);
+    if (!shotGeometry) throw new Error(`EFIT shot ${shot.shot} references an unknown geometry id.`);
+    if (shot.topologyBinary && !shotGeometry.gridExtentM) {
+      throw new Error(`EFIT shot ${shot.shot} topology delivery requires finite grid bounds and a reviewed limiter polyline.`);
+    }
+  });
 
   return {
     schema: stringValue(raw.schemaVersion ?? raw.schema ?? raw.version, 'exl50u-efit/v1'),
     device: stringValue(deviceRecord.displayName ?? deviceRecord.id ?? raw.device, 'EXL-50U'),
     generatedAt: typeof raw.generatedAt === 'string' ? raw.generatedAt : undefined,
     psiNLevels,
-    geometry: {
-      limiterRzM: parseFlatRz(geometry.limiterRzM),
-      gridExtentM: extent,
-      coordinateSystem: typeof coordinateSystem.source === 'string'
-        ? coordinateSystem.source
-        : typeof geometry.coordinateSystem === 'string' ? geometry.coordinateSystem : undefined,
-      cadRegistration,
-    },
+    geometry: defaultGeometry,
+    geometries: geometries.length > 0 ? geometries : undefined,
     shots,
   };
 }
@@ -744,14 +907,15 @@ export function createEfitBinaryDataSource(options: EfitBinaryDataSourceOptions 
     return manifest;
   }
 
-  async function findShot(shot: EfitShotId, request: EfitDataRequest = {}): Promise<EfitShotManifest> {
+  async function findShot(shot: EfitShotId, request: EfitDataRequest = {}): Promise<LegacyShotManifest> {
     const manifest = await loadManifest(request);
     const found = manifest.shots.find((candidate) => candidate.shot === shot);
     if (!found) throw new Error(`EFIT shot ${shot} is not present in the index.`);
-    return found;
+    if (!found.binary) throw new Error(`EFIT shot ${shot} is not a legacy contour-binary delivery.`);
+    return found as LegacyShotManifest;
   }
 
-  async function verifyFile(shot: EfitShotManifest, signal?: AbortSignal): Promise<void> {
+  async function verifyFile(shot: LegacyShotManifest, signal?: AbortSignal): Promise<void> {
     let pending = verifiedFiles.get(shot.shot);
     if (!pending) {
       pending = fetchBytes(fetcher, shot.binary.url, 0, shot.binary.fileHeaderBytes)
@@ -786,7 +950,7 @@ export function createEfitBinaryDataSource(options: EfitBinaryDataSourceOptions 
     await raceWithAbort(pending, signal);
   }
 
-  async function verifyTopologyFile(shot: EfitShotManifest, signal?: AbortSignal): Promise<void> {
+  async function verifyTopologyFile(shot: LegacyShotManifest, signal?: AbortSignal): Promise<void> {
     const binary = shot.topologyBinary;
     if (!binary) return;
     let pending = verifiedTopologyFiles.get(shot.shot);
@@ -843,8 +1007,10 @@ export function createEfitBinaryDataSource(options: EfitBinaryDataSourceOptions 
 
     const pending = (async () => {
       const manifest = await loadManifest();
-      const shot = manifest.shots.find((candidate) => candidate.shot === shotId);
-      if (!shot) throw new Error(`EFIT shot ${shotId} is not present in the index.`);
+      const candidate = manifest.shots.find((item) => item.shot === shotId);
+      if (!candidate) throw new Error(`EFIT shot ${shotId} is not present in the index.`);
+      if (!candidate.binary) throw new Error(`EFIT shot ${shotId} is not a legacy contour-binary delivery.`);
+      const shot = candidate as LegacyShotManifest;
       const summary = shot.frames[frameIndex];
       if (!summary) throw new Error(`EFIT shot ${shotId} has no frame ${frameIndex}.`);
       await Promise.all([verifyFile(shot), verifyTopologyFile(shot)]);
@@ -869,12 +1035,16 @@ export function createEfitBinaryDataSource(options: EfitBinaryDataSourceOptions 
       ]);
       const frame = parseFrame(bytes, summary, shot.binary, manifest.psiNLevels);
       if (topologyBytes && shot.topologyBinary) {
+        const shotGeometry = resolvedShotGeometry(manifest, shot);
+        if (!shotGeometry?.gridExtentM) {
+          throw new Error(`Shot ${shot.shot} topology has no resolved geometry contract.`);
+        }
         frame.topology = parseTopologyFrame(
           topologyBytes,
           summary,
           shot.topologyBinary,
-          manifest.geometry.limiterRzM.validPoints - 1,
-          manifest.geometry.gridExtentM as readonly [number, number, number, number],
+          shotGeometry.canonicalSegmentCount ?? shotGeometry.limiterRzM.validPoints - 1,
+          shotGeometry.gridExtentM,
         );
       }
       remember(key, frame);
@@ -923,6 +1093,7 @@ export function inspectEfitBinaryContract(index: unknown, shotFile: ArrayBuffer)
   const manifest = normalizeManifest(index, DEFAULT_INDEX_URL);
   const shot = manifest.shots[0];
   if (!shot) throw new Error('EFIT index has no shot to inspect.');
+  if (!shot.binary) throw new Error('EFIT inspection index does not describe a legacy binary shot.');
   if (shotFile.byteLength < shot.binary.fileHeaderBytes + shot.binary.frameStrideBytes) {
     throw new Error('EFIT inspection payload does not include a complete first frame.');
   }
