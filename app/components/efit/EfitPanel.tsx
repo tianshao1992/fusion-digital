@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, type KeyboardEvent } from 'react';
+import { deriveReviewedDivertorRegion } from './divertor-region';
 import EfitEquilibriumChart, { efitTopologyLabel } from './EfitEquilibriumChart';
 import EfitSignalsChart from './EfitSignalsChart';
 import EfitTimelineControls from './EfitTimelineControls';
@@ -68,6 +69,11 @@ export default function EfitPanel({
   const frame = snapshot.currentFrame;
   const quality = frame?.quality;
   const topology = frame?.topology;
+  const divertorRegion = deriveReviewedDivertorRegion(
+    topology,
+    snapshot.manifest?.geometry.limiterRzM,
+    frame ? { rM: frame.rAxisM, zM: frame.zAxisM } : undefined,
+  );
 
   return (
     <section
@@ -110,6 +116,14 @@ export default function EfitPanel({
             拓扑 · {efitTopologyLabel(topology.kind)} · X {topology.xPoints.length}
           </span>
         )}
+        {topology && divertorRegion.state !== 'unavailable' && (
+          <span
+            className={`efitStatusPill divertor-region-${divertorRegion.state}`}
+            title={divertorRegion.message}
+          >
+            边界区域 · {divertorRegion.state === 'filled' ? '已审查闭合' : '仅线框'}
+          </span>
+        )}
         {snapshot.gapNotice && (
           <span className="efitStatusPill isWarning">
             数据间隙 {snapshot.gapNotice.afterMs}–{snapshot.gapNotice.beforeMs} ms{snapshot.gapNotice.missingCount ? ` · 缺 ${snapshot.gapNotice.missingCount} 帧` : ''}
@@ -148,14 +162,15 @@ export default function EfitPanel({
         </article>
       </div>
 
-      <div className={`efitTopologyBoundary${topology?.kind === 'partial' || topology?.kind === 'unknown' ? ' isPartial' : ''}`} role="note">
+      <div className={`efitTopologyBoundary${divertorRegion.state === 'wireframe' ? ' isPartial' : ''}`} role="note">
         <b>DIVERTOR TOPOLOGY / VISUALIZATION-DERIVED</b>
         <span>
           {topology
             ? `${efitTopologyLabel(topology.kind)}：已发布 ${topology.xPoints.length} 个 X 点、${topology.separatrixLegs.length} 条开放分离支和 ${topology.strikePoints.length} 个 limiter 交点。`
             : '当前帧未发布经校验的偏滤器拓扑；界面不会由 LCFS 猜测 X 点或分离支。'}
           {topology?.kind === 'near-double-null' && ' 近双零标记区分主、次 X 点，不表示严格平衡双零。'}
-          {' '}交点仅表示分离支与已发布 limiter 轮廓的交会，不等同于经 CAD 配准校核的真实偏滤器靶板打击点。
+          {' '}{divertorRegion.message}
+          {' '}橙色填充只表示上述边界构造区域，不表示温度、密度、真实 SOL 宽度或物理场。交点仅表示分离支与已发布 limiter 轮廓的交会，不等同于经 CAD 配准校核的真实偏滤器靶板打击点。
         </span>
       </div>
 

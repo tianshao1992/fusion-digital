@@ -123,7 +123,15 @@ function materialList(material: Material | Material[]) {
 function currentEfitFrame(store: EfitStoreLike | null | undefined): EfitRenderableFrame | null {
   const snapshot = store?.getSnapshot();
   if (!snapshot) return null;
-  if ('currentFrame' in snapshot) return snapshot.currentFrame ?? null;
+  if ('currentFrame' in snapshot) {
+    const frame = snapshot.currentFrame;
+    if (!frame) return null;
+    const limiterRzM = snapshot.manifest?.geometry?.limiterRzM;
+    // The 3D renderer needs the exact published limiter arc to close a
+    // divertor region. Add it as render-only frame context without mutating
+    // the EFIT frame, store or public binary contract.
+    return limiterRzM ? { ...frame, limiterRzM } : frame;
+  }
   return 'timeMs' in snapshot ? snapshot : null;
 }
 

@@ -168,6 +168,8 @@
 .efitStatusPill.topology-near-double-null { color: #c9b6ff; border-color: rgba(178, 151, 255, 0.38); background: rgba(142, 107, 244, 0.1); }
 .efitStatusPill.topology-partial,
 .efitStatusPill.topology-unknown { color: #f2bd72; border-color: rgba(242, 189, 114, 0.32); background: rgba(242, 189, 114, 0.08); }
+.efitStatusPill.divertor-region-filled { color: #ffad68; border-color: rgba(255, 139, 60, 0.42); background: rgba(255, 112, 34, 0.11); }
+.efitStatusPill.divertor-region-wireframe { color: #f2bd72; border-color: rgba(242, 189, 114, 0.34); background: rgba(242, 189, 114, 0.08); }
 
 .efitStatusText {
   color: #bd9d70;
@@ -303,15 +305,15 @@
   margin-top: 12px;
   padding: 10px 13px;
   color: #82a7a0;
-  background: rgba(18, 12, 19, 0.64);
-  border: 1px solid rgba(255, 112, 187, 0.2);
+  background: rgba(27, 17, 10, 0.62);
+  border: 1px solid rgba(255, 132, 55, 0.24);
   border-radius: 11px;
   font-size: 0.63rem;
   line-height: 1.55;
 }
 
 .efitTopologyBoundary b {
-  color: #ff8fc9;
+  color: #ff9a52;
   font: 700 0.58rem/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   letter-spacing: 0.08em;
   white-space: nowrap;

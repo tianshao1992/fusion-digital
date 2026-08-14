@@ -12,7 +12,9 @@ import {
   Object3D,
   Plane,
   SRGBColorSpace,
+  ShapeUtils,
   SphereGeometry,
+  Vector2,
   Vector3,
   type WebGLRenderer,
 } from 'three';
@@ -21,6 +23,7 @@ import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js';
 import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js';
+import { deriveReviewedDivertorRegion } from '../efit/divertor-region';
 import { colorForPsiN } from '../efit/psi-n-palette';
 
 type Vec3Tuple = readonly [number, number, number];
@@ -88,10 +91,15 @@ export type EfitRenderableFrame = {
   lcfs?: EfitRzCurve | ArrayLike<number> | null;
   contours?: readonly EfitRzCurve[];
   topology?: EfitRenderableTopology;
+  /** Render-only context copied from the published manifest; never inferred. */
+  limiterRzM?: EfitRzCurve;
 };
 
 export type EfitStoreSnapshotLike = {
   currentFrame?: EfitRenderableFrame | null;
+  manifest?: {
+    geometry?: { limiterRzM?: EfitRzCurve };
+  } | null;
 };
 
 export type EfitStoreLike = {
@@ -348,6 +356,36 @@ export function createEfitThreeOverlay(
   separatrixLines.visible = false;
   root.add(separatrixLines);
   separatrixGeometry.setPositions(new Float32Array([0, 0, 0, 0, 0, 0]));
+
+  const divertorSectionGeometry = new BufferGeometry();
+  const divertorSectionMaterial = new MeshBasicMaterial({
+    color: 0xff8a35,
+    transparent: true,
+    opacity: 0.34,
+    depthWrite: false,
+    side: DoubleSide,
+  });
+  const divertorSectionRegion = new Mesh(divertorSectionGeometry, divertorSectionMaterial);
+  divertorSectionRegion.name = 'EFIT_DIVERTOR_TOPOLOGY_SECTION_REGION';
+  divertorSectionRegion.frustumCulled = false;
+  divertorSectionRegion.renderOrder = 22;
+  divertorSectionRegion.visible = false;
+  root.add(divertorSectionRegion);
+
+  const divertorRevolvedGeometry = new BufferGeometry();
+  const divertorRevolvedMaterial = new MeshBasicMaterial({
+    color: 0xff7a25,
+    transparent: true,
+    opacity: 0.15,
+    depthWrite: false,
+    side: DoubleSide,
+  });
+  const divertorRevolvedRegion = new Mesh(divertorRevolvedGeometry, divertorRevolvedMaterial);
+  divertorRevolvedRegion.name = 'EFIT_DIVERTOR_TOPOLOGY_REVOLVED_REGION';
+  divertorRevolvedRegion.frustumCulled = false;
+  divertorRevolvedRegion.renderOrder = 21;
+  divertorRevolvedRegion.visible = false;
+  root.add(divertorRevolvedRegion);
 
   const primaryXGeometry = new LineSegmentsGeometry();
   const primaryXMaterial = new LineMaterial({
@@ -641,8 +679,120 @@ export function createEfitThreeOverlay(
     lcfsSurface.visible = root.visible && options.showSurface;
   };
 
+  const setDynamicMeshGeometry = (
+    geometry: BufferGeometry,
+    positions: Float32Array,
+    indices: Uint16Array | Uint32Array,
+  ) => {
+    const currentPositions = geometry.getAttribute('position') as BufferAttribute | undefined;
+    if (currentPositions && currentPositions.array.length === positions.length) {
+      (currentPositions.array as Float32Array).set(positions);
+      currentPositions.needsUpdate = true;
+    } else {
+      geometry.setAttribute('position', new BufferAttribute(positions, 3).setUsage(DynamicDrawUsage));
+    }
+    const currentIndex = geometry.getIndex();
+    if (currentIndex && currentIndex.array.constructor === indices.constructor && currentIndex.array.length === indices.length) {
+      (currentIndex.array as Uint16Array | Uint32Array).set(indices);
+      currentIndex.needsUpdate = true;
+    } else {
+      geometry.setIndex(new BufferAttribute(indices, 1).setUsage(DynamicDrawUsage));
+    }
+    geometry.setDrawRange(0, indices.length);
+    geometry.computeBoundingSphere();
+  };
+
+  const updateDivertorRegionGeometry = (polygon: readonly RzPoint[], phi: number) => {
+    if (polygon.length < 3) {
+      divertorSectionRegion.visible = false;
+      divertorRevolvedRegion.visible = false;
+      return;
+    }
+
+    const faces = ShapeUtils.triangulateShape(
+      polygon.map(([r, z]) => new Vector2(r, z)),
+      [],
+    );
+    if (faces.length === 0) {
+      divertorSectionRegion.visible = false;
+      divertorRevolvedRegion.visible = false;
+      return;
+    }
+    const sectionPhis = [phi, phi + Math.PI] as const;
+    const sectionPositions = new Float32Array(polygon.length * sectionPhis.length * 3);
+    const sectionTarget = new Vector3();
+    sectionPhis.forEach((sectionPhi, sideIndex) => {
+      polygon.forEach(([r, z], pointIndex) => {
+        transformRz(r, z, sectionPhi, sectionTarget);
+        const offset = (sideIndex * polygon.length + pointIndex) * 3;
+        sectionPositions[offset] = sectionTarget.x;
+        sectionPositions[offset + 1] = sectionTarget.y;
+        sectionPositions[offset + 2] = sectionTarget.z;
+      });
+    });
+    const sectionVertexCount = polygon.length * sectionPhis.length;
+    const sectionIndices = sectionVertexCount <= 65_535
+      ? new Uint16Array(faces.length * sectionPhis.length * 3)
+      : new Uint32Array(faces.length * sectionPhis.length * 3);
+    let sectionIndexOffset = 0;
+    sectionPhis.forEach((_sectionPhi, sideIndex) => {
+      const base = sideIndex * polygon.length;
+      faces.forEach(([a, b, c]) => {
+        sectionIndices[sectionIndexOffset] = base + a;
+        sectionIndices[sectionIndexOffset + 1] = base + b;
+        sectionIndices[sectionIndexOffset + 2] = base + c;
+        sectionIndexOffset += 3;
+      });
+    });
+    setDynamicMeshGeometry(divertorSectionGeometry, sectionPositions, sectionIndices);
+    divertorSectionRegion.visible = root.visible && options.showSection;
+
+    // Revolve only the proven closed boundary. This is a display of the
+    // boundary-derived topology volume, not a SOL width or scalar field.
+    const poloidal = sampleCurve([...polygon], MathUtils.clamp(Math.round(options.maxPoloidalPoints), 24, 384));
+    const toroidalSegments = MathUtils.clamp(Math.round(options.surfaceToroidalSegments), 12, 128);
+    const ringSize = toroidalSegments + 1;
+    const revolvedVertexCount = poloidal.length * ringSize;
+    const revolvedPositions = new Float32Array(revolvedVertexCount * 3);
+    let positionOffset = 0;
+    poloidal.forEach(([r, z]) => {
+      for (let toroidalIndex = 0; toroidalIndex <= toroidalSegments; toroidalIndex += 1) {
+        transformRz(r, z, (toroidalIndex / toroidalSegments) * Math.PI * 2, sectionTarget);
+        revolvedPositions[positionOffset] = sectionTarget.x;
+        revolvedPositions[positionOffset + 1] = sectionTarget.y;
+        revolvedPositions[positionOffset + 2] = sectionTarget.z;
+        positionOffset += 3;
+      }
+    });
+    const revolvedIndexCount = poloidal.length * toroidalSegments * 6;
+    const revolvedIndices = revolvedVertexCount <= 65_535
+      ? new Uint16Array(revolvedIndexCount)
+      : new Uint32Array(revolvedIndexCount);
+    let revolvedIndexOffset = 0;
+    for (let poloidalIndex = 0; poloidalIndex < poloidal.length; poloidalIndex += 1) {
+      const nextPoloidal = (poloidalIndex + 1) % poloidal.length;
+      for (let toroidalIndex = 0; toroidalIndex < toroidalSegments; toroidalIndex += 1) {
+        const a = poloidalIndex * ringSize + toroidalIndex;
+        const b = nextPoloidal * ringSize + toroidalIndex;
+        const c = nextPoloidal * ringSize + toroidalIndex + 1;
+        const d = poloidalIndex * ringSize + toroidalIndex + 1;
+        revolvedIndices[revolvedIndexOffset] = a;
+        revolvedIndices[revolvedIndexOffset + 1] = b;
+        revolvedIndices[revolvedIndexOffset + 2] = d;
+        revolvedIndices[revolvedIndexOffset + 3] = b;
+        revolvedIndices[revolvedIndexOffset + 4] = c;
+        revolvedIndices[revolvedIndexOffset + 5] = d;
+        revolvedIndexOffset += 6;
+      }
+    }
+    setDynamicMeshGeometry(divertorRevolvedGeometry, revolvedPositions, revolvedIndices);
+    divertorRevolvedRegion.visible = root.visible && options.showSurface;
+  };
+
   const hideTopology = () => {
     separatrixLines.visible = false;
+    divertorSectionRegion.visible = false;
+    divertorRevolvedRegion.visible = false;
     primaryXMarkers.visible = false;
     secondaryXMarkers.visible = false;
     strikeMarkers.visible = false;
@@ -687,11 +837,21 @@ export function createEfitThreeOverlay(
     }
   };
 
-  const updateTopology = (topology: EfitRenderableTopology | undefined, phi: number) => {
+  const updateTopology = (frame: EfitRenderableFrame, phi: number) => {
     // Always clear visibility first. A limited/unavailable frame must never
     // retain X points or divertor legs from the previously rendered frame.
     hideTopology();
-    if (!topology || topology.kind === 'limited' || !options.showDivertorTopology || !options.showSection) return;
+    const topology = frame.topology;
+    if (!topology || topology.kind === 'limited' || !options.showDivertorTopology) return;
+
+    const rAxis = frame.rAxisM ?? frame.magneticAxis?.rM;
+    const zAxis = frame.zAxisM ?? frame.magneticAxis?.zM;
+    const magneticAxis = Number.isFinite(rAxis) && Number.isFinite(zAxis)
+      ? { rM: Number(rAxis), zM: Number(zAxis) }
+      : undefined;
+    const region = deriveReviewedDivertorRegion(topology, frame.limiterRzM, magneticAxis);
+    if (region.state === 'filled') updateDivertorRegionGeometry(region.polygon, phi);
+    if (!options.showSection) return;
 
     const sectionPhis = [phi, phi + Math.PI] as const;
     const separatrixPositions: number[] = [];
@@ -851,7 +1011,7 @@ export function createEfitThreeOverlay(
     }
     axisMarker.visible = options.showMagneticAxis && hasAxis;
     axisRing.visible = options.showMagneticAxis && hasAxis;
-    updateTopology(frame.topology, phi);
+    updateTopology(frame, phi);
   };
 
   const applyMode = () => {
@@ -861,6 +1021,8 @@ export function createEfitThreeOverlay(
       sectionMaterial,
       lcfsMaterial,
       separatrixMaterial,
+      divertorSectionMaterial,
+      divertorRevolvedMaterial,
       primaryXMaterial,
       secondaryXMaterial,
       strikeMaterial,
@@ -873,6 +1035,8 @@ export function createEfitThreeOverlay(
     });
     surfaceMaterial.opacity = options.mode === 'xray' ? 0.25 : 0.16;
     sectionFillMaterial.opacity = options.mode === 'xray' ? 0.9 : 0.78;
+    divertorSectionMaterial.opacity = options.mode === 'xray' ? 0.42 : 0.3;
+    divertorRevolvedMaterial.opacity = options.mode === 'xray' ? 0.22 : 0.13;
   };
 
   const applyClipping = () => {
@@ -881,6 +1045,8 @@ export function createEfitThreeOverlay(
       sectionMaterial,
       lcfsMaterial,
       separatrixMaterial,
+      divertorSectionMaterial,
+      divertorRevolvedMaterial,
       primaryXMaterial,
       secondaryXMaterial,
       strikeMaterial,
@@ -927,6 +1093,8 @@ export function createEfitThreeOverlay(
         sectionLines,
         lcfsLine,
         separatrixLines,
+        divertorSectionRegion,
+        divertorRevolvedRegion,
         primaryXMarkers,
         secondaryXMarkers,
         strikeMarkers,
@@ -941,6 +1109,8 @@ export function createEfitThreeOverlay(
       sectionFillTexture.dispose();
       lcfsGeometry.dispose();
       separatrixGeometry.dispose();
+      divertorSectionGeometry.dispose();
+      divertorRevolvedGeometry.dispose();
       primaryXGeometry.dispose();
       secondaryXGeometry.dispose();
       strikeGeometry.dispose();
@@ -951,6 +1121,8 @@ export function createEfitThreeOverlay(
       sectionFillMaterial.dispose();
       lcfsMaterial.dispose();
       separatrixMaterial.dispose();
+      divertorSectionMaterial.dispose();
+      divertorRevolvedMaterial.dispose();
       primaryXMaterial.dispose();
       secondaryXMaterial.dispose();
       strikeMaterial.dispose();

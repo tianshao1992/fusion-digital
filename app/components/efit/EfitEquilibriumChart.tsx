@@ -3,6 +3,7 @@
 import type { EChartsCoreOption } from 'echarts/core';
 import type { CustomSeriesRenderItem } from 'echarts/types/dist/option';
 import { useMemo } from 'react';
+import { deriveReviewedDivertorRegion } from './divertor-region';
 import EfitCanvasChart from './EfitCanvasChart';
 import { PSI_N_COLORS } from './psi-n-palette';
 import type { EfitFrame, EfitManifest, EfitNumericVector, EfitTopologyKind } from './types';
@@ -65,6 +66,11 @@ export default function EfitEquilibriumChart({ frame, manifest }: EfitEquilibriu
       data: vectorPairs(contour.rM, contour.zM, contour.validPoints, contour.closed),
     }));
     const topology = frame?.topology;
+    const divertorRegion = deriveReviewedDivertorRegion(
+      topology,
+      limiter,
+      frame ? { rM: frame.rAxisM, zM: frame.zAxisM } : undefined,
+    );
     const separatrixData = (topology?.separatrixLegs ?? []).map((leg, index) => ({
       leg,
       index,
@@ -124,6 +130,23 @@ export default function EfitEquilibriumChart({ frame, manifest }: EfitEquilibriu
       };
     };
 
+    const renderDivertorRegion: CustomSeriesRenderItem = (_params, api) => {
+      if (divertorRegion.state !== 'filled') return;
+      const points = divertorRegion.polygon.map(([r, z]) => api.coord([r, z]));
+      return {
+        type: 'polygon',
+        shape: { points },
+        style: {
+          fill: 'rgba(255, 132, 55, .28)',
+          stroke: '#ff9a52',
+          lineWidth: 1.35,
+          shadowBlur: 8,
+          shadowColor: 'rgba(255, 111, 37, .24)',
+        },
+        z2: 0,
+      };
+    };
+
     const surfaceSeries = contourData.map(({ contour, data }) => ({
       name: contour.kind === 'lcfs' ? 'LCFS' : `ψN ${contour.psiN.toFixed(1)}`,
       type: 'line' as const,
@@ -150,9 +173,9 @@ export default function EfitEquilibriumChart({ frame, manifest }: EfitEquilibriu
       connectNulls: false,
       lineStyle: {
         width: 2.35,
-        color: '#ff8fcb',
+        color: '#ff9a52',
         shadowBlur: 9,
-        shadowColor: 'rgba(255, 89, 181, .5)',
+        shadowColor: 'rgba(255, 111, 37, .5)',
       },
       z: 15,
       emphasis: { disabled: true },
@@ -165,7 +188,7 @@ export default function EfitEquilibriumChart({ frame, manifest }: EfitEquilibriu
       aria: {
         enabled: true,
         description: frame
-          ? `EXL-50U ${frame.shot} 炮，${frame.timeMs} 毫秒的 EFIT R-Z 平衡位形。颜色表示由已发布等磁通轮廓形成的归一化极向磁通分带，不表示温度或密度。${topology ? `当前为${efitTopologyLabel(topology.kind)}，包含 ${xPointData.length} 个 X 点、${separatrixData.length} 条已发布分离支和 ${strikePointData.length} 个 limiter 交点。` : ''}`
+          ? `EXL-50U ${frame.shot} 炮，${frame.timeMs} 毫秒的 EFIT R-Z 平衡位形。颜色表示由已发布等磁通轮廓形成的归一化极向磁通分带，不表示温度或密度。${topology ? `当前为${efitTopologyLabel(topology.kind)}，包含 ${xPointData.length} 个 X 点、${separatrixData.length} 条已发布分离支和 ${strikePointData.length} 个 limiter 交点。${divertorRegion.message}` : ''}`
           : 'EXL-50U EFIT R-Z 平衡位形等待数据。',
       },
       visualMap: filledContours.length > 0 ? {
@@ -246,6 +269,17 @@ export default function EfitEquilibriumChart({ frame, manifest }: EfitEquilibriu
           z: 13,
           animation: false,
         },
+        ...(divertorRegion.state === 'filled' ? [{
+          name: '偏滤器拓扑边界区域',
+          type: 'custom' as const,
+          coordinateSystem: 'cartesian2d' as const,
+          renderItem: renderDivertorRegion,
+          data: [[1]],
+          silent: true,
+          clip: true,
+          z: 9,
+          animation: false,
+        }] : []),
         ...surfaceSeries,
         ...separatrixSeries,
         ...(xPointData.length > 0 ? [{
@@ -309,6 +343,7 @@ export default function EfitEquilibriumChart({ frame, manifest }: EfitEquilibriu
       <span>{frame.contours.filter((contour) => contour.kind === 'surface').length} 个 ψN 磁面分带填色</span>
       <span>{frame.contours.some((contour) => contour.kind === 'lcfs') ? 'LCFS 有效' : 'LCFS 缺失'}</span>
       {frame.topology && <span>{efitTopologyLabel(frame.topology.kind)} · X 点 {frame.topology.xPoints.length} · 分离支 {frame.topology.separatrixLegs.length} · limiter 交点 {frame.topology.strikePoints.length}</span>}
+      {frame.topology && <span>{deriveReviewedDivertorRegion(frame.topology, manifest?.geometry.limiterRzM, { rM: frame.rAxisM, zM: frame.zAxisM }).message}</span>}
       <span>颜色表示归一化极向磁通，不代表温度或密度</span>
       <span>磁轴 R {Number.isFinite(frame.rAxisM) ? frame.rAxisM.toFixed(3) : '—'} m · Z {Number.isFinite(frame.zAxisM) ? frame.zAxisM.toFixed(3) : '—'} m</span>
     </div>

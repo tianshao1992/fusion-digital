@@ -2,6 +2,9 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
+import { createEfitBinaryDataSource } from '../app/components/efit/data-source.ts';
+import { deriveReviewedDivertorRegion } from '../app/components/efit/divertor-region.ts';
+
 const root = new URL('../', import.meta.url);
 
 async function source(path) {
@@ -13,6 +16,22 @@ function cssRule(css, selector) {
   const matches = [...css.matchAll(new RegExp(`(?:^|})\\s*${escaped}\\{([^}]*)\\}`, 'g'))];
   assert.ok(matches.length, `missing CSS rule ${selector}`);
   return matches.map((match) => match[1]).join(';');
+}
+
+async function localEfitFetch(input, init = {}) {
+  const pathname = new URL(String(input), 'http://localhost').pathname;
+  const filename = pathname.replace('/device-data/exl50u-efit/', '');
+  const approved = new Set(['index.json', 'shot-18303.bin', 'shot-18303-topology.bin']);
+  if (!approved.has(filename)) return new Response('Not found', { status: 404 });
+  const payload = await readFile(new URL(`../public/data/exl50u-efit/${filename}`, import.meta.url));
+  const range = /^bytes=(\d+)-(\d+)$/.exec(new Headers(init.headers).get('range') ?? '');
+  if (!range) return new Response(payload, { status: 200 });
+  const start = Number(range[1]);
+  const end = Math.min(payload.length - 1, Number(range[2]));
+  return new Response(payload.subarray(start, end + 1), {
+    status: 206,
+    headers: { 'Content-Range': `bytes ${start}-${end}/${payload.length}` },
+  });
 }
 
 test('EXL device package declares a typed EFIT physics overlay', async () => {
@@ -222,6 +241,102 @@ test('optional divertor topology renders as open scientific overlays without con
     assert.match(clippingBlock, new RegExp(material));
     assert.match(overlay, new RegExp(`${material}\\.dispose\\(\\)`));
   }
+});
+
+test('reviewed divertor region closes only through one unambiguous published limiter arc', () => {
+  const limiter = {
+    rM: [0, 2, 2, 0, 0],
+    zM: [-2, -2, 2, 2, -2],
+    validPoints: 5,
+  };
+  const topology = {
+    kind: 'lower-single-null',
+    xPoints: [{ rM: 1, zM: 0, role: 'primary' }],
+    strikePoints: [
+      { rM: 0.5, zM: -2, wallSegment: 0 },
+      { rM: 1.5, zM: -2, wallSegment: 0 },
+    ],
+    separatrixLegs: [
+      { rM: [1, 0.8, 0.5], zM: [0, -1, -2], validPoints: 3, xPointIndex: 0, strikePointIndex: 0, closed: false },
+      { rM: [1, 1.2, 1.5], zM: [0, -1, -2], validPoints: 3, xPointIndex: 0, strikePointIndex: 1, closed: false },
+    ],
+  };
+
+  const reviewed = deriveReviewedDivertorRegion(topology, limiter, { rM: 1, zM: 1 });
+  assert.equal(reviewed.state, 'filled');
+  assert.equal(reviewed.code, 'closed-reviewed-boundary');
+  assert.deepEqual(reviewed.limiterArc, [[0.5, -2], [1.5, -2]], 'must use the actual limiter segment, not an invented strike chord');
+  assert.ok(reviewed.polygon.length >= 5);
+
+  const ambiguous = deriveReviewedDivertorRegion(topology, limiter);
+  assert.equal(ambiguous.state, 'wireframe');
+  assert.equal(ambiguous.code, 'ambiguous-limiter-arc');
+
+  const selfIntersecting = deriveReviewedDivertorRegion({
+    ...topology,
+    separatrixLegs: [
+      { ...topology.separatrixLegs[0], rM: [1, 1.4, 0.5] },
+      { ...topology.separatrixLegs[1], rM: [1, 0.6, 1.5] },
+    ],
+  }, limiter, { rM: 1, zM: 1 });
+  assert.equal(selfIntersecting.state, 'wireframe');
+  assert.equal(selfIntersecting.code, 'invalid-closed-boundary');
+});
+
+test('published shot 18303 fills complete divertor boundaries and rejects incomplete legs', async () => {
+  const dataSource = createEfitBinaryDataSource({ fetch: localEfitFetch });
+  const manifest = await dataSource.loadManifest();
+  const shot = manifest.shots.find((candidate) => candidate.shot === 18303);
+  assert.ok(shot);
+  const completeIndex = shot.frames.findIndex((frame) => frame.timeMs === 350);
+  const incompleteIndex = shot.frames.findIndex((frame) => frame.timeMs === 346);
+  assert.ok(completeIndex >= 0 && incompleteIndex >= 0);
+
+  const complete = await dataSource.loadFrame(18303, completeIndex);
+  const completeRegion = deriveReviewedDivertorRegion(
+    complete.topology,
+    manifest.geometry.limiterRzM,
+    { rM: complete.rAxisM, zM: complete.zAxisM },
+  );
+  assert.equal(complete.topology?.kind, 'upper-single-null');
+  assert.equal(completeRegion.state, 'filled');
+  assert.equal(completeRegion.code, 'closed-reviewed-boundary');
+  assert.ok(completeRegion.limiterArc.length > 2, 'the published multi-segment limiter arc must be preserved between strike points');
+
+  const incomplete = await dataSource.loadFrame(18303, incompleteIndex);
+  const incompleteRegion = deriveReviewedDivertorRegion(
+    incomplete.topology,
+    manifest.geometry.limiterRzM,
+    { rM: incomplete.rAxisM, zM: incomplete.zAxisM },
+  );
+  assert.equal(incompleteRegion.state, 'wireframe');
+  assert.equal(incompleteRegion.code, 'separatrix-leg-count');
+});
+
+test('divertor region has independent honest 2D and 3D rendering lifecycles', async () => {
+  const panel = await source('app/components/efit/EfitPanel.tsx');
+  const equilibrium = await source('app/components/efit/EfitEquilibriumChart.tsx');
+  const overlay = await source('app/components/device-viewer/EfitThreeOverlay.ts');
+  const viewer = await source('app/components/TokamakCadViewer.tsx');
+
+  assert.match(equilibrium, /deriveReviewedDivertorRegion/);
+  assert.match(equilibrium, /name: '偏滤器拓扑边界区域'/);
+  assert.match(equilibrium, /rgba\(255, 132, 55, \.28\)/);
+  assert.match(panel, /边界区域 · \{divertorRegion\.state === 'filled' \? '已审查闭合' : '仅线框'\}/);
+  assert.match(panel, /不表示温度、密度、真实 SOL 宽度或物理场/);
+  assert.match(overlay, /EFIT_DIVERTOR_TOPOLOGY_SECTION_REGION/);
+  assert.match(overlay, /EFIT_DIVERTOR_TOPOLOGY_REVOLVED_REGION/);
+  assert.match(overlay, /ShapeUtils\.triangulateShape/);
+  assert.match(overlay, /region\.state === 'filled'/);
+  assert.match(overlay, /divertorSectionRegion\.visible = false/);
+  assert.match(overlay, /divertorRevolvedRegion\.visible = false/);
+  const clipping = overlay.slice(overlay.indexOf('const applyClipping'), overlay.indexOf('setLineResolution(context.renderer'));
+  for (const material of ['divertorSectionMaterial', 'divertorRevolvedMaterial']) {
+    assert.match(clipping, new RegExp(material));
+    assert.match(overlay, new RegExp(`${material}\\.dispose\\(\\)`));
+  }
+  assert.match(viewer, /snapshot\.manifest\?\.geometry\?\.limiterRzM/);
+  assert.match(viewer, /return limiterRzM \? \{ \.\.\.frame, limiterRzM \} : frame/);
 });
 
 test('EFIT component runtime stays lazy and does not expose raw-data URLs', async () => {
