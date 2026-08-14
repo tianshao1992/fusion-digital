@@ -405,6 +405,13 @@ export type EfitGeometry = {
   cadRegistration?: EfitCadRegistration;
 };
 
+export type EfitNumericQuantizationContract = {
+  fractionDigits: 8;
+  roundingMode: 'ROUND_HALF_EVEN';
+  negativeZeroNormalized: true;
+  maxAbsoluteErrorPerValue: 5e-9;
+};
+
 export type EfitManifest = {
   schema: string;
   device: string;
@@ -413,6 +420,8 @@ export type EfitManifest = {
   /** Legacy/default geometry. Per-shot geometryId takes precedence when set. */
   geometry: EfitGeometry;
   geometries?: readonly EfitGeometry[];
+  /** Present only on graph-v2 catalogs; legacy geometry identity is explicitly excluded. */
+  numericQuantization?: EfitNumericQuantizationContract;
   shots: readonly EfitShotManifest[];
 };
 

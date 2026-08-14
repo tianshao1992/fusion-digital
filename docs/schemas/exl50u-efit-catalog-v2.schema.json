@@ -22,12 +22,13 @@
     "generatedBy": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["publisher", "algorithmId", "algorithmVersion", "algorithmSourceSha256"],
+      "required": ["publisher", "algorithmId", "algorithmVersion", "algorithmSourceSha256", "candidateAlgorithmSourceSha256"],
       "properties": {
         "publisher": {"const": "scripts/efit/derive_topology_graph_v2.py"},
         "algorithmId": {"const": "fusion.efit.topology-graph"},
         "algorithmVersion": {"type": "string", "minLength": 1},
-        "algorithmSourceSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+        "algorithmSourceSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "candidateAlgorithmSourceSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
       }
     },
     "coordinateSystem": {"$ref": "#/$defs/coordinateSystem"},
@@ -39,7 +40,7 @@
     "distributionPolicy": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["derivedOnly", "sourceArchivesIncluded", "sourcePsiGridsIncluded", "rawGFilesIncluded", "auxiliaryARecordsIncluded", "chunkFrames", "chunkTransport"],
+      "required": ["derivedOnly", "sourceArchivesIncluded", "sourcePsiGridsIncluded", "rawGFilesIncluded", "auxiliaryARecordsIncluded", "chunkFrames", "numericQuantization", "chunkTransport"],
       "properties": {
         "derivedOnly": {"const": true},
         "sourceArchivesIncluded": {"const": false},
@@ -47,6 +48,31 @@
         "rawGFilesIncluded": {"const": false},
         "auxiliaryARecordsIncluded": {"const": false},
         "chunkFrames": {"const": 16},
+        "numericQuantization": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["fractionDigits", "roundingMode", "negativeZeroNormalized", "maxAbsoluteErrorPerValue", "appliesTo", "excludedFromQuantization"],
+          "properties": {
+            "fractionDigits": {"const": 8},
+            "roundingMode": {"const": "ROUND_HALF_EVEN"},
+            "negativeZeroNormalized": {"const": true},
+            "maxAbsoluteErrorPerValue": {"const": 5e-9},
+            "appliesTo": {
+              "const": [
+                "topology-graph-v2 chunk floating-point values",
+                "topology-graph-v2 shots[].frames continuous scalar values"
+              ]
+            },
+            "excludedFromQuantization": {
+              "const": [
+                "integers, booleans, nulls, strings",
+                "legacy v1 assets",
+                "geometry coordinates and F64LE identity hashes",
+                "catalog algorithm, geometry, and structural metadata"
+              ]
+            }
+          }
+        },
         "chunkTransport": {
           "type": "object",
           "additionalProperties": false,

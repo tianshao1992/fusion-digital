@@ -30,6 +30,7 @@ export type {
   EfitGraphEvidence,
   EfitManifest,
   EfitNumericVector,
+  EfitNumericQuantizationContract,
   EfitQuality,
   EfitQualityState,
   EfitRzPolyline,

@@ -62,6 +62,23 @@ candidate evidence after cross-checking against G-EQDSK flux.
 No missing frame is interpolated. `availableTimesMs`, `frames[]` and chunk mappings must agree
 exactly and remain strictly increasing.
 
+## Reviewed-publication numeric encoding
+
+Private candidate records retain the derivation's full floating-point precision. Immediately
+before public JSON serialization, the publisher rounds every floating-point value in graph-v2
+frame chunks to eight decimal places using decimal `ROUND_HALF_EVEN`, normalizes negative zero to
+positive zero, and applies the identical operation to continuous values in the corresponding
+`shots[].frames` summaries. The absolute error introduced into any one serialized value is at
+most `5e-9` in that field's declared SI unit; independently quantized `(R,Z)` coordinates have a
+Euclidean displacement bound of `sqrt(2) * 5e-9 m`, approximately `7.0711e-9 m`.
+
+Integer time/index/count values, booleans, strings, nulls, legacy-v1 assets, algorithm thresholds,
+and catalog structural metadata are not quantized. Limiter geometry coordinates are also excluded
+so `geometryId`, `canonicalSha256F64LE`, `sourceLimiterSha256F64LE`, and canonical segment indices
+continue to bind the exact reviewed float64 geometry. The machine-readable declaration is
+`distributionPolicy.numericQuantization` in the catalog. The publisher re-runs full frame
+semantic validation after quantization and before compression.
+
 ## Chunk and HTTP transport
 
 Each immutable chunk contains at most 16 newline-delimited JSON frame records and is compressed
@@ -85,6 +102,8 @@ through explicit public allowlists rather than copied.
 The audit and candidate commands are restricted to the private review root and impose ZIP member,
 compression-ratio and cumulative decompression budgets before reading a member. The reviewed
 publisher requires all six approved new shots exactly once, one approved geometry per shot, exact
-frame counts, the current algorithm-source hash, the reviewed source digests and an explicit
-confirmation flag. It revalidates every frame and atomically replaces only the locked v2 output
-directory. Committing and deployment remain separate human-reviewed operations.
+frame counts, one explicitly reviewed candidate algorithm-source hash, the current publisher
+source hash, the reviewed source digests and an explicit confirmation flag. It revalidates every
+full-precision candidate frame, quantizes and revalidates the public record, and atomically replaces
+only the locked v2 output directory. Committing and deployment remain separate human-reviewed
+operations.

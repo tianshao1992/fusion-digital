@@ -24,6 +24,7 @@ import sys
 import tempfile
 import zipfile
 from collections import Counter, defaultdict
+from decimal import Decimal, ROUND_HALF_EVEN
 from pathlib import Path
 
 import numpy as np
@@ -55,6 +56,15 @@ from topology_graph_v2 import (
 SCHEMA_VERSION = "fusion.efit.topology-graph.v2-candidate"
 PUBLIC_SCHEMA_VERSION = "fusion.efit.topology-graph.v2"
 FRAMES_PER_CHUNK = 16
+PUBLIC_QUANTIZATION_FRACTION_DIGITS = 8
+PUBLIC_QUANTIZATION_QUANTUM = Decimal("0.00000001")
+PUBLIC_QUANTIZATION_MAX_ABS_ERROR = 5e-9
+# These reviewed private candidates were generated before public-only numeric
+# quantization was added to the publisher. Their scientific payload is still
+# validated in full before the current publisher performs the lossy encoding.
+REVIEWED_CANDIDATE_ALGORITHM_SOURCE_SHA256 = {
+    "b11a8afc05a83111ca359120b0375f5a723ad538221fa11a5c835b8af4af1198",
+}
 FORBIDDEN_SERIALIZED_KEYS = ('"psirz"', '"psiGrid"', '"sourceGFile"', '"rawGfile"')
 FORBIDDEN_FIELD_NAMES = {"psirz", "psigrid", "sourcegfile", "rawgfile", "gfilepayload"}
 PUBLIC_FRAME_SUMMARY_KEYS = (
@@ -140,6 +150,50 @@ def _json_bytes(value: object) -> bytes:
     if any(forbidden in text for forbidden in FORBIDDEN_SERIALIZED_KEYS):
         raise ValueError("derived artifact attempted to serialize a forbidden raw-data field")
     return encoded
+
+
+def _quantize_public_float(value: float) -> float:
+    """Round one reviewed-publication float to the declared decimal contract."""
+    if not math.isfinite(value):
+        raise ValueError("non-finite public numeric value is forbidden")
+    quantized = Decimal(str(value)).quantize(
+        PUBLIC_QUANTIZATION_QUANTUM,
+        rounding=ROUND_HALF_EVEN,
+    )
+    # json.dumps would preserve a negative sign on -0.0, so normalize it here.
+    return 0.0 if quantized.is_zero() else float(quantized)
+
+
+def _quantize_public_numbers(value: object) -> object:
+    """Quantize floats recursively while preserving every structural JSON value."""
+    if isinstance(value, bool) or value is None or isinstance(value, (str, int)):
+        return value
+    if isinstance(value, float):
+        return _quantize_public_float(value)
+    if isinstance(value, list):
+        return [_quantize_public_numbers(item) for item in value]
+    if isinstance(value, dict):
+        return {key: _quantize_public_numbers(item) for key, item in value.items()}
+    raise TypeError(f"unsupported public JSON value: {type(value).__name__}")
+
+
+def _public_numeric_quantization_contract() -> dict[str, object]:
+    return {
+        "fractionDigits": PUBLIC_QUANTIZATION_FRACTION_DIGITS,
+        "roundingMode": "ROUND_HALF_EVEN",
+        "negativeZeroNormalized": True,
+        "maxAbsoluteErrorPerValue": PUBLIC_QUANTIZATION_MAX_ABS_ERROR,
+        "appliesTo": [
+            "topology-graph-v2 chunk floating-point values",
+            "topology-graph-v2 shots[].frames continuous scalar values",
+        ],
+        "excludedFromQuantization": [
+            "integers, booleans, nulls, strings",
+            "legacy v1 assets",
+            "geometry coordinates and F64LE identity hashes",
+            "catalog algorithm, geometry, and structural metadata",
+        ],
+    }
 
 
 def _strict_json_loads(payload: str | bytes) -> object:
@@ -304,6 +358,27 @@ def _write_gzip_jsonl(path: Path, records: list[dict[str, object]]) -> None:
         with gzip.GzipFile(filename="", mode="wb", fileobj=raw, compresslevel=9, mtime=0) as compressed:
             for record in records:
                 compressed.write(_json_bytes(record))
+                compressed.write(b"\n")
+
+
+def _write_public_gzip_jsonl(
+    path: Path,
+    records: list[dict[str, object]],
+    geometry_by_id: dict[str, GeometryRevision],
+) -> None:
+    """Write deterministic reviewed-publication bytes without altering candidates."""
+    with path.open("wb") as raw:
+        with gzip.GzipFile(filename="", mode="wb", fileobj=raw, compresslevel=9, mtime=0) as compressed:
+            for record in records:
+                quantized = _quantize_public_numbers(record)
+                if not isinstance(quantized, dict):
+                    raise TypeError("quantized public frame must remain a JSON object")
+                geometry = geometry_by_id.get(str(quantized.get("geometryId")))
+                if geometry is None:
+                    raise ValueError("quantized public frame references an unknown geometry")
+                # Re-run the full semantic validator on the actual bytes contract.
+                validate_derived_frame(quantized, geometry)
+                compressed.write(_json_bytes(quantized))
                 compressed.write(b"\n")
 
 
@@ -645,7 +720,10 @@ def _project_frame_summary(record: object) -> dict[str, object]:
         not isinstance(flag, str) or not re.fullmatch(r"[A-Z0-9_]+", flag) for flag in flags
     ):
         raise ValueError("invalid lightweight frame quality flags")
-    return projected
+    quantized = _quantize_public_numbers(projected)
+    if not isinstance(quantized, dict):
+        raise TypeError("quantized frame summary must remain a JSON object")
+    return quantized
 
 
 def _project_quality_summary(record: object) -> dict[str, object]:
@@ -759,6 +837,7 @@ def publish_reviewed_candidates(
     dataset_sources: dict[str, dict[str, object]] = {}
     algorithm_contract = GraphConfig().public_dict()
     private_source_tokens: list[str] = []
+    candidate_algorithm_source_hashes: set[str] = set()
 
     for candidate_root_value in candidate_roots:
         candidate_root = assert_private_output(candidate_root_value.resolve(strict=True))
@@ -768,8 +847,14 @@ def publish_reviewed_candidates(
         if manifest.get("schemaVersion") != SCHEMA_VERSION or manifest.get("status") != "private-candidate-not-authorized-for-publication":
             raise ValueError("publisher accepts only a private v2 candidate manifest")
         generated = manifest.get("generatedBy", {})
-        if generated.get("algorithmVersion") != ALGORITHM_VERSION or generated.get("algorithmSourceSha256") != current_source_hash:
+        candidate_source_hash = str(generated.get("algorithmSourceSha256", ""))
+        accepted_candidate_hashes = {
+            current_source_hash,
+            *REVIEWED_CANDIDATE_ALGORITHM_SOURCE_SHA256,
+        }
+        if generated.get("algorithmVersion") != ALGORITHM_VERSION or candidate_source_hash not in accepted_candidate_hashes:
             raise ValueError("candidate was not generated by the current reviewed algorithm source")
+        candidate_algorithm_source_hashes.add(candidate_source_hash)
         source = manifest.get("source", {})
         source_digest = str(source.get("archiveSha256", ""))
         reviewed = REVIEWED_SOURCE_SETS.get(source_digest)
@@ -833,6 +918,9 @@ def publish_reviewed_candidates(
         raise ValueError("reviewed publication requires all six new shots exactly once")
     if len(geometry_objects) != 1:
         raise ValueError("reviewed six-shot release expects exactly one canonical upgraded geometry")
+    if len(candidate_algorithm_source_hashes) != 1:
+        raise ValueError("reviewed publication cannot mix candidate algorithm-source revisions")
+    candidate_algorithm_source_hash = next(iter(candidate_algorithm_source_hashes))
 
     repository = Path(__file__).resolve().parents[2]
     legacy_index_path = repository / "public" / "data" / "exl50u-efit" / "index.json"
@@ -896,7 +984,7 @@ def publish_reviewed_candidates(
                 observed_times.extend(int(record["timeMs"]) for record in records)
                 name = f"shot-{shot_number}-part-{len(copied_assets):03d}.jsonl.gz"
                 destination = temp / name
-                _write_gzip_jsonl(destination, records)
+                _write_public_gzip_jsonl(destination, records, geometry_objects)
                 copied_assets.append(
                     _public_asset_record(
                         asset,
@@ -984,6 +1072,7 @@ def publish_reviewed_candidates(
                 "algorithmId": ALGORITHM_ID,
                 "algorithmVersion": ALGORITHM_VERSION,
                 "algorithmSourceSha256": current_source_hash,
+                "candidateAlgorithmSourceSha256": candidate_algorithm_source_hash,
             },
             "coordinateSystem": {
                 "source": "right-handed cylindrical (R,phi,Z)",
@@ -1003,6 +1092,7 @@ def publish_reviewed_candidates(
                 "rawGFilesIncluded": False,
                 "auxiliaryARecordsIncluded": False,
                 "chunkFrames": FRAMES_PER_CHUNK,
+                "numericQuantization": _public_numeric_quantization_contract(),
                 "chunkTransport": {
                     "httpContentType": "application/gzip",
                     "httpContentEncoding": "identity (header omitted)",

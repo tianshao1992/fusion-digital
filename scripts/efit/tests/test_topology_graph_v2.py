@@ -4,6 +4,7 @@ import copy
 import gzip
 import hashlib
 import json
+import math
 import os
 import sys
 import tempfile
@@ -37,8 +38,11 @@ from derive_topology_graph_v2 import (  # noqa: E402
     _algorithm_source_sha256,
     _assert_no_private_strings,
     _json_bytes,
+    _public_numeric_quantization_contract,
     _public_asset_record,
     _project_frame_summary,
+    _quantize_public_float,
+    _quantize_public_numbers,
     _strict_json_loads,
     _write_frame_chunk,
     _write_report,
@@ -52,6 +56,7 @@ from topology_graph_v2 import (  # noqa: E402
     derive_closed_flux_surfaces,
     derive_frame,
     derive_topology_graph,
+    signed_area,
     validate_derived_frame,
 )
 
@@ -433,6 +438,42 @@ class PublicationSafetyTests(unittest.TestCase):
         validate_catalog(catalog)
         self.assertEqual(catalog["status"], "reviewed-derived-publication")
         self.assertEqual(catalog["generatedBy"]["algorithmVersion"], "2.0.0")
+        self.assertEqual(catalog["generatedBy"]["algorithmSourceSha256"], _algorithm_source_sha256())
+        self.assertEqual(
+            catalog["distributionPolicy"]["numericQuantization"],
+            _public_numeric_quantization_contract(),
+        )
+        self.assertLessEqual(
+            sum(path.stat().st_size for path in public_root.rglob("*") if path.is_file()),
+            60_000_000,
+        )
+        canonical_geometry_record = next(
+            geometry for geometry in catalog["geometries"] if geometry["contractKind"] == "canonical-graph-v2"
+        )
+        canonical_points = np.asarray(canonical_geometry_record["limiterRzM"], dtype=np.float64).reshape((-1, 2))
+        self.assertEqual(
+            hashlib.sha256(canonical_points.astype("<f8", copy=False).tobytes(order="C")).hexdigest(),
+            canonical_geometry_record["canonicalSha256F64LE"],
+        )
+        canonical_geometry = topology_graph.GeometryRevision(
+            geometry_id=canonical_geometry_record["id"],
+            revision="reviewed-publication",
+            sha256=canonical_geometry_record["canonicalSha256F64LE"],
+            source_sha256=canonical_geometry_record["sourceLimiterSha256F64LE"],
+            source_point_count=canonical_geometry_record["sourcePointCount"],
+            points=canonical_points,
+            signed_area_m2=signed_area(canonical_points),
+        )
+
+        def contains_negative_zero(value: object) -> bool:
+            if isinstance(value, float):
+                return value == 0.0 and math.copysign(1.0, value) < 0.0
+            if isinstance(value, list):
+                return any(contains_negative_zero(item) for item in value)
+            if isinstance(value, dict):
+                return any(contains_negative_zero(item) for item in value.values())
+            return False
+
         expected_parts = {20213: 33, 20289: 4, 20666: 45, 20669: 57, 20707: 38, 20708: 42}
         expected_files = {"index.json"}
         frame_count = 0
@@ -441,6 +482,7 @@ class PublicationSafetyTests(unittest.TestCase):
             if shot["sourceKind"] != "topology-graph-v2":
                 continue
             self.assertEqual(len(shot["frameAssets"]), expected_parts[shot["shot"]])
+            summaries_by_time = {int(summary["timeMs"]): summary for summary in shot["frames"]}
             observed_times = []
             for asset in shot["frameAssets"]:
                 name = asset["url"].rsplit("/", 1)[-1]
@@ -453,8 +495,22 @@ class PublicationSafetyTests(unittest.TestCase):
                 for line in gzip.decompress(payload).splitlines():
                     record = _strict_json_loads(line)
                     validate_frame(record)
+                    validate_derived_frame(record, canonical_geometry)
+                    self.assertEqual(record, _quantize_public_numbers(record))
+                    self.assertFalse(contains_negative_zero(record))
                     frame_count += 1
                     observed_times.append(record["timeMs"])
+                    summary = summaries_by_time[int(record["timeMs"])]
+                    for key in ("currentA", "rAxisM", "zAxisM", "bcentrT", "q95"):
+                        self.assertEqual(summary[key], record["scalars"][key])
+                    for surface in record["closedFluxSurfaces"]:
+                        points = np.asarray(surface["pointsRzM"], dtype=np.float64).reshape((-1, 2))
+                        polygon_area = abs(signed_area(points))
+                        published_area = float(surface["areaM2"])
+                        self.assertLessEqual(
+                            abs(polygon_area - published_area) / max(published_area, 1e-12),
+                            1e-3,
+                        )
                     if not record["topologyGraph"]["nodes"]:
                         empty_graph_count += 1
                         self.assertEqual(record["quality"]["validity"], "unavailable")
@@ -478,11 +534,13 @@ class PublicationSafetyTests(unittest.TestCase):
             candidate = root / "candidate"
             candidate.mkdir()
             shot_records = []
+            derived_by_shot: dict[int, dict[str, object]] = {}
             for shot in fake_shots:
                 digest = hashlib.sha256(str(shot).encode("ascii")).hexdigest()
                 shot_id = f"EXL-50U:shot:{shot:06d}"
                 reconstruction_id = f"exl-50u:efit:{shot:06d}:{digest[:20]}"
                 derived = derive_frame(frame, geometry, shot_id, reconstruction_id, GraphConfig())
+                derived_by_shot[shot] = derived
                 validate_derived_frame(derived, geometry)
                 shot_dir = candidate / "shots" / f"{shot:06d}"
                 shot_dir.mkdir(parents=True)
@@ -561,6 +619,18 @@ class PublicationSafetyTests(unittest.TestCase):
             )
             Draft202012Validator.check_schema(schema)
             Draft202012Validator(schema).validate(public_manifest)
+            self.assertEqual(
+                public_manifest["generatedBy"]["candidateAlgorithmSourceSha256"],
+                _algorithm_source_sha256(),
+            )
+            self.assertEqual(
+                public_manifest["distributionPolicy"]["numericQuantization"],
+                _public_numeric_quantization_contract(),
+            )
+            published_geometry = next(
+                item for item in public_manifest["geometries"] if item["contractKind"] == "canonical-graph-v2"
+            )
+            self.assertEqual(published_geometry["limiterRzM"], geometry.public_dict()["coordinatesRzM"])
             graph_shots = [shot for shot in public_manifest["shots"] if shot["sourceKind"] == "topology-graph-v2"]
             self.assertEqual(len(graph_shots), 6)
             for shot in graph_shots:
@@ -572,6 +642,10 @@ class PublicationSafetyTests(unittest.TestCase):
                 payload = (output / asset["url"].rsplit("/", 1)[-1]).read_bytes()
                 self.assertEqual(payload[:2], b"\x1f\x8b")
                 self.assertTrue(gzip.decompress(payload).endswith(b"\n"))
+                published_frame = _strict_json_loads(gzip.decompress(payload).splitlines()[0])
+                self.assertEqual(published_frame, _quantize_public_numbers(derived_by_shot[shot["shot"]]))
+                for key in ("currentA", "rAxisM", "zAxisM", "bcentrT", "q95"):
+                    self.assertEqual(shot["frames"][0][key], published_frame["scalars"][key])
 
     def test_output_guard_rejects_every_repository_subtree(self) -> None:
         for target in (REPOSITORY_ROOT / "public" / "data" / "efit-v2", REPOSITORY_ROOT / "app" / "candidate"):
@@ -596,6 +670,28 @@ class PublicationSafetyTests(unittest.TestCase):
             self.assertEqual(first["timeRangeMs"], [100, 115])
             with self.assertRaisesRegex(ValueError, "between 1 and 16"):
                 _write_frame_chunk(Path(first_dir), 42, 1, 16, records + [{"timeMs": 116}])
+
+    def test_public_float_quantization_is_decimal_half_even_and_structural(self) -> None:
+        self.assertEqual(_quantize_public_float(1.234567885), 1.23456788)
+        self.assertEqual(_quantize_public_float(1.234567895), 1.2345679)
+        self.assertEqual(_quantize_public_float(-1.234567885), -1.23456788)
+        zero = _quantize_public_float(-0.000000004)
+        self.assertEqual(zero, 0.0)
+        self.assertGreater(math.copysign(1.0, zero), 0.0)
+        original = {
+            "float": 0.123456789,
+            "integer": 123,
+            "boolean": True,
+            "nested": [None, "id", -0.0],
+        }
+        quantized = _quantize_public_numbers(original)
+        self.assertEqual(quantized["float"], 0.12345679)
+        self.assertEqual(type(quantized["integer"]), int)
+        self.assertEqual(type(quantized["boolean"]), bool)
+        self.assertEqual(_json_bytes(quantized), b'{"float":0.12345679,"integer":123,"boolean":true,"nested":[null,"id",0.0]}')
+        self.assertLessEqual(abs(float(quantized["float"]) - original["float"]), 5e-9 + 1e-16)
+        with self.assertRaisesRegex(ValueError, "non-finite"):
+            _quantize_public_float(float("nan"))
 
     def test_serializer_rejects_raw_grid_fields_and_nonfinite_numbers(self) -> None:
         with self.assertRaisesRegex(ValueError, "forbidden raw-data field"):

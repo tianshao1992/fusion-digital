@@ -99,6 +99,12 @@ contains 128 unique equal-arc samples and closes implicitly from its last point 
 In contrast, the canonical limiter coordinate list repeats its first point explicitly, and all
 wall segment indices refer to that canonical list.
 
+The reviewed publisher keeps private candidates at full precision, then encodes public graph
+floats and matching timeline-summary scalars with decimal `ROUND_HALF_EVEN` at eight fractional
+digits (`-0` becomes `0`). Geometry coordinates are deliberately exempt so their exact F64LE
+hashes and canonical segment indices remain unchanged. The catalog's
+`distributionPolicy.numericQuantization` object is the machine-readable encoding contract.
+
 The exact contracts are documented in
 [`docs/EFIT_TOPOLOGY_GRAPH_V2.md`](../../docs/EFIT_TOPOLOGY_GRAPH_V2.md) and validated by the
 JSON Schemas under [`docs/schemas`](../../docs/schemas). Run:

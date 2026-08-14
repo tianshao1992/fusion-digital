@@ -9,6 +9,7 @@ import type {
   EfitGap,
   EfitGeometry,
   EfitManifest,
+  EfitNumericQuantizationContract,
   EfitQuality,
   EfitQualityState,
   EfitShotCatalogMetadata,
@@ -217,6 +218,22 @@ function parseGap(value: unknown, label: string): EfitGap {
   };
 }
 
+function parseNumericQuantization(value: unknown): EfitNumericQuantizationContract {
+  const item = record(value, 'distributionPolicy.numericQuantization');
+  if (integer(item.fractionDigits, 'numericQuantization.fractionDigits', 0, 16) !== 8
+    || item.roundingMode !== 'ROUND_HALF_EVEN'
+    || item.negativeZeroNormalized !== true
+    || finite(item.maxAbsoluteErrorPerValue, 'numericQuantization.maxAbsoluteErrorPerValue') !== 5e-9) {
+    throw new Error('EFIT v2 numeric quantization contract is unsupported.');
+  }
+  return {
+    fractionDigits: 8,
+    roundingMode: 'ROUND_HALF_EVEN',
+    negativeZeroNormalized: true,
+    maxAbsoluteErrorPerValue: 5e-9,
+  };
+}
+
 function sameLimiter(left: EfitGeometry, right: EfitGeometry): boolean {
   const leftLimiter = left.limiterRzM;
   const rightLimiter = right.limiterRzM;
@@ -362,6 +379,8 @@ export function normalizeEfitHybridCatalog(
   const raw = record(value, 'EFIT v2 catalog');
   if (raw.schemaVersion !== 'fusion.efit.catalog.v2') throw new Error('EFIT v2 catalog schema is unsupported.');
   const device = record(raw.device, 'EFIT v2 catalog device');
+  const distributionPolicy = record(raw.distributionPolicy, 'EFIT v2 distributionPolicy');
+  const numericQuantization = parseNumericQuantization(distributionPolicy.numericQuantization);
   const extent = parseExtent(raw.gridExtentM);
   const geometries = array(raw.geometries, 'EFIT v2 geometries', 64).map((entry, index) => parseGeometry(entry, extent, index));
   if (geometries.length === 0) throw new Error('EFIT v2 catalog has no geometry contracts.');
@@ -480,6 +499,7 @@ export function normalizeEfitHybridCatalog(
     psiNLevels: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
     geometry: defaultGeometry,
     geometries: geometries.filter((geometry) => geometry.geometryId !== defaultGeometryId),
+    numericQuantization,
     shots,
   };
   return { manifest, sourceByShot };
@@ -665,6 +685,7 @@ export function createEfitHybridDataSource(options: EfitHybridDataSourceOptions 
     chunk: EfitTopologyGraphChunkDescriptor,
     shot: EfitShotManifest,
     geometry: EfitGeometry,
+    numericQuantization: EfitNumericQuantizationContract,
     signal?: AbortSignal,
   ): Promise<readonly EfitTopologyGraphFramePayload[]> {
     const key = `${chunk.url}:${chunk.sha256}`;
@@ -711,6 +732,7 @@ export function createEfitHybridDataSource(options: EfitHybridDataSourceOptions 
       }
       return validateEfitTopologyGraphFrame(value, {
         geometry,
+        numericQuantization,
         expectedShotId: descriptor.shotId,
         expectedReconstructionId: descriptor.reconstructionId,
         expectedTimeMs: chunk.availableTimesMs[localIndex],
@@ -731,10 +753,12 @@ export function createEfitHybridDataSource(options: EfitHybridDataSourceOptions 
       ? catalog.manifest.geometry
       : catalog.manifest.geometries?.find((candidate) => candidate.geometryId === shot.geometryId);
     if (!geometry) throw new Error(`EFIT shot ${shotId} references an unavailable geometry.`);
+    const numericQuantization = catalog.manifest.numericQuantization;
+    if (!numericQuantization) throw new Error('EFIT v2 catalog is missing its numeric quantization contract.');
     const chunk = shot.topologyGraph?.chunks.find((candidate) => frameIndex >= candidate.frameStart
       && frameIndex < candidate.frameStart + candidate.frameCount);
     if (!chunk) throw new Error(`EFIT shot ${shotId} frame ${frameIndex} has no chunk descriptor.`);
-    const payloads = await loadChunk(chunk, shot, geometry, request.signal);
+    const payloads = await loadChunk(chunk, shot, geometry, numericQuantization, request.signal);
     const payload = payloads[frameIndex - chunk.frameStart];
     if (!payload) throw new Error(`EFIT shot ${shotId} frame ${frameIndex} is missing from its chunk.`);
     const summary = shot.frames[frameIndex];

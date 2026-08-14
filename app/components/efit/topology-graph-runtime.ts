@@ -1,4 +1,4 @@
-import type { EfitGeometry, EfitTopologyGraphFramePayload } from './types';
+import type { EfitGeometry, EfitNumericQuantizationContract, EfitTopologyGraphFramePayload } from './types';
 
 const RUNTIME_LIMITS = Object.freeze({
   nodes: 512,
@@ -17,6 +17,7 @@ type JsonRecord = Record<string, unknown>;
 
 export type EfitTopologyGraphValidationContext = {
   geometry: EfitGeometry;
+  numericQuantization?: EfitNumericQuantizationContract;
   expectedShotId?: string;
   expectedReconstructionId?: string;
   expectedTimeMs?: number;
@@ -190,6 +191,12 @@ export function validateEfitTopologyGraphFrame(
   void frameId;
 
   const bounds = pointBounds(context);
+  // absPsiNMinusOne and psiN are independently quantized floating values.
+  // Their derived consistency error is therefore bounded by twice the
+  // catalog's per-value absolute error, plus a small arithmetic epsilon.
+  const derivedConsistencyTolerance = context.numericQuantization
+    ? context.numericQuantization.maxAbsoluteErrorPerValue * 2 + 1e-12
+    : 1e-9;
   const total = { points: 0 };
   const quality = record(frame.quality, 'frame.quality');
   const qualityValidity = literal(quality.validity, 'frame.quality.validity', ['usable', 'partial', 'unavailable']);
@@ -267,7 +274,7 @@ export function validateEfitTopologyGraphFrame(
       evidence(node.evidence, `${label}.evidence`);
       const psiN = finite(node.psiN, `${label}.psiN`);
       const psiDistance = finite(node.absPsiNMinusOne, `${label}.absPsiNMinusOne`);
-      if (Math.abs(psiDistance - Math.abs(psiN - 1)) > 1e-9
+      if (Math.abs(psiDistance - Math.abs(psiN - 1)) > derivedConsistencyTolerance
         || psiDistance < 0
         || psiDistance > (role === 'boundary' ? 0.002 : 0.02) + 1e-12) {
         fail('X-point psiN evidence is inconsistent with its role.');
@@ -334,7 +341,7 @@ export function validateEfitTopologyGraphFrame(
     const maxPsiNResidual = finite(edge.maxPsiNResidual, `${label}.maxPsiNResidual`);
     const extensionRatio = nullableFinite(edge.extensionRatio, `${label}.extensionRatio`);
     if (arcLengthM < 0 || directDistanceM < 0 || maxPsiNResidual < 0 || maxPsiNResidual > 0.002 + 1e-12
-      || Math.abs(psiN - Number(source.psiN)) > 1e-9
+      || Math.abs(psiN - Number(source.psiN)) > derivedConsistencyTolerance
       || (extensionRatio !== null && extensionRatio < 1 - 1e-6)) {
       fail('edge metrics are outside their reviewed bounds.');
     }

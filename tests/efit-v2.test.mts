@@ -114,6 +114,14 @@ function fixture() {
     schemaVersion: 'fusion.efit.catalog.v2',
     device: { id: 'EXL-50U', displayName: 'EXL-50U', defaultGeometryId: graphGeometryId },
     gridExtentM: { r: [0.2, 2.2], z: [-1.899999975, 1.899999975] },
+    distributionPolicy: {
+      numericQuantization: {
+        fractionDigits: 8,
+        roundingMode: 'ROUND_HALF_EVEN',
+        negativeZeroNormalized: true,
+        maxAbsoluteErrorPerValue: 5e-9,
+      },
+    },
     geometries: [{
       id: `legacy-wall-${f64LeHash(legacyPoints).slice(0, 20)}`,
       kind: 'axisymmetric-wall-limiter-rz-polyline',
@@ -276,6 +284,12 @@ test('hybrid v2 source exposes legacy and graph shots, finite signal summaries, 
   const source = createEfitHybridDataSource({ fetch: network.fetch });
   const manifest = await source.loadManifest();
   assert.deepEqual(manifest.shots.map((shot) => shot.shot), [18301, 20289]);
+  assert.deepEqual(manifest.numericQuantization, {
+    fractionDigits: 8,
+    roundingMode: 'ROUND_HALF_EVEN',
+    negativeZeroNormalized: true,
+    maxAbsoluteErrorPerValue: 5e-9,
+  });
   assert.match(manifest.shots[1]?.catalog?.reconstructionLabel ?? '', /aaaaaaaaaaaa/);
   const timeline = await source.loadTimeline(20289);
   assert.equal(timeline.length, 1);
@@ -313,6 +327,51 @@ test('empty topology graphs are accepted only for explicitly unavailable frames'
   const unavailable = structuredClone(partial);
   unavailable.quality.validity = 'unavailable';
   assert.equal(validateEfitTopologyGraphFrame(unavailable, { geometry }).topologyGraph.nodes.length, 0);
+});
+
+test('psiN derived consistency tolerance is bounded by the published quantization contract', () => {
+  const geometryId = 'wall-00000000000000000000';
+  const geometry = {
+    geometryId,
+    limiterRzM: { rM: [0.3, 1.2, 1.2, 0.3, 0.3], zM: [-1, -1, 1, 1, -1], validPoints: 5 },
+    canonicalSegmentCount: 4,
+    gridExtentM: [0.2, 2.2, -1.899999975, 1.899999975] as const,
+  };
+  const frame = graphFrame(geometryId);
+  const nodes: unknown[] = frame.topologyGraph.nodes;
+  nodes.push({
+    nodeId: 'candidate-x',
+    kind: 'x-point',
+    role: 'near-boundary',
+    activityRole: 'secondary',
+    activeBranchEligible: false,
+    evidenceOnly: true,
+    evidence: evidence(),
+    rM: 0.8,
+    zM: -0.5,
+    psiN: 0.99,
+    absPsiNMinusOne: 0.01000001,
+    gradientResidual: 0.001,
+    fitRms: 0.001,
+    lcfsDistanceM: 0.01,
+    hessianEigenvaluesPerM2: [-1, 1],
+    positionUncertaintyM: 0.01,
+  });
+  Object.assign(frame.topologyGraph.features, {
+    xPointCount: 1,
+    candidateXPointCount: 1,
+    nearBoundaryXPointCount: 1,
+  });
+  assert.throws(() => validateEfitTopologyGraphFrame(frame, { geometry }), /psiN evidence is inconsistent/);
+  assert.equal(validateEfitTopologyGraphFrame(frame, {
+    geometry,
+    numericQuantization: {
+      fractionDigits: 8,
+      roundingMode: 'ROUND_HALF_EVEN',
+      negativeZeroNormalized: true,
+      maxAbsoluteErrorPerValue: 5e-9,
+    },
+  }).topologyGraph.features.candidateXPointCount, 1);
 });
 
 test('hybrid v2 source rejects altered bytes, altered length, and transparent HTTP gzip', async () => {
@@ -385,6 +444,10 @@ test('hybrid catalog rejects geometry lies, unknown geometry ids, and duplicate 
   uppercaseDigest.shots[1].reconstructionDigest = RECONSTRUCTION_DIGEST.toUpperCase();
   assert.throws(() => normalizeEfitHybridCatalog(uppercaseDigest, legacyManifest), /SHA-256 digest/);
 
+  const unsupportedQuantization = structuredClone(fixtureValue.catalog);
+  unsupportedQuantization.distributionPolicy.numericQuantization.fractionDigits = 7;
+  assert.throws(() => normalizeEfitHybridCatalog(unsupportedQuantization, legacyManifest), /quantization contract is unsupported/);
+
   const fractionalTime = structuredClone(fixtureValue.catalog);
   fractionalTime.shots[1]!.availableTimesMs![0] = 110.5;
   assert.throws(() => normalizeEfitHybridCatalog(fractionalTime, legacyManifest), /integer in range/);
@@ -404,6 +467,12 @@ test('published 10-shot catalog and all 219 graph chunks decode through the prod
   const manifest = await source.loadManifest();
   assert.deepEqual(manifest.shots.map((shot) => shot.shot), [18301, 18303, 18304, 18308, 20213, 20289, 20666, 20669, 20707, 20708]);
   assert.equal(manifest.shots.reduce((total, shot) => total + shot.frameCount, 0), 5_804);
+  assert.deepEqual(manifest.numericQuantization, {
+    fractionDigits: 8,
+    roundingMode: 'ROUND_HALF_EVEN',
+    negativeZeroNormalized: true,
+    maxAbsoluteErrorPerValue: 5e-9,
+  });
   assert.deepEqual(new Set(manifest.shots.map((shot) => shot.geometryId)), new Set([
     'legacy-wall-670a93840d1354ae4c96',
     'wall-0a9a572a64f6f2e36ac2',
