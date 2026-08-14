@@ -46,6 +46,9 @@ function DeviceViewer({
     workspace
     showDownloadActions={false}
     securityNotice={device.statement}
+    defaultClipping={Boolean(efitOverlay)}
+    defaultClipAxis={efitOverlay ? 'z' : 'x'}
+    defaultClipOffset={efitOverlay ? 0.08 : 0}
     efitStore={efitStore}
     efitAlignment={efitOverlay ? {
       originWebMetres: [0, 0, 0],

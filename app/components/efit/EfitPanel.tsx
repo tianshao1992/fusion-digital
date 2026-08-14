@@ -123,7 +123,7 @@ export default function EfitPanel({
 
       <div className="efitChartGrid">
         <article className="efitChartCard efitEquilibriumCard">
-          <div className="efitCardHeading"><span>01</span><div><h3>R–Z 磁面重建</h3><p>ψN 0.1–0.9 · LCFS · 限制器 · 磁轴</p></div></div>
+          <div className="efitCardHeading"><span>01</span><div><h3>R–Z 磁通分带云图</h3><p>归一化极向磁通 ψN · 0 接近磁轴 / 1 = LCFS · 非温度/密度</p></div></div>
           <EfitEquilibriumChart frame={frame} manifest={snapshot.manifest} />
         </article>
         <article className="efitChartCard efitSignalsCard">

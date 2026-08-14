@@ -140,6 +140,30 @@ test('EFIT panel exposes shot selection, real time scrubbing, playback and quali
   assert.match(equilibrium, /磁轴/);
 });
 
+test('EFIT plasma colour field is a contour-constrained psiN display in both 2D and 3D', async () => {
+  const panel = await source('app/components/efit/EfitPanel.tsx');
+  const equilibrium = await source('app/components/efit/EfitEquilibriumChart.tsx');
+  const runtime = await source('app/components/efit/echarts-canvas-runtime.ts');
+  const palette = await source('app/components/efit/psi-n-palette.ts');
+  const overlay = await source('app/components/device-viewer/EfitThreeOverlay.ts');
+  const viewer = await source('app/components/TokamakCadViewer.tsx');
+
+  assert.match(panel, /R–Z 磁通分带云图/);
+  assert.match(panel, /归一化极向磁通 ψN/);
+  assert.match(panel, /非温度\/密度/);
+  assert.match(equilibrium, /type: 'custom'/);
+  assert.match(equilibrium, /bandPsiN/);
+  assert.match(equilibrium, /不代表温度或密度/);
+  assert.match(runtime, /CustomChart/);
+  assert.match(runtime, /VisualMapComponent/);
+  assert.match(palette, /colorForPsiN/);
+  assert.match(overlay, /EFIT_PSI_N_BANDED_SECTION/);
+  assert.match(overlay, /EFIT_PSI_N_BANDED_SECTION_OPPOSITE/);
+  assert.match(overlay, /publishedContours/);
+  assert.match(overlay, /bandPsiN/);
+  assert.match(viewer, /ψN 分带剖面/);
+});
+
 test('EFIT component runtime stays lazy and does not expose raw-data URLs', async () => {
   const viewer = await source('app/components/TokamakCadViewer.tsx');
   const chart = await source('app/components/efit/EfitCanvasChart.tsx');

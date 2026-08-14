@@ -34,6 +34,9 @@ export type TokamakCadViewerProps = {
   workspace?: boolean;
   showDownloadActions?: boolean;
   securityNotice?: string;
+  defaultClipping?: boolean;
+  defaultClipAxis?: 'x' | 'y' | 'z';
+  defaultClipOffset?: number;
   efitFrame?: EfitFrame | EfitRenderableFrame | null;
   efitStore?: EfitStore | EfitStoreLike | null;
   efitAlignment?: EfitAlignmentContract;
@@ -53,6 +56,14 @@ export type TokamakCadViewerProps = {
 type ViewerStatus = 'idle' | 'loading' | 'ready' | 'error';
 type ViewPreset = 'iso' | 'front' | 'top';
 type ClipAxis = 'x' | 'y' | 'z';
+type ViewerInteraction = {
+  activeView: ViewPreset;
+  autoRotate: boolean;
+  wireframe: boolean;
+  clipping: boolean;
+  clipAxis: ClipAxis;
+  clipOffset: number;
+};
 type ViewerStats = { meshes: number; triangles: number; renderer: string; parts: number };
 type ViewSnapshot = {
   position: [number, number, number];
@@ -150,19 +161,46 @@ function shouldPreferPreview() {
     || (typeof hintedNavigator.deviceMemory === 'number' && hintedNavigator.deviceMemory < 4);
 }
 
-export default function TokamakCadViewer({
+function defaultInteractionFor(clipping: boolean, clipAxis: ClipAxis, clipOffset: number): ViewerInteraction {
+  const boundedClipOffset = Number.isFinite(clipOffset)
+    ? Math.min(0.9, Math.max(-0.9, clipOffset))
+    : 0;
+  return {
+    activeView: 'iso',
+    autoRotate: false,
+    wireframe: false,
+    clipping,
+    clipAxis,
+    clipOffset: boundedClipOffset,
+  };
+}
+
+export default function TokamakCadViewer(props: TokamakCadViewerProps = {}) {
+  const sessionViewerId = props.viewerId ?? 'paramak-tokamak-demo';
+  const sessionManifestUrl = props.manifestUrl ?? DEFAULT_MANIFEST_URL;
+  return <TokamakCadViewerSession
+    key={`${sessionViewerId}:${sessionManifestUrl}`}
+    {...props}
+  />;
+}
+
+function TokamakCadViewerSession({
   manifestUrl = DEFAULT_MANIFEST_URL,
   viewerId = 'paramak-tokamak-demo',
   sectionId,
   workspace = false,
   showDownloadActions = true,
   securityNotice,
+  defaultClipping = false,
+  defaultClipAxis = 'x',
+  defaultClipOffset = 0,
   efitFrame = null,
   efitStore = null,
   efitAlignment,
   efitOptions,
   efitControls,
 }: TokamakCadViewerProps = {}) {
+  const defaultInteraction = defaultInteractionFor(defaultClipping, defaultClipAxis, defaultClipOffset);
   const mountRef = useRef<HTMLDivElement>(null);
   const fullscreenRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<ViewerApi | null>(null);
@@ -178,14 +216,7 @@ export default function TokamakCadViewer({
   const isolatedPartIdsRef = useRef<Set<string>>(new Set());
   const opacityRef = useRef({ global: 1, selected: 1 });
   const viewSnapshotRef = useRef<ViewSnapshot | null>(null);
-  const interactionRef = useRef({
-    activeView: 'iso' as ViewPreset,
-    autoRotate: false,
-    wireframe: false,
-    clipping: false,
-    clipAxis: 'x' as ClipAxis,
-    clipOffset: 0,
-  });
+  const interactionRef = useRef<ViewerInteraction>({ ...defaultInteraction });
   const [activated, setActivated] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [status, setStatus] = useState<ViewerStatus>('idle');
@@ -195,9 +226,9 @@ export default function TokamakCadViewer({
   const [lodNotice, setLodNotice] = useState('');
   const [autoRotate, setAutoRotate] = useState(false);
   const [wireframe, setWireframe] = useState(false);
-  const [clipping, setClipping] = useState(false);
-  const [clipAxis, setClipAxis] = useState<ClipAxis>('x');
-  const [clipOffset, setClipOffset] = useState(0);
+  const [clipping, setClipping] = useState(defaultInteraction.clipping);
+  const [clipAxis, setClipAxis] = useState<ClipAxis>(defaultInteraction.clipAxis);
+  const [clipOffset, setClipOffset] = useState(defaultInteraction.clipOffset);
   const [globalOpacity, setGlobalOpacity] = useState(1);
   const [selectedOpacity, setSelectedOpacity] = useState(1);
   const [fullscreen, setFullscreen] = useState(false);
@@ -770,12 +801,12 @@ export default function TokamakCadViewer({
     hiddenPartIdsRef.current = new Set();
     isolatedPartIdsRef.current = new Set();
     viewSnapshotRef.current = null;
-    interactionRef.current = { activeView: 'iso', autoRotate: false, wireframe: false, clipping: false, clipAxis: 'x', clipOffset: 0 };
+    interactionRef.current = { ...defaultInteraction };
     setActiveView('iso'); setAutoRotate(false); setWireframe(false); setSelectedPartId(null); setSelectedPartIds(new Set()); setIsolatedPartIds(new Set()); setHiddenPartIds(new Set());
     opacityRef.current = { global: 1, selected: 1 };
-    setClipAxis('x'); setClipOffset(0); setClipping(false); setGlobalOpacity(1); setSelectedOpacity(1);
+    setClipAxis(defaultInteraction.clipAxis); setClipOffset(defaultInteraction.clipOffset); setClipping(defaultInteraction.clipping); setGlobalOpacity(1); setSelectedOpacity(1);
     viewerRef.current?.selectParts(new Set()); viewerRef.current?.applyVisibility(new Set(), new Set());
-    viewerRef.current?.setClipping(false, 'x', 0); viewerRef.current?.setOpacity(1, 1);
+    viewerRef.current?.setClipping(defaultInteraction.clipping, defaultInteraction.clipAxis, defaultInteraction.clipOffset); viewerRef.current?.setOpacity(1, 1);
   };
   const selectPart = (partId: string, additive = false) => {
     const next = additive ? new Set(selectedPartIds) : new Set<string>();
@@ -942,7 +973,7 @@ export default function TokamakCadViewer({
         {efitControls && <div className="tokamakCadEfitControls" aria-label="EFIT 三维叠加设置">
           <span>EFIT OVERLAY</span>
           <button type="button" className={efitControls.mode === 'xray' ? 'active' : ''} aria-pressed={efitControls.mode === 'xray'} onClick={() => efitControls.onModeChange(efitControls.mode === 'xray' ? 'physical' : 'xray')}>{efitControls.mode === 'xray' ? '透视可见' : '物理遮挡'}</button>
-          <label><input type="checkbox" checked={efitControls.showSection} onChange={(event) => efitControls.onShowSectionChange(event.currentTarget.checked)} />剖面磁面</label>
+          <label title="颜色表示归一化极向磁通 ψN，不代表温度或密度"><input type="checkbox" checked={efitControls.showSection} onChange={(event) => efitControls.onShowSectionChange(event.currentTarget.checked)} />ψN 分带剖面</label>
           <label><input type="checkbox" checked={efitControls.showSurface} onChange={(event) => efitControls.onShowSurfaceChange(event.currentTarget.checked)} />LCFS 旋转面</label>
           <label><input type="checkbox" checked={efitControls.showMagneticAxis} onChange={(event) => efitControls.onShowMagneticAxisChange(event.currentTarget.checked)} />磁轴</label>
         </div>}

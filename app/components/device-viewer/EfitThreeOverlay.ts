@@ -1,14 +1,17 @@
 import {
   BufferAttribute,
   BufferGeometry,
+  CanvasTexture,
   DoubleSide,
   DynamicDrawUsage,
   Group,
+  LinearFilter,
   MathUtils,
   Mesh,
   MeshBasicMaterial,
   Object3D,
   Plane,
+  SRGBColorSpace,
   SphereGeometry,
   Vector3,
   type WebGLRenderer,
@@ -18,6 +21,7 @@ import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js';
 import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js';
+import { colorForPsiN } from '../efit/psi-n-palette';
 
 type Vec3Tuple = readonly [number, number, number];
 
@@ -120,6 +124,12 @@ type ResolvedAlignment = {
 };
 
 type RzPoint = readonly [number, number];
+
+type FluxBandContour = {
+  points: RzPoint[];
+  boundaryPsiN: number;
+  bandPsiN: number;
+};
 
 function isFiniteTuple(value: Vec3Tuple) {
   return value.length === 3 && value.every(Number.isFinite);
@@ -227,6 +237,54 @@ export function createEfitThreeOverlay(
   root.add(sectionLines);
   sectionGeometry.setPositions(new Float32Array([0, 0, 0, 0, 0, 0]));
 
+  // The public derivative contains contour geometry but no publishable psi
+  // grid. A canvas texture therefore fills only the nested, published psiN
+  // bands; it never interpolates a synthetic temperature/density field.
+  const sectionFillCanvas = document.createElement('canvas');
+  sectionFillCanvas.width = 512;
+  sectionFillCanvas.height = 512;
+  const sectionFillContext = sectionFillCanvas.getContext('2d', { alpha: true });
+  const sectionFillTexture = new CanvasTexture(sectionFillCanvas);
+  sectionFillTexture.colorSpace = SRGBColorSpace;
+  sectionFillTexture.minFilter = LinearFilter;
+  sectionFillTexture.magFilter = LinearFilter;
+  sectionFillTexture.generateMipmaps = false;
+  const createSectionFillGeometry = () => {
+    const geometry = new BufferGeometry();
+    geometry.setAttribute('position', new BufferAttribute(new Float32Array(12), 3).setUsage(DynamicDrawUsage));
+    geometry.setAttribute('uv', new BufferAttribute(new Float32Array([
+      0, 0,
+      1, 0,
+      1, 1,
+      0, 1,
+    ]), 2));
+    geometry.setIndex([0, 1, 2, 0, 2, 3]);
+    return geometry;
+  };
+  const sectionFillGeometry = createSectionFillGeometry();
+  const sectionFillMirrorGeometry = createSectionFillGeometry();
+  const sectionFillMaterial = new MeshBasicMaterial({
+    map: sectionFillTexture,
+    transparent: true,
+    opacity: 0.82,
+    alphaTest: 0.01,
+    depthWrite: false,
+    side: DoubleSide,
+    toneMapped: false,
+  });
+  const sectionFill = new Mesh(sectionFillGeometry, sectionFillMaterial);
+  sectionFill.name = 'EFIT_PSI_N_BANDED_SECTION';
+  sectionFill.frustumCulled = false;
+  sectionFill.renderOrder = 20;
+  sectionFill.visible = false;
+  root.add(sectionFill);
+  const sectionFillMirror = new Mesh(sectionFillMirrorGeometry, sectionFillMaterial);
+  sectionFillMirror.name = 'EFIT_PSI_N_BANDED_SECTION_OPPOSITE';
+  sectionFillMirror.frustumCulled = false;
+  sectionFillMirror.renderOrder = 20;
+  sectionFillMirror.visible = false;
+  root.add(sectionFillMirror);
+
   const lcfsGeometry = new LineGeometry();
   const lcfsMaterial = new LineMaterial({
     color: 0xff8b4a,
@@ -330,6 +388,93 @@ export function createEfitThreeOverlay(
     surfaceGeometry.setIndex(attribute);
   };
 
+  const updateSectionFill = (bands: readonly FluxBandContour[], phi: number) => {
+    if (!sectionFillContext || bands.length === 0) {
+      sectionFill.visible = false;
+      sectionFillMirror.visible = false;
+      return;
+    }
+    const points = bands.flatMap((band) => band.points);
+    if (points.length < 3) {
+      sectionFill.visible = false;
+      sectionFillMirror.visible = false;
+      return;
+    }
+    const rValues = points.map(([r]) => r);
+    const zValues = points.map(([, z]) => z);
+    const rMinData = Math.min(...rValues);
+    const rMaxData = Math.max(...rValues);
+    const zMinData = Math.min(...zValues);
+    const zMaxData = Math.max(...zValues);
+    const rSpan = rMaxData - rMinData;
+    const zSpan = zMaxData - zMinData;
+    if (!(rSpan > 1e-6) || !(zSpan > 1e-6)) {
+      sectionFill.visible = false;
+      sectionFillMirror.visible = false;
+      return;
+    }
+    const rPadding = rSpan * 0.018;
+    const zPadding = zSpan * 0.018;
+    const rMin = rMinData - rPadding;
+    const rMax = rMaxData + rPadding;
+    const zMin = zMinData - zPadding;
+    const zMax = zMaxData + zPadding;
+    const width = sectionFillCanvas.width;
+    const height = sectionFillCanvas.height;
+    sectionFillContext.clearRect(0, 0, width, height);
+    sectionFillContext.lineJoin = 'round';
+    sectionFillContext.lineCap = 'round';
+
+    // Largest boundary first; each smaller polygon replaces its interior.
+    // The remaining visible ring is coloured by its psiN-band midpoint.
+    bands.forEach((band) => {
+      if (band.points.length < 3) return;
+      sectionFillContext.beginPath();
+      band.points.forEach(([r, z], pointIndex) => {
+        const x = ((r - rMin) / (rMax - rMin)) * width;
+        const y = ((zMax - z) / (zMax - zMin)) * height;
+        if (pointIndex === 0) sectionFillContext.moveTo(x, y);
+        else sectionFillContext.lineTo(x, y);
+      });
+      sectionFillContext.closePath();
+      sectionFillContext.fillStyle = colorForPsiN(band.bandPsiN);
+      sectionFillContext.fill();
+      sectionFillContext.strokeStyle = band.boundaryPsiN >= 0.999
+        ? 'rgba(255, 225, 244, .96)'
+        : 'rgba(244, 255, 252, .38)';
+      sectionFillContext.lineWidth = band.boundaryPsiN >= 0.999 ? 2.25 : 0.8;
+      sectionFillContext.stroke();
+    });
+    sectionFillTexture.needsUpdate = true;
+
+    const corners: readonly RzPoint[] = [
+      [rMin, zMin],
+      [rMax, zMin],
+      [rMax, zMax],
+      [rMin, zMax],
+    ];
+    const updatePlaneGeometry = (geometry: BufferGeometry, sectionPhi: number) => {
+      const positions = geometry.getAttribute('position') as BufferAttribute;
+      const values = positions.array as Float32Array;
+      const target = new Vector3();
+      corners.forEach(([r, z], index) => {
+        transformRz(r, z, sectionPhi, target);
+        values[index * 3] = target.x;
+        values[index * 3 + 1] = target.y;
+        values[index * 3 + 2] = target.z;
+      });
+      positions.needsUpdate = true;
+      geometry.computeBoundingSphere();
+    };
+    updatePlaneGeometry(sectionFillGeometry, phi);
+    // Axisymmetry makes the same R-Z reconstruction valid at phi + pi. The
+    // opposite half-plane exposes both sides of a central Z cut, as in a
+    // conventional tokamak cross-section, without fabricating another frame.
+    updatePlaneGeometry(sectionFillMirrorGeometry, phi + Math.PI);
+    sectionFill.visible = root.visible && options.showSection;
+    sectionFillMirror.visible = root.visible && options.showSection;
+  };
+
   const updateSurface = (lcfs: RzPoint[]) => {
     const poloidal = sampleCurve(lcfs, MathUtils.clamp(Math.round(options.maxPoloidalPoints), 24, 384));
     if (poloidal.length < 3) {
@@ -405,6 +550,8 @@ export function createEfitThreeOverlay(
     root.visible = options.visible && frameUsable;
     if (!frameUsable || !frame) {
       sectionLines.visible = false;
+      sectionFill.visible = false;
+      sectionFillMirror.visible = false;
       lcfsLine.visible = false;
       lcfsSurface.visible = false;
       axisMarker.visible = false;
@@ -416,6 +563,22 @@ export function createEfitThreeOverlay(
       ?? frame.contours?.filter((curve) => curve.kind !== 'lcfs')
       ?? [];
     const phi = Number.isFinite(options.phiRadians) ? options.phiRadians : 0;
+
+    const explicitLcfs = curvePoints(frame.lcfs);
+    const contourLcfs = frame.contours?.find((curve) => curve.kind === 'lcfs');
+    const lcfs = explicitLcfs.length > 0 ? explicitLcfs : curvePoints(contourLcfs);
+    const publishedContours = (frame.contours ?? [])
+      .filter((curve) => curve.kind !== 'lcfs' && Number.isFinite(curve.psiN))
+      .map((curve) => ({ points: curvePoints(curve), boundaryPsiN: Number(curve.psiN) }))
+      .filter((curve) => curve.points.length >= 3);
+    if (lcfs.length >= 3) publishedContours.push({ points: lcfs, boundaryPsiN: 1 });
+    publishedContours.sort((left, right) => right.boundaryPsiN - left.boundaryPsiN);
+    const fluxBands: FluxBandContour[] = publishedContours.map((curve, index) => ({
+      ...curve,
+      bandPsiN: (curve.boundaryPsiN + (publishedContours[index + 1]?.boundaryPsiN ?? 0)) / 2,
+    }));
+    updateSectionFill(fluxBands, phi);
+
     const segmentPositions: number[] = [];
     const a = new Vector3();
     const b = new Vector3();
@@ -435,9 +598,6 @@ export function createEfitThreeOverlay(
     if (segmentPositions.length > 0) sectionGeometry.setPositions(new Float32Array(segmentPositions));
     sectionLines.visible = options.showSection && segmentPositions.length > 0;
 
-    const explicitLcfs = curvePoints(frame.lcfs);
-    const contourLcfs = frame.contours?.find((curve) => curve.kind === 'lcfs');
-    const lcfs = explicitLcfs.length > 0 ? explicitLcfs : curvePoints(contourLcfs);
     const sampledLcfs = sampleCurve(lcfs, MathUtils.clamp(Math.round(options.maxPoloidalPoints), 24, 384));
     if (sampledLcfs.length >= 3) {
       const linePositions: number[] = [];
@@ -476,15 +636,16 @@ export function createEfitThreeOverlay(
 
   const applyMode = () => {
     const depthTest = options.mode === 'physical';
-    [sectionMaterial, lcfsMaterial, axisMaterial, axisMarkerMaterial, surfaceMaterial].forEach((material) => {
+    [sectionFillMaterial, sectionMaterial, lcfsMaterial, axisMaterial, axisMarkerMaterial, surfaceMaterial].forEach((material) => {
       material.depthTest = depthTest;
       material.needsUpdate = true;
     });
     surfaceMaterial.opacity = options.mode === 'xray' ? 0.25 : 0.16;
+    sectionFillMaterial.opacity = options.mode === 'xray' ? 0.9 : 0.78;
   };
 
   const applyClipping = () => {
-    [sectionMaterial, lcfsMaterial, axisMaterial, axisMarkerMaterial, surfaceMaterial].forEach((material) => {
+    [sectionFillMaterial, sectionMaterial, lcfsMaterial, axisMaterial, axisMarkerMaterial, surfaceMaterial].forEach((material) => {
       material.clippingPlanes = clippingEnabled ? [context.clippingPlane] : null;
       material.needsUpdate = true;
     });
@@ -518,14 +679,18 @@ export function createEfitThreeOverlay(
     dispose: () => {
       if (disposed) return;
       disposed = true;
-      root.remove(sectionLines, lcfsLine, axisRing, axisMarker, lcfsSurface);
+      root.remove(sectionFill, sectionFillMirror, sectionLines, lcfsLine, axisRing, axisMarker, lcfsSurface);
       root.removeFromParent();
       sectionGeometry.dispose();
+      sectionFillGeometry.dispose();
+      sectionFillMirrorGeometry.dispose();
+      sectionFillTexture.dispose();
       lcfsGeometry.dispose();
       axisGeometry.dispose();
       surfaceGeometry.dispose();
       axisMarker.geometry.dispose();
       sectionMaterial.dispose();
+      sectionFillMaterial.dispose();
       lcfsMaterial.dispose();
       axisMaterial.dispose();
       axisMarkerMaterial.dispose();

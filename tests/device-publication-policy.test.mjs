@@ -553,7 +553,7 @@ test('Paramak interaction controls remain public-only and expose consistent acce
   assert.match(source, /<label><span>[^<]*(?:剖切|切面)[^<]*<\/span>[\s\S]{0,180}<input type="range"/s);
   assert.match(source, /setGlobalOpacity\(1\)/);
   assert.match(source, /setSelectedOpacity\(1\)/);
-  assert.match(source, /setClipOffset\(0\)/);
+  assert.match(source, /setClipOffset\(defaultInteraction\.clipOffset\)/);
   assert.match(source, /setHiddenPartIds\(new Set\(\)\)/);
   assert.match(source, /setIsolatedPartIds\(new Set\(\)\)/);
   assert.match(source, /setSelectedPartIds\(new Set\(\)\)/);
@@ -592,4 +592,22 @@ test('Paramak interaction controls remain public-only and expose consistent acce
   assert.match(turntableSource, /aria-pressed=\{candidate\.id === mode\.id\}/);
   assert.doesNotMatch(turntableSource, /(?:GLTFLoader|from\s+['"]three|\.glb|\.gltf|\.step|\.stp)/i,
     'EXL turntable viewer must remain raster-only and must not import geometry loaders');
+});
+
+test('EXL real-time viewer opens and resets to an active Z section through the device centre', async () => {
+  const source = await readFile(resolve(repositoryRoot, 'app/components/TokamakCadViewer.tsx'), 'utf8');
+  const workspace = await readFile(resolve(repositoryRoot, 'app/digital-prototype/MultiDeviceWorkspace.tsx'), 'utf8');
+
+  assert.match(workspace, /defaultClipping=\{Boolean\(efitOverlay\)\}/);
+  assert.match(workspace, /defaultClipAxis=\{efitOverlay\s*\?\s*['"]z['"]\s*:\s*['"]x['"]\}/);
+  assert.match(workspace, /defaultClipOffset=\{efitOverlay\s*\?\s*0\.08\s*:\s*0\}/);
+  assert.match(source, /useState\(defaultInteraction\.clipping\)/);
+  assert.match(source, /useState<ClipAxis>\(defaultInteraction\.clipAxis\)/);
+  assert.match(source, /useState\(defaultInteraction\.clipOffset\)/);
+  assert.match(source, /clippingPlane\.constant\s*=\s*offset\s*\*\s*modelRadius/,
+    'the non-zero default offset must be converted into a real model-space clipping plane');
+  assert.match(source, /setClipping\(defaultInteraction\.clipping,\s*defaultInteraction\.clipAxis,\s*defaultInteraction\.clipOffset\)/,
+    'reset must restore the EXL section instead of turning clipping off');
+  assert.match(source, /key=\{`\$\{sessionViewerId\}:\$\{sessionManifestUrl\}`\}/,
+    'switching devices must create a fresh viewer session with the correct device defaults');
 });
