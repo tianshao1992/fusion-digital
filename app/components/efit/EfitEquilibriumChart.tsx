@@ -12,9 +12,9 @@ type EfitEquilibriumChartProps = {
   manifest: EfitManifest | null;
 };
 
-// ECharts ContinuousVisualMap always interprets itemWidth/itemHeight as the
-// unrotated [short, long] bar dimensions. `orient: horizontal` rotates that
-// bar; swapping these values would therefore create a vertical strip.
+// Keep the psiN legend as a slim vertical rail at the chart's far-right edge.
+// The plot grid reserves a separate gutter below so the legend never covers
+// equilibrium geometry or the chart's top information.
 const PSI_N_COLORBAR_SHORT_PX = 7;
 const PSI_N_COLORBAR_LONG_PX = 104;
 
@@ -124,9 +124,9 @@ export default function EfitEquilibriumChart({ frame, manifest }: EfitEquilibriu
         max: 1,
         dimension: 0,
         seriesIndex: 0,
-        orient: 'horizontal',
-        left: 'center',
-        top: 3,
+        orient: 'vertical',
+        right: 4,
+        top: 'middle',
         itemWidth: PSI_N_COLORBAR_SHORT_PX,
         itemHeight: PSI_N_COLORBAR_LONG_PX,
         precision: 1,
@@ -137,7 +137,7 @@ export default function EfitEquilibriumChart({ frame, manifest }: EfitEquilibriu
         inRange: { color: PSI_N_COLORS },
         borderColor: 'rgba(185, 235, 226, .22)',
       } : undefined,
-      grid: { left: 56, right: 24, top: 24, bottom: 48, containLabel: false },
+      grid: { left: 56, right: 64, top: 24, bottom: 48, containLabel: false },
       tooltip: {
         trigger: 'axis',
         axisPointer: { type: 'cross', lineStyle: { color: 'rgba(123, 234, 220, .45)' } },

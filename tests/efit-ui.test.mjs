@@ -160,11 +160,14 @@ test('EFIT plasma colour field is a contour-constrained psiN display in both 2D 
   assert.match(equilibrium, /type: 'custom'/);
   assert.match(equilibrium, /bandPsiN/);
   assert.match(equilibrium, /不代表温度或密度/);
-  assert.match(equilibrium, /orient: 'horizontal'/);
+  assert.match(equilibrium, /orient: 'vertical'/);
+  assert.match(equilibrium, /right: 4/);
+  assert.match(equilibrium, /top: 'middle'/);
   assert.match(equilibrium, /const PSI_N_COLORBAR_SHORT_PX = 7/);
   assert.match(equilibrium, /const PSI_N_COLORBAR_LONG_PX = 104/);
   assert.match(equilibrium, /itemWidth: PSI_N_COLORBAR_SHORT_PX/);
   assert.match(equilibrium, /itemHeight: PSI_N_COLORBAR_LONG_PX/);
+  assert.match(equilibrium, /grid: \{ left: 56, right: 64, top: 24, bottom: 48/);
   assert.match(runtime, /CustomChart/);
   assert.match(runtime, /VisualMapComponent/);
   assert.match(palette, /colorForPsiN/);
