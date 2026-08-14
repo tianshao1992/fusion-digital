@@ -37,6 +37,7 @@ const controlledEfitAssets = new Map([
   ["/device-data/exl50u-efit/index.json", "/data/exl50u-efit/index.json"],
   ["/device-data/exl50u-efit/shot-18301.bin", "/data/exl50u-efit/shot-18301.bin"],
   ["/device-data/exl50u-efit/shot-18303.bin", "/data/exl50u-efit/shot-18303.bin"],
+  ["/device-data/exl50u-efit/shot-18303-topology.bin", "/data/exl50u-efit/shot-18303-topology.bin"],
   ["/device-data/exl50u-efit/shot-18304.bin", "/data/exl50u-efit/shot-18304.bin"],
   ["/device-data/exl50u-efit/shot-18308.bin", "/data/exl50u-efit/shot-18308.bin"],
 ]);

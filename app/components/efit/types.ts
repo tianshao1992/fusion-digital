@@ -22,6 +22,45 @@ export type EfitContour = EfitRzPolyline & {
   closed: boolean;
 };
 
+export type EfitTopologyKind =
+  | 'limited'
+  | 'upper-single-null'
+  | 'lower-single-null'
+  | 'double-null'
+  | 'near-double-null'
+  | 'partial'
+  | 'unknown';
+
+export type EfitXPoint = {
+  rM: number;
+  zM: number;
+  psiN: number;
+  gradientResidual: number;
+  role?: 'primary' | 'secondary';
+  /** Backward-compatible alias for early topology derivatives. */
+  primary?: boolean;
+};
+
+export type EfitStrikePoint = {
+  rM: number;
+  zM: number;
+  wallSegment: number;
+};
+
+export type EfitSeparatrixLeg = EfitRzPolyline & {
+  xPointIndex: number;
+  strikePointIndex: number;
+  closed: false;
+};
+
+export type EfitTopology = {
+  kind: EfitTopologyKind;
+  flags: number;
+  xPoints: readonly EfitXPoint[];
+  strikePoints: readonly EfitStrikePoint[];
+  separatrixLegs: readonly EfitSeparatrixLeg[];
+};
+
 export type EfitFrameSummary = {
   shot: EfitShotId;
   index: number;
@@ -39,10 +78,17 @@ export type EfitFrameSummary = {
   surfaceMask: number;
   lcfsValidPoints: number;
   offsetBytes: number;
+  topologyKind?: EfitTopologyKind;
+  topologyFlags?: number;
+  xPointCount?: number;
+  strikePointCount?: number;
+  separatrixLegCount?: number;
 };
 
 export type EfitFrame = EfitFrameSummary & {
   contours: readonly EfitContour[];
+  /** Optional reviewed divertor-topology derivative; absent in the v1 contour package. */
+  topology?: EfitTopology;
 };
 
 export type EfitGap = {
@@ -63,6 +109,21 @@ export type EfitBinaryDescriptor = {
   pointsPerContour: number;
 };
 
+export type EfitTopologyBinaryDescriptor = {
+  url: string;
+  byteLength: number;
+  sha256: string;
+  baseBinarySha256: string;
+  baseSha256PrefixHex: string;
+  fileHeaderBytes: 64;
+  frameHeaderBytes: 160;
+  frameStrideBytes: 2208;
+  maxSeparatrixLegs: 4;
+  pointsPerLeg: 64;
+  maxXPoints: 2;
+  maxStrikePoints: 4;
+};
+
 export type EfitShotManifest = {
   shot: EfitShotId;
   frameCount: number;
@@ -71,6 +132,7 @@ export type EfitShotManifest = {
   gaps: readonly EfitGap[];
   frames: readonly EfitFrameSummary[];
   binary: EfitBinaryDescriptor;
+  topologyBinary?: EfitTopologyBinaryDescriptor;
 };
 
 export type EfitCadRegistration = {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, type KeyboardEvent } from 'react';
-import EfitEquilibriumChart from './EfitEquilibriumChart';
+import EfitEquilibriumChart, { efitTopologyLabel } from './EfitEquilibriumChart';
 import EfitSignalsChart from './EfitSignalsChart';
 import EfitTimelineControls from './EfitTimelineControls';
 import type { EfitStore } from './store';
@@ -11,6 +11,7 @@ import './efit-panel.css';
 type EfitPanelProps = {
   store: EfitStore;
   preferredShot?: number;
+  preferredTimeMs?: number;
   className?: string;
   title?: string;
 };
@@ -26,6 +27,7 @@ function isFormControl(target: EventTarget | null): boolean {
 export default function EfitPanel({
   store,
   preferredShot,
+  preferredTimeMs,
   className = '',
   title = 'EFIT 平衡位形',
 }: EfitPanelProps) {
@@ -35,8 +37,13 @@ export default function EfitPanel({
   useEffect(() => {
     if (initializedRef.current) return;
     initializedRef.current = true;
-    void store.actions.initialize(preferredShot);
-  }, [preferredShot, store]);
+    void (async () => {
+      await store.actions.initialize(preferredShot);
+      if (preferredTimeMs !== undefined && Number.isFinite(preferredTimeMs)) {
+        await store.actions.seekTimeMs(preferredTimeMs);
+      }
+    })();
+  }, [preferredShot, preferredTimeMs, store]);
 
   function handleKeyDown(event: KeyboardEvent<HTMLElement>): void {
     if (isFormControl(event.target) || event.altKey || event.ctrlKey || event.metaKey) return;
@@ -60,6 +67,7 @@ export default function EfitPanel({
 
   const frame = snapshot.currentFrame;
   const quality = frame?.quality;
+  const topology = frame?.topology;
 
   return (
     <section
@@ -94,6 +102,14 @@ export default function EfitPanel({
           <span className="efitStatusPill isLoading">{snapshot.status === 'loading-index' ? '读取 EFIT 索引' : snapshot.status === 'loading-shot' ? '准备放电数据' : '读取位形帧'}</span>
         )}
         {quality && <span className={`efitStatusPill quality-${quality.state}`}>质量 · {quality.state === 'good' ? '有效' : quality.state === 'warning' ? '需关注' : '不可用'}</span>}
+        {topology && (
+          <span
+            className={`efitStatusPill topology-${topology.kind}`}
+            title={topology.kind === 'near-double-null' ? '包含主、次 X 点；次 X 点不等同于严格双零平衡。' : undefined}
+          >
+            拓扑 · {efitTopologyLabel(topology.kind)} · X {topology.xPoints.length}
+          </span>
+        )}
         {snapshot.gapNotice && (
           <span className="efitStatusPill isWarning">
             数据间隙 {snapshot.gapNotice.afterMs}–{snapshot.gapNotice.beforeMs} ms{snapshot.gapNotice.missingCount ? ` · 缺 ${snapshot.gapNotice.missingCount} 帧` : ''}
@@ -123,7 +139,7 @@ export default function EfitPanel({
 
       <div className="efitChartGrid">
         <article className="efitChartCard efitEquilibriumCard">
-          <div className="efitCardHeading"><span>01</span><div><h3>R–Z 磁通分带云图</h3><p>归一化极向磁通 ψN · 0 接近磁轴 / 1 = LCFS · 非温度/密度</p></div></div>
+          <div className="efitCardHeading"><span>01</span><div><h3>R–Z 磁通分带云图与偏滤器拓扑</h3><p>归一化极向磁通 ψN 分带 · LCFS / 分离支 · X 点 · limiter 交点 · 非温度/密度</p></div></div>
           <EfitEquilibriumChart frame={frame} manifest={snapshot.manifest} />
         </article>
         <article className="efitChartCard efitSignalsCard">
@@ -132,10 +148,21 @@ export default function EfitPanel({
         </article>
       </div>
 
+      <div className={`efitTopologyBoundary${topology?.kind === 'partial' || topology?.kind === 'unknown' ? ' isPartial' : ''}`} role="note">
+        <b>DIVERTOR TOPOLOGY / VISUALIZATION-DERIVED</b>
+        <span>
+          {topology
+            ? `${efitTopologyLabel(topology.kind)}：已发布 ${topology.xPoints.length} 个 X 点、${topology.separatrixLegs.length} 条开放分离支和 ${topology.strikePoints.length} 个 limiter 交点。`
+            : '当前帧未发布经校验的偏滤器拓扑；界面不会由 LCFS 猜测 X 点或分离支。'}
+          {topology?.kind === 'near-double-null' && ' 近双零标记区分主、次 X 点，不表示严格平衡双零。'}
+          {' '}交点仅表示分离支与已发布 limiter 轮廓的交会，不等同于经 CAD 配准校核的真实偏滤器靶板打击点。
+        </span>
+      </div>
+
       <EfitTimelineControls store={store} snapshot={snapshot} />
 
       <noscript>
-        <p className="efitNoScript">此面板需要 JavaScript 才能播放 EFIT 动画。静态信息：EXL-50U 平衡位形包含 R–Z 磁面、LCFS、限制器、磁轴及 Ip/Raxis/Zaxis 时序。</p>
+        <p className="efitNoScript">此面板需要 JavaScript 才能播放 EFIT 动画。静态信息：EXL-50U 平衡位形包含 R–Z 磁面、LCFS、限制器、磁轴及 Ip/Raxis/Zaxis 时序；仅在帧内已发布经校验数据时显示 X 点、分离支与 limiter 交点。</p>
       </noscript>
     </section>
   );

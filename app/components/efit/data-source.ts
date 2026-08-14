@@ -11,6 +11,9 @@ import type {
   EfitRzPolyline,
   EfitShotId,
   EfitShotManifest,
+  EfitTopology,
+  EfitTopologyBinaryDescriptor,
+  EfitTopologyKind,
 } from './types';
 
 const DEFAULT_INDEX_URL = '/device-data/exl50u-efit/index.json';
@@ -20,8 +23,27 @@ const DEFAULT_FRAME_HEADER_BYTES = 64;
 const DEFAULT_FRAME_STRIDE_BYTES = 10_304;
 const DEFAULT_SURFACE_COUNT = 9;
 const DEFAULT_POINTS_PER_CONTOUR = 128;
+const TOPOLOGY_MAGIC = 'EXL50TP1';
+const TOPOLOGY_FILE_HEADER_BYTES = 64;
+const TOPOLOGY_FRAME_HEADER_BYTES = 160;
+const TOPOLOGY_FRAME_STRIDE_BYTES = 2_208;
+const TOPOLOGY_MAX_LEGS = 4;
+const TOPOLOGY_POINTS_PER_LEG = 64;
+const TOPOLOGY_MAX_X_POINTS = 2;
+const TOPOLOGY_MAX_STRIKE_POINTS = 4;
+const TOPOLOGY_KNOWN_FLAGS_MASK = (1 << 11) - 1;
+const TOPOLOGY_KNOWN_STRIKE_FLAGS_MASK = (1 << 2) - 1;
 const PSI_N_LEVELS = Object.freeze([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]);
 const SOURCE_VALID_FLAG = 1 << 0;
+const TOPOLOGY_KINDS: Readonly<Record<number, EfitTopologyKind>> = Object.freeze({
+  0: 'unknown',
+  1: 'limited',
+  2: 'upper-single-null',
+  3: 'lower-single-null',
+  4: 'double-null',
+  5: 'near-double-null',
+  6: 'partial',
+});
 const QUALITY_FLAGS = Object.freeze([
   [1 << 1, '前一帧存在真实时间间隙。'],
   [1 << 2, '等离子体电流绝对值低于 50 kA。'],
@@ -75,6 +97,16 @@ function integer(value: unknown, fallback = 0): number {
 function optionalFinite(value: unknown): number | undefined {
   const parsed = finiteNumber(value);
   return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+function optionalUnsignedInteger(value: unknown, maximum = 0xffff_ffff): number | undefined {
+  return typeof value === 'number'
+    && Number.isFinite(value)
+    && Number.isInteger(value)
+    && value >= 0
+    && value <= maximum
+    ? value
+    : undefined;
 }
 
 function stringValue(value: unknown, fallback: string): string {
@@ -177,6 +209,55 @@ function normalizeBinary(
   return descriptor;
 }
 
+function normalizeTopologyBinary(
+  raw: JsonRecord,
+  indexUrl: string,
+  shot: EfitShotId,
+  frameCount: number,
+  baseBinary: EfitBinaryDescriptor,
+): EfitTopologyBinaryDescriptor | undefined {
+  if (!isRecord(raw.topologyBinary)) return undefined;
+  const nested = raw.topologyBinary;
+  const descriptor: EfitTopologyBinaryDescriptor = {
+    url: resolveAssetUrl(indexUrl, stringValue(nested.url ?? nested.path, `shot-${shot}-topology.bin`)),
+    byteLength: integer(nested.byteLength),
+    sha256: stringValue(nested.sha256, ''),
+    baseBinarySha256: stringValue(nested.baseBinarySha256, ''),
+    baseSha256PrefixHex: stringValue(nested.baseSha256PrefixHex, ''),
+    fileHeaderBytes: integer(nested.fileHeaderBytes, TOPOLOGY_FILE_HEADER_BYTES) as 64,
+    frameHeaderBytes: integer(nested.frameHeaderBytes, TOPOLOGY_FRAME_HEADER_BYTES) as 160,
+    frameStrideBytes: integer(nested.frameStrideBytes, TOPOLOGY_FRAME_STRIDE_BYTES) as 2208,
+    maxSeparatrixLegs: TOPOLOGY_MAX_LEGS,
+    pointsPerLeg: TOPOLOGY_POINTS_PER_LEG,
+    maxXPoints: TOPOLOGY_MAX_X_POINTS,
+    maxStrikePoints: TOPOLOGY_MAX_STRIKE_POINTS,
+  };
+  if (descriptor.fileHeaderBytes !== TOPOLOGY_FILE_HEADER_BYTES
+    || descriptor.frameHeaderBytes !== TOPOLOGY_FRAME_HEADER_BYTES
+    || descriptor.frameStrideBytes !== TOPOLOGY_FRAME_STRIDE_BYTES) {
+    throw new Error(`EFIT shot ${shot} topology sidecar does not match the reviewed EXL50TP1 layout.`);
+  }
+  const expectedBytes = TOPOLOGY_FILE_HEADER_BYTES + frameCount * TOPOLOGY_FRAME_STRIDE_BYTES;
+  if (descriptor.byteLength !== expectedBytes) throw new Error(`EFIT shot ${shot} topology byte length is inconsistent.`);
+  if (!/^[a-f0-9]{64}$/i.test(descriptor.sha256)
+    || !/^[a-f0-9]{64}$/i.test(descriptor.baseBinarySha256)
+    || !/^[a-f0-9]{32}$/i.test(descriptor.baseSha256PrefixHex)) {
+    throw new Error(`EFIT shot ${shot} topology sidecar has an invalid hash binding.`);
+  }
+  if (!baseBinary.sha256 || descriptor.baseBinarySha256.toLowerCase() !== baseBinary.sha256.toLowerCase()
+    || descriptor.baseSha256PrefixHex.toLowerCase() !== descriptor.baseBinarySha256.slice(0, 32).toLowerCase()) {
+    throw new Error(`EFIT shot ${shot} topology sidecar is not bound to its reviewed base binary.`);
+  }
+  return descriptor;
+}
+
+function topologyKind(value: unknown): EfitTopologyKind | undefined {
+  if (typeof value !== 'string') return undefined;
+  return Object.values(TOPOLOGY_KINDS).includes(value as EfitTopologyKind)
+    ? value as EfitTopologyKind
+    : undefined;
+}
+
 function normalizeSummary(raw: unknown, shot: EfitShotId, index: number, binary: EfitBinaryDescriptor): EfitFrameSummary {
   const record = isRecord(raw) ? raw : {};
   const flags = integer(record.qualityFlags ?? record.flags, 0) >>> 0;
@@ -202,6 +283,11 @@ function normalizeSummary(raw: unknown, shot: EfitShotId, index: number, binary:
       record.offsetBytes,
       binary.fileHeaderBytes + index * binary.frameStrideBytes,
     ),
+    topologyKind: topologyKind(record.topologyKind),
+    topologyFlags: optionalUnsignedInteger(record.topologyFlags),
+    xPointCount: optionalUnsignedInteger(record.xPointCount, TOPOLOGY_MAX_X_POINTS),
+    strikePointCount: optionalUnsignedInteger(record.strikePointCount, TOPOLOGY_MAX_STRIKE_POINTS),
+    separatrixLegCount: optionalUnsignedInteger(record.separatrixLegCount, TOPOLOGY_MAX_LEGS),
   };
 }
 
@@ -218,6 +304,7 @@ function normalizeShot(raw: unknown, layout: JsonRecord, indexUrl: string): Efit
     || (rawTimes.length > 0 && rawTimes.length !== expectedCount)) {
     throw new Error(`EFIT shot ${shot} has an invalid or inconsistent frame count.`);
   }
+  const topologyBinary = normalizeTopologyBinary(raw, indexUrl, shot, expectedCount, binary);
   const frames = Array.from({ length: expectedCount }, (_, frameIndex) => {
     const frame = isRecord(rawFrames[frameIndex])
       ? rawFrames[frameIndex]
@@ -232,6 +319,14 @@ function normalizeShot(raw: unknown, layout: JsonRecord, indexUrl: string): Efit
     }
     if (frameIndex > 0 && frame.timeMs <= frames[frameIndex - 1].timeMs) {
       throw new Error(`EFIT shot ${shot} frame times must be strictly increasing.`);
+    }
+    if (topologyBinary && (frame.topologyKind === undefined
+      || frame.topologyFlags === undefined
+      || frame.xPointCount === undefined
+      || frame.strikePointCount === undefined
+      || frame.separatrixLegCount === undefined
+      || (frame.topologyFlags & ~TOPOLOGY_KNOWN_FLAGS_MASK) !== 0)) {
+      throw new Error(`EFIT shot ${shot} topology summary is incomplete or invalid for frame ${frameIndex}.`);
     }
   });
   const expectedBytes = binary.fileHeaderBytes + expectedCount * binary.frameStrideBytes;
@@ -254,6 +349,7 @@ function normalizeShot(raw: unknown, layout: JsonRecord, indexUrl: string): Efit
     gaps,
     frames,
     binary,
+    topologyBinary,
   };
 }
 
@@ -288,6 +384,13 @@ function normalizeManifest(raw: unknown, indexUrl: string): EfitManifest {
       : isRecord(geometry.cadRegistration)
         ? geometry.cadRegistration
         : undefined;
+
+  if (shots.some((shot) => shot.topologyBinary)
+    && (!extent || extent.some((value) => !Number.isFinite(value))
+      || extent[1] <= extent[0] || extent[3] <= extent[2]
+      || parseFlatRz(geometry.limiterRzM).validPoints < 2)) {
+    throw new Error('EFIT topology delivery requires finite grid bounds and a reviewed limiter polyline.');
+  }
 
   return {
     schema: stringValue(raw.schemaVersion ?? raw.schema ?? raw.version, 'exl50u-efit/v1'),
@@ -349,12 +452,39 @@ async function fetchBytes(
   checkAborted(signal);
 
   if (response.status === 206) {
-    if (bytes.byteLength < length) throw new Error('EFIT Range response is shorter than requested.');
-    return bytes.byteLength === length ? bytes : bytes.slice(0, length);
+    const contentRange = response.headers.get('content-range');
+    const match = /^bytes (\d+)-(\d+)\/(\d+|\*)$/i.exec(contentRange ?? '');
+    if (!match
+      || Number(match[1]) !== start
+      || Number(match[2]) !== start + length - 1
+      || bytes.byteLength !== length
+      || (match[3] !== '*' && Number(match[3]) < start + length)) {
+      throw new Error('EFIT Range response does not match the requested byte interval.');
+    }
+    return bytes;
   }
   if (bytes.byteLength >= start + length) return bytes.slice(start, start + length);
   if (bytes.byteLength === length) return bytes;
   throw new Error('Server did not honor the EFIT byte range request.');
+}
+
+function raceWithAbort<T>(promise: Promise<T>, signal?: AbortSignal): Promise<T> {
+  checkAborted(signal);
+  if (!signal) return promise;
+  return new Promise<T>((resolve, reject) => {
+    const abort = () => reject(abortError());
+    signal.addEventListener('abort', abort, { once: true });
+    promise.then(
+      (value) => {
+        signal.removeEventListener('abort', abort);
+        resolve(value);
+      },
+      (error) => {
+        signal.removeEventListener('abort', abort);
+        reject(error);
+      },
+    );
+  });
 }
 
 function readMagic(buffer: ArrayBuffer): string {
@@ -387,7 +517,15 @@ function parseFrame(
   const timeMs = view.getInt32(0, true);
   const flags = view.getUint32(4, true);
   const surfaceMask = view.getUint16(46, true);
-  const lcfsValidPoints = Math.min(view.getUint16(44, true), binary.pointsPerContour);
+  const lcfsValidPoints = view.getUint16(44, true);
+  if (timeMs !== summary.timeMs
+    || flags !== summary.quality.flags
+    || surfaceMask !== summary.surfaceMask
+    || lcfsValidPoints !== summary.lcfsValidPoints
+    || lcfsValidPoints > binary.pointsPerContour
+    || (surfaceMask & ~((1 << binary.surfaceCount) - 1)) !== 0) {
+    throw new Error(`EFIT base frame ${summary.index} disagrees with its index summary.`);
+  }
   const contours: EfitContour[] = [];
   let curveOffset = binary.frameHeaderBytes;
 
@@ -418,6 +556,20 @@ function parseFrame(
   const q95 = view.getFloat32(32, true);
   const efitError = view.getFloat32(36, true);
   const iconvr = view.getFloat32(40, true);
+  const scalarPairs = [
+    [summary.currentA, view.getFloat32(8, true)],
+    [summary.rAxisM, view.getFloat32(12, true)],
+    [summary.zAxisM, view.getFloat32(16, true)],
+    [summary.bcentrT, view.getFloat32(20, true)],
+    [summary.psiAxisWbPerRad, view.getFloat32(24, true)],
+    [summary.psiBoundaryWbPerRad, view.getFloat32(28, true)],
+  ] as const;
+  if (scalarPairs.some(([expected, actual]) => !Number.isFinite(actual) || Math.fround(expected) !== actual)
+    || (summary.q95 !== undefined && Math.fround(summary.q95) !== q95)
+    || (summary.efitError !== undefined && Math.fround(summary.efitError) !== efitError)
+    || (summary.iconvr !== undefined && Math.fround(summary.iconvr) !== iconvr)) {
+    throw new Error(`EFIT base frame ${summary.index} scalar payload disagrees with its index summary.`);
+  }
   return {
     ...summary,
     timeMs,
@@ -437,19 +589,147 @@ function parseFrame(
   };
 }
 
+function parseTopologyFrame(
+  buffer: ArrayBuffer,
+  summary: EfitFrameSummary,
+  binary: EfitTopologyBinaryDescriptor,
+  limiterSegmentCount: number,
+  gridExtentM: readonly [number, number, number, number],
+): EfitTopology {
+  if (buffer.byteLength < binary.frameStrideBytes) throw new Error('EFIT topology frame payload is incomplete.');
+  const view = new DataView(buffer);
+  const timeMs = view.getInt32(0, true);
+  const flags = view.getUint32(4, true);
+  const kind = TOPOLOGY_KINDS[view.getUint8(8)];
+  const xCount = view.getUint8(9);
+  const strikeCount = view.getUint8(10);
+  const legCount = view.getUint8(11);
+  if (timeMs !== summary.timeMs || !kind
+    || (flags & ~TOPOLOGY_KNOWN_FLAGS_MASK) !== 0
+    || xCount > binary.maxXPoints
+    || strikeCount > binary.maxStrikePoints
+    || legCount > binary.maxSeparatrixLegs) {
+    throw new Error(`EFIT topology frame ${summary.index} has invalid identity or record counts.`);
+  }
+  if (summary.topologyKind !== kind
+    || summary.topologyFlags !== flags
+    || summary.xPointCount !== xCount
+    || summary.strikePointCount !== strikeCount
+    || summary.separatrixLegCount !== legCount) {
+    throw new Error(`EFIT topology frame ${summary.index} disagrees with its index summary.`);
+  }
+
+  const xPoints: EfitTopology['xPoints'][number][] = [];
+  for (let index = 0; index < binary.maxXPoints; index += 1) {
+    const roleCode = view.getUint8(24 + index);
+    const offset = 32 + index * 16;
+    const rM = view.getFloat32(offset, true);
+    const zM = view.getFloat32(offset + 4, true);
+    const psiN = view.getFloat32(offset + 8, true);
+    const gradientResidual = view.getFloat32(offset + 12, true);
+    if (![rM, zM, psiN, gradientResidual].every(Number.isFinite)) {
+      throw new Error(`EFIT topology frame ${summary.index} contains a non-finite X-point record.`);
+    }
+    if (index >= xCount) {
+      if (roleCode !== 0 || rM !== 0 || zM !== 0 || psiN !== 0 || gradientResidual !== 0) {
+        throw new Error(`EFIT topology frame ${summary.index} has a nonzero unused X-point slot.`);
+      }
+      continue;
+    }
+    const role = roleCode === 1 ? 'primary' : roleCode === 2 ? 'secondary' : undefined;
+    if (!role || rM < gridExtentM[0] || rM > gridExtentM[1]
+      || zM < gridExtentM[2] || zM > gridExtentM[3]
+      || Math.abs(psiN - 1) > 0.011 || gradientResidual < 0) {
+      throw new Error(`EFIT topology frame ${summary.index} has an invalid X-point record.`);
+    }
+    xPoints.push({ rM, zM, psiN, gradientResidual, role, primary: role === 'primary' });
+  }
+
+  const strikePoints: EfitTopology['strikePoints'][number][] = [];
+  for (let index = 0; index < binary.maxStrikePoints; index += 1) {
+    const offset = 64 + index * 12;
+    const rM = view.getFloat32(offset, true);
+    const zM = view.getFloat32(offset + 4, true);
+    const wallSegment = view.getUint16(offset + 8, true);
+    const strikeFlags = view.getUint16(offset + 10, true);
+    if (![rM, zM].every(Number.isFinite)) {
+      throw new Error(`EFIT topology frame ${summary.index} contains a non-finite limiter intersection.`);
+    }
+    if (index >= strikeCount) {
+      if (rM !== 0 || zM !== 0 || wallSegment !== 0 || strikeFlags !== 0) {
+        throw new Error(`EFIT topology frame ${summary.index} has a nonzero unused limiter-intersection slot.`);
+      }
+      continue;
+    }
+    if (rM < gridExtentM[0] || rM > gridExtentM[1]
+      || zM < gridExtentM[2] || zM > gridExtentM[3]
+      || wallSegment >= limiterSegmentCount
+      || strikeFlags !== TOPOLOGY_KNOWN_STRIKE_FLAGS_MASK) {
+      throw new Error(`EFIT topology frame ${summary.index} has an invalid limiter-intersection record.`);
+    }
+    strikePoints.push({ rM, zM, wallSegment });
+  }
+
+  const separatrixLegs: EfitTopology['separatrixLegs'][number][] = [];
+  let payloadOffset = binary.frameHeaderBytes;
+  for (let index = 0; index < binary.maxSeparatrixLegs; index += 1) {
+    const validPoints = view.getUint8(12 + index);
+    const xPointIndex = view.getUint8(16 + index);
+    const strikePointIndex = view.getUint8(20 + index);
+    if (validPoints > binary.pointsPerLeg) {
+      throw new Error(`EFIT topology frame ${summary.index} has an invalid separatrix-leg length.`);
+    }
+    const polyline = parsePolyline(view, payloadOffset, binary.pointsPerLeg);
+    payloadOffset += binary.pointsPerLeg * 8;
+    if (index >= legCount) {
+      if (validPoints !== 0 || xPointIndex !== 0 || strikePointIndex !== 0
+        || Array.from(polyline.rM).some((value) => value !== 0)
+        || Array.from(polyline.zM).some((value) => value !== 0)) {
+        throw new Error(`EFIT topology frame ${summary.index} has a nonzero unused separatrix-leg slot.`);
+      }
+      continue;
+    }
+    if (validPoints < 2 || xPointIndex >= xCount || strikePointIndex >= strikeCount) {
+      throw new Error(`EFIT topology frame ${summary.index} has invalid separatrix-leg associations.`);
+    }
+    const rM = (polyline.rM as Float32Array).slice(0, validPoints);
+    const zM = (polyline.zM as Float32Array).slice(0, validPoints);
+    if (Array.from(rM).some((value) => !Number.isFinite(value) || value < 0)
+      || Array.from(zM).some((value) => !Number.isFinite(value))) {
+      throw new Error(`EFIT topology frame ${summary.index} contains invalid separatrix coordinates.`);
+    }
+    for (let pointIndex = validPoints; pointIndex < binary.pointsPerLeg; pointIndex += 1) {
+      if (polyline.rM[pointIndex] !== 0 || polyline.zM[pointIndex] !== 0) {
+        throw new Error(`EFIT topology frame ${summary.index} has a nonzero separatrix tail.`);
+      }
+    }
+    if (Array.from(rM).some((value) => value < gridExtentM[0] || value > gridExtentM[1])
+      || Array.from(zM).some((value) => value < gridExtentM[2] || value > gridExtentM[3])) {
+      throw new Error(`EFIT topology frame ${summary.index} has separatrix coordinates outside the reviewed grid.`);
+    }
+    separatrixLegs.push({ rM, zM, validPoints, xPointIndex, strikePointIndex, closed: false });
+  }
+
+  return { kind, flags, xPoints, strikePoints, separatrixLegs };
+}
+
 export function createEfitBinaryDataSource(options: EfitBinaryDataSourceOptions = {}): EfitDataSource {
   const indexUrl = canonicalIndexUrl(options.indexUrl ?? DEFAULT_INDEX_URL);
   const fetcher = options.fetch ?? globalThis.fetch.bind(globalThis);
-  const maxCachedFrames = Math.max(4, options.maxCachedFrames ?? 48);
+  const configuredCacheSize = options.maxCachedFrames;
+  const maxCachedFrames = Number.isFinite(configuredCacheSize) && Number.isInteger(configuredCacheSize)
+    ? Math.min(512, Math.max(4, configuredCacheSize as number))
+    : 48;
   let manifestPromise: Promise<EfitManifest> | null = null;
   const verifiedFiles = new Map<EfitShotId, Promise<void>>();
+  const verifiedTopologyFiles = new Map<EfitShotId, Promise<void>>();
   const frameCache = new Map<string, EfitFrame>();
   const pendingFrames = new Map<string, Promise<EfitFrame>>();
 
   async function loadManifest(request: EfitDataRequest = {}): Promise<EfitManifest> {
     checkAborted(request.signal);
     if (!manifestPromise) {
-      manifestPromise = fetcher(indexUrl, { signal: request.signal })
+      manifestPromise = fetcher(indexUrl)
         .then(async (response) => {
           if (!response.ok) throw new Error(`EFIT index request failed (${response.status}).`);
           return normalizeManifest(await response.json(), indexUrl);
@@ -459,7 +739,7 @@ export function createEfitBinaryDataSource(options: EfitBinaryDataSourceOptions 
           throw error;
         });
     }
-    const manifest = await manifestPromise;
+    const manifest = await raceWithAbort(manifestPromise, request.signal);
     checkAborted(request.signal);
     return manifest;
   }
@@ -474,18 +754,27 @@ export function createEfitBinaryDataSource(options: EfitBinaryDataSourceOptions 
   async function verifyFile(shot: EfitShotManifest, signal?: AbortSignal): Promise<void> {
     let pending = verifiedFiles.get(shot.shot);
     if (!pending) {
-      pending = fetchBytes(fetcher, shot.binary.url, 0, shot.binary.fileHeaderBytes, signal)
+      pending = fetchBytes(fetcher, shot.binary.url, 0, shot.binary.fileHeaderBytes)
         .then((header) => {
           const view = new DataView(header);
           if (readMagic(header) !== EXPECTED_MAGIC) throw new Error(`Shot ${shot.shot} has an unknown EFIT binary format.`);
+          const version = view.getUint32(8, true);
           const fileShot = view.getUint32(12, true);
+          const frameCount = view.getUint32(16, true);
           const stride = view.getUint32(20, true);
           const frameHeader = view.getUint32(24, true);
           const surfaceCount = view.getUint32(28, true);
           const points = view.getUint32(32, true);
-          if (fileShot !== shot.shot || stride !== shot.binary.frameStrideBytes || frameHeader !== shot.binary.frameHeaderBytes
+          const fileHeader = view.getUint32(36, true);
+          const levels = Array.from(new Uint8Array(header, 40, DEFAULT_SURFACE_COUNT));
+          if (version !== 1 || fileShot !== shot.shot || frameCount !== shot.frameCount
+            || stride !== shot.binary.frameStrideBytes || frameHeader !== shot.binary.frameHeaderBytes
             || surfaceCount !== shot.binary.surfaceCount || points !== shot.binary.pointsPerContour) {
             throw new Error(`Shot ${shot.shot} binary header does not match its index metadata.`);
+          }
+          if (fileHeader !== shot.binary.fileHeaderBytes
+            || levels.some((value, index) => value !== (index + 1) * 10)) {
+            throw new Error(`Shot ${shot.shot} binary header has an invalid file header or psiN levels.`);
           }
         })
         .catch((error) => {
@@ -494,8 +783,41 @@ export function createEfitBinaryDataSource(options: EfitBinaryDataSourceOptions 
         });
       verifiedFiles.set(shot.shot, pending);
     }
-    await pending;
-    checkAborted(signal);
+    await raceWithAbort(pending, signal);
+  }
+
+  async function verifyTopologyFile(shot: EfitShotManifest, signal?: AbortSignal): Promise<void> {
+    const binary = shot.topologyBinary;
+    if (!binary) return;
+    let pending = verifiedTopologyFiles.get(shot.shot);
+    if (!pending) {
+      pending = fetchBytes(fetcher, binary.url, 0, binary.fileHeaderBytes)
+        .then((header) => {
+          const view = new DataView(header);
+          const hashPrefix = Array.from(new Uint8Array(header, 48, 16))
+            .map((value) => value.toString(16).padStart(2, '0'))
+            .join('');
+          if (readMagic(header) !== TOPOLOGY_MAGIC
+            || view.getUint32(8, true) !== 1
+            || view.getUint32(12, true) !== shot.shot
+            || view.getUint32(16, true) !== shot.frameCount
+            || view.getUint32(20, true) !== binary.frameStrideBytes
+            || view.getUint32(24, true) !== binary.frameHeaderBytes
+            || view.getUint32(28, true) !== binary.maxSeparatrixLegs
+            || view.getUint32(32, true) !== binary.pointsPerLeg
+            || view.getUint32(36, true) !== binary.maxXPoints
+            || view.getUint32(40, true) !== binary.maxStrikePoints
+            || hashPrefix !== binary.baseSha256PrefixHex.toLowerCase()) {
+            throw new Error(`Shot ${shot.shot} topology header does not match its index or base binary binding.`);
+          }
+        })
+        .catch((error) => {
+          verifiedTopologyFiles.delete(shot.shot);
+          throw error;
+        });
+      verifiedTopologyFiles.set(shot.shot, pending);
+    }
+    await raceWithAbort(pending, signal);
   }
 
   function remember(key: string, frame: EfitFrame): void {
@@ -512,32 +834,54 @@ export function createEfitBinaryDataSource(options: EfitBinaryDataSourceOptions 
     const key = `${shotId}:${frameIndex}`;
     const cached = frameCache.get(key);
     if (cached) {
+      checkAborted(request.signal);
       remember(key, cached);
       return cached;
     }
     const existing = pendingFrames.get(key);
-    if (existing) return existing;
+    if (existing) return raceWithAbort(existing, request.signal);
 
     const pending = (async () => {
-      const manifest = await loadManifest(request);
+      const manifest = await loadManifest();
       const shot = manifest.shots.find((candidate) => candidate.shot === shotId);
       if (!shot) throw new Error(`EFIT shot ${shotId} is not present in the index.`);
       const summary = shot.frames[frameIndex];
       if (!summary) throw new Error(`EFIT shot ${shotId} has no frame ${frameIndex}.`);
-      await verifyFile(shot, request.signal);
-      const bytes = await fetchBytes(
-        fetcher,
-        shot.binary.url,
-        summary.offsetBytes,
-        shot.binary.frameStrideBytes,
-        request.signal,
-      );
+      await Promise.all([verifyFile(shot), verifyTopologyFile(shot)]);
+      const topologyOffset = shot.topologyBinary
+        ? shot.topologyBinary.fileHeaderBytes + frameIndex * shot.topologyBinary.frameStrideBytes
+        : undefined;
+      const [bytes, topologyBytes] = await Promise.all([
+        fetchBytes(
+          fetcher,
+          shot.binary.url,
+          summary.offsetBytes,
+          shot.binary.frameStrideBytes,
+        ),
+        shot.topologyBinary && topologyOffset !== undefined
+          ? fetchBytes(
+            fetcher,
+            shot.topologyBinary.url,
+            topologyOffset,
+            shot.topologyBinary.frameStrideBytes,
+          )
+          : Promise.resolve<ArrayBuffer | undefined>(undefined),
+      ]);
       const frame = parseFrame(bytes, summary, shot.binary, manifest.psiNLevels);
+      if (topologyBytes && shot.topologyBinary) {
+        frame.topology = parseTopologyFrame(
+          topologyBytes,
+          summary,
+          shot.topologyBinary,
+          manifest.geometry.limiterRzM.validPoints - 1,
+          manifest.geometry.gridExtentM as readonly [number, number, number, number],
+        );
+      }
       remember(key, frame);
       return frame;
     })().finally(() => pendingFrames.delete(key));
     pendingFrames.set(key, pending);
-    return pending;
+    return raceWithAbort(pending, request.signal);
   }
 
   return {

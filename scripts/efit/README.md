@@ -22,11 +22,20 @@ The files remain physically under `public/data/exl50u-efit/`, but the applicatio
 them only through the Worker allow-list route `/device-data/exl50u-efit/`; direct
 `/data/exl50u-efit/*` access is intentionally blocked.
 
-The delivery allow-list contains exactly five paths: `index.json` and the four reviewed shot
-binaries (`18301`, `18303`, `18304`, `18308`). It accepts `GET`, `HEAD`, and single-file byte
-range requests. Responses are same-origin, inline, private/no-store, no-referrer and nosniff.
-Unknown filenames, non-read methods, and every direct `/data/exl50u-efit/*` request fail closed
-with `404`. The build must contain no source ZIP, HDF5, G-EQDSK/g-file, or full flux grid.
+The delivery allow-list contains exactly six paths: `index.json`, the four reviewed contour
+binaries (`18301`, `18303`, `18304`, `18308`), and the reviewed
+`shot-18303-topology.bin` sidecar. The topology sidecar adds derived X points, open
+separatrix branches and limiter-intersection proxies without changing the stable contour
+binary layout. It does not contain the source psi grid or a raw G-EQDSK/g-file.
+
+The allow-list accepts `GET`, `HEAD`, and single-file byte range requests. Responses are
+same-origin, inline, private/no-store, no-referrer and nosniff. Unknown filenames, non-read
+methods, and every direct `/data/exl50u-efit/*` request fail closed with `404`. These controls
+reduce unintended discovery and caching; they cannot prevent a user from saving bytes that
+the browser is authorized to receive. The build must contain no source ZIP, HDF5,
+G-EQDSK/g-file, or full flux grid. See
+[`docs/EFIT_DIVERTOR_TOPOLOGY.md`](../../docs/EFIT_DIVERTOR_TOPOLOGY.md) for the scientific
+and delivery boundaries of the sidecar.
 
 See the generated `index.json` for the complete little-endian binary layout, units,
 quality-bit dictionary, time gaps and per-frame byte offsets.
@@ -40,7 +49,8 @@ extension flow is:
 1. audit the new G-EQDSK set, time units, convergence fields and source rights;
 2. add the shot and expected frame count to `EXPECTED_SHOTS` in the converter;
 3. regenerate the immutable contour/index package and review its SHA-256 values;
-4. add exactly that new binary path to `controlledEfitAssets` in `worker/index.ts`;
+4. add exactly the reviewed contour and, when present, topology-sidecar paths to
+   `controlledEfitAssets` in `worker/index.ts`;
 5. run `npm test`, which checks source leakage, byte ranges, data quality and the UI contract.
 
 The viewer reads the `shots[]` catalog dynamically, so no React component change is needed.

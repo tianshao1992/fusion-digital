@@ -10,6 +10,7 @@ const approvedFiles = new Set([
   "index.json",
   "shot-18301.bin",
   "shot-18303.bin",
+  "shot-18303-topology.bin",
   "shot-18304.bin",
   "shot-18308.bin",
 ]);
@@ -136,7 +137,9 @@ test("EFIT Worker preserves byte ranges and secures partial/error responses", as
     secureHeaders(response);
     const payload = Buffer.from(await response.arrayBuffer());
     assert.equal(payload.byteLength, 64);
-    if (route.endsWith(".bin")) {
+    if (route.endsWith("-topology.bin")) {
+      assert.equal(payload.subarray(0, 8).toString("ascii"), "EXL50TP1");
+    } else if (route.endsWith(".bin")) {
       assert.equal(payload.subarray(0, 8).toString("ascii"), "EXL50EF1");
     } else {
       assert.equal(payload.subarray(0, 1).toString("utf8"), "{");
@@ -154,6 +157,8 @@ test("EFIT Worker blocks direct storage paths, unknown files, directories, and w
     "/device-data/exl50u-efit",
     "/device-data/exl50u-efit/",
     "/device-data/exl50u-efit/shot-99999.bin",
+    "/device-data/exl50u-efit/shot-18301-topology.bin",
+    "/device-data/exl50u-efit/shot-18303-topology.json",
     "/device-data/exl50u-efit/EFIT%E6%95%B0%E6%8D%AE.zip",
     "/device-data/exl50u-efit/IPs.h5",
     "/device-data/exl50u-efit/g018301.00100",
@@ -186,7 +191,7 @@ test("public and built EFIT packages contain only reviewed derivatives and no ra
     }
     const derivedRoot = resolve(root, root === resolve(repositoryRoot, "public") ? "data/exl50u-efit" : "client/data/exl50u-efit");
     const derived = await walkFiles(derivedRoot);
-    assert.deepEqual(new Set(derived.map((path) => basename(path))), approvedFiles, `${derivedRoot} must contain exactly the five reviewed derivatives`);
+    assert.deepEqual(new Set(derived.map((path) => basename(path))), approvedFiles, `${derivedRoot} must contain exactly the six reviewed derivatives`);
     for (const path of derived) assert.ok((await stat(path)).size > 0);
   }
 });

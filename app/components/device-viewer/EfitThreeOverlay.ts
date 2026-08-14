@@ -48,6 +48,34 @@ export type EfitRzCurve = {
   validPoints?: number;
 };
 
+export type EfitRenderableXPoint = {
+  rM: number;
+  zM: number;
+  psiN?: number;
+  gradientResidual?: number;
+  role?: 'primary' | 'secondary' | string;
+  primary?: boolean;
+};
+
+export type EfitRenderableStrikePoint = {
+  rM: number;
+  zM: number;
+  wallSegment?: number;
+};
+
+export type EfitRenderableSeparatrixLeg = EfitRzCurve & {
+  xPointIndex?: number;
+  strikePointIndex?: number;
+  closed?: false;
+};
+
+export type EfitRenderableTopology = {
+  kind?: 'limited' | 'upper-single-null' | 'lower-single-null' | 'double-null' | 'near-double-null' | 'partial' | 'unknown' | string;
+  xPoints?: readonly EfitRenderableXPoint[];
+  strikePoints?: readonly EfitRenderableStrikePoint[];
+  separatrixLegs?: readonly EfitRenderableSeparatrixLeg[];
+};
+
 export type EfitRenderableFrame = {
   shot?: number | string;
   index?: number;
@@ -59,6 +87,7 @@ export type EfitRenderableFrame = {
   surfaces?: readonly (EfitRzCurve | ArrayLike<number>)[];
   lcfs?: EfitRzCurve | ArrayLike<number> | null;
   contours?: readonly EfitRzCurve[];
+  topology?: EfitRenderableTopology;
 };
 
 export type EfitStoreSnapshotLike = {
@@ -79,6 +108,8 @@ export type EfitThreeOverlayOptions = {
   showSection?: boolean;
   showSurface?: boolean;
   showMagneticAxis?: boolean;
+  showDivertorTopology?: boolean;
+  showTopologyRings?: boolean;
   surfaceToroidalSegments?: number;
   maxPoloidalPoints?: number;
 };
@@ -112,6 +143,8 @@ const DEFAULT_OPTIONS: Required<EfitThreeOverlayOptions> = {
   showSection: true,
   showSurface: true,
   showMagneticAxis: true,
+  showDivertorTopology: true,
+  showTopologyRings: true,
   surfaceToroidalSegments: 64,
   maxPoloidalPoints: 192,
 };
@@ -300,6 +333,70 @@ export function createEfitThreeOverlay(
   root.add(lcfsLine);
   lcfsGeometry.setPositions([0, 0, 0, 0, 0, 0]);
 
+  const separatrixGeometry = new LineSegmentsGeometry();
+  const separatrixMaterial = new LineMaterial({
+    color: 0xff82c4,
+    linewidth: 2.25,
+    transparent: true,
+    opacity: 0.96,
+    depthWrite: false,
+  });
+  const separatrixLines = new LineSegments2(separatrixGeometry, separatrixMaterial);
+  separatrixLines.name = 'EFIT_SEPARATRIX_LEGS_RZ';
+  separatrixLines.frustumCulled = false;
+  separatrixLines.renderOrder = 24;
+  separatrixLines.visible = false;
+  root.add(separatrixLines);
+  separatrixGeometry.setPositions(new Float32Array([0, 0, 0, 0, 0, 0]));
+
+  const primaryXGeometry = new LineSegmentsGeometry();
+  const primaryXMaterial = new LineMaterial({
+    color: 0xffe7a3,
+    linewidth: 2.7,
+    transparent: true,
+    opacity: 1,
+    depthWrite: false,
+  });
+  const primaryXMarkers = new LineSegments2(primaryXGeometry, primaryXMaterial);
+  primaryXMarkers.name = 'EFIT_PRIMARY_X_POINT_MARKERS_AND_LINES';
+  primaryXMarkers.frustumCulled = false;
+  primaryXMarkers.renderOrder = 27;
+  primaryXMarkers.visible = false;
+  root.add(primaryXMarkers);
+  primaryXGeometry.setPositions(new Float32Array([0, 0, 0, 0, 0, 0]));
+
+  const secondaryXGeometry = new LineSegmentsGeometry();
+  const secondaryXMaterial = new LineMaterial({
+    color: 0xc9b5ff,
+    linewidth: 2.35,
+    transparent: true,
+    opacity: 0.92,
+    depthWrite: false,
+  });
+  const secondaryXMarkers = new LineSegments2(secondaryXGeometry, secondaryXMaterial);
+  secondaryXMarkers.name = 'EFIT_SECONDARY_X_POINT_MARKERS_AND_LINES';
+  secondaryXMarkers.frustumCulled = false;
+  secondaryXMarkers.renderOrder = 26;
+  secondaryXMarkers.visible = false;
+  root.add(secondaryXMarkers);
+  secondaryXGeometry.setPositions(new Float32Array([0, 0, 0, 0, 0, 0]));
+
+  const strikeGeometry = new LineSegmentsGeometry();
+  const strikeMaterial = new LineMaterial({
+    color: 0xff704d,
+    linewidth: 2.4,
+    transparent: true,
+    opacity: 0.96,
+    depthWrite: false,
+  });
+  const strikeMarkers = new LineSegments2(strikeGeometry, strikeMaterial);
+  strikeMarkers.name = 'EFIT_LIMITER_INTERSECTION_MARKERS_AND_RINGS';
+  strikeMarkers.frustumCulled = false;
+  strikeMarkers.renderOrder = 26;
+  strikeMarkers.visible = false;
+  root.add(strikeMarkers);
+  strikeGeometry.setPositions(new Float32Array([0, 0, 0, 0, 0, 0]));
+
   const axisGeometry = new LineGeometry();
   const axisMaterial = new LineMaterial({
     color: 0xffe38a,
@@ -361,6 +458,10 @@ export function createEfitThreeOverlay(
     const safeHeight = Math.max(1, height);
     sectionMaterial.resolution.set(safeWidth, safeHeight);
     lcfsMaterial.resolution.set(safeWidth, safeHeight);
+    separatrixMaterial.resolution.set(safeWidth, safeHeight);
+    primaryXMaterial.resolution.set(safeWidth, safeHeight);
+    secondaryXMaterial.resolution.set(safeWidth, safeHeight);
+    strikeMaterial.resolution.set(safeWidth, safeHeight);
     axisMaterial.resolution.set(safeWidth, safeHeight);
   };
 
@@ -540,9 +641,127 @@ export function createEfitThreeOverlay(
     lcfsSurface.visible = root.visible && options.showSurface;
   };
 
+  const hideTopology = () => {
+    separatrixLines.visible = false;
+    primaryXMarkers.visible = false;
+    secondaryXMarkers.visible = false;
+    strikeMarkers.visible = false;
+  };
+
+  const topologySegmentFrom = new Vector3();
+  const topologySegmentTo = new Vector3();
+
+  const appendRzSegment = (
+    target: number[],
+    fromR: number,
+    fromZ: number,
+    toR: number,
+    toZ: number,
+    phi: number,
+  ) => {
+    transformRz(fromR, fromZ, phi, topologySegmentFrom);
+    transformRz(toR, toZ, phi, topologySegmentTo);
+    target.push(
+      topologySegmentFrom.x,
+      topologySegmentFrom.y,
+      topologySegmentFrom.z,
+      topologySegmentTo.x,
+      topologySegmentTo.y,
+      topologySegmentTo.z,
+    );
+  };
+
+  const appendToroidalRing = (target: number[], r: number, z: number) => {
+    const segments = 72;
+    for (let index = 0; index < segments; index += 1) {
+      transformRz(r, z, (index / segments) * Math.PI * 2, topologySegmentFrom);
+      transformRz(r, z, ((index + 1) / segments) * Math.PI * 2, topologySegmentTo);
+      target.push(
+        topologySegmentFrom.x,
+        topologySegmentFrom.y,
+        topologySegmentFrom.z,
+        topologySegmentTo.x,
+        topologySegmentTo.y,
+        topologySegmentTo.z,
+      );
+    }
+  };
+
+  const updateTopology = (topology: EfitRenderableTopology | undefined, phi: number) => {
+    // Always clear visibility first. A limited/unavailable frame must never
+    // retain X points or divertor legs from the previously rendered frame.
+    hideTopology();
+    if (!topology || topology.kind === 'limited' || !options.showDivertorTopology || !options.showSection) return;
+
+    const sectionPhis = [phi, phi + Math.PI] as const;
+    const separatrixPositions: number[] = [];
+    (topology.separatrixLegs ?? []).forEach((leg) => {
+      const sampled = sampleCurve(curvePoints(leg), MathUtils.clamp(Math.round(options.maxPoloidalPoints), 24, 384));
+      if (sampled.length < 2) return;
+      sectionPhis.forEach((sectionPhi) => {
+        for (let index = 0; index + 1 < sampled.length; index += 1) {
+          appendRzSegment(
+            separatrixPositions,
+            sampled[index][0],
+            sampled[index][1],
+            sampled[index + 1][0],
+            sampled[index + 1][1],
+            sectionPhi,
+          );
+        }
+      });
+    });
+    if (separatrixPositions.length > 0) {
+      separatrixGeometry.setPositions(new Float32Array(separatrixPositions));
+      separatrixLines.visible = true;
+    }
+
+    const primaryXPositions: number[] = [];
+    const secondaryXPositions: number[] = [];
+    const xMarkerHalfSizeM = 0.026;
+    (topology.xPoints ?? []).forEach((point) => {
+      if (!Number.isFinite(point.rM) || !Number.isFinite(point.zM) || point.rM < 0) return;
+      const secondary = point.role === 'secondary' || point.primary === false;
+      const positions = secondary ? secondaryXPositions : primaryXPositions;
+      sectionPhis.forEach((sectionPhi) => {
+        appendRzSegment(positions, point.rM - xMarkerHalfSizeM, point.zM - xMarkerHalfSizeM, point.rM + xMarkerHalfSizeM, point.zM + xMarkerHalfSizeM, sectionPhi);
+        appendRzSegment(positions, point.rM - xMarkerHalfSizeM, point.zM + xMarkerHalfSizeM, point.rM + xMarkerHalfSizeM, point.zM - xMarkerHalfSizeM, sectionPhi);
+      });
+      if (options.showTopologyRings) appendToroidalRing(positions, point.rM, point.zM);
+    });
+    if (primaryXPositions.length > 0) {
+      primaryXGeometry.setPositions(new Float32Array(primaryXPositions));
+      primaryXMarkers.visible = true;
+    }
+    if (secondaryXPositions.length > 0) {
+      secondaryXGeometry.setPositions(new Float32Array(secondaryXPositions));
+      secondaryXMarkers.visible = true;
+    }
+
+    const strikePositions: number[] = [];
+    const strikeMarkerHalfSizeM = 0.022;
+    (topology.strikePoints ?? []).forEach((point) => {
+      if (!Number.isFinite(point.rM) || !Number.isFinite(point.zM) || point.rM < 0) return;
+      const top: RzPoint = [point.rM, point.zM + strikeMarkerHalfSizeM];
+      const lowerLeft: RzPoint = [point.rM - strikeMarkerHalfSizeM, point.zM - strikeMarkerHalfSizeM];
+      const lowerRight: RzPoint = [point.rM + strikeMarkerHalfSizeM, point.zM - strikeMarkerHalfSizeM];
+      sectionPhis.forEach((sectionPhi) => {
+        appendRzSegment(strikePositions, top[0], top[1], lowerLeft[0], lowerLeft[1], sectionPhi);
+        appendRzSegment(strikePositions, lowerLeft[0], lowerLeft[1], lowerRight[0], lowerRight[1], sectionPhi);
+        appendRzSegment(strikePositions, lowerRight[0], lowerRight[1], top[0], top[1], sectionPhi);
+      });
+      if (options.showTopologyRings) appendToroidalRing(strikePositions, point.rM, point.zM);
+    });
+    if (strikePositions.length > 0) {
+      strikeGeometry.setPositions(new Float32Array(strikePositions));
+      strikeMarkers.visible = true;
+    }
+  };
+
   const updateFrame = (frame: EfitRenderableFrame | null) => {
     latestFrame = frame;
     if (disposed) return;
+    hideTopology();
     const frameUsable = Boolean(frame)
       && frame?.quality?.state !== 'invalid'
       && frame?.quality?.state !== 'missing'
@@ -632,11 +851,23 @@ export function createEfitThreeOverlay(
     }
     axisMarker.visible = options.showMagneticAxis && hasAxis;
     axisRing.visible = options.showMagneticAxis && hasAxis;
+    updateTopology(frame.topology, phi);
   };
 
   const applyMode = () => {
     const depthTest = options.mode === 'physical';
-    [sectionFillMaterial, sectionMaterial, lcfsMaterial, axisMaterial, axisMarkerMaterial, surfaceMaterial].forEach((material) => {
+    [
+      sectionFillMaterial,
+      sectionMaterial,
+      lcfsMaterial,
+      separatrixMaterial,
+      primaryXMaterial,
+      secondaryXMaterial,
+      strikeMaterial,
+      axisMaterial,
+      axisMarkerMaterial,
+      surfaceMaterial,
+    ].forEach((material) => {
       material.depthTest = depthTest;
       material.needsUpdate = true;
     });
@@ -645,7 +876,18 @@ export function createEfitThreeOverlay(
   };
 
   const applyClipping = () => {
-    [sectionFillMaterial, sectionMaterial, lcfsMaterial, axisMaterial, axisMarkerMaterial, surfaceMaterial].forEach((material) => {
+    [
+      sectionFillMaterial,
+      sectionMaterial,
+      lcfsMaterial,
+      separatrixMaterial,
+      primaryXMaterial,
+      secondaryXMaterial,
+      strikeMaterial,
+      axisMaterial,
+      axisMarkerMaterial,
+      surfaceMaterial,
+    ].forEach((material) => {
       material.clippingPlanes = clippingEnabled ? [context.clippingPlane] : null;
       material.needsUpdate = true;
     });
@@ -679,19 +921,39 @@ export function createEfitThreeOverlay(
     dispose: () => {
       if (disposed) return;
       disposed = true;
-      root.remove(sectionFill, sectionFillMirror, sectionLines, lcfsLine, axisRing, axisMarker, lcfsSurface);
+      root.remove(
+        sectionFill,
+        sectionFillMirror,
+        sectionLines,
+        lcfsLine,
+        separatrixLines,
+        primaryXMarkers,
+        secondaryXMarkers,
+        strikeMarkers,
+        axisRing,
+        axisMarker,
+        lcfsSurface,
+      );
       root.removeFromParent();
       sectionGeometry.dispose();
       sectionFillGeometry.dispose();
       sectionFillMirrorGeometry.dispose();
       sectionFillTexture.dispose();
       lcfsGeometry.dispose();
+      separatrixGeometry.dispose();
+      primaryXGeometry.dispose();
+      secondaryXGeometry.dispose();
+      strikeGeometry.dispose();
       axisGeometry.dispose();
       surfaceGeometry.dispose();
       axisMarker.geometry.dispose();
       sectionMaterial.dispose();
       sectionFillMaterial.dispose();
       lcfsMaterial.dispose();
+      separatrixMaterial.dispose();
+      primaryXMaterial.dispose();
+      secondaryXMaterial.dispose();
+      strikeMaterial.dispose();
       axisMaterial.dispose();
       axisMarkerMaterial.dispose();
       surfaceMaterial.dispose();

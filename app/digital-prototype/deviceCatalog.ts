@@ -6,6 +6,7 @@ export type DevicePhysicsOverlay = {
   kind: 'axisymmetric-equilibrium';
   manifestEndpoint: string;
   defaultShot: number;
+  defaultTimeMs?: number;
   coordinateFrame: string;
   authority: 'visualization-derived';
   statement: string;
@@ -131,11 +132,15 @@ export function parseDeviceCatalog(input: unknown): DeviceCatalog {
       const authority = stringValue(overlay.authority, `${id}.${overlayId}.authority`);
       if (authority !== 'visualization-derived') throw new Error(`${id}.${overlayId}.authority is unsupported`);
       const defaultShot = finiteInteger(overlay.defaultShot, `${id}.${overlayId}.defaultShot`);
+      const defaultTimeMs = overlay.defaultTimeMs === undefined
+        ? undefined
+        : finiteInteger(overlay.defaultTimeMs, `${id}.${overlayId}.defaultTimeMs`);
       return {
         id: overlayId,
         kind,
         manifestEndpoint: controlledPhysicsPath(overlay.manifestEndpoint, `${id}.${overlayId}.manifestEndpoint`),
         defaultShot,
+        defaultTimeMs,
         coordinateFrame: stringValue(overlay.coordinateFrame, `${id}.${overlayId}.coordinateFrame`),
         authority,
         statement: stringValue(overlay.statement, `${id}.${overlayId}.statement`),

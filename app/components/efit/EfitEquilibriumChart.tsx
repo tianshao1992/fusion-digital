@@ -5,7 +5,7 @@ import type { CustomSeriesRenderItem } from 'echarts/types/dist/option';
 import { useMemo } from 'react';
 import EfitCanvasChart from './EfitCanvasChart';
 import { PSI_N_COLORS } from './psi-n-palette';
-import type { EfitFrame, EfitManifest, EfitNumericVector } from './types';
+import type { EfitFrame, EfitManifest, EfitNumericVector, EfitTopologyKind } from './types';
 
 type EfitEquilibriumChartProps = {
   frame: EfitFrame | null;
@@ -17,6 +17,19 @@ type EfitEquilibriumChartProps = {
 // equilibrium geometry or the chart's top information.
 const PSI_N_COLORBAR_SHORT_PX = 7;
 const PSI_N_COLORBAR_LONG_PX = 104;
+const X_POINT_SYMBOL = 'path://M-7,-5 L-5,-7 L0,-2 L5,-7 L7,-5 L2,0 L7,5 L5,7 L0,2 L-5,7 L-7,5 L-2,0 Z';
+
+export function efitTopologyLabel(kind: EfitTopologyKind): string {
+  switch (kind) {
+    case 'limited': return '受限位形';
+    case 'upper-single-null': return '上单零位形';
+    case 'lower-single-null': return '下单零位形';
+    case 'double-null': return '双零位形';
+    case 'near-double-null': return '近双零位形';
+    case 'partial': return '偏滤器拓扑部分有效';
+    default: return '拓扑待确认';
+  }
+}
 
 function vectorPairs(rM: EfitNumericVector, zM: EfitNumericVector, count: number, closed = false): number[][] {
   const limit = Math.min(count, rM.length, zM.length);
@@ -51,6 +64,20 @@ export default function EfitEquilibriumChart({ frame, manifest }: EfitEquilibriu
       contour,
       data: vectorPairs(contour.rM, contour.zM, contour.validPoints, contour.closed),
     }));
+    const topology = frame?.topology;
+    const separatrixData = (topology?.separatrixLegs ?? []).map((leg, index) => ({
+      leg,
+      index,
+      // Divertor legs are open curves. Never close them or pass them to the
+      // nested flux-band polygons below.
+      data: vectorPairs(leg.rM, leg.zM, leg.validPoints, false),
+    })).filter(({ data }) => data.length >= 2);
+    const xPointData = (topology?.xPoints ?? []).flatMap((point, index) => (
+      Number.isFinite(point.rM) && Number.isFinite(point.zM) ? [{ point, index, value: [point.rM, point.zM] }] : []
+    ));
+    const strikePointData = (topology?.strikePoints ?? []).flatMap((point, index) => (
+      Number.isFinite(point.rM) && Number.isFinite(point.zM) ? [{ point, index, value: [point.rM, point.zM] }] : []
+    ));
     // Draw the largest contour first, then cover it with successively smaller
     // contours. This produces honest, discrete psiN bands from the published
     // contour geometry without inventing a temperature/density field or a
@@ -64,7 +91,13 @@ export default function EfitEquilibriumChart({ frame, manifest }: EfitEquilibriu
       // the next inner contour, so colour it by that band's midpoint psiN.
       bandPsiN: (item.contour.psiN + (nestedContours[index + 1]?.contour.psiN ?? 0)) / 2,
     }));
-    const allPairs = [...limiterData, ...contourData.flatMap((item) => item.data)];
+    const allPairs = [
+      ...limiterData,
+      ...contourData.flatMap((item) => item.data),
+      ...separatrixData.flatMap((item) => item.data),
+      ...xPointData.map((item) => item.value),
+      ...strikePointData.map((item) => item.value),
+    ];
     const manifestExtent = manifest?.geometry.gridExtentM;
     const rExtent = manifestExtent
       ? [manifestExtent[0], manifestExtent[1]] as [number, number]
@@ -108,6 +141,23 @@ export default function EfitEquilibriumChart({ frame, manifest }: EfitEquilibriu
       emphasis: { disabled: true },
       animation: false,
     }));
+    const separatrixSeries = separatrixData.map(({ data, index }) => ({
+      name: `偏滤器分离支 L${index + 1}`,
+      type: 'line' as const,
+      data,
+      showSymbol: false,
+      silent: true,
+      connectNulls: false,
+      lineStyle: {
+        width: 2.35,
+        color: '#ff8fcb',
+        shadowBlur: 9,
+        shadowColor: 'rgba(255, 89, 181, .5)',
+      },
+      z: 15,
+      emphasis: { disabled: true },
+      animation: false,
+    }));
 
     return {
       animation: false,
@@ -115,7 +165,7 @@ export default function EfitEquilibriumChart({ frame, manifest }: EfitEquilibriu
       aria: {
         enabled: true,
         description: frame
-          ? `EXL-50U ${frame.shot} 炮，${frame.timeMs} 毫秒的 EFIT R-Z 平衡位形。颜色表示由已发布等磁通轮廓形成的归一化极向磁通分带，不表示温度或密度。`
+          ? `EXL-50U ${frame.shot} 炮，${frame.timeMs} 毫秒的 EFIT R-Z 平衡位形。颜色表示由已发布等磁通轮廓形成的归一化极向磁通分带，不表示温度或密度。${topology ? `当前为${efitTopologyLabel(topology.kind)}，包含 ${xPointData.length} 个 X 点、${separatrixData.length} 条已发布分离支和 ${strikePointData.length} 个 limiter 交点。` : ''}`
           : 'EXL-50U EFIT R-Z 平衡位形等待数据。',
       },
       visualMap: filledContours.length > 0 ? {
@@ -197,6 +247,48 @@ export default function EfitEquilibriumChart({ frame, manifest }: EfitEquilibriu
           animation: false,
         },
         ...surfaceSeries,
+        ...separatrixSeries,
+        ...(xPointData.length > 0 ? [{
+          name: 'X 点',
+          type: 'scatter' as const,
+          data: xPointData.map(({ point, index, value }) => ({
+            name: `${point.role === 'secondary' || point.primary === false ? '次' : '主'} X${index + 1}`,
+            value,
+            itemStyle: {
+              color: point.role === 'secondary' || point.primary === false ? '#cbb9ff' : '#ffe39a',
+              borderColor: '#3a2630',
+              borderWidth: 1,
+            },
+          })),
+          symbol: X_POINT_SYMBOL,
+          symbolSize: 15,
+          label: {
+            show: true,
+            position: 'right' as const,
+            distance: 6,
+            color: '#ffe8bb',
+            fontSize: 9,
+            formatter: '{b}',
+          },
+          tooltip: { trigger: 'item' as const },
+          z: 22,
+          animation: false,
+        }] : []),
+        ...(strikePointData.length > 0 ? [{
+          name: 'Limiter 交点',
+          type: 'scatter' as const,
+          data: strikePointData.map(({ point, index, value }) => ({
+            name: `SP${index + 1} · limiter ${point.wallSegment}`,
+            value,
+          })),
+          symbol: 'triangle',
+          symbolSize: 11,
+          symbolRotate: 180,
+          itemStyle: { color: '#ff754f', borderColor: '#ffe1d6', borderWidth: 1.2, shadowBlur: 8, shadowColor: 'rgba(255, 93, 55, .45)' },
+          tooltip: { trigger: 'item' as const },
+          z: 21,
+          animation: false,
+        }] : []),
         ...(frame && Number.isFinite(frame.rAxisM) && Number.isFinite(frame.zAxisM) ? [{
           name: '磁轴',
           type: 'scatter' as const,
@@ -216,6 +308,7 @@ export default function EfitEquilibriumChart({ frame, manifest }: EfitEquilibriu
       <strong>R–Z 平衡位形</strong>
       <span>{frame.contours.filter((contour) => contour.kind === 'surface').length} 个 ψN 磁面分带填色</span>
       <span>{frame.contours.some((contour) => contour.kind === 'lcfs') ? 'LCFS 有效' : 'LCFS 缺失'}</span>
+      {frame.topology && <span>{efitTopologyLabel(frame.topology.kind)} · X 点 {frame.topology.xPoints.length} · 分离支 {frame.topology.separatrixLegs.length} · limiter 交点 {frame.topology.strikePoints.length}</span>}
       <span>颜色表示归一化极向磁通，不代表温度或密度</span>
       <span>磁轴 R {Number.isFinite(frame.rAxisM) ? frame.rAxisM.toFixed(3) : '—'} m · Z {Number.isFinite(frame.zAxisM) ? frame.zAxisM.toFixed(3) : '—'} m</span>
     </div>
@@ -226,7 +319,7 @@ export default function EfitEquilibriumChart({ frame, manifest }: EfitEquilibriu
   return (
     <EfitCanvasChart
       option={option}
-      ariaLabel={frame ? `EXL-50U ${frame.shot} 炮 ${frame.timeMs} 毫秒的 R-Z EFIT 归一化极向磁通分带位形` : 'EFIT R-Z 位形等待数据'}
+      ariaLabel={frame ? `EXL-50U ${frame.shot} 炮 ${frame.timeMs} 毫秒的 R-Z EFIT 归一化极向磁通分带位形${frame.topology ? `，${efitTopologyLabel(frame.topology.kind)}及偏滤器拓扑` : ''}` : 'EFIT R-Z 位形等待数据'}
       fallback={fallback}
       className="efitEquilibriumChart"
       dataAspectRatio={dataAspectRatio}

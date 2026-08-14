@@ -324,9 +324,10 @@ test('server-renders the public full-device digital-prototype workspace', async 
   assert.equal(exl.physicsOverlays.length, 1);
   assert.equal(exl.physicsOverlays[0].kind, 'axisymmetric-equilibrium');
   assert.equal(exl.physicsOverlays[0].manifestEndpoint, '/device-data/exl50u-efit/index.json');
-  assert.equal(exl.physicsOverlays[0].defaultShot, 18301);
+  assert.equal(exl.physicsOverlays[0].defaultShot, 18303);
+  assert.equal(exl.physicsOverlays[0].defaultTimeMs, 350);
   assert.ok(exl.facts.includes('12 个主要系统组件'));
-  assert.ok(exl.facts.includes('4 炮 / 2,358 帧 EFIT 位形'));
+  assert.ok(exl.facts.includes('4 炮 / 2,358 帧 EFIT · 18303 偏滤器拓扑'));
   assert.match(exl.copy, /12 个主要系统组件/);
   assert.match(exl.copy, /原始 CAD、STEP、完整磁通网格和工程权威模型不会由网站下发/);
   assert.match(exl.statement, /Browser-delivered geometry can be technically saved/);

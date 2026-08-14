@@ -327,7 +327,12 @@ function DevicePhysicsPanel({
   store: EfitStore;
 }) {
   return <aside className="devicePhysicsPanel" aria-label={`${device.title} EFIT 位形与时序`}>
-    <EfitPanel store={store} preferredShot={overlay.defaultShot} title="EFIT 位形与放电时序" />
+    <EfitPanel
+      store={store}
+      preferredShot={overlay.defaultShot}
+      preferredTimeMs={overlay.defaultTimeMs}
+      title="EFIT 位形与放电时序"
+    />
     <div className="devicePhysicsBoundary" role="note">
       <b>AXISYMMETRIC FLUX SURFACE / VISUALIZATION-DERIVED</b>
       <span>{overlay.statement}</span>

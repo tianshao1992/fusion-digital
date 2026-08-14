@@ -22,7 +22,8 @@ test('EXL device package declares a typed EFIT physics overlay', async () => {
   assert.deepEqual(exl.physicsOverlays.map((overlay) => overlay.id), ['efit-equilibrium']);
   assert.equal(exl.physicsOverlays[0].kind, 'axisymmetric-equilibrium');
   assert.equal(exl.physicsOverlays[0].manifestEndpoint, '/device-data/exl50u-efit/index.json');
-  assert.equal(exl.physicsOverlays[0].defaultShot, 18301);
+  assert.equal(exl.physicsOverlays[0].defaultShot, 18303);
+  assert.equal(exl.physicsOverlays[0].defaultTimeMs, 350);
   assert.equal(exl.physicsOverlays[0].authority, 'visualization-derived');
   assert.ok(catalog.devices.filter((device) => device.id !== exl.id).every((device) => device.physicsOverlays.length === 0));
 });
@@ -35,7 +36,7 @@ test('EFIT controls, store and Three overlay share one external frame state', as
   const overlay = await source('app/components/device-viewer/EfitThreeOverlay.ts');
 
   assert.match(workspace, /createEfitStore\(createEfitBinaryDataSource/);
-  assert.match(workspace, /<EfitPanel store=\{store\}/);
+  assert.match(workspace, /<EfitPanel[\s\S]*?store=\{store\}/);
   assert.match(workspace, /efitStore=\{efitStore\}/);
   assert.match(workspace, /onShowSurfaceChange/);
   assert.match(viewer, /return efitStore\.subscribe\(sync\)/);
@@ -176,6 +177,51 @@ test('EFIT plasma colour field is a contour-constrained psiN display in both 2D 
   assert.match(overlay, /publishedContours/);
   assert.match(overlay, /bandPsiN/);
   assert.match(viewer, /ψN 分带剖面/);
+});
+
+test('optional divertor topology renders as open scientific overlays without contaminating psiN fill bands', async () => {
+  const types = await source('app/components/efit/types.ts');
+  const panel = await source('app/components/efit/EfitPanel.tsx');
+  const equilibrium = await source('app/components/efit/EfitEquilibriumChart.tsx');
+  const css = await source('app/components/efit/efit-panel.css');
+  const overlay = await source('app/components/device-viewer/EfitThreeOverlay.ts');
+
+  assert.match(types, /'near-double-null'/);
+  assert.match(types, /role\?: 'primary' \| 'secondary'/);
+  assert.match(types, /topology\?: EfitTopology/);
+  assert.match(types, /separatrixLegs: readonly EfitSeparatrixLeg\[\]/);
+
+  assert.match(equilibrium, /const separatrixData =/);
+  assert.match(equilibrium, /vectorPairs\(leg\.rM, leg\.zM, leg\.validPoints, false\)/,
+    'divertor legs must remain open');
+  assert.match(equilibrium, /const nestedContours = contourData/,
+    'only reviewed closed contourData may enter the flux-band polygons');
+  assert.doesNotMatch(equilibrium, /nestedContours\s*=\s*separatrixData/);
+  assert.match(equilibrium, /name: 'X 点'/);
+  assert.match(equilibrium, /name: 'Limiter 交点'/);
+  assert.match(equilibrium, /近双零位形/);
+  assert.match(equilibrium, /point\.role === 'secondary' \|\| point\.primary === false/);
+
+  assert.match(panel, /DIVERTOR TOPOLOGY \/ VISUALIZATION-DERIVED/);
+  assert.match(panel, /不等同于严格双零平衡/);
+  assert.match(panel, /不等同于经 CAD 配准校核的真实偏滤器靶板打击点/);
+  assert.match(css, /\.efitTopologyBoundary/);
+  assert.match(css, /\.efitStatusPill\.topology-near-double-null/);
+
+  assert.match(overlay, /EFIT_SEPARATRIX_LEGS_RZ/);
+  assert.match(overlay, /EFIT_PRIMARY_X_POINT_MARKERS_AND_LINES/);
+  assert.match(overlay, /EFIT_SECONDARY_X_POINT_MARKERS_AND_LINES/);
+  assert.match(overlay, /EFIT_LIMITER_INTERSECTION_MARKERS_AND_RINGS/);
+  assert.match(overlay, /const sectionPhis = \[phi, phi \+ Math\.PI\]/,
+    'topology must appear on both sides of the axisymmetric section');
+  assert.match(overlay, /hideTopology\(\);[\s\S]*?frameUsable/,
+    'every frame update must clear stale topology before validating the next frame');
+  const clippingBlock = overlay.slice(overlay.indexOf('const applyClipping'), overlay.indexOf('setLineResolution(context.renderer'));
+  assert.match(clippingBlock, /material\.clippingPlanes/);
+  for (const material of ['separatrixMaterial', 'primaryXMaterial', 'secondaryXMaterial', 'strikeMaterial']) {
+    assert.match(clippingBlock, new RegExp(material));
+    assert.match(overlay, new RegExp(`${material}\\.dispose\\(\\)`));
+  }
 });
 
 test('EFIT component runtime stays lazy and does not expose raw-data URLs', async () => {

@@ -161,6 +161,13 @@
 .efitStatusPill.isWarning { color: #f2bd72; border-color: rgba(242, 189, 114, 0.32); background: rgba(242, 189, 114, 0.08); }
 .efitStatusPill.quality-invalid,
 .efitStatusPill.quality-missing { color: #ff806e; border-color: rgba(255, 128, 110, 0.34); background: rgba(255, 128, 110, 0.08); }
+.efitStatusPill.topology-limited { color: #9fc1bb; }
+.efitStatusPill.topology-upper-single-null,
+.efitStatusPill.topology-lower-single-null,
+.efitStatusPill.topology-double-null { color: #ff9fd2; border-color: rgba(255, 116, 192, 0.35); background: rgba(255, 91, 180, 0.08); }
+.efitStatusPill.topology-near-double-null { color: #c9b6ff; border-color: rgba(178, 151, 255, 0.38); background: rgba(142, 107, 244, 0.1); }
+.efitStatusPill.topology-partial,
+.efitStatusPill.topology-unknown { color: #f2bd72; border-color: rgba(242, 189, 114, 0.32); background: rgba(242, 189, 114, 0.08); }
 
 .efitStatusText {
   color: #bd9d70;
@@ -288,6 +295,35 @@
   font-size: 0.58rem;
 }
 
+.efitTopologyBoundary {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 10px 14px;
+  margin-top: 12px;
+  padding: 10px 13px;
+  color: #82a7a0;
+  background: rgba(18, 12, 19, 0.64);
+  border: 1px solid rgba(255, 112, 187, 0.2);
+  border-radius: 11px;
+  font-size: 0.63rem;
+  line-height: 1.55;
+}
+
+.efitTopologyBoundary b {
+  color: #ff8fc9;
+  font: 700 0.58rem/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+.efitTopologyBoundary.isPartial {
+  border-color: rgba(242, 189, 114, 0.28);
+  background: rgba(48, 33, 15, 0.23);
+}
+
+.efitTopologyBoundary.isPartial b { color: #f2bd72; }
+
 .efitTransport {
   display: grid;
   grid-template-columns: auto minmax(260px, 1fr) auto;
@@ -383,6 +419,7 @@
   .efitChartGrid { grid-template-columns: 1fr; }
   .efitChart { height: min(88vw, 390px); }
   .efitSignalsChart { height: 300px; }
+  .efitTopologyBoundary { grid-template-columns: 1fr; }
   .efitTransport { grid-template-columns: 1fr; gap: 10px; }
   .efitTransportTopline { justify-content: space-between; }
   .efitTransportSettings { grid-column: auto; justify-content: space-between; flex-wrap: wrap; }

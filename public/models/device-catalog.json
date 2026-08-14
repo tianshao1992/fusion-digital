@@ -39,8 +39,8 @@
       "eyebrow": "AUTHORIZED · REAL-TIME 3D",
       "state": "简化派生实时三维",
       "tone": "controlled",
-      "facts": ["用户授权公开展示", "12 个主要系统组件", "4 炮 / 2,358 帧 EFIT 位形"],
-      "copy": "公开加载经授权、脱敏和轻量化的简化派生几何；标准与高清两档均采用细化曲面离散、锐边法线与 Meshopt 传输压缩。原装配合并为 12 个主要系统组件，支持组件选择、显隐、隔离、透明度与 X/Y/Z 剖切；新增四炮 EFIT 轴对称磁面、LCFS、磁轴和放电时序的联动播放。原始 CAD、STEP、完整磁通网格和工程权威模型不会由网站下发。",
+      "facts": ["用户授权公开展示", "12 个主要系统组件", "4 炮 / 2,358 帧 EFIT · 18303 偏滤器拓扑"],
+      "copy": "公开加载经授权、脱敏和轻量化的简化派生几何；标准与高清两档均采用细化曲面离散、锐边法线与 Meshopt 传输压缩。原装配合并为 12 个主要系统组件，支持组件选择、显隐、隔离、透明度与 X/Y/Z 剖切；四炮 EFIT 可联动播放轴对称磁面、LCFS、磁轴和放电时序，18303 另显示经离线校验的主/次 X 点、开放分离支及 limiter 交点代理。原始 CAD、STEP、完整磁通网格和工程权威模型不会由网站下发。",
       "availability": "online-public-simplified",
       "delivery": "public-static",
       "comparisonFrame": null,
@@ -56,10 +56,11 @@
           "id": "efit-equilibrium",
           "kind": "axisymmetric-equilibrium",
           "manifestEndpoint": "/device-data/exl50u-efit/index.json",
-          "defaultShot": 18301,
+          "defaultShot": 18303,
+          "defaultTimeMs": 350,
           "coordinateFrame": "EXL50U_WEB_METRES_PROVISIONAL_V1",
           "authority": "visualization-derived",
-          "statement": "Visualization-derived axisymmetric EFIT flux surfaces for four reviewed shots. The CAD registration is provisional and is not an engineering metrology or real-time control result."
+          "statement": "Visualization-derived axisymmetric EFIT flux surfaces for four reviewed shots. Shot 18303 additionally exposes reviewed saddle-point, open separatrix and limiter-intersection derivatives. The CAD registration is provisional; limiter intersections are not verified divertor-target strike points, engineering metrology or a real-time control result."
         }
       ]
     },
