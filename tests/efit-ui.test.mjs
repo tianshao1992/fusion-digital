@@ -99,7 +99,8 @@ test('digital-prototype workspace is full-width, aligned and safely stacks below
   assert.match(cssRule(css, '.devicePaneSeparator'), /height:var\(--device-workbench-height\)/);
   assert.match(cssRule(css, '.devicePhysicsPanel'), /height:var\(--device-workbench-height\)/);
   assert.match(css, /\.devicePhysicsPanel\{container-name:physics-panel;container-type:inline-size\}/);
-  assert.match(css, /@container physics-panel \(min-width:580px\)\{\.devicePhysicsPanel \.efitChartGrid\{grid-template-columns:/);
+  assert.match(css, /@container physics-panel \(min-width:540px\)\{/);
+  assert.match(css, /\.devicePhysicsPanel \.efitChartGrid\{grid-template-columns:minmax\(0,1\.04fr\) minmax\(0,\.96fr\)\}/);
 
   const compactStart = css.indexOf('@media(max-width:1180px){');
   const compactEnd = css.indexOf('@media(max-width:1100px){', compactStart);
