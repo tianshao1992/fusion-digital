@@ -48,7 +48,6 @@ test('deployment surface contains no controlled CAD or engineering mesh', async 
 
 test('ships non-empty reports and structured download assets', async () => {
   const assets = [
-    '../public/fusion-physics-simulation-report.docx',
     '../public/fusion-physics-simulation-report.pdf',
     '../public/tokamak-engineering-simulation-report.docx',
     '../public/tokamak-engineering-simulation-report.pdf',

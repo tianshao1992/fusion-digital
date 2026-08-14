@@ -878,7 +878,7 @@ def add_landscape_overview(doc: Document, entries: list[dict[str, Any]], figures
     add_body(doc, f"总览采用双口径：{stats['unique_total']} 个 projectId 去重后的唯一工作，以及 {stats['domain_relationships']} 条工作—领域关联。下表每一行统计该领域的主域命中与关联域命中，因此九行关系数之和大于唯一工作数是正常现象。")
     add_figure(
         doc,
-        figures_dir / "integrated-twin-reference-architecture-image2-v2.png",
+        figures_dir / "integrated-twin-reference-architecture-nature.png",
         "图 4-1  聚变数字孪生参考架构：统一配置、时间、单位、不确定度与证据，把物理、工程、实验和控制连接起来。概念性科学架构图。",
         width=6.35,
     )
@@ -1053,7 +1053,7 @@ def add_twin_gap(doc: Document, figures_dir: Path, chapter_number: int):
     add_body(doc, "单个 AI 模型只解决映射问题；数字孪生必须持续代表一个具体资产或装置在特定配置和时间下的状态，并能把模型、数据、实验、工程判断与决策证据闭环起来。当前最主要的差距不是再训练更大的网络，而是把模型嵌入可验证的系统工程。")
     add_figure(
         doc,
-        figures_dir / "roadmap-image2-v2.png",
+        figures_dir / "roadmap-nature.png",
         f"图 {chapter_number}-1  从模型与集成模拟走向运行数字孪生的能力阶梯。概念性路线图。",
         width=6.35,
     )
