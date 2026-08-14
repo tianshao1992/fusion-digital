@@ -559,7 +559,8 @@ test('Paramak interaction controls remain public-only and expose consistent acce
   assert.match(source, /setSelectedPartIds\(new Set\(\)\)/);
   assert.match(await readFile(resolve(repositoryRoot, 'app/digital-prototype/TurntableDeviceViewer.tsx'), 'utf8'), /!value\.includes\('%'\)[\s\S]{0,80}!value\.includes\('\/\/'\)/);
   assert.match(source, /selectedPartIdsRef\.current\s*=\s*next/);
-  assert.match(source, /highlightMaterial[^\n]*opacity:\s*1/);
+  assert.match(source, /semanticHighlightMaterial[^\n]*opacity:\s*1/);
+  assert.match(source, /const selectedMaterial = baseMaterial\.clone\(\)/);
   assert.match(source, /opacityRef\.current\.global\s*=\s*value[\s\S]*?setOpacity\(value,\s*opacityRef\.current\.selected\)/,
     'global opacity must use the latest selected-opacity value rather than a render-time closure');
   assert.match(source, /opacityRef\.current\.selected\s*=\s*value[\s\S]*?setOpacity\(opacityRef\.current\.global,\s*value\)/,
@@ -594,6 +595,34 @@ test('Paramak interaction controls remain public-only and expose consistent acce
     'EXL turntable viewer must remain raster-only and must not import geometry loaders');
 });
 
+test('EXL alone uses a lifecycle-safe industrial silver appearance without changing Paramak semantics', async () => {
+  const source = await readFile(resolve(repositoryRoot, 'app/components/TokamakCadViewer.tsx'), 'utf8');
+  const workspace = await readFile(resolve(repositoryRoot, 'app/digital-prototype/MultiDeviceWorkspace.tsx'), 'utf8');
+  const appearanceSource = await readFile(resolve(repositoryRoot, 'app/components/device-viewer/industrialAppearance.ts'), 'utf8');
+  const manifest = JSON.parse(await readFile(resolve(publicRoot, 'models/exl50u-interactive/model-manifest.json'), 'utf8'));
+  const appearance = await import('../app/components/device-viewer/industrialAppearance.ts');
+
+  assert.match(workspace, /device\.id === ['"]exl-50u-2026-upgrade['"][\s\S]{0,100}['"]industrial-silver-v1['"][\s\S]{0,80}['"]semantic['"]/);
+  assert.match(source, /RoomEnvironment\.js/);
+  assert.match(source, /new THREE\.PMREMGenerator\(renderer\)/);
+  assert.match(source, /scene\.environment = localEnvironmentTarget\.texture/);
+  assert.match(source, /if \(localScene\) localScene\.environment = null;[\s\S]{0,120}localEnvironmentTarget\?\.dispose\(\)/,
+    'the scene must release its environment reference before the PMREM render target');
+  assert.match(source, /interactiveMaterials\(\)\.forEach\(\(material\) => \{[\s\S]{0,180}wireframe/s);
+  assert.match(source, /interactiveMaterials\(\)\.forEach\(\(material\) => \{[\s\S]{0,180}clippingPlanes/s);
+  assert.match(source, /const selectedMaterial = baseMaterial\.clone\(\)/);
+  assert.match(source, /originalMaterials\.forEach\(\(material, mesh\) => \{ mesh\.material = material; \}\)/);
+  assert.match(appearanceSource, /presentation-only appearance codes/);
+  assert.match(workspace, /不代表真实材料、涂层、表面状态或温度场/);
+
+  const systemIds = manifest.systems.map((system) => system.id).sort();
+  assert.deepEqual(Object.keys(appearance.EXL50U_INDUSTRIAL_SYSTEM_PRESETS).sort(), systemIds,
+    'every reviewed EXL system must receive one explicit visual material preset');
+  assert.equal(appearance.resolveIndustrialMaterialPreset('unknown-system', 'structure'), 'brushed-steel');
+  assert.ok(new Set(Object.values(appearance.EXL50U_INDUSTRIAL_SYSTEM_PRESETS)).size >= 5,
+    'the silver scheme must retain enough finish contrast to distinguish structures');
+});
+
 test('EXL real-time viewer opens and resets to an active Z section through the device centre', async () => {
   const source = await readFile(resolve(repositoryRoot, 'app/components/TokamakCadViewer.tsx'), 'utf8');
   const workspace = await readFile(resolve(repositoryRoot, 'app/digital-prototype/MultiDeviceWorkspace.tsx'), 'utf8');
@@ -608,6 +637,6 @@ test('EXL real-time viewer opens and resets to an active Z section through the d
     'the non-zero default offset must be converted into a real model-space clipping plane');
   assert.match(source, /setClipping\(defaultInteraction\.clipping,\s*defaultInteraction\.clipAxis,\s*defaultInteraction\.clipOffset\)/,
     'reset must restore the EXL section instead of turning clipping off');
-  assert.match(source, /key=\{`\$\{sessionViewerId\}:\$\{sessionManifestUrl\}`\}/,
+  assert.match(source, /key=\{`\$\{sessionViewerId\}:\$\{sessionManifestUrl\}:\$\{sessionAppearancePreset\}`\}/,
     'switching devices must create a fresh viewer session with the correct device defaults');
 });

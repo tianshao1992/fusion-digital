@@ -4,9 +4,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type {
   Material,
   Mesh,
+  MeshStandardMaterial,
   Object3D,
   Plane,
   Scene,
+  WebGLRenderTarget,
   WebGLRenderer,
 } from 'three';
 import type { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
@@ -17,6 +19,12 @@ import type {
   EfitThreeOverlay,
   EfitThreeOverlayOptions,
 } from './device-viewer/EfitThreeOverlay';
+import {
+  INDUSTRIAL_STUDIO,
+  resolveIndustrialMaterialPreset,
+  resolveIndustrialMaterialSpec,
+  type TokamakAppearancePreset,
+} from './device-viewer/industrialAppearance';
 import type { EfitFrame, EfitStore } from './efit';
 import {
   parseDeviceManifest,
@@ -37,6 +45,7 @@ export type TokamakCadViewerProps = {
   defaultClipping?: boolean;
   defaultClipAxis?: 'x' | 'y' | 'z';
   defaultClipOffset?: number;
+  appearancePreset?: TokamakAppearancePreset;
   efitFrame?: EfitFrame | EfitRenderableFrame | null;
   efitStore?: EfitStore | EfitStoreLike | null;
   efitAlignment?: EfitAlignmentContract;
@@ -178,8 +187,9 @@ function defaultInteractionFor(clipping: boolean, clipAxis: ClipAxis, clipOffset
 export default function TokamakCadViewer(props: TokamakCadViewerProps = {}) {
   const sessionViewerId = props.viewerId ?? 'paramak-tokamak-demo';
   const sessionManifestUrl = props.manifestUrl ?? DEFAULT_MANIFEST_URL;
+  const sessionAppearancePreset = props.appearancePreset ?? 'semantic';
   return <TokamakCadViewerSession
-    key={`${sessionViewerId}:${sessionManifestUrl}`}
+    key={`${sessionViewerId}:${sessionManifestUrl}:${sessionAppearancePreset}`}
     {...props}
   />;
 }
@@ -194,6 +204,7 @@ function TokamakCadViewerSession({
   defaultClipping = false,
   defaultClipAxis = 'x',
   defaultClipOffset = 0,
+  appearancePreset = 'semantic',
   efitFrame = null,
   efitStore = null,
   efitAlignment,
@@ -325,6 +336,7 @@ function TokamakCadViewerSession({
     let localModel: Object3D | null = null;
     let localEfitOverlay: EfitThreeOverlay | null = null;
     let localDisposableMaterials: Set<Material> | null = null;
+    let localEnvironmentTarget: WebGLRenderTarget | null = null;
     let resourcesReleased = false;
 
     const releaseResources = () => {
@@ -340,6 +352,9 @@ function TokamakCadViewerSession({
       localControls?.dispose();
       localEfitOverlay?.dispose();
       localEfitOverlay = null;
+      if (localScene) localScene.environment = null;
+      localEnvironmentTarget?.dispose();
+      localEnvironmentTarget = null;
       if (localModel && localModel.parent !== localScene) disposeObject(localModel);
       localScene?.traverse((node) => {
         const renderable = node as Object3D & { geometry?: { dispose: () => void } };
@@ -363,12 +378,16 @@ function TokamakCadViewerSession({
     async function initialise() {
       if (!supportsWebGL2()) throw new Error('当前浏览器或显卡未启用 WebGL 2，无法启动三维视图。');
 
-      const [THREE, controlsModule, loaderModule, meshoptModule, efitOverlayModule] = await Promise.all([
+      const environmentModulePromise = appearancePreset === 'industrial-silver-v1'
+        ? import('three/examples/jsm/environments/RoomEnvironment.js')
+        : Promise.resolve(null);
+      const [THREE, controlsModule, loaderModule, meshoptModule, efitOverlayModule, environmentModule] = await Promise.all([
         import('three'),
         import('three/examples/jsm/controls/OrbitControls.js'),
         import('three/examples/jsm/loaders/GLTFLoader.js'),
         import('three/examples/jsm/libs/meshopt_decoder.module.js'),
         import('./device-viewer/EfitThreeOverlay'),
+        environmentModulePromise,
       ]);
       if (disposed || !mountRef.current) return;
       if (!manifest || !selectedModel) throw new Error('模型清单或质量版本尚未就绪。');
@@ -376,17 +395,21 @@ function TokamakCadViewerSession({
       const loadedModel = selectedModel;
 
       const mount = mountRef.current;
+      const industrialAppearance = appearancePreset === 'industrial-silver-v1';
       const scene = new THREE.Scene();
       localScene = scene;
-      scene.fog = new THREE.FogExp2(0x07110e, 0.032);
+      scene.fog = new THREE.FogExp2(
+        industrialAppearance ? INDUSTRIAL_STUDIO.fogColor : 0x07110e,
+        industrialAppearance ? INDUSTRIAL_STUDIO.fogDensity : 0.032,
+      );
       const camera = new THREE.PerspectiveCamera(36, 1, 0.02, 120);
       const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'high-performance' });
       localRenderer = renderer;
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.2;
-      renderer.setClearColor(0x07110e, 0);
+      renderer.toneMappingExposure = industrialAppearance ? INDUSTRIAL_STUDIO.exposure : 1.2;
+      renderer.setClearColor(industrialAppearance ? INDUSTRIAL_STUDIO.clearColor : 0x07110e, 0);
       renderer.localClippingEnabled = true;
       renderer.domElement.setAttribute('aria-label', `可旋转、缩放并选择部件的${loadedManifest.title}三维模型`);
       renderer.domElement.setAttribute('role', 'img');
@@ -404,26 +427,89 @@ function TokamakCadViewerSession({
       controls.maxDistance = 15;
       controls.autoRotateSpeed = 0.72;
 
-      scene.add(new THREE.HemisphereLight(0xbdeee2, 0x11100f, 2.4));
-      const cyanLight = new THREE.DirectionalLight(0x67eed8, 3.2);
-      cyanLight.position.set(4, 5, 6);
-      scene.add(cyanLight);
-      const orangeLight = new THREE.PointLight(0xff6b24, 26, 20, 1.7);
-      orangeLight.position.set(-4, 1.5, 3);
-      scene.add(orangeLight);
-      const violetLight = new THREE.PointLight(0x8e6cff, 25, 16, 1.8);
-      violetLight.position.set(1, -3, -4);
-      scene.add(violetLight);
+      if (industrialAppearance) {
+        if (!environmentModule) throw new Error('银色工业外观环境模块载入失败。');
+        const roomEnvironment = new environmentModule.RoomEnvironment();
+        const pmremGenerator = new THREE.PMREMGenerator(renderer);
+        try {
+          pmremGenerator.compileEquirectangularShader();
+          localEnvironmentTarget = pmremGenerator.fromScene(roomEnvironment, 0.04);
+          scene.environment = localEnvironmentTarget.texture;
+          scene.environmentIntensity = INDUSTRIAL_STUDIO.environmentIntensity;
+        } finally {
+          roomEnvironment.dispose();
+          pmremGenerator.dispose();
+        }
+        const hemisphere = INDUSTRIAL_STUDIO.hemisphere;
+        scene.add(new THREE.HemisphereLight(hemisphere.sky, hemisphere.ground, hemisphere.intensity));
+        const key = new THREE.DirectionalLight(INDUSTRIAL_STUDIO.key.color, INDUSTRIAL_STUDIO.key.intensity);
+        key.position.set(...INDUSTRIAL_STUDIO.key.position);
+        const fill = new THREE.DirectionalLight(INDUSTRIAL_STUDIO.fill.color, INDUSTRIAL_STUDIO.fill.intensity);
+        fill.position.set(...INDUSTRIAL_STUDIO.fill.position);
+        const rim = new THREE.DirectionalLight(INDUSTRIAL_STUDIO.rim.color, INDUSTRIAL_STUDIO.rim.intensity);
+        rim.position.set(...INDUSTRIAL_STUDIO.rim.position);
+        scene.add(key, fill, rim);
+      } else {
+        scene.add(new THREE.HemisphereLight(0xbdeee2, 0x11100f, 2.4));
+        const cyanLight = new THREE.DirectionalLight(0x67eed8, 3.2);
+        cyanLight.position.set(4, 5, 6);
+        scene.add(cyanLight);
+        const orangeLight = new THREE.PointLight(0xff6b24, 26, 20, 1.7);
+        orangeLight.position.set(-4, 1.5, 3);
+        scene.add(orangeLight);
+        const violetLight = new THREE.PointLight(0x8e6cff, 25, 16, 1.8);
+        violetLight.position.set(1, -3, -4);
+        scene.add(violetLight);
+      }
 
-      const materialByCategory = {
-        plasma: new THREE.MeshPhysicalMaterial({ color: 0xff6a1e, emissive: 0xff3d09, emissiveIntensity: 3.4, roughness: 0.18, metalness: 0.08, transparent: true, opacity: 0.9, side: THREE.DoubleSide }),
-        tf: new THREE.MeshStandardMaterial({ color: 0x42d9c8, emissive: 0x0a665f, emissiveIntensity: 0.48, roughness: 0.3, metalness: 0.72 }),
-        pf: new THREE.MeshStandardMaterial({ color: 0x9476ff, emissive: 0x37216e, emissiveIntensity: 0.42, roughness: 0.32, metalness: 0.7 }),
-        layer: new THREE.MeshStandardMaterial({ color: 0x8d775f, emissive: 0x170c05, emissiveIntensity: 0.06, roughness: 0.56, metalness: 0.68, transparent: true, opacity: 0.42, depthWrite: false, side: THREE.DoubleSide }),
-        structure: new THREE.MeshStandardMaterial({ color: 0x7f958d, emissive: 0x10231d, emissiveIntensity: 0.18, roughness: 0.46, metalness: 0.78 }),
+      const viewerMaterials = new Set<Material>();
+      const disposableMaterials = new Set<Material>();
+      const materialByAppearanceKey = new Map<string, MeshStandardMaterial>();
+      const plasmaMaterials = new Set<MeshStandardMaterial>();
+      const createSemanticMaterial = (category: DeviceManifest['systems'][number]['category']) => {
+        switch (category) {
+          case 'plasma': return new THREE.MeshPhysicalMaterial({ color: 0xff6a1e, emissive: 0xff3d09, emissiveIntensity: 3.4, roughness: 0.18, metalness: 0.08, transparent: true, opacity: 0.9, side: THREE.DoubleSide });
+          case 'tf': return new THREE.MeshStandardMaterial({ color: 0x42d9c8, emissive: 0x0a665f, emissiveIntensity: 0.48, roughness: 0.3, metalness: 0.72 });
+          case 'pf': return new THREE.MeshStandardMaterial({ color: 0x9476ff, emissive: 0x37216e, emissiveIntensity: 0.42, roughness: 0.32, metalness: 0.7 });
+          case 'layer': return new THREE.MeshStandardMaterial({ color: 0x8d775f, emissive: 0x170c05, emissiveIntensity: 0.06, roughness: 0.56, metalness: 0.68, transparent: true, opacity: 0.42, depthWrite: false, side: THREE.DoubleSide });
+          default: return new THREE.MeshStandardMaterial({ color: 0x7f958d, emissive: 0x10231d, emissiveIntensity: 0.18, roughness: 0.46, metalness: 0.78 });
+        }
       };
-      const viewerMaterials = new Set<Material>(Object.values(materialByCategory));
-      const disposableMaterials = new Set<Material>(viewerMaterials);
+      const materialForSystem = (system: DeviceManifest['systems'][number] | undefined) => {
+        const category = system?.category ?? 'structure';
+        const appearanceKey = industrialAppearance
+          ? `industrial:${resolveIndustrialMaterialPreset(system?.id ?? '', category)}`
+          : `semantic:${category}`;
+        const existing = materialByAppearanceKey.get(appearanceKey);
+        if (existing) return existing;
+        let material: MeshStandardMaterial;
+        if (industrialAppearance) {
+          const spec = resolveIndustrialMaterialSpec(system?.id ?? '', category);
+          const common = {
+            color: spec.color,
+            emissive: spec.emissive ?? 0x000000,
+            emissiveIntensity: spec.emissiveIntensity ?? 0,
+            metalness: spec.metalness,
+            roughness: spec.roughness,
+            envMapIntensity: spec.envMapIntensity,
+            transparent: spec.transparent ?? false,
+            opacity: spec.opacity ?? 1,
+            depthWrite: !(spec.transparent ?? false),
+            side: spec.doubleSided ? THREE.DoubleSide : THREE.FrontSide,
+          };
+          material = spec.kind === 'physical'
+            ? new THREE.MeshPhysicalMaterial({ ...common, clearcoat: spec.clearcoat ?? 0, clearcoatRoughness: spec.clearcoatRoughness ?? 0 })
+            : new THREE.MeshStandardMaterial(common);
+        } else {
+          material = createSemanticMaterial(category);
+        }
+        material.name = `FusionDigital:${appearanceKey}`;
+        materialByAppearanceKey.set(appearanceKey, material);
+        viewerMaterials.add(material);
+        disposableMaterials.add(material);
+        if (category === 'plasma') plasmaMaterials.add(material);
+        return material;
+      };
       localDisposableMaterials = disposableMaterials;
 
       const loader = new loaderModule.GLTFLoader();
@@ -442,9 +528,9 @@ function TokamakCadViewerSession({
       const originalMaterials = new Map<Mesh, Material | Material[]>();
       const nodeByPartId = new Map<string, Object3D>();
       const partIdByNode = new WeakMap<Object3D, string>();
-      const systemByNodeName = new Map<string, { category: keyof typeof materialByCategory; partId: string }>();
+      const systemByNodeName = new Map<string, { partId: string }>();
       const systemByPartId = new Map<string, DeviceManifest['systems'][number]>();
-      loadedManifest.systems.forEach((system) => system.parts.forEach((part) => systemByNodeName.set(part.nodeName, { category: system.category, partId: part.id })));
+      loadedManifest.systems.forEach((system) => system.parts.forEach((part) => systemByNodeName.set(part.nodeName, { partId: part.id })));
       loadedManifest.systems.forEach((system) => system.parts.forEach((part) => systemByPartId.set(part.id, system)));
       let meshes = 0;
       let triangles = 0;
@@ -462,7 +548,7 @@ function TokamakCadViewerSession({
         materialList(mesh.material).forEach((material) => sourceMaterials.add(material));
         const inheritedPartId = partIdByNode.get(mesh);
         const system = inheritedPartId ? systemByPartId.get(inheritedPartId) : undefined;
-        const replacement = materialByCategory[system?.category ?? 'structure'];
+        const replacement = materialForSystem(system);
         mesh.material = replacement;
         originalMaterials.set(mesh, replacement);
         const positionCount = mesh.geometry.attributes.position?.count ?? 0;
@@ -487,11 +573,25 @@ function TokamakCadViewerSession({
       const fittedBox = new THREE.Box3().setFromObject(model);
       const fittedSphere = fittedBox.getBoundingSphere(new THREE.Sphere());
       const floorY = fittedBox.min.y - 0.42;
-      const grid = new THREE.GridHelper(18, 36, 0x3ab7a4, 0x1b4238);
+      const grid = new THREE.GridHelper(
+        18,
+        36,
+        industrialAppearance ? INDUSTRIAL_STUDIO.grid.center : 0x3ab7a4,
+        industrialAppearance ? INDUSTRIAL_STUDIO.grid.line : 0x1b4238,
+      );
       grid.position.y = floorY;
-      materialList(grid.material).forEach((material) => { material.transparent = true; material.opacity = 0.28; disposableMaterials.add(material); });
+      materialList(grid.material).forEach((material) => {
+        material.transparent = true;
+        material.opacity = industrialAppearance ? INDUSTRIAL_STUDIO.grid.opacity : 0.28;
+        disposableMaterials.add(material);
+      });
       scene.add(grid);
-      const orbitMaterial = new THREE.MeshBasicMaterial({ color: 0x53e6cf, transparent: true, opacity: 0.22, side: THREE.DoubleSide });
+      const orbitMaterial = new THREE.MeshBasicMaterial({
+        color: industrialAppearance ? INDUSTRIAL_STUDIO.orbit.color : 0x53e6cf,
+        transparent: true,
+        opacity: industrialAppearance ? INDUSTRIAL_STUDIO.orbit.opacity : 0.22,
+        side: THREE.DoubleSide,
+      });
       const orbit = new THREE.Mesh(new THREE.TorusGeometry(3.72, 0.008, 6, 180), orbitMaterial);
       disposableMaterials.add(orbitMaterial);
       orbit.rotation.x = Math.PI / 2;
@@ -537,21 +637,14 @@ function TokamakCadViewerSession({
         initialEfitState.options,
       );
       localEfitOverlay.setFrame(initialEfitState.frame ?? currentEfitFrame(initialEfitState.store));
-      const highlightMaterial = new THREE.MeshPhysicalMaterial({ color: 0xffd06b, emissive: 0xff6a1e, emissiveIntensity: 1.8, roughness: 0.22, metalness: 0.56, transparent: false, opacity: 1, side: THREE.DoubleSide });
-      disposableMaterials.add(highlightMaterial);
+      const semanticHighlightMaterial = industrialAppearance ? null : new THREE.MeshPhysicalMaterial({ color: 0xffd06b, emissive: 0xff6a1e, emissiveIntensity: 1.8, roughness: 0.22, metalness: 0.56, transparent: false, opacity: 1, side: THREE.DoubleSide });
+      if (semanticHighlightMaterial) disposableMaterials.add(semanticHighlightMaterial);
+      const selectionMaterials = new Set<Material>();
+      const selectionMaterialByBase = new Map<Material, Material>();
       const baseOpacity = new Map<Material, number>();
       viewerMaterials.forEach((material) => baseOpacity.set(material, material.opacity));
       const applyVisibility = (hidden: Set<string>, isolated: Set<string>) => {
         nodeByPartId.forEach((node, partId) => { node.visible = isolated.size > 0 ? isolated.has(partId) : !hidden.has(partId); });
-      };
-      let highlightedPartIds = new Set<string>();
-      const selectParts = (partIds: Set<string>) => {
-        highlightedPartIds = new Set(partIds);
-        originalMaterials.forEach((material, mesh) => { mesh.material = material; });
-        partIds.forEach((partId) => {
-          const node = nodeByPartId.get(partId);
-          if (node) allMeshes(node).forEach((mesh) => { mesh.material = highlightMaterial; });
-        });
       };
       const applyMaterialOpacity = (material: Material, opacity: number) => {
         material.opacity = Math.max(0.04, Math.min(1, opacity));
@@ -559,9 +652,53 @@ function TokamakCadViewerSession({
         material.depthWrite = material.opacity >= 0.999;
         material.needsUpdate = true;
       };
+      let currentSelectedOpacity = opacityRef.current.selected;
+      const industrialSelectionMaterial = (baseMaterial: Material) => {
+        const existing = selectionMaterialByBase.get(baseMaterial);
+        if (existing) return existing;
+        const selectedMaterial = baseMaterial.clone();
+        selectedMaterial.name = `${baseMaterial.name}:selected`;
+        selectedMaterial.clippingPlanes = baseMaterial.clippingPlanes ? [...baseMaterial.clippingPlanes] : null;
+        if (selectedMaterial instanceof THREE.MeshStandardMaterial) {
+          selectedMaterial.color.lerp(new THREE.Color(INDUSTRIAL_STUDIO.selection.tint), INDUSTRIAL_STUDIO.selection.mix);
+          selectedMaterial.emissive.setHex(INDUSTRIAL_STUDIO.selection.emissive);
+          selectedMaterial.emissiveIntensity = INDUSTRIAL_STUDIO.selection.emissiveIntensity;
+          selectedMaterial.roughness = Math.max(0.12, selectedMaterial.roughness + INDUSTRIAL_STUDIO.selection.roughnessDelta);
+        }
+        applyMaterialOpacity(selectedMaterial, currentSelectedOpacity);
+        selectionMaterialByBase.set(baseMaterial, selectedMaterial);
+        selectionMaterials.add(selectedMaterial);
+        disposableMaterials.add(selectedMaterial);
+        return selectedMaterial;
+      };
+      const selectedMaterialFor = (material: Material | Material[]) => {
+        if (semanticHighlightMaterial) return semanticHighlightMaterial;
+        return Array.isArray(material)
+          ? material.map((candidate) => industrialSelectionMaterial(candidate))
+          : industrialSelectionMaterial(material);
+      };
+      const interactiveMaterials = () => new Set<Material>([
+        ...viewerMaterials,
+        ...selectionMaterials,
+        ...(semanticHighlightMaterial ? [semanticHighlightMaterial] : []),
+      ]);
+      let highlightedPartIds = new Set<string>();
+      const selectParts = (partIds: Set<string>) => {
+        highlightedPartIds = new Set(partIds);
+        originalMaterials.forEach((material, mesh) => { mesh.material = material; });
+        partIds.forEach((partId) => {
+          const node = nodeByPartId.get(partId);
+          if (node) allMeshes(node).forEach((mesh) => {
+            const baseMaterial = originalMaterials.get(mesh);
+            if (baseMaterial) mesh.material = selectedMaterialFor(baseMaterial);
+          });
+        });
+      };
       const setOpacity = (overall: number, selected: number) => {
+        currentSelectedOpacity = selected;
         viewerMaterials.forEach((material) => applyMaterialOpacity(material, (baseOpacity.get(material) ?? 1) * overall));
-        applyMaterialOpacity(highlightMaterial, selected);
+        selectionMaterials.forEach((material) => applyMaterialOpacity(material, selected));
+        if (semanticHighlightMaterial) applyMaterialOpacity(semanticHighlightMaterial, selected);
         selectParts(highlightedPartIds);
       };
       const raycaster = new THREE.Raycaster();
@@ -641,12 +778,13 @@ function TokamakCadViewerSession({
       renderer.domElement.addEventListener('pointerdown', pointerDownHandler);
       renderer.domElement.addEventListener('pointerup', pointerUpHandler);
 
-      const plasmaMaterial = materialByCategory.plasma;
       const startedAt = performance.now();
       const render = (now: number) => {
         if (disposed) return;
         if (pageVisible && inViewport) {
-          plasmaMaterial.emissiveIntensity = 3.15 + Math.sin((now - startedAt) * 0.0022) * 0.35;
+          plasmaMaterials.forEach((material) => {
+            material.emissiveIntensity = 3.15 + Math.sin((now - startedAt) * 0.0022) * 0.35;
+          });
           controls.update();
           renderer.render(scene, camera);
         }
@@ -666,15 +804,16 @@ function TokamakCadViewerSession({
         disposableMaterials,
         setView,
         reset: () => setView('iso'),
-        setWireframe: (enabled) => [...viewerMaterials, highlightMaterial].forEach((material) => {
+        setWireframe: (enabled) => interactiveMaterials().forEach((material) => {
           if ('wireframe' in material) { (material as Material & { wireframe: boolean }).wireframe = enabled; material.needsUpdate = true; }
         }),
         setClipping: (enabled, axis, offset) => {
           clippingPlane.normal.set(axis === 'x' ? -1 : 0, axis === 'y' ? -1 : 0, axis === 'z' ? -1 : 0);
           clippingPlane.constant = offset * modelRadius;
-          viewerMaterials.forEach((material) => { material.clippingPlanes = enabled ? [clippingPlane] : null; material.needsUpdate = true; });
-          highlightMaterial.clippingPlanes = enabled ? [clippingPlane] : null;
-          highlightMaterial.needsUpdate = true;
+          interactiveMaterials().forEach((material) => {
+            material.clippingPlanes = enabled ? [clippingPlane] : null;
+            material.needsUpdate = true;
+          });
           localEfitOverlay?.setClippingEnabled(enabled);
         },
         setOpacity,
@@ -731,7 +870,7 @@ function TokamakCadViewerSession({
     });
 
     return () => { disposed = true; releaseResources(); viewerRef.current = null; };
-  }, [activated, attempt, manifest, selectedModel]);
+  }, [activated, appearancePreset, attempt, manifest, selectedModel]);
 
   useEffect(() => {
     const overlay = viewerRef.current?.efitOverlay;
@@ -876,7 +1015,7 @@ function TokamakCadViewerSession({
   const applicabilityStatement = manifest?.disclaimer ?? '该浏览器派生模型仅用于网页预览，不能用于制造、尺寸校核、仿真计算或安全决策。';
 
   return (
-    <section id={sectionId ?? (workspace ? 'prototype-workspace' : 'device-3d')} className={`tokamakCadSection${workspace ? ' tokamakCadSection--workspace' : ''}`} data-three-viewer={viewerId} aria-labelledby={`${viewerId}-title`}>
+    <section id={sectionId ?? (workspace ? 'prototype-workspace' : 'device-3d')} className={`tokamakCadSection${workspace ? ' tokamakCadSection--workspace' : ''} appearance-${appearancePreset}`} data-three-viewer={viewerId} aria-labelledby={`${viewerId}-title`}>
       <div className="tokamakCadIntro">
         <p className="tokamakCadIndex">{workspace ? 'WORKSPACE / FULL-DEVICE DIGITAL MOCK-UP' : '03D / DEVICE PACKAGE VIEWER'}</p>
         <div>
@@ -980,7 +1119,7 @@ function TokamakCadViewerSession({
       </div>
 
       <div className="tokamakCadFootnotes">
-        <p><b>科学与安全边界</b>{applicabilityStatement}</p>
+        <p><b>科学与安全边界</b>{applicabilityStatement}{appearancePreset === 'industrial-silver-v1' && ' 银色、深合金、铜色及 CFC 外观仅用于结构辨识，不代表真实材料、涂层、表面状态或温度场。'}</p>
         <p><b>预览交付与可替换接口</b>{securityNotice ?? '模型以浏览器派生资产发送到用户设备；界面可隐藏下载操作，但无法从技术上阻止浏览器缓存、网络调试或复制已传输的数据。原始工程 CAD 不由此查看器交付。'}<a href={manifestUrl}>查看 DeviceManifest</a><a href="/models/device-manifest.schema.json">查看清单 Schema</a>{isParamakPackage && <a href="https://github.com/fusion-energy/paramak/tree/0.9.11" target="_blank" rel="noreferrer">Paramak 0.9.11</a>}<a href="/licenses/THREE-LICENSE.txt">Three.js 许可</a>{showDownloadActions && <><a href={sourceCadPath} download>下载 STEP</a><a href={webModelPath} download>下载 GLB</a></>}</p>
       </div>
     </section>

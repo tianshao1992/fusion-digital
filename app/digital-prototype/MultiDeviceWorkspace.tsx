@@ -46,6 +46,7 @@ function DeviceViewer({
     workspace
     showDownloadActions={false}
     securityNotice={device.statement}
+    appearancePreset={device.id === 'exl-50u-2026-upgrade' ? 'industrial-silver-v1' : 'semantic'}
     defaultClipping={Boolean(efitOverlay)}
     defaultClipAxis={efitOverlay ? 'z' : 'x'}
     defaultClipOffset={efitOverlay ? 0.08 : 0}
@@ -246,7 +247,7 @@ function DeviceExperience({ device }: { device: DeviceCatalogEntry }) {
 function DeviceGovernanceNote({ device }: { device: DeviceCatalogEntry }) {
   if (!device.physicsOverlays.some((overlay) => overlay.kind === 'axisymmetric-equilibrium')) return null;
   return <div className="deviceGovernanceNote" role="note">
-    <p><b>科学与安全边界</b>当前交付仅为经授权的浏览器简化派生模型，不可用于制造、尺寸校核、CAE 计算、安全决策或反向工程。</p>
+    <p><b>科学与安全边界</b>当前交付仅为经授权的浏览器简化派生模型，不可用于制造、尺寸校核、CAE 计算、安全决策或反向工程。银色、深合金、铜色及 CFC 外观仅用于结构辨识，不代表真实材料、涂层、表面状态或温度场。</p>
     <p><b>预览交付与替换接口</b>{device.statement} 原始工程 CAD 不由网站交付。</p>
   </div>;
 }
