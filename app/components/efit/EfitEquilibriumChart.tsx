@@ -12,6 +12,12 @@ type EfitEquilibriumChartProps = {
   manifest: EfitManifest | null;
 };
 
+// ECharts ContinuousVisualMap always interprets itemWidth/itemHeight as the
+// unrotated [short, long] bar dimensions. `orient: horizontal` rotates that
+// bar; swapping these values would therefore create a vertical strip.
+const PSI_N_COLORBAR_SHORT_PX = 7;
+const PSI_N_COLORBAR_LONG_PX = 104;
+
 function vectorPairs(rM: EfitNumericVector, zM: EfitNumericVector, count: number, closed = false): number[][] {
   const limit = Math.min(count, rM.length, zM.length);
   const pairs: number[][] = [];
@@ -121,8 +127,8 @@ export default function EfitEquilibriumChart({ frame, manifest }: EfitEquilibriu
         orient: 'horizontal',
         left: 'center',
         top: 3,
-        itemWidth: 104,
-        itemHeight: 7,
+        itemWidth: PSI_N_COLORBAR_SHORT_PX,
+        itemHeight: PSI_N_COLORBAR_LONG_PX,
         precision: 1,
         calculable: false,
         text: ['ψN 1', '0'],
