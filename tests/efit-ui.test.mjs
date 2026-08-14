@@ -8,6 +8,13 @@ async function source(path) {
   return readFile(new URL(path, root), 'utf8');
 }
 
+function cssRule(css, selector) {
+  const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const matches = [...css.matchAll(new RegExp(`(?:^|})\\s*${escaped}\\{([^}]*)\\}`, 'g'))];
+  assert.ok(matches.length, `missing CSS rule ${selector}`);
+  return matches.map((match) => match[1]).join(';');
+}
+
 test('EXL device package declares a typed EFIT physics overlay', async () => {
   const catalog = JSON.parse(await source('public/models/device-catalog.json'));
   const exl = catalog.devices.find((device) => device.id === 'exl-50u-2026-upgrade');
@@ -40,6 +47,81 @@ test('EFIT controls, store and Three overlay share one external frame state', as
   assert.match(overlay, /EFIT_LCFS_REVOLVED_SURFACE/);
   assert.match(overlay, /ePhiPositiveAtPhi0Web/);
   assert.match(overlay, /alignment basis must be orthonormal and right-handed/);
+});
+
+test('digital-prototype split layout exposes an accessible and persistent resize contract', async () => {
+  const workspace = await source('app/digital-prototype/MultiDeviceWorkspace.tsx');
+
+  assert.match(workspace, /const WORKBENCH_PREFERENCE_KEY = 'fusion-digital:prototype-efit-width:v1'/);
+  assert.match(workspace, /const DEFAULT_PHYSICS_SHARE = 0\.36/);
+  assert.match(workspace, /useState\(DEFAULT_PHYSICS_SHARE\)/);
+  assert.match(workspace, /savedPreference !== null/);
+  assert.match(workspace, /Number\.isFinite\(saved\)/, 'invalid persisted values must leave the 36% default intact');
+  assert.match(workspace, /localStorage\.setItem\(WORKBENCH_PREFERENCE_KEY, physicsShare\.toFixed\(4\)\)/);
+  assert.match(workspace, /data-layout="split-resizable"/);
+  assert.match(workspace, /className="devicePaneSeparator"[\s\S]*?role="separator"/);
+  assert.match(workspace, /aria-label="调整三维装置与 EFIT 分析面板的宽度"/);
+  assert.match(workspace, /aria-orientation="vertical"/);
+  assert.match(workspace, /aria-valuemin=\{Math\.round\(MIN_PHYSICS_SHARE \* 100\)\}/);
+  assert.match(workspace, /aria-valuemax=\{Math\.round\(MAX_PHYSICS_SHARE \* 100\)\}/);
+  assert.match(workspace, /aria-valuenow=\{Math\.round\(physicsPercent\)\}/);
+  assert.match(workspace, /tabIndex=\{0\}/);
+  assert.match(workspace, /event\.currentTarget\.setPointerCapture\(event\.pointerId\)/);
+  assert.match(workspace, /event\.currentTarget\.releasePointerCapture\(event\.pointerId\)/);
+  assert.match(workspace, /onPointerMove=/);
+  assert.match(workspace, /onPointerUp=\{finishResize\}/);
+  assert.match(workspace, /onPointerCancel=\{finishResize\}/);
+  assert.match(workspace, /event\.key === 'ArrowLeft'/);
+  assert.match(workspace, /event\.key === 'ArrowRight'/);
+  assert.match(workspace, /event\.key === 'Home'/);
+  assert.match(workspace, /event\.key === 'End'/);
+  assert.match(workspace, /event\.preventDefault\(\)/);
+});
+
+test('digital-prototype workspace is full-width, aligned and safely stacks below 1180px', async () => {
+  const workspace = await source('app/digital-prototype/MultiDeviceWorkspace.tsx');
+  const css = await source('app/digital-prototype/prototype.css');
+
+  assert.match(cssRule(css, '.multiDeviceSection'), /padding:56px clamp\(14px,1\.5vw,30px\) 72px/);
+  for (const selector of ['.multiDeviceIntro', '.deviceSelector', '.deviceStage']) {
+    const declarations = cssRule(css, selector);
+    assert.match(declarations, /width:100%/, `${selector} must fill the available page width`);
+    assert.doesNotMatch(declarations, /max-width:/, `${selector} must not retain the former 1600px ceiling`);
+  }
+  assert.match(cssRule(css, '.deviceStage'), /grid-template-columns:clamp\(170px,11vw,215px\) minmax\(0,1fr\)/);
+  assert.match(cssRule(css, '.deviceAuthority'), /padding:22px 16px/);
+
+  const layout = cssRule(css, '.deviceExperienceLayout');
+  assert.match(layout, /--device-physics-width:36%/);
+  assert.match(layout, /--device-workbench-height:/);
+  assert.match(layout, /grid-template-columns:minmax\(0,calc\(100% - var\(--device-physics-width\) - 10px\)\) 10px minmax\(0,var\(--device-physics-width\)\)/);
+  assert.match(cssRule(css, '.deviceViewport .tokamakCadShell'), /height:var\(--device-workbench-height\)/);
+  assert.match(cssRule(css, '.devicePaneSeparator'), /height:var\(--device-workbench-height\)/);
+  assert.match(cssRule(css, '.devicePhysicsPanel'), /height:var\(--device-workbench-height\)/);
+  assert.match(css, /\.devicePhysicsPanel\{container-name:physics-panel;container-type:inline-size\}/);
+  assert.match(css, /@container physics-panel \(min-width:580px\)\{\.devicePhysicsPanel \.efitChartGrid\{grid-template-columns:/);
+
+  const compactStart = css.indexOf('@media(max-width:1180px){');
+  const compactEnd = css.indexOf('@media(max-width:1100px){', compactStart);
+  assert.ok(compactStart >= 0 && compactEnd > compactStart, 'missing 1180px stacked-layout breakpoint');
+  const compact = css.slice(compactStart, compactEnd);
+  assert.match(compact, /\.deviceExperienceLayout\{display:block\}/);
+  assert.match(compact, /\.devicePaneSeparator\{display:none\}/);
+  assert.match(compact, /\.deviceViewport \.tokamakCadShell\{height:auto;min-height:0\}/);
+  assert.match(compact, /\.devicePhysicsPanel\{height:auto;max-height:none;overflow:visible/);
+  assert.match(compact, /\.tokamakCadFootnotes\{display:grid\}/, 'the original governance footnotes must return in stacked mode');
+
+  assert.match(workspace, /function DeviceGovernanceNote/);
+  assert.match(workspace, /className="deviceGovernanceNote" role="note"/);
+  assert.match(workspace, /科学与安全边界/);
+  assert.match(workspace, /预览交付与替换接口/);
+  assert.match(workspace, /<DeviceGovernanceNote device=\{current\} \/>/);
+  assert.match(cssRule(css, '.deviceGovernanceNote'), /display:grid/);
+  assert.doesNotMatch(
+    cssRule(css, '.deviceViewport .tokamakCadFootnotes'),
+    /display:none/,
+    'the base footnote rule must remain available outside the aligned desktop split',
+  );
 });
 
 test('EFIT panel exposes shot selection, real time scrubbing, playback and quality boundaries', async () => {

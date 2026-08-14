@@ -1,6 +1,14 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type PointerEvent as ReactPointerEvent,
+} from 'react';
 import TokamakCadViewer from '../components/TokamakCadViewer';
 import { createEfitBinaryDataSource, createEfitStore, EfitPanel, type EfitStore } from '../components/efit';
 import type { DeviceCatalog, DeviceCatalogEntry, DevicePhysicsOverlay } from './deviceCatalog';
@@ -69,6 +77,147 @@ function DeviceViewer({
   return <MetadataViewer device={device} />;
 }
 
+const WORKBENCH_PREFERENCE_KEY = 'fusion-digital:prototype-efit-width:v1';
+const DEFAULT_PHYSICS_SHARE = 0.36;
+const MIN_PHYSICS_SHARE = 0.26;
+const MAX_PHYSICS_SHARE = 0.5;
+
+function clampPhysicsShare(value: number, containerWidth?: number) {
+  const minByContent = containerWidth ? 360 / containerWidth : MIN_PHYSICS_SHARE;
+  const maxByContent = containerWidth ? 1 - 560 / containerWidth : MAX_PHYSICS_SHARE;
+  const lower = Math.max(MIN_PHYSICS_SHARE, minByContent);
+  const upper = Math.min(MAX_PHYSICS_SHARE, maxByContent);
+  if (upper < lower) return DEFAULT_PHYSICS_SHARE;
+  return Math.min(upper, Math.max(lower, value));
+}
+
+function ResizableDeviceExperience({
+  device,
+  efitOverlay,
+  efitStore,
+}: {
+  device: DeviceCatalogEntry;
+  efitOverlay: DevicePhysicsOverlay;
+  efitStore: EfitStore;
+}) {
+  const layoutRef = useRef<HTMLDivElement>(null);
+  const activePointer = useRef<number | null>(null);
+  const [physicsShare, setPhysicsShare] = useState(DEFAULT_PHYSICS_SHARE);
+  const [preferenceLoaded, setPreferenceLoaded] = useState(false);
+  const [dragging, setDragging] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      try {
+        const savedPreference = window.localStorage.getItem(WORKBENCH_PREFERENCE_KEY);
+        if (savedPreference !== null) {
+          const saved = Number(savedPreference);
+          if (Number.isFinite(saved)) setPhysicsShare(clampPhysicsShare(saved));
+        }
+      } catch {
+        // A blocked storage area must not prevent the engineering workspace loading.
+      }
+      setPreferenceLoaded(true);
+    });
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    if (!preferenceLoaded) return;
+    try {
+      window.localStorage.setItem(WORKBENCH_PREFERENCE_KEY, physicsShare.toFixed(4));
+    } catch {
+      // The split ratio is an optional device-local preference only.
+    }
+  }, [physicsShare, preferenceLoaded]);
+
+  useEffect(() => {
+    const element = layoutRef.current;
+    if (!element || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(([entry]) => {
+      const width = entry.contentRect.width;
+      setPhysicsShare((current) => {
+        const next = clampPhysicsShare(current, width);
+        return Math.abs(next - current) > 0.0001 ? next : current;
+      });
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
+  const updateFromClientX = (clientX: number) => {
+    const bounds = layoutRef.current?.getBoundingClientRect();
+    if (!bounds || bounds.width <= 0) return;
+    setPhysicsShare(clampPhysicsShare((bounds.right - clientX) / bounds.width, bounds.width));
+  };
+
+  const finishResize = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (activePointer.current !== event.pointerId) return;
+    activePointer.current = null;
+    setDragging(false);
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  };
+
+  const handleSeparatorKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    const step = event.shiftKey ? 0.05 : 0.02;
+    let next = physicsShare;
+    if (event.key === 'ArrowLeft') next += step;
+    else if (event.key === 'ArrowRight') next -= step;
+    else if (event.key === 'Home') next = MIN_PHYSICS_SHARE;
+    else if (event.key === 'End') next = MAX_PHYSICS_SHARE;
+    else return;
+    event.preventDefault();
+    setPhysicsShare(clampPhysicsShare(next, layoutRef.current?.clientWidth));
+  };
+
+  const physicsPercent = physicsShare * 100;
+  const layoutStyle = {
+    '--device-physics-width': `${physicsPercent.toFixed(3)}%`,
+  } as CSSProperties;
+
+  return <div
+    className={`deviceExperienceLayout${dragging ? ' isResizing' : ''}`}
+    data-layout="split-resizable"
+    ref={layoutRef}
+    style={layoutStyle}
+  >
+    <div className="deviceViewport hasPhysicsOverlay">
+      <DeviceViewer device={device} efitOverlay={efitOverlay} efitStore={efitStore} />
+    </div>
+    <div
+      className="devicePaneSeparator"
+      role="separator"
+      aria-label="调整三维装置与 EFIT 分析面板的宽度"
+      aria-orientation="vertical"
+      aria-valuemin={Math.round(MIN_PHYSICS_SHARE * 100)}
+      aria-valuemax={Math.round(MAX_PHYSICS_SHARE * 100)}
+      aria-valuenow={Math.round(physicsPercent)}
+      aria-valuetext={`EFIT 面板占工作区 ${Math.round(physicsPercent)}%`}
+      tabIndex={0}
+      title="拖动调整宽度；方向键微调；双击恢复默认"
+      onDoubleClick={() => setPhysicsShare(DEFAULT_PHYSICS_SHARE)}
+      onKeyDown={handleSeparatorKeyDown}
+      onPointerDown={(event) => {
+        if (event.pointerType === 'mouse' && event.button !== 0) return;
+        activePointer.current = event.pointerId;
+        event.currentTarget.setPointerCapture(event.pointerId);
+        setDragging(true);
+        updateFromClientX(event.clientX);
+      }}
+      onPointerMove={(event) => {
+        if (activePointer.current === event.pointerId) updateFromClientX(event.clientX);
+      }}
+      onPointerUp={finishResize}
+      onPointerCancel={finishResize}
+    ><span aria-hidden="true" /></div>
+    <DevicePhysicsPanel device={device} overlay={efitOverlay} store={efitStore} />
+  </div>;
+}
+
 function DeviceExperience({ device }: { device: DeviceCatalogEntry }) {
   const efitOverlay = device.physicsOverlays.find((overlay) => overlay.kind === 'axisymmetric-equilibrium');
   const endpoint = efitOverlay?.manifestEndpoint ?? null;
@@ -78,12 +227,25 @@ function DeviceExperience({ device }: { device: DeviceCatalogEntry }) {
 
   useEffect(() => () => efitStore?.destroy(), [efitStore]);
 
-  return <>
-    <div className={`deviceViewport${efitOverlay ? ' hasPhysicsOverlay' : ''}`}>
-      <DeviceViewer device={device} efitOverlay={efitOverlay} efitStore={efitStore} />
+  if (efitOverlay && efitStore) return <ResizableDeviceExperience
+    device={device}
+    efitOverlay={efitOverlay}
+    efitStore={efitStore}
+  />;
+
+  return <div className="deviceExperienceLayout isSinglePane" data-layout="single-pane">
+    <div className="deviceViewport">
+      <DeviceViewer device={device} efitStore={efitStore} />
     </div>
-    {efitOverlay && efitStore && <DevicePhysicsPanel device={device} overlay={efitOverlay} store={efitStore} />}
-  </>;
+  </div>;
+}
+
+function DeviceGovernanceNote({ device }: { device: DeviceCatalogEntry }) {
+  if (!device.physicsOverlays.some((overlay) => overlay.kind === 'axisymmetric-equilibrium')) return null;
+  return <div className="deviceGovernanceNote" role="note">
+    <p><b>科学与安全边界</b>当前交付仅为经授权的浏览器简化派生模型，不可用于制造、尺寸校核、CAE 计算、安全决策或反向工程。</p>
+    <p><b>预览交付与替换接口</b>{device.statement} 原始工程 CAD 不由网站交付。</p>
+  </div>;
 }
 
 export default function MultiDeviceWorkspace({ catalog }: { catalog: DeviceCatalog }) {
@@ -140,6 +302,8 @@ export default function MultiDeviceWorkspace({ catalog }: { catalog: DeviceCatal
       </aside>
       <DeviceExperience device={current} />
     </div>
+
+    <DeviceGovernanceNote device={current} />
 
     <div className="devicePreviewPolicy" role="note">
       <b>PREVIEW SECURITY POLICY</b>
