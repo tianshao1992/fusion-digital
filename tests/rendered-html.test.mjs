@@ -192,15 +192,16 @@ test('ships a closed, public DeviceManifest for the CAD viewer', async () => {
 test('server-renders the FusionDigital community portal', async () => {
   const html = await htmlFor('/');
   assert.match(html, /FusionDigital/);
-  assert.match(html, /href="\/physics"/);
-  assert.match(html, /href="\/engineering"/);
-  assert.match(html, /href="\/control"/);
-  assert.match(html, /href="\/diagnostics"/);
-  assert.match(html, /href="\/diagnostics"[^>]*>诊断感知<\/a>/);
-  assert.match(html, /href="\/ai"/);
   assert.match(html, /href="\/facilities"/);
   assert.match(html, /href="\/#prototype-workspace"/);
   assert.equal((html.match(/href="\/knowledge-graph"[^>]*>知识图谱<\/a>/g) ?? []).length, 2, 'desktop and mobile navigation must use the 知识图谱 primary label');
+  assert.match(html, /href="\/knowledge-graph#modules"[^>]*>进入十大知识模块<\/a>/);
+  for (const moduleId of ['physics', 'engineering', 'control', 'diagnostics', 'ai']) {
+    assert.match(html, new RegExp(`href="/knowledge-graph/modules/${moduleId}"`));
+  }
+  for (const removedPrimaryRoute of ['/physics', '/engineering', '/control', '/diagnostics', '/ai']) {
+    assert.doesNotMatch(html, new RegExp(`href="${removedPrimaryRoute}"`), `${removedPrimaryRoute} must be managed from Knowledge instead of the homepage`);
+  }
   assert.doesNotMatch(html, /知识智能/);
   assert.match(html, /fusiondigital-mark\.png/);
   assert.match(html, /class="brandWordmark"/);
@@ -215,74 +216,25 @@ test('server-renders the FusionDigital community portal', async () => {
   assert.match(html, /ITER 教育简化模型/);
   assert.match(html, /搜索名称、ID 或工程标签/);
   assert.doesNotMatch(html, /class="tokamakCadTrust"|class="tokamakCadFootnotes"/);
-  assert.match(html, /data-echart="fusion-twin-system-map"/);
-  assert.match(html, /一个装置 · 一条数字主线 · 十项协同能力/);
-  assert.match(html, /ONE ASSET · ONE DIGITAL THREAD · TEN COORDINATED CAPABILITIES/);
-  for (const baseline of ['AS-DESIGNED', 'AS-BUILT', 'AS-COMMISSIONED', 'AS-OPERATED', 'AS-MAINTAINED', 'AS-DECOMMISSIONED']) {
-    assert.match(html, new RegExp(baseline));
-  }
-  for (const domain of ['物理模拟', '工程仿真', '集成控制', '诊断感知', '能量转化', '辅机模拟', '人机交互', '数据基座', '总体集成', '智能原生']) {
-    assert.match(html, new RegExp(domain));
-  }
-  assert.match(html, /class="fusionTwinModuleDock"/);
-  assert.equal((html.match(/data-module-id=/g) ?? []).length, 10);
-  assert.match(html, /NESTED CLOCKS/);
-  assert.match(html, /μs—ms/);
-  assert.match(html, /年—数十年/);
-  assert.match(html, /安全与授权门/);
-  assert.match(html, /AI 加速感知、代理建模、优化与知识协同/);
-  assert.match(html, /人工智能不得直接连接装置执行器/);
-  assert.match(html, /data-echart="phase-one-roadmap"/);
-  assert.match(html, /一期先闭合一条可信数字线程/);
-  assert.match(html, /EXL(?:‑|-)?50U 可验证窄域孪生/);
-  assert.match(html, /R0 控制服务化到 R1 窄域数字影子之间/);
-  assert.match(html, /现有基线/);
-  assert.match(html, /一期建设/);
-  assert.match(html, /一期后缺口/);
-  assert.match(html, /G0—G2/);
-  assert.match(html, /08 数据基座/);
-  assert.match(html, /六个能力门表达依赖顺序与建设边界/);
-  assert.equal((html.match(/data-roadmap-module-id=/g) ?? []).length, 10);
-  assert.doesNotMatch(html, /roadmap-image2-v2\.png|class="roadmapCards"/);
-  assert.doesNotMatch(html, /COMMUNITY THESIS|DIGITAL TWIN MAINLINE|一炮一链：聚变数字孪生的共同主线/);
+  assert.doesNotMatch(html, /data-echart="fusion-twin-system-map"|data-echart="phase-one-roadmap"|class="domainSection"|class="domainCard/);
   assert.match(html, /fusion-twin-ai-native-overview\.png/);
   assert.match(html, /class="heroTitleValues">成本可控/);
   assert.match(html, /<figcaption class="srOnly">聚变、数字孪生与智能体关系图/);
-  assert.match(html, /loading="lazy" decoding="async"/);
   assert.match(html, /权限、安全与物理约束门/);
   assert.match(html, /成本可控 · 高效运行 · 可靠可用 · 安全可证/);
   assert.match(html, /LIFECYCLE COST CONTROL · EFFICIENT OPERATION · RELIABLE AVAILABILITY · EVIDENCE-BASED SAFETY/);
-  assert.match(html, /能量转化/);
-  assert.match(html, /ENERGY CONVERSION/);
-  assert.match(html, /包层热取出、一次\/二次回路/);
-  assert.match(html, /辅机模拟/);
-  assert.match(html, /人机交互/);
-  assert.match(html, /总体集成/);
-  assert.match(html, /WHOLE-PLANT INTEGRATION/);
   assert.match(html, /<b>05<\/b>已开放知识域/);
-  assert.match(html, /DIAGNOSTICS &amp; SENSING/);
   assert.match(html, /诊断证据链/);
   assert.doesNotMatch(html, /智能诊断|INTELLIGENT DIAGNOSTICS/);
-  for (const figure of [
-    'domain-physics-dark-image2.png',
-    'domain-engineering-dark-image2.png',
-    'domain-integrated-control-dark-image2.png',
-    'domain-intelligent-diagnostics-dark-image2.png',
-    'domain-energy-conversion-dark-image2.png',
-    'domain-auxiliary-systems-dark-image2.png',
-    'domain-human-machine-interaction-dark-image2.png',
-    'domain-data-foundation-dark-image2.png',
-    'domain-whole-plant-integration-dark-image2.png',
-    'domain-ai-native-dark-image2.png',
-  ]) assert.match(html, new RegExp(figure.replaceAll('.', '\\.')));
+  assert.doesNotMatch(html, /domain-(?:physics|engineering|integrated-control|intelligent-diagnostics|energy-conversion|auxiliary-systems|human-machine-interaction|data-foundation|whole-plant-integration|ai-native)-dark-image2\.png/);
   assert.doesNotMatch(html, /发电系统|POWER SYSTEMS|本质安全/);
 });
 
 test('homepage owns the public full-device digital-prototype workspace', async () => {
   const html = await htmlFor('/');
   assert.equal((html.match(/id="prototype-workspace"/g) ?? []).length, 1);
-  assert.ok(html.indexOf('id="prototype-workspace"') < html.indexOf('data-echart="fusion-twin-system-map"'),
-    'the working interface must replace the former preview before the system map');
+  assert.ok(html.indexOf('id="prototype-workspace"') < html.indexOf('class="aiNativePortal"'),
+    'the working interface must remain ahead of the compact knowledge entry');
   assert.match(html, /装置、三维与 EFIT 联动/);
   assert.match(html, /data-three-viewer="paramak-full-device"/);
   assert.match(html, /Paramak/);
@@ -458,8 +410,8 @@ test('server-renders the integrated-control and PCS research atlas', async () =>
   assert.match(html, /data-echart="control-task-timescale"/);
   assert.match(html, /data-echart="control-evidence-deployment-matrix"/);
   assert.match(html, /target="_blank"/);
-  assert.match(html, /href="\/platform#contracts"/);
-  assert.doesNotMatch(html, /07 \/ COLLABORATE|网页条目用于技术交流/);
+  assert.match(html, /href="\/knowledge-graph"[^>]*class="active"|class="active"[^>]*href="\/knowledge-graph"/);
+  assert.doesNotMatch(html, /CENTRAL THESIS|class="controlThesis"|class="controlClosing"|07 \/ COLLABORATE|网页条目用于技术交流/);
 });
 
 test('server-renders the diagnostics and sensing research atlas', async () => {
@@ -493,9 +445,9 @@ test('server-renders the diagnostics and sensing research atlas', async () => {
     'diagnostics-device-task-coverage',
     'diagnostics-digital-twin-roadmap',
   ]) assert.match(html, new RegExp(`data-echart="${chart}"`));
-  assert.match(html, /href="\/diagnostics"[^>]*class="active"[^>]*>诊断感知<\/a>|class="active"[^>]*href="\/diagnostics"[^>]*>诊断感知<\/a>/);
+  assert.match(html, /href="\/knowledge-graph"[^>]*class="active"|class="active"[^>]*href="\/knowledge-graph"/);
   assert.match(html, /target="_blank"/);
-  assert.doesNotMatch(html, /METHOD &amp; LIMITS|如何严谨地使用本知识域/);
+  assert.doesNotMatch(html, /DOMAIN THESIS|class="diagnosticsThesis"|METHOD &amp; LIMITS|如何严谨地使用本知识域/);
 });
 
 test('server-renders and validates diagnostics catalog URL filters', async () => {
@@ -526,7 +478,8 @@ test('server-renders the physics simulation atlas', async () => {
     'integrated-maturity-gap',
     'physics-digital-twin-roadmap',
   ]) assert.match(html, new RegExp(`data-echart="${chart}"`));
-  assert.match(html, /href="\/engineering"/);
+  assert.match(html, /href="\/knowledge-graph\/modules\/physics"/);
+  assert.doesNotMatch(html, /class="thesis"|关键判断/);
   assert.doesNotMatch(html, /不构成求解器排名|不代表官方评级|不是成熟度认证/);
 });
 
@@ -583,8 +536,8 @@ test('server-renders the AI-native fusion digital twin research page', async () 
   ]) assert.match(html, new RegExp(domain));
   assert.match(html, /FUSION · TWIN · AGENT LOOP/);
   assert.match(html, /target="_blank"/);
-  assert.match(html, /href="\/platform#architecture"/);
-  assert.doesNotMatch(html, /METHOD &amp; LIMITS|如何使用这份图谱/);
+  assert.match(html, /href="\/knowledge-graph"[^>]*class="active"|class="active"[^>]*href="\/knowledge-graph"/);
+  assert.doesNotMatch(html, /OPERATING PRINCIPLE|class="aiThesis"|class="platformInlineLink"|METHOD &amp; LIMITS|如何使用这份图谱/);
 });
 
 test('ships and server-renders the evidence-first knowledge graph', async () => {
@@ -612,14 +565,36 @@ test('ships and server-renders the evidence-first knowledge graph', async () => 
   assert.ok(snapshot.edges.some((edge) => edge.relation === 'SUPPORTED_BY' && edge.evidenceUrl));
 
   const html = await htmlFor('/knowledge-graph');
-  assert.match(html, /FUSION KNOWLEDGE GRAPH/);
+  assert.match(html, /FUSION KNOWLEDGE/);
   assert.match(html, /data-echart="fusion-knowledge-graph"/);
-  assert.match(html, /论文、代码与装置证据/);
+  assert.match(html, /十大模块、研究文档与/);
+  assert.equal((html.match(/class="knowledgeModuleCard"/g) ?? []).length, 10);
+  for (const moduleId of ['physics', 'engineering', 'control', 'diagnostics', 'energy', 'auxiliary', 'hmi', 'data', 'integration', 'ai']) {
+    assert.match(html, new RegExp(`href="/knowledge-graph/modules/${moduleId}"`));
+  }
+  assert.match(html, /href="\/knowledge-graph\/system-map"/);
+  assert.match(html, /href="\/knowledge-graph\/roadmap"/);
   assert.match(html, /href="\/data\/fusion-knowledge-graph\.json"/);
   assert.match(html, /节点上限/);
   assert.match(html, /1 跳 · 直接关系/);
-  assert.match(html, /href="\/platform#contracts"/);
-  assert.doesNotMatch(html, /04 \/ GOVERNANCE|图谱是证据索引/);
+  assert.doesNotMatch(html, /关系主张|查看数据合同与接入路线|04 \/ GOVERNANCE|图谱是证据索引/);
+
+  const physicsModule = await htmlFor('/knowledge-graph/modules/physics');
+  assert.match(physicsModule, /PHYSICS/);
+  assert.match(physicsModule, /<h1>物理模拟<\/h1>/);
+  assert.match(physicsModule, /href="\/physics"/);
+  assert.match(physicsModule, /href="\/fusion-physics-simulation-report\.pdf"/);
+  const dataModule = await htmlFor('/knowledge-graph/modules/data');
+  assert.match(dataModule, /<h1>数据基座<\/h1>/);
+  assert.match(dataModule, /MDSplus/);
+  const systemMap = await htmlFor('/knowledge-graph/system-map');
+  assert.match(systemMap, /data-echart="fusion-twin-system-map"/);
+  assert.equal((systemMap.match(/data-module-id=/g) ?? []).length, 10);
+  assert.doesNotMatch(systemMap, /AI-NATIVE \/ GOVERNED ENABLEMENT/);
+  const roadmap = await htmlFor('/knowledge-graph/roadmap');
+  assert.match(roadmap, /data-echart="phase-one-roadmap"/);
+  assert.equal((roadmap.match(/data-roadmap-module-id=/g) ?? []).length, 10);
+  assert.doesNotMatch(roadmap, /PHASE I CUTLINE|六个能力门表达依赖顺序与建设边界|class="phaseOneBoundary"/);
 });
 
 test('ships and server-renders evidence-grounded knowledge search', async () => {

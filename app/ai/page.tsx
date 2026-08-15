@@ -126,16 +126,13 @@ const deviceEvidenceCount = aiResearchItems.filter((item) => ['E2', 'E3', 'E4'].
 export default function AIPage() {
   return (
     <main className="aiPage">
-      <SiteNav active="ai" />
+      <SiteNav active="knowledge" />
 
       <header className="aiHero">
         <div>
           <p className="aiEyebrow">FUSION AI-NATIVE RESEARCH ATLAS · 2026</p>
           <h1>智能原生不是增加一个聊天框，<br /><span>而是重构聚变的认知与协作闭环。</span></h1>
-          <p>
-            以物理与实验事实为锚，以快速代理和多模态状态表征提升实时性，以智能体编排数据、仿真与优化；
-            任何影响装置的动作都必须经过确定性安全边界、权限控制和可审计批准。
-          </p>
+          <p>以物理与实验事实为锚，以快速代理和多模态状态表征提升实时性，以智能体编排数据、仿真与优化。</p>
           <div className="aiActions">
             <a href="#catalog">检索研究图谱</a>
             <a href="/fusion-ai-native-research-report.docx" download>下载 Word 报告</a>
@@ -149,11 +146,6 @@ export default function AIPage() {
         </div>
         <TwinAgentMotion />
       </header>
-
-      <section className="aiThesis">
-        <p className="aiIndex">00 / OPERATING PRINCIPLE</p>
-        <h2><span>数字孪生提供“世界模型、实时状态与证据”，</span>人工智能提供“表征、搜索、优化与编排”。二者融合的目标不是取代物理，而是在已知边界内更快形成可验证、可解释、可回退的决策。</h2>
-      </section>
 
       <section className="aiCapabilities" id="capabilities">
         <div className="aiSectionHead">
@@ -238,8 +230,6 @@ export default function AIPage() {
         <div className="aiSectionHead"><p className="aiIndex">07 / FUSIONDIGITAL ROADMAP</p><h2>从 DINA / MEQ 与窄任务切入，逐步获得受控自治。</h2><p>先建立可复现评测和代理服务，再把 AI 放入影子模式，最后只在狭窄、经验证的适用域开放闭环权限；“会生成方案”与“有权执行方案”必须是两个独立里程碑。</p></div>
         <div className="aiRouteGrid">{roadmap.map((item) => <article key={item[0]}><span>{item[0]}</span><h3>{item[1]}</h3><p>{item[2]}</p></article>)}</div>
       </section>
-
-      <section className="platformInlineLink"><span>研究条目保留证据等级、来源、代码状态与局限；任何影响装置的动作仍需服务端授权和人工批准。</span><a href="/platform#architecture">查看智能体接入架构 →</a></section>
 
       <SiteFooter />
     </main>

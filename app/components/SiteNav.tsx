@@ -13,16 +13,11 @@ type SiteNavProps = {
 
 const links = [
   { key: 'home', href: '/', label: 'nav.home', priority: 0 },
-  { key: 'physics', href: '/physics', label: 'nav.physics', priority: 1 },
-  { key: 'engineering', href: '/engineering', label: 'nav.engineering', priority: 1 },
-  { key: 'control', href: '/control', label: 'nav.control', priority: 1 },
-  { key: 'diagnostics', href: '/diagnostics', label: 'nav.diagnostics', priority: 2 },
-  { key: 'ai', href: '/ai', label: 'nav.ai', priority: 2 },
-  { key: 'knowledge', href: '/knowledge-graph', label: 'nav.knowledge', priority: 3 },
-  { key: 'facilities', href: '/facilities', label: 'nav.facilities', priority: 4 },
-  { key: 'prototype', href: '/#prototype-workspace', label: 'nav.prototype', priority: 2 },
-  { key: 'resources', href: '/#resources', label: 'nav.resources', priority: 5 },
-  { key: 'roadmap', href: '/#roadmap', label: 'nav.roadmap', priority: 5 },
+  { key: 'knowledge', href: '/knowledge-graph', label: 'nav.knowledge', priority: 1 },
+  { key: 'prototype', href: '/#prototype-workspace', label: 'nav.prototype', priority: 1 },
+  { key: 'facilities', href: '/facilities', label: 'nav.facilities', priority: 2 },
+  { key: 'resources', href: '/#resources', label: 'nav.resources', priority: 3 },
+  { key: 'roadmap', href: '/knowledge-graph/roadmap', label: 'nav.roadmap', priority: 3 },
 ] as const;
 
 type NavigationLink = (typeof links)[number];

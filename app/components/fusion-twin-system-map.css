@@ -43,7 +43,7 @@
 
 .fusionTwinMapIntro {
   display: grid;
-  grid-template-columns: minmax(0, 1.55fr) minmax(290px, 0.58fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: clamp(38px, 6vw, 100px);
   align-items: end;
   width: min(1480px, 100%);

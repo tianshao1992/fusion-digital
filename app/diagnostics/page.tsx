@@ -136,7 +136,7 @@ export default async function DiagnosticsPage({ searchParams }: { searchParams?:
   const initialCatalogState = parseDiagnosticsCatalogState(await (searchParams ?? Promise.resolve({})));
   return (
     <main className="diagnosticsPage">
-      <SiteNav active="diagnostics" />
+      <SiteNav active="knowledge" />
 
       <header className="diagnosticsHero">
         <div className="diagnosticsHeroCopy">
@@ -164,15 +164,6 @@ export default async function DiagnosticsPage({ searchParams }: { searchParams?:
           caption="图 1｜真实观测与模型预测通过配置、时钟、标定和不确定度连接。"
         />
       </header>
-
-      <section className="diagnosticsThesis">
-        <p className="diagnosticsIndex">00 / DOMAIN THESIS</p>
-        <h2><span>数字孪生的本质不是“显示信号”，</span>而是持续回答：装置此刻处于什么状态、我们为何相信它、误差有多大、模型与观测为何不一致，以及据此可以安全地做什么。</h2>
-        <div>
-          <p>真实诊断给出带噪声、带选择效应的局部观测；集成反演把多诊断转化为带不确定度的状态；合成诊断把模型状态重新投影回仪器空间。只有两条路径在同一配置下闭合，模型校准才有物理含义。</p>
-          <p>面向电厂，诊断责任还必须覆盖磁体、结构、真空、低温、燃料/氚、冷却与能量转换设备。等离子体状态和工程健康不能继续作为两套相互孤立的数据产品。</p>
-        </div>
-      </section>
 
       <section className="diagnosticsLoop" id="closed-loop">
         <div className="diagnosticsSectionHead">

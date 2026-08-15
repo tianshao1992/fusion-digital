@@ -74,16 +74,16 @@ const phases: Phase[] = [
 ];
 
 const modules: TwinModule[] = [
-  { id: 'physics', no: '01', cn: '物理模拟', en: 'PHYSICS', summary: '平衡、输运、MHD、边界与粒子过程。', input: '装置配置、诊断观测、执行器与边界条件', output: '等离子体状态、稳定性、热/粒子/中子载荷源', aiRole: '加速反演、代理输运与场景搜索；保持物理约束和适用域。', trust: '高保真计算、实验后验、守恒检查与不确定度。', href: '/physics', color: '#ff8738', position: [250, 515], size: [160, 82], intensities: [4, 2, 4, 4, 3, 1] },
-  { id: 'engineering', no: '02', cn: '工程仿真', en: 'ENGINEERING', summary: '电磁、结构、热流体、中子与材料响应。', input: '几何、材料、边界条件和等离子体载荷', output: '温度、应力、电磁力、损伤、活化与工程裕量', aiRole: '降阶模型、损伤识别和寿命代理；不得取代合格分析。', trust: '基准题、试验、网格/时间步收敛与规范符合性。', href: '/engineering', color: '#ffb05f', position: [445, 515], size: [160, 82], intensities: [4, 4, 3, 3, 4, 4] },
-  { id: 'control', no: '03', cn: '集成控制', en: 'CONTROL / PCS', summary: '状态估计、约束控制、PCS 与多执行器协调。', input: '经质量标记的状态、场景目标、设备能力和安全约束', output: '通过验证与授权门的控制指令', aiRole: '策略建议、预测控制和异常规避；默认不直达执行器。', trust: '实时确定性、SIL/HIL、保护独立性与权限治理。', href: '/control', color: '#ff8738', position: [895, 415], size: [164, 86], intensities: [3, 2, 4, 4, 3, 1] },
-  { id: 'diagnostics', no: '04', cn: '诊断感知', en: 'DIAGNOSTICS & SENSING', summary: '标定、反演、观测融合、信号质量和异常识别。', input: '传感器原始信号、诊断几何与标定信息', output: '带质量标记和不确定度的观测与状态', aiRole: '去噪、缺失补全、异常识别和多模态状态估计。', trust: '盲测、漂移监测、残差保留和失效降级。', href: '/diagnostics', color: '#65e6d2', position: [225, 315], size: [164, 86], intensities: [3, 3, 4, 4, 4, 2] },
-  { id: 'energy', no: '05', cn: '能量转化', en: 'ENERGY', summary: '包层换热、热循环、发电系统与电网响应。', input: '热/中子源、冷却边界和电网需求', output: '热功率、净电功率、效率和动态约束', aiRole: '运行优化和性能代理；纯实验装置可能不适用。', trust: '守恒、部件试验、循环基准和电网约束验证。', href: '/#domains', color: '#f0cf69', position: [640, 515], size: [160, 82], intensities: [4, 4, 3, 4, 3, 2] },
-  { id: 'auxiliary', no: '06', cn: '辅机模拟', en: 'AUXILIARY', summary: '真空、低温、燃料、电源、冷却与 BOP。', input: '设备状态、设定值、需求曲线和故障事件', output: '服务能力、厂用负荷、边界条件与故障响应', aiRole: '设备健康、负荷预测与故障定位。', trust: '设备曲线、联锁试验、故障树和运行回放。', href: '/#domains', color: '#67cfd3', position: [835, 515], size: [160, 82], intensities: [3, 4, 3, 4, 4, 3] },
-  { id: 'hmi', no: '07', cn: '人机交互', en: 'HUMAN–MACHINE', summary: '态势感知、解释、协同和人在回路授权。', input: '状态、风险、备选方案、证据和不确定度', output: '操作意图、限制条件、批准与注释', aiRole: '解释、检索与方案比较；责任主体始终明确。', trust: '可解释界面、告警管理、行为试验和审计记录。', href: '/#domains', color: '#bff4df', position: [825, 315], size: [170, 86], intensities: [2, 2, 4, 4, 4, 3] },
-  { id: 'data', no: '08', cn: '数据基座', en: 'DATA FOUNDATION', summary: '配置、时间、坐标、单位、血缘和不确定度。', input: '全域原始数据、配置、模型与实验记录', output: '对时、版本化、可发现、可追溯的数据产品', aiRole: '语义映射与数据质量辅助；不得改写原始证据。', trust: '主数据、访问控制、校验和、版本与来源账本。', href: '/#domains', color: '#65e6d2', position: [425, 315], size: [176, 92], intensities: [3, 4, 4, 4, 4, 4] },
-  { id: 'integration', no: '09', cn: '总体集成', en: 'WHOLE-PLANT', summary: '场景编排、协同仿真、接口契约、需求与 VVUQ。', input: '专业模型、数据服务、需求、配置与成熟度状态', output: '一致场景、工作流、证据链和电厂级决策视图', aiRole: '工作流规划与跨域协同；所有调用受权限和证据门约束。', trust: '接口测试、配置基线、VVUQ、变更与责任管理。', href: '/physics#integrated', color: '#e9fff6', position: [630, 315], size: [184, 94], intensities: [4, 4, 4, 4, 4, 4] },
-  { id: 'ai', no: '10', cn: '智能原生', en: 'AI-NATIVE ENABLEMENT', summary: '代理模型、同化、异常识别、优化、基础模型与智能体。', input: '受治理的数据、物理先验、工具权限和使用场景', output: '带置信度的估计、预测、告警、候选方案与计划', aiRole: '跨域加速与知识协同，而不是凌驾于系统之上的“大脑”。', trust: '有效域、校准、独立验证、权限、安全门与人工授权。', href: '/ai', color: '#a98bff', position: [600, 152], size: [560, 56], intensities: [2, 2, 3, 3, 3, 2] },
+  { id: 'physics', no: '01', cn: '物理模拟', en: 'PHYSICS', summary: '平衡、输运、MHD、边界与粒子过程。', input: '装置配置、诊断观测、执行器与边界条件', output: '等离子体状态、稳定性、热/粒子/中子载荷源', aiRole: '加速反演、代理输运与场景搜索；保持物理约束和适用域。', trust: '高保真计算、实验后验、守恒检查与不确定度。', href: '/knowledge-graph/modules/physics', color: '#ff8738', position: [250, 515], size: [160, 82], intensities: [4, 2, 4, 4, 3, 1] },
+  { id: 'engineering', no: '02', cn: '工程仿真', en: 'ENGINEERING', summary: '电磁、结构、热流体、中子与材料响应。', input: '几何、材料、边界条件和等离子体载荷', output: '温度、应力、电磁力、损伤、活化与工程裕量', aiRole: '降阶模型、损伤识别和寿命代理；不得取代合格分析。', trust: '基准题、试验、网格/时间步收敛与规范符合性。', href: '/knowledge-graph/modules/engineering', color: '#ffb05f', position: [445, 515], size: [160, 82], intensities: [4, 4, 3, 3, 4, 4] },
+  { id: 'control', no: '03', cn: '集成控制', en: 'CONTROL / PCS', summary: '状态估计、约束控制、PCS 与多执行器协调。', input: '经质量标记的状态、场景目标、设备能力和安全约束', output: '通过验证与授权门的控制指令', aiRole: '策略建议、预测控制和异常规避；默认不直达执行器。', trust: '实时确定性、SIL/HIL、保护独立性与权限治理。', href: '/knowledge-graph/modules/control', color: '#ff8738', position: [895, 415], size: [164, 86], intensities: [3, 2, 4, 4, 3, 1] },
+  { id: 'diagnostics', no: '04', cn: '诊断感知', en: 'DIAGNOSTICS & SENSING', summary: '标定、反演、观测融合、信号质量和异常识别。', input: '传感器原始信号、诊断几何与标定信息', output: '带质量标记和不确定度的观测与状态', aiRole: '去噪、缺失补全、异常识别和多模态状态估计。', trust: '盲测、漂移监测、残差保留和失效降级。', href: '/knowledge-graph/modules/diagnostics', color: '#65e6d2', position: [225, 315], size: [164, 86], intensities: [3, 3, 4, 4, 4, 2] },
+  { id: 'energy', no: '05', cn: '能量转化', en: 'ENERGY', summary: '包层换热、热循环、发电系统与电网响应。', input: '热/中子源、冷却边界和电网需求', output: '热功率、净电功率、效率和动态约束', aiRole: '运行优化和性能代理；纯实验装置可能不适用。', trust: '守恒、部件试验、循环基准和电网约束验证。', href: '/knowledge-graph/modules/energy', color: '#f0cf69', position: [640, 515], size: [160, 82], intensities: [4, 4, 3, 4, 3, 2] },
+  { id: 'auxiliary', no: '06', cn: '辅机模拟', en: 'AUXILIARY', summary: '真空、低温、燃料、电源、冷却与 BOP。', input: '设备状态、设定值、需求曲线和故障事件', output: '服务能力、厂用负荷、边界条件与故障响应', aiRole: '设备健康、负荷预测与故障定位。', trust: '设备曲线、联锁试验、故障树和运行回放。', href: '/knowledge-graph/modules/auxiliary', color: '#67cfd3', position: [835, 515], size: [160, 82], intensities: [3, 4, 3, 4, 4, 3] },
+  { id: 'hmi', no: '07', cn: '人机交互', en: 'HUMAN–MACHINE', summary: '态势感知、解释、协同和人在回路授权。', input: '状态、风险、备选方案、证据和不确定度', output: '操作意图、限制条件、批准与注释', aiRole: '解释、检索与方案比较；责任主体始终明确。', trust: '可解释界面、告警管理、行为试验和审计记录。', href: '/knowledge-graph/modules/hmi', color: '#bff4df', position: [825, 315], size: [170, 86], intensities: [2, 2, 4, 4, 4, 3] },
+  { id: 'data', no: '08', cn: '数据基座', en: 'DATA FOUNDATION', summary: '配置、时间、坐标、单位、血缘和不确定度。', input: '全域原始数据、配置、模型与实验记录', output: '对时、版本化、可发现、可追溯的数据产品', aiRole: '语义映射与数据质量辅助；不得改写原始证据。', trust: '主数据、访问控制、校验和、版本与来源账本。', href: '/knowledge-graph/modules/data', color: '#65e6d2', position: [425, 315], size: [176, 92], intensities: [3, 4, 4, 4, 4, 4] },
+  { id: 'integration', no: '09', cn: '总体集成', en: 'WHOLE-PLANT', summary: '场景编排、协同仿真、接口契约、需求与 VVUQ。', input: '专业模型、数据服务、需求、配置与成熟度状态', output: '一致场景、工作流、证据链和电厂级决策视图', aiRole: '工作流规划与跨域协同；所有调用受权限和证据门约束。', trust: '接口测试、配置基线、VVUQ、变更与责任管理。', href: '/knowledge-graph/modules/integration', color: '#e9fff6', position: [630, 315], size: [184, 94], intensities: [4, 4, 4, 4, 4, 4] },
+  { id: 'ai', no: '10', cn: '智能原生', en: 'AI-NATIVE ENABLEMENT', summary: '代理模型、同化、异常识别、优化、基础模型与智能体。', input: '受治理的数据、物理先验、工具权限和使用场景', output: '带置信度的估计、预测、告警、候选方案与计划', aiRole: '跨域加速与知识协同，而不是凌驾于系统之上的“大脑”。', trust: '有效域、校准、独立验证、权限、安全门与人工授权。', href: '/knowledge-graph/modules/ai', color: '#a98bff', position: [600, 152], size: [560, 56], intensities: [2, 2, 3, 3, 3, 2] },
 ];
 
 const links: TwinLink[] = [
@@ -390,13 +390,9 @@ export default function FusionTwinSystemMap() {
         <div>
           <p className="sectionIndex">00—01 / FUSION DIGITAL TWIN SYSTEM MAP</p>
           <h2 id="fusion-twin-map-title">一个装置 · 一条数字主线 · 十项协同能力</h2>
-          <p>聚变数字孪生不是三维外观，也不是一个万能求解器；它是贯穿设计、建造、调试、运行、维护升级与退役，以配置受控的数据、经验证的多保真模型和可追溯证据支撑人机决策的持续系统。</p>
+          <p>查看十个模块在装置生命周期中的连接、输入输出和相互依赖。</p>
           <small>ONE ASSET · ONE DIGITAL THREAD · TEN COORDINATED CAPABILITIES</small>
         </div>
-        <aside>
-          <b>AI-NATIVE / GOVERNED ENABLEMENT</b>
-          <p>AI 加速感知、代理建模、优化与知识协同，但不替代物理约束、验证证据、确定性保护和人的授权。</p>
-        </aside>
       </div>
 
       <div className="fusionTwinMapShell">
@@ -472,7 +468,7 @@ export default function FusionTwinSystemMap() {
 
         <div className="fusionTwinMapLegend">
           <span className="dataFlow">观测 / 数据流</span><span className="modelFlow">模型耦合</span><span className="evidenceFlow">配置 / 证据</span><span className="commandFlow">经验证控制</span><span className="aiFlow">AI 候选与加速</span>
-          <p>图中生命周期为示意性典型范围，不是项目工期承诺；模块强度表示相对参与程度，不表示技术成熟度或安全等级。维护升级与运行可重复交叠，能量转化对纯实验装置可能不适用。</p>
+          <p>模块强度表示在所选生命周期阶段的相对参与程度。</p>
         </div>
       </div>
 
