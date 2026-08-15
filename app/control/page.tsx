@@ -74,8 +74,8 @@ export default function ControlPage() {
     <header className="controlHero">
       <div className="controlHeroCopy">
         <p className="controlEyebrow">FUSIONDIGITAL / INTEGRATED CONTROL &amp; PCS ATLAS / 2026</p>
-        <h1><span className="controlHeroLead">把每一次控制动作，</span><span>变成可验证、可回放、</span><span>可治理的决策。</span></h1>
-        <p>以 T0–T9 十类控制任务和装置/PCS 双索引，连接状态估计、位形、剖面、MHD、排热、功率、破裂规避、多执行器协调、实时基础设施及其原始论文与代码。数字孪生增强预测与证据，但不替代独立机器保护和安全系统。</p>
+        <h1><span className="controlHeroLead">把每一次控制动作，</span><span>变成可验证、可回放、</span><span>可复核的决策。</span></h1>
+        <p>以 T0–T9 十类控制任务和装置/PCS 双索引，连接状态估计、位形、剖面、MHD、排热、功率、破裂规避、多执行器协调、实时基础设施及其原始论文与代码。</p>
         <div className="controlActions">
           <a href="#research">检索关键工作</a>
           <a href="/fusion-integrated-control-research-report.docx" download>下载 5 万字以上 Word 报告</a>
@@ -89,7 +89,7 @@ export default function ControlPage() {
       </div>
       <figure className="controlHeroFigure">
         <img src="/figures/control-closed-loop-architecture-nature.png" alt="聚变装置、诊断、状态估计、任务控制、多执行器协调、PCS和独立保护之间的闭环架构" />
-        <figcaption>控制闭环与责任边界：实时控制和数字孪生共享状态与证据，机器保护与安全系统保留独立最终权威。</figcaption>
+        <figcaption>控制闭环：诊断、状态估计、任务控制、执行器协调与 PCS。</figcaption>
       </figure>
     </header>
 
@@ -120,12 +120,12 @@ export default function ControlPage() {
     </section>
 
     <section className="controlResearch" id="research">
-      <div className="controlSectionHead controlResearchHead"><div><p className="controlIndex">03 / SEARCHABLE RESEARCH LANDSCAPE</p><h2>按任务、装置、证据与代码关系检索关键工作</h2><p>按公开证据尽可能说明问题、架构、传感器、执行器、装置、验证、结果、局限、论文与代码；设施未公开的接口和实现会明确标注。装置数据、实时运行和真实闭环被严格区分。</p></div><div className="controlDownloads"><a href="/fusion-integrated-control-research-report.docx" download><b>WORD</b><span>完整技术报告</span></a><a href="/data/fusion-control-landscape.json" download><b>JSON</b><span>控制工作数据</span></a><a href="/fusion-control-paper-code-index.csv" download><b>CSV</b><span>论文代码索引</span></a><a href="/fusion-control-references.bib" download><b>BIB</b><span>引用元数据</span></a></div></div>
+      <div className="controlSectionHead controlResearchHead"><div><p className="controlIndex">03 / SEARCHABLE RESEARCH LANDSCAPE</p><h2>按任务、装置、证据与代码关系检索关键工作</h2><p>聚合问题、架构、传感器、执行器、装置、验证、结果、局限、论文与代码；装置数据、实时运行和真机闭环分别标注。</p></div><div className="controlDownloads"><a href="/fusion-integrated-control-research-report.docx" download><b>WORD</b><span>完整技术报告</span></a><a href="/data/fusion-control-landscape.json" download><b>JSON</b><span>控制工作数据</span></a><a href="/fusion-control-paper-code-index.csv" download><b>CSV</b><span>论文代码索引</span></a><a href="/fusion-control-references.bib" download><b>BIB</b><span>引用元数据</span></a></div></div>
       <ControlResearchCatalog />
     </section>
 
     <section className="controlEvidence" id="evidence">
-      <div className="controlSectionHead"><p className="controlIndex">04 / EVIDENCE &amp; VERIFICATION</p><h2>平均速度不是实时证据，单次成功也不是安全资格</h2><p>证据 E0–E4 与部署 D1–D5 分开维护。升级必须同时证明模型、数据、软件运行时、硬件接口、故障回退和装置治理，而不是只展示一次最优曲线。</p></div>
+      <div className="controlSectionHead"><p className="controlIndex">04 / EVIDENCE &amp; VERIFICATION</p><h2>科学证据 E 与工程部署 D 分开判断</h2><p>升级同时验证模型、数据、软件运行时、硬件接口和故障回退；单次最优曲线不代表实时或安全资格。</p></div>
       <div className="evidenceLayout"><figure><ControlEvidenceHeatmap/><figcaption>热图按 E0–E4 证据与 D1–D5 部署责任聚合全部工作；点击格子可筛选目录。若交互组件不可用，则回退显示原验证阶梯：数值基准 → 历史回放 → SIL → 实时/HIL → 影子 → 低风险闭环 → 目标工况 → 持续运行。</figcaption></figure><div className="evidenceSteps">{evidenceSteps.map((step)=><article key={step[0]}><span>{step[0]}</span><div><h3>{step[1]}</h3><p>{step[2]}</p></div></article>)}</div></div>
     </section>
 
@@ -135,12 +135,12 @@ export default function ControlPage() {
     </section>
 
     <section className="controlRoadmap" id="roadmap">
-      <div className="controlSectionHead"><p className="controlIndex">06 / FUSIONDIGITAL ROADMAP</p><h2>从 DINA / MEQ 控制服务，逐级走向堆与电厂控制孪生</h2><p>每一级以证据门验收。影子模式先于闭环，多任务协调先证明可解释与可回退，最终才把燃烧、工程限值、RAMI、氚、热循环和电网接入多时间尺度决策。</p></div>
-      <figure><img src="/figures/control-digital-twin-roadmap-nature.png" alt="FusionDigital从磁控制回放到聚变电厂控制数字孪生的路线图" loading="lazy" decoding="async"/><figcaption>路线不是代码接入清单，而是从可重复回放到持续 VVUQ、治理与电厂级目标的能力升级。</figcaption></figure>
+      <div className="controlSectionHead"><p className="controlIndex">06 / FUSIONDIGITAL ROADMAP</p><h2>从 DINA / MEQ 控制服务，逐级走向堆与电厂控制孪生</h2><p>影子模式先于闭环，多任务协调先验证可解释与可回退，再接入燃烧、工程限值、RAMI、氚、热循环和电网目标。</p></div>
+      <figure><img src="/figures/control-digital-twin-roadmap-nature.png" alt="FusionDigital从磁控制回放到聚变电厂控制数字孪生的路线图" loading="lazy" decoding="async"/><figcaption>从磁控制回放、数字影子和 SIL/HIL 走向有限闭环与电厂级协同。</figcaption></figure>
       <div className="controlRoadmapGrid">{roadmap.map((item)=><article key={item[0]}><header><span>{item[0]}</span><b>{item[1]}</b></header><p>{item[2]}</p><footer>{item[3]}</footer></article>)}</div>
     </section>
 
-    <section className="controlClosing"><div><p className="controlIndex">07 / COLLABORATE</p><h2>把控制论文、装置经验和真实失败案例连接成共同证据。</h2></div><div><p>欢迎装置控制、PCS、诊断、实时软件、机器保护、物理模拟与工程团队共同补充论文、代码关系、装置配置和 V&amp;V 案例。网页条目用于技术交流，不替代装置运行程序、安全分析或许可活动。</p><a href="mailto:tianshao1992@gmail.com">联系新奥聚变人工智能团队 →</a></div></section>
+    <section className="controlClosing"><div><p className="controlIndex">07 / NEXT</p><h2>从控制研究进入平台实施。</h2></div><div><Link href="/platform#contracts">查看统一数据契约与技术路线 →</Link></div></section>
     <SiteFooter />
   </main>;
 }

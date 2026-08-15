@@ -30,8 +30,7 @@ export default function SearchPage() {
     </header>
     <section className="knowledgeIntro"><p>01 / SEARCH & ASK</p><h2>模型不替代证据，它负责把问题与证据连接起来。</h2><div><p>搜索接口直接查询经过整理的站内知识索引；问答接口只把已检索且包含来源的记录发送给服务器端模型。</p><p>若模型密钥未配置、服务超时或引用校验失败，系统自动返回确定性结果，不显示未经证据支持的回答。</p></div></section>
     <SearchWorkspace />
-    <section className="knowledgeGraphPortal"><div><p>02 / KNOWLEDGE GRAPH</p><h2>从一条结果，展开论文、代码、装置与任务之间的证据关系。</h2><span>图谱默认只加载受限规模的一至两跳邻域，并把每条可见关系链接回结构化来源。</span></div><Link href="/knowledge-graph">打开交互知识图谱 <b>→</b></Link></section>
-    <section className="knowledgeBoundary"><p>03 / TRUST BOUNDARY</p><div><h2>当前能力边界</h2><p>本页覆盖现有物理、工程、控制、诊断、智能原生、集成框架与全球装置数据。它不是通用互联网搜索，也不表示所有收录工作已经独立复现。论文、预印本、机构资料、代码仓库和商业工具的证据性质应分别判断。</p></div></section>
+    <section className="knowledgeGraphPortal"><div><p>02 / KNOWLEDGE GRAPH</p><h2>从检索结果继续探索论文、代码、装置与任务关系。</h2><span>来源和更新时间随记录保留；数据合同与接入方式集中在平台架构页。</span></div><div className="knowledgePortalActions"><Link href="/knowledge-graph">打开知识图谱 <b>→</b></Link><Link href="/platform#contracts">平台架构</Link></div></section>
     <SiteFooter />
   </main>;
 }

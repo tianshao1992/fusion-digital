@@ -2,7 +2,7 @@ import Link from 'next/link';
 import BrandWordmark from './BrandWordmark';
 
 type SiteNavProps = {
-  active?: 'home' | 'physics' | 'engineering' | 'control' | 'diagnostics' | 'ai' | 'facilities' | 'prototype' | 'knowledge' | 'account';
+  active?: 'home' | 'physics' | 'engineering' | 'control' | 'diagnostics' | 'ai' | 'facilities' | 'prototype' | 'knowledge' | 'account' | 'platform';
 };
 
 const links = [

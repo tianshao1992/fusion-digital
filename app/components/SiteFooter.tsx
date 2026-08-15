@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import BrandWordmark from './BrandWordmark';
 
 export default function SiteFooter() {
@@ -8,6 +9,6 @@ export default function SiteFooter() {
     </div>
     <div><b>建设团队</b><p>新奥聚变人工智能团队</p></div>
     <div><b>联系与合作</b><p><a href="mailto:tianshao1992@gmail.com">tianshao1992@gmail.com</a></p></div>
-    <div><b>使用说明</b><p>资料核验至 2026-08-10。网页内容用于技术研究与协作，不替代正式设计、安全分析或许可活动。</p></div>
+    <div><b>平台说明</b><p><Link href="/platform">平台架构、接入合同与技术路线</Link><br/>资料更新至 2026-08-15</p></div>
   </footer>;
 }

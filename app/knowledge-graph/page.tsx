@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import SiteFooter from '@/app/components/SiteFooter';
 import SiteNav from '@/app/components/SiteNav';
 import KnowledgeGraphExplorer from './KnowledgeGraphExplorer';
@@ -32,11 +33,7 @@ export default function KnowledgeGraphPage() {
     </header>
     <div className="kgPrincipleBand"><span>ENTITY</span><b>实体</b><i>→</i><span>CLAIM</span><b>关系主张</b><i>→</i><span>EVIDENCE</span><b>论文 / 代码 / 官方来源</b><i>→</i><span>DECISION</span><b>可审计结论</b></div>
     <KnowledgeGraphExplorer initial={initial} devices={devices} />
-    <section className="kgMethod">
-      <p className="kgEyebrow">04 / GOVERNANCE</p>
-      <h2>图谱是证据索引，不是科学真理的替代品</h2>
-      <div><article><span>01</span><h3>唯一实体</h3><p>论文优先用 DOI/URL，代码使用规范仓库 URL，装置和任务采用受控别名，减少同名与重复节点。</p></article><article><span>02</span><h3>关系可追溯</h3><p>SUPPORTED_BY、HAS_CODE、VALIDATED_ON、OPERATES 等关系继承来源记录；没有来源的模型推断不进入公开图谱。</p></article><article><span>03</span><h3>按需展开</h3><p>API 最多返回 800 个高关联节点，页面默认一跳展开，避免把数千个实体一次性推送到浏览器。</p></article><article><span>04</span><h3>可重建快照</h3><p>完整 JSON 由版本化脚本从现有调研数据生成，后续每日智能体只能提出候选变更，审核后再重建。</p></article></div>
-    </section>
+    <section className="platformInlineLink"><span>图谱保留来源与更新时间，并按需加载邻域。</span><Link href="/platform#contracts">查看数据合同与接入路线 →</Link></section>
     <SiteFooter />
   </main>;
 }

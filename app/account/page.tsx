@@ -36,7 +36,7 @@ export default async function AccountPage() {
       <div><p>01 / REGISTER & SIGN IN</p><h2>无需创建新密码，使用 ChatGPT 完成注册与登录。</h2><p>首次登录时，系统会自动建立 FusionDigital 站内账户，并分配基础访问角色与每日额度。模型密钥始终保留在服务端，不会发送到浏览器。</p><a className="accountPrimaryAction" href={chatGPTSignInPath("/account")}>使用 ChatGPT 注册 / 登录 <b>↗</b></a></div>
       <ol><li><b>01</b><span><strong>确认身份</strong>由平台完成安全登录，本站不接触密码。</span></li><li><b>02</b><span><strong>建立账户</strong>首次访问账户接口时自动创建站内档案。</span></li><li><b>03</b><span><strong>受控使用</strong>问答、审校等能力按角色与额度执行。</span></li></ol>
     </section>}
-    <section className="accountBoundary"><p>02 / SECURITY BOUNDARY</p><div><h2>身份负责“你是谁”，后端负责“你能做什么”。</h2><p>所有角色判断、额度扣减和研究内容审校均在服务端执行。浏览器仅展示账户状态，不持有 OpenAI API 密钥，也不能通过修改页面绕过授权。</p></div></section>
+    <section className="platformInlineLink"><span>角色、额度与写操作由服务端校验。</span><Link href="/platform#architecture">查看平台边界与技术路线 →</Link></section>
     <SiteFooter />
   </main>;
 }

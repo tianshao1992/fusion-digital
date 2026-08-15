@@ -381,15 +381,10 @@ export default function EfitEquilibriumChart({ frame, geometry }: EfitEquilibriu
 
   const fallback = frame ? (
     <div className="efitChartTextFallback">
-      <strong>R–Z 平衡位形</strong>
-      <span>{frame.contours.filter((contour) => contour.kind === 'surface').length} 个 ψN 磁面分带填色</span>
-      <span>{frame.contours.some((contour) => contour.kind === 'lcfs') ? 'LCFS 有效' : 'LCFS 缺失'}</span>
-      {frame.topology && <span>{efitTopologyLabel(frame.topology.kind)} · X 点 {frame.topology.xPoints.length} · 分离支 {frame.topology.separatrixLegs.length} · limiter 交点 {frame.topology.strikePoints.length}</span>}
-      {frame.topology && <span>{deriveReviewedDivertorRegion(frame.topology, geometry?.limiterRzM, { rM: frame.rAxisM, zM: frame.zAxisM }).message}</span>}
-      {frame.topologyGraphPayload && <span>拓扑图 v2 · X 点证据 {frame.topologyGraphPayload.topologyGraph.features.xPointCount} · 已解析分离支 {frame.topologyGraphPayload.topologyGraph.edges.length} · limiter 交点 {frame.topologyGraphPayload.topologyGraph.features.wallIntersectionCount}</span>}
-      {frame.topologyGraphPayload && <span>开放偏滤器区域尚未完成科学审查，仅显示分离支与交点线框，不进行区域填色。</span>}
-      <span>颜色表示归一化极向磁通，不代表温度或密度</span>
-      <span>磁轴 R {Number.isFinite(frame.rAxisM) ? frame.rAxisM.toFixed(3) : '—'} m · Z {Number.isFinite(frame.zAxisM) ? frame.zAxisM.toFixed(3) : '—'} m</span>
+      <strong>R–Z 位形 · {frame.timeMs / 1000} s</strong>
+      <span>{frame.contours.filter((contour) => contour.kind === 'surface').length} 个磁面 · {frame.contours.some((contour) => contour.kind === 'lcfs') ? 'LCFS 有效' : 'LCFS 缺失'}</span>
+      {frame.topology && <span>{efitTopologyLabel(frame.topology.kind)} · X {frame.topology.xPoints.length} · 分离支 {frame.topology.separatrixLegs.length}</span>}
+      {frame.topologyGraphPayload && <span>拓扑 v2 · X {frame.topologyGraphPayload.topologyGraph.features.xPointCount} · 分离支 {frame.topologyGraphPayload.topologyGraph.edges.length}</span>}
     </div>
   ) : (
     <div className="efitChartTextFallback"><strong>R–Z 平衡位形</strong><span>等待首帧数据</span></div>

@@ -176,7 +176,7 @@ test('EFIT plasma colour field is a contour-constrained psiN display in both 2D 
   assert.match(panel, /非温度\/密度/);
   assert.match(equilibrium, /type: 'custom'/);
   assert.match(equilibrium, /bandPsiN/);
-  assert.match(equilibrium, /不代表温度或密度/);
+  assert.match(equilibrium, /不表示温度或密度/);
   assert.match(equilibrium, /orient: 'vertical'/);
   assert.match(equilibrium, /right: 4/);
   assert.match(equilibrium, /top: 'middle'/);

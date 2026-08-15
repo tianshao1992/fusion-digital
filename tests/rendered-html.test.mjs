@@ -64,6 +64,7 @@ test('ships non-empty reports and structured download assets', async () => {
     '../public/fusion-diagnostics-references.bib',
     '../public/data/fusion-diagnostics-landscape.json',
     '../public/data/fusion-diagnostics-device-profiles.json',
+    '../public/FusionDigital-technical-roadmap-2026-08-15.docx',
     '../public/models/paramak-tokamak-demo/paramak-tokamak-demo.step',
     '../public/models/paramak-tokamak-demo/paramak-tokamak-demo.glb',
     '../public/models/paramak-tokamak-demo/paramak-tokamak-demo-poster.png',
@@ -206,17 +207,13 @@ test('server-renders the FusionDigital community portal', async () => {
   assert.match(html, /id="device-3d"/);
   assert.match(html, /MANIFEST-DRIVEN TOKAMAK PACKAGE/);
   assert.match(html, /paramak-tokamak-demo-poster\.png/);
-  assert.match(html, /href="\/models\/paramak-tokamak-demo\/paramak-tokamak-demo\.step"/);
-  assert.match(html, /href="\/models\/paramak-tokamak-demo\/paramak-tokamak-demo\.glb"/);
-  assert.match(html, /href="\/models\/paramak-tokamak-demo\/model-manifest\.json"/);
   assert.match(html, /PF COILS \/ CASES/);
   assert.match(html, /DEVICE PACKAGE VIEWER/);
   assert.match(html, /MANIFEST-DRIVEN DIGITAL ASSET/);
   assert.match(html, /DEVICE-AGNOSTIC \/ LICENCE-AWARE PACKAGE CONTRACT/);
-  assert.match(html, /查看清单 Schema/);
-  assert.match(html, /href="\/licenses\/THREE-LICENSE\.txt"/);
-  assert.match(html, /Paramak 0\.9\.11/);
-  assert.match(html, /不能用于制造、尺寸校核、仿真计算或安全决策/);
+  assert.match(html, /启动装置数据包查看器/);
+  assert.match(html, /搜索名称、ID 或工程标签/);
+  assert.doesNotMatch(html, /class="tokamakCadTrust"|class="tokamakCadFootnotes"/);
   assert.match(html, /data-echart="fusion-twin-system-map"/);
   assert.match(html, /一个装置 · 一条数字主线 · 十项协同能力/);
   assert.match(html, /ONE ASSET · ONE DIGITAL THREAD · TEN COORDINATED CAPABILITIES/);
@@ -282,21 +279,27 @@ test('server-renders the FusionDigital community portal', async () => {
 
 test('server-renders the public full-device digital-prototype workspace', async () => {
   const html = await htmlFor('/digital-prototype');
-  assert.match(html, /CAD \/ CAE DIGITAL PROTOTYPE WORKSPACE/);
+  assert.match(html, /DIGITAL PROTOTYPE \/ 3D \+ EFIT/);
+  assert.match(html, /数字样机工作台/);
   assert.match(html, /href="\/digital-prototype"[^>]*class="active"|class="active"[^>]*href="\/digital-prototype"/);
   assert.equal((html.match(/id="prototype-workspace"/g) ?? []).length, 1);
+  assert.ok(html.indexOf('id="prototype-workspace"') < html.indexOf('PLATFORM INTEGRATION'),
+    'the working interface must appear before integration and architecture guidance');
+  assert.match(html, /装置、三维与 EFIT 联动/);
+  assert.match(html, /href="\/platform#contracts"/);
   assert.match(html, /data-three-viewer="paramak-full-device"/);
   assert.match(html, /Paramak/);
   assert.match(html, /EXL(?:‑|-)?50U 2026 升级版/);
   assert.match(html, /ITER 教育简化模型/);
-  assert.match(html, /三套装置，分级交互的数字样机入口/);
   assert.match(html, /简化派生实时三维/);
   assert.match(html, /仅展示装置信息/);
-  assert.match(html, /叠加比较/);
   assert.match(html, /360°/);
-  assert.match(html, /已获公开展示授权的简化派生几何/);
-  assert.match(html, /原始工程 CAD 始终不由网站交付/);
   for (const removedWorkbenchCopy of [
+    /MODEL COVERAGE/,
+    /DIGITAL ASSET THREAD/,
+    /CAE RESULT ENTRY/,
+    /RESULT ADAPTER \/ PLANNED/,
+    /叠加比较/,
     /DIVERTOR TOPOLOGY \/ VISUALIZATION-DERIVED/,
     /AXISYMMETRIC FLUX SURFACE \/ VISUALIZATION-DERIVED/,
     /PREVIEW SECURITY POLICY/,
@@ -305,11 +308,6 @@ test('server-renders the public full-device digital-prototype workspace', async 
   ]) assert.doesNotMatch(html, removedWorkbenchCopy);
   assert.match(html, /按需加载约 (?:<!-- -->)?2\.2(?:<!-- -->)? MB/);
   assert.doesNotMatch(html, /paramak-tokamak-demo-poster\.png/);
-  assert.match(html, /中央螺线管 \/ 真空室/);
-  assert.match(html, /低温恒温器 \/ 热屏蔽/);
-  assert.match(html, /href="\/models\/paramak-full-device\/model-manifest\.json"/);
-  assert.match(html, /href="\/models\/device-manifest\.schema\.json"/);
-  assert.match(html, /href="\/models\/device-catalog\.json"/);
   assert.doesNotMatch(html, /iter-cad-private|127\.0\.0\.1|\/models\/iter[^"']*\.glb/i);
 
   const catalog = JSON.parse(await readFile(
@@ -379,6 +377,24 @@ test('server-renders the public full-device digital-prototype workspace', async 
   assert.match(manifest.disclaimer, /not an engineering model of ITER, EXL-50U/);
 });
 
+test('server-renders the consolidated platform architecture and technical roadmap', async () => {
+  const html = await htmlFor('/platform');
+  assert.match(html, /PLATFORM ARCHITECTURE \/ 2026/);
+  assert.match(html, /公开投影面/);
+  assert.match(html, /内网科学平台面/);
+  assert.match(html, /实验实时面/);
+  for (const contract of ['DeviceRevision', 'Shot / Signal', 'ArtifactManifest', 'SimulationRun', 'ResultManifest', 'AgentRun', 'Release']) {
+    assert.match(html, new RegExp(contract.replace('/', '\\/')));
+  }
+  assert.match(html, /MDSplus/);
+  assert.match(html, /PostgreSQL/);
+  assert.match(html, /Kubernetes Jobs/);
+  assert.match(html, /NATS JetStream/);
+  assert.match(html, /href="\/FusionDigital-technical-roadmap-2026-08-15\.docx"/);
+  assert.match(html, /href="\/platform"/);
+  assert.doesNotMatch(html, /浏览器[^<]{0,80}(?:直接访问|直连)[^<]{0,40}PCS/);
+});
+
 test('server-renders the integrated-control and PCS research atlas', async () => {
   const html = await htmlFor('/control');
   assert.match(html, /INTEGRATED CONTROL &amp; PCS ATLAS/);
@@ -402,6 +418,8 @@ test('server-renders the integrated-control and PCS research atlas', async () =>
   assert.match(html, /data-echart="control-task-timescale"/);
   assert.match(html, /data-echart="control-evidence-deployment-matrix"/);
   assert.match(html, /target="_blank"/);
+  assert.match(html, /href="\/platform#contracts"/);
+  assert.doesNotMatch(html, /07 \/ COLLABORATE|网页条目用于技术交流/);
 });
 
 test('server-renders the diagnostics and sensing research atlas', async () => {
@@ -437,6 +455,7 @@ test('server-renders the diagnostics and sensing research atlas', async () => {
   ]) assert.match(html, new RegExp(`data-echart="${chart}"`));
   assert.match(html, /href="\/diagnostics"[^>]*class="active"[^>]*>诊断感知<\/a>|class="active"[^>]*href="\/diagnostics"[^>]*>诊断感知<\/a>/);
   assert.match(html, /target="_blank"/);
+  assert.doesNotMatch(html, /METHOD &amp; LIMITS|如何严谨地使用本知识域/);
 });
 
 test('server-renders and validates diagnostics catalog URL filters', async () => {
@@ -468,6 +487,7 @@ test('server-renders the physics simulation atlas', async () => {
     'physics-digital-twin-roadmap',
   ]) assert.match(html, new RegExp(`data-echart="${chart}"`));
   assert.match(html, /href="\/engineering"/);
+  assert.doesNotMatch(html, /不构成求解器排名|不代表官方评级|不是成熟度认证/);
 });
 
 test('server-renders the Tokamak engineering atlas with external tool links', async () => {
@@ -484,6 +504,7 @@ test('server-renders the Tokamak engineering atlas with external tool links', as
     'engineering-digital-twin-roadmap',
   ]) assert.match(html, new RegExp(`data-echart="${chart}"`));
   assert.match(html, /target="_blank"/);
+  assert.doesNotMatch(html, /不构成性能承诺|不构成项目进度承诺/);
 });
 
 test('server-renders the device construction-status observatory', async () => {
@@ -494,6 +515,8 @@ test('server-renders the device construction-status observatory', async () => {
   assert.match(html, /SPARC/);
   assert.match(html, /BEST/);
   assert.match(html, /target="_blank"/);
+  assert.match(html, /href="\/platform#architecture"/);
+  assert.doesNotMatch(html, /STATUS METHOD|纳入与核验规则/);
 });
 
 test('server-renders the AI-native fusion digital twin research page', async () => {
@@ -520,6 +543,8 @@ test('server-renders the AI-native fusion digital twin research page', async () 
   ]) assert.match(html, new RegExp(domain));
   assert.match(html, /FUSION · TWIN · AGENT LOOP/);
   assert.match(html, /target="_blank"/);
+  assert.match(html, /href="\/platform#architecture"/);
+  assert.doesNotMatch(html, /METHOD &amp; LIMITS|如何使用这份图谱/);
 });
 
 test('ships and server-renders the evidence-first knowledge graph', async () => {
@@ -553,6 +578,8 @@ test('ships and server-renders the evidence-first knowledge graph', async () => 
   assert.match(html, /href="\/data\/fusion-knowledge-graph\.json"/);
   assert.match(html, /节点上限/);
   assert.match(html, /1 跳 · 直接关系/);
+  assert.match(html, /href="\/platform#contracts"/);
+  assert.doesNotMatch(html, /04 \/ GOVERNANCE|图谱是证据索引/);
 });
 
 test('ships and server-renders evidence-grounded knowledge search', async () => {
@@ -572,6 +599,8 @@ test('ships and server-renders evidence-grounded knowledge search', async () => 
   assert.match(html, /确定性检索/);
   assert.match(html, /询问 FusionDigital/);
   assert.match(html, /证据不足则拒答/);
+  assert.match(html, /href="\/platform#contracts"/);
+  assert.doesNotMatch(html, /03 \/ TRUST BOUNDARY|当前能力边界/);
 });
 
 test('server-renders the identity-aware account entry without exposing credentials', async () => {
@@ -582,6 +611,8 @@ test('server-renders the identity-aware account entry without exposing credentia
   assert.match(html, /使用 ChatGPT 注册 \/ 登录/);
   assert.match(html, /模型密钥始终保留在服务端/);
   assert.match(html, /href="\/account"[^>]*aria-label="账户中心"/);
+  assert.match(html, /href="\/platform#architecture"/);
+  assert.doesNotMatch(html, /02 \/ SECURITY BOUNDARY/);
   assert.doesNotMatch(html, /OPENAI_API_KEY|sk-[A-Za-z0-9_-]{16,}/);
 });
 

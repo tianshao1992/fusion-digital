@@ -72,7 +72,6 @@ export default function Home() {
         <a href="/research-review"><span>03 / HUMAN REVIEW</span><h3>智能体候选审核</h3><p>一期已建立候选生成与职责分离审核；联网发现仍处于安全演练阶段，任何接受项也不会自动发布。</p><b>进入审核台 →</b></a>
         <a href="/account"><span>04 / IDENTITY & GOVERNANCE</span><h3>账户、角色与配额</h3><p>使用可信平台身份，统一管理成员角色、模型额度、使用记录和审计边界。</p><b>查看账户 →</b></a>
       </div>
-      <div className="aiNativeGuardrail"><span>RETRIEVAL</span><i>→</i><span>CITATION GATE</span><i>→</i><span>MODEL SYNTHESIS</span><i>→</i><span>HUMAN REVIEW</span><i>→</i><span>VERSIONED PUBLISH</span></div>
     </section>
 
     <section className="domainSection" id="domains">

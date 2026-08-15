@@ -210,7 +210,7 @@ function TokamakCadViewerSession({
   sectionId,
   workspace = false,
   showDownloadActions = true,
-  showFootnotes = true,
+  showFootnotes = false,
   securityNotice,
   defaultClipping = false,
   defaultClipAxis = 'x',
@@ -1031,7 +1031,7 @@ function TokamakCadViewerSession({
         <p className="tokamakCadIndex">{workspace ? 'WORKSPACE / FULL-DEVICE DIGITAL MOCK-UP' : '03D / DEVICE PACKAGE VIEWER'}</p>
         <div>
           <h2 id={`${viewerId}-title`}>{workspace ? '浏览完整主体装置，并保持每个部件可追溯' : '从网页三维样机，进入可替换的装置数据包'}</h2>
-          <p>{manifest ? `${manifest.title}由 DeviceManifest 驱动装配树、稳定部件 ID、单位、坐标系、数据分级与许可；当前交付的是浏览器派生几何，不等同于原始工程 CAD。` : '查看器由 DeviceManifest 驱动：几何、单位、坐标系、许可分级、稳定部件 ID 与装配树均来自同一份清单。'}</p>
+          <p>{manifest ? `${manifest.title} · 装配树、部件选择、显隐、剖切与多级细节。` : '按需载入装置三维与装配树。'}</p>
         </div>
       </div>
 
@@ -1106,7 +1106,6 @@ function TokamakCadViewerSession({
               {selectedPartIds.size > 1 && <p className="tokamakCadSelectionSummary">已多选 {selectedPartIds.size} 个部件；按 Ctrl / ⌘ / Shift 点击可增减选择。</p>}
               <div className="tokamakCadPropertyActions"><button type="button" onClick={() => togglePartVisibility(selectedPart.id)}>{hiddenPartIds.has(selectedPart.id) ? '显示当前部件' : '隐藏当前部件'}</button><button type="button" className={isolatedPartIds.size > 0 ? 'active' : ''} onClick={isolateSelection}>{isolatedPartIds.size > 0 ? '退出隔离' : `隔离选中（${selectedPartIds.size}）`}</button></div>
             </div> : <div className="tokamakCadPropertyEmpty"><span>◎</span><p>在装配树或三维视图中选择部件，查看稳定 ID、工程标签与数据级别。</p></div>}
-            <div className="tokamakCadTrust"><b>PUBLIC DERIVATIVE</b><p>{manifest?.access.statement ?? '该演示不包含 ITER 或 EXL-50U 受限工程数据。'}</p></div>
           </aside>
         </div>
 

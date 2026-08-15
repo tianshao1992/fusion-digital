@@ -161,7 +161,7 @@ export default async function DiagnosticsPage({ searchParams }: { searchParams?:
         <ScientificFigure
           src="/figures/diagnostics-digital-twin-architecture-nature.png"
           alt="聚变诊断与数字孪生参考架构：真实装置、测量链、状态反演、合成诊断、决策与证据治理"
-          caption="图 1｜诊断感知在聚变数字孪生中的位置。真实观测和模型预测必须通过配置、时钟、标定、不确定度与证据治理相遇；AI 只能在这些边界内赋能。"
+          caption="图 1｜真实观测与模型预测通过配置、时钟、标定和不确定度连接。"
         />
       </header>
 
@@ -183,7 +183,7 @@ export default async function DiagnosticsPage({ searchParams }: { searchParams?:
         <div className="diagnosticsLoopGrid">
           <figure className="diagnosticsChartFigure">
             <DiagnosticsClosedLoopGraph />
-            <figcaption>交互图 1｜从装置真实状态，经仪器与数据链形成后验状态；模型再经合成诊断返回仪器空间，以残差驱动校准、设计和决策。节点位置表达责任关系，不代表固定软件部署拓扑。</figcaption>
+            <figcaption>交互图 1｜观测形成后验状态，模型经合成诊断返回仪器空间，残差驱动校准、设计和决策。</figcaption>
           </figure>
           <div className="diagnosticsLoopPrinciples">
             <article><span>01</span><div><b>计量可追溯</b><p>每个量值都能回到原始信号、单位、坐标、标定系数、有效期和几何版本。</p></div></article>
@@ -202,7 +202,7 @@ export default async function DiagnosticsPage({ searchParams }: { searchParams?:
         </div>
         <figure className="diagnosticsChartFigure diagnosticsCoverage">
           <DiagnosticsTaskCoverageChart />
-          <figcaption>交互图 2｜97 项工作按主任务聚合。点击条形可进入目录筛选；数量反映本版调研覆盖，不代表某类诊断的重要性或全球总工作量。</figcaption>
+          <figcaption>交互图 2｜97 项工作按主任务聚合；点击条形进入目录筛选。</figcaption>
         </figure>
         <div className="diagnosticsTaskGrid">
           {taskIds.map((taskId) => {
@@ -227,7 +227,7 @@ export default async function DiagnosticsPage({ searchParams }: { searchParams?:
           <div>
             <p className="diagnosticsIndex">03 / SEARCHABLE EVIDENCE ATLAS</p>
             <h2>按任务、技术、装置、证据和软件关系检索主要工作。</h2>
-            <p>条目区分“论文原代码、官方使能工具、社区复现、商业/受控软件和未公开代码”。没有公开实现时明确标注，不以通用框架或论文链接冒充源码。</p>
+            <p>条目区分论文原代码、官方使能工具、社区复现、商业/受控软件和未公开代码。</p>
           </div>
           <nav className="diagnosticsDownloads" aria-label="诊断研究数据下载">
             <a href="/fusion-diagnostics-research-report.docx" download><b>DOCX</b><span>完整技术报告</span></a>
@@ -249,7 +249,7 @@ export default async function DiagnosticsPage({ searchParams }: { searchParams?:
         <div className="diagnosticsEvidenceLayout">
           <figure className="diagnosticsChartFigure">
             <DiagnosticsEvidenceHeatmap />
-            <figcaption>交互图 3｜工作按 E0–E4 与 D1–D5 交叉聚合。点击单元格可进入目录筛选；空格表示本版事实库未记录对应组合，不表示全球没有相关工作。</figcaption>
+            <figcaption>交互图 3｜工作按 E0–E4 与 D1–D5 交叉聚合；点击单元格进入目录筛选。</figcaption>
           </figure>
           <div className="diagnosticsEvidenceScales">
             <div>
@@ -267,15 +267,15 @@ export default async function DiagnosticsPage({ searchParams }: { searchParams?:
       <section className="diagnosticsScientificViews" id="scientific-views">
         <div className="diagnosticsSectionHead">
           <p className="diagnosticsIndex">05 / SCIENTIFIC VIEWS</p>
-          <h2>从时间尺度、装置覆盖到反演治理：五张互补视图解释同一系统。</h2>
-          <p>这些图是架构与方法视图，不替代具体诊断的标定曲线、误差预算或装置安全文件；图中数量级和关系应结合每项工作的原始来源阅读。</p>
+          <h2>从时间尺度、装置覆盖到反演与实时链：五张视图解释同一系统。</h2>
+          <p>图中数量级和关系与目录中的原始来源、标定和误差信息对应。</p>
         </div>
         <div className="diagnosticsFigureGrid">
-          <figure className="diagnosticsChartFigure diagnosticsScientificChart"><DiagnosticsTimescaleChart /><figcaption>交互图 4｜多时间尺度：快速保护、实时状态、炮内演化、炮间校准与全生命周期健康需要不同数据链和验证方法。区间为综合示意，不是性能承诺。</figcaption></figure>
-          <figure className="diagnosticsChartFigure diagnosticsScientificChart"><DiagnosticsDeviceCoverageChart /><figcaption>交互图 5｜装置证据索引：不同装置的任务、数据开放度、实时接口和验证环境不同；着色不代表所有系统同时可用或成熟度相同。</figcaption></figure>
+          <figure className="diagnosticsChartFigure diagnosticsScientificChart"><DiagnosticsTimescaleChart /><figcaption>交互图 4｜快速保护、实时状态、炮内演化、炮间校准与全生命周期健康对应不同数据链和验证方法。</figcaption></figure>
+          <figure className="diagnosticsChartFigure diagnosticsScientificChart"><DiagnosticsDeviceCoverageChart /><figcaption>交互图 5｜按任务、数据开放度、实时接口和验证环境索引装置证据。</figcaption></figure>
           <ScientificFigure src="/figures/diagnostics-synthetic-loop-nature.png" alt="真实诊断与合成诊断残差闭环图" caption="图 7｜合成诊断闭环：模型经过仪器前向算子后再与原始观测比较，残差用于定位物理、几何、校准或噪声模型偏差。" />
           <ScientificFigure src="/figures/diagnostics-inference-graph-nature.png" alt="多诊断联合反演和不确定度传播图" caption="图 8｜集成反演：联合多个互补观测，显式表达先验、似然、空间几何和后验不确定度，避免各诊断各自产生互不一致的状态。" />
-          <ScientificFigure src="/figures/diagnostics-realtime-governance-nature.png" alt="实时诊断、人工智能、质量门和安全治理图" caption="图 9｜实时治理：模型发布、输入质量、最坏时延、OOD、降级和权限门决定输出能否进入 PCS、保护或只供人机界面参考。" />
+          <ScientificFigure src="/figures/diagnostics-realtime-governance-nature.png" alt="实时诊断、人工智能、质量门和安全接口图" caption="图 9｜实时链：输入质量、最坏时延、OOD 和降级状态决定输出进入 PCS、保护或人机界面的路径。" />
         </div>
       </section>
 
@@ -293,21 +293,11 @@ export default async function DiagnosticsPage({ searchParams }: { searchParams?:
         <div className="diagnosticsSectionHead">
           <p className="diagnosticsIndex">07 / FUSIONDIGITAL ROADMAP</p>
           <h2>从炮次级证据链切入，逐步形成电厂级持续观测与可信决策。</h2>
-          <p>每一阶段都应保留“可回放、可对比、可降级、可追责”的验收门。建议节奏取决于 EXL-50U / EHL-2 的仪器配置、数据权限与实验计划，不把网页阶段直接等同工程承诺。</p>
+          <p>每一阶段以可回放、可对比、可降级为验收门，节奏取决于 EXL-50U / EHL-2 的仪器配置、数据权限与实验计划。</p>
         </div>
-        <figure className="diagnosticsChartFigure diagnosticsRoadmapFigure"><DiagnosticsRoadmapChart /><figcaption>交互图 6｜建议阶段允许并行，并以证据门而非日历自动晋级；时间窗口用于架构规划，不是已批准进度承诺。</figcaption></figure>
+        <figure className="diagnosticsChartFigure diagnosticsRoadmapFigure"><DiagnosticsRoadmapChart /><figcaption>交互图 6｜阶段允许并行，并按证据门推进。</figcaption></figure>
         <div className="diagnosticsRoadmapGrid">
           {roadmap.map(([id, title, description, horizon]) => <article key={id}><header><span>{id}</span><b>{horizon}</b></header><h3>{title}</h3><p>{description}</p><footer>配置基线 → 验证记录 → 责任批准 → 可回退发布</footer></article>)}
-        </div>
-      </section>
-
-      <section className="diagnosticsMethod">
-        <div><p className="diagnosticsIndex">08 / METHOD &amp; LIMITS</p><h2>如何严谨地使用本知识域</h2></div>
-        <div className="diagnosticsMethodGrid">
-          <article><b>收录口径</b><p>优先原始论文、装置/机构官方页面和作者仓库；工作按稳定 ID 去重，一项工作只计一个主任务。</p></article>
-          <article><b>代码口径</b><p>“使能工具”不等于论文原实现；商业、受控和未公开软件分别标注，未发现公开仓库时不补猜链接。</p></article>
-          <article><b>装置口径</b><p>装置档案是证据索引，不声称所有诊断在每个实验周期同时可用；装机、调试、离线和实时使用需要分开判断。</p></article>
-          <article><b>维护口径</b><p>新增记录需补齐问题、测量原理、时空尺度、标定、反演、验证、E/D、论文、代码关系、局限与更新时间。</p></article>
         </div>
       </section>
 

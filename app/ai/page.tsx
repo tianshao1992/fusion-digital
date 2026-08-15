@@ -239,15 +239,7 @@ export default function AIPage() {
         <div className="aiRouteGrid">{roadmap.map((item) => <article key={item[0]}><span>{item[0]}</span><h3>{item[1]}</h3><p>{item[2]}</p></article>)}</div>
       </section>
 
-      <section className="aiMethod">
-        <div><p className="aiIndex">08 / METHOD & LIMITS</p><h2>如何使用这份图谱</h2></div>
-        <div className="methodGrid">
-          <article><b>证据分级</b><p>E0 方法/概念；E1 仿真；E2 真实装置离线数据；E3 实时、HIL 或影子；E4 真实装置闭环。仅按原始来源直接证明的最高等级标注。</p></article>
-          <article><b>代码分级</b><p>区分官方对应实现、官方使能工具、社区复现和未公开。通用 PyTorch/JAX/OpenMDAO 不被当作特定论文的对应代码。</p></article>
-          <article><b>范围限制</b><p>这是面向 Tokamak 与聚变电厂数字孪生规划的可维护图谱，不声称穷尽所有论文；商业内部项目和未公开装置工作不可避免地存在盲区。</p></article>
-          <article><b>更新方式</b><p>网页条目由公开 JSON 数据生成。新增工作应同时补齐问题、装置、证据、论文、代码关系、数据、成熟度与局限字段。</p></article>
-        </div>
-      </section>
+      <section className="platformInlineLink"><span>研究条目保留证据等级、来源、代码状态与局限；任何影响装置的动作仍需服务端授权和人工批准。</span><a href="/platform#architecture">查看智能体接入架构 →</a></section>
 
       <SiteFooter />
     </main>

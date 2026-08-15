@@ -18,8 +18,11 @@ FusionDigital 的软件目标不是提供一个万能聚变求解器，而是提
 - Python 标准库进行调研数据归一化和审计
 - `python-docx` 生成 Word 技术报告
 - OpenAI Sites 负责生产托管
+- D1 保存账户、角色、配额、审计、知识实体以及研究候选/审核控制面
 
-站点当前没有业务数据库和用户写入功能；`.openai/hosting.json` 中 D1/R2 均为空。新增社区投稿、账号、评论或文件上传前，必须先设计鉴权、审核、数据保留和内容治理。
+站点当前已经启用 D1 和 Sign in with ChatGPT，并实现账户、角色、配额、审计、研究运行、候选提交与人工审核。R2 仍未启用；公开检索和图谱仍主要读取 Git 中生成的静态快照，尚未以 D1 知识表为统一读取源。大型 PDF、CAD、CAE、EFIT、诊断和仿真资产不应继续由 D1 或 Worker 请求路径承载。
+
+面向 MDSplus、NAS、对象存储、CAD/CAE、仿真和控制的完整目标架构见 [整体技术路线图](PLATFORM_TECHNICAL_ROADMAP.md)。
 
 ## 3. 页面结构
 
@@ -30,6 +33,7 @@ app/physics/page.tsx           物理模拟与集成模拟
 app/engineering/page.tsx       Tokamak 工程仿真
 app/ai/page.tsx                智能原生专题
 app/facilities/page.tsx        全球装置状态
+app/platform/page.tsx          平台架构、统一合同与技术路线
 app/components/                导航、页脚、品牌与动效
 ```
 
@@ -130,6 +134,7 @@ GitHub 是人和 Codex 的协作入口；Sites 内部仓库是生产发布通道
 1. 将物理、工程、装置数据也迁移为带 schema 的源数据和生成文件。
 2. 增加 JSON Schema、字段级验证、外链定期检查和变更日志。
 3. 将报告生成、图片压缩和链接审计纳入独立的内容流水线。
-4. 增加专家身份、投稿暂存区和审核队列，再开放社区写入。
-5. 对 DINA、MEQ、工程代理模型和实验数据服务建立 API 合约，而不是把研究条目直接当作运行模型。
-6. 在影子模式、HIL、VVUQ 和权限治理成熟后，逐步形成数字孪生运行服务。
+4. 将 D1 知识表确定为写入控制面，把静态 JSON 明确为版本化发布投影。
+5. 建立 PostgreSQL + S3 对象存储的内网科学平台，并增加 MDSplus/NAS/PLM 只读适配器。
+6. 对 DINA、MEQ、工程代理模型和实验数据服务建立统一 SimulationRun/ResultManifest 合约，而不是把研究条目直接当作运行模型。
+7. 在影子模式、HIL、VVUQ 和权限治理成熟后，逐步形成数字孪生运行服务；实时控制与保护保持独立安全域。

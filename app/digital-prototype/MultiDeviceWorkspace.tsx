@@ -17,11 +17,11 @@ import TurntableDeviceViewer from './TurntableDeviceViewer';
 function MetadataViewer({ device }: { device: DeviceCatalogEntry }) {
   return <div className={`controlledDevicePlaceholder ${device.tone}`}>
     <div className="deviceLockGlyph" aria-hidden="true"><i /><i /><i /></div>
-    <p>{device.eyebrow}</p>
-    <h3>{device.title} 不向公网下发三维几何</h3>
-    <span>{device.statement}</span>
-    <div className="controlledStats">{device.facts.map((fact) => <b key={fact}>{fact}</b>)}</div>
-    <a href="#asset-policy">查看资产与发布边界 ↗</a>
+    <p>INFORMATION MODE</p>
+    <h3>{device.title}</h3>
+    <span>当前仅提供装置信息，不加载浏览器三维。</span>
+    <div className="controlledStats">{device.facts.slice(0, 2).map((fact) => <b key={fact}>{fact}</b>)}</div>
+    <a href="/platform#contracts">查看装置接入方式 ↗</a>
   </div>;
 }
 
@@ -247,26 +247,14 @@ function DeviceExperience({ device }: { device: DeviceCatalogEntry }) {
 
 export default function MultiDeviceWorkspace({ catalog }: { catalog: DeviceCatalog }) {
   const [selectedId, setSelectedId] = useState(catalog.devices[0].id);
-  const [compare, setCompare] = useState(false);
   const current = catalog.devices.find((device) => device.id === selectedId) ?? catalog.devices[0];
-  const overlayCandidates = catalog.devices.filter((device) => device.viewer.mode === 'real-3d'
-    && device.viewer.overlayEligible
-    && device.comparisonFrame !== null);
-  // The public workspace intentionally stays single-device until a shared-canvas
-  // renderer has passed the same publication policy. The controlled local viewer
-  // already provides true multi-device overlays without publishing protected data.
-  const overlayReady = false;
 
   return <section className="multiDeviceSection" id="prototype-workspace" aria-labelledby="multi-device-title">
     <div className="multiDeviceIntro">
-      <p>02 / MULTI-DEVICE WORKSPACE</p>
+      <p>WORKSPACE</p>
       <div>
-        <h2 id="multi-device-title">三套装置，分级交互的数字样机入口。</h2>
-        <span>设备选择与展示方式由同一目录驱动；已获公开展示授权的简化派生几何可进入实时三维，受限装置保持纯信息模式。发送到浏览器的几何无法从技术上保证不可保存，原始工程 CAD 始终不由网站交付。</span>
-      </div>
-      <div className="multiDeviceModes" aria-label="查看模式">
-        <button className={!compare ? 'active' : ''} type="button" onClick={() => setCompare(false)} aria-pressed={!compare}>单装置切换</button>
-        <button className={compare ? 'active' : ''} type="button" disabled={!overlayReady} title={overlayCandidates.length < 2 ? '需要至少两套获批且坐标系一致的实时三维资产' : '共享画布适配器尚未通过发布策略'} onClick={() => setCompare(true)} aria-pressed={compare}>叠加比较</button>
+        <h2 id="multi-device-title">装置、三维与 EFIT 联动</h2>
+        <span>选择装置后即可进入对应的三维、预览或资料模式。</span>
       </div>
     </div>
 
@@ -278,7 +266,7 @@ export default function MultiDeviceWorkspace({ catalog }: { catalog: DeviceCatal
         aria-selected={current.id === device.id}
         aria-controls={`device-panel-${device.id}`}
         className={`${current.id === device.id ? 'active ' : ''}${device.tone}`}
-        onClick={() => { setSelectedId(device.id); setCompare(false); }}
+        onClick={() => setSelectedId(device.id)}
       >
         <span>{device.index}</span>
         <small>{device.eyebrow}</small>
@@ -289,13 +277,9 @@ export default function MultiDeviceWorkspace({ catalog }: { catalog: DeviceCatal
 
     <div className="deviceStage" id={`device-panel-${current.id}`} role="tabpanel">
       <aside className={`deviceAuthority ${current.tone}`}>
-        <small>DEVICE AUTHORITY / {current.viewer.mode.toUpperCase()}</small>
+        <small>{current.viewer.mode.toUpperCase()}</small>
         <h3>{current.title}</h3>
-        <p>{current.copy}</p>
-        <ul>{current.facts.map((fact) => <li key={fact}>{fact}</li>)}</ul>
-        <div className="compareGate"><b>OVERLAY GATE</b><span>{overlayReady
-          ? '仅获授权、采用实时三维模式且共享同一比较坐标系的装置可以叠加。'
-          : '当前没有两套同时获批且坐标一致的实时三维资产；转台帧与纯信息模式不会进入几何叠加。'}</span></div>
+        <ul>{current.facts.slice(0, 3).map((fact) => <li key={fact}>{fact}</li>)}</ul>
       </aside>
       <DeviceExperience device={current} />
     </div>
