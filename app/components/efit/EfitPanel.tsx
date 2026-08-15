@@ -74,7 +74,6 @@ export default function EfitPanel({
   const graphXPoints = topologyGraph?.nodes.filter((node) => node.kind === 'x-point') ?? [];
   const graphBoundaryXPoints = graphXPoints.filter((node) => node.role === 'boundary');
   const graphCandidateXPoints = graphXPoints.filter((node) => node.role === 'near-boundary');
-  const graphWallPoints = topologyGraph?.nodes.filter((node) => node.kind === 'wall-intersection') ?? [];
   const graphIsPartial = Boolean(topologyGraph && (topologyGraph.unresolvedArms.length > 0 || topologyGraph.unresolvedRegions.length > 0));
   const activeGeometry = resolveShotGeometry(snapshot.manifest, snapshot.activeShot);
   const divertorRegion = deriveReviewedDivertorRegion(
@@ -179,20 +178,6 @@ export default function EfitPanel({
           <div className="efitCardHeading"><span>02</span><div><h3>放电时序</h3><p>Ip · Raxis · Zaxis；点击曲线定位时间</p></div></div>
           <EfitSignalsChart timeline={snapshot.timeline} currentTimeMs={snapshot.currentTimeMs} onSeekTimeMs={(timeMs) => void store.actions.seekTimeMs(timeMs)} />
         </article>
-      </div>
-
-      <div className={`efitTopologyBoundary${divertorRegion.state === 'wireframe' || graphIsPartial ? ' isPartial' : ''}`} role="note">
-        <b>DIVERTOR TOPOLOGY / VISUALIZATION-DERIVED</b>
-        <span>
-          {topologyGraph
-            ? `拓扑图 v2：已发布 ${graphBoundaryXPoints.length} 个边界 X 点、${graphCandidateXPoints.length} 个近边界候选证据、${topologyGraph.edges.length} 条已解析恒磁通分离支和 ${graphWallPoints.length} 个 canonical limiter 交点；另有 ${topologyGraph.unresolvedArms.length} 条未解析分离臂。三维中的灰蓝小叉仅表示候选证据，不显示活动环。开放偏滤器区域尚未完成科学审查，因此只显示线框，不生成或填充 SOL / 偏滤器区域。`
-            : topology
-            ? `${efitTopologyLabel(topology.kind)}：已发布 ${topology.xPoints.length} 个 X 点、${topology.separatrixLegs.length} 条开放分离支和 ${topology.strikePoints.length} 个 limiter 交点。`
-            : '当前帧未发布经校验的偏滤器拓扑；界面不会由 LCFS 猜测 X 点或分离支。'}
-          {topology?.kind === 'near-double-null' && ' 近双零标记区分主、次 X 点，不表示严格平衡双零。'}
-          {!topologyGraph && <> {divertorRegion.message}</>}
-          {' '}橙色填充只表示上述边界构造区域，不表示温度、密度、真实 SOL 宽度或物理场。交点仅表示分离支与已发布 limiter 轮廓的交会，不等同于经 CAD 配准校核的真实偏滤器靶板打击点。
-        </span>
       </div>
 
       <EfitTimelineControls store={store} snapshot={snapshot} />

@@ -613,7 +613,9 @@ test('EXL alone uses a lifecycle-safe industrial silver appearance without chang
   assert.match(source, /const selectedMaterial = baseMaterial\.clone\(\)/);
   assert.match(source, /originalMaterials\.forEach\(\(material, mesh\) => \{ mesh\.material = material; \}\)/);
   assert.match(appearanceSource, /presentation-only appearance codes/);
-  assert.match(workspace, /不代表真实材料、涂层、表面状态或温度场/);
+  assert.match(source, /不代表真实材料、涂层、表面状态或温度场/);
+  assert.match(workspace, /showFootnotes=\{false\}/,
+    'the compact digital-prototype workbench must suppress long-form viewer footnotes');
 
   const systemIds = manifest.systems.map((system) => system.id).sort();
   assert.deepEqual(Object.keys(appearance.EXL50U_INDUSTRIAL_SYSTEM_PRESETS).sort(), systemIds,

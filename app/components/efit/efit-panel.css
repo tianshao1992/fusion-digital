@@ -297,35 +297,6 @@
   font-size: 0.58rem;
 }
 
-.efitTopologyBoundary {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: start;
-  gap: 10px 14px;
-  margin-top: 12px;
-  padding: 10px 13px;
-  color: #82a7a0;
-  background: rgba(27, 17, 10, 0.62);
-  border: 1px solid rgba(255, 132, 55, 0.24);
-  border-radius: 11px;
-  font-size: 0.63rem;
-  line-height: 1.55;
-}
-
-.efitTopologyBoundary b {
-  color: #ff9a52;
-  font: 700 0.58rem/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  letter-spacing: 0.08em;
-  white-space: nowrap;
-}
-
-.efitTopologyBoundary.isPartial {
-  border-color: rgba(242, 189, 114, 0.28);
-  background: rgba(48, 33, 15, 0.23);
-}
-
-.efitTopologyBoundary.isPartial b { color: #f2bd72; }
-
 .efitTransport {
   display: grid;
   grid-template-columns: auto minmax(260px, 1fr) auto;
@@ -421,7 +392,6 @@
   .efitChartGrid { grid-template-columns: 1fr; }
   .efitChart { height: min(88vw, 390px); }
   .efitSignalsChart { height: 300px; }
-  .efitTopologyBoundary { grid-template-columns: 1fr; }
   .efitTransport { grid-template-columns: 1fr; gap: 10px; }
   .efitTransportTopline { justify-content: space-between; }
   .efitTransportSettings { grid-column: auto; justify-content: space-between; flex-wrap: wrap; }

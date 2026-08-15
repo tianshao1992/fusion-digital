@@ -296,6 +296,13 @@ test('server-renders the public full-device digital-prototype workspace', async 
   assert.match(html, /360°/);
   assert.match(html, /已获公开展示授权的简化派生几何/);
   assert.match(html, /原始工程 CAD 始终不由网站交付/);
+  for (const removedWorkbenchCopy of [
+    /DIVERTOR TOPOLOGY \/ VISUALIZATION-DERIVED/,
+    /AXISYMMETRIC FLUX SURFACE \/ VISUALIZATION-DERIVED/,
+    /PREVIEW SECURITY POLICY/,
+    /科学与安全边界/,
+    /预览交付与替换接口/,
+  ]) assert.doesNotMatch(html, removedWorkbenchCopy);
   assert.match(html, /按需加载约 (?:<!-- -->)?2\.2(?:<!-- -->)? MB/);
   assert.doesNotMatch(html, /paramak-tokamak-demo-poster\.png/);
   assert.match(html, /中央螺线管 \/ 真空室/);

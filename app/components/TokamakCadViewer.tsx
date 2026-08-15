@@ -41,6 +41,7 @@ export type TokamakCadViewerProps = {
   sectionId?: string;
   workspace?: boolean;
   showDownloadActions?: boolean;
+  showFootnotes?: boolean;
   securityNotice?: string;
   defaultClipping?: boolean;
   defaultClipAxis?: 'x' | 'y' | 'z';
@@ -209,6 +210,7 @@ function TokamakCadViewerSession({
   sectionId,
   workspace = false,
   showDownloadActions = true,
+  showFootnotes = true,
   securityNotice,
   defaultClipping = false,
   defaultClipAxis = 'x',
@@ -1127,10 +1129,10 @@ function TokamakCadViewerSession({
         </div>}
       </div>
 
-      <div className="tokamakCadFootnotes">
+      {showFootnotes && <div className="tokamakCadFootnotes">
         <p><b>科学与安全边界</b>{applicabilityStatement}{appearancePreset === 'industrial-silver-v1' && ' 银色、深合金、铜色及 CFC 外观仅用于结构辨识，不代表真实材料、涂层、表面状态或温度场。'}</p>
         <p><b>预览交付与可替换接口</b>{securityNotice ?? '模型以浏览器派生资产发送到用户设备；界面可隐藏下载操作，但无法从技术上阻止浏览器缓存、网络调试或复制已传输的数据。原始工程 CAD 不由此查看器交付。'}<a href={manifestUrl}>查看 DeviceManifest</a><a href="/models/device-manifest.schema.json">查看清单 Schema</a>{isParamakPackage && <a href="https://github.com/fusion-energy/paramak/tree/0.9.11" target="_blank" rel="noreferrer">Paramak 0.9.11</a>}<a href="/licenses/THREE-LICENSE.txt">Three.js 许可</a>{showDownloadActions && <><a href={sourceCadPath} download>下载 STEP</a><a href={webModelPath} download>下载 GLB</a></>}</p>
-      </div>
+      </div>}
     </section>
   );
 }

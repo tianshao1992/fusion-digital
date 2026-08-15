@@ -103,6 +103,7 @@ test('digital-prototype split layout exposes an accessible and persistent resize
 
 test('digital-prototype workspace is full-width, aligned and safely stacks below 1180px', async () => {
   const workspace = await source('app/digital-prototype/MultiDeviceWorkspace.tsx');
+  const viewer = await source('app/components/TokamakCadViewer.tsx');
   const css = await source('app/digital-prototype/prototype.css');
 
   assert.match(cssRule(css, '.multiDeviceSection'), /padding:56px clamp\(14px,1\.5vw,30px\) 72px/);
@@ -133,19 +134,12 @@ test('digital-prototype workspace is full-width, aligned and safely stacks below
   assert.match(compact, /\.devicePaneSeparator\{display:none\}/);
   assert.match(compact, /\.deviceViewport \.tokamakCadShell\{height:auto;min-height:0\}/);
   assert.match(compact, /\.devicePhysicsPanel\{height:auto;max-height:none;overflow:visible/);
-  assert.match(compact, /\.tokamakCadFootnotes\{display:grid\}/, 'the original governance footnotes must return in stacked mode');
 
-  assert.match(workspace, /function DeviceGovernanceNote/);
-  assert.match(workspace, /className="deviceGovernanceNote" role="note"/);
-  assert.match(workspace, /科学与安全边界/);
-  assert.match(workspace, /预览交付与替换接口/);
-  assert.match(workspace, /<DeviceGovernanceNote device=\{current\} \/>/);
-  assert.match(cssRule(css, '.deviceGovernanceNote'), /display:grid/);
-  assert.doesNotMatch(
-    cssRule(css, '.deviceViewport .tokamakCadFootnotes'),
-    /display:none/,
-    'the base footnote rule must remain available outside the aligned desktop split',
-  );
+  assert.match(viewer, /showFootnotes\?: boolean/);
+  assert.match(viewer, /\{showFootnotes && <div className="tokamakCadFootnotes">/);
+  assert.match(workspace, /showFootnotes=\{false\}/);
+  assert.doesNotMatch(workspace, /DeviceGovernanceNote|deviceGovernanceNote|devicePreviewPolicy|devicePhysicsBoundary/);
+  assert.doesNotMatch(workspace, /PREVIEW SECURITY POLICY|AXISYMMETRIC FLUX SURFACE/);
 });
 
 test('EFIT panel exposes shot selection, real time scrubbing, playback and quality boundaries', async () => {
@@ -226,10 +220,9 @@ test('optional divertor topology renders as open scientific overlays without con
   assert.match(equilibrium, /topologyGraph\?\.edges/);
   assert.match(equilibrium, /near-boundary/);
 
-  assert.match(panel, /DIVERTOR TOPOLOGY \/ VISUALIZATION-DERIVED/);
   assert.match(panel, /不等同于严格双零平衡/);
-  assert.match(panel, /不等同于经 CAD 配准校核的真实偏滤器靶板打击点/);
-  assert.match(css, /\.efitTopologyBoundary/);
+  assert.doesNotMatch(panel, /DIVERTOR TOPOLOGY \/ VISUALIZATION-DERIVED|efitTopologyBoundary/);
+  assert.doesNotMatch(css, /\.efitTopologyBoundary/);
   assert.match(css, /\.efitStatusPill\.topology-near-double-null/);
 
   assert.match(overlay, /EFIT_SEPARATRIX_LEGS_RZ/);
@@ -338,7 +331,7 @@ test('divertor region has independent honest 2D and 3D rendering lifecycles', as
   assert.match(equilibrium, /name: '偏滤器拓扑边界区域'/);
   assert.match(equilibrium, /rgba\(255, 132, 55, \.28\)/);
   assert.match(panel, /边界区域 · \{divertorRegion\.state === 'filled' \? '已审查闭合' : '仅线框'\}/);
-  assert.match(panel, /不表示温度、密度、真实 SOL 宽度或物理场/);
+  assert.match(panel, /非温度\/密度/);
   assert.match(overlay, /EFIT_DIVERTOR_TOPOLOGY_SECTION_REGION/);
   assert.match(overlay, /EFIT_DIVERTOR_TOPOLOGY_REVOLVED_REGION/);
   assert.match(overlay, /ShapeUtils\.triangulateShape/);

@@ -45,6 +45,7 @@ function DeviceViewer({
     sectionId={`${device.id}-workspace`}
     workspace
     showDownloadActions={false}
+    showFootnotes={false}
     securityNotice={device.statement}
     appearancePreset={device.id === 'exl-50u-2026-upgrade' ? 'industrial-silver-v1' : 'semantic'}
     defaultClipping={Boolean(efitOverlay)}
@@ -244,14 +245,6 @@ function DeviceExperience({ device }: { device: DeviceCatalogEntry }) {
   </div>;
 }
 
-function DeviceGovernanceNote({ device }: { device: DeviceCatalogEntry }) {
-  if (!device.physicsOverlays.some((overlay) => overlay.kind === 'axisymmetric-equilibrium')) return null;
-  return <div className="deviceGovernanceNote" role="note">
-    <p><b>科学与安全边界</b>当前交付仅为经授权的浏览器简化派生模型，不可用于制造、尺寸校核、CAE 计算、安全决策或反向工程。银色、深合金、铜色及 CFC 外观仅用于结构辨识，不代表真实材料、涂层、表面状态或温度场。</p>
-    <p><b>预览交付与替换接口</b>{device.statement} 原始工程 CAD 不由网站交付。</p>
-  </div>;
-}
-
 export default function MultiDeviceWorkspace({ catalog }: { catalog: DeviceCatalog }) {
   const [selectedId, setSelectedId] = useState(catalog.devices[0].id);
   const [compare, setCompare] = useState(false);
@@ -307,13 +300,6 @@ export default function MultiDeviceWorkspace({ catalog }: { catalog: DeviceCatal
       <DeviceExperience device={current} />
     </div>
 
-    <DeviceGovernanceNote device={current} />
-
-    <div className="devicePreviewPolicy" role="note">
-      <b>PREVIEW SECURITY POLICY</b>
-      <span>{catalog.securityPolicy.notice}</span>
-      <small>REQUEST POLICY: CACHE {catalog.securityPolicy.cacheRequestPolicy.toUpperCase()} · REFERRER {catalog.securityPolicy.referrerPolicy.toUpperCase()}</small>
-    </div>
   </section>;
 }
 
@@ -333,10 +319,5 @@ function DevicePhysicsPanel({
       preferredTimeMs={overlay.defaultTimeMs}
       title="EFIT 位形与放电时序"
     />
-    <div className="devicePhysicsBoundary" role="note">
-      <b>AXISYMMETRIC FLUX SURFACE / VISUALIZATION-DERIVED</b>
-      <span>{overlay.statement}</span>
-      <small>坐标合同 {overlay.coordinateFrame} · 当前为轴对称磁通面重建，不是三维磁力线或 MHD 场。</small>
-    </div>
   </aside>;
 }
