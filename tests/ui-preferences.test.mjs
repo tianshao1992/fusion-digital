@@ -20,7 +20,10 @@ test('typed locale registry supports Chinese and English with durable fallback',
   assert.match(provider, /window\.localStorage\.setItem\(LOCALE_STORAGE_KEY, locale\)/);
   assert.match(provider, /document\.documentElement\.lang = definition\.htmlLang/);
   assert.match(messages, /const en: Record<MessageKey, string>/);
-  assert.match(messages, /'nav\.prototype': 'Digital prototype'/);
+  assert.match(messages, /'nav\.prototype': 'Prototype'/);
+  assert.match(messages, /'nav\.control': 'Control'/);
+  assert.match(messages, /'nav\.knowledge': 'Knowledge'/);
+  assert.match(messages, /'nav\.more': 'More'/);
   assert.match(messages, /'efit\.play': 'Play'/);
   assert.match(messages, /'viewer\.fullscreen': 'Fullscreen'/);
 });
@@ -38,8 +41,25 @@ test('root shell and navigation wire locale and theme preferences without changi
   assert.match(nav, /ThemeSwitcher/);
   assert.match(nav, /setLocale\(locale === 'zh-CN' \? 'en' : 'zh-CN'\)/);
   assert.match(nav, /t\('theme\.light'\)/);
-  assert.match(nav, /\['prototype', '\/#prototype-workspace', 'nav\.prototype'\]/);
-  assert.doesNotMatch(nav, /\['prototype', '\/digital-prototype'/);
+  assert.match(nav, /key: 'prototype', href: '\/#prototype-workspace', label: 'nav\.prototype'/);
+  assert.doesNotMatch(nav, /key: 'prototype', href: '\/digital-prototype'/);
+  assert.match(nav, /selectVisibleNavigationKeys/);
+  assert.match(nav, /new ResizeObserver\(update\)/);
+  assert.match(nav, /window\.addEventListener\('resize', update\)/);
+  assert.match(nav, /aria-haspopup="menu"/);
+  assert.match(nav, /aria-expanded=\{moreOpen\}/);
+  assert.match(nav, /document\.addEventListener\('pointerdown', closeOutside\)/);
+  assert.match(nav, /event\.key === 'Escape'/);
+  assert.match(nav, /aria-current=\{active === item\.key \? 'page' : undefined\}/);
+  assert.match(nav, /data-nav-active=\{active === item\.key \? 'true' : undefined\}/);
+});
+
+test('navigation selected state remains bold orange across page and theme overrides', async () => {
+  const globals = await source('app/globals.css');
+  assert.match(globals, /\.siteNav\.siteNav \.siteLinks > a\.active\[aria-current='page'\][\s\S]*?color: var\(--color-accent-strong\); font-weight: 900/);
+  assert.match(globals, /\.siteNav\.siteNav \.siteMoreMenu a\.active\[aria-current='page'\]/);
+  assert.match(globals, /\.siteNav\.siteNav \.mobileNav a\.active\[aria-current='page'\]/);
+  assert.match(globals, /\.siteLinksMeasure > span\[data-nav-active='true'\] \{ font-weight: 900; \}/);
 });
 
 test('theme registry exposes system, Morandi light and dark modes with pre-hydration persistence', async () => {

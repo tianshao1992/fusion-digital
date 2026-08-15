@@ -10,7 +10,7 @@
     "dev": "vinext dev",
     "build": "vinext build",
     "start": "vinext start",
-    "test": "npm run build && node --test --test-concurrency=1 tests/rendered-html.test.mjs tests/device-publication-policy.test.mjs tests/efit-data.test.mjs tests/efit-delivery.test.mjs tests/efit-store.test.mjs tests/efit-ui.test.mjs tests/ui-preferences.test.mjs && tsx --test --test-concurrency=1 tests/efit-v2.test.mts tests/cad-theme.test.mts",
+    "test": "npm run build && node --test --test-concurrency=1 tests/rendered-html.test.mjs tests/device-publication-policy.test.mjs tests/efit-data.test.mjs tests/efit-delivery.test.mjs tests/efit-store.test.mjs tests/efit-ui.test.mjs tests/ui-preferences.test.mjs && tsx --test --test-concurrency=1 tests/efit-v2.test.mts tests/cad-theme.test.mts tests/site-nav-layout.test.mts",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next --ignore-pattern .vinext --ignore-pattern public --ignore-pattern research",
     "check": "npm run lint && npm test",
     "research:ai": "node scripts/research/ai-native.mjs rebuild",
