@@ -1,12 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://fusiondigital.example/schemas/device-manifest-1.1.json",
+  "$id": "https://fusiondigital.example/schemas/device-manifest-1.2.json",
   "title": "FusionDigital browser-safe device package manifest",
   "description": "Public metadata contract for a derived 3D asset. Authoritative CAD/CAE files remain in the controlled engineering data zone.",
   "type": "object",
   "required": ["schemaVersion", "id", "title", "asOf", "devicePackage", "access", "coordinateSystem", "assets", "systems", "generator", "disclaimer"],
   "properties": {
-    "schemaVersion": { "const": "1.1" },
+    "schemaVersion": { "enum": ["1.1", "1.2"] },
     "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]+$" },
     "title": { "type": "string", "minLength": 1 },
     "asOf": { "type": "string", "format": "date" },
@@ -65,8 +65,20 @@
             }
           ]
         },
+        "componentBundles": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/componentBundle" }
+        },
         "sourceCad": { "$ref": "#/$defs/asset" },
         "poster": { "$ref": "#/$defs/assetWithoutFormat" }
+      },
+      "additionalProperties": false
+    },
+    "visualizations": {
+      "type": "object",
+      "properties": {
+        "analyticPlasma": { "$ref": "#/$defs/analyticPlasma" }
       },
       "additionalProperties": false
     },
@@ -106,6 +118,21 @@
     "generator": { "type": "object" },
     "disclaimer": { "type": "string", "minLength": 30 }
   },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "assets": { "required": ["componentBundles"] }
+        },
+        "required": ["assets"]
+      },
+      "then": { "properties": { "schemaVersion": { "const": "1.2" } } }
+    },
+    {
+      "if": { "required": ["visualizations"] },
+      "then": { "properties": { "schemaVersion": { "const": "1.2" } } }
+    }
+  ],
   "$defs": {
     "asset": {
       "type": "object",
@@ -117,7 +144,7 @@
         "bytes": { "type": "integer", "minimum": 1 },
         "triangles": { "type": "integer", "minimum": 1 },
         "vertices": { "type": "integer", "minimum": 1 },
-        "decodedGpuBytes": { "type": "integer", "minimum": 1 },
+        "decodedGpuBytes": { "type": "integer", "minimum": 1, "maximum": 536870912 },
         "boundsMetres": { "$ref": "#/$defs/boundsMetres" }
       },
       "additionalProperties": false
@@ -148,6 +175,83 @@
         "decodedGpuBytes": { "type": "integer", "minimum": 1 },
         "boundsMetres": { "$ref": "#/$defs/boundsMetres" },
         "default": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "componentModel": {
+      "type": "object",
+      "required": ["partId", "nodeName", "path", "format", "sha256", "bytes", "triangles", "vertices", "sceneDrawTriangles", "sceneDrawVertices", "meshInstances", "decodedGpuBytes", "boundsMetres"],
+      "properties": {
+        "partId": { "type": "string", "minLength": 1 },
+        "nodeName": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "pattern": "^/device-assets/iter-high-detail/v1/[a-z0-9-]+\\.[a-f0-9]{64}\\.high\\.meshopt\\.glb$" },
+        "format": { "const": "glTF 2.0 binary + EXT_meshopt_compression + KHR_mesh_quantization; POSITION normalized Int16 per mesh; NORMAL normalized Int8 (8-bit)" },
+        "sha256": { "type": "string", "pattern": "^[A-Fa-f0-9]{64}$" },
+        "bytes": { "type": "integer", "minimum": 1, "exclusiveMaximum": 25165824 },
+        "triangles": { "type": "integer", "minimum": 1 },
+        "vertices": { "type": "integer", "minimum": 1 },
+        "sceneDrawTriangles": { "type": "integer", "minimum": 1 },
+        "sceneDrawVertices": { "type": "integer", "minimum": 1 },
+        "meshInstances": { "type": "integer", "minimum": 1, "maximum": 300 },
+        "decodedGpuBytes": { "type": "integer", "minimum": 1 },
+        "boundsMetres": { "$ref": "#/$defs/boundsMetres" }
+      },
+      "additionalProperties": false
+    },
+    "componentBundle": {
+      "type": "object",
+      "required": ["id", "label", "quality", "delivery", "format", "bytes", "triangles", "vertices", "sceneDrawTriangles", "sceneDrawVertices", "meshInstances", "decodedGpuBytes", "boundsMetres", "components"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "label": { "type": "string", "minLength": 1 },
+        "quality": { "const": "high" },
+        "delivery": { "const": "components" },
+        "format": { "const": "glTF 2.0 binary + EXT_meshopt_compression + KHR_mesh_quantization; POSITION normalized Int16 per mesh; NORMAL normalized Int8 (8-bit)" },
+        "bytes": { "type": "integer", "minimum": 80000000, "maximum": 110000000 },
+        "triangles": { "type": "integer", "minimum": 1 },
+        "vertices": { "type": "integer", "minimum": 1 },
+        "sceneDrawTriangles": { "type": "integer", "minimum": 1 },
+        "sceneDrawVertices": { "type": "integer", "minimum": 1 },
+        "meshInstances": { "type": "integer", "minimum": 1, "maximum": 1000 },
+        "decodedGpuBytes": { "type": "integer", "minimum": 1, "maximum": 536870912 },
+        "boundsMetres": { "$ref": "#/$defs/boundsMetres" },
+        "components": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/componentModel" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "analyticPlasma": {
+      "type": "object",
+      "required": [
+        "kind", "label", "sourceLabel", "sourceUrl", "majorRadiusMetres", "minorRadiusMetres",
+        "kappa95", "delta95", "kappaSeparatrixReference", "deltaSeparatrixReference",
+        "nominalPlasmaCurrentMA", "toroidalFieldAtMajorRadiusT", "q95", "nominalVolumeCubicMetres",
+        "topologyReference", "geometryOnly", "hasPsiGrid", "hasXPoint", "hasDiagnostics", "isEfit"
+      ],
+      "properties": {
+        "kind": { "const": "analytic-design-proxy" },
+        "label": { "type": "string", "minLength": 1 },
+        "sourceLabel": { "type": "string", "minLength": 1 },
+        "sourceUrl": { "type": "string", "pattern": "^https://" },
+        "majorRadiusMetres": { "type": "number", "exclusiveMinimum": 0 },
+        "minorRadiusMetres": { "type": "number", "exclusiveMinimum": 0 },
+        "kappa95": { "type": "number", "exclusiveMinimum": 0 },
+        "delta95": { "type": "number", "exclusiveMinimum": -1, "exclusiveMaximum": 1 },
+        "kappaSeparatrixReference": { "type": "number", "exclusiveMinimum": 0 },
+        "deltaSeparatrixReference": { "type": "number", "exclusiveMinimum": -1, "exclusiveMaximum": 1 },
+        "nominalPlasmaCurrentMA": { "type": "number", "exclusiveMinimum": 0 },
+        "toroidalFieldAtMajorRadiusT": { "type": "number", "exclusiveMinimum": 0 },
+        "q95": { "type": "number", "exclusiveMinimum": 0 },
+        "nominalVolumeCubicMetres": { "type": "number", "exclusiveMinimum": 0 },
+        "topologyReference": { "const": "single-null" },
+        "geometryOnly": { "const": true },
+        "hasPsiGrid": { "const": false },
+        "hasXPoint": { "const": false },
+        "hasDiagnostics": { "const": false },
+        "isEfit": { "const": false }
       },
       "additionalProperties": false
     },

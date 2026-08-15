@@ -222,7 +222,9 @@ test('publishes only catalog-declared EXL and ITER browser derivatives and no pr
   assert.equal(iter?.viewer?.mode, 'real-3d', 'ITER public geometry requires an explicit real-3d catalog entry');
   assert.equal(iter.viewer.manifestEndpoint, iterManifestEndpoint);
   const iterManifest = JSON.parse(await readFile(endpointToPublicPath(iterManifestEndpoint), 'utf8'));
-  assert.equal(iterManifest.assets?.webModels, undefined, 'ITER must publish no high-detail LOD list');
+  assert.equal(iterManifest.assets?.webModels, undefined, 'ITER high detail must not be a monolithic LOD');
+  assert.equal(iterManifest.assets?.componentBundles?.length, 1, 'ITER must expose one reviewed component-sharded high-detail bundle');
+  assert.equal(iterManifest.assets.componentBundles[0].components.length, 18);
   assert.equal(iterManifest.assets?.webModel?.path, iterPreviewEndpoint);
   const iterPublicModelPath = relative(repositoryRoot, endpointToPublicPath(iterPreviewEndpoint)).replaceAll('\\', '/').toLowerCase();
   const allowedIterGeometry = new Set([
@@ -414,8 +416,9 @@ test('public device catalog is fail-closed and authorizes only bounded, verifiab
         assert.equal(manifest.devicePackage?.kind, 'public-simplified-derivative');
         assert.equal(manifest.devicePackage?.authority, 'illustrative');
         assert.equal(manifest.assets.sourceCad, undefined, 'ITER source CAD must remain private');
-        assert.equal(manifest.assets.poster, undefined, 'ITER package must contain only its interactive preview');
-        assert.equal(manifest.assets.webModels, undefined, 'ITER high-detail LODs must remain private');
+        assert.equal(manifest.assets.poster, undefined, 'ITER static package must contain only its manifest and compact preview');
+        assert.equal(manifest.assets.webModels, undefined, 'ITER high detail must never be delivered as a monolithic LOD');
+        assert.equal(manifest.assets.componentBundles?.length, 1, 'ITER must declare one reviewed high-detail component bundle');
         assert.equal(manifest.assets.webModel.path, iterPreviewEndpoint);
         assert.match(manifest.assets.webModel.format, /(?:glTF\s*2\.0|GLB).*meshopt|meshopt.*(?:glTF\s*2\.0|GLB)/i);
         assert.match(manifest.access.statement, /(?:project[- ]owner[- ]authorized|project owner (?:explicitly )?authorized|项目方授权)/i);
@@ -430,9 +433,45 @@ test('public device catalog is fail-closed and authorizes only bounded, verifiab
         assert.equal(parts.length, 18, 'ITER public preview must expose all 18 approved component identities');
         assert.equal(new Set(parts.map((part) => part.id)).size, 18, 'ITER component IDs must be unique');
         const approvedNodeNames = new Set(parts.map((part) => part.nodeName));
+        const approvedPartIds = new Set(parts.map((part) => part.id));
         assert.equal(approvedNodeNames.size, 18, 'ITER stable node mappings must be unique');
         for (const nodeName of approvedNodeNames) assert.match(nodeName, /^ITER_PART__[a-z0-9-]+$/,
           'ITER public nodes must use the stable ITER_PART__<id> contract');
+
+        const highBundle = manifest.assets.componentBundles[0];
+        assert.equal(highBundle.delivery, 'components');
+        assert.equal(highBundle.quality, 'high');
+        assert.ok(highBundle.bytes >= 80_000_000 && highBundle.bytes <= 110_000_000,
+          'ITER high-detail transfer must remain near the reviewed ~100 MB target');
+        assert.ok(highBundle.triangles > manifest.assets.webModel.triangles,
+          'ITER high-detail bundle must contain more detail than the compatibility preview');
+        assert.equal(highBundle.components.length, 18);
+        assert.deepEqual(new Set(highBundle.components.map((component) => component.partId)), approvedPartIds);
+        assert.deepEqual(new Set(highBundle.components.map((component) => component.nodeName)), approvedNodeNames);
+        assert.equal(new Set(highBundle.components.map((component) => component.path)).size, 18);
+        assert.equal(highBundle.components.reduce((sum, component) => sum + component.bytes, 0), highBundle.bytes);
+        assert.equal(highBundle.components.reduce((sum, component) => sum + component.triangles, 0), highBundle.triangles);
+        assert.equal(highBundle.components.reduce((sum, component) => sum + component.vertices, 0), highBundle.vertices);
+        assert.equal(highBundle.components.reduce((sum, component) => sum + component.sceneDrawTriangles, 0), highBundle.sceneDrawTriangles);
+        assert.equal(highBundle.components.reduce((sum, component) => sum + component.sceneDrawVertices, 0), highBundle.sceneDrawVertices);
+        assert.equal(highBundle.components.reduce((sum, component) => sum + component.meshInstances, 0), highBundle.meshInstances);
+        assert.ok(highBundle.meshInstances <= 1000, 'ITER high-detail bundle exceeds its reviewed draw-call budget');
+        assert.equal(highBundle.components.reduce((sum, component) => sum + component.decodedGpuBytes, 0), highBundle.decodedGpuBytes);
+        for (const component of highBundle.components) {
+          assert.match(component.path, /^\/device-assets\/iter-high-detail\/v1\/[a-z0-9-]+\.[a-f0-9]{64}\.high\.meshopt\.glb$/);
+          assert.match(component.sha256, /^[a-f0-9]{64}$/i);
+          assert.ok(component.bytes > 0 && component.bytes < 24 * 1024 * 1024);
+          assert.ok(component.triangles > 0 && component.vertices > 0
+            && component.sceneDrawTriangles >= component.triangles
+            && component.sceneDrawVertices >= component.vertices
+            && component.meshInstances > 0 && component.meshInstances <= 300 && component.decodedGpuBytes > 0);
+          assert.ok(Array.isArray(component.boundsMetres?.min) && Array.isArray(component.boundsMetres?.max));
+        }
+        assert.equal(manifest.visualizations?.analyticPlasma?.kind, 'analytic-design-proxy');
+        assert.equal(manifest.visualizations?.analyticPlasma?.geometryOnly, true);
+        assert.equal(manifest.visualizations?.analyticPlasma?.hasPsiGrid, false);
+        assert.equal(manifest.visualizations?.analyticPlasma?.hasXPoint, false);
+        assert.equal(manifest.visualizations?.analyticPlasma?.isEfit, false);
 
         const asset = manifest.assets.webModel;
         assert.ok(Number.isSafeInteger(asset.triangles) && asset.triangles > 0 && asset.triangles <= maxIterPreviewTriangles,
@@ -451,6 +490,11 @@ test('public device catalog is fail-closed and authorizes only bounded, verifiab
           'ITER preview must require EXT_meshopt_compression');
         assert.ok(glb.extensionsRequired?.includes('KHR_mesh_quantization'),
           'ITER preview must require KHR_mesh_quantization');
+        assert.equal(glb.asset?.extras?.publicationStatus, 'PUBLIC_VISUALIZATION_DERIVATIVE_REVIEWED');
+        assert.equal(glb.asset?.extras?.candidateStatus, undefined,
+          'public ITER GLB metadata must not retain a private candidate status');
+        assert.doesNotMatch(JSON.stringify(glb), /(?:[a-z]:[\\/]|\/(?:Users|home)\/|\bprivate\b|source\.path|PRIVATE_PREVIEW_INCOMPLETE)/i,
+          'public ITER GLB JSON must not expose private provenance or local paths');
 
         const stableNodeEntries = glb.nodes
           .map((node, index) => ({ node, index }))
@@ -467,6 +511,8 @@ test('public device catalog is fail-closed and authorizes only bounded, verifiab
         const meshOwners = new Map();
         const meshResourceOwners = new Map();
         for (const { node, index } of stableNodeEntries) {
+          assert.equal(node.extras?.geometryStatus, 'registered-public-visualization-derivative',
+            `${node.name} must carry a public visualization status, not private candidate provenance`);
           const descendants = descendantMeshNodeIndexes(glb, index);
           assert.ok(descendants.length > 0, `${node.name} must own visible geometry`);
           for (const meshNodeIndex of descendants) {
@@ -514,11 +560,13 @@ test('public device catalog is fail-closed and authorizes only bounded, verifiab
           assert.ok(allowedPackageFiles.has(resolve(pathname).toLowerCase()),
             `ITER public derivative package contains an undeclared asset: ${relative(publicRoot, pathname)}`);
         }
-        assert.equal(packageFiles.length, 2, 'ITER public package must contain exactly one manifest and one preview GLB');
+        assert.equal(packageFiles.length, 2, 'ITER Sites package must contain exactly one manifest and one compact preview GLB');
         for (const value of collectStrings(manifest)) {
           assert.doesNotMatch(value, localPathPattern, 'ITER manifest must not expose a private filesystem path');
-          if (hasGeometryOrSourceExtension(value)) assert.equal(value, iterPreviewEndpoint,
-            `ITER manifest exposes an undeclared geometry/source path: ${value}`);
+          if (hasGeometryOrSourceExtension(value)) assert.ok(
+            value === iterPreviewEndpoint || /^\/device-assets\/iter-high-detail\/v1\/[a-z0-9-]+\.[a-f0-9]{64}\.high\.meshopt\.glb$/.test(value),
+            `ITER manifest exposes an undeclared geometry/source path: ${value}`,
+          );
         }
       }
     } else {
@@ -682,6 +730,313 @@ test('controlled raster previews and authorized EXL browser geometry receive def
   }
 });
 
+test('ITER high-detail proxy enforces its content-addressed HTTP and header boundary', async (t) => {
+  const workerUrl = new URL('../dist/server/index.js', import.meta.url);
+  workerUrl.searchParams.set('iter-proxy-contract-test', `${process.pid}-${Date.now()}`);
+  const { proxyIterHighDetailAsset } = await import(workerUrl.href);
+  assert.equal(typeof proxyIterHighDetailAsset, 'function');
+
+  const payload = new Uint8Array(128);
+  const digest = createHash('sha256').update(payload).digest('hex');
+  const filename = `cs.${digest}.high.meshopt.glb`;
+  const route = `/device-assets/iter-high-detail/v1/${filename}`;
+  const asset = {
+    bytes: payload.byteLength,
+    upstreamUrl: `https://github.com/tianshao1992/fusion-physics-atlas-assets/releases/download/iter-education-hd-v1/${filename}`,
+  };
+  const partialResponse = (first, last, headers = {}) => new Response(payload.slice(first, last + 1), {
+    status: 206,
+    headers: {
+      'Content-Length': String(last - first + 1),
+      'Content-Range': `bytes ${first}-${last}/${payload.byteLength}`,
+      ...headers,
+    },
+  });
+
+  await t.test('forwards only byte validators, serves a verified 206 and strips unsafe response headers', async () => {
+    let captured;
+    const response = await proxyIterHighDetailAsset(new Request(`http://localhost${route}`, {
+      headers: {
+        Authorization: 'Bearer never-forward',
+        Cookie: 'session=never-forward',
+        'If-Modified-Since': 'Sat, 15 Aug 2026 12:00:00 GMT',
+        'If-None-Match': '"component-v1"',
+        'If-Range': '"range-v1"',
+        Origin: 'https://sensitive.example',
+        Range: 'bytes=0-63',
+        Referer: 'https://sensitive.example/private',
+        'X-Forwarded-For': '192.0.2.1',
+      },
+    }), asset, async (input, init) => {
+      captured = { input, init };
+      return partialResponse(0, 63, {
+        'Clear-Site-Data': '"*"',
+        'Content-Encoding': 'identity',
+        'Content-Security-Policy': "default-src 'none'",
+        ETag: '"component-v1"',
+        'Last-Modified': 'Sat, 15 Aug 2026 12:00:00 GMT',
+        'Set-Cookie': 'upstream=never-forward',
+      });
+    });
+
+    assert.equal(captured.input, asset.upstreamUrl);
+    assert.equal(captured.init.method, 'GET');
+    assert.equal(captured.init.redirect, 'follow');
+    const forwarded = new Headers(captured.init.headers);
+    assert.equal(forwarded.get('accept-encoding'), 'identity');
+    assert.equal(forwarded.get('range'), 'bytes=0-63');
+    assert.equal(forwarded.get('if-range'), '"range-v1"');
+    assert.equal(forwarded.get('if-none-match'), '"component-v1"');
+    assert.equal(forwarded.get('if-modified-since'), 'Sat, 15 Aug 2026 12:00:00 GMT');
+    for (const sensitive of ['authorization', 'cookie', 'origin', 'referer', 'x-forwarded-for']) {
+      assert.equal(forwarded.get(sensitive), null, `${sensitive} must not reach the release host`);
+    }
+
+    assert.equal(response.status, 206);
+    assert.equal((await response.arrayBuffer()).byteLength, 64);
+    assert.equal(response.headers.get('content-range'), 'bytes 0-63/128');
+    assert.equal(response.headers.get('content-length'), '64');
+    assert.equal(response.headers.get('etag'), '"component-v1"');
+    assert.equal(response.headers.get('last-modified'), 'Sat, 15 Aug 2026 12:00:00 GMT');
+    assert.match(response.headers.get('cache-control') ?? '', /public.*max-age=31536000.*immutable/i);
+    assert.equal(response.headers.get('content-type'), 'model/gltf-binary');
+    assert.equal(response.headers.get('referrer-policy'), 'no-referrer');
+    assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
+    assert.equal(response.headers.get('cross-origin-resource-policy'), 'same-origin');
+    assert.match(response.headers.get('content-disposition') ?? '', /^inline\b/i);
+    for (const unsafe of ['clear-site-data', 'content-encoding', 'content-security-policy', 'set-cookie']) {
+      assert.equal(response.headers.get(unsafe), null, `${unsafe} must not cross the proxy boundary`);
+    }
+  });
+
+  await t.test('normalizes open, suffix and clamped ranges and rejects a mismatched upstream range', async () => {
+    for (const [header, first, last] of [
+      ['bytes=64-', 64, 127],
+      ['bytes=-16', 112, 127],
+      ['bytes=120-999', 120, 127],
+      ['bytes=-999', 0, 127],
+    ]) {
+      const response = await proxyIterHighDetailAsset(
+        new Request(`http://localhost${route}`, { headers: { Range: header } }),
+        asset,
+        async () => partialResponse(first, last),
+      );
+      assert.equal(response.status, 206, header);
+      assert.equal(response.headers.get('content-range'), `bytes ${first}-${last}/128`);
+    }
+    const wrongRange = await proxyIterHighDetailAsset(
+      new Request(`http://localhost${route}`, { headers: { Range: 'bytes=0-63' } }),
+      asset,
+      async () => partialResponse(64, 127),
+    );
+    assert.equal(wrongRange.status, 502);
+    assert.match(wrongRange.headers.get('cache-control') ?? '', /no-store/i);
+
+    const missingLength = await proxyIterHighDetailAsset(
+      new Request(`http://localhost${route}`, { headers: { Range: 'bytes=0-63' } }),
+      asset,
+      async () => new Response(payload.slice(0, 64), {
+        status: 206,
+        headers: { 'Content-Range': 'bytes 0-63/128' },
+      }),
+    );
+    assert.equal(missingLength.status, 502, 'a 206 without exact Content-Length must fail closed');
+  });
+
+  await t.test('accepts a full 200 when If-Range does not match and suppresses every HEAD body', async () => {
+    let ifRange;
+    const full = await proxyIterHighDetailAsset(new Request(`http://localhost${route}`, {
+      headers: { Range: 'bytes=0-63', 'If-Range': '"stale"' },
+    }), asset, async (_input, init) => {
+      ifRange = new Headers(init.headers).get('if-range');
+      return new Response(payload, { status: 200, headers: { 'Content-Length': '128' } });
+    });
+    assert.equal(ifRange, '"stale"');
+    assert.equal(full.status, 200);
+    assert.equal((await full.arrayBuffer()).byteLength, 128);
+
+    const head = await proxyIterHighDetailAsset(
+      new Request(`http://localhost${route}`, { method: 'HEAD' }),
+      asset,
+      async () => new Response(payload, { status: 200, headers: { 'Content-Length': '128' } }),
+    );
+    assert.equal(head.status, 200);
+    assert.equal(head.body, null);
+    assert.equal(head.headers.get('content-length'), '128');
+  });
+
+  await t.test('keeps 304 validators but never an upstream body or unsafe header', async () => {
+    const response = await proxyIterHighDetailAsset(
+      new Request(`http://localhost${route}`, { headers: { 'If-None-Match': '"component-v1"' } }),
+      asset,
+      async () => new Response(null, {
+        status: 304,
+        headers: {
+          ETag: '"component-v1"',
+          'Last-Modified': 'Sat, 15 Aug 2026 12:00:00 GMT',
+          'Set-Cookie': 'upstream=never-forward',
+        },
+      }),
+    );
+    assert.equal(response.status, 304);
+    assert.equal(response.body, null);
+    assert.equal(response.headers.get('etag'), '"component-v1"');
+    assert.equal(response.headers.get('last-modified'), 'Sat, 15 Aug 2026 12:00:00 GMT');
+    assert.equal(response.headers.get('set-cookie'), null);
+
+    const unsolicited = await proxyIterHighDetailAsset(
+      new Request(`http://localhost${route}`),
+      asset,
+      async () => new Response(null, { status: 304, headers: { ETag: '"unexpected"' } }),
+    );
+    assert.equal(unsolicited.status, 502, 'an unconditional request must not accept an empty 304');
+  });
+
+  await t.test('rejects malformed, multiple and unsatisfiable ranges locally with 416', async () => {
+    let calls = 0;
+    const shouldNotFetch = async () => { calls += 1; return new Response(payload); };
+    for (const header of ['bytes=0-1,4-5', 'items=0-1', 'bytes=64-63', 'bytes=128-', 'bytes=-0']) {
+      const response = await proxyIterHighDetailAsset(
+        new Request(`http://localhost${route}`, { headers: { Range: header } }),
+        asset,
+        shouldNotFetch,
+      );
+      assert.equal(response.status, 416, header);
+      assert.equal(response.headers.get('content-range'), 'bytes */128');
+      assert.match(response.headers.get('cache-control') ?? '', /no-store/i);
+    }
+    assert.equal(calls, 0);
+  });
+
+  await t.test('preserves a valid upstream 416 and Retry-After on 429, while sanitizing both', async () => {
+    const unsatisfied = await proxyIterHighDetailAsset(
+      new Request(`http://localhost${route}`, { headers: { Range: 'bytes=0-63' } }),
+      asset,
+      async () => new Response('upstream detail', {
+        status: 416,
+        headers: { 'Content-Range': 'bytes */128', 'Set-Cookie': 'never=forward' },
+      }),
+    );
+    assert.equal(unsatisfied.status, 416);
+    assert.equal(unsatisfied.headers.get('content-range'), 'bytes */128');
+    assert.equal(unsatisfied.headers.get('set-cookie'), null);
+    assert.equal(unsatisfied.body, null);
+
+    const limited = await proxyIterHighDetailAsset(
+      new Request(`http://localhost${route}`),
+      asset,
+      async () => new Response('upstream detail', {
+        status: 429,
+        headers: { 'Retry-After': '120', 'Set-Cookie': 'never=forward' },
+      }),
+    );
+    assert.equal(limited.status, 429);
+    assert.equal(limited.headers.get('retry-after'), '120');
+    assert.equal(limited.headers.get('set-cookie'), null);
+    assert.equal(limited.body, null);
+    assert.match(limited.headers.get('cache-control') ?? '', /no-store/i);
+  });
+
+  await t.test('maps upstream failures safely and rejects transformed or inconsistent representations', async () => {
+    const serverFailure = await proxyIterHighDetailAsset(
+      new Request(`http://localhost${route}`),
+      asset,
+      async () => new Response('upstream detail', { status: 500, headers: { 'Retry-After': '30' } }),
+    );
+    assert.equal(serverFailure.status, 503);
+    assert.equal(serverFailure.headers.get('retry-after'), '30');
+
+    const fetchFailure = await proxyIterHighDetailAsset(
+      new Request(`http://localhost${route}`),
+      asset,
+      async () => { throw new Error('network unavailable'); },
+    );
+    assert.equal(fetchFailure.status, 502);
+
+    for (const upstreamResponse of [
+      new Response(payload, { status: 200, headers: { 'Content-Encoding': 'gzip', 'Content-Length': '128' } }),
+      new Response(payload, { status: 200, headers: { 'Content-Length': '127' } }),
+      new Response(new ReadableStream({
+        start(controller) {
+          controller.enqueue(payload);
+          controller.close();
+        },
+      }), { status: 200 }),
+      new Response('missing', { status: 404 }),
+      new Response(null, { status: 416, headers: { 'Content-Range': 'bytes */127' } }),
+    ]) {
+      const response = await proxyIterHighDetailAsset(
+        new Request(`http://localhost${route}`), asset, async () => upstreamResponse,
+      );
+      assert.equal(response.status, 502);
+      assert.equal(response.body, null);
+      assert.match(response.headers.get('cache-control') ?? '', /no-store/i);
+    }
+  });
+
+  await t.test('unknown and legacy un-hashed paths never trigger the release host', async () => {
+    const originalFetch = globalThis.fetch;
+    let calls = 0;
+    globalThis.fetch = async () => { calls += 1; throw new Error('must not fetch'); };
+    try {
+      for (const pathname of [
+        '/device-assets/iter-high-detail/v1/not-reviewed.high.meshopt.glb',
+        '/device-assets/iter-high-detail/v1/cs.high.meshopt.glb',
+        `/device-assets/iter-high-detail/v1/cs.${'f'.repeat(64)}.high.meshopt.glb`,
+      ]) {
+        const response = await fetchFromWorker(pathname);
+        assert.equal(response.status, 404, pathname);
+      }
+      assert.equal(calls, 0);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+});
+
+test('ITER high-detail production allowlist exactly mirrors the reviewed manifest bundle', async () => {
+  const manifest = JSON.parse(await readFile(endpointToPublicPath(iterManifestEndpoint), 'utf8'));
+  const bundle = manifest.assets?.componentBundles?.[0];
+  assert.ok(bundle, 'the reviewed component bundle must exist before the Worker allowlist is enabled');
+  assert.equal(bundle.components?.length, 18);
+
+  const releaseBase = 'https://github.com/tianshao1992/fusion-physics-atlas-assets/releases/download/iter-education-hd-v1/';
+  const byUpstreamUrl = new Map(bundle.components.map((component) => {
+    assert.match(component.path, /^\/device-assets\/iter-high-detail\/v1\/[a-z0-9-]+\.[a-f0-9]{64}\.high\.meshopt\.glb$/);
+    const filename = component.path.split('/').at(-1);
+    assert.ok(filename.includes(`.${component.sha256}.`), `${component.partId} route must embed its declared digest`);
+    return [`${releaseBase}${filename}`, component];
+  }));
+  assert.equal(byUpstreamUrl.size, 18);
+
+  const originalFetch = globalThis.fetch;
+  const requested = new Set();
+  globalThis.fetch = async (input, init = {}) => {
+    const url = typeof input === 'string' ? input : input.url;
+    const component = byUpstreamUrl.get(url);
+    assert.ok(component, `Worker requested an undeclared release URL: ${url}`);
+    assert.equal(init.method, 'HEAD');
+    assert.equal(new Headers(init.headers).get('accept-encoding'), 'identity');
+    requested.add(url);
+    return new Response(null, {
+      status: 200,
+      headers: { 'Content-Length': String(component.bytes), ETag: `"${component.sha256}"` },
+    });
+  };
+  try {
+    for (const component of bundle.components) {
+      const response = await fetchFromWorker(component.path, { method: 'HEAD' });
+      assert.equal(response.status, 200, `${component.partId} must be on the exact Worker allowlist`);
+      assert.equal(response.body, null);
+      assert.equal(response.headers.get('content-length'), String(component.bytes));
+      assert.match(response.headers.get('cache-control') ?? '', /public.*immutable/i);
+    }
+    assert.equal(requested.size, 18, 'every and only reviewed component release must be reachable');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test('Paramak interaction controls remain public-only and expose consistent accessible state', async () => {
   const source = await readFile(resolve(repositoryRoot, 'app/components/TokamakCadViewer.tsx'), 'utf8');
   const manifestParser = await readFile(resolve(repositoryRoot, 'app/components/deviceManifest.ts'), 'utf8');
@@ -724,6 +1079,7 @@ test('Paramak interaction controls remain public-only and expose consistent acce
 
   assert.match(manifestParser, /value\.startsWith\(['"]\/models\/['"]\)/);
   assert.match(manifestParser, /value\.startsWith\(['"]\/device-assets\/exl50u-interactive\/['"]\)/);
+  assert.match(manifestParser, /value\.startsWith\(['"]\/device-assets\/iter-high-detail\/['"]\)/);
   assert.match(catalogParser, /result\.startsWith\(['"]\/device-assets\/exl50u-interactive\/['"]\)/);
   for (const rejectedPathToken of ["'..'", "'%'", "'//'" ]) {
     assert.ok(manifestParser.includes(`value.includes(${rejectedPathToken})`), `manifest parser must reject ${rejectedPathToken}`);

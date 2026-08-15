@@ -18,6 +18,7 @@ const localBindingConfig = {
     binding: "ASSETS",
     run_worker_first: [
       "/device-assets/exl50u-interactive/*",
+      "/device-assets/iter-high-detail/v1/*",
       "/models/exl50u-interactive/*",
       "/device-data/exl50u-efit",
       "/device-data/exl50u-efit/*",

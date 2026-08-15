@@ -1,11 +1,13 @@
 ITER PUBLIC BROWSER-VISUALIZATION DERIVATIVE NOTICE
 
-The FusionDigital project owner explicitly authorized public delivery of this
-strongly simplified ITER visualization derivative on 2026-08-15.
+The FusionDigital project owner explicitly authorized public delivery of these
+ITER educational visualization derivatives on 2026-08-15 and explicitly
+authorized a higher-detail, component-sharded browser derivative on 2026-08-16.
 
-The delivered mesh is a non-authoritative browser visualization and performance
-test asset. It contains decimated triangles, display materials, stable component
-identifiers and release metadata only. It does not include source STEP/STP,
+The delivered preview mesh and optional high-detail component shards are
+non-authoritative browser visualization and performance-test assets. They
+contain decimated triangles, display materials, stable component identifiers
+and release metadata only. They do not include source STEP/STP,
 B-Rep topology, PMI, authoritative dimensions, manufacturing tolerances, source
 assembly metadata or private download credentials.
 

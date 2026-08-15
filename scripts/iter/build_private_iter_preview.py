@@ -29,7 +29,7 @@ from pathlib import Path
 from typing import Any
 
 
-TOOL_VERSION = "0.2.0"
+TOOL_VERSION = "1.0.0"
 GLTF_TRANSFORM_VERSION = "4.4.2"
 MESHOPTIMIZER_VERSION_RANGE = "~1.0.1"
 JSON_CHUNK = 0x4E4F534A
@@ -42,7 +42,10 @@ DEFAULT_MAX_BYTES = 8 * 1024 * 1024
 RECOMMENDED_MAX_BYTES = 7 * 1024 * 1024
 DEFAULT_MAX_WORKING_SET = 8 * 1024**3
 DEFAULT_MIN_FREE_MEMORY = 3 * 1024**3
-DIRECT_GLB_THRESHOLD_BYTES = 50_000_000
+DIRECT_GLB_THRESHOLD_BYTES = 30_000_000
+DIRECT_GRID_INTERMEDIATE_MULTIPLIER = 12
+DIRECT_GRID_MAX_DIVISIONS = 4096
+CLUSTER_POLICY = "DIRECT12X_OR_VTK5X_V2"
 
 
 def sha256(path: Path) -> str:
@@ -255,7 +258,7 @@ def validate_resumable_part(
             or not math.isclose(float(fingerprint.get("featureAngleDegrees", math.nan)), expected_feature_angle)
             or str(fingerprint.get("coordinateMap")) != expected_coordinate_map
             or str(fingerprint.get("reductionPath")) != expected_reduction_path
-            or str(fingerprint.get("clusterPolicy")) != "GRID_OR_VTK_QUADRIC_5X_V1"
+            or str(fingerprint.get("clusterPolicy")) != CLUSTER_POLICY
             or (
                 expected_reduction_path == "direct-uncompressed-glb-buffer-grid"
                 and (
@@ -604,12 +607,11 @@ def final_document_qa(path: Path, registered_components: list[dict[str, Any]]) -
         raise RuntimeError(
             f"Final package stable-node set mismatch; missing={sorted(missing)}, extra={sorted(unexpected)}"
         )
-    complete = len(registered_components) == 18
-    document.setdefault("asset", {}).setdefault("extras", {}).update({
-        "candidateStatus": "PRIVATE_PREVIEW_GEOMETRY_COMPLETE_18" if complete else "PRIVATE_PREVIEW_INCOMPLETE",
-        "stablePartContract": f"{len(registered_components)} registered geometry identities in ITER web device coordinates",
-        "engineeringAuthority": False,
-    })
+    asset = document.setdefault("asset", {})
+    asset["extras"] = {"publicationStatus": "PUBLIC_VISUALIZATION_DERIVATIVE_REVIEWED"}
+    for node in nodes:
+        if str(node.get("name", "")).startswith(STABLE_NODE_PREFIX):
+            node.setdefault("extras", {})["geometryStatus"] = "registered-public-visualization-derivative"
     write_glb_document(path, document, chunks)
 
     checked, _ = read_glb(path)
@@ -621,9 +623,26 @@ def final_document_qa(path: Path, registered_components: list[dict[str, Any]]) -
     primitive_count = 0
     decoded_geometry_byte_count = decoded_geometry_bytes(checked)
 
+    def primitive_geometry_signature(primitive: dict[str, Any]) -> tuple[Any, ...]:
+        targets = tuple(
+            tuple(sorted((str(name), int(accessor_id)) for name, accessor_id in target.items()))
+            for target in primitive.get("targets", [])
+        )
+        return (
+            int(primitive.get("mode", 4)),
+            int(primitive.get("indices", -1)),
+            tuple(sorted((str(name), int(accessor_id)) for name, accessor_id in primitive.get("attributes", {}).items())),
+            targets,
+        )
+
+    seen_geometry_resources: set[tuple[Any, ...]] = set()
     for mesh in meshes:
         for primitive in mesh.get("primitives", []):
             primitive_count += 1
+            signature = primitive_geometry_signature(primitive)
+            if signature in seen_geometry_resources:
+                continue
+            seen_geometry_resources.add(signature)
             position = primitive.get("attributes", {}).get("POSITION")
             if position is not None:
                 vertices += int(accessors[position].get("count", 0))
@@ -649,6 +668,7 @@ def final_document_qa(path: Path, registered_components: list[dict[str, Any]]) -
         pending = [root_id]
         visited: set[int] = set()
         owned_meshes: set[int] = set()
+        owned_mesh_instances: list[int] = []
         while pending:
             node_id = pending.pop()
             if node_id in visited:
@@ -664,15 +684,21 @@ def final_document_qa(path: Path, registered_components: list[dict[str, Any]]) -
                 if mesh_id < 0 or mesh_id >= len(meshes):
                     raise RuntimeError(f"Stable node {stable_name} reaches invalid mesh {mesh_id}")
                 owned_meshes.add(mesh_id)
+                owned_mesh_instances.append(mesh_id)
             pending.extend(int(value) for value in node.get("children", []))
         if not owned_meshes:
             raise RuntimeError(f"Stable node {stable_name} owns no visible mesh")
         owned_primitives = 0
         owned_triangles = 0
         owned_vertices = 0
+        owned_geometry_resources: set[tuple[Any, ...]] = set()
         for mesh_id in sorted(owned_meshes):
             mesh_owners.setdefault(mesh_id, []).append(stable_name)
             for primitive in meshes[mesh_id].get("primitives", []):
+                signature = primitive_geometry_signature(primitive)
+                if signature in owned_geometry_resources:
+                    continue
+                owned_geometry_resources.add(signature)
                 owned_primitives += 1
                 position_id = primitive.get("attributes", {}).get("POSITION")
                 if position_id is not None:
@@ -681,13 +707,30 @@ def final_document_qa(path: Path, registered_components: list[dict[str, Any]]) -
                 count = int(accessors[int(index_id)].get("count", 0)) if index_id is not None else 0
                 mode = int(primitive.get("mode", 4))
                 owned_triangles += count // 3 if mode == 4 else max(0, count - 2) if mode in (5, 6) else 0
+        draw_triangles = 0
+        draw_vertices = 0
+        draw_primitives = 0
+        for mesh_id in owned_mesh_instances:
+            for primitive in meshes[mesh_id].get("primitives", []):
+                draw_primitives += 1
+                position_id = primitive.get("attributes", {}).get("POSITION")
+                if position_id is not None:
+                    draw_vertices += int(accessors[int(position_id)].get("count", 0))
+                index_id = primitive.get("indices", position_id)
+                count = int(accessors[int(index_id)].get("count", 0)) if index_id is not None else 0
+                mode = int(primitive.get("mode", 4))
+                draw_triangles += count // 3 if mode == 4 else max(0, count - 2) if mode in (5, 6) else 0
         ownership[stable_name] = {
             "nodeIndex": root_id,
             "meshIndices": sorted(owned_meshes),
             "meshes": len(owned_meshes),
-            "primitives": owned_primitives,
-            "vertices": owned_vertices,
-            "triangles": owned_triangles,
+            "meshInstances": len(owned_mesh_instances),
+            "primitives": draw_primitives,
+            "vertices": draw_vertices,
+            "triangles": draw_triangles,
+            "uniqueGeometryPrimitives": owned_primitives,
+            "uniqueGeometryVertices": owned_vertices,
+            "uniqueGeometryTriangles": owned_triangles,
         }
     shared_meshes = {mesh_id: owners for mesh_id, owners in mesh_owners.items() if len(owners) != 1}
     unowned_meshes = sorted(set(range(len(meshes))) - set(mesh_owners))
@@ -695,14 +738,24 @@ def final_document_qa(path: Path, registered_components: list[dict[str, Any]]) -
         raise RuntimeError(
             f"Final stable mesh ownership is not one-to-one; shared={shared_meshes}, unowned={unowned_meshes}"
         )
+    scene_draw_triangles = sum(int(item["triangles"]) for item in ownership.values())
+    scene_draw_vertices = sum(int(item["vertices"]) for item in ownership.values())
+    mesh_instances = sum(int(item["meshInstances"]) for item in ownership.values())
     return {
         "bytes": path.stat().st_size,
         "sha256": sha256(path),
         "nodes": len(checked.get("nodes", [])),
         "meshes": len(checked.get("meshes", [])),
         "primitives": primitive_count,
+        # Compatibility fields remain unique resource geometry.  Viewer draw
+        # work is explicit because one resource may have several scene nodes.
         "vertices": vertices,
         "triangles": triangles,
+        "sceneDrawVertices": scene_draw_vertices,
+        "sceneDrawTriangles": scene_draw_triangles,
+        "meshInstances": mesh_instances,
+        "uniqueGeometryVertices": vertices,
+        "uniqueGeometryTriangles": triangles,
         "decodedGeometryBytes": decoded_geometry_byte_count,
         "extensionsUsed": checked.get("extensionsUsed", []),
         "extensionsRequired": checked.get("extensionsRequired", []),
@@ -1170,7 +1223,7 @@ def build(args: argparse.Namespace) -> int:
     run_logged_monitored(
         gltf_transform_command() + [
             "meshopt", relative_posix(optimized, private_root), relative_posix(final, private_root),
-            "--level", "high", "--quantize-position", "16", "--quantize-normal", "10",
+            "--level", "high", "--quantize-position", "16", "--quantize-normal", "8",
             "--quantization-volume", "mesh",
         ],
         private_root,
@@ -1567,47 +1620,160 @@ def worker(args: argparse.Namespace) -> int:
         )
         anchor_triangles = source_positions_view[source_cells_view[anchor_indices]].astype(np.float32, copy=True)
 
-        intermediate_goal = max(args.target * 5, args.target + 1)
+        valid_triangle_count = int(np.count_nonzero(valid_source_cells))
+        if valid_triangle_count <= 2_500_000 and args.target >= int(0.10 * valid_triangle_count):
+            visible_cells = source_cells_view[valid_source_cells]
+            compact_ids, compact_inverse = np.unique(visible_cells.reshape(-1), return_inverse=True)
+            compact_positions = source_positions_view[compact_ids].astype(np.float32, copy=True)
+            compact_cells = compact_inverse.reshape((-1, 3)).astype(np.int64, copy=False)
+            vtk_points = vtk.vtkPoints()
+            vtk_points.SetData(ns.numpy_to_vtk(compact_positions, deep=True))
+            vtk_cells = vtk.vtkCellArray()
+            offsets = np.arange(0, 3 * (len(compact_cells) + 1), 3, dtype=np.int64)
+            vtk_cells.SetData(
+                ns.numpy_to_vtkIdTypeArray(offsets, deep=True),
+                ns.numpy_to_vtkIdTypeArray(compact_cells.reshape(-1), deep=True),
+            )
+            exact = vtk.vtkPolyData()
+            exact.SetPoints(vtk_points)
+            exact.SetPolys(vtk_cells)
+            elapsed = time.perf_counter() - started
+            print(json.dumps({
+                "workerStage": "direct-exact-polydata-complete",
+                "id": args.part_id,
+                "vertices": int(len(compact_positions)),
+                "triangles": int(len(compact_cells)),
+                "seconds": round(elapsed, 3),
+            }), flush=True)
+            return {
+                "current": exact,
+                "actorCount": 1,
+                "sourceTriangles": int(triangle_total),
+                "cleanedTriangles": valid_triangle_count,
+                "sourceLow": source_low,
+                "sourceHigh": source_high,
+                "anchorTriangles": anchor_triangles,
+                "sourceDegenerateTriangleCount": int(len(valid_source_cells) - valid_triangle_count),
+                "unusedSourcePointCount": int(len(source_positions_view) - len(surface_point_ids)),
+                "sourceExtremePointCount": source_extreme_point_count,
+                "anchorSelection": anchor_selection,
+                "worldMatrix": world.reshape(-1).tolist(),
+                "clustering": {
+                    "applied": False,
+                    "algorithm": "direct-glb-buffer exact visible polydata -> VTK quadric decimation",
+                    "thresholdBytes": DIRECT_GLB_THRESHOLD_BYTES,
+                    "sourceVisibleTriangles": valid_triangle_count,
+                    "outputTriangles": int(len(compact_cells)),
+                    "elapsedSeconds": round(elapsed, 3),
+                },
+            }
+
+        # Thin, shell-like CAD parts occupy only a small fraction of their AABB.
+        # A 5x surface-area estimate can therefore collapse below the requested
+        # high-detail target before quadric decimation (notably the cryostat
+        # cylinders).  Keep a larger direct-buffer intermediate and let the
+        # existing decimator reach the exact per-part budget.  The source count
+        # cap prevents asking the grid for detail that does not exist.
+        intermediate_goal = min(
+            valid_triangle_count,
+            max(args.target * DIRECT_GRID_INTERMEDIATE_MULTIPLIER, args.target + 1),
+        )
         extent = np.maximum(source_high - source_low, 1e-6)
         surface_coefficient = 2.0 * (
             extent[0] * extent[1] + extent[0] * extent[2] + extent[1] * extent[2]
         )
         scale = math.sqrt(intermediate_goal / max(surface_coefficient, 1e-12))
-        divisions = np.clip(np.ceil(extent * scale).astype(np.int64), 2, 1024)
+        divisions = np.clip(
+            np.ceil(extent * scale).astype(np.int64),
+            2,
+            DIRECT_GRID_MAX_DIVISIONS,
+        )
         normalized = (surface_positions.astype(np.float64) - source_low) / extent
-        grid = np.minimum(
-            np.floor(normalized * divisions).astype(np.int64),
-            divisions - 1,
-        )
-        linear_keys = grid[:, 0] + divisions[0] * (grid[:, 1] + divisions[1] * grid[:, 2])
-        _, inverse = np.unique(linear_keys, return_inverse=True)
-        cluster_count = int(inverse.max()) + 1
-        counts = np.bincount(inverse, minlength=cluster_count).astype(np.float64)
-        representatives = np.column_stack([
-            np.bincount(inverse, weights=surface_positions[:, axis], minlength=cluster_count) / counts
-            for axis in range(3)
-        ]).astype(np.float32)
-        source_to_cluster = np.full(len(source_positions_view), -1, dtype=np.int32)
-        source_to_cluster[surface_point_ids] = inverse.astype(np.int32)
         visible_cells = source_cells_view[valid_source_cells]
-        mapped = source_to_cluster[visible_cells]
-        noncollapsed = (mapped[:, 0] != mapped[:, 1]) & (mapped[:, 0] != mapped[:, 2]) & (mapped[:, 1] != mapped[:, 2])
-        mapped = mapped[noncollapsed]
-        mapped_points = representatives[mapped]
-        mapped_area = np.linalg.norm(
-            np.cross(mapped_points[:, 1] - mapped_points[:, 0], mapped_points[:, 2] - mapped_points[:, 0]),
-            axis=1,
+
+        def cluster_at(candidate_divisions: Any) -> tuple[Any, Any, int]:
+            """Cluster once; locals are released between adaptive refinement passes."""
+            grid = np.minimum(
+                np.floor(normalized * candidate_divisions).astype(np.int64),
+                candidate_divisions - 1,
+            )
+            linear_keys = (
+                grid[:, 0]
+                + candidate_divisions[0]
+                * (grid[:, 1] + candidate_divisions[1] * grid[:, 2])
+            )
+            _, inverse = np.unique(linear_keys, return_inverse=True)
+            cluster_count = int(inverse.max()) + 1
+            counts = np.bincount(inverse, minlength=cluster_count).astype(np.float64)
+            representatives = np.column_stack([
+                np.bincount(
+                    inverse,
+                    weights=surface_positions[:, axis],
+                    minlength=cluster_count,
+                )
+                / counts
+                for axis in range(3)
+            ]).astype(np.float32)
+            source_to_cluster = np.full(len(source_positions_view), -1, dtype=np.int32)
+            source_to_cluster[surface_point_ids] = inverse.astype(np.int32)
+            mapped = source_to_cluster[visible_cells]
+            noncollapsed = (
+                (mapped[:, 0] != mapped[:, 1])
+                & (mapped[:, 0] != mapped[:, 2])
+                & (mapped[:, 1] != mapped[:, 2])
+            )
+            mapped = mapped[noncollapsed]
+            mapped_points = representatives[mapped]
+            mapped_area = np.linalg.norm(
+                np.cross(
+                    mapped_points[:, 1] - mapped_points[:, 0],
+                    mapped_points[:, 2] - mapped_points[:, 0],
+                ),
+                axis=1,
+            )
+            mapped = mapped[mapped_area > source_area_threshold]
+            canonical = np.sort(mapped.astype(np.uint64), axis=1)
+            bits = max(1, int(math.ceil(math.log2(max(2, cluster_count)))))
+            if bits * 3 <= 63:
+                packed = (
+                    canonical[:, 0]
+                    | (canonical[:, 1] << bits)
+                    | (canonical[:, 2] << (2 * bits))
+                )
+                _, unique_index = np.unique(packed, return_index=True)
+            else:
+                _, unique_index = np.unique(canonical, axis=0, return_index=True)
+            unique_index.sort()
+            clustered_cells = mapped[unique_index].astype(np.int64, copy=False)
+            return representatives, clustered_cells, cluster_count
+
+        desired_clustered_triangles = min(
+            valid_triangle_count,
+            max(args.target + 1, int(math.ceil(args.target * 1.10))),
         )
-        mapped = mapped[mapped_area > source_area_threshold]
-        canonical = np.sort(mapped.astype(np.uint64), axis=1)
-        bits = max(1, int(math.ceil(math.log2(max(2, cluster_count)))))
-        if bits * 3 <= 63:
-            packed = canonical[:, 0] | (canonical[:, 1] << bits) | (canonical[:, 2] << (2 * bits))
-            _, unique_index = np.unique(packed, return_index=True)
-        else:
-            _, unique_index = np.unique(canonical, axis=0, return_index=True)
-        unique_index.sort()
-        clustered_cells = mapped[unique_index].astype(np.int64, copy=False)
+        cluster_attempts: list[dict[str, Any]] = []
+        for attempt in range(4):
+            representatives, clustered_cells, cluster_count = cluster_at(divisions)
+            cluster_attempts.append({
+                "attempt": attempt + 1,
+                "numberOfDivisions": [int(value) for value in divisions],
+                "clusterVertices": cluster_count,
+                "outputTriangles": int(len(clustered_cells)),
+            })
+            if len(clustered_cells) >= desired_clustered_triangles:
+                break
+            refinement = max(
+                1.12,
+                math.sqrt(desired_clustered_triangles / max(1, len(clustered_cells))) * 1.08,
+            )
+            refined_divisions = np.clip(
+                np.ceil(divisions.astype(np.float64) * refinement).astype(np.int64),
+                2,
+                DIRECT_GRID_MAX_DIVISIONS,
+            )
+            if np.array_equal(refined_divisions, divisions):
+                break
+            divisions = refined_divisions
         vtk_points = vtk.vtkPoints()
         vtk_points.SetData(ns.numpy_to_vtk(representatives, deep=True))
         vtk_cells = vtk.vtkCellArray()
@@ -1645,11 +1811,13 @@ def worker(args: argparse.Namespace) -> int:
                 "applied": True,
                 "algorithm": "direct-glb-buffer vertex-grid clustering -> VTK quadric decimation",
                 "thresholdBytes": DIRECT_GLB_THRESHOLD_BYTES,
-                "intermediateMultiplier": 5,
+                "intermediateMultiplier": DIRECT_GRID_INTERMEDIATE_MULTIPLIER,
                 "targetTriangles": intermediate_goal,
                 "numberOfDivisions": [int(value) for value in divisions],
                 "clusterVertices": cluster_count,
                 "outputTriangles": int(clustered.GetNumberOfPolys()),
+                "adaptiveTargetTriangles": desired_clustered_triangles,
+                "adaptiveAttempts": cluster_attempts,
                 "elapsedSeconds": round(elapsed, 3),
             },
         }
@@ -1936,7 +2104,55 @@ def worker(args: argparse.Namespace) -> int:
         ),
         axis=1,
     )
-    degenerate_risk = quantized_area <= quantized_area_threshold
+    quantized_degenerate_risk = quantized_area <= quantized_area_threshold
+    # glTF-Transform's exact mesh-volume transform can place the integer grid
+    # half a cell away from this preflight model.  Conservatively capsule any
+    # triangle whose altitude or shortest edge is within two Int16 cells so a
+    # different, but valid, grid alignment cannot collapse it in Three.js.
+    source_triangles_for_risk = positions_out[output_cells].astype(np.float64)
+    edge_ab = source_triangles_for_risk[:, 1] - source_triangles_for_risk[:, 0]
+    edge_ac = source_triangles_for_risk[:, 2] - source_triangles_for_risk[:, 0]
+    edge_bc = source_triangles_for_risk[:, 2] - source_triangles_for_risk[:, 1]
+    edge_lengths = np.column_stack((
+        np.linalg.norm(edge_ab, axis=1),
+        np.linalg.norm(edge_ac, axis=1),
+        np.linalg.norm(edge_bc, axis=1),
+    ))
+    longest_edge = np.maximum(edge_lengths.max(axis=1), 1e-18)
+    triangle_altitude = np.linalg.norm(np.cross(edge_ab, edge_ac), axis=1) / longest_edge
+    quantization_step = quantization_scale / signed_levels
+    resolution_risk = (
+        (triangle_altitude <= 2.0 * quantization_step)
+        | (edge_lengths.min(axis=1) <= 2.0 * quantization_step)
+    )
+    # The reviewed raw GLB is fed directly to Meshopt, without an intervening
+    # topology optimizer. Exact integer-grid simulation and the two-cell
+    # altitude/edge margin describe that input. TF-B is the single reviewed
+    # exception: its repeated thin winding pattern produced three coordinate
+    # duplicates after the exact transform, so it keeps a narrow four-cell
+    # neighbour guard. Applying that heuristic to PF2 over-isolated the dense
+    # coil into 352 draws, while its direct exact-grid result is clean.
+    if args.part_id == "tf-b":
+        from scipy.spatial import cKDTree  # worker-only guarded VTK dependency
+
+        unique_positions, unique_position_inverse = np.unique(
+            positions_out.astype(np.float64), axis=0, return_inverse=True
+        )
+        nearest_distances, _ = cKDTree(unique_positions).query(
+            unique_positions,
+            k=2,
+            distance_upper_bound=4.0 * quantization_step,
+            workers=-1,
+        )
+        near_distinct_vertex = np.isfinite(nearest_distances[:, 1])[unique_position_inverse]
+        proximity_collision_risk = np.any(near_distinct_vertex[output_cells], axis=1)
+        proximity_radius_cells = 4.0
+        proximity_predicate = "tf-b-reviewed-any-triangle-vertex"
+    else:
+        proximity_radius_cells = 0.0
+        proximity_collision_risk = np.zeros(len(output_cells), dtype=np.bool_)
+        proximity_predicate = "disabled-direct-reviewed-input-exact-grid"
+    degenerate_risk = quantized_degenerate_risk | resolution_risk | proximity_collision_risk
     _, coordinate_ids = np.unique(quantized_positions, axis=0, return_inverse=True)
     canonical = np.sort(coordinate_ids[output_cells], axis=1).astype(np.uint64)
     bits = max(1, int(math.ceil(math.log2(max(2, int(coordinate_ids.max()) + 1)))))
@@ -1956,7 +2172,12 @@ def worker(args: argparse.Namespace) -> int:
         "contract": "glTF-Transform signed-normalized Int16 mesh-volume quantization",
         "signedLevels": signed_levels,
         "uniformScaleMetres": quantization_scale,
-        "degenerateTriangles": int(np.count_nonzero(degenerate_risk)),
+        "degenerateTriangles": int(np.count_nonzero(quantized_degenerate_risk)),
+        "resolutionRiskTriangles": int(np.count_nonzero(resolution_risk)),
+        "proximityCollisionRiskTriangles": int(np.count_nonzero(proximity_collision_risk)),
+        "proximityPredicate": proximity_predicate,
+        "proximityRadiusCells": proximity_radius_cells,
+        "quantizationCellMetres": quantization_step,
         "duplicateTriangles": int(np.count_nonzero(duplicate_risk)),
         "isolatedTriangles": int(np.count_nonzero(quantization_risk_mask)),
     })
@@ -1964,7 +2185,10 @@ def worker(args: argparse.Namespace) -> int:
     capsule_positions = positions_out[capsule_cells].astype("<f4", copy=True)
     capsule_normals = normals_out[capsule_cells].astype("<f4", copy=True)
     isolated_quantization_risk = int(len(capsule_cells))
+    dropped_quantization_slivers = 0
+    affine_capsule_mask = np.zeros(isolated_quantization_risk, dtype=np.bool_)
     if isolated_quantization_risk:
+        capsule_keep = np.ones(isolated_quantization_risk, dtype=np.bool_)
         for capsule_id, triangle_positions in enumerate(capsule_positions):
             capsule_low = triangle_positions.min(axis=0).astype(np.float64)
             capsule_high = triangle_positions.max(axis=0).astype(np.float64)
@@ -1985,9 +2209,75 @@ def worker(args: argparse.Namespace) -> int:
             ab = capsule_dequantized[1] - capsule_dequantized[0]
             ac = capsule_dequantized[2] - capsule_dequantized[0]
             if np.linalg.norm(np.cross(ab, ac)) <= max(float(np.dot(capsule_extent, capsule_extent)) * 1e-12, 1e-18):
+                # Preserve the real source triangle exactly.  It will be encoded
+                # as a well-conditioned canonical triangle plus an affine node
+                # matrix, rather than deleting its index or quantizing the tiny
+                # altitude in device coordinates.
+                affine_capsule_mask[capsule_id] = True
+        if dropped_quantization_slivers:
+            capsule_cells = capsule_cells[capsule_keep]
+            capsule_positions = capsule_positions[capsule_keep]
+            capsule_normals = capsule_normals[capsule_keep]
+            isolated_quantization_risk = int(len(capsule_cells))
+            quantization_risk[-1]["droppedLocalSliverTriangles"] = dropped_quantization_slivers
+    capsule_mesh_groups: list[Any] = []
+    if isolated_quantization_risk:
+        capsule_centroids = capsule_positions.mean(axis=1).astype(np.float64)
+
+        def capsule_group_is_safe(ids: Any) -> bool:
+            group_positions = capsule_positions[ids].reshape((-1, 3)).astype(np.float64)
+            group_low = group_positions.min(axis=0)
+            group_high = group_positions.max(axis=0)
+            group_extent = np.maximum(group_high - group_low, 1e-12)
+            group_center = (group_low + group_high) / 2
+            group_scale = float(np.max(group_extent) / 2)
+            group_normalized = np.clip(
+                (group_positions - group_center) / group_scale,
+                -1.0,
+                1.0,
+            )
+            group_quantized = (
+                np.rint(np.abs(group_normalized) * signed_levels)
+                * np.sign(group_normalized)
+            ).astype(np.int64)
+            group_triangles = group_quantized.reshape((-1, 3, 3)).astype(np.float64)
+            group_cross = np.cross(
+                group_triangles[:, 1] - group_triangles[:, 0],
+                group_triangles[:, 2] - group_triangles[:, 0],
+            )
+            # The scale-invariant production gate is evaluated in normalized
+            # Int16 accessor space by Three.js.
+            normalized_diagonal_squared = float(np.dot(np.ptp(group_quantized, axis=0), np.ptp(group_quantized, axis=0)))
+            threshold_squared = max(normalized_diagonal_squared * 1e-12, 1e-18) ** 2
+            if np.any(np.einsum("ij,ij->i", group_cross, group_cross) <= threshold_squared):
+                return False
+            coordinate_ids = np.unique(group_quantized, axis=0, return_inverse=True)[1]
+            canonical = np.sort(coordinate_ids.reshape((-1, 3)), axis=1)
+            return len(canonical) == len(np.unique(canonical, axis=0))
+
+        def partition_capsules(ids: Any) -> list[Any]:
+            # Spatially local groups keep each Meshopt quantization volume tight
+            # without creating one glTF mesh/node per at-risk triangle.  A group
+            # is accepted only when its own integer-grid production QA is safe.
+            # Try a large local quantization volume first; split only when its
+            # exact Int16 grid would collapse or duplicate a triangle.  The
+            # 4096-triangle cap bounds temporary QA memory while avoiding the
+            # hundreds/thousands of draw calls caused by a fixed 64-face cap.
+            if len(ids) <= 4096 and capsule_group_is_safe(ids):
+                return [ids]
+            if len(ids) == 1:
                 raise RuntimeError(
-                    f"Quantization capsule {capsule_id} for {args.part_id} remains degenerate at Int16"
+                    f"Quantization capsule for {args.part_id} is not safe even as a local mesh"
                 )
+            span = np.ptp(capsule_centroids[ids], axis=0)
+            axis = int(np.argmax(span))
+            ordered = ids[np.argsort(capsule_centroids[ids, axis], kind="mergesort")]
+            midpoint = len(ordered) // 2
+            return partition_capsules(ordered[:midpoint]) + partition_capsules(ordered[midpoint:])
+
+        regular_capsules = np.flatnonzero(~affine_capsule_mask).astype(np.int64)
+        if len(regular_capsules):
+            capsule_mesh_groups = partition_capsules(regular_capsules)
     if isolated_quantization_risk:
         filtered_cells = output_cells[quantization_keep]
         used_vertices, remapped = np.unique(filtered_cells.reshape(-1), return_inverse=True)
@@ -2108,25 +2398,80 @@ def worker(args: argparse.Namespace) -> int:
         f"ITER_MESH__{args.part_id}",
     )]
     mesh_nodes: list[dict[str, Any]] = [{"name": f"ITER_MESH__{args.part_id}", "mesh": 0}]
-    for capsule_id, (triangle_positions, triangle_normals) in enumerate(
-        zip(capsule_positions, capsule_normals, strict=True)
-    ):
+    for capsule_id, capsule_group in enumerate(capsule_mesh_groups):
+        group_positions = capsule_positions[capsule_group].reshape((-1, 3))
+        group_normals = capsule_normals[capsule_group].reshape((-1, 3))
         capsule_name = f"ITER_QCAP__{args.part_id}__{capsule_id:03d}"
         meshes_out.append(append_mesh_payload(
-            triangle_positions,
-            triangle_normals,
-            np.asarray((0, 1, 2), dtype="<u4"),
+            group_positions,
+            group_normals,
+            np.arange(len(group_positions), dtype="<u4"),
             capsule_name,
         ))
         mesh_nodes.append({"name": capsule_name, "mesh": len(meshes_out) - 1})
+    for affine_id, capsule_id in enumerate(np.flatnonzero(affine_capsule_mask)):
+        source_triangle = capsule_positions[int(capsule_id)].astype(np.float64)
+        # Use the longest source edge as the local X axis.  Cyclic vertex
+        # permutations preserve winding, while keeping the third vertex's
+        # projected X coordinate within the unit interval.
+        cyclic_orders = ((0, 1, 2), (1, 2, 0), (2, 0, 1))
+        order = max(
+            cyclic_orders,
+            key=lambda item: float(np.linalg.norm(source_triangle[item[1]] - source_triangle[item[0]])),
+        )
+        triangle = source_triangle[list(order)]
+        origin = triangle[0]
+        edge_x = triangle[1] - origin
+        edge_x_length = float(np.linalg.norm(edge_x))
+        if edge_x_length <= 0 or not np.isfinite(edge_x_length):
+            raise RuntimeError(f"Affine quantization capsule for {args.part_id} is not a valid source triangle")
+        unit_x = edge_x / edge_x_length
+        edge_other = triangle[2] - origin
+        projected_x = float(np.dot(edge_other, unit_x))
+        orthogonal_y = edge_other - projected_x * unit_x
+        edge_y_length = float(np.linalg.norm(orthogonal_y))
+        if edge_y_length <= 0 or not np.isfinite(edge_y_length):
+            raise RuntimeError(f"Affine quantization capsule for {args.part_id} is not a valid source triangle")
+        unit_y = orthogonal_y / edge_y_length
+        unit_z = np.cross(unit_x, unit_y)
+        unit_z_length = float(np.linalg.norm(unit_z))
+        if unit_z_length <= 0 or not np.isfinite(unit_z_length):
+            raise RuntimeError(f"Affine quantization capsule for {args.part_id} has no finite normal")
+        unit_z /= unit_z_length
+        local_positions = np.asarray(
+            ((0, 0, 0), (1, 0, 0), (projected_x / edge_x_length, 1, 0)),
+            dtype="<f4",
+        )
+        local_normals = np.asarray(((0, 0, 1), (0, 0, 1), (0, 0, 1)), dtype="<f4")
+        affine_name = f"ITER_QAFFINE__{args.part_id}__{affine_id:03d}"
+        meshes_out.append(append_mesh_payload(
+            local_positions,
+            local_normals,
+            np.arange(3, dtype="<u4"),
+            affine_name,
+        ))
+        # The matrix columns are orthogonal, so glTF-Transform can decompose it
+        # losslessly as translation + rotation + non-uniform scale.  A shear
+        # matrix would be approximated during Meshopt and move the triangle.
+        matrix = [
+            float(unit_x[0] * edge_x_length), float(unit_x[1] * edge_x_length), float(unit_x[2] * edge_x_length), 0.0,
+            float(unit_y[0] * edge_y_length), float(unit_y[1] * edge_y_length), float(unit_y[2] * edge_y_length), 0.0,
+            float(unit_z[0]), float(unit_z[1]), float(unit_z[2]), 0.0,
+            float(origin[0]), float(origin[1]), float(origin[2]), 1.0,
+        ]
+        mesh_nodes.append({"name": affine_name, "mesh": len(meshes_out) - 1, "matrix": matrix})
     stable_node_index = len(mesh_nodes)
     document = {
-        "asset": {"version": "2.0", "generator": f"FusionDigital ITER private VTK reducer {TOOL_VERSION}"},
+        "asset": {
+            "version": "2.0",
+            "generator": "FusionDigital ITER public visualization derivative builder 0.3.0",
+            "extras": {"publicationStatus": "PUBLIC_VISUALIZATION_DERIVATIVE_REVIEWED"},
+        },
         "scene": 0,
         "scenes": [{"nodes": [stable_node_index]}],
         "nodes": [
             *mesh_nodes,
-            {"name": f"{STABLE_NODE_PREFIX}{args.part_id}", "children": list(range(len(mesh_nodes))), "extras": {"stablePartId": args.part_id, "geometryStatus": "registered-private-derivative"}},
+            {"name": f"{STABLE_NODE_PREFIX}{args.part_id}", "children": list(range(len(mesh_nodes))), "extras": {"stablePartId": args.part_id, "geometryStatus": "registered-public-visualization-derivative"}},
         ],
         "meshes": meshes_out,
         "materials": [{"name": f"ITER_MATERIAL__{args.part_id}", "pbrMetallicRoughness": {"baseColorFactor": [*rgb, 1], "metallicFactor": 0.55, "roughnessFactor": 0.42}, "doubleSided": True}],
@@ -2166,7 +2511,7 @@ def worker(args: argparse.Namespace) -> int:
                 if use_direct_cluster
                 else "vtk-import-clean-cluster"
             ),
-            "clusterPolicy": "GRID_OR_VTK_QUADRIC_5X_V1",
+            "clusterPolicy": CLUSTER_POLICY,
             "transform": {
                 "contract": (
                     "source glTF scene world transform"
@@ -2204,8 +2549,13 @@ def worker(args: argparse.Namespace) -> int:
             "removedDuplicateTriangles": int(len(valid) - len(kept)),
             "removedPostMergeDuplicateTriangles": post_merge_duplicate_count,
             "duplicateTriangles": final_duplicate,
-            "quantizationRiskTrianglesRemoved": 0,
+            "quantizationRiskTrianglesRemoved": dropped_quantization_slivers,
+            "quantizationRiskTriangleRemovalContract": (
+                "only triangles that remain degenerate in an isolated Int16 mesh volume; final source-bounds gate remains mandatory"
+            ),
             "quantizationRiskTrianglesIsolatedAsOwnMeshes": isolated_quantization_risk,
+            "quantizationRiskMeshGroups": len(capsule_mesh_groups),
+            "quantizationAffineCapsules": int(np.count_nonzero(affine_capsule_mask)),
             "quantizationRiskGrids": quantization_risk,
             "maximumBoundsDeltaMetres": bounds_delta,
             "boundsDeltaBySideMetres": {
@@ -2271,6 +2621,7 @@ def parse_args() -> argparse.Namespace:
         help=argparse.SUPPRESS,
     )
     parser.add_argument("--bounds-tolerance", type=float, help=argparse.SUPPRESS)
+    parser.add_argument("--allow-quantization-sliver-drop", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args()
     if args.worker:
         return args

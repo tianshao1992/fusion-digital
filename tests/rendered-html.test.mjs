@@ -180,7 +180,7 @@ test('ships a closed, public DeviceManifest for the CAD viewer', async () => {
   assert.equal(manifest.schemaVersion, '1.1');
   assert.equal(manifest.access.classification, 'PUBLIC');
   assert.equal(manifest.access.redistributionAllowed, true);
-  assert.equal(schema.properties.schemaVersion.const, '1.1');
+  assert.deepEqual(schema.properties.schemaVersion.enum, ['1.1', '1.2']);
   const parts = manifest.systems.flatMap((system) => system.parts);
   assert.equal(parts.length, 17);
   assert.equal(new Set(parts.map((part) => part.id)).size, parts.length);
@@ -342,9 +342,9 @@ test('homepage owns the public full-device digital-prototype workspace', async (
   assert.equal(iter.viewer.overlayEligible, false);
   assert.equal(iter.physicsOverlays.length, 0);
   assert.ok(iter.facts.includes('18 个稳定部件'));
-  assert.ok(iter.facts.includes('细节优先预览包 · ≤ 8 MB'));
-  assert.match(iter.copy, /源 STEP、B-Rep、工程尺寸与高精度模型不公开/);
-  assert.match(iter.statement, /Project-owner-authorized public simplified browser visualization derivative/);
+  assert.ok(iter.facts.includes('5 MB 快速预览 + 约 100 MB 分片高精度'));
+  assert.match(iter.copy, /源 STEP、B-Rep、工程尺寸与工程权威模型不公开/);
+  assert.match(iter.statement, /Project-owner-authorized public browser visualization derivative/);
   assert.match(iter.statement, /Browser-delivered geometry can be technically saved/);
   assert.match(iter.statement, /does not claim ITER Organization endorsement/);
   assert.ok(catalog.devices.filter((device) => device.id !== exl.id).every((device) => device.physicsOverlays.length === 0));
@@ -374,8 +374,12 @@ test('homepage owns the public full-device digital-prototype workspace', async (
   assert.equal(iterManifest.access.classification, 'PUBLIC');
   assert.equal(iterManifest.access.redistributionAllowed, true);
   assert.equal(iterManifest.access.engineeringUseAllowed, false);
+  assert.equal(iterManifest.schemaVersion, '1.2');
   assert.equal(iterManifest.assets.sourceCad, undefined);
   assert.equal(iterManifest.assets.webModels, undefined);
+  assert.equal(iterManifest.assets.componentBundles?.[0]?.components.length, 18);
+  assert.equal(iterManifest.visualizations?.analyticPlasma?.isEfit, false);
+  assert.equal(iterManifest.visualizations?.analyticPlasma?.hasXPoint, false);
   assert.equal(iterManifest.assets.webModel.path, '/models/iter-public-simplified/iter-public-simplified-preview.meshopt.glb');
   assert.ok(iterManifest.assets.webModel.bytes > 0 && iterManifest.assets.webModel.bytes <= 8 * 1024 * 1024);
   const iterParts = iterManifest.systems.flatMap((system) => system.parts);

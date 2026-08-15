@@ -26,17 +26,28 @@ import {
   type TokamakAppearancePreset,
 } from './device-viewer/industrialAppearance';
 import { resolveCadSceneTheme } from './device-viewer/cadSceneTheme';
+import {
+  ANALYTIC_PLASMA_RUNTIME_SEMANTICS,
+  ANALYTIC_PLASMA_VISIBLE_BY_DEFAULT,
+  buildAnalyticPlasmaGeometry,
+} from './device-viewer/analyticPlasma';
+import { createSerialTaskGate, loadVerifiedComponentBundle, loadVerifiedMonolithicModel } from './device-viewer/componentModelLoader';
 import { resolveShotGeometry, type EfitFrame, type EfitStore } from './efit';
 import { useI18n } from '../i18n';
 import { useTheme, type ResolvedTheme } from './theme';
 import {
   parseDeviceManifest,
+  type DeviceComponentBundle,
   type DeviceManifest,
   type DeviceWebModelVariant,
 } from './deviceManifest';
 import './tokamak-cad-viewer.css';
 
 const DEFAULT_MANIFEST_URL = '/models/paramak-tokamak-demo/model-manifest.json';
+// GLTFLoader parsing cannot be cancelled. Keep one client-module decode lane so
+// keyed viewer remounts, route transitions and multiple viewers cannot stack
+// stale large parses and multiply peak memory.
+const globalModelDecodeGate = createSerialTaskGate();
 
 export type TokamakCadViewerProps = {
   manifestUrl?: string;
@@ -78,6 +89,8 @@ type ViewerInteraction = {
   clipOffset: number;
 };
 type ViewerStats = { meshes: number; triangles: number; renderer: string; parts: number };
+type MonolithicViewerModel = DeviceWebModelVariant & { delivery: 'monolithic' };
+type ViewerModelChoice = MonolithicViewerModel | DeviceComponentBundle;
 type ViewSnapshot = {
   position: [number, number, number];
   target: [number, number, number];
@@ -99,6 +112,7 @@ type ViewerApi = {
   setClipping: (enabled: boolean, axis: ClipAxis, offset: number) => void;
   setOpacity: (globalOpacity: number, selectedOpacity: number) => void;
   setVisualTheme: (theme: ResolvedTheme) => void;
+  setAnalyticPlasmaVisible: (visible: boolean) => void;
   applyVisibility: (hidden: Set<string>, isolated: Set<string>) => void;
   selectParts: (partIds: Set<string>) => void;
   pickPart: (event: PointerEvent) => string | null;
@@ -159,15 +173,16 @@ function allMeshes(root: Object3D) {
   return meshes;
 }
 
-function webModelVariants(manifest: DeviceManifest | null): DeviceWebModelVariant[] {
+function webModelVariants(manifest: DeviceManifest | null): ViewerModelChoice[] {
   if (!manifest) return [];
-  return manifest.assets.webModels ?? [{
-    ...manifest.assets.webModel,
-    id: 'standard',
-    label: '标准',
-    quality: 'preview',
-    default: true,
-  }];
+  const monolithic = (manifest.assets.webModels ?? [{
+      ...manifest.assets.webModel,
+      id: 'standard',
+      label: '标准',
+      quality: 'preview' as const,
+      default: true,
+    }]).map((asset) => ({ ...asset, delivery: 'monolithic' as const }));
+  return [...monolithic, ...(manifest.assets.componentBundles ?? [])];
 }
 
 function megabytes(bytes: number) {
@@ -252,6 +267,7 @@ function TokamakCadViewerSession({
   const hiddenPartIdsRef = useRef<Set<string>>(new Set());
   const isolatedPartIdsRef = useRef<Set<string>>(new Set());
   const opacityRef = useRef({ global: 1, selected: 1 });
+  const analyticPlasmaVisibleRef = useRef(ANALYTIC_PLASMA_VISIBLE_BY_DEFAULT);
   const viewSnapshotRef = useRef<ViewSnapshot | null>(null);
   const interactionRef = useRef<ViewerInteraction>({ ...defaultInteraction });
   const [activated, setActivated] = useState(false);
@@ -268,6 +284,9 @@ function TokamakCadViewerSession({
   const [clipOffset, setClipOffset] = useState(defaultInteraction.clipOffset);
   const [globalOpacity, setGlobalOpacity] = useState(1);
   const [selectedOpacity, setSelectedOpacity] = useState(1);
+  const [analyticPlasmaVisible, setAnalyticPlasmaVisible] = useState(
+    ANALYTIC_PLASMA_VISIBLE_BY_DEFAULT,
+  );
   const [fullscreen, setFullscreen] = useState(false);
   const [activeView, setActiveView] = useState<ViewPreset>('iso');
   const [stats, setStats] = useState<ViewerStats>({ meshes: 0, triangles: 0, renderer: 'WEBGL 2', parts: 0 });
@@ -325,7 +344,7 @@ function TokamakCadViewerSession({
         if (controller.signal.aborted) return;
         const variants = webModelVariants(loadedManifest);
         const preview = variants.find((asset) => asset.quality === 'preview') ?? variants[0];
-        const declaredDefault = variants.find((asset) => asset.default === true) ?? preview;
+        const declaredDefault = variants.find((asset) => 'default' in asset && asset.default === true) ?? preview;
         const constrained = variants.length > 1 && shouldPreferPreview();
         const preferred = constrained ? preview : declaredDefault;
         setManifest(loadedManifest);
@@ -363,11 +382,13 @@ function TokamakCadViewerSession({
     let localEfitOverlay: EfitThreeOverlay | null = null;
     let localDisposableMaterials: Set<Material> | null = null;
     let localEnvironmentTarget: WebGLRenderTarget | null = null;
+    const modelLoadController = new AbortController();
     let resourcesReleased = false;
 
     const releaseResources = () => {
       if (resourcesReleased) return;
       resourcesReleased = true;
+      modelLoadController.abort();
       window.cancelAnimationFrame(frame);
       resizeObserver?.disconnect();
       intersectionObserver?.disconnect();
@@ -517,6 +538,10 @@ function TokamakCadViewerSession({
       const disposableMaterials = new Set<Material>();
       const materialByAppearanceKey = new Map<string, MeshStandardMaterial>();
       const plasmaMaterials = new Set<MeshStandardMaterial>();
+      let analyticPlasmaSurfaceMaterial: MeshStandardMaterial | null = null;
+      let analyticPlasmaPulseBase = 3.15;
+      let analyticPlasmaPulseAmplitude = 0.35;
+      let applyAnalyticPlasmaTheme: (theme: ResolvedTheme) => void = () => undefined;
       const createSemanticMaterial = (category: DeviceManifest['systems'][number]['category']) => {
         switch (category) {
           case 'plasma': return new THREE.MeshPhysicalMaterial({ color: 0xff6a1e, emissive: 0xff3d09, emissiveIntensity: 3.4, roughness: 0.18, metalness: 0.08, transparent: true, opacity: 0.9, side: THREE.DoubleSide });
@@ -565,15 +590,33 @@ function TokamakCadViewerSession({
 
       const loader = new loaderModule.GLTFLoader();
       loader.setMeshoptDecoder(meshoptModule.MeshoptDecoder);
-      const gltf = await loader.loadAsync(loadedModel.path, (event) => {
-        if (!disposed && event.total > 0) setProgress(Math.min(99, Math.round((event.loaded / event.total) * 100)));
+      const model: Object3D = await globalModelDecodeGate.run(async () => {
+        if (loadedModel.delivery === 'components') {
+          const hintedNavigator = navigator as Navigator & { deviceMemory?: number };
+          const concurrency = typeof hintedNavigator.deviceMemory === 'number' && hintedNavigator.deviceMemory < 8 ? 1 : 2;
+          return loadVerifiedComponentBundle(loadedModel, {
+            loader,
+            createGroup: () => new THREE.Group(),
+            signal: modelLoadController.signal,
+            concurrency,
+            onProgress: (loadedBytes, totalBytes) => {
+                if (!disposed && totalBytes > 0) setProgress(Math.min(99, Math.round((loadedBytes / totalBytes) * 100)));
+              },
+          });
+        }
+        return loadVerifiedMonolithicModel(loadedModel, {
+          loader,
+          signal: modelLoadController.signal,
+          onProgress: (loadedBytes, totalBytes) => {
+            if (!disposed && totalBytes > 0) setProgress(Math.min(99, Math.round((loadedBytes / totalBytes) * 100)));
+          },
+        });
       });
       if (disposed) {
-        disposeObject(gltf.scene);
+        disposeObject(model);
         return;
       }
 
-      const model = gltf.scene;
       localModel = model;
       const sourceMaterials = new Set<Material>();
       const originalMaterials = new Map<Mesh, Material | Material[]>();
@@ -585,6 +628,7 @@ function TokamakCadViewerSession({
       loadedManifest.systems.forEach((system) => system.parts.forEach((part) => systemByPartId.set(part.id, system)));
       let meshes = 0;
       let triangles = 0;
+      let drawVertices = 0;
 
       model.traverse((node) => {
         const mapped = systemByNodeName.get(node.name);
@@ -603,8 +647,15 @@ function TokamakCadViewerSession({
         mesh.material = replacement;
         originalMaterials.set(mesh, replacement);
         const positionCount = mesh.geometry.attributes.position?.count ?? 0;
+        drawVertices += positionCount;
         triangles += mesh.geometry.index ? mesh.geometry.index.count / 3 : positionCount / 3;
       });
+      if (loadedModel.delivery === 'components'
+        && (Math.round(triangles) !== loadedModel.sceneDrawTriangles
+          || drawVertices !== loadedModel.sceneDrawVertices
+          || meshes !== loadedModel.meshInstances)) {
+        throw new Error(i18nRef.current.t('viewer.errorModelNotReady'));
+      }
       const expectedParts = loadedManifest.systems.flatMap((system) => system.parts);
       const missingParts = expectedParts.filter((part) => !nodeByPartId.has(part.id));
       if (missingParts.length > 0) throw new Error(i18nRef.current.t('viewer.errorMissingNodes', {
@@ -684,6 +735,7 @@ function TokamakCadViewerSession({
         orbitMaterial.color.setHex(next.orbit.color);
         orbitMaterial.opacity = next.orbit.opacity;
         orbitMaterial.needsUpdate = true;
+        applyAnalyticPlasmaTheme(theme);
       };
 
       const target = fittedSphere.center.clone();
@@ -713,6 +765,91 @@ function TokamakCadViewerSession({
       };
 
       const clippingPlane = new THREE.Plane(new THREE.Vector3(-1, 0, 0), 0);
+      const analyticPlasmaDefinition = loadedManifest.visualizations?.analyticPlasma;
+      let analyticPlasmaRoot: Object3D | null = null;
+      if (analyticPlasmaDefinition) {
+        const geometryData = buildAnalyticPlasmaGeometry(analyticPlasmaDefinition);
+        const plasmaRoot = new THREE.Group();
+        plasmaRoot.name = 'ITER_ANALYTIC_PLASMA_PROXY';
+        plasmaRoot.visible = analyticPlasmaVisibleRef.current;
+        plasmaRoot.userData = {
+          kind: analyticPlasmaDefinition.kind,
+          ...ANALYTIC_PLASMA_RUNTIME_SEMANTICS,
+          sourceUrl: analyticPlasmaDefinition.sourceUrl,
+        };
+
+        const surfaceGeometry = new THREE.BufferGeometry();
+        surfaceGeometry.setAttribute(
+          'position',
+          new THREE.Float32BufferAttribute(geometryData.surface95.positions, 3),
+        );
+        surfaceGeometry.setIndex(new THREE.Uint32BufferAttribute(geometryData.surface95.indices, 1));
+        surfaceGeometry.computeVertexNormals();
+        surfaceGeometry.computeBoundingSphere();
+        const surfaceMaterial = new THREE.MeshPhysicalMaterial({
+          color: 0xff7a35,
+          emissive: 0xff4f16,
+          emissiveIntensity: 3.15,
+          roughness: 0.2,
+          metalness: 0.04,
+          clearcoat: 0.28,
+          clearcoatRoughness: 0.2,
+          transparent: true,
+          opacity: 0.42,
+          depthWrite: false,
+          side: THREE.DoubleSide,
+        });
+        surfaceMaterial.name = 'FusionDigital:analytic-plasma-proxy:surface95';
+        const surface = new THREE.Mesh(surfaceGeometry, surfaceMaterial);
+        surface.name = 'ITER_ANALYTIC_PLASMA_SURFACE_95';
+        // The proxy is contextual geometry, never a selectable CAD component.
+        // Explicitly suppress raycasting so clicks pass through to reviewed
+        // assembly nodes without relying on the absence of a part mapping.
+        surface.raycast = () => undefined;
+        surface.userData = { ...ANALYTIC_PLASMA_RUNTIME_SEMANTICS };
+        surface.renderOrder = 8;
+        plasmaRoot.add(surface);
+        viewerMaterials.add(surfaceMaterial);
+        disposableMaterials.add(surfaceMaterial);
+        plasmaMaterials.add(surfaceMaterial);
+
+        const contourMaterial = new THREE.LineBasicMaterial({
+          color: 0xffb06d,
+          transparent: true,
+          opacity: 0.96,
+          depthTest: false,
+          depthWrite: false,
+        });
+        contourMaterial.name = 'FusionDigital:analytic-plasma-proxy:separatrix-reference';
+        analyticPlasmaSurfaceMaterial = surfaceMaterial;
+        applyAnalyticPlasmaTheme = (theme) => {
+          const light = theme === 'light';
+          surfaceMaterial.color.setHex(light ? 0xc86236 : 0xff7a35);
+          surfaceMaterial.emissive.setHex(light ? 0x7c2815 : 0xff4f16);
+          contourMaterial.color.setHex(light ? 0x99482f : 0xffb06d);
+          analyticPlasmaPulseBase = light ? 1.05 : 3.15;
+          analyticPlasmaPulseAmplitude = light ? 0.12 : 0.35;
+          surfaceMaterial.needsUpdate = true;
+          contourMaterial.needsUpdate = true;
+        };
+        applyAnalyticPlasmaTheme(visualThemeRef.current);
+        viewerMaterials.add(contourMaterial);
+        disposableMaterials.add(contourMaterial);
+        geometryData.separatrixReferenceContours.forEach((positions, contourIndex) => {
+          const contourGeometry = new THREE.BufferGeometry();
+          contourGeometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+          contourGeometry.computeBoundingSphere();
+          const contour = new THREE.Line(contourGeometry, contourMaterial);
+          contour.name = `ITER_ANALYTIC_PLASMA_REFERENCE_CONTOUR_${contourIndex + 1}`;
+          contour.raycast = () => undefined;
+          contour.userData = { ...ANALYTIC_PLASMA_RUNTIME_SEMANTICS };
+          contour.renderOrder = 9;
+          plasmaRoot.add(contour);
+        });
+
+        model.add(plasmaRoot);
+        analyticPlasmaRoot = plasmaRoot;
+      }
       const initialEfitState = efitStateRef.current;
       // `model` began as the identity glTF scene wrapper and now owns only the
       // viewer fit. Its CAD child owns the source mm -> web-metre transform,
@@ -871,7 +1008,10 @@ function TokamakCadViewerSession({
         if (disposed) return;
         if (pageVisible && inViewport) {
           plasmaMaterials.forEach((material) => {
-            material.emissiveIntensity = 3.15 + Math.sin((now - startedAt) * 0.0022) * 0.35;
+            const isAnalyticProxy = material === analyticPlasmaSurfaceMaterial;
+            material.emissiveIntensity = (isAnalyticProxy ? analyticPlasmaPulseBase : 3.15)
+              + Math.sin((now - startedAt) * 0.0022)
+                * (isAnalyticProxy ? analyticPlasmaPulseAmplitude : 0.35);
           });
           controls.update();
           renderer.render(scene, camera);
@@ -906,6 +1046,9 @@ function TokamakCadViewerSession({
         },
         setOpacity,
         setVisualTheme,
+        setAnalyticPlasmaVisible: (visible) => {
+          if (analyticPlasmaRoot) analyticPlasmaRoot.visible = visible;
+        },
         applyVisibility,
         selectParts,
         pickPart,
@@ -936,6 +1079,7 @@ function TokamakCadViewerSession({
         interactionRef.current.clipAxis,
         interactionRef.current.clipOffset,
       );
+      viewerRef.current.setAnalyticPlasmaVisible(analyticPlasmaVisibleRef.current);
       controls.autoRotate = interactionRef.current.autoRotate;
       setStats({ meshes, triangles: Math.round(triangles), renderer: renderer.capabilities.isWebGL2 ? 'WEBGL 2' : 'WEBGL', parts: nodeByPartId.size });
       setProgress(100);
@@ -946,7 +1090,7 @@ function TokamakCadViewerSession({
     initialise().catch((error: unknown) => {
       if (disposed) return;
       releaseResources();
-      const preview = manifest.assets.webModels?.find((asset) => asset.quality === 'preview');
+      const preview = availableModels.find((asset) => asset.quality === 'preview');
       if (selectedModel.quality === 'high' && preview && preview.id !== selectedModel.id) {
         const reason = error instanceof Error ? error.message : i18nRef.current.t('viewer.errorUnknown');
         setLodNotice(i18nRef.current.t('viewer.highFallback', { reason }));
@@ -960,7 +1104,7 @@ function TokamakCadViewerSession({
     });
 
     return () => { disposed = true; releaseResources(); viewerRef.current = null; };
-  }, [activated, appearancePreset, attempt, manifest, selectedModel]);
+  }, [activated, appearancePreset, attempt, availableModels, manifest, selectedModel]);
 
   useEffect(() => {
     const overlay = viewerRef.current?.efitOverlay;
@@ -1010,6 +1154,12 @@ function TokamakCadViewerSession({
     viewerRef.current?.setClipping(next, clipAxis, clipOffset);
     setClipping(next);
   };
+  const toggleAnalyticPlasma = () => {
+    const next = !analyticPlasmaVisible;
+    analyticPlasmaVisibleRef.current = next;
+    viewerRef.current?.setAnalyticPlasmaVisible(next);
+    setAnalyticPlasmaVisible(next);
+  };
   const updateClipAxis = (axis: ClipAxis) => {
     interactionRef.current.clipAxis = axis;
     setClipAxis(axis);
@@ -1043,6 +1193,11 @@ function TokamakCadViewerSession({
     setClipAxis(defaultInteraction.clipAxis); setClipOffset(defaultInteraction.clipOffset); setClipping(defaultInteraction.clipping); setGlobalOpacity(1); setSelectedOpacity(1);
     viewerRef.current?.selectParts(new Set()); viewerRef.current?.applyVisibility(new Set(), new Set());
     viewerRef.current?.setClipping(defaultInteraction.clipping, defaultInteraction.clipAxis, defaultInteraction.clipOffset); viewerRef.current?.setOpacity(1, 1);
+    if (manifest?.visualizations?.analyticPlasma) {
+      analyticPlasmaVisibleRef.current = ANALYTIC_PLASMA_VISIBLE_BY_DEFAULT;
+      setAnalyticPlasmaVisible(ANALYTIC_PLASMA_VISIBLE_BY_DEFAULT);
+      viewerRef.current?.setAnalyticPlasmaVisible(ANALYTIC_PLASMA_VISIBLE_BY_DEFAULT);
+    }
   };
   const selectPart = (partId: string, additive = false) => {
     const next = additive ? new Set(selectedPartIds) : new Set<string>();
@@ -1105,7 +1260,9 @@ function TokamakCadViewerSession({
   const ready = status === 'ready';
   const packageBase = manifestUrl.slice(0, manifestUrl.lastIndexOf('/'));
   const sourceCadPath = manifest?.assets.sourceCad?.path ?? `${packageBase}/${viewerId}.step`;
-  const webModelPath = selectedModel?.path ?? manifest?.assets.webModel.path ?? `${packageBase}/${viewerId}.glb`;
+  const webModelPath = selectedModel?.delivery === 'monolithic'
+    ? selectedModel.path
+    : manifest?.assets.webModel.path ?? `${packageBase}/${viewerId}.glb`;
   const posterPath = manifest?.assets.poster?.path ?? (workspace ? null : '/models/paramak-tokamak-demo/paramak-tokamak-demo-poster.png');
   const isParamakPackage = manifest?.devicePackage.kind === 'public-demonstrator' || viewerId.includes('paramak');
   const estimatedMegabytes = selectedModel?.bytes ? megabytes(selectedModel.bytes) : manifest?.assets.webModel.bytes ? megabytes(manifest.assets.webModel.bytes) : workspace ? '2.2' : '1.1';
@@ -1132,10 +1289,10 @@ function TokamakCadViewerSession({
                 key={asset.id}
                 className={selectedModel?.id === asset.id ? 'active' : ''}
                 aria-pressed={selectedModel?.id === asset.id}
-                disabled={status === 'loading'}
+                disabled={status === 'loading' && selectedModel?.id === asset.id}
                 onClick={() => selectModel(asset.id)}
-                title={`${content(asset.label)} · ${megabytes(asset.bytes)} MB${asset.triangles ? ` · ${formatCount(asset.triangles, locale)} triangles` : ''}`}
-              >{asset.quality === 'high' ? t('viewer.high') : t('viewer.standard')} <small>{megabytes(asset.bytes)} MB</small></button>)}
+                title={`${content(asset.label)} · ${megabytes(asset.bytes)} MB${asset.decodedGpuBytes ? ` · ${t('viewer.decodedMemory', { size: megabytes(asset.decodedGpuBytes) })}` : ''}${asset.triangles ? ` · ${formatCount('sceneDrawTriangles' in asset ? asset.sceneDrawTriangles : asset.triangles, locale)} triangles` : ''}`}
+              >{asset.quality === 'high' ? t('viewer.high') : t('viewer.standard')} <small>{megabytes(asset.bytes)} MB{asset.decodedGpuBytes ? ` · ${megabytes(asset.decodedGpuBytes)} MB RAM` : ''}</small></button>)}
             </fieldset>}
             <div className="tokamakCadStatus" aria-live="polite"><span>{ready ? `${selectedModel?.label ?? 'STANDARD'} · MODEL ONLINE` : status === 'loading' ? `STREAMING ${progress}%` : status === 'error' ? 'FALLBACK MODE' : 'STANDBY'}</span><i aria-hidden="true" /></div>
           </div>
@@ -1178,9 +1335,9 @@ function TokamakCadViewerSession({
             <div className="tokamakCadViewport" ref={mountRef} />
             <div className="tokamakCadScan" aria-hidden="true" /><div className="tokamakCadReticle" aria-hidden="true"><i /><i /></div>
             {status === 'idle' && <div className="tokamakCadLaunch"><div className="tokamakCadLaunchGlyph" aria-hidden="true"><span /><i /><b /></div><p>MANIFEST-DRIVEN DIGITAL ASSET / 01</p><h3>{t('viewer.launchTitle')}</h3><span>{t('viewer.launchCopy', { model: content(selectedModel?.label ?? t('viewer.standard')), size: estimatedMegabytes })}</span>{lodNotice && <em className="tokamakCadLodNotice">{lodNotice}</em>}<button type="button" onClick={activate} disabled={!manifest || !selectedModel}>{t('viewer.launch')} <i>→</i></button></div>}
-            {status === 'loading' && <div className="tokamakCadLoading" role="status"><span>MANIFEST → {selectedModel?.quality === 'high' ? 'HIGH LOD' : 'PREVIEW LOD'} → GPU</span><div><i style={{ width: `${Math.max(6, progress)}%` }} /></div><b>{progress > 0 ? `${progress}% · ${content(selectedModel?.label ?? 'MODEL')} ${estimatedMegabytes} MB` : t('viewer.loadingModel', { model: content(selectedModel?.label ?? t('viewer.standard')) })}</b>{lodNotice && <em className="tokamakCadLodNotice">{lodNotice}</em>}</div>}
+            {status === 'loading' && <div className="tokamakCadLoading" role="status"><span>MANIFEST → {selectedModel?.quality === 'high' ? 'HIGH LOD' : 'PREVIEW LOD'} → GPU</span><div><i style={{ width: `${Math.max(6, progress)}%` }} /></div><b>{progress > 0 ? `${progress}% · ${content(selectedModel?.label ?? 'MODEL')} ${estimatedMegabytes} MB${selectedModel?.decodedGpuBytes ? ` · ${t('viewer.decodedMemory', { size: megabytes(selectedModel.decodedGpuBytes) })}` : ''}` : t('viewer.loadingModel', { model: content(selectedModel?.label ?? t('viewer.standard')) })}</b>{lodNotice && <em className="tokamakCadLodNotice">{lodNotice}</em>}</div>}
             {status === 'error' && <div className="tokamakCadFallback"><div className="tokamakFallbackTorus" aria-hidden="true"><span /><i /><b /></div><p>WEBGL FALLBACK</p><h3>{t('viewer.unavailable')}</h3><span>{errorMessage}</span><div><button type="button" onClick={activate}>{t('viewer.reload')}</button>{showDownloadActions && <a href={sourceCadPath} download>{t('viewer.downloadStep')}</a>}</div></div>}
-            <div className="tokamakCadLegend" aria-label={t('viewer.legendAria')}><span><i className="plasma" />PLASMA</span><span><i className="tf" />TF COILS</span><span><i className="pf" />PF COILS / CASES</span><span><i className="structure" />STRUCTURE</span></div>
+            <div className="tokamakCadLegend" aria-label={t('viewer.legendAria')}><span title={manifest?.visualizations?.analyticPlasma ? t('viewer.analyticPlasmaHelp') : undefined}><i className="plasma" />{manifest?.visualizations?.analyticPlasma ? t('viewer.analyticPlasma') : 'PLASMA'}</span><span><i className="tf" />TF COILS</span><span><i className="pf" />PF COILS / CASES</span><span><i className="structure" />STRUCTURE</span></div>
             <div className="tokamakCadReadout" aria-label={t('viewer.statsAria')}><span><small>QUALITY</small><b>{content(selectedModel?.label ?? 'STANDARD')} · {estimatedMegabytes} MB</b></span><span><small>MESHES</small><b>{ready ? formatCount(stats.meshes, locale) : '—'}</b></span><span><small>TRIANGLES</small><b>{ready ? formatCount(stats.triangles, locale) : selectedModel?.triangles ? formatCount(selectedModel.triangles, locale) : '—'}</b></span><span><small>RENDER</small><b>{ready ? stats.renderer : 'ON DEMAND'}</b></span></div>
           </div>
 
@@ -1203,7 +1360,7 @@ function TokamakCadViewerSession({
             <div className="tokamakCadOpacityControl global"><label><span>{t('viewer.globalOpacity')}</span><b>{Math.round(globalOpacity * 100)}%</b><input type="range" min="0.1" max="1" step="0.05" value={globalOpacity} disabled={!ready} onChange={(event) => updateGlobalOpacity(Number(event.target.value))} /></label></div>
             <div className="tokamakCadOpacityControl global"><label><span>{t('viewer.selectedOpacity')}</span><b>{Math.round(selectedOpacity * 100)}%</b><input type="range" min="0.1" max="1" step="0.05" value={selectedOpacity} disabled={!ready || selectedPartIds.size === 0} onChange={(event) => updateSelectedOpacity(Number(event.target.value))} /></label></div>
           </div>
-          <div className="tokamakCadTools"><button type="button" disabled={!ready} onClick={resetView}>{t('viewer.reset')}</button><button type="button" disabled={!ready} className={autoRotate ? 'active' : ''} aria-pressed={autoRotate} onClick={toggleAutoRotate}>{t('viewer.rotate')}</button><button type="button" disabled={!ready} className={wireframe ? 'active' : ''} aria-pressed={wireframe} onClick={toggleWireframe}>{t('viewer.wireframe')}</button><button type="button" disabled={!ready} className={clipping ? 'active' : ''} aria-pressed={clipping} onClick={toggleClipping}>{t('viewer.clip')}</button><button type="button" disabled={!ready} className={fullscreen ? 'active' : ''} aria-pressed={fullscreen} onClick={toggleFullscreen}>{t('viewer.fullscreen')}</button></div>
+          <div className="tokamakCadTools"><button type="button" disabled={!ready} onClick={resetView}>{t('viewer.reset')}</button><button type="button" disabled={!ready} className={autoRotate ? 'active' : ''} aria-pressed={autoRotate} onClick={toggleAutoRotate}>{t('viewer.rotate')}</button><button type="button" disabled={!ready} className={wireframe ? 'active' : ''} aria-pressed={wireframe} onClick={toggleWireframe}>{t('viewer.wireframe')}</button><button type="button" disabled={!ready} className={clipping ? 'active' : ''} aria-pressed={clipping} onClick={toggleClipping}>{t('viewer.clip')}</button>{manifest?.visualizations?.analyticPlasma && <button type="button" disabled={!ready} className={analyticPlasmaVisible ? 'active' : ''} aria-pressed={analyticPlasmaVisible} title={`${content(manifest.visualizations.analyticPlasma.label)} · ${t('viewer.analyticPlasmaHelp')}`} onClick={toggleAnalyticPlasma}>{t('viewer.analyticPlasma')}</button>}<button type="button" disabled={!ready} className={fullscreen ? 'active' : ''} aria-pressed={fullscreen} onClick={toggleFullscreen}>{t('viewer.fullscreen')}</button></div>
         </div>
         {efitControls && <div className="tokamakCadEfitControls" aria-label={t('viewer.efitControls')}>
           <span>EFIT OVERLAY</span>

@@ -1,6 +1,6 @@
 {
   "$schema": "/models/device-manifest.schema.json",
-  "schemaVersion": "1.1",
+  "schemaVersion": "1.2",
   "id": "iter-public-simplified-v1",
   "title": "ITER public simplified browser visualization derivative",
   "asOf": "2026-08-16",
@@ -11,7 +11,7 @@
     "replacementContract": [
       "project-owner authorization for public browser visualization",
       "exactly 18 stable selectable component identities",
-      "single detail-prioritized Meshopt preview with no high-detail or source-CAD asset",
+      "compact all-part Meshopt preview plus an optional reviewed 18-file high-detail visualization bundle",
       "metre-scale Y-up right-handed web coordinate frame",
       "content hash, geometry budgets and non-engineering-use boundary"
     ]
@@ -20,7 +20,7 @@
     "classification": "PUBLIC",
     "redistributionAllowed": true,
     "engineeringUseAllowed": false,
-    "statement": "Project-owner-authorized public simplified browser visualization derivative. Source STEP, B-Rep topology, authoritative dimensions, manufacturing metadata and high-detail engineering geometry remain private. This release does not claim ITER Organization endorsement."
+    "statement": "Project-owner-authorized public browser visualization derivative. The compact preview and optional high-detail component shards are non-engineering display meshes. Source STEP, B-Rep topology, authoritative dimensions and manufacturing metadata remain private. This release does not claim ITER Organization endorsement."
   },
   "coordinateSystem": {
     "linearUnit": "metre",
@@ -31,16 +31,546 @@
   "assets": {
     "webModel": {
       "path": "/models/iter-public-simplified/iter-public-simplified-preview.meshopt.glb",
-      "format": "glTF 2.0 binary + EXT_meshopt_compression + KHR_mesh_quantization; 16-bit position / 10-bit normal",
-      "bytes": 5149964,
-      "sha256": "BBA68F7C94AA606A941D3D678ABDA2EC0E0959EF6278D4A25B04D446884424C4",
+      "format": "glTF 2.0 binary + EXT_meshopt_compression + KHR_mesh_quantization; POSITION normalized Int16 per mesh; NORMAL normalized Int8 (8-bit)",
+      "bytes": 5150212,
+      "sha256": "96AD760708E5E8BFA8B23BDC715ACE4591B0F1F543BC541A83DA86064C2E1EC3",
       "triangles": 399499,
       "vertices": 738938,
       "decodedGpuBytes": 10936437,
       "boundsMetres": {
-        "min": [-15.01108, -13.01996, -14.89584],
-        "max": [15.01133, 16.20763, 14.95982]
+        "min": [
+          -15.01108,
+          -13.01996,
+          -14.89584
+        ],
+        "max": [
+          15.01133,
+          16.20763,
+          14.95982
+        ]
       }
+    },
+    "componentBundles": [
+      {
+        "id": "iter-high-v1",
+        "label": "ITER 高清教育可视化",
+        "quality": "high",
+        "delivery": "components",
+        "format": "glTF 2.0 binary + EXT_meshopt_compression + KHR_mesh_quantization; POSITION normalized Int16 per mesh; NORMAL normalized Int8 (8-bit)",
+        "bytes": 92232312,
+        "triangles": 12256550,
+        "vertices": 15410663,
+        "sceneDrawTriangles": 12256550,
+        "sceneDrawVertices": 15410663,
+        "meshInstances": 892,
+        "decodedGpuBytes": 279017055,
+        "boundsMetres": {
+          "min": [
+            -15.011083602905273,
+            -13.019881064008414,
+            -14.890042671573884
+          ],
+          "max": [
+            15.011083602905273,
+            16.207624586099932,
+            14.959957661647497
+          ]
+        },
+        "components": [
+          {
+            "partId": "ITER-CRYOSTAT-BASE",
+            "nodeName": "ITER_PART__cryostat-base",
+            "path": "/device-assets/iter-high-detail/v1/cryostat-base.f4daa0cabe2cdc3fb44057d57c5b5863c295015b2d692ea34f86cc7a96a9a34e.high.meshopt.glb",
+            "format": "glTF 2.0 binary + EXT_meshopt_compression + KHR_mesh_quantization; POSITION normalized Int16 per mesh; NORMAL normalized Int8 (8-bit)",
+            "sha256": "f4daa0cabe2cdc3fb44057d57c5b5863c295015b2d692ea34f86cc7a96a9a34e",
+            "bytes": 2003108,
+            "triangles": 299813,
+            "vertices": 403566,
+            "sceneDrawTriangles": 299813,
+            "sceneDrawVertices": 403566,
+            "meshInstances": 22,
+            "decodedGpuBytes": 6911388,
+            "boundsMetres": {
+              "min": [
+                -14.47174957805795,
+                -13.019881064008414,
+                -14.642000198364258
+              ],
+              "max": [
+                14.47174957805795,
+                -7.0526191648734216,
+                14.642000198364258
+              ]
+            }
+          },
+          {
+            "partId": "ITER-CRYOSTAT-LOWER",
+            "nodeName": "ITER_PART__cryostat-lower",
+            "path": "/device-assets/iter-high-detail/v1/cryostat-lower.e48fcc0d23ba738df3a3184e16a927b86cba93ccdab762112773dffcff1141f4.high.meshopt.glb",
+            "format": "glTF 2.0 binary + EXT_meshopt_compression + KHR_mesh_quantization; POSITION normalized Int16 per mesh; NORMAL normalized Int8 (8-bit)",
+            "sha256": "e48fcc0d23ba738df3a3184e16a927b86cba93ccdab762112773dffcff1141f4",
+            "bytes": 20330804,
+            "triangles": 2199830,
+            "vertices": 3413930,
+            "sceneDrawTriangles": 2199830,
+            "sceneDrawVertices": 3413930,
+            "meshInstances": 47,
+            "decodedGpuBytes": 56660208,
+            "boundsMetres": {
+              "min": [
+                -15.011083602905273,
+                -7.052658550190009,
+                -14.890042671573884
+              ],
+              "max": [
+                15.011083602905273,
+                3.3401586932411567,
+                14.959957661647497
+              ]
+            }
+          },
+          {
+            "partId": "ITER-CRYOSTAT-TOP",
+            "nodeName": "ITER_PART__cryostat-top",
+            "path": "/device-assets/iter-high-detail/v1/cryostat-top.fbd22be80dd003f6810755e425423c037fb6db4083af5a4ae200e82bf0cd8ce3.high.meshopt.glb",
+            "format": "glTF 2.0 binary + EXT_meshopt_compression + KHR_mesh_quantization; POSITION normalized Int16 per mesh; NORMAL normalized Int8 (8-bit)",
+            "sha256": "fbd22be80dd003f6810755e425423c037fb6db4083af5a4ae200e82bf0cd8ce3",
+            "bytes": 807836,
+            "triangles": 171046,
+            "vertices": 166245,
+            "sceneDrawTriangles": 171046,
+            "sceneDrawVertices": 166245,
+            "meshInstances": 6,
+            "decodedGpuBytes": 3485391,
+            "boundsMetres": {
+              "min": [
+                -14.669389724731445,
+                11.849830476766279,
+                -14.669389724731445
+              ],
+              "max": [
+                14.669389724731445,
+                16.207624586099932,
+                14.669389724731445
+              ]
+            }
+          },
+          {
+            "partId": "ITER-CRYOSTAT-UPPER",
+            "nodeName": "ITER_PART__cryostat-upper",
+            "path": "/device-assets/iter-high-detail/v1/cryostat-upper.f7b326788c41df1e9f61c96e035b8788b22ec044503c8d0c16a4ab3e68c7e7f9.high.meshopt.glb",
+            "format": "glTF 2.0 binary + EXT_meshopt_compression + KHR_mesh_quantization; POSITION normalized Int16 per mesh; NORMAL normalized Int8 (8-bit)",
+            "sha256": "f7b326788c41df1e9f61c96e035b8788b22ec044503c8d0c16a4ab3e68c7e7f9",
+            "bytes": 18802744,
+            "triangles": 2099807,
+            "vertices": 3169264,
+            "sceneDrawTriangles": 2099807,
+            "sceneDrawVertices": 3169264,
+            "meshInstances": 24,
+            "decodedGpuBytes": 53252172,
+            "boundsMetres": {
+              "min": [
+                -15.001235008239746,
+                3.0400972020277903,
+                -14.880017520403314
+              ],
+              "max": [
+                15.001235008239746,
+                12.0499029505601,
+                14.880000786905443
+              ]
+            }
+          },
+          {
+            "partId": "ITER-CS",
+            "nodeName": "ITER_PART__cs",
+            "path": "/device-assets/iter-high-detail/v1/cs.d1a8a1b30b9da86cd5d428012c3ce599fb16eca0b4778da3507bd26ceba78cdb.high.meshopt.glb",
+            "format": "glTF 2.0 binary + EXT_meshopt_compression + KHR_mesh_quantization; POSITION normalized Int16 per mesh; NORMAL normalized Int8 (8-bit)",
+            "sha256": "d1a8a1b30b9da86cd5d428012c3ce599fb16eca0b4778da3507bd26ceba78cdb",
+            "bytes": 6331312,
+            "triangles": 981539,
+            "vertices": 1269388,
+            "sceneDrawTriangles": 981539,
+            "sceneDrawVertices": 1269388,
+            "meshInstances": 206,
+            "decodedGpuBytes": 21604191,
+            "boundsMetres": {
+              "min": [
+                -3.132078466411185,
+                -9.04840470643051,
+                -3.1581365084900614
+              ],
+              "max": [
+                3.0971980667072057,
+                8.880008755140747,
+                3.1581365084900614
+              ]
+            }
+          },
+          {
+            "partId": "ITER-DIVERTOR",
+            "nodeName": "ITER_PART__divertor",
+            "path": "/device-assets/iter-high-detail/v1/divertor.54bff21eff660cecd961415af61ce9df4a5319bb941559e390805a675176c278.high.meshopt.glb",
+            "format": "glTF 2.0 binary + EXT_meshopt_compression + KHR_mesh_quantization; POSITION normalized Int16 per mesh; NORMAL normalized Int8 (8-bit)",
+            "sha256": "54bff21eff660cecd961415af61ce9df4a5319bb941559e390805a675176c278",
+            "bytes": 1804300,
+            "triangles": 291163,
+            "vertices": 240144,
+            "sceneDrawTriangles": 291163,
+            "sceneDrawVertices": 240144,
+            "meshInstances": 86,
+            "decodedGpuBytes": 5628894,
+            "boundsMetres": {
+              "min": [
+                3.278719425201416,
+                -5.006570492359186,
+                -3.1909147586846194
+              ],
+              "max": [
+                7.241139888763428,
+                -2.539535369304632,
+                -0.41660370564223914
+              ]
+            }
+          },
+          {
+            "partId": "ITER-PF1",
+            "nodeName": "ITER_PART__pf1",
+            "path": "/device-assets/iter-high-detail/v1/pf1.4d802390f02288c13638afc02e1d14d97530abb5fcc872c0a24371cbdaace558.high.meshopt.glb",
+            "format": "glTF 2.0 binary + EXT_meshopt_compression + KHR_mesh_quantization; POSITION normalized Int16 per mesh; NORMAL normalized Int8 (8-bit)",
+            "sha256": "4d802390f02288c13638afc02e1d14d97530abb5fcc872c0a24371cbdaace558",
+            "bytes": 400840,
+            "triangles": 53750,
+            "vertices": 82132,
+            "sceneDrawTriangles": 53750,
+            "sceneDrawVertices": 82132,
+            "meshInstances": 13,
+            "decodedGpuBytes": 1015764,
+            "boundsMetres": {
+              "min": [
+                -4.737417229844408,
+                6.877915035238722,
+                -4.87249755859375
+              ],
+              "max": [
+                4.859471329881029,
+                8.679016087820079,
+                4.87249755859375
+              ]
+            }
+          },
+          {
+            "partId": "ITER-PF2",
+            "nodeName": "ITER_PART__pf2",
+            "path": "/device-assets/iter-high-detail/v1/pf2.74c2387b2951c19a51b547b6cd6bccc837c926041319f6d994ef747ffba27d89.high.meshopt.glb",
+            "format": "glTF 2.0 binary + EXT_meshopt_compression + KHR_mesh_quantization; POSITION normalized Int16 per mesh; NORMAL normalized Int8 (8-bit)",
+            "sha256": "74c2387b2951c19a51b547b6cd6bccc837c926041319f6d994ef747ffba27d89",
+            "bytes": 3598620,
+            "triangles": 264156,
+            "vertices": 602519,
+            "sceneDrawTriangles": 264156,
+            "sceneDrawVertices": 602519,
+            "meshInstances": 227,
+            "decodedGpuBytes": 6694521,
+            "boundsMetres": {
+              "min": [
+                -9.07550048828125,
+                6.115543515251398,
+                -9.024537870713461
+              ],
+              "max": [
+                9.07550048828125,
+                7.403509025523961,
+                9.024537870713461
+              ]
+            }
+          },
+          {
+            "partId": "ITER-PF3",
+            "nodeName": "ITER_PART__pf3",
+            "path": "/device-assets/iter-high-detail/v1/pf3.9c2a34664d2f18c5d91fb499348424401d8637889d7ff4e70a6444fadecccb27.high.meshopt.glb",
+            "format": "glTF 2.0 binary + EXT_meshopt_compression + KHR_mesh_quantization; POSITION normalized Int16 per mesh; NORMAL normalized Int8 (8-bit)",
+            "sha256": "9c2a34664d2f18c5d91fb499348424401d8637889d7ff4e70a6444fadecccb27",
+            "bytes": 1059116,
+            "triangles": 256152,
+            "vertices": 248570,
+            "sceneDrawTriangles": 256152,
+            "sceneDrawVertices": 248570,
+            "meshInstances": 13,
+            "decodedGpuBytes": 5243670,
+            "boundsMetres": {
+              "min": [
+                -12.691008567810059,
+                1.504458757369385,
+                -12.687522771822929
+              ],
+              "max": [
+                12.691008567810059,
+                3.041307477028503,
+                12.687522771822929
+              ]
+            }
+          },
+          {
+            "partId": "ITER-PF4",
+            "nodeName": "ITER_PART__pf4",
+            "path": "/device-assets/iter-high-detail/v1/pf4.7152b2d6eb2c40fbe219fd6db905a6a2cef18604bf8338cf55fe932c8e86d424.high.meshopt.glb",
+            "format": "glTF 2.0 binary + EXT_meshopt_compression + KHR_mesh_quantization; POSITION normalized Int16 per mesh; NORMAL normalized Int8 (8-bit)",
+            "sha256": "7152b2d6eb2c40fbe219fd6db905a6a2cef18604bf8338cf55fe932c8e86d424",
+            "bytes": 1858988,
+            "triangles": 331374,
+            "vertices": 412522,
+            "sceneDrawTriangles": 331374,
+            "sceneDrawVertices": 412522,
+            "meshInstances": 54,
+            "decodedGpuBytes": 7289076,
+            "boundsMetres": {
+              "min": [
+                -12.696001052856445,
+                -3.8129267255449424,
+                -12.621995614424621
+              ],
+              "max": [
+                12.696001052856445,
+                2.0121924440050254,
+                12.621995614424621
+              ]
+            }
+          },
+          {
+            "partId": "ITER-PF5",
+            "nodeName": "ITER_PART__pf5",
+            "path": "/device-assets/iter-high-detail/v1/pf5.5a4d67c2644cfb3353f28aab772c19d0c19d525f0829bfee4d66d2fa10bb8c2d.high.meshopt.glb",
+            "format": "glTF 2.0 binary + EXT_meshopt_compression + KHR_mesh_quantization; POSITION normalized Int16 per mesh; NORMAL normalized Int8 (8-bit)",
+            "sha256": "5a4d67c2644cfb3353f28aab772c19d0c19d525f0829bfee4d66d2fa10bb8c2d",
+            "bytes": 707344,
+            "triangles": 139694,
+            "vertices": 161504,
+            "sceneDrawTriangles": 139694,
+            "sceneDrawVertices": 161504,
+            "meshInstances": 6,
+            "decodedGpuBytes": 3030180,
+            "boundsMetres": {
+              "min": [
+                -9.281599998474121,
+                -7.759543437001965,
+                -9.227497224350504
+              ],
+              "max": [
+                9.281599998474121,
+                -6.103579776267506,
+                9.227497224350504
+              ]
+            }
+          },
+          {
+            "partId": "ITER-PF6",
+            "nodeName": "ITER_PART__pf6",
+            "path": "/device-assets/iter-high-detail/v1/pf6.81c6fbba0bd99cab6b861995bcbbdca8feea7c9cca4a64da645a8201a0f6eeec.high.meshopt.glb",
+            "format": "glTF 2.0 binary + EXT_meshopt_compression + KHR_mesh_quantization; POSITION normalized Int16 per mesh; NORMAL normalized Int8 (8-bit)",
+            "sha256": "81c6fbba0bd99cab6b861995bcbbdca8feea7c9cca4a64da645a8201a0f6eeec",
+            "bytes": 839244,
+            "triangles": 155659,
+            "vertices": 153324,
+            "sceneDrawTriangles": 155659,
+            "sceneDrawVertices": 153324,
+            "meshInstances": 51,
+            "decodedGpuBytes": 3144876,
+            "boundsMetres": {
+              "min": [
+                -5.416909189102658,
+                -8.680773709114082,
+                -5.541674613952637
+              ],
+              "max": [
+                5.53896255221326,
+                -6.811957385246269,
+                5.541674613952637
+              ]
+            }
+          },
+          {
+            "partId": "ITER-TF-A",
+            "nodeName": "ITER_PART__tf-a",
+            "path": "/device-assets/iter-high-detail/v1/tf-a.ca14bb03eac8ac74edcd6861c39c78c80a11bcbbb0f5f12a7cf75f19c3e4222f.high.meshopt.glb",
+            "format": "glTF 2.0 binary + EXT_meshopt_compression + KHR_mesh_quantization; POSITION normalized Int16 per mesh; NORMAL normalized Int8 (8-bit)",
+            "sha256": "ca14bb03eac8ac74edcd6861c39c78c80a11bcbbb0f5f12a7cf75f19c3e4222f",
+            "bytes": 439032,
+            "triangles": 54662,
+            "vertices": 67412,
+            "sceneDrawTriangles": 54662,
+            "sceneDrawVertices": 67412,
+            "meshInstances": 30,
+            "decodedGpuBytes": 909354,
+            "boundsMetres": {
+              "min": [
+                1.9000028596208294,
+                -8.881000518798828,
+                -5.8817706268674
+              ],
+              "max": [
+                10.79505763194106,
+                8.269000053405762,
+                -0.38457967225254963
+              ]
+            }
+          },
+          {
+            "partId": "ITER-TF-B",
+            "nodeName": "ITER_PART__tf-b",
+            "path": "/device-assets/iter-high-detail/v1/tf-b.219e07618fc984e5f6e15f6092c59387cc614beaf273f4a88c73bca2f14ef0a2.high.meshopt.glb",
+            "format": "glTF 2.0 binary + EXT_meshopt_compression + KHR_mesh_quantization; POSITION normalized Int16 per mesh; NORMAL normalized Int8 (8-bit)",
+            "sha256": "219e07618fc984e5f6e15f6092c59387cc614beaf273f4a88c73bca2f14ef0a2",
+            "bytes": 605324,
+            "triangles": 58033,
+            "vertices": 85656,
+            "sceneDrawTriangles": 58033,
+            "sceneDrawVertices": 85656,
+            "meshInstances": 81,
+            "decodedGpuBytes": 1058883,
+            "boundsMetres": {
+              "min": [
+                1.8998771280202167,
+                -8.881000518798828,
+                -7.458644390651915
+              ],
+              "max": [
+                10.795057938863053,
+                8.269001007080078,
+                -0.3844176195074156
+              ]
+            }
+          },
+          {
+            "partId": "ITER-VV1",
+            "nodeName": "ITER_PART__vv1",
+            "path": "/device-assets/iter-high-detail/v1/vv1.dfbc4da888f415a62bed27c1dda45700cd191f9d8652f5ddcb28c591c59f5503.high.meshopt.glb",
+            "format": "glTF 2.0 binary + EXT_meshopt_compression + KHR_mesh_quantization; POSITION normalized Int16 per mesh; NORMAL normalized Int8 (8-bit)",
+            "sha256": "dfbc4da888f415a62bed27c1dda45700cd191f9d8652f5ddcb28c591c59f5503",
+            "bytes": 7979988,
+            "triangles": 1199969,
+            "vertices": 1208794,
+            "sceneDrawTriangles": 1199969,
+            "sceneDrawVertices": 1208794,
+            "meshInstances": 3,
+            "decodedGpuBytes": 25251162,
+            "boundsMetres": {
+              "min": [
+                2.112940513324042,
+                -6.025000095367432,
+                -7.429132134239824
+              ],
+              "max": [
+                9.878515995312434,
+                6.639473915100098,
+                -0.6096747245147398
+              ]
+            }
+          },
+          {
+            "partId": "ITER-VV2",
+            "nodeName": "ITER_PART__vv2",
+            "path": "/device-assets/iter-high-detail/v1/vv2.397d0424f70525335d3d167bce13308dac70d8d6a66ee173b350c05cfadfe5b4.high.meshopt.glb",
+            "format": "glTF 2.0 binary + EXT_meshopt_compression + KHR_mesh_quantization; POSITION normalized Int16 per mesh; NORMAL normalized Int8 (8-bit)",
+            "sha256": "397d0424f70525335d3d167bce13308dac70d8d6a66ee173b350c05cfadfe5b4",
+            "bytes": 7908704,
+            "triangles": 1199964,
+            "vertices": 1190432,
+            "sceneDrawTriangles": 1199964,
+            "sceneDrawVertices": 1190432,
+            "meshInstances": 11,
+            "decodedGpuBytes": 25084158,
+            "boundsMetres": {
+              "min": [
+                0.050080361562571785,
+                -6.075099945068359,
+                -10.428676641554574
+              ],
+              "max": [
+                6.21323823928833,
+                6.639473915100098,
+                -2.504719221024771
+              ]
+            }
+          },
+          {
+            "partId": "ITER-VV3",
+            "nodeName": "ITER_PART__vv3",
+            "path": "/device-assets/iter-high-detail/v1/vv3.730d0b8df6ca92bef654f5dcf777f37de3065cfbc45cfc0f5ae74753002cc2a2.high.meshopt.glb",
+            "format": "glTF 2.0 binary + EXT_meshopt_compression + KHR_mesh_quantization; POSITION normalized Int16 per mesh; NORMAL normalized Int8 (8-bit)",
+            "sha256": "730d0b8df6ca92bef654f5dcf777f37de3065cfbc45cfc0f5ae74753002cc2a2",
+            "bytes": 8686100,
+            "triangles": 1299972,
+            "vertices": 1320718,
+            "sceneDrawTriangles": 1299972,
+            "sceneDrawVertices": 1320718,
+            "meshInstances": 9,
+            "decodedGpuBytes": 27451692,
+            "boundsMetres": {
+              "min": [
+                -6.195433768293891,
+                -6.075099945068359,
+                -10.431687882630015
+              ],
+              "max": [
+                -0.04205652061935883,
+                6.639479859222275,
+                -2.5046262233575334
+              ]
+            }
+          },
+          {
+            "partId": "ITER-VV4",
+            "nodeName": "ITER_PART__vv4",
+            "path": "/device-assets/iter-high-detail/v1/vv4.c3719d8d84ba66ec35d3bff6ba656ccb576d680b353f78feea432d169a08ba53.high.meshopt.glb",
+            "format": "glTF 2.0 binary + EXT_meshopt_compression + KHR_mesh_quantization; POSITION normalized Int16 per mesh; NORMAL normalized Int8 (8-bit)",
+            "sha256": "c3719d8d84ba66ec35d3bff6ba656ccb576d680b353f78feea432d169a08ba53",
+            "bytes": 8068908,
+            "triangles": 1199967,
+            "vertices": 1214543,
+            "sceneDrawTriangles": 1199967,
+            "sceneDrawVertices": 1214543,
+            "meshInstances": 3,
+            "decodedGpuBytes": 25301475,
+            "boundsMetres": {
+              "min": [
+                -9.878515995312434,
+                -6.025000095367432,
+                -7.396980974229432
+              ],
+              "max": [
+                -2.112940513324042,
+                6.639473915100098,
+                -0.6096391944564812
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "visualizations": {
+    "analyticPlasma": {
+      "kind": "analytic-design-proxy",
+      "label": "ITER 名义设计参数解析等离子体",
+      "sourceLabel": "IAEA ITER EDA Documentation Series No. 22, Table 2.1-1",
+      "sourceUrl": "https://www-pub.iaea.org/MTCD/Publications/PDF/ITER-EDA-DS-22.pdf",
+      "majorRadiusMetres": 6.2,
+      "minorRadiusMetres": 2,
+      "kappa95": 1.7,
+      "delta95": 0.33,
+      "kappaSeparatrixReference": 1.85,
+      "deltaSeparatrixReference": 0.49,
+      "nominalPlasmaCurrentMA": 15,
+      "toroidalFieldAtMajorRadiusT": 5.3,
+      "q95": 3,
+      "nominalVolumeCubicMetres": 837,
+      "topologyReference": "single-null",
+      "geometryOnly": true,
+      "hasPsiGrid": false,
+      "hasXPoint": false,
+      "hasDiagnostics": false,
+      "isEfit": false
     }
   },
   "systems": [
@@ -69,12 +599,48 @@
       "color": "#C08A68",
       "description": "PF1–PF6 极向场线圈的浏览器可视化节点。",
       "parts": [
-        { "id": "ITER-PF1", "title": "PF1 线圈", "nodeName": "ITER_PART__pf1", "description": "PF1 简化可选择节点。", "engineeringTag": "ITER.WEB.PF1" },
-        { "id": "ITER-PF2", "title": "PF2 线圈", "nodeName": "ITER_PART__pf2", "description": "PF2 简化可选择节点。", "engineeringTag": "ITER.WEB.PF2" },
-        { "id": "ITER-PF3", "title": "PF3 线圈", "nodeName": "ITER_PART__pf3", "description": "PF3 简化可选择节点。", "engineeringTag": "ITER.WEB.PF3" },
-        { "id": "ITER-PF4", "title": "PF4 线圈与支架", "nodeName": "ITER_PART__pf4", "description": "PF4 与支架的简化可选择节点。", "engineeringTag": "ITER.WEB.PF4" },
-        { "id": "ITER-PF5", "title": "PF5 线圈", "nodeName": "ITER_PART__pf5", "description": "PF5 简化可选择节点。", "engineeringTag": "ITER.WEB.PF5" },
-        { "id": "ITER-PF6", "title": "PF6 线圈", "nodeName": "ITER_PART__pf6", "description": "PF6 简化可选择节点。", "engineeringTag": "ITER.WEB.PF6" }
+        {
+          "id": "ITER-PF1",
+          "title": "PF1 线圈",
+          "nodeName": "ITER_PART__pf1",
+          "description": "PF1 简化可选择节点。",
+          "engineeringTag": "ITER.WEB.PF1"
+        },
+        {
+          "id": "ITER-PF2",
+          "title": "PF2 线圈",
+          "nodeName": "ITER_PART__pf2",
+          "description": "PF2 简化可选择节点。",
+          "engineeringTag": "ITER.WEB.PF2"
+        },
+        {
+          "id": "ITER-PF3",
+          "title": "PF3 线圈",
+          "nodeName": "ITER_PART__pf3",
+          "description": "PF3 简化可选择节点。",
+          "engineeringTag": "ITER.WEB.PF3"
+        },
+        {
+          "id": "ITER-PF4",
+          "title": "PF4 线圈与支架",
+          "nodeName": "ITER_PART__pf4",
+          "description": "PF4 与支架的简化可选择节点。",
+          "engineeringTag": "ITER.WEB.PF4"
+        },
+        {
+          "id": "ITER-PF5",
+          "title": "PF5 线圈",
+          "nodeName": "ITER_PART__pf5",
+          "description": "PF5 简化可选择节点。",
+          "engineeringTag": "ITER.WEB.PF5"
+        },
+        {
+          "id": "ITER-PF6",
+          "title": "PF6 线圈",
+          "nodeName": "ITER_PART__pf6",
+          "description": "PF6 简化可选择节点。",
+          "engineeringTag": "ITER.WEB.PF6"
+        }
       ]
     },
     {
@@ -85,8 +651,20 @@
       "color": "#83958B",
       "description": "两组环向场线圈装配的浏览器可视化节点。",
       "parts": [
-        { "id": "ITER-TF-A", "title": "TF 线圈 A", "nodeName": "ITER_PART__tf-a", "description": "TF A 简化可选择节点。", "engineeringTag": "ITER.WEB.TF_A" },
-        { "id": "ITER-TF-B", "title": "TF 线圈 B", "nodeName": "ITER_PART__tf-b", "description": "TF B 简化可选择节点。", "engineeringTag": "ITER.WEB.TF_B" }
+        {
+          "id": "ITER-TF-A",
+          "title": "TF 线圈 A",
+          "nodeName": "ITER_PART__tf-a",
+          "description": "TF A 简化可选择节点。",
+          "engineeringTag": "ITER.WEB.TF_A"
+        },
+        {
+          "id": "ITER-TF-B",
+          "title": "TF 线圈 B",
+          "nodeName": "ITER_PART__tf-b",
+          "description": "TF B 简化可选择节点。",
+          "engineeringTag": "ITER.WEB.TF_B"
+        }
       ]
     },
     {
@@ -97,10 +675,34 @@
       "color": "#A7A59D",
       "description": "低温恒温器四个主要分段的浏览器可视化节点。",
       "parts": [
-        { "id": "ITER-CRYOSTAT-BASE", "title": "低温恒温器底座", "nodeName": "ITER_PART__cryostat-base", "description": "底座简化可选择节点。", "engineeringTag": "ITER.WEB.CRYOSTAT_BASE" },
-        { "id": "ITER-CRYOSTAT-LOWER", "title": "低温恒温器下筒体", "nodeName": "ITER_PART__cryostat-lower", "description": "下筒体简化可选择节点。", "engineeringTag": "ITER.WEB.CRYOSTAT_LOWER" },
-        { "id": "ITER-CRYOSTAT-TOP", "title": "低温恒温器顶盖", "nodeName": "ITER_PART__cryostat-top", "description": "顶盖简化可选择节点。", "engineeringTag": "ITER.WEB.CRYOSTAT_TOP" },
-        { "id": "ITER-CRYOSTAT-UPPER", "title": "低温恒温器上筒体", "nodeName": "ITER_PART__cryostat-upper", "description": "上筒体简化可选择节点。", "engineeringTag": "ITER.WEB.CRYOSTAT_UPPER" }
+        {
+          "id": "ITER-CRYOSTAT-BASE",
+          "title": "低温恒温器底座",
+          "nodeName": "ITER_PART__cryostat-base",
+          "description": "底座简化可选择节点。",
+          "engineeringTag": "ITER.WEB.CRYOSTAT_BASE"
+        },
+        {
+          "id": "ITER-CRYOSTAT-LOWER",
+          "title": "低温恒温器下筒体",
+          "nodeName": "ITER_PART__cryostat-lower",
+          "description": "下筒体简化可选择节点。",
+          "engineeringTag": "ITER.WEB.CRYOSTAT_LOWER"
+        },
+        {
+          "id": "ITER-CRYOSTAT-TOP",
+          "title": "低温恒温器顶盖",
+          "nodeName": "ITER_PART__cryostat-top",
+          "description": "顶盖简化可选择节点。",
+          "engineeringTag": "ITER.WEB.CRYOSTAT_TOP"
+        },
+        {
+          "id": "ITER-CRYOSTAT-UPPER",
+          "title": "低温恒温器上筒体",
+          "nodeName": "ITER_PART__cryostat-upper",
+          "description": "上筒体简化可选择节点。",
+          "engineeringTag": "ITER.WEB.CRYOSTAT_UPPER"
+        }
       ]
     },
     {
@@ -128,10 +730,34 @@
       "color": "#7F898A",
       "description": "四个真空室扇区的浏览器可视化节点。",
       "parts": [
-        { "id": "ITER-VV1", "title": "真空室扇区 1", "nodeName": "ITER_PART__vv1", "description": "扇区 1 简化可选择节点。", "engineeringTag": "ITER.WEB.VV1" },
-        { "id": "ITER-VV2", "title": "真空室扇区 2", "nodeName": "ITER_PART__vv2", "description": "扇区 2 简化可选择节点。", "engineeringTag": "ITER.WEB.VV2" },
-        { "id": "ITER-VV3", "title": "真空室扇区 3", "nodeName": "ITER_PART__vv3", "description": "扇区 3 简化可选择节点。", "engineeringTag": "ITER.WEB.VV3" },
-        { "id": "ITER-VV4", "title": "真空室扇区 4", "nodeName": "ITER_PART__vv4", "description": "扇区 4 简化可选择节点。", "engineeringTag": "ITER.WEB.VV4" }
+        {
+          "id": "ITER-VV1",
+          "title": "真空室扇区 1",
+          "nodeName": "ITER_PART__vv1",
+          "description": "扇区 1 简化可选择节点。",
+          "engineeringTag": "ITER.WEB.VV1"
+        },
+        {
+          "id": "ITER-VV2",
+          "title": "真空室扇区 2",
+          "nodeName": "ITER_PART__vv2",
+          "description": "扇区 2 简化可选择节点。",
+          "engineeringTag": "ITER.WEB.VV2"
+        },
+        {
+          "id": "ITER-VV3",
+          "title": "真空室扇区 3",
+          "nodeName": "ITER_PART__vv3",
+          "description": "扇区 3 简化可选择节点。",
+          "engineeringTag": "ITER.WEB.VV3"
+        },
+        {
+          "id": "ITER-VV4",
+          "title": "真空室扇区 4",
+          "nodeName": "ITER_PART__vv4",
+          "description": "扇区 4 简化可选择节点。",
+          "engineeringTag": "ITER.WEB.VV4"
+        }
       ]
     }
   ],
@@ -142,10 +768,16 @@
     "licenseUrl": "/licenses/ITER-PUBLIC-VISUALIZATION-DERIVATIVE.txt",
     "conversion": {
       "pipeline": "reviewed component transforms -> detail-prioritized bounded simplification -> stable identity assembly -> glTF 2.0 Meshopt",
+      "converter": "FusionDigital ITER reviewed component-shard pipeline",
+      "converterVersion": "0.9.0 / glTF-Transform 4.4.2",
       "targetTriangles": 400000,
       "publishedTriangles": 399499,
+      "highDetailTargetTriangles": 12280970,
+      "highDetailPublishedTriangles": 12256550,
+      "highDetailTransferBytes": 92232312,
+      "highDetailMeshInstances": 892,
       "positionQuantizationBits": 16,
-      "normalQuantizationBits": 10,
+      "normalQuantizationBits": 8,
       "featureAngleDegrees": 55,
       "qualityGates": [
         "finite positions and normals",
@@ -168,8 +800,16 @@
       "source STEP/STP and B-Rep topology",
       "PMI, authoritative dimensions and manufacturing tolerances",
       "private source assembly metadata and download credentials",
-      "high-detail or engineering-authoritative geometry"
-    ]
+      "engineering-authoritative geometry"
+    ],
+    "highDetail": {
+      "delivery": "18 independently verified immutable component shards",
+      "transferBytes": 92232312,
+      "triangles": 12256550,
+      "sceneDrawTriangles": 12256550,
+      "vertices": 15410663,
+      "decodedGpuBytes": 279017055
+    }
   },
-  "disclaimer": "Project-owner-authorized non-engineering browser visualization derivative only. It is not an authoritative ITER engineering model and must not be used for manufacturing, dimensional verification, CAE, physics or safety decisions. This release does not claim ITER Organization endorsement."
+  "disclaimer": "Project-owner-authorized non-engineering browser visualization derivative only. It is not an authoritative ITER engineering model and must not be used for manufacturing, dimensional verification, CAE, physics or safety decisions. The analytic plasma is a Miller-style nominal design-parameter geometry proxy, not EFIT, a real LCFS or a reconstructed equilibrium; it contains no psi grid or X point. This release does not claim ITER Organization endorsement."
 }
