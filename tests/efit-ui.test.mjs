@@ -83,7 +83,7 @@ test('digital-prototype split layout exposes an accessible and persistent resize
   assert.match(workspace, /localStorage\.setItem\(WORKBENCH_PREFERENCE_KEY, physicsShare\.toFixed\(4\)\)/);
   assert.match(workspace, /data-layout="split-resizable"/);
   assert.match(workspace, /className="devicePaneSeparator"[\s\S]*?role="separator"/);
-  assert.match(workspace, /aria-label="调整三维装置与 EFIT 分析面板的宽度"/);
+  assert.match(workspace, /aria-label=\{t\('workspace\.resize'\)\}/);
   assert.match(workspace, /aria-orientation="vertical"/);
   assert.match(workspace, /aria-valuemin=\{Math\.round\(MIN_PHYSICS_SHARE \* 100\)\}/);
   assert.match(workspace, /aria-valuemax=\{Math\.round\(MAX_PHYSICS_SHARE \* 100\)\}/);
@@ -146,15 +146,17 @@ test('EFIT panel exposes shot selection, real time scrubbing, playback and quali
   const panel = await source('app/components/efit/EfitPanel.tsx');
   const transport = await source('app/components/efit/EfitTimelineControls.tsx');
   const equilibrium = await source('app/components/efit/EfitEquilibriumChart.tsx');
-  assert.match(panel, /放电炮号/);
-  assert.match(panel, /质量/);
-  assert.match(panel, /数据间隙/);
-  assert.match(transport, /真实 EFIT 时间轴/);
-  assert.match(transport, /上一帧/);
-  assert.match(transport, /循环播放/);
-  assert.match(equilibrium, /R–Z 平衡位形/);
+  const messages = await source('app/i18n/messages.ts');
+  assert.match(panel, /t\('efit\.shot'\)/);
+  assert.match(panel, /t\('efit\.quality'\)/);
+  assert.match(panel, /t\('efit\.dataGap'/);
+  assert.match(transport, /t\('efit\.realTimeline'\)/);
+  assert.match(transport, /t\('efit\.previous'\)/);
+  assert.match(transport, /t\('efit\.loop'\)/);
+  assert.match(equilibrium, /t\('efit\.chart\.equilibrium'\)/);
+  assert.match(messages, /'efit\.shot': '放电炮号'/);
   assert.match(equilibrium, /LCFS/);
-  assert.match(equilibrium, /磁轴/);
+  assert.match(equilibrium, /t\('efit\.chart\.magneticAxis'\)/);
 });
 
 test('EFIT Ip and magnetic-axis curves break across missing source frames', async () => {
@@ -170,13 +172,15 @@ test('EFIT plasma colour field is a contour-constrained psiN display in both 2D 
   const palette = await source('app/components/efit/psi-n-palette.ts');
   const overlay = await source('app/components/device-viewer/EfitThreeOverlay.ts');
   const viewer = await source('app/components/TokamakCadViewer.tsx');
+  const messages = await source('app/i18n/messages.ts');
 
-  assert.match(panel, /R–Z 磁通分带云图/);
-  assert.match(panel, /归一化极向磁通 ψN/);
-  assert.match(panel, /非温度\/密度/);
+  assert.match(panel, /t\('efit\.equilibriumCard'\)/);
+  assert.match(panel, /t\('efit\.equilibriumCardCopy'\)/);
+  assert.match(messages, /R–Z 磁通分带云图与偏滤器拓扑/);
+  assert.match(messages, /非温度\/密度/);
   assert.match(equilibrium, /type: 'custom'/);
   assert.match(equilibrium, /bandPsiN/);
-  assert.match(equilibrium, /不表示温度或密度/);
+  assert.match(equilibrium, /t\('efit\.chart\.frameAria'/);
   assert.match(equilibrium, /orient: 'vertical'/);
   assert.match(equilibrium, /right: 4/);
   assert.match(equilibrium, /top: 'middle'/);
@@ -192,7 +196,7 @@ test('EFIT plasma colour field is a contour-constrained psiN display in both 2D 
   assert.match(overlay, /EFIT_PSI_N_BANDED_SECTION_OPPOSITE/);
   assert.match(overlay, /publishedContours/);
   assert.match(overlay, /bandPsiN/);
-  assert.match(viewer, /ψN 分带剖面/);
+  assert.match(viewer, /t\('viewer\.psiSection'\)/);
 });
 
 test('optional divertor topology renders as open scientific overlays without contaminating psiN fill bands', async () => {
@@ -213,14 +217,14 @@ test('optional divertor topology renders as open scientific overlays without con
   assert.match(equilibrium, /const nestedContours = contourData/,
     'only reviewed closed contourData may enter the flux-band polygons');
   assert.doesNotMatch(equilibrium, /nestedContours\s*=\s*separatrixData/);
-  assert.match(equilibrium, /name: 'X 点'/);
-  assert.match(equilibrium, /name: 'Limiter 交点'/);
-  assert.match(equilibrium, /近双零位形/);
+  assert.match(equilibrium, /name: t\('efit\.chart\.xPoint'\)/);
+  assert.match(equilibrium, /name: t\('efit\.chart\.limiterIntersection'\)/);
+  assert.match(panel, /t\('efit\.nearDoubleHelp'\)/);
   assert.match(equilibrium, /activityRole === 'secondary'/);
   assert.match(equilibrium, /topologyGraph\?\.edges/);
   assert.match(equilibrium, /near-boundary/);
 
-  assert.match(panel, /不等同于严格双零平衡/);
+  assert.match(panel, /t\('efit\.nearDoubleHelp'\)/);
   assert.doesNotMatch(panel, /DIVERTOR TOPOLOGY \/ VISUALIZATION-DERIVED|efitTopologyBoundary/);
   assert.doesNotMatch(css, /\.efitTopologyBoundary/);
   assert.match(css, /\.efitStatusPill\.topology-near-double-null/);
@@ -328,10 +332,12 @@ test('divertor region has independent honest 2D and 3D rendering lifecycles', as
   const viewer = await source('app/components/TokamakCadViewer.tsx');
 
   assert.match(equilibrium, /deriveReviewedDivertorRegion/);
-  assert.match(equilibrium, /name: '偏滤器拓扑边界区域'/);
+  assert.match(equilibrium, /name: t\('efit\.chart\.divertorRegion'\)/);
   assert.match(equilibrium, /rgba\(255, 132, 55, \.28\)/);
-  assert.match(panel, /边界区域 · \{divertorRegion\.state === 'filled' \? '已审查闭合' : '仅线框'\}/);
-  assert.match(panel, /非温度\/密度/);
+  assert.match(panel, /t\('efit\.boundaryRegion'\)/);
+  assert.match(panel, /t\('efit\.reviewedClosed'\)/);
+  assert.match(panel, /t\('efit\.wireframeOnly'\)/);
+  assert.match(panel, /t\('efit\.equilibriumCardCopy'\)/);
   assert.match(overlay, /EFIT_DIVERTOR_TOPOLOGY_SECTION_REGION/);
   assert.match(overlay, /EFIT_DIVERTOR_TOPOLOGY_REVOLVED_REGION/);
   assert.match(overlay, /ShapeUtils\.triangulateShape/);

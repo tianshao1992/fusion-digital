@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useI18n, type MessageKey } from '../i18n';
 
 type TurntableFrame = { src: string; azimuthDeg: number };
 type TurntableControl = {
@@ -112,13 +113,14 @@ function nearestFrameIndex(frames: TurntableFrame[], azimuthDeg: number) {
   }, 0);
 }
 
-const GROUP_LABELS: Record<TurntableControl['type'], string> = {
-  appearance: '呈现模式',
-  section: '剖切方向',
-  detail: '内部细节',
+const GROUP_LABEL_KEYS: Record<TurntableControl['type'], MessageKey> = {
+  appearance: 'turntable.appearance',
+  section: 'turntable.section',
+  detail: 'turntable.detail',
 };
 
 export default function TurntableDeviceViewer({ title, manifestEndpoint }: { title: string; manifestEndpoint: string }) {
+  const { content, t } = useI18n();
   const [manifest, setManifest] = useState<TurntableManifest | null>(null);
   const [modeId, setModeId] = useState('');
   const [frameIndex, setFrameIndex] = useState(0);
@@ -173,8 +175,8 @@ export default function TurntableDeviceViewer({ title, manifestEndpoint }: { tit
   if (status !== 'ready' || !manifest || !mode) return <div className="turntablePending" role="status">
     <div className="deviceLockGlyph" aria-hidden="true"><i /><i /><i /></div>
     <p>SECURE TURNTABLE PREVIEW</p>
-    <h3>{status === 'loading' ? '正在读取受控预览清单' : `${title} 安全转台预览正在生成`}</h3>
-    <span>这里仅接收渲染帧，不下发源 CAD、STEP 或工程 GLB。预览包就绪后会自动接入。</span>
+    <h3>{status === 'loading' ? t('turntable.loading') : t('turntable.pending', { title: content(title) })}</h3>
+    <span>{t('turntable.pendingCopy')}</span>
   </div>;
 
   const frame = mode.frames[Math.min(frameIndex, mode.frames.length - 1)];
@@ -186,7 +188,7 @@ export default function TurntableDeviceViewer({ title, manifestEndpoint }: { tit
   return <div
     className="turntableViewer"
     tabIndex={0}
-    aria-label={`${title} 受控三维转台，当前为${mode.label}`}
+    aria-label={t('turntable.aria', { title: content(title), mode: content(mode.label) })}
     onKeyDown={(event) => {
       if (event.key === 'ArrowLeft') { event.preventDefault(); selectFrame(frameIndex - 1); }
       if (event.key === 'ArrowRight') { event.preventDefault(); selectFrame(frameIndex + 1); }
@@ -201,30 +203,30 @@ export default function TurntableDeviceViewer({ title, manifestEndpoint }: { tit
     onPointerUp={() => { dragRef.current = null; }}
     onPointerCancel={() => { dragRef.current = null; }}
   >
-    <div className="turntableModeControls" aria-label="装置内部观察预设">
+    <div className="turntableModeControls" aria-label={t('turntable.presets')}>
       {groupedModes.map((group) => <div className="turntableModeGroup" key={group.type}>
-        <span>{GROUP_LABELS[group.type]}</span>
+        <span>{t(GROUP_LABEL_KEYS[group.type])}</span>
         <div>{group.modes.map((candidate) => <button
           type="button"
           key={candidate.id}
           className={candidate.id === mode.id ? 'active' : ''}
           aria-pressed={candidate.id === mode.id}
-          title={candidate.description}
+          title={content(candidate.description)}
           onClick={() => selectMode(candidate)}
-        >{candidate.label}</button>)}</div>
+        >{content(candidate.label)}</button>)}</div>
       </div>)}
     </div>
     <div className="turntableCanvas">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={frame.src} alt={`${title} ${mode.label}，方位角 ${Math.round(frame.azimuthDeg)}°`} draggable={false} referrerPolicy="no-referrer" />
+      <img src={frame.src} alt={t('turntable.alt', { title: content(title), mode: content(mode.label), angle: Math.round(frame.azimuthDeg) })} draggable={false} referrerPolicy="no-referrer" />
       <div className="turntableHud"><span>{mode.controls.type === 'section' ? `SECTION ${mode.controls.axis?.toUpperCase()}` : mode.controls.type.toUpperCase()}</span><b>{Math.round(frame.azimuthDeg).toString().padStart(3, '0')}°</b></div>
-      <div className="turntableModeReadout" aria-live="polite"><b>{mode.label}</b><span>{mode.description}</span></div>
+      <div className="turntableModeReadout" aria-live="polite"><b>{content(mode.label)}</b><span>{content(mode.description)}</span></div>
     </div>
     {canRotate ? <div className="turntableControls">
-      <button type="button" onClick={() => selectFrame(frameIndex - 1)} aria-label="向左旋转">←</button>
-      <label><span>拖动、方向键或滑杆查看 {mode.frames.length} 个角度</span><input type="range" min="0" max={mode.frames.length - 1} value={frameIndex} onChange={(event) => setFrameIndex(Number(event.target.value))} /></label>
-      <button type="button" onClick={() => selectFrame(frameIndex + 1)} aria-label="向右旋转">→</button>
-    </div> : <div className="turntableDetailHint"><span>DETAIL PRESET</span><b>选择其他内部细节或剖切方向继续观察</b></div>}
+      <button type="button" onClick={() => selectFrame(frameIndex - 1)} aria-label={t('turntable.left')}>←</button>
+      <label><span>{t('turntable.angleHint', { count: mode.frames.length })}</span><input type="range" min="0" max={mode.frames.length - 1} value={frameIndex} onChange={(event) => setFrameIndex(Number(event.target.value))} /></label>
+      <button type="button" onClick={() => selectFrame(frameIndex + 1)} aria-label={t('turntable.right')}>→</button>
+    </div> : <div className="turntableDetailHint"><span>DETAIL PRESET</span><b>{t('turntable.detailHint')}</b></div>}
     <p className="turntableNotice">PREVIEW ONLY · PRE-RENDERED TRANSPARENCY / SECTION VIEWS · NO SOURCE CAD OR ENGINEERING MESH DELIVERY</p>
   </div>;
 }

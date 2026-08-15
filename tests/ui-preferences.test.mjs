@@ -1,0 +1,87 @@
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import test from 'node:test';
+
+const source = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
+
+test('typed locale registry supports Chinese and English with durable fallback', async () => {
+  const [config, provider, messages] = await Promise.all([
+    source('app/i18n/config.ts'),
+    source('app/i18n/I18nProvider.tsx'),
+    source('app/i18n/messages.ts'),
+  ]);
+
+  assert.match(config, /'zh-CN': \{/);
+  assert.match(config, /en: \{/);
+  assert.match(config, /DEFAULT_LOCALE: AppLocale = 'zh-CN'/);
+  assert.match(config, /fusiondigital_locale/);
+  assert.match(config, /fusiondigital:locale:v1/);
+  assert.match(provider, /messages\[locale\]\?\.\[key\] \?\? messages\[DEFAULT_LOCALE\]\?\.\[key\] \?\? key/);
+  assert.match(provider, /window\.localStorage\.setItem\(LOCALE_STORAGE_KEY, locale\)/);
+  assert.match(provider, /document\.documentElement\.lang = definition\.htmlLang/);
+  assert.match(messages, /const en: Record<MessageKey, string>/);
+  assert.match(messages, /'nav\.prototype': 'Digital prototype'/);
+  assert.match(messages, /'efit\.play': 'Play'/);
+  assert.match(messages, /'viewer\.fullscreen': 'Fullscreen'/);
+});
+
+test('root shell and navigation wire locale and theme preferences without changing routes', async () => {
+  const [layout, nav] = await Promise.all([
+    source('app/layout.tsx'),
+    source('app/components/SiteNav.tsx'),
+  ]);
+
+  assert.match(layout, /await cookies\(\)/);
+  assert.match(layout, /cookieStore\.get\(LOCALE_COOKIE_NAME\)/);
+  assert.match(layout, /<ThemeBootScript \/>/);
+  assert.match(layout, /<ThemeProvider><I18nProvider initialLocale=\{initialLocale\}>/);
+  assert.match(nav, /ThemeSwitcher/);
+  assert.match(nav, /setLocale\(locale === 'zh-CN' \? 'en' : 'zh-CN'\)/);
+  assert.match(nav, /t\('theme\.light'\)/);
+  assert.match(nav, /\['prototype', '\/digital-prototype', 'nav\.prototype'\]/);
+});
+
+test('theme registry exposes system, Morandi light and dark modes with pre-hydration persistence', async () => {
+  const [config, boot, provider, switcher, css] = await Promise.all([
+    source('app/components/theme/theme-config.ts'),
+    source('app/components/theme/ThemeBootScript.tsx'),
+    source('app/components/theme/ThemeProvider.tsx'),
+    source('app/components/theme/ThemeSwitcher.tsx'),
+    source('app/theme.css'),
+  ]);
+
+  assert.match(config, /\['system', 'light', 'dark'\] as const/);
+  assert.match(config, /fusiondigital\.theme/);
+  assert.match(boot, /prefers-color-scheme: dark/);
+  assert.match(boot, /fusiondigital-theme-init/);
+  assert.match(provider, /window\.localStorage\.setItem\(THEME_STORAGE_KEY, nextPreference\)/);
+  assert.match(provider, /media\.addEventListener\('change'/);
+  assert.match(switcher, /role="radiogroup"/);
+  assert.match(switcher, /role="radio"/);
+  assert.match(switcher, /event\.key === 'ArrowRight'/);
+  assert.match(css, /:root\[data-theme='light'\]/);
+  assert.match(css, /--color-canvas: #f7f3ec/);
+  assert.match(css, /--color-accent: #c86545/);
+  assert.match(css, /--color-info: #718579/);
+  assert.match(css, /:root\[data-theme='dark'\]/);
+  assert.match(css, /--color-workbench: #070d0b/);
+  assert.match(css, /@media \(prefers-contrast:more\)/);
+  assert.match(css, /@media \(forced-colors:active\)/);
+});
+
+test('digital prototype operational UI consumes the shared locale layer', async () => {
+  const paths = [
+    'app/digital-prototype/DigitalPrototypeContent.tsx',
+    'app/digital-prototype/MultiDeviceWorkspace.tsx',
+    'app/digital-prototype/TurntableDeviceViewer.tsx',
+    'app/components/TokamakCadViewer.tsx',
+    'app/components/efit/EfitPanel.tsx',
+    'app/components/efit/EfitEquilibriumChart.tsx',
+    'app/components/efit/EfitSignalsChart.tsx',
+    'app/components/efit/EfitTimelineControls.tsx',
+  ];
+  const files = await Promise.all(paths.map(source));
+  for (const [index, file] of files.entries()) {
+    assert.match(file, /useI18n/, `${paths[index]} must use the shared locale layer`);
+  }
+});

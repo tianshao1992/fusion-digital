@@ -1,6 +1,7 @@
 'use client';
 
 import type { EfitStore, EfitStoreSnapshot } from './store';
+import { useI18n } from '../../i18n';
 
 type EfitTimelineControlsProps = {
   store: EfitStore;
@@ -13,13 +14,14 @@ function formatTime(timeMs: number): string {
   return `${(timeMs / 1000).toFixed(3)} s`;
 }
 export default function EfitTimelineControls({ store, snapshot }: EfitTimelineControlsProps) {
+  const { t } = useI18n();
   const { actions } = store;
   const first = snapshot.timeline[0];
   const last = snapshot.timeline.at(-1);
   const disabled = snapshot.timeline.length === 0;
 
   return (
-    <div className="efitTransport" aria-label="EFIT 位形播放控制">
+    <div className="efitTransport" aria-label={t('efit.playerAria')}>
       <div className="efitTransportTopline">
         <div className="efitTransportButtons">
           <button
@@ -27,8 +29,8 @@ export default function EfitTimelineControls({ store, snapshot }: EfitTimelineCo
             className="efitIconButton"
             onClick={() => void actions.step(-1)}
             disabled={disabled}
-            aria-label="上一帧"
-            title="上一帧（←）"
+            aria-label={t('efit.previous')}
+            title={t('efit.previousTitle')}
           >
             <span aria-hidden="true">|‹</span>
           </button>
@@ -37,19 +39,19 @@ export default function EfitTimelineControls({ store, snapshot }: EfitTimelineCo
             className="efitPlayButton"
             onClick={actions.togglePlayback}
             disabled={disabled}
-            aria-label={snapshot.isPlaying ? '暂停 EFIT 动画' : '播放 EFIT 动画'}
+            aria-label={snapshot.isPlaying ? t('efit.pauseAria') : t('efit.playAria')}
             aria-pressed={snapshot.isPlaying}
           >
             <span aria-hidden="true">{snapshot.isPlaying ? 'Ⅱ' : '▶'}</span>
-            {snapshot.isPlaying ? '暂停' : '播放'}
+            {snapshot.isPlaying ? t('efit.pause') : t('efit.play')}
           </button>
           <button
             type="button"
             className="efitIconButton"
             onClick={() => void actions.step(1)}
             disabled={disabled}
-            aria-label="下一帧"
-            title="下一帧（→）"
+            aria-label={t('efit.next')}
+            title={t('efit.nextTitle')}
           >
             <span aria-hidden="true">›|</span>
           </button>
@@ -62,7 +64,7 @@ export default function EfitTimelineControls({ store, snapshot }: EfitTimelineCo
       </div>
 
       <label className="efitScrubber">
-        <span className="srOnly">EFIT 真实时间</span>
+        <span className="srOnly">{t('efit.realTime')}</span>
         <input
           type="range"
           min={first?.timeMs ?? 0}
@@ -75,23 +77,23 @@ export default function EfitTimelineControls({ store, snapshot }: EfitTimelineCo
         />
         <span className="efitScrubberLabels" aria-hidden="true">
           <span>{formatTime(first?.timeMs ?? 0)}</span>
-          <span>真实 EFIT 时间轴</span>
+          <span>{t('efit.realTimeline')}</span>
           <span>{formatTime(last?.timeMs ?? 0)}</span>
         </span>
       </label>
 
       <div className="efitTransportSettings">
         <label>
-          <span>速度</span>
+          <span>{t('efit.speed')}</span>
           <select value={snapshot.playbackRate} onChange={(event) => actions.setPlaybackRate(Number(event.currentTarget.value))}>
             {SPEEDS.map((speed) => <option key={speed} value={speed}>{speed}×</option>)}
           </select>
         </label>
         <label className="efitLoopToggle">
           <input type="checkbox" checked={snapshot.loop} onChange={(event) => actions.setLoop(event.currentTarget.checked)} />
-          <span>循环播放</span>
+          <span>{t('efit.loop')}</span>
         </label>
-        <span className="efitKeyboardHint">空格 播放/暂停 · ← → 逐帧</span>
+        <span className="efitKeyboardHint">{t('efit.keyboardHint')}</span>
       </div>
     </div>
   );

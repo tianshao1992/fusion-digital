@@ -549,8 +549,8 @@ test('Paramak interaction controls remain public-only and expose consistent acce
   assert.match(source, /aria-pressed=\{selectedPartIds\.has\(part\.id\)\}/);
   assert.match(source, /aria-pressed=\{hiddenPartIds\.has\(part\.id\)\}/);
   assert.match(source, /aria-pressed=\{clipping\}/);
-  assert.match(source, /<label><span>[^<]*透明度[^<]*<\/span>[\s\S]{0,180}<input type="range"/s);
-  assert.match(source, /<label><span>[^<]*(?:剖切|切面)[^<]*<\/span>[\s\S]{0,180}<input type="range"/s);
+  assert.match(source, /<label><span>\{t\('viewer\.globalOpacity'\)\}<\/span>[\s\S]{0,180}<input type="range"/s);
+  assert.match(source, /<label><span>\{t\('viewer\.clipPlane',[\s\S]{0,100}<input type="range"/s);
   assert.match(source, /setGlobalOpacity\(1\)/);
   assert.match(source, /setSelectedOpacity\(1\)/);
   assert.match(source, /setClipOffset\(defaultInteraction\.clipOffset\)/);
@@ -599,6 +599,7 @@ test('EXL alone uses a lifecycle-safe industrial silver appearance without chang
   const source = await readFile(resolve(repositoryRoot, 'app/components/TokamakCadViewer.tsx'), 'utf8');
   const workspace = await readFile(resolve(repositoryRoot, 'app/digital-prototype/MultiDeviceWorkspace.tsx'), 'utf8');
   const appearanceSource = await readFile(resolve(repositoryRoot, 'app/components/device-viewer/industrialAppearance.ts'), 'utf8');
+  const messagesSource = await readFile(resolve(repositoryRoot, 'app/i18n/messages.ts'), 'utf8');
   const manifest = JSON.parse(await readFile(resolve(publicRoot, 'models/exl50u-interactive/model-manifest.json'), 'utf8'));
   const appearance = await import('../app/components/device-viewer/industrialAppearance.ts');
 
@@ -613,7 +614,9 @@ test('EXL alone uses a lifecycle-safe industrial silver appearance without chang
   assert.match(source, /const selectedMaterial = baseMaterial\.clone\(\)/);
   assert.match(source, /originalMaterials\.forEach\(\(material, mesh\) => \{ mesh\.material = material; \}\)/);
   assert.match(appearanceSource, /presentation-only appearance codes/);
-  assert.match(source, /不代表真实材料、涂层、表面状态或温度场/);
+  assert.match(source, /t\(['"]viewer\.appearanceDisclaimer['"]\)/);
+  assert.match(messagesSource, /不代表真实材料、涂层、表面状态或温度场/);
+  assert.match(messagesSource, /do not represent real materials, coatings, surface condition or temperature/i);
   assert.match(workspace, /showFootnotes=\{false\}/,
     'the compact digital-prototype workbench must suppress long-form viewer footnotes');
 

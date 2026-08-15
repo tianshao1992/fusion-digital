@@ -2,7 +2,8 @@
 
 import type { EChartsCoreOption } from 'echarts/core';
 import type { CustomSeriesRenderItem } from 'echarts/types/dist/option';
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
+import { useI18n, type MessageKey } from '../../i18n';
 import { deriveReviewedDivertorRegion } from './divertor-region';
 import EfitCanvasChart from './EfitCanvasChart';
 import { PSI_N_COLORS } from './psi-n-palette';
@@ -20,15 +21,15 @@ const PSI_N_COLORBAR_SHORT_PX = 7;
 const PSI_N_COLORBAR_LONG_PX = 104;
 const X_POINT_SYMBOL = 'path://M-7,-5 L-5,-7 L0,-2 L5,-7 L7,-5 L2,0 L7,5 L5,7 L0,2 L-5,7 L-7,5 L-2,0 Z';
 
-export function efitTopologyLabel(kind: EfitTopologyKind): string {
+export function efitTopologyMessageKey(kind: EfitTopologyKind): MessageKey {
   switch (kind) {
-    case 'limited': return '受限位形';
-    case 'upper-single-null': return '上单零位形';
-    case 'lower-single-null': return '下单零位形';
-    case 'double-null': return '双零位形';
-    case 'near-double-null': return '近双零位形';
-    case 'partial': return '偏滤器拓扑部分有效';
-    default: return '拓扑待确认';
+    case 'limited': return 'efit.topology.limited';
+    case 'upper-single-null': return 'efit.topology.upperSingleNull';
+    case 'lower-single-null': return 'efit.topology.lowerSingleNull';
+    case 'double-null': return 'efit.topology.doubleNull';
+    case 'near-double-null': return 'efit.topology.nearDoubleNull';
+    case 'partial': return 'efit.topology.partial';
+    default: return 'efit.topology.unknown';
   }
 }
 
@@ -66,6 +67,8 @@ function finiteExtent(values: number[], paddingRatio = 0.05): [number, number] |
 }
 
 export default function EfitEquilibriumChart({ frame, geometry }: EfitEquilibriumChartProps) {
+  const { t } = useI18n();
+  const topologyLabel = useCallback((kind: EfitTopologyKind) => t(efitTopologyMessageKey(kind)), [t]);
   const extent = geometry?.gridExtentM;
   const dataAspectRatio = extent && extent[1] > extent[0] && extent[3] > extent[2]
     ? (extent[1] - extent[0]) / (extent[3] - extent[2])
@@ -207,7 +210,7 @@ export default function EfitEquilibriumChart({ frame, geometry }: EfitEquilibriu
       animation: false,
     }));
     const separatrixSeries = separatrixData.map(({ data, index }) => ({
-      name: `偏滤器分离支 L${index + 1}`,
+      name: `${t('efit.chart.separatrix')} L${index + 1}`,
       type: 'line' as const,
       data,
       showSymbol: false,
@@ -230,8 +233,14 @@ export default function EfitEquilibriumChart({ frame, geometry }: EfitEquilibriu
       aria: {
         enabled: true,
         description: frame
-          ? `EXL-50U ${frame.shot} 炮，${frame.timeMs} 毫秒的 EFIT R-Z 平衡位形。颜色表示由已发布等磁通轮廓形成的归一化极向磁通分带，不表示温度或密度。${topology ? `当前为${efitTopologyLabel(topology.kind)}，包含 ${xPointData.length} 个 X 点、${separatrixData.length} 条已发布分离支和 ${strikePointData.length} 个 limiter 交点。${divertorRegion.message}` : topologyGraph ? `拓扑图 v2 包含 ${topologyGraph.features.boundaryXPointCount} 个边界 X 点、${topologyGraph.features.nearBoundaryXPointCount} 个近边界候选证据、${separatrixData.length} 条已解析分离支和 ${strikePointData.length} 个 limiter 交点；未解析臂 ${topologyGraph.unresolvedArms.length} 条，未审查开放区域不填色。` : ''}`
-          : 'EXL-50U EFIT R-Z 平衡位形等待数据。',
+          ? t('efit.chart.frameAria', {
+            shot: frame.shot,
+            time: frame.timeMs,
+            topology: topology
+              ? t('efit.chart.topologySummary', { kind: topologyLabel(topology.kind), xPoints: xPointData.length, legs: separatrixData.length })
+              : '',
+          })
+          : t('efit.chart.waitingAria'),
       },
       visualMap: filledContours.length > 0 ? {
         type: 'continuous',
@@ -289,7 +298,7 @@ export default function EfitEquilibriumChart({ frame, geometry }: EfitEquilibriu
       },
       series: [
         {
-          name: '归一化极向磁通 ψN 分带',
+          name: t('efit.chart.fluxBands'),
           type: 'custom',
           coordinateSystem: 'cartesian2d',
           renderItem: renderFluxBands,
@@ -312,7 +321,7 @@ export default function EfitEquilibriumChart({ frame, geometry }: EfitEquilibriu
           animation: false,
         },
         ...(divertorRegion.state === 'filled' ? [{
-          name: '偏滤器拓扑边界区域',
+          name: t('efit.chart.divertorRegion'),
           type: 'custom' as const,
           coordinateSystem: 'cartesian2d' as const,
           renderItem: renderDivertorRegion,
@@ -325,10 +334,10 @@ export default function EfitEquilibriumChart({ frame, geometry }: EfitEquilibriu
         ...surfaceSeries,
         ...separatrixSeries,
         ...(xPointData.length > 0 ? [{
-          name: 'X 点',
+          name: t('efit.chart.xPoint'),
           type: 'scatter' as const,
           data: xPointData.map(({ activityRole, evidenceRole, index, value }) => ({
-            name: `${activityRole === 'secondary' ? '次' : '主'} X${index + 1}${evidenceRole === 'near-boundary' ? '（近边界证据）' : ''}`,
+            name: `${activityRole === 'secondary' ? t('efit.chart.secondary') : t('efit.chart.primary')} X${index + 1}${evidenceRole === 'near-boundary' ? t('efit.chart.nearBoundary') : ''}`,
             value,
             itemStyle: {
               color: evidenceRole === 'near-boundary' ? '#9aacc5' : activityRole === 'secondary' ? '#cbb9ff' : '#ffe39a',
@@ -351,7 +360,7 @@ export default function EfitEquilibriumChart({ frame, geometry }: EfitEquilibriu
           animation: false,
         }] : []),
         ...(strikePointData.length > 0 ? [{
-          name: 'Limiter 交点',
+          name: t('efit.chart.limiterIntersection'),
           type: 'scatter' as const,
           data: strikePointData.map(({ wallSegment, index, value }) => ({
             name: `SP${index + 1} · limiter ${wallSegment}`,
@@ -366,7 +375,7 @@ export default function EfitEquilibriumChart({ frame, geometry }: EfitEquilibriu
           animation: false,
         }] : []),
         ...(frame && Number.isFinite(frame.rAxisM) && Number.isFinite(frame.zAxisM) ? [{
-          name: '磁轴',
+          name: t('efit.chart.magneticAxis'),
           type: 'scatter' as const,
           data: [[frame.rAxisM, frame.zAxisM]],
           symbol: 'diamond',
@@ -377,23 +386,29 @@ export default function EfitEquilibriumChart({ frame, geometry }: EfitEquilibriu
         }] : []),
       ],
     };
-  }, [frame, geometry]);
+  }, [frame, geometry, t, topologyLabel]);
 
   const fallback = frame ? (
     <div className="efitChartTextFallback">
-      <strong>R–Z 位形 · {frame.timeMs / 1000} s</strong>
-      <span>{frame.contours.filter((contour) => contour.kind === 'surface').length} 个磁面 · {frame.contours.some((contour) => contour.kind === 'lcfs') ? 'LCFS 有效' : 'LCFS 缺失'}</span>
-      {frame.topology && <span>{efitTopologyLabel(frame.topology.kind)} · X {frame.topology.xPoints.length} · 分离支 {frame.topology.separatrixLegs.length}</span>}
-      {frame.topologyGraphPayload && <span>拓扑 v2 · X {frame.topologyGraphPayload.topologyGraph.features.xPointCount} · 分离支 {frame.topologyGraphPayload.topologyGraph.edges.length}</span>}
+      <strong>R–Z · {frame.timeMs / 1000} s</strong>
+      <span>{t('efit.chart.surfaces', { count: frame.contours.filter((contour) => contour.kind === 'surface').length })} · {frame.contours.some((contour) => contour.kind === 'lcfs') ? t('efit.chart.lcfsValid') : t('efit.chart.lcfsMissing')}</span>
+      {frame.topology && <span>{topologyLabel(frame.topology.kind)} · X {frame.topology.xPoints.length} · {t('efit.chart.separatrix')} {frame.topology.separatrixLegs.length}</span>}
+      {frame.topologyGraphPayload && <span>Topology v2 · X {frame.topologyGraphPayload.topologyGraph.features.xPointCount} · {t('efit.chart.separatrix')} {frame.topologyGraphPayload.topologyGraph.edges.length}</span>}
     </div>
   ) : (
-    <div className="efitChartTextFallback"><strong>R–Z 平衡位形</strong><span>等待首帧数据</span></div>
+    <div className="efitChartTextFallback"><strong>{t('efit.chart.equilibrium')}</strong><span>{t('efit.chart.waiting')}</span></div>
   );
 
   return (
     <EfitCanvasChart
       option={option}
-      ariaLabel={frame ? `EXL-50U ${frame.shot} 炮 ${frame.timeMs} 毫秒的 R-Z EFIT 归一化极向磁通分带位形${frame.topology ? `，${efitTopologyLabel(frame.topology.kind)}及偏滤器拓扑` : frame.topologyGraphPayload ? '，拓扑图 v2 的 X 点、分离支与 limiter 交点' : ''}` : 'EFIT R-Z 位形等待数据'}
+      ariaLabel={frame ? t('efit.chart.frameAria', {
+        shot: frame.shot,
+        time: frame.timeMs,
+        topology: frame.topology
+          ? t('efit.chart.topologySummary', { kind: topologyLabel(frame.topology.kind), xPoints: frame.topology.xPoints.length, legs: frame.topology.separatrixLegs.length })
+          : '',
+      }) : t('efit.chart.waitingAria')}
       fallback={fallback}
       className="efitEquilibriumChart"
       dataAspectRatio={dataAspectRatio}

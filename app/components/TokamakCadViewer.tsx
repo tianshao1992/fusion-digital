@@ -26,6 +26,7 @@ import {
   type TokamakAppearancePreset,
 } from './device-viewer/industrialAppearance';
 import { resolveShotGeometry, type EfitFrame, type EfitStore } from './efit';
+import { useI18n } from '../i18n';
 import {
   parseDeviceManifest,
   type DeviceManifest,
@@ -104,8 +105,8 @@ type ViewerApi = {
   efitOverlay: EfitThreeOverlay | null;
 };
 
-function formatCount(value: number) {
-  return new Intl.NumberFormat('zh-CN', { maximumFractionDigits: 0 }).format(value);
+function formatCount(value: number, locale = 'zh-CN') {
+  return new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(value);
 }
 
 function supportsWebGL2() {
@@ -222,6 +223,11 @@ function TokamakCadViewerSession({
   efitOptions,
   efitControls,
 }: TokamakCadViewerProps = {}) {
+  const { content, locale, t } = useI18n();
+  const i18nRef = useRef({ content, t });
+  useEffect(() => {
+    i18nRef.current = { content, t };
+  }, [content, t]);
   const defaultInteraction = defaultInteractionFor(defaultClipping, defaultClipAxis, defaultClipOffset);
   const mountRef = useRef<HTMLDivElement>(null);
   const fullscreenRef = useRef<HTMLDivElement>(null);
@@ -287,9 +293,9 @@ function TokamakCadViewerSession({
   }))) ?? [], [manifest]);
   const partById = useMemo(() => new Map(parts.map((part) => [part.id, part])), [parts]);
   const selectedPart = selectedPartId ? partById.get(selectedPartId) ?? null : null;
-  const normalizedQuery = query.trim().toLocaleLowerCase('zh-CN');
+  const normalizedQuery = query.trim().toLocaleLowerCase(locale);
   const filteredPartIds = useMemo(() => new Set(parts.filter((part) => !normalizedQuery
-    || `${part.title} ${part.id} ${part.engineeringTag}`.toLocaleLowerCase('zh-CN').includes(normalizedQuery)).map((part) => part.id)), [normalizedQuery, parts]);
+    || `${content(part.title)} ${part.title} ${part.id} ${part.engineeringTag}`.toLocaleLowerCase(locale).includes(normalizedQuery)).map((part) => part.id)), [content, locale, normalizedQuery, parts]);
 
   const activate = useCallback(() => {
     setErrorMessage('');
@@ -303,10 +309,10 @@ function TokamakCadViewerSession({
     const controller = new AbortController();
     fetch(manifestUrl, { cache: 'no-store', signal: controller.signal })
       .then(async (response) => {
-        if (!response.ok) throw new Error(`装置清单载入失败（HTTP ${response.status}）。`);
+        if (!response.ok) throw new Error(i18nRef.current.t('viewer.errorManifestHttp', { status: response.status }));
         const loadedManifest = parseDeviceManifest(await response.json());
-        if (loadedManifest.access.classification !== 'PUBLIC') throw new Error('当前网页只允许加载 PUBLIC 级的浏览器派生资产。');
-        if (!loadedManifest.access.redistributionAllowed) throw new Error('该装置包未授予公开再分发权，已拒绝在公网站点加载。');
+        if (loadedManifest.access.classification !== 'PUBLIC') throw new Error(i18nRef.current.t('viewer.errorPublicOnly'));
+        if (!loadedManifest.access.redistributionAllowed) throw new Error(i18nRef.current.t('viewer.errorRedistribution'));
         if (controller.signal.aborted) return;
         const variants = webModelVariants(loadedManifest);
         const preview = variants.find((asset) => asset.quality === 'preview') ?? variants[0];
@@ -317,13 +323,13 @@ function TokamakCadViewerSession({
         setOpenSystems(new Set(loadedManifest.systems.map((system) => system.id)));
         setSelectedModelId((current) => variants.some((asset) => asset.id === current) ? current : preferred.id);
         setLodNotice(constrained && preferred.id !== declaredDefault.id
-          ? '已根据窄屏、节省流量或低内存设备自动选择标准模型；可手动切换高清。'
+          ? i18nRef.current.t('viewer.autoPreview')
           : '');
       })
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
         setStatus('error');
-        setErrorMessage(error instanceof Error ? error.message : '装置清单载入失败。');
+        setErrorMessage(error instanceof Error ? error.message : i18nRef.current.t('viewer.errorManifest'));
       });
     return () => controller.abort();
   }, [attempt, manifestUrl]);
@@ -387,7 +393,7 @@ function TokamakCadViewerSession({
     };
 
     async function initialise() {
-      if (!supportsWebGL2()) throw new Error('当前浏览器或显卡未启用 WebGL 2，无法启动三维视图。');
+      if (!supportsWebGL2()) throw new Error(i18nRef.current.t('viewer.errorWebgl2'));
 
       const environmentModulePromise = appearancePreset === 'industrial-silver-v1'
         ? import('three/examples/jsm/environments/RoomEnvironment.js')
@@ -401,7 +407,7 @@ function TokamakCadViewerSession({
         environmentModulePromise,
       ]);
       if (disposed || !mountRef.current) return;
-      if (!manifest || !selectedModel) throw new Error('模型清单或质量版本尚未就绪。');
+      if (!manifest || !selectedModel) throw new Error(i18nRef.current.t('viewer.errorModelNotReady'));
       const loadedManifest = manifest;
       const loadedModel = selectedModel;
 
@@ -422,7 +428,9 @@ function TokamakCadViewerSession({
       renderer.toneMappingExposure = industrialAppearance ? INDUSTRIAL_STUDIO.exposure : 1.2;
       renderer.setClearColor(industrialAppearance ? INDUSTRIAL_STUDIO.clearColor : 0x07110e, 0);
       renderer.localClippingEnabled = true;
-      renderer.domElement.setAttribute('aria-label', `可旋转、缩放并选择部件的${loadedManifest.title}三维模型`);
+      renderer.domElement.setAttribute('aria-label', i18nRef.current.t('viewer.threeAria', {
+        title: i18nRef.current.content(loadedManifest.title),
+      }));
       renderer.domElement.setAttribute('role', 'img');
       renderer.domElement.tabIndex = 0;
       mount.replaceChildren(renderer.domElement);
@@ -439,7 +447,7 @@ function TokamakCadViewerSession({
       controls.autoRotateSpeed = 0.72;
 
       if (industrialAppearance) {
-        if (!environmentModule) throw new Error('银色工业外观环境模块载入失败。');
+        if (!environmentModule) throw new Error(i18nRef.current.t('viewer.errorEnvironment'));
         const roomEnvironment = new environmentModule.RoomEnvironment();
         const pmremGenerator = new THREE.PMREMGenerator(renderer);
         try {
@@ -549,7 +557,7 @@ function TokamakCadViewerSession({
       model.traverse((node) => {
         const mapped = systemByNodeName.get(node.name);
         if (mapped) {
-          if (nodeByPartId.has(mapped.partId)) throw new Error(`GLB 中存在重复节点映射：${node.name}`);
+          if (nodeByPartId.has(mapped.partId)) throw new Error(i18nRef.current.t('viewer.errorDuplicateNode', { node: node.name }));
           nodeByPartId.set(mapped.partId, node);
           node.traverse((descendant) => partIdByNode.set(descendant, mapped.partId));
         }
@@ -567,9 +575,13 @@ function TokamakCadViewerSession({
       });
       const expectedParts = loadedManifest.systems.flatMap((system) => system.parts);
       const missingParts = expectedParts.filter((part) => !nodeByPartId.has(part.id));
-      if (missingParts.length > 0) throw new Error(`GLB 缺少清单节点：${missingParts.map((part) => part.nodeName).join('、')}`);
+      if (missingParts.length > 0) throw new Error(i18nRef.current.t('viewer.errorMissingNodes', {
+        nodes: missingParts.map((part) => part.nodeName).join(', '),
+      }));
       const unmappedMeshes = allMeshes(model).filter((mesh) => !partIdByNode.has(mesh));
-      if (unmappedMeshes.length > 0) throw new Error(`GLB 含有 ${unmappedMeshes.length} 个未纳入装置清单的网格，已拒绝加载。`);
+      if (unmappedMeshes.length > 0) throw new Error(i18nRef.current.t('viewer.errorUnmappedMeshes', {
+        count: unmappedMeshes.length,
+      }));
       sourceMaterials.forEach((material) => material.dispose());
 
       const sourceBox = new THREE.Box3().setFromObject(model);
@@ -861,7 +873,7 @@ function TokamakCadViewerSession({
       setStats({ meshes, triangles: Math.round(triangles), renderer: renderer.capabilities.isWebGL2 ? 'WEBGL 2' : 'WEBGL', parts: nodeByPartId.size });
       setProgress(100);
       setStatus('ready');
-      setLodNotice((notice) => notice.startsWith('正在切换到') ? '' : notice);
+      setLodNotice('');
     }
 
     initialise().catch((error: unknown) => {
@@ -869,15 +881,15 @@ function TokamakCadViewerSession({
       releaseResources();
       const preview = manifest.assets.webModels?.find((asset) => asset.quality === 'preview');
       if (selectedModel.quality === 'high' && preview && preview.id !== selectedModel.id) {
-        const reason = error instanceof Error ? error.message : '未知加载错误';
-        setLodNotice(`高清模型加载失败，已回退标准模型：${reason}`);
+        const reason = error instanceof Error ? error.message : i18nRef.current.t('viewer.errorUnknown');
+        setLodNotice(i18nRef.current.t('viewer.highFallback', { reason }));
         setProgress(0);
         setStatus('loading');
         setSelectedModelId(preview.id);
         return;
       }
       setStatus('error');
-      setErrorMessage(error instanceof Error ? error.message : '模型载入失败，请稍后重试。');
+      setErrorMessage(error instanceof Error ? error.message : i18nRef.current.t('viewer.errorModel'));
     });
 
     return () => { disposed = true; releaseResources(); viewerRef.current = null; };
@@ -890,6 +902,13 @@ function TokamakCadViewerSession({
     sync();
     return efitStore.subscribe(sync);
   }, [efitStore, selectedModelId, status]);
+
+  useEffect(() => {
+    const title = manifest?.title;
+    if (title && viewerRef.current?.renderer.domElement) {
+      viewerRef.current.renderer.domElement.setAttribute('aria-label', t('viewer.threeAria', { title: content(title) }));
+    }
+  }, [content, manifest?.title, status, t]);
 
   useEffect(() => {
     const onFullscreenChange = () => {
@@ -1011,7 +1030,7 @@ function TokamakCadViewerSession({
     const next = availableModels.find((asset) => asset.id === modelId);
     if (!next || next.id === selectedModel?.id) return;
     viewSnapshotRef.current = viewerRef.current?.captureView() ?? viewSnapshotRef.current;
-    setLodNotice(`正在切换到${next.label}模型（约 ${megabytes(next.bytes)} MB）…`);
+    setLodNotice(t('viewer.switching', { model: content(next.label), size: megabytes(next.bytes) }));
     setProgress(0);
     if (activated) setStatus('loading');
     setSelectedModelId(next.id);
@@ -1023,15 +1042,15 @@ function TokamakCadViewerSession({
   const posterPath = manifest?.assets.poster?.path ?? (workspace ? null : '/models/paramak-tokamak-demo/paramak-tokamak-demo-poster.png');
   const isParamakPackage = manifest?.devicePackage.kind === 'public-demonstrator' || viewerId.includes('paramak');
   const estimatedMegabytes = selectedModel?.bytes ? megabytes(selectedModel.bytes) : manifest?.assets.webModel.bytes ? megabytes(manifest.assets.webModel.bytes) : workspace ? '2.2' : '1.1';
-  const applicabilityStatement = manifest?.disclaimer ?? '该浏览器派生模型仅用于网页预览，不能用于制造、尺寸校核、仿真计算或安全决策。';
+  const applicabilityStatement = manifest?.disclaimer ? content(manifest.disclaimer) : t('viewer.defaultDisclaimer');
 
   return (
     <section id={sectionId ?? (workspace ? 'prototype-workspace' : 'device-3d')} className={`tokamakCadSection${workspace ? ' tokamakCadSection--workspace' : ''} appearance-${appearancePreset}`} data-three-viewer={viewerId} aria-labelledby={`${viewerId}-title`}>
       <div className="tokamakCadIntro">
         <p className="tokamakCadIndex">{workspace ? 'WORKSPACE / FULL-DEVICE DIGITAL MOCK-UP' : '03D / DEVICE PACKAGE VIEWER'}</p>
         <div>
-          <h2 id={`${viewerId}-title`}>{workspace ? '浏览完整主体装置，并保持每个部件可追溯' : '从网页三维样机，进入可替换的装置数据包'}</h2>
-          <p>{manifest ? `${manifest.title} · 装配树、部件选择、显隐、剖切与多级细节。` : '按需载入装置三维与装配树。'}</p>
+          <h2 id={`${viewerId}-title`}>{workspace ? t('viewer.introWorkspace') : t('viewer.introStandalone')}</h2>
+          <p>{manifest ? t('viewer.manifestReady', { title: content(manifest.title) }) : t('viewer.onDemand')}</p>
         </div>
       </div>
 
@@ -1039,8 +1058,8 @@ function TokamakCadViewerSession({
         <div className="tokamakCadTopbar">
           <div className="tokamakCadIdentity"><span className="tokamakCadPulse" aria-hidden="true" /><div><b>{manifest?.title.toUpperCase() ?? 'MANIFEST-DRIVEN TOKAMAK PACKAGE'}</b><small>DEVICE-AGNOSTIC / LICENCE-AWARE PACKAGE CONTRACT</small></div></div>
           <div className="tokamakCadTopbarActions">
-            {availableModels.length > 1 && <fieldset className="tokamakCadLodSelector" aria-label="模型精度">
-              <legend className="srOnly">模型精度</legend>
+            {availableModels.length > 1 && <fieldset className="tokamakCadLodSelector" aria-label={t('viewer.modelPrecision')}>
+              <legend className="srOnly">{t('viewer.modelPrecision')}</legend>
               {availableModels.map((asset) => <button
                 type="button"
                 key={asset.id}
@@ -1048,89 +1067,89 @@ function TokamakCadViewerSession({
                 aria-pressed={selectedModel?.id === asset.id}
                 disabled={status === 'loading'}
                 onClick={() => selectModel(asset.id)}
-                title={`${asset.label} · ${megabytes(asset.bytes)} MB${asset.triangles ? ` · ${formatCount(asset.triangles)} triangles` : ''}`}
-              >{asset.quality === 'high' ? '高清' : '标准'} <small>{megabytes(asset.bytes)} MB</small></button>)}
+                title={`${content(asset.label)} · ${megabytes(asset.bytes)} MB${asset.triangles ? ` · ${formatCount(asset.triangles, locale)} triangles` : ''}`}
+              >{asset.quality === 'high' ? t('viewer.high') : t('viewer.standard')} <small>{megabytes(asset.bytes)} MB</small></button>)}
             </fieldset>}
             <div className="tokamakCadStatus" aria-live="polite"><span>{ready ? `${selectedModel?.label ?? 'STANDARD'} · MODEL ONLINE` : status === 'loading' ? `STREAMING ${progress}%` : status === 'error' ? 'FALLBACK MODE' : 'STANDBY'}</span><i aria-hidden="true" /></div>
           </div>
         </div>
 
         <div className="tokamakCadWorkspace">
-          <aside className="tokamakCadTree" aria-label="装配树">
+          <aside className="tokamakCadTree" aria-label={t('viewer.assemblyTree')}>
             <div className="tokamakCadPanelHead"><span>ASSEMBLY TREE</span><b>{ready ? `${stats.parts} PARTS` : 'MANIFEST'}</b></div>
-            <label className="tokamakCadSearch"><span className="srOnly">搜索部件</span><input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索名称、ID 或工程标签" disabled={!ready} /></label>
-            <div className="tokamakCadTreeActions" aria-label="装配树批量操作">
-              <button type="button" disabled={!ready || filteredPartIds.size === 0} onClick={selectFilteredParts}>选择筛选项</button>
-              <button type="button" disabled={!ready || selectedPartIds.size === 0} onClick={clearSelection}>清除选择</button>
-              <button type="button" disabled={!ready || filteredPartIds.size === 0} onClick={() => setPartIdsVisibility(filteredPartIds, false)}>隐藏筛选项</button>
-              <button type="button" disabled={!ready || hiddenPartIds.size === 0} onClick={() => setPartIdsVisibility(new Set(hiddenPartIds), true)}>全部显示</button>
-              <button type="button" className={isolatedPartIds.size > 0 ? 'active' : ''} disabled={!ready || selectedPartIds.size === 0} onClick={isolateSelection}>{isolatedPartIds.size > 0 ? '退出隔离' : '隔离选中'}</button>
+            <label className="tokamakCadSearch"><span className="srOnly">{t('viewer.search')}</span><input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t('viewer.searchPlaceholder')} disabled={!ready} /></label>
+            <div className="tokamakCadTreeActions" aria-label={t('viewer.bulkActions')}>
+              <button type="button" disabled={!ready || filteredPartIds.size === 0} onClick={selectFilteredParts}>{t('viewer.selectFiltered')}</button>
+              <button type="button" disabled={!ready || selectedPartIds.size === 0} onClick={clearSelection}>{t('viewer.clearSelection')}</button>
+              <button type="button" disabled={!ready || filteredPartIds.size === 0} onClick={() => setPartIdsVisibility(filteredPartIds, false)}>{t('viewer.hideFiltered')}</button>
+              <button type="button" disabled={!ready || hiddenPartIds.size === 0} onClick={() => setPartIdsVisibility(new Set(hiddenPartIds), true)}>{t('viewer.showAll')}</button>
+              <button type="button" className={isolatedPartIds.size > 0 ? 'active' : ''} disabled={!ready || selectedPartIds.size === 0} onClick={isolateSelection}>{isolatedPartIds.size > 0 ? t('viewer.exitIsolation') : t('viewer.isolateSelected')}</button>
             </div>
             <div className="tokamakCadTreeScroll">
               {manifest?.systems.map((system) => {
-                const visibleParts = system.parts.filter((part) => !normalizedQuery || `${part.title} ${part.id} ${part.engineeringTag}`.toLocaleLowerCase('zh-CN').includes(normalizedQuery));
+                const visibleParts = system.parts.filter((part) => !normalizedQuery || `${content(part.title)} ${part.title} ${part.id} ${part.engineeringTag}`.toLocaleLowerCase(locale).includes(normalizedQuery));
                 if (normalizedQuery && visibleParts.length === 0) return null;
                 const expanded = normalizedQuery ? true : openSystems.has(system.id);
                 return <div className="tokamakCadSystem" key={system.id}>
-                  <button type="button" className="tokamakCadSystemButton" aria-expanded={expanded} onClick={() => toggleSystem(system.id)}><i style={{ background: system.color }} /><span>{system.title}<small>{system.shortTitle} · {system.parts.length}</small></span><b>{expanded ? '−' : '+'}</b></button>
+                  <button type="button" className="tokamakCadSystemButton" aria-expanded={expanded} onClick={() => toggleSystem(system.id)}><i style={{ background: system.color }} /><span>{content(system.title)}<small>{system.shortTitle} · {system.parts.length}</small></span><b>{expanded ? '−' : '+'}</b></button>
                   {expanded && <div className="tokamakCadParts">{visibleParts.map((part) => <div className={`tokamakCadPart${selectedPartIds.has(part.id) ? ' active' : ''}${hiddenPartIds.has(part.id) ? ' hidden' : ''}`} key={part.id}>
-                    <button type="button" className="tokamakCadPartToggle" onClick={() => selectPart(part.id, true)} aria-label={`${selectedPartIds.has(part.id) ? '取消选择' : '加入选择'}${part.title}`} aria-pressed={selectedPartIds.has(part.id)}>{selectedPartIds.has(part.id) ? '✓' : ''}</button>
-                    <button type="button" className="tokamakCadPartSelect" onClick={(event) => selectPart(part.id, event.ctrlKey || event.metaKey || event.shiftKey)} aria-pressed={selectedPartIds.has(part.id)}><span>{part.title}</span><small>{part.id}</small></button>
-                    <button type="button" className="tokamakCadIconButton" onClick={() => togglePartVisibility(part.id)} aria-label={`${hiddenPartIds.has(part.id) ? '显示' : '隐藏'}${part.title}`} aria-pressed={hiddenPartIds.has(part.id)}>{hiddenPartIds.has(part.id) ? '○' : '●'}</button>
+                    <button type="button" className="tokamakCadPartToggle" onClick={() => selectPart(part.id, true)} aria-label={t(selectedPartIds.has(part.id) ? 'viewer.removeSelection' : 'viewer.addSelection', { part: content(part.title) })} aria-pressed={selectedPartIds.has(part.id)}>{selectedPartIds.has(part.id) ? '✓' : ''}</button>
+                    <button type="button" className="tokamakCadPartSelect" onClick={(event) => selectPart(part.id, event.ctrlKey || event.metaKey || event.shiftKey)} aria-pressed={selectedPartIds.has(part.id)}><span>{content(part.title)}</span><small>{part.id}</small></button>
+                    <button type="button" className="tokamakCadIconButton" onClick={() => togglePartVisibility(part.id)} aria-label={t(hiddenPartIds.has(part.id) ? 'viewer.showPart' : 'viewer.hidePart', { part: content(part.title) })} aria-pressed={hiddenPartIds.has(part.id)}>{hiddenPartIds.has(part.id) ? '○' : '●'}</button>
                   </div>)}</div>}
                 </div>;
               })}
-              {ready && normalizedQuery && manifest?.systems.every((system) => system.parts.every((part) => !`${part.title} ${part.id} ${part.engineeringTag}`.toLocaleLowerCase('zh-CN').includes(normalizedQuery))) && <p className="tokamakCadEmpty">未找到匹配部件</p>}
+              {ready && normalizedQuery && filteredPartIds.size === 0 && <p className="tokamakCadEmpty">{t('viewer.noMatches')}</p>}
             </div>
           </aside>
 
           <div className="tokamakCadViewportShell">
             {posterPath && <>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img className="tokamakCadPoster" src={posterPath} alt={`${manifest?.title ?? 'Tokamak'}三维模型预览`} loading="lazy" decoding="async" />
+              <img className="tokamakCadPoster" src={posterPath} alt={t('viewer.posterAlt', { title: content(manifest?.title ?? 'Tokamak') })} loading="lazy" decoding="async" />
             </>}
             <div className="tokamakCadViewport" ref={mountRef} />
             <div className="tokamakCadScan" aria-hidden="true" /><div className="tokamakCadReticle" aria-hidden="true"><i /><i /></div>
-            {status === 'idle' && <div className="tokamakCadLaunch"><div className="tokamakCadLaunchGlyph" aria-hidden="true"><span /><i /><b /></div><p>MANIFEST-DRIVEN DIGITAL ASSET / 01</p><h3>启动装置数据包查看器</h3><span>当前选择{selectedModel?.label ?? '标准'}质量，按需加载约 {estimatedMegabytes} MB。可浏览装配树、点选部件、显隐/隔离、透明度、X/Y/Z 剖切、线框与属性信息。</span>{lodNotice && <em className="tokamakCadLodNotice">{lodNotice}</em>}<button type="button" onClick={activate} disabled={!manifest || !selectedModel}>启动 3D VIEWER <i>→</i></button></div>}
-            {status === 'loading' && <div className="tokamakCadLoading" role="status"><span>MANIFEST → {selectedModel?.quality === 'high' ? 'HIGH LOD' : 'PREVIEW LOD'} → GPU</span><div><i style={{ width: `${Math.max(6, progress)}%` }} /></div><b>{progress > 0 ? `${progress}% · ${selectedModel?.label ?? '模型'} ${estimatedMegabytes} MB` : `正在载入${selectedModel?.label ?? '选定'}模型`}</b>{lodNotice && <em className="tokamakCadLodNotice">{lodNotice}</em>}</div>}
-            {status === 'error' && <div className="tokamakCadFallback"><div className="tokamakFallbackTorus" aria-hidden="true"><span /><i /><b /></div><p>WEBGL FALLBACK</p><h3>三维视图暂不可用</h3><span>{errorMessage}</span><div><button type="button" onClick={activate}>重新载入</button>{showDownloadActions && <a href={sourceCadPath} download>下载 STEP</a>}</div></div>}
-            <div className="tokamakCadLegend" aria-label="部件颜色图例"><span><i className="plasma" />PLASMA</span><span><i className="tf" />TF COILS</span><span><i className="pf" />PF COILS / CASES</span><span><i className="structure" />STRUCTURE</span></div>
-            <div className="tokamakCadReadout" aria-label="三维模型统计"><span><small>QUALITY</small><b>{selectedModel?.label ?? 'STANDARD'} · {estimatedMegabytes} MB</b></span><span><small>MESHES</small><b>{ready ? formatCount(stats.meshes) : '—'}</b></span><span><small>TRIANGLES</small><b>{ready ? formatCount(stats.triangles) : selectedModel?.triangles ? formatCount(selectedModel.triangles) : '—'}</b></span><span><small>RENDER</small><b>{ready ? stats.renderer : 'ON DEMAND'}</b></span></div>
+            {status === 'idle' && <div className="tokamakCadLaunch"><div className="tokamakCadLaunchGlyph" aria-hidden="true"><span /><i /><b /></div><p>MANIFEST-DRIVEN DIGITAL ASSET / 01</p><h3>{t('viewer.launchTitle')}</h3><span>{t('viewer.launchCopy', { model: content(selectedModel?.label ?? t('viewer.standard')), size: estimatedMegabytes })}</span>{lodNotice && <em className="tokamakCadLodNotice">{lodNotice}</em>}<button type="button" onClick={activate} disabled={!manifest || !selectedModel}>{t('viewer.launch')} <i>→</i></button></div>}
+            {status === 'loading' && <div className="tokamakCadLoading" role="status"><span>MANIFEST → {selectedModel?.quality === 'high' ? 'HIGH LOD' : 'PREVIEW LOD'} → GPU</span><div><i style={{ width: `${Math.max(6, progress)}%` }} /></div><b>{progress > 0 ? `${progress}% · ${content(selectedModel?.label ?? 'MODEL')} ${estimatedMegabytes} MB` : t('viewer.loadingModel', { model: content(selectedModel?.label ?? t('viewer.standard')) })}</b>{lodNotice && <em className="tokamakCadLodNotice">{lodNotice}</em>}</div>}
+            {status === 'error' && <div className="tokamakCadFallback"><div className="tokamakFallbackTorus" aria-hidden="true"><span /><i /><b /></div><p>WEBGL FALLBACK</p><h3>{t('viewer.unavailable')}</h3><span>{errorMessage}</span><div><button type="button" onClick={activate}>{t('viewer.reload')}</button>{showDownloadActions && <a href={sourceCadPath} download>{t('viewer.downloadStep')}</a>}</div></div>}
+            <div className="tokamakCadLegend" aria-label={t('viewer.legendAria')}><span><i className="plasma" />PLASMA</span><span><i className="tf" />TF COILS</span><span><i className="pf" />PF COILS / CASES</span><span><i className="structure" />STRUCTURE</span></div>
+            <div className="tokamakCadReadout" aria-label={t('viewer.statsAria')}><span><small>QUALITY</small><b>{content(selectedModel?.label ?? 'STANDARD')} · {estimatedMegabytes} MB</b></span><span><small>MESHES</small><b>{ready ? formatCount(stats.meshes, locale) : '—'}</b></span><span><small>TRIANGLES</small><b>{ready ? formatCount(stats.triangles, locale) : selectedModel?.triangles ? formatCount(selectedModel.triangles, locale) : '—'}</b></span><span><small>RENDER</small><b>{ready ? stats.renderer : 'ON DEMAND'}</b></span></div>
           </div>
 
-          <aside className="tokamakCadProperties" aria-label="部件属性">
+          <aside className="tokamakCadProperties" aria-label={t('viewer.properties')}>
             <div className="tokamakCadPanelHead"><span>PROPERTIES</span><b>{selectedPartIds.size > 1 ? `${selectedPartIds.size} SELECTED` : selectedPart ? selectedPart.id : 'NO SELECTION'}</b></div>
             {selectedPart ? <div className="tokamakCadPropertyBody">
-              <p className="tokamakCadPropertyKicker" style={{ color: selectedPart.color }}>{selectedPart.systemTitle}</p><h3>{selectedPart.title}</h3><p>{selectedPart.description}</p>
-              <dl><div><dt>稳定部件 ID</dt><dd>{selectedPart.id}</dd></div><div><dt>工程标签</dt><dd>{selectedPart.engineeringTag}</dd></div><div><dt>GLB 节点</dt><dd>{selectedPart.nodeName}</dd></div><div><dt>数据级别</dt><dd>{manifest?.access.classification}</dd></div></dl>
-              {selectedPartIds.size > 1 && <p className="tokamakCadSelectionSummary">已多选 {selectedPartIds.size} 个部件；按 Ctrl / ⌘ / Shift 点击可增减选择。</p>}
-              <div className="tokamakCadPropertyActions"><button type="button" onClick={() => togglePartVisibility(selectedPart.id)}>{hiddenPartIds.has(selectedPart.id) ? '显示当前部件' : '隐藏当前部件'}</button><button type="button" className={isolatedPartIds.size > 0 ? 'active' : ''} onClick={isolateSelection}>{isolatedPartIds.size > 0 ? '退出隔离' : `隔离选中（${selectedPartIds.size}）`}</button></div>
-            </div> : <div className="tokamakCadPropertyEmpty"><span>◎</span><p>在装配树或三维视图中选择部件，查看稳定 ID、工程标签与数据级别。</p></div>}
+              <p className="tokamakCadPropertyKicker" style={{ color: selectedPart.color }}>{content(selectedPart.systemTitle)}</p><h3>{content(selectedPart.title)}</h3><p>{content(selectedPart.description)}</p>
+              <dl><div><dt>{t('viewer.stableId')}</dt><dd>{selectedPart.id}</dd></div><div><dt>{t('viewer.engineeringTag')}</dt><dd>{selectedPart.engineeringTag}</dd></div><div><dt>{t('viewer.glbNode')}</dt><dd>{selectedPart.nodeName}</dd></div><div><dt>{t('viewer.classification')}</dt><dd>{manifest?.access.classification}</dd></div></dl>
+              {selectedPartIds.size > 1 && <p className="tokamakCadSelectionSummary">{t('viewer.multiSelected', { count: selectedPartIds.size })}</p>}
+              <div className="tokamakCadPropertyActions"><button type="button" onClick={() => togglePartVisibility(selectedPart.id)}>{hiddenPartIds.has(selectedPart.id) ? t('viewer.showCurrent') : t('viewer.hideCurrent')}</button><button type="button" className={isolatedPartIds.size > 0 ? 'active' : ''} onClick={isolateSelection}>{isolatedPartIds.size > 0 ? t('viewer.exitIsolation') : t('viewer.isolateCount', { count: selectedPartIds.size })}</button></div>
+            </div> : <div className="tokamakCadPropertyEmpty"><span>◎</span><p>{t('viewer.selectHint')}</p></div>}
           </aside>
         </div>
 
-        <div className="tokamakCadControls" aria-label="三维视图控制">
-          <div className="tokamakCadPresets"><span>VIEW</span>{(['iso', 'front', 'top'] as const).map((preset) => <button type="button" key={preset} disabled={!ready} className={activeView === preset ? 'active' : ''} aria-pressed={activeView === preset} onClick={() => selectView(preset)}>{preset === 'iso' ? '3/4' : preset === 'front' ? '前视' : '俯视'}</button>)}</div>
+        <div className="tokamakCadControls" aria-label={t('viewer.controlsAria')}>
+          <div className="tokamakCadPresets"><span>VIEW</span>{(['iso', 'front', 'top'] as const).map((preset) => <button type="button" key={preset} disabled={!ready} className={activeView === preset ? 'active' : ''} aria-pressed={activeView === preset} onClick={() => selectView(preset)}>{preset === 'iso' ? '3/4' : preset === 'front' ? t('viewer.front') : t('viewer.top')}</button>)}</div>
           <div className="tokamakCadPrecisionControls">
-            <div className="tokamakCadClipAxes" aria-label="剖切轴">{(['x', 'y', 'z'] as const).map((axis) => <button type="button" key={axis} disabled={!ready} className={clipAxis === axis ? 'active' : ''} aria-pressed={clipAxis === axis} onClick={() => updateClipAxis(axis)}>{axis.toUpperCase()}</button>)}</div>
-            <div className="tokamakCadClipControl"><label><span>切面 {clipAxis.toUpperCase()}</span><b>{Math.round(clipOffset * 100)}%</b><input type="range" min="-0.9" max="0.9" step="0.02" value={clipOffset} disabled={!ready || !clipping} onChange={(event) => updateClipOffset(Number(event.target.value))} /></label></div>
-            <div className="tokamakCadOpacityControl global"><label><span>全局透明度</span><b>{Math.round(globalOpacity * 100)}%</b><input type="range" min="0.1" max="1" step="0.05" value={globalOpacity} disabled={!ready} onChange={(event) => updateGlobalOpacity(Number(event.target.value))} /></label></div>
-            <div className="tokamakCadOpacityControl global"><label><span>选中透明度</span><b>{Math.round(selectedOpacity * 100)}%</b><input type="range" min="0.1" max="1" step="0.05" value={selectedOpacity} disabled={!ready || selectedPartIds.size === 0} onChange={(event) => updateSelectedOpacity(Number(event.target.value))} /></label></div>
+            <div className="tokamakCadClipAxes" aria-label={t('viewer.clipAxes')}>{(['x', 'y', 'z'] as const).map((axis) => <button type="button" key={axis} disabled={!ready} className={clipAxis === axis ? 'active' : ''} aria-pressed={clipAxis === axis} onClick={() => updateClipAxis(axis)}>{axis.toUpperCase()}</button>)}</div>
+            <div className="tokamakCadClipControl"><label><span>{t('viewer.clipPlane', { axis: clipAxis.toUpperCase() })}</span><b>{Math.round(clipOffset * 100)}%</b><input type="range" min="-0.9" max="0.9" step="0.02" value={clipOffset} disabled={!ready || !clipping} onChange={(event) => updateClipOffset(Number(event.target.value))} /></label></div>
+            <div className="tokamakCadOpacityControl global"><label><span>{t('viewer.globalOpacity')}</span><b>{Math.round(globalOpacity * 100)}%</b><input type="range" min="0.1" max="1" step="0.05" value={globalOpacity} disabled={!ready} onChange={(event) => updateGlobalOpacity(Number(event.target.value))} /></label></div>
+            <div className="tokamakCadOpacityControl global"><label><span>{t('viewer.selectedOpacity')}</span><b>{Math.round(selectedOpacity * 100)}%</b><input type="range" min="0.1" max="1" step="0.05" value={selectedOpacity} disabled={!ready || selectedPartIds.size === 0} onChange={(event) => updateSelectedOpacity(Number(event.target.value))} /></label></div>
           </div>
-          <div className="tokamakCadTools"><button type="button" disabled={!ready} onClick={resetView}>复位</button><button type="button" disabled={!ready} className={autoRotate ? 'active' : ''} aria-pressed={autoRotate} onClick={toggleAutoRotate}>自转</button><button type="button" disabled={!ready} className={wireframe ? 'active' : ''} aria-pressed={wireframe} onClick={toggleWireframe}>线框</button><button type="button" disabled={!ready} className={clipping ? 'active' : ''} aria-pressed={clipping} onClick={toggleClipping}>剖切</button><button type="button" disabled={!ready} className={fullscreen ? 'active' : ''} aria-pressed={fullscreen} onClick={toggleFullscreen}>全屏</button></div>
+          <div className="tokamakCadTools"><button type="button" disabled={!ready} onClick={resetView}>{t('viewer.reset')}</button><button type="button" disabled={!ready} className={autoRotate ? 'active' : ''} aria-pressed={autoRotate} onClick={toggleAutoRotate}>{t('viewer.rotate')}</button><button type="button" disabled={!ready} className={wireframe ? 'active' : ''} aria-pressed={wireframe} onClick={toggleWireframe}>{t('viewer.wireframe')}</button><button type="button" disabled={!ready} className={clipping ? 'active' : ''} aria-pressed={clipping} onClick={toggleClipping}>{t('viewer.clip')}</button><button type="button" disabled={!ready} className={fullscreen ? 'active' : ''} aria-pressed={fullscreen} onClick={toggleFullscreen}>{t('viewer.fullscreen')}</button></div>
         </div>
-        {efitControls && <div className="tokamakCadEfitControls" aria-label="EFIT 三维叠加设置">
+        {efitControls && <div className="tokamakCadEfitControls" aria-label={t('viewer.efitControls')}>
           <span>EFIT OVERLAY</span>
-          <button type="button" className={efitControls.mode === 'xray' ? 'active' : ''} aria-pressed={efitControls.mode === 'xray'} onClick={() => efitControls.onModeChange(efitControls.mode === 'xray' ? 'physical' : 'xray')}>{efitControls.mode === 'xray' ? '透视可见' : '物理遮挡'}</button>
-          <label title="颜色表示归一化极向磁通 ψN，不代表温度或密度"><input type="checkbox" checked={efitControls.showSection} onChange={(event) => efitControls.onShowSectionChange(event.currentTarget.checked)} />ψN 分带剖面</label>
-          <label><input type="checkbox" checked={efitControls.showSurface} onChange={(event) => efitControls.onShowSurfaceChange(event.currentTarget.checked)} />LCFS 旋转面</label>
-          <label><input type="checkbox" checked={efitControls.showMagneticAxis} onChange={(event) => efitControls.onShowMagneticAxisChange(event.currentTarget.checked)} />磁轴</label>
+          <button type="button" className={efitControls.mode === 'xray' ? 'active' : ''} aria-pressed={efitControls.mode === 'xray'} onClick={() => efitControls.onModeChange(efitControls.mode === 'xray' ? 'physical' : 'xray')}>{efitControls.mode === 'xray' ? t('viewer.xray') : t('viewer.physical')}</button>
+          <label><input type="checkbox" checked={efitControls.showSection} onChange={(event) => efitControls.onShowSectionChange(event.currentTarget.checked)} />{t('viewer.psiSection')}</label>
+          <label><input type="checkbox" checked={efitControls.showSurface} onChange={(event) => efitControls.onShowSurfaceChange(event.currentTarget.checked)} />{t('viewer.lcfsSurface')}</label>
+          <label><input type="checkbox" checked={efitControls.showMagneticAxis} onChange={(event) => efitControls.onShowMagneticAxisChange(event.currentTarget.checked)} />{t('viewer.magneticAxis')}</label>
         </div>}
       </div>
 
       {showFootnotes && <div className="tokamakCadFootnotes">
-        <p><b>科学与安全边界</b>{applicabilityStatement}{appearancePreset === 'industrial-silver-v1' && ' 银色、深合金、铜色及 CFC 外观仅用于结构辨识，不代表真实材料、涂层、表面状态或温度场。'}</p>
-        <p><b>预览交付与可替换接口</b>{securityNotice ?? '模型以浏览器派生资产发送到用户设备；界面可隐藏下载操作，但无法从技术上阻止浏览器缓存、网络调试或复制已传输的数据。原始工程 CAD 不由此查看器交付。'}<a href={manifestUrl}>查看 DeviceManifest</a><a href="/models/device-manifest.schema.json">查看清单 Schema</a>{isParamakPackage && <a href="https://github.com/fusion-energy/paramak/tree/0.9.11" target="_blank" rel="noreferrer">Paramak 0.9.11</a>}<a href="/licenses/THREE-LICENSE.txt">Three.js 许可</a>{showDownloadActions && <><a href={sourceCadPath} download>下载 STEP</a><a href={webModelPath} download>下载 GLB</a></>}</p>
+        <p><b>{t('viewer.footnoteScience')}</b>{applicabilityStatement}{appearancePreset === 'industrial-silver-v1' && ` ${t('viewer.appearanceDisclaimer')}`}</p>
+        <p><b>{t('viewer.footnoteDelivery')}</b>{securityNotice ? content(securityNotice) : t('viewer.deliveryDisclaimer')}<a href={manifestUrl}>{t('viewer.viewManifest')}</a><a href="/models/device-manifest.schema.json">{t('viewer.viewSchema')}</a>{isParamakPackage && <a href="https://github.com/fusion-energy/paramak/tree/0.9.11" target="_blank" rel="noreferrer">Paramak 0.9.11</a>}<a href="/licenses/THREE-LICENSE.txt">{t('viewer.threeLicense')}</a>{showDownloadActions && <><a href={sourceCadPath} download>{t('viewer.downloadStep')}</a><a href={webModelPath} download>{t('viewer.downloadGlb')}</a></>}</p>
       </div>}
     </section>
   );

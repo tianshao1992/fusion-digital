@@ -11,17 +11,19 @@ import {
 } from 'react';
 import TokamakCadViewer from '../components/TokamakCadViewer';
 import { createEfitHybridDataSource, createEfitStore, EfitPanel, type EfitStore } from '../components/efit';
+import { useI18n } from '../i18n';
 import type { DeviceCatalog, DeviceCatalogEntry, DevicePhysicsOverlay } from './deviceCatalog';
 import TurntableDeviceViewer from './TurntableDeviceViewer';
 
 function MetadataViewer({ device }: { device: DeviceCatalogEntry }) {
+  const { content, t } = useI18n();
   return <div className={`controlledDevicePlaceholder ${device.tone}`}>
     <div className="deviceLockGlyph" aria-hidden="true"><i /><i /><i /></div>
     <p>INFORMATION MODE</p>
-    <h3>{device.title}</h3>
-    <span>当前仅提供装置信息，不加载浏览器三维。</span>
-    <div className="controlledStats">{device.facts.slice(0, 2).map((fact) => <b key={fact}>{fact}</b>)}</div>
-    <a href="/platform#contracts">查看装置接入方式 ↗</a>
+    <h3>{content(device.title)}</h3>
+    <span>{t('workspace.metadataOnly')}</span>
+    <div className="controlledStats">{device.facts.slice(0, 2).map((fact) => <b key={fact}>{content(fact)}</b>)}</div>
+    <a href="/platform#contracts">{t('workspace.integration')}</a>
   </div>;
 }
 
@@ -105,6 +107,7 @@ function ResizableDeviceExperience({
   efitOverlay: DevicePhysicsOverlay;
   efitStore: EfitStore;
 }) {
+  const { t } = useI18n();
   const layoutRef = useRef<HTMLDivElement>(null);
   const activePointer = useRef<number | null>(null);
   const [physicsShare, setPhysicsShare] = useState(DEFAULT_PHYSICS_SHARE);
@@ -196,14 +199,14 @@ function ResizableDeviceExperience({
     <div
       className="devicePaneSeparator"
       role="separator"
-      aria-label="调整三维装置与 EFIT 分析面板的宽度"
+      aria-label={t('workspace.resize')}
       aria-orientation="vertical"
       aria-valuemin={Math.round(MIN_PHYSICS_SHARE * 100)}
       aria-valuemax={Math.round(MAX_PHYSICS_SHARE * 100)}
       aria-valuenow={Math.round(physicsPercent)}
-      aria-valuetext={`EFIT 面板占工作区 ${Math.round(physicsPercent)}%`}
+      aria-valuetext={t('workspace.resizeValue', { percent: Math.round(physicsPercent) })}
       tabIndex={0}
-      title="拖动调整宽度；方向键微调；双击恢复默认"
+      title={t('workspace.resizeHelp')}
       onDoubleClick={() => setPhysicsShare(DEFAULT_PHYSICS_SHARE)}
       onKeyDown={handleSeparatorKeyDown}
       onPointerDown={(event) => {
@@ -246,6 +249,7 @@ function DeviceExperience({ device }: { device: DeviceCatalogEntry }) {
 }
 
 export default function MultiDeviceWorkspace({ catalog }: { catalog: DeviceCatalog }) {
+  const { content, t } = useI18n();
   const [selectedId, setSelectedId] = useState(catalog.devices[0].id);
   const current = catalog.devices.find((device) => device.id === selectedId) ?? catalog.devices[0];
 
@@ -253,12 +257,12 @@ export default function MultiDeviceWorkspace({ catalog }: { catalog: DeviceCatal
     <div className="multiDeviceIntro">
       <p>WORKSPACE</p>
       <div>
-        <h2 id="multi-device-title">装置、三维与 EFIT 联动</h2>
-        <span>选择装置后即可进入对应的三维、预览或资料模式。</span>
+        <h2 id="multi-device-title">{t('workspace.title')}</h2>
+        <span>{t('workspace.lead')}</span>
       </div>
     </div>
 
-    <div className="deviceSelector" role="tablist" aria-label="数字样机装置" style={{ gridTemplateColumns: `repeat(${Math.min(catalog.devices.length, 4)}, minmax(0, 1fr))` }}>
+    <div className="deviceSelector" role="tablist" aria-label={t('workspace.deviceTabs')} style={{ gridTemplateColumns: `repeat(${Math.min(catalog.devices.length, 4)}, minmax(0, 1fr))` }}>
       {catalog.devices.map((device) => <button
         key={device.id}
         type="button"
@@ -270,16 +274,16 @@ export default function MultiDeviceWorkspace({ catalog }: { catalog: DeviceCatal
       >
         <span>{device.index}</span>
         <small>{device.eyebrow}</small>
-        <strong>{device.title}</strong>
-        <em>{device.state}</em>
+        <strong>{content(device.title)}</strong>
+        <em>{content(device.state)}</em>
       </button>)}
     </div>
 
     <div className="deviceStage" id={`device-panel-${current.id}`} role="tabpanel">
       <aside className={`deviceAuthority ${current.tone}`}>
         <small>{current.viewer.mode.toUpperCase()}</small>
-        <h3>{current.title}</h3>
-        <ul>{current.facts.slice(0, 3).map((fact) => <li key={fact}>{fact}</li>)}</ul>
+        <h3>{content(current.title)}</h3>
+        <ul>{current.facts.slice(0, 3).map((fact) => <li key={fact}>{content(fact)}</li>)}</ul>
       </aside>
       <DeviceExperience device={current} />
     </div>
@@ -296,12 +300,13 @@ function DevicePhysicsPanel({
   overlay: DeviceCatalogEntry['physicsOverlays'][number];
   store: EfitStore;
 }) {
-  return <aside className="devicePhysicsPanel" aria-label={`${device.title} EFIT 位形与时序`}>
+  const { content, t } = useI18n();
+  return <aside className="devicePhysicsPanel" aria-label={t('workspace.efitAria', { device: content(device.title) })}>
     <EfitPanel
       store={store}
       preferredShot={overlay.defaultShot}
       preferredTimeMs={overlay.defaultTimeMs}
-      title="EFIT 位形与放电时序"
+      title={t('workspace.efitTitle')}
     />
   </aside>;
 }

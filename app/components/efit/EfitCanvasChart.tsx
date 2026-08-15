@@ -2,6 +2,7 @@
 
 import type { EChartsCoreOption, EChartsType } from 'echarts/core';
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { useI18n } from '../../i18n';
 
 type EfitCanvasChartProps = {
   option: EChartsCoreOption;
@@ -51,6 +52,7 @@ export default function EfitCanvasChart({
   onChartClick,
   dataAspectRatio,
 }: EfitCanvasChartProps) {
+  const { t } = useI18n();
   const mountRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<EChartsType | null>(null);
   const optionRef = useRef(option);
@@ -136,8 +138,8 @@ export default function EfitCanvasChart({
         aria-label={ariaLabel}
         aria-hidden={!ready || undefined}
       />
-      {!ready && !failed && <span className="efitChartStatus">图表引擎加载中…</span>}
-      {failed && <span className="efitChartStatus">交互图表未加载，当前显示可读摘要。</span>}
+      {!ready && !failed && <span className="efitChartStatus">{t('efit.chartLoading')}</span>}
+      {failed && <span className="efitChartStatus">{t('efit.chartFailed')}</span>}
     </div>
   );
 }

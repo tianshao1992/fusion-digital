@@ -2,6 +2,7 @@
 
 import type { EChartsCoreOption } from 'echarts/core';
 import { useMemo } from 'react';
+import { useI18n } from '../../i18n';
 import EfitCanvasChart from './EfitCanvasChart';
 import { buildGapAwareSignalSeries } from './signal-series';
 import type { EfitFrameSummary } from './types';
@@ -20,6 +21,7 @@ function chartTimeFromClick(params: unknown): number | null {
 }
 
 export default function EfitSignalsChart({ timeline, currentTimeMs, onSeekTimeMs }: EfitSignalsChartProps) {
+  const { locale, t } = useI18n();
   const option = useMemo<EChartsCoreOption>(() => {
     const cursor = {
       silent: true,
@@ -38,7 +40,7 @@ export default function EfitSignalsChart({ timeline, currentTimeMs, onSeekTimeMs
     return {
       animation: false,
       backgroundColor: 'transparent',
-      aria: { enabled: true, description: '等离子体电流、磁轴大半径和垂直位置的 EFIT 时间序列。' },
+      aria: { enabled: true, description: t('efit.signalsAria') },
       color: ['#45ddc7', '#80a7ff', '#ff9c70'],
       legend: {
         top: 4,
@@ -80,7 +82,7 @@ export default function EfitSignalsChart({ timeline, currentTimeMs, onSeekTimeMs
         },
         {
           type: 'value',
-          name: '轴位置 / m',
+          name: t('efit.axisPosition'),
           scale: true,
           axisLine: { show: true, lineStyle: { color: '#80a7ff' } },
           axisLabel: { color: '#8fa9d9', fontSize: 10 },
@@ -124,22 +126,22 @@ export default function EfitSignalsChart({ timeline, currentTimeMs, onSeekTimeMs
         },
       ],
     };
-  }, [currentTimeMs, timeline]);
+  }, [currentTimeMs, t, timeline]);
 
   const validIp = timeline.filter((frame) => Number.isFinite(frame.currentA));
   const fallback = (
     <div className="efitChartTextFallback">
-      <strong>EFIT 时序</strong>
-      <span>{timeline.length.toLocaleString('zh-CN')} 帧</span>
-      <span>{validIp.length ? `Ip ${Math.min(...validIp.map((frame) => frame.currentA / 1000)).toFixed(1)} – ${Math.max(...validIp.map((frame) => frame.currentA / 1000)).toFixed(1)} kA` : 'Ip 暂无有效数据'}</span>
-      <span>当前 {(currentTimeMs / 1000).toFixed(3)} s</span>
+      <strong>{t('efit.signalFallback')}</strong>
+      <span>{t('efit.frames', { count: timeline.length.toLocaleString(locale) })}</span>
+      <span>{validIp.length ? `Ip ${Math.min(...validIp.map((frame) => frame.currentA / 1000)).toFixed(1)} – ${Math.max(...validIp.map((frame) => frame.currentA / 1000)).toFixed(1)} kA` : t('efit.noIp')}</span>
+      <span>{t('efit.currentTime', { time: (currentTimeMs / 1000).toFixed(3) })}</span>
     </div>
   );
 
   return (
     <EfitCanvasChart
       option={option}
-      ariaLabel="EXL-50U EFIT 等离子体电流与磁轴位置时间序列"
+      ariaLabel={t('efit.signalChartAria')}
       fallback={fallback}
       className="efitSignalsChart"
       onChartClick={(params) => {

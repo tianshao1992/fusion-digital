@@ -1,0 +1,279 @@
+:root,
+:root[data-theme='light'] {
+  color-scheme: light;
+  --color-canvas: #f7f3ec;
+  --color-surface: #fffdf8;
+  --color-surface-raised: #ffffff;
+  --color-surface-muted: #eee7dc;
+  --color-surface-subtle: #e7ded2;
+  --color-ink: #2f2b27;
+  --color-ink-muted: #706960;
+  --color-ink-subtle: #8b8379;
+  --color-border: #d7cdc0;
+  --color-border-strong: #b9ab9b;
+  --color-accent: #c86545;
+  --color-accent-strong: #a94e33;
+  --color-accent-soft: #efd7cc;
+  --color-info: #718579;
+  --color-info-strong: #52685b;
+  --color-info-soft: #dce4dc;
+  --color-positive: #5f806a;
+  --color-warning: #a66f3f;
+  --color-danger: #a7574c;
+  --color-violet: #7d7085;
+  --color-inverse: #29302c;
+  --color-inverse-raised: #343b36;
+  --color-on-inverse: #f8f2e9;
+  --color-on-inverse-muted: #c6beb3;
+  --color-on-inverse-subtle: #999f99;
+  --color-inverse-border: #515b54;
+  --color-workbench: #252a27;
+  --color-workbench-raised: #303632;
+  --color-workbench-panel: #1e2421;
+  --color-workbench-ink: #f7f1e8;
+  --color-workbench-muted: #b6aea3;
+  --color-workbench-line: #505a53;
+  --color-workbench-accent: #df8b68;
+  --color-workbench-info: #b4c7b8;
+  --color-workbench-violet: #c0b1c5;
+  --color-grid: rgb(82 104 91 / 12%);
+  --color-glass: rgb(255 253 248 / 86%);
+  --shadow-sm: 0 1px 2px rgb(47 43 39 / 7%), 0 8px 24px rgb(47 43 39 / 5%);
+  --shadow-md: 0 18px 48px rgb(47 43 39 / 12%);
+  --focus-ring: #87513f;
+  --selection-bg: #dfb9a9;
+  --selection-ink: #2f211b;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --color-canvas: #151916;
+  --color-surface: #1b211d;
+  --color-surface-raised: #222923;
+  --color-surface-muted: #272d28;
+  --color-surface-subtle: #313832;
+  --color-ink: #f1ebe2;
+  --color-ink-muted: #b8b0a6;
+  --color-ink-subtle: #938d84;
+  --color-border: #3c463f;
+  --color-border-strong: #58655c;
+  --color-accent: #e18766;
+  --color-accent-strong: #f0a081;
+  --color-accent-soft: #4c3027;
+  --color-info: #9aafa0;
+  --color-info-strong: #bdd0c2;
+  --color-info-soft: #2c3c32;
+  --color-positive: #90b39a;
+  --color-warning: #d6a06c;
+  --color-danger: #df8f83;
+  --color-violet: #b5a4bd;
+  --color-inverse: #0d120f;
+  --color-inverse-raised: #151b17;
+  --color-on-inverse: #f6f0e7;
+  --color-on-inverse-muted: #b8c1ba;
+  --color-on-inverse-subtle: #7d9186;
+  --color-inverse-border: #33483d;
+  --color-workbench: #070d0b;
+  --color-workbench-raised: #0c1814;
+  --color-workbench-panel: #08110e;
+  --color-workbench-ink: #eef8f4;
+  --color-workbench-muted: #8fa99e;
+  --color-workbench-line: rgb(123 216 195 / 16%);
+  --color-workbench-accent: #e18766;
+  --color-workbench-info: #9fb8a7;
+  --color-workbench-violet: #b5a4bd;
+  --color-grid: rgb(154 175 160 / 8%);
+  --color-glass: rgb(21 27 23 / 88%);
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 24%), 0 8px 24px rgb(0 0 0 / 18%);
+  --shadow-md: 0 24px 64px rgb(0 0 0 / 32%);
+  --focus-ring: #f0a081;
+  --selection-bg: #7a4635;
+  --selection-ink: #fff8f2;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+    --color-canvas: #151916;
+    --color-surface: #1b211d;
+    --color-surface-raised: #222923;
+    --color-surface-muted: #272d28;
+    --color-surface-subtle: #313832;
+    --color-ink: #f1ebe2;
+    --color-ink-muted: #b8b0a6;
+    --color-ink-subtle: #938d84;
+    --color-border: #3c463f;
+    --color-border-strong: #58655c;
+    --color-accent: #e18766;
+    --color-accent-strong: #f0a081;
+    --color-accent-soft: #4c3027;
+    --color-info: #9aafa0;
+    --color-info-strong: #bdd0c2;
+    --color-info-soft: #2c3c32;
+    --color-positive: #90b39a;
+    --color-warning: #d6a06c;
+    --color-danger: #df8f83;
+    --color-violet: #b5a4bd;
+    --color-inverse: #0d120f;
+    --color-inverse-raised: #151b17;
+    --color-on-inverse: #f6f0e7;
+    --color-on-inverse-muted: #b8c1ba;
+    --color-on-inverse-subtle: #7d9186;
+    --color-inverse-border: #33483d;
+    --color-workbench: #070d0b;
+    --color-workbench-raised: #0c1814;
+    --color-workbench-panel: #08110e;
+    --color-workbench-ink: #eef8f4;
+    --color-workbench-muted: #8fa99e;
+    --color-workbench-line: rgb(123 216 195 / 16%);
+    --color-workbench-accent: #e18766;
+    --color-workbench-info: #9fb8a7;
+    --color-workbench-violet: #b5a4bd;
+    --color-grid: rgb(154 175 160 / 8%);
+    --color-glass: rgb(21 27 23 / 88%);
+    --shadow-sm: 0 1px 2px rgb(0 0 0 / 24%), 0 8px 24px rgb(0 0 0 / 18%);
+    --shadow-md: 0 24px 64px rgb(0 0 0 / 32%);
+    --focus-ring: #f0a081;
+    --selection-bg: #7a4635;
+    --selection-ink: #fff8f2;
+  }
+}
+
+::selection { color: var(--selection-ink); background: var(--selection-bg); }
+:where(a,button,input,select,textarea,summary):focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 3px; }
+
+.themeSwitcher {
+  display: inline-grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(38px,auto);
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  color: var(--color-ink-muted);
+  background: var(--color-glass);
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+.themeSwitcher button {
+  min-width: 38px;
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 999px;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+}
+.themeSwitcher button:hover { color: var(--color-ink); background: var(--color-surface-muted); }
+.themeSwitcher button[aria-checked='true'] { color: var(--color-on-inverse); background: var(--color-inverse-raised); box-shadow: 0 1px 3px rgb(0 0 0 / 18%); }
+.themeSwitcherIcon { width: 1.15em; font-size: 14px; text-align: center; }
+.themeSwitcher--compact .themeSwitcherLabel { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+/* Portal bridge: light mode becomes warm paper, terracotta and muted sage. */
+html .portalPage {
+  --fd-bg: var(--color-inverse);
+  --fd-panel: var(--color-inverse-raised);
+  --fd-paper: var(--color-canvas);
+  --fd-ink: var(--color-ink);
+  --fd-ai: var(--color-info-strong);
+  --fd-ai-dark: var(--color-info-strong);
+  --fd-fusion: var(--color-accent);
+  --fd-line: var(--color-border);
+  --fd-muted: var(--color-ink-muted);
+}
+html .portalPage .prototypePortalCta { color: var(--color-ink); background: var(--color-surface-muted); border-color: var(--color-border); }
+html .portalPage .prototypePortalCta p { color: var(--color-accent-strong); }
+html .portalPage .prototypePortalCta > a { color: var(--color-on-inverse); background: var(--color-accent); box-shadow: var(--shadow-sm); }
+html .portalPage .portalHero { color: var(--color-ink); background: radial-gradient(circle at 73% 32%,var(--color-info-soft),var(--color-canvas) 48%); }
+html .portalPage .portalHero::before { background-image: linear-gradient(var(--color-grid) 1px,transparent 1px),linear-gradient(90deg,var(--color-grid) 1px,transparent 1px); }
+html .portalPage .kicker,html .portalPage .heroLead { color: var(--color-ink-muted); }
+html .portalPage .heroActions a { border-color: var(--color-border-strong); }
+html .portalPage .heroActions a.solid { color: var(--color-on-inverse); background: var(--color-accent); border-color: var(--color-accent); }
+html .portalPage .heroMetrics,html .portalPage .heroMetrics span { color: var(--color-ink-muted); border-color: var(--color-border); }
+html .portalPage .heroMetrics b { color: var(--color-ink); }
+html .portalPage .heroArchitectureFigure,html .portalPage .heroArchitectureFigure > a { background: var(--color-workbench); border-color: var(--color-workbench-line); }
+html .portalPage .heroArchitectureFigure { box-shadow: var(--shadow-md); }
+html .portalPage .plantValue { color: var(--color-ink); background: linear-gradient(110deg,var(--color-surface-raised),var(--color-info-soft)); box-shadow: var(--shadow-md); }
+html .portalPage .plantValue > p,html .portalPage .plantValueGrid,html .portalPage .plantValueGrid article { border-color: var(--color-border); }
+html .portalPage .plantValueEnglish,html .portalPage .plantValueGrid p { color: var(--color-ink-muted); }
+html .portalPage .plantValueEnglish b,html .portalPage .plantValueGrid b { color: var(--color-info-strong); }
+html .portalPage .portalThesis,html .portalPage .domainSection,html .portalPage .portalRoadmap { background: var(--color-surface-muted); }
+html .portalPage .mainLine,html .portalPage .resourceSection { background: var(--color-surface-raised); }
+html .portalPage .aiNativePortal { color: var(--color-ink); background: radial-gradient(circle at 78% 12%,var(--color-info-soft),var(--color-surface) 62%); border-color: var(--color-border); }
+html .portalPage .aiNativePortalIntro > p:last-child,html .portalPage .aiNativePortalGrid p { color: var(--color-ink-muted); }
+html .portalPage .aiNativePortalGrid,html .portalPage .resourceGrid,html .portalPage .roadmapCards { background: var(--color-border); border-color: var(--color-border); }
+html .portalPage .aiNativePortalGrid a,html .portalPage .lineSteps article,html .portalPage .resourceGrid a,html .portalPage .roadmapCards article { background: var(--color-surface); }
+html .portalPage .aiNativePortalGrid a:hover,html .portalPage .aiNativePortalGrid a:focus-visible,html .portalPage .resourceGrid a:hover { background: var(--color-surface-raised); }
+html .portalPage .aiNativeGuardrail { color: var(--color-ink-muted); border-color: var(--color-border); }
+html .portalPage .domainCard,html .portalPage .featuredDomainCard { background: var(--color-surface-raised); border-color: var(--color-border); }
+html .portalPage .domainCard:hover,html .portalPage .domainCard:focus-visible { border-color: var(--color-border-strong); box-shadow: var(--shadow-md); }
+html .portalPage .facilityPreview { color: var(--color-ink); background: var(--color-surface-subtle); }
+html .portalPage .facilityPreview p,html .portalPage .facilityTicker span { color: var(--color-ink-muted); }
+html .portalPage .facilityTicker,html .portalPage .facilityTicker span { border-color: var(--color-border); }
+html .portalPage .portalRoadmap > img { background: var(--color-surface-raised); border-color: var(--color-border); }
+html .portalPage .communityBand { color: var(--color-ink); background: linear-gradient(120deg,var(--color-accent-soft),var(--color-surface-muted)); }
+html .portalPage .communityBand > div:last-child p { color: var(--color-ink-muted); }
+
+/* The CAD viewport remains dark for depth perception; its chrome follows theme tokens. */
+html .prototypePage {
+  --pt-bg: var(--color-workbench);
+  --pt-panel: var(--color-workbench-raised);
+  --pt-cyan: var(--color-workbench-info);
+  --pt-orange: var(--color-workbench-accent);
+  --pt-violet: var(--color-workbench-violet);
+  --pt-line: var(--color-workbench-line);
+  color: var(--color-workbench-ink);
+  background: var(--color-workbench);
+}
+html .prototypePage .prototypeHero--compact { background: radial-gradient(circle at 82% 20%,color-mix(in srgb,var(--color-workbench-info) 16%,transparent),transparent 33%),var(--color-workbench); }
+html .prototypePage .prototypeLead,html .prototypePage .prototypeHeroStatus span,html .prototypePage .prototypePlatformLink > p,html .prototypePage .multiDeviceIntro span { color: var(--color-workbench-muted); }
+html .prototypePage .prototypeHeroActions a { color: var(--color-workbench-ink); border-color: var(--color-workbench-line); }
+html .prototypePage .prototypeHeroActions a:first-child { color: #241712; }
+html .prototypePage .prototypeHeroStatus { border-color: var(--color-workbench-line); background: var(--color-workbench-panel); }
+html .prototypePage .prototypeHeroStatus span { border-color: var(--color-workbench-line); }
+html .prototypePage .prototypeHeroStatus b { color: var(--color-workbench-ink); }
+html .prototypePage .prototypePlatformLink { background: var(--color-workbench-raised); border-color: var(--color-workbench-line); }
+html .prototypePage .multiDeviceSection { color: var(--color-workbench-ink); background: radial-gradient(circle at 80% 10%,color-mix(in srgb,var(--color-workbench-info) 14%,transparent),transparent 32%),var(--color-workbench); }
+html .prototypePage .multiDeviceModes,html .prototypePage .deviceSelector,html .prototypePage .deviceStage,html .prototypePage .devicePreviewPolicy { border-color: var(--color-workbench-line); }
+html .prototypePage .multiDeviceModes button,html .prototypePage .deviceSelector button { color: var(--color-workbench-muted); background: var(--color-workbench-panel); }
+html .prototypePage .multiDeviceModes button.active { color: #1f2521; background: var(--color-workbench-info); }
+html .prototypePage .deviceSelector { background: var(--color-workbench-line); }
+html .prototypePage .deviceSelector button.active { background: var(--color-workbench-raised); }
+html .prototypePage .deviceSelector strong,html .prototypePage .deviceAuthority h3 { color: var(--color-workbench-ink); }
+html .prototypePage .deviceStage,html .prototypePage .devicePreviewPolicy,html .prototypePage .devicePaneSeparator { background: var(--color-workbench); }
+html .prototypePage .deviceAuthority,html .prototypePage .devicePaneSeparator,html .prototypePage .deviceViewport .tokamakCadFootnotes { border-color: var(--color-workbench-line); }
+html .prototypePage .deviceAuthority p,html .prototypePage .deviceAuthority li,html .prototypePage .devicePreviewPolicy span { color: var(--color-workbench-muted); }
+html .prototypePage .devicePhysicsPanel { scrollbar-color: var(--color-workbench-line) var(--color-workbench); background: var(--color-workbench); }
+html .prototypePage .turntableViewer { background: radial-gradient(circle at 50% 42%,color-mix(in srgb,var(--color-workbench-accent) 18%,transparent),var(--color-workbench) 58%); }
+html .prototypePage .turntableModeControls,html .prototypePage .turntableControls,html .prototypePage .turntableDetailHint,html .prototypePage .turntableNotice { border-color: var(--color-workbench-line); background: var(--color-workbench-panel); }
+html .prototypePage .turntableModeGroup { background: var(--color-workbench); }
+html .prototypePage .turntableModeGroup > span,html .prototypePage .turntableModeReadout span,html .prototypePage .turntableControls label,html .prototypePage .turntableDetailHint { color: var(--color-workbench-muted); }
+html .prototypePage .turntableModeGroup button { color: var(--color-workbench-muted); border-color: var(--color-workbench-line); background: var(--color-workbench-raised); }
+html .prototypePage .turntableModeGroup button:hover,html .prototypePage .turntableModeGroup button:focus-visible { color: var(--color-workbench-info); border-color: var(--color-workbench-info); }
+html .prototypePage .turntableModeGroup button.active { color: #241712; border-color: var(--color-workbench-accent); background: var(--color-workbench-accent); }
+html .prototypePage .turntableHud,html .prototypePage .turntableModeReadout { border-color: var(--color-workbench-line); background: color-mix(in srgb,var(--color-workbench-panel) 90%,transparent); }
+html .prototypePage .turntableModeReadout b { color: var(--color-workbench-ink); }
+html .prototypePage .turntableControls button { color: var(--color-workbench-accent); border-color: var(--color-workbench-line); background: var(--color-workbench-raised); }
+
+@media (prefers-reduced-motion:no-preference) {
+  body,.siteNav,.siteFooter,.portalPage,.prototypePage { transition: color 160ms ease,background-color 160ms ease,border-color 160ms ease; }
+}
+@media (prefers-contrast:more) {
+  :root { --color-border: currentColor; --color-border-strong: currentColor; }
+  .themeSwitcher { border-width: 2px; box-shadow: none; }
+  .themeSwitcher button[aria-checked='true'] { outline: 2px solid currentColor; outline-offset: -3px; }
+  html .portalPage .domainCard,html .portalPage .aiNativePortalGrid a,html .prototypePage .deviceStage { border: 1px solid currentColor; }
+}
+@media (forced-colors:active) {
+  .themeSwitcher,.themeSwitcher button,.themeSwitcher button[aria-checked='true'] { forced-color-adjust: auto; border-color: ButtonText; color: ButtonText; background: ButtonFace; box-shadow: none; }
+  .themeSwitcher button[aria-checked='true'] { outline: 2px solid Highlight; }
+}
