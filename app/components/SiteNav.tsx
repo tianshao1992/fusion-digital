@@ -18,7 +18,7 @@ const links = [
   ['ai', '/ai', 'nav.ai'],
   ['knowledge', '/knowledge-graph', 'nav.knowledge'],
   ['facilities', '/facilities', 'nav.facilities'],
-  ['prototype', '/digital-prototype', 'nav.prototype'],
+  ['prototype', '/#prototype-workspace', 'nav.prototype'],
 ] as const;
 
 export default function SiteNav({active = 'home'}: SiteNavProps) {

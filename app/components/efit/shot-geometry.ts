@@ -27,12 +27,10 @@ export function resolveShotGeometry(
   return manifest.geometries?.find((geometry) => geometry.geometryId === shotManifest.geometryId) ?? null;
 }
 
-export function efitShotOptionLabel(shot: EfitShotManifest): string {
-  const catalog = shot.catalog;
-  const dataset = catalog?.datasetLabel ?? catalog?.datasetId ?? 'EFIT v1';
-  const reconstruction = catalog?.reconstructionLabel
-    ?? (shot.topologyBinary ? '磁面 + 拓扑' : '磁面重建');
+export function efitShotOptionLabel(
+  shot: EfitShotManifest,
+  formatFrames: (count: number) => string = (count) => `${count.toLocaleString('zh-CN')} 帧`,
+): string {
   const displayableFrames = shot.frames.filter((frame) => frame.quality.state !== 'invalid' && frame.quality.state !== 'missing').length;
-  const quality = catalog?.qualityLabel ?? `可显示 ${displayableFrames}/${shot.frameCount} 帧`;
-  return `#${shot.shot} · ${dataset} · ${reconstruction} · ${quality}`;
+  return `#${shot.shot} · ${formatFrames(displayableFrames)}`;
 }

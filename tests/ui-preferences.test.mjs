@@ -38,7 +38,8 @@ test('root shell and navigation wire locale and theme preferences without changi
   assert.match(nav, /ThemeSwitcher/);
   assert.match(nav, /setLocale\(locale === 'zh-CN' \? 'en' : 'zh-CN'\)/);
   assert.match(nav, /t\('theme\.light'\)/);
-  assert.match(nav, /\['prototype', '\/digital-prototype', 'nav\.prototype'\]/);
+  assert.match(nav, /\['prototype', '\/#prototype-workspace', 'nav\.prototype'\]/);
+  assert.doesNotMatch(nav, /\['prototype', '\/digital-prototype'/);
 });
 
 test('theme registry exposes system, Morandi light and dark modes with pre-hydration persistence', async () => {
@@ -98,9 +99,42 @@ test('Morandi light mode covers legacy heroes, workspaces and filter modules', a
   assert.doesNotMatch(surfaces, /:root\[data-theme='dark'\]/);
 });
 
+test('Morandi light mode covers every digital-prototype workspace shell while preserving dark tokens', async () => {
+  const [theme, prototype, turntable] = await Promise.all([
+    source('app/theme.css'),
+    source('app/digital-prototype/prototype.css'),
+    source('app/digital-prototype/turntable.css'),
+  ]);
+
+  assert.match(theme, /:root,\s*:root\[data-theme='light'\][\s\S]*?--color-workbench: #eee8de/);
+  assert.match(theme, /:root\[data-theme='dark'\][\s\S]*?--color-workbench: #070d0b/);
+  assert.match(theme, /html :where\(\.prototypePage,\.portalPage\) \.devicePhysicsPanel[^\n]*background: var\(--color-workbench\)/);
+
+  for (const selector of [
+    '.multiDeviceSection',
+    '.deviceSelector',
+    '.deviceStage',
+    '.deviceAuthority',
+    '.deviceViewport',
+    '.devicePaneSeparator',
+    '.devicePhysicsPanel',
+    '.controlledDevicePlaceholder',
+  ]) {
+    assert.ok(
+      prototype.includes(`:root[data-theme='light'] .prototypePage ${selector}`)
+        || prototype.includes(`:root[data-theme='light'] :where(.prototypePage,.portalPage) ${selector}`),
+      `${selector} must expose an explicit light workbench surface`,
+    );
+  }
+
+  assert.match(prototype, /@media\(max-width:1180px\)[\s\S]*?\.devicePaneSeparator\{display:none\}/);
+  assert.match(prototype, /@media\(max-width:900px\)[\s\S]*?\.deviceSelector\{grid-template-columns:1fr!important\}/);
+  assert.match(turntable, /:root\[data-theme='light'\] \.prototypePage \.turntableCanvas:before/);
+  assert.doesNotMatch(turntable, /:root\[data-theme='dark'\]/);
+});
+
 test('digital prototype operational UI consumes the shared locale layer', async () => {
   const paths = [
-    'app/digital-prototype/DigitalPrototypeContent.tsx',
     'app/digital-prototype/MultiDeviceWorkspace.tsx',
     'app/digital-prototype/TurntableDeviceViewer.tsx',
     'app/components/TokamakCadViewer.tsx',
@@ -113,6 +147,19 @@ test('digital prototype operational UI consumes the shared locale layer', async 
   for (const [index, file] of files.entries()) {
     assert.match(file, /useI18n/, `${paths[index]} must use the shared locale layer`);
   }
+});
+
+test('homepage mounts one full prototype workspace and the legacy route redirects', async () => {
+  const [home, legacyPage] = await Promise.all([
+    source('app/page.tsx'),
+    source('app/digital-prototype/page.tsx'),
+  ]);
+
+  assert.match(home, /<div className="prototypePage prototypePage--embedded">\s*<MultiDeviceWorkspace catalog=\{deviceCatalog\} \/>/);
+  assert.match(home, /parseDeviceCatalog\(deviceCatalogJson\)/);
+  assert.doesNotMatch(home, /<TokamakCadViewer|prototypePortalCta/);
+  assert.match(legacyPage, /redirect\('\/#prototype-workspace'\)/);
+  assert.doesNotMatch(legacyPage, /MultiDeviceWorkspace|DigitalPrototypeContent/);
 });
 
 test('scientific visualizations consume the resolved theme and redraw with semantic palettes', async () => {

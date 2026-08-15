@@ -195,7 +195,7 @@ test('server-renders the FusionDigital community portal', async () => {
   assert.match(html, /href="\/diagnostics"[^>]*>诊断感知<\/a>/);
   assert.match(html, /href="\/ai"/);
   assert.match(html, /href="\/facilities"/);
-  assert.match(html, /href="\/digital-prototype"/);
+  assert.match(html, /href="\/#prototype-workspace"/);
   assert.equal((html.match(/href="\/knowledge-graph"[^>]*>知识图谱<\/a>/g) ?? []).length, 2, 'desktop and mobile navigation must use the 知识图谱 primary label');
   assert.doesNotMatch(html, /知识智能/);
   assert.match(html, /fusiondigital-mark\.png/);
@@ -203,15 +203,12 @@ test('server-renders the FusionDigital community portal', async () => {
   assert.match(html, /class="brandFusion">Fusion/);
   assert.match(html, /class="brandDigital">Digital/);
   assert.match(html, /TOOLCHAINS/);
-  assert.match(html, /data-three-viewer="paramak-tokamak-demo"/);
-  assert.match(html, /id="device-3d"/);
-  assert.match(html, /MANIFEST-DRIVEN TOKAMAK PACKAGE/);
-  assert.match(html, /paramak-tokamak-demo-poster\.png/);
-  assert.match(html, /PF COILS \/ CASES/);
-  assert.match(html, /DEVICE PACKAGE VIEWER/);
-  assert.match(html, /MANIFEST-DRIVEN DIGITAL ASSET/);
-  assert.match(html, /DEVICE-AGNOSTIC \/ LICENCE-AWARE PACKAGE CONTRACT/);
-  assert.match(html, /启动装置数据包查看器/);
+  assert.equal((html.match(/id="prototype-workspace"/g) ?? []).length, 1);
+  assert.match(html, /class="prototypePage prototypePage--embedded"/);
+  assert.match(html, /data-three-viewer="paramak-full-device"/);
+  assert.match(html, /装置、三维与 EFIT 联动/);
+  assert.match(html, /EXL(?:‑|-)?50U 2026 升级版/);
+  assert.match(html, /ITER 教育简化模型/);
   assert.match(html, /搜索名称、ID 或工程标签/);
   assert.doesNotMatch(html, /class="tokamakCadTrust"|class="tokamakCadFootnotes"/);
   assert.match(html, /data-echart="fusion-twin-system-map"/);
@@ -277,16 +274,12 @@ test('server-renders the FusionDigital community portal', async () => {
   assert.doesNotMatch(html, /发电系统|POWER SYSTEMS|本质安全/);
 });
 
-test('server-renders the public full-device digital-prototype workspace', async () => {
-  const html = await htmlFor('/digital-prototype');
-  assert.match(html, /DIGITAL PROTOTYPE \/ 3D \+ EFIT/);
-  assert.match(html, /数字样机工作台/);
-  assert.match(html, /href="\/digital-prototype"[^>]*class="active"|class="active"[^>]*href="\/digital-prototype"/);
+test('homepage owns the public full-device digital-prototype workspace', async () => {
+  const html = await htmlFor('/');
   assert.equal((html.match(/id="prototype-workspace"/g) ?? []).length, 1);
-  assert.ok(html.indexOf('id="prototype-workspace"') < html.indexOf('PLATFORM INTEGRATION'),
-    'the working interface must appear before integration and architecture guidance');
+  assert.ok(html.indexOf('id="prototype-workspace"') < html.indexOf('data-echart="fusion-twin-system-map"'),
+    'the working interface must replace the former preview before the system map');
   assert.match(html, /装置、三维与 EFIT 联动/);
-  assert.match(html, /href="\/platform#contracts"/);
   assert.match(html, /data-three-viewer="paramak-full-device"/);
   assert.match(html, /Paramak/);
   assert.match(html, /EXL(?:‑|-)?50U 2026 升级版/);
@@ -375,6 +368,12 @@ test('server-renders the public full-device digital-prototype workspace', async 
   assert.match(manifest.assets.webModel.sha256, /^[A-F0-9]{64}$/);
   assert.ok(manifest.coverage.notIncluded.includes('central solenoid'));
   assert.match(manifest.disclaimer, /not an engineering model of ITER, EXL-50U/);
+});
+
+test('legacy digital-prototype route redirects to the homepage workspace anchor', async () => {
+  const response = await render('/digital-prototype');
+  assert.ok([307, 308].includes(response.status));
+  assert.match(response.headers.get('location') ?? '', /\/#prototype-workspace$/);
 });
 
 test('server-renders the consolidated platform architecture and technical roadmap', async () => {

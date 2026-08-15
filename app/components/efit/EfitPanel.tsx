@@ -34,7 +34,7 @@ export default function EfitPanel({
   className = '',
   title,
 }: EfitPanelProps) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const panelTitle = title ?? t('efit.title');
   const snapshot = useEfitStore(store);
   const initializedRef = useRef(false);
@@ -84,6 +84,31 @@ export default function EfitPanel({
     activeGeometry?.limiterRzM,
     frame ? { rM: frame.rAxisM, zM: frame.zAxisM } : undefined,
   );
+  const qualityLabel = quality
+    ? quality.state === 'good' ? t('efit.good') : quality.state === 'warning' ? t('efit.warning') : t('efit.invalid')
+    : '';
+  const qualityDetail = quality
+    ? [t('efit.quality'), qualityLabel, ...quality.messages].filter(Boolean).join(' · ')
+    : undefined;
+  const topologyLabel = topology ? t(efitTopologyMessageKey(topology.kind)) : t('efit.topology.unknown');
+  const topologyXCount = topology?.xPoints.length ?? graphBoundaryXPoints.length;
+  const topologyDetail = (topology || topologyGraph)
+    ? [
+        `${t('efit.topology')}: ${topologyLabel}`,
+        topology?.kind === 'near-double-null' ? t('efit.nearDoubleHelp') : null,
+        topologyGraph
+          ? `${t('efit.graphSummary', { boundary: graphBoundaryXPoints.length, candidate: graphCandidateXPoints.length, branches: topologyGraph.edges.length })} · ${graphIsPartial ? t('efit.graphPartialHelp') : t('efit.graphValidHelp')}`
+          : null,
+        topology && divertorRegion.state !== 'unavailable'
+          ? `${t('efit.boundaryRegion')}: ${divertorRegion.state === 'filled' ? t('efit.reviewedClosed') : t('efit.wireframeOnly')} · ${divertorRegion.message}`
+          : null,
+      ].filter(Boolean).join(' · ')
+    : undefined;
+  const gapLabel = snapshot.gapNotice
+    ? snapshot.gapNotice.missingCount
+      ? `${t('efit.missingFrames', { count: snapshot.gapNotice.missingCount })} · ${snapshot.gapNotice.afterMs}–${snapshot.gapNotice.beforeMs} ms`
+      : t('efit.dataGap', { after: snapshot.gapNotice.afterMs, before: snapshot.gapNotice.beforeMs })
+    : null;
 
   return (
     <section
@@ -94,9 +119,8 @@ export default function EfitPanel({
     >
       <header className="efitPanelHeader">
         <div>
-          <span className="efitEyebrow">EXL-50U · EQUILIBRIUM RECONSTRUCTION</span>
+          <span className="efitEyebrow">EXL-50U · EFIT</span>
           <h2 id="efit-panel-heading">{panelTitle}</h2>
-          <p>{t('efit.description')}</p>
         </div>
         <label className="efitShotSelect">
           <span>{t('efit.shot')}</span>
@@ -107,7 +131,9 @@ export default function EfitPanel({
           >
             {!snapshot.manifest && <option value="">{t('efit.loading')}</option>}
             {snapshot.manifest?.shots.map((shot) => (
-              <option key={shot.shot} value={shot.shot}>{efitShotOptionLabel(shot)}</option>
+              <option key={shot.shot} value={shot.shot}>
+                {efitShotOptionLabel(shot, (count) => t('efit.frames', { count: count.toLocaleString(locale) }))}
+              </option>
             ))}
           </select>
         </label>
@@ -117,40 +143,24 @@ export default function EfitPanel({
         {snapshot.status !== 'ready' && snapshot.status !== 'idle' && snapshot.status !== 'error' && (
           <span className="efitStatusPill isLoading">{snapshot.status === 'loading-index' ? t('efit.loadingIndex') : snapshot.status === 'loading-shot' ? t('efit.loadingShot') : t('efit.loadingFrame')}</span>
         )}
-        {quality && <span className={`efitStatusPill quality-${quality.state}`}>{t('efit.quality')} · {quality.state === 'good' ? t('efit.good') : quality.state === 'warning' ? t('efit.warning') : t('efit.invalid')}</span>}
+        {quality && <span className={`efitStatusPill quality-${quality.state}`} title={qualityDetail} aria-label={qualityDetail}>{qualityLabel}</span>}
         {snapshot.activeShot !== null && !activeGeometry && (
           <span className="efitStatusPill quality-invalid">{t('efit.geometryMissing')}</span>
         )}
-        {topology && (
+        {(topology || topologyGraph) && (
           <span
-            className={`efitStatusPill topology-${topology.kind}`}
-            title={topology.kind === 'near-double-null' ? t('efit.nearDoubleHelp') : undefined}
+            className={`efitStatusPill topology-${topology?.kind ?? 'unknown'}`}
+            title={topologyDetail}
+            aria-label={topologyDetail}
           >
-            {t('efit.topology')} · {t(efitTopologyMessageKey(topology.kind))} · X {topology.xPoints.length}
-          </span>
-        )}
-        {topologyGraph && (
-          <span
-            className={`efitStatusPill ${graphIsPartial ? 'divertor-region-wireframe' : 'quality-good'}`}
-            title={graphIsPartial ? t('efit.graphPartialHelp') : t('efit.graphValidHelp')}
-          >
-            {t('efit.graphSummary', { boundary: graphBoundaryXPoints.length, candidate: graphCandidateXPoints.length, branches: topologyGraph.edges.length })}
-          </span>
-        )}
-        {topology && divertorRegion.state !== 'unavailable' && (
-          <span
-            className={`efitStatusPill divertor-region-${divertorRegion.state}`}
-            title={divertorRegion.message}
-          >
-            {t('efit.boundaryRegion')} · {divertorRegion.state === 'filled' ? t('efit.reviewedClosed') : t('efit.wireframeOnly')}
+            {topologyLabel} · X{topologyXCount}
           </span>
         )}
         {snapshot.gapNotice && (
-          <span className="efitStatusPill isWarning">
-            {t('efit.dataGap', { after: snapshot.gapNotice.afterMs, before: snapshot.gapNotice.beforeMs })}{snapshot.gapNotice.missingCount ? ` · ${t('efit.missingFrames', { count: snapshot.gapNotice.missingCount })}` : ''}
+          <span className="efitStatusPill isWarning" title={snapshot.gapNotice.reason}>
+            {gapLabel}
           </span>
         )}
-        {quality?.messages.map((message) => <span className="efitStatusText" key={message}>{message}</span>)}
         {snapshot.error && (
           <span className="efitError" role="alert">
             {snapshot.error}
@@ -173,12 +183,12 @@ export default function EfitPanel({
       </div>
 
       <div className="efitChartGrid">
-        <article className="efitChartCard efitEquilibriumCard">
-          <div className="efitCardHeading"><span>01</span><div><h3>{t('efit.equilibriumCard')}</h3><p>{t('efit.equilibriumCardCopy')}</p></div></div>
+        <article className="efitChartCard efitEquilibriumCard" title={t('efit.equilibriumCardCopy')} aria-label={`${t('efit.equilibriumCard')}. ${t('efit.equilibriumCardCopy')}`}>
+          <div className="efitCardHeading"><span>01</span><div><h3>{t('efit.equilibriumCard')}</h3></div></div>
           <EfitEquilibriumChart frame={frame} geometry={activeGeometry} />
         </article>
-        <article className="efitChartCard efitSignalsCard">
-          <div className="efitCardHeading"><span>02</span><div><h3>{t('efit.timelineCard')}</h3><p>{t('efit.timelineCardCopy')}</p></div></div>
+        <article className="efitChartCard efitSignalsCard" title={t('efit.timelineCardCopy')} aria-label={`${t('efit.timelineCard')}. ${t('efit.timelineCardCopy')}`}>
+          <div className="efitCardHeading"><span>02</span><div><h3>{t('efit.timelineCard')}</h3></div></div>
           <EfitSignalsChart timeline={snapshot.timeline} currentTimeMs={snapshot.currentTimeMs} onSeekTimeMs={(timeMs) => void store.actions.seekTimeMs(timeMs)} />
         </article>
       </div>

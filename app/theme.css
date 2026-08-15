@@ -27,15 +27,15 @@
   --color-on-inverse-muted: #c6beb3;
   --color-on-inverse-subtle: #999f99;
   --color-inverse-border: #515b54;
-  --color-workbench: #252a27;
-  --color-workbench-raised: #303632;
-  --color-workbench-panel: #1e2421;
-  --color-workbench-ink: #f7f1e8;
-  --color-workbench-muted: #b6aea3;
-  --color-workbench-line: #505a53;
-  --color-workbench-accent: #df8b68;
-  --color-workbench-info: #b4c7b8;
-  --color-workbench-violet: #c0b1c5;
+  --color-workbench: #eee8de;
+  --color-workbench-raised: #fffdf8;
+  --color-workbench-panel: #e5ded3;
+  --color-workbench-ink: #2f2b27;
+  --color-workbench-muted: #706960;
+  --color-workbench-line: #c8bcaf;
+  --color-workbench-accent: #c86545;
+  --color-workbench-info: #657c6f;
+  --color-workbench-violet: #7d7085;
   --color-grid: rgb(82 104 91 / 12%);
   --color-glass: rgb(255 253 248 / 86%);
   --shadow-sm: 0 1px 2px rgb(47 43 39 / 7%), 0 8px 24px rgb(47 43 39 / 5%);
@@ -190,9 +190,6 @@ html .portalPage {
   --fd-line: var(--color-border);
   --fd-muted: var(--color-ink-muted);
 }
-html .portalPage .prototypePortalCta { color: var(--color-ink); background: var(--color-surface-muted); border-color: var(--color-border); }
-html .portalPage .prototypePortalCta p { color: var(--color-accent-strong); }
-html .portalPage .prototypePortalCta > a { color: var(--color-on-inverse); background: var(--color-accent); box-shadow: var(--shadow-sm); }
 html .portalPage .portalHero { color: var(--color-ink); background: radial-gradient(circle at 73% 32%,var(--color-info-soft),var(--color-canvas) 48%); }
 html .portalPage .portalHero::before { background-image: linear-gradient(var(--color-grid) 1px,transparent 1px),linear-gradient(90deg,var(--color-grid) 1px,transparent 1px); }
 html .portalPage .kicker,html .portalPage .heroLead { color: var(--color-ink-muted); }
@@ -223,7 +220,7 @@ html .portalPage .portalRoadmap > img { background: var(--color-surface-raised);
 html .portalPage .communityBand { color: var(--color-ink); background: linear-gradient(120deg,var(--color-accent-soft),var(--color-surface-muted)); }
 html .portalPage .communityBand > div:last-child p { color: var(--color-ink-muted); }
 
-/* The CAD viewport remains dark for depth perception; its chrome follows theme tokens. */
+/* The workbench follows the selected theme; the WebGL scene keeps its own depth-aware palette. */
 html .prototypePage {
   --pt-bg: var(--color-workbench);
   --pt-panel: var(--color-workbench-raised);
@@ -242,27 +239,34 @@ html .prototypePage .prototypeHeroStatus { border-color: var(--color-workbench-l
 html .prototypePage .prototypeHeroStatus span { border-color: var(--color-workbench-line); }
 html .prototypePage .prototypeHeroStatus b { color: var(--color-workbench-ink); }
 html .prototypePage .prototypePlatformLink { background: var(--color-workbench-raised); border-color: var(--color-workbench-line); }
-html .prototypePage .multiDeviceSection { color: var(--color-workbench-ink); background: radial-gradient(circle at 80% 10%,color-mix(in srgb,var(--color-workbench-info) 14%,transparent),transparent 32%),var(--color-workbench); }
-html .prototypePage .multiDeviceModes,html .prototypePage .deviceSelector,html .prototypePage .deviceStage,html .prototypePage .devicePreviewPolicy { border-color: var(--color-workbench-line); }
-html .prototypePage .multiDeviceModes button,html .prototypePage .deviceSelector button { color: var(--color-workbench-muted); background: var(--color-workbench-panel); }
-html .prototypePage .multiDeviceModes button.active { color: #1f2521; background: var(--color-workbench-info); }
-html .prototypePage .deviceSelector { background: var(--color-workbench-line); }
-html .prototypePage .deviceSelector button.active { background: var(--color-workbench-raised); }
-html .prototypePage .deviceSelector strong,html .prototypePage .deviceAuthority h3 { color: var(--color-workbench-ink); }
-html .prototypePage .deviceStage,html .prototypePage .devicePreviewPolicy,html .prototypePage .devicePaneSeparator { background: var(--color-workbench); }
-html .prototypePage .deviceAuthority,html .prototypePage .devicePaneSeparator,html .prototypePage .deviceViewport .tokamakCadFootnotes { border-color: var(--color-workbench-line); }
-html .prototypePage .deviceAuthority p,html .prototypePage .deviceAuthority li,html .prototypePage .devicePreviewPolicy span { color: var(--color-workbench-muted); }
-html .prototypePage .devicePhysicsPanel { scrollbar-color: var(--color-workbench-line) var(--color-workbench); background: var(--color-workbench); }
-html .prototypePage .turntableViewer { background: radial-gradient(circle at 50% 42%,color-mix(in srgb,var(--color-workbench-accent) 18%,transparent),var(--color-workbench) 58%); }
-html .prototypePage .turntableModeControls,html .prototypePage .turntableControls,html .prototypePage .turntableDetailHint,html .prototypePage .turntableNotice { border-color: var(--color-workbench-line); background: var(--color-workbench-panel); }
-html .prototypePage .turntableModeGroup { background: var(--color-workbench); }
-html .prototypePage .turntableModeGroup > span,html .prototypePage .turntableModeReadout span,html .prototypePage .turntableControls label,html .prototypePage .turntableDetailHint { color: var(--color-workbench-muted); }
-html .prototypePage .turntableModeGroup button { color: var(--color-workbench-muted); border-color: var(--color-workbench-line); background: var(--color-workbench-raised); }
-html .prototypePage .turntableModeGroup button:hover,html .prototypePage .turntableModeGroup button:focus-visible { color: var(--color-workbench-info); border-color: var(--color-workbench-info); }
-html .prototypePage .turntableModeGroup button.active { color: #241712; border-color: var(--color-workbench-accent); background: var(--color-workbench-accent); }
-html .prototypePage .turntableHud,html .prototypePage .turntableModeReadout { border-color: var(--color-workbench-line); background: color-mix(in srgb,var(--color-workbench-panel) 90%,transparent); }
-html .prototypePage .turntableModeReadout b { color: var(--color-workbench-ink); }
-html .prototypePage .turntableControls button { color: var(--color-workbench-accent); border-color: var(--color-workbench-line); background: var(--color-workbench-raised); }
+html :where(.prototypePage,.portalPage) .multiDeviceSection { color: var(--color-workbench-ink); background: radial-gradient(circle at 80% 10%,color-mix(in srgb,var(--color-workbench-info) 14%,transparent),transparent 32%),var(--color-workbench); }
+html :where(.prototypePage,.portalPage) .multiDeviceModes,html :where(.prototypePage,.portalPage) .deviceSelector,html :where(.prototypePage,.portalPage) .deviceStage,html :where(.prototypePage,.portalPage) .devicePreviewPolicy { border-color: var(--color-workbench-line); }
+html :where(.prototypePage,.portalPage) .multiDeviceModes button,html :where(.prototypePage,.portalPage) .deviceSelector button { color: var(--color-workbench-muted); background: var(--color-workbench-panel); }
+html :where(.prototypePage,.portalPage) .multiDeviceModes button.active { color: #1f2521; background: var(--color-workbench-info); }
+html :where(.prototypePage,.portalPage) .deviceSelector { background: var(--color-workbench-line); }
+html :where(.prototypePage,.portalPage) .deviceSelector button.active { background: var(--color-workbench-raised); }
+html :where(.prototypePage,.portalPage) .deviceSelector strong,html :where(.prototypePage,.portalPage) .deviceAuthority h3 { color: var(--color-workbench-ink); }
+html :where(.prototypePage,.portalPage) .deviceStage,html :where(.prototypePage,.portalPage) .devicePreviewPolicy,html :where(.prototypePage,.portalPage) .devicePaneSeparator { background: var(--color-workbench); }
+html :where(.prototypePage,.portalPage) .deviceAuthority,html :where(.prototypePage,.portalPage) .devicePaneSeparator,html :where(.prototypePage,.portalPage) .deviceViewport .tokamakCadFootnotes { border-color: var(--color-workbench-line); }
+html :where(.prototypePage,.portalPage) .deviceAuthority p,html :where(.prototypePage,.portalPage) .deviceAuthority li,html :where(.prototypePage,.portalPage) .devicePreviewPolicy span { color: var(--color-workbench-muted); }
+html :where(.prototypePage,.portalPage) .devicePhysicsPanel { scrollbar-color: var(--color-workbench-line) var(--color-workbench); background: var(--color-workbench); }
+html :where(.prototypePage,.portalPage) .devicePaneSeparator span { background: color-mix(in srgb,var(--color-workbench-info) 52%,transparent); box-shadow: 0 0 0 1px var(--color-workbench),0 0 14px color-mix(in srgb,var(--color-workbench-info) 14%,transparent); }
+html :where(.prototypePage,.portalPage) .devicePaneSeparator:hover span,html :where(.prototypePage,.portalPage) .devicePaneSeparator:focus-visible span,html :where(.prototypePage,.portalPage) .deviceExperienceLayout.isResizing .devicePaneSeparator span { background: var(--color-workbench-info); box-shadow: 0 0 0 1px var(--color-workbench),0 0 18px color-mix(in srgb,var(--color-workbench-info) 32%,transparent); }
+html :where(.prototypePage,.portalPage) .controlledDevicePlaceholder { color: var(--color-workbench-ink); background: radial-gradient(circle at 50% 46%,var(--color-info-soft),var(--color-workbench) 58%); }
+html :where(.prototypePage,.portalPage) .controlledDevicePlaceholder.controlled { background: radial-gradient(circle at 50% 46%,var(--color-accent-soft),var(--color-workbench) 60%); }
+html :where(.prototypePage,.portalPage) .controlledDevicePlaceholder.restricted { background: radial-gradient(circle at 50% 46%,color-mix(in srgb,var(--color-violet) 18%,var(--color-workbench)),var(--color-workbench) 60%); }
+html :where(.prototypePage,.portalPage) .controlledDevicePlaceholder > span,html :where(.prototypePage,.portalPage) .controlledStats b { color: var(--color-workbench-muted); }
+html :where(.prototypePage,.portalPage) .controlledStats b { border-color: var(--color-workbench-line); background: color-mix(in srgb,var(--color-workbench-raised) 72%,transparent); }
+html :where(.prototypePage,.portalPage) .turntableViewer { background: radial-gradient(circle at 50% 42%,color-mix(in srgb,var(--color-workbench-accent) 18%,transparent),var(--color-workbench) 58%); }
+html :where(.prototypePage,.portalPage) .turntableModeControls,html :where(.prototypePage,.portalPage) .turntableControls,html :where(.prototypePage,.portalPage) .turntableDetailHint,html :where(.prototypePage,.portalPage) .turntableNotice { border-color: var(--color-workbench-line); background: var(--color-workbench-panel); }
+html :where(.prototypePage,.portalPage) .turntableModeGroup { background: var(--color-workbench); }
+html :where(.prototypePage,.portalPage) .turntableModeGroup > span,html :where(.prototypePage,.portalPage) .turntableModeReadout span,html :where(.prototypePage,.portalPage) .turntableControls label,html :where(.prototypePage,.portalPage) .turntableDetailHint { color: var(--color-workbench-muted); }
+html :where(.prototypePage,.portalPage) .turntableModeGroup button { color: var(--color-workbench-muted); border-color: var(--color-workbench-line); background: var(--color-workbench-raised); }
+html :where(.prototypePage,.portalPage) .turntableModeGroup button:hover,html :where(.prototypePage,.portalPage) .turntableModeGroup button:focus-visible { color: var(--color-workbench-info); border-color: var(--color-workbench-info); }
+html :where(.prototypePage,.portalPage) .turntableModeGroup button.active { color: #241712; border-color: var(--color-workbench-accent); background: var(--color-workbench-accent); }
+html :where(.prototypePage,.portalPage) .turntableHud,html :where(.prototypePage,.portalPage) .turntableModeReadout { border-color: var(--color-workbench-line); background: color-mix(in srgb,var(--color-workbench-panel) 90%,transparent); }
+html :where(.prototypePage,.portalPage) .turntableModeReadout b { color: var(--color-workbench-ink); }
+html :where(.prototypePage,.portalPage) .turntableControls button { color: var(--color-workbench-accent); border-color: var(--color-workbench-line); background: var(--color-workbench-raised); }
 
 @media (prefers-reduced-motion:no-preference) {
   body,.siteNav,.siteFooter,.portalPage,.prototypePage { transition: color 160ms ease,background-color 160ms ease,border-color 160ms ease; }

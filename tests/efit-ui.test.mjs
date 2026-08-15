@@ -13,7 +13,7 @@ async function source(path) {
 
 function cssRule(css, selector) {
   const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const matches = [...css.matchAll(new RegExp(`(?:^|})\\s*${escaped}\\{([^}]*)\\}`, 'g'))];
+  const matches = [...css.matchAll(new RegExp(`(?:^|})\\s*${escaped}\\s*\\{([^}]*)\\}`, 'g'))];
   assert.ok(matches.length, `missing CSS rule ${selector}`);
   return matches.map((match) => match[1]).join(';');
 }
@@ -157,6 +157,37 @@ test('EFIT panel exposes shot selection, real time scrubbing, playback and quali
   assert.match(messages, /'efit\.shot': '放电炮号'/);
   assert.match(equilibrium, /LCFS/);
   assert.match(equilibrium, /t\('efit\.chart\.magneticAxis'\)/);
+});
+
+test('EFIT sidebar keeps operational evidence compact and uses designed tabular numerals', async () => {
+  const panel = await source('app/components/efit/EfitPanel.tsx');
+  const shotGeometry = await source('app/components/efit/shot-geometry.ts');
+  const css = await source('app/components/efit/efit-panel.css');
+
+  assert.match(panel, /EXL-50U · EFIT/);
+  assert.doesNotMatch(panel, /<p>\{t\('efit\.description'\)\}<\/p>/,
+    'the sidebar header should not spend vertical space on governance copy');
+  assert.doesNotMatch(panel, /quality\?\.messages\.map/,
+    'frame-quality diagnostics belong in the compact quality tooltip, not the primary visual rail');
+  assert.match(panel, /title=\{qualityDetail\}/);
+  assert.match(panel, /title=\{topologyDetail\}/);
+  assert.match(panel, /\{topologyLabel\} · X\{topologyXCount\}/);
+  assert.match(panel, /t\('efit\.missingFrames'/);
+  assert.match(shotGeometry, /return `#\$\{shot\.shot\} · \$\{formatFrames\(displayableFrames\)\}`/,
+    'shot options should contain only the shot identifier and usable frame count');
+
+  assert.match(cssRule(css, '.efitPanel'), /--efit-numeric-font:/);
+  for (const selector of ['.efitMetricStrip strong', '.efitScrubberLabels']) {
+    const declarations = cssRule(css, selector);
+    assert.match(declarations, /font-(?:family|variant-numeric):[^;]*(?:var\(--efit-numeric-font\)|tabular-nums)/,
+      `${selector} must use the EFIT numeric typography contract`);
+  }
+  assert.match(css, /\.efitTimeReadout strong,\s*\.efitTimeReadout span\s*\{[^}]*font-family:\s*var\(--efit-numeric-font\)/s);
+  const lightPanel = cssRule(css, ":root[data-theme='light'] .efitPanel");
+  assert.match(lightPanel, /background:/);
+  assert.match(lightPanel, /var\(--color-surface-raised\)/);
+  assert.match(cssRule(css, ":root[data-theme='light'] .efitMetricStrip"), /var\(--color-surface-raised\)/);
+  assert.match(cssRule(css, ":root[data-theme='light'] .efitTransport"), /var\(--color-surface-raised\)/);
 });
 
 test('EFIT Ip and magnetic-axis curves break across missing source frames', async () => {
