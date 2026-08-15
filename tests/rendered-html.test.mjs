@@ -577,6 +577,9 @@ test('ships and server-renders the evidence-first knowledge graph', async () => 
   assert.match(html, /href="\/data\/fusion-knowledge-graph\.json"/);
   assert.match(html, /节点上限/);
   assert.match(html, /1 跳 · 直接关系/);
+  assert.match(html, /围绕图谱持续提问/);
+  assert.match(html, /多轮上下文保存在本设备/);
+  assert.match(html, /aria-label="FusionDigital 对话记录"/);
   assert.doesNotMatch(html, /关系主张|查看数据合同与接入路线|04 \/ GOVERNANCE|图谱是证据索引/);
 
   const physicsModule = await htmlFor('/knowledge-graph/modules/physics');
@@ -612,7 +615,9 @@ test('ships and server-renders evidence-grounded knowledge search', async () => 
   const html = await htmlFor('/search');
   assert.match(html, /AI-NATIVE KNOWLEDGE/);
   assert.match(html, /确定性检索/);
-  assert.match(html, /询问 FusionDigital/);
+  assert.match(html, /检索后继续追问/);
+  assert.match(html, /证据对话/);
+  assert.match(html, /发送问题/);
   assert.match(html, /证据不足则拒答/);
   assert.match(html, /href="\/platform#contracts"/);
   assert.doesNotMatch(html, /03 \/ TRUST BOUNDARY|当前能力边界/);

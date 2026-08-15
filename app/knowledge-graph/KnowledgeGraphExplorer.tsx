@@ -4,6 +4,7 @@ import type { EChartsCoreOption } from 'echarts/core';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import ScientificChart from '@/app/components/charts/ScientificChart';
 import { useChartTheme, type ChartThemePalette } from '@/app/components/charts/chart-theme';
+import KnowledgeChat from '@/app/components/knowledge-chat/KnowledgeChat';
 import type { GraphQueryResponse, KnowledgeGraphNode } from './types';
 
 type ExplorerProps = {
@@ -159,7 +160,7 @@ export default function KnowledgeGraphExplorer({ initial, devices }: ExplorerPro
     if (event.dataType === 'node' && event.data?.id) setSelectedId(event.data.id);
   }
 
-  return <section className="kgWorkspace" aria-label="FusionDigital 交互式知识图谱工作区">
+  return <><section className="kgWorkspace" aria-label="FusionDigital 交互式知识图谱工作区">
     <aside className="kgFilters">
       <p className="kgPanelIndex">01 / QUERY</p>
       <h2>从问题进入证据网络</h2>
@@ -216,5 +217,16 @@ export default function KnowledgeGraphExplorer({ initial, devices }: ExplorerPro
         {selected.tags && selected.tags.length > 0 && <div className="kgTags">{selected.tags.slice(0, 9).map((tag) => <span key={tag}>#{tag}</span>)}</div>}
       </> : <p className="kgDescription">选择一个节点查看实体详情、关系和原始证据。</p>}
     </aside>
-  </section>;
+  </section><KnowledgeChat
+    context={{
+      path: '/knowledge-graph',
+      title: 'FusionDigital 知识图谱',
+      domain: selected?.domain,
+      focusId: selected?.id,
+      focusLabel: selected?.label,
+      focusDescription: selected ? nodeDescription(selected) : undefined,
+    }}
+    title="围绕图谱持续提问"
+    titleEn="Continue from the knowledge graph"
+  /></>;
 }

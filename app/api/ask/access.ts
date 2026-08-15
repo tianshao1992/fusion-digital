@@ -6,7 +6,7 @@ export type AskAccess = {
   reserved: boolean;
 };
 
-export async function authorizeAsk(input: { requestedTokens: number; model: string; questionLength: number; contextEntries: number }): Promise<AskAccess> {
+export async function authorizeAsk(input: { requestedTokens: number; model: string; questionLength: number; contextEntries: number; historyTurns?: number; conversationId?: string }): Promise<AskAccess> {
   const requestId = crypto.randomUUID();
   const { getChatGPTUser } = await import("@/app/chatgpt-auth");
   const identity = await getChatGPTUser();
@@ -26,7 +26,7 @@ export async function authorizeAsk(input: { requestedTokens: number; model: stri
       model: input.model,
       requestedTokens: input.requestedTokens,
       quota,
-      metadata: { questionLength: input.questionLength, contextEntries: input.contextEntries },
+      metadata: { questionLength: input.questionLength, contextEntries: input.contextEntries, historyTurns: input.historyTurns ?? 0, conversationId: input.conversationId ?? null },
     });
     await safeAudit({ actorUserId: principal.user.id, requestId, outcome: "success", action: "knowledge.ask.reserve", model: input.model });
     return { authenticated: true, userId: principal.user.id, requestId, quotaPolicy: "database-ledger-v1", reserved: true };

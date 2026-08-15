@@ -51,6 +51,10 @@ test("ask route enforces claim-level citations and conservative quota accounting
   assert.match(ask, /invalidClaim/);
   assert.match(ask, /stripModelCitationMarkers/);
   assert.match(ask, /new TextEncoder\(\)\.encode\(value\)\.byteLength/);
+  assert.match(ask, /normalizeHistory/);
+  assert.match(ask, /buildRetrievalQuery/);
+  assert.match(ask, /最近对话（仅用于理解连续提问，不是事实来源）/);
+  assert.match(ask, /conversationId/);
   assert.match(usage, /expiresAt/);
   assert.match(usage, /actualTokens > existing\.reservedTokens/);
 });
