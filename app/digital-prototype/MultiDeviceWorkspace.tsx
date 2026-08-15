@@ -49,7 +49,9 @@ function DeviceViewer({
     showDownloadActions={false}
     showFootnotes={false}
     securityNotice={device.statement}
-    appearancePreset={device.id === 'exl-50u-2026-upgrade' ? 'industrial-silver-v1' : 'semantic'}
+    appearancePreset={device.id === 'exl-50u-2026-upgrade' || device.id === 'iter-educational-model'
+      ? 'industrial-silver-v1'
+      : 'semantic'}
     defaultClipping={Boolean(efitOverlay)}
     defaultClipAxis={efitOverlay ? 'z' : 'x'}
     defaultClipOffset={efitOverlay ? 0.08 : 0}

@@ -23,14 +23,19 @@ export type DeviceWebModel = {
   format: string;
   sha256: string;
   bytes: number;
+  triangles?: number;
+  vertices?: number;
+  decodedGpuBytes?: number;
+  boundsMetres?: {
+    min: [number, number, number];
+    max: [number, number, number];
+  };
 };
 
 export type DeviceWebModelVariant = DeviceWebModel & {
   id: string;
   label: string;
   quality: 'preview' | 'high';
-  triangles?: number;
-  vertices?: number;
   default?: boolean;
 };
 
@@ -91,15 +96,53 @@ export type DeviceManifest = {
   disclaimer: string;
 };
 
+function isFiniteVector3(value: unknown): value is [number, number, number] {
+  return Array.isArray(value)
+    && value.length === 3
+    && value.every((coordinate) => typeof coordinate === 'number' && Number.isFinite(coordinate));
+}
+
+function isBoundsMetres(value: unknown): boolean {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const bounds = value as Record<string, unknown>;
+  const minimum = bounds.min;
+  const maximum = bounds.max;
+  if (!isFiniteVector3(minimum) || !isFiniteVector3(maximum)) return false;
+  return minimum.every((coordinate, axis) => coordinate < maximum[axis]);
+}
+
+function isSafePublicAssetPath(value: unknown): value is string {
+  return typeof value === 'string'
+    && (value.startsWith('/models/') || value.startsWith('/device-assets/exl50u-interactive/'))
+    && !value.includes('..')
+    && !value.includes('%')
+    && !value.includes('//')
+    && !/^[a-z]+:/i.test(value);
+}
+
+function hasValidOptionalModelMetadata(asset: Record<string, unknown>): boolean {
+  return (asset.triangles === undefined || (Number.isSafeInteger(asset.triangles) && Number(asset.triangles) > 0))
+    && (asset.vertices === undefined || (Number.isSafeInteger(asset.vertices) && Number(asset.vertices) > 0))
+    && (asset.decodedGpuBytes === undefined || (Number.isSafeInteger(asset.decodedGpuBytes) && Number(asset.decodedGpuBytes) > 0))
+    && (asset.boundsMetres === undefined || isBoundsMetres(asset.boundsMetres));
+}
+
 function isAsset(value: unknown): boolean {
   if (!value || typeof value !== 'object') return false;
   const asset = value as Record<string, unknown>;
-  return typeof asset.path === 'string'
-    && (asset.path.startsWith('/models/') || asset.path.startsWith('/device-assets/exl50u-interactive/'))
-    && !asset.path.includes('..')
-    && !asset.path.includes('%')
-    && !asset.path.includes('//')
+  return isSafePublicAssetPath(asset.path)
     && typeof asset.format === 'string'
+    && typeof asset.sha256 === 'string'
+    && /^[a-f0-9]{64}$/i.test(asset.sha256)
+    && Number.isInteger(asset.bytes)
+    && Number(asset.bytes) > 0
+    && hasValidOptionalModelMetadata(asset);
+}
+
+function isAssetWithoutFormat(value: unknown): boolean {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const asset = value as Record<string, unknown>;
+  return isSafePublicAssetPath(asset.path)
     && typeof asset.sha256 === 'string'
     && /^[a-f0-9]{64}$/i.test(asset.sha256)
     && Number.isInteger(asset.bytes)
@@ -118,7 +161,10 @@ function validateWebModels(value: unknown, compatibilityAsset: DeviceWebModel) {
   const ids = new Set<string>();
   let defaultCount = 0;
   const previewAssets: DeviceWebModelVariant[] = [];
-  const allowedKeys = new Set(['id', 'label', 'quality', 'path', 'format', 'sha256', 'bytes', 'triangles', 'vertices', 'default']);
+  const allowedKeys = new Set([
+    'id', 'label', 'quality', 'path', 'format', 'sha256', 'bytes',
+    'triangles', 'vertices', 'decodedGpuBytes', 'boundsMetres', 'default',
+  ]);
 
   for (const candidate of value) {
     if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) throw new Error('装置清单包含无效的 LOD 资产。');
@@ -133,7 +179,9 @@ function validateWebModels(value: unknown, compatibilityAsset: DeviceWebModel) {
       || !['preview', 'high'].includes(String(record.quality))
       || (record.default !== undefined && typeof record.default !== 'boolean')
       || (record.triangles !== undefined && (!Number.isInteger(record.triangles) || Number(record.triangles) <= 0))
-      || (record.vertices !== undefined && (!Number.isInteger(record.vertices) || Number(record.vertices) <= 0))) {
+      || (record.vertices !== undefined && (!Number.isInteger(record.vertices) || Number(record.vertices) <= 0))
+      || (record.decodedGpuBytes !== undefined && (!Number.isSafeInteger(record.decodedGpuBytes) || Number(record.decodedGpuBytes) <= 0))
+      || (record.boundsMetres !== undefined && !isBoundsMetres(record.boundsMetres))) {
       throw new Error(`装置清单包含无效或重复的 LOD 资产：${String(record.id ?? 'unknown')}。`);
     }
     const asset = record as unknown as DeviceWebModelVariant;
@@ -147,11 +195,38 @@ function validateWebModels(value: unknown, compatibilityAsset: DeviceWebModel) {
   if (!sameAsset(compatibilityAsset, previewAssets[0])) throw new Error('兼容 webModel 必须与 preview LOD 完全一致。');
 }
 
+function manifestAssetPaths(manifest: DeviceManifest) {
+  return [
+    manifest.assets.webModel.path,
+    ...(manifest.assets.webModels?.map((asset) => asset.path) ?? []),
+    ...(manifest.assets.poster ? [manifest.assets.poster.path] : []),
+    ...(manifest.assets.sourceCad ? [manifest.assets.sourceCad.path] : []),
+  ];
+}
+
+function validateManifestAssetNamespace(manifest: DeviceManifest, manifestUrl: string) {
+  if (!isSafePublicAssetPath(manifestUrl) || !manifestUrl.endsWith('/model-manifest.json')) {
+    throw new Error('装置清单 URL 必须是规范的公开 model-manifest.json 路径。');
+  }
+  const packagePrefix = manifestUrl.slice(0, manifestUrl.lastIndexOf('/') + 1);
+  for (const assetPath of manifestAssetPaths(manifest)) {
+    const filename = assetPath.slice(packagePrefix.length);
+    if (!assetPath.startsWith(packagePrefix) || filename === '' || filename.includes('/')) {
+      throw new Error(`装置资产必须与清单位于同一精确包目录：${assetPath}`);
+    }
+  }
+}
+
+export type ParseDeviceManifestOptions = {
+  /** Enforces that every declared browser asset belongs to this manifest's exact package directory. */
+  manifestUrl?: string;
+};
+
 /**
  * Runtime validation intentionally checks the fields that cross the public trust boundary.
  * Full authoring validation is performed against the published JSON Schema in CI/data tooling.
  */
-export function parseDeviceManifest(value: unknown): DeviceManifest {
+export function parseDeviceManifest(value: unknown, options: ParseDeviceManifestOptions = {}): DeviceManifest {
   if (!value || typeof value !== 'object') throw new Error('装置清单不是有效的 JSON 对象。');
   const manifest = value as Partial<DeviceManifest>;
   if (!manifest.id || !manifest.title || !manifest.schemaVersion) throw new Error('装置清单缺少 id、title 或 schemaVersion。');
@@ -181,6 +256,8 @@ export function parseDeviceManifest(value: unknown): DeviceManifest {
   }
   if (!manifest.assets || !isAsset(manifest.assets.webModel)) throw new Error('装置清单缺少可加载的 webModel 资产。');
   if (manifest.assets.webModels !== undefined) validateWebModels(manifest.assets.webModels, manifest.assets.webModel);
+  if (manifest.assets.sourceCad !== undefined && !isAsset(manifest.assets.sourceCad)) throw new Error('装置清单包含无效的 sourceCad 资产。');
+  if (manifest.assets.poster !== undefined && !isAssetWithoutFormat(manifest.assets.poster)) throw new Error('装置清单包含无效的 poster 资产。');
   if (!Array.isArray(manifest.systems) || manifest.systems.length === 0) throw new Error('装置清单没有系统/部件映射。');
   const partIds = new Set<string>();
   const nodeNames = new Set<string>();
@@ -215,5 +292,7 @@ export function parseDeviceManifest(value: unknown): DeviceManifest {
     throw new Error('高清 LOD 缺少离散化精度或锐边法线声明。');
   }
   if (!manifest.disclaimer || manifest.disclaimer.trim().length < 30) throw new Error('装置清单缺少适用性边界声明。');
-  return manifest as DeviceManifest;
+  const parsedManifest = manifest as DeviceManifest;
+  if (options.manifestUrl) validateManifestAssetNamespace(parsedManifest, options.manifestUrl);
+  return parsedManifest;
 }

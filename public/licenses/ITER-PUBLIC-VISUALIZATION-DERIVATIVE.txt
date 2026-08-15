@@ -1,0 +1,18 @@
+ITER PUBLIC BROWSER-VISUALIZATION DERIVATIVE NOTICE
+
+The FusionDigital project owner explicitly authorized public delivery of this
+strongly simplified ITER visualization derivative on 2026-08-15.
+
+The delivered mesh is a non-authoritative browser visualization and performance
+test asset. It contains decimated triangles, display materials, stable component
+identifiers and release metadata only. It does not include source STEP/STP,
+B-Rep topology, PMI, authoritative dimensions, manufacturing tolerances, source
+assembly metadata or private download credentials.
+
+This notice records the project-owner authorization for the delivered web
+derivative. It does not claim endorsement, certification or authorship by the
+ITER Organization, and it grants no licence to undistributed source CAD.
+
+The visualization must not be used for manufacturing, dimensional verification,
+CAE, physics or safety decisions, configuration control, or reconstruction of
+the private source package.

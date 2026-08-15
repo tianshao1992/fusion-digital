@@ -114,7 +114,11 @@
         "path": { "type": "string", "pattern": "^/" },
         "format": { "type": "string" },
         "sha256": { "type": "string", "pattern": "^[A-Fa-f0-9]{64}$" },
-        "bytes": { "type": "integer", "minimum": 1 }
+        "bytes": { "type": "integer", "minimum": 1 },
+        "triangles": { "type": "integer", "minimum": 1 },
+        "vertices": { "type": "integer", "minimum": 1 },
+        "decodedGpuBytes": { "type": "integer", "minimum": 1 },
+        "boundsMetres": { "$ref": "#/$defs/boundsMetres" }
       },
       "additionalProperties": false
     },
@@ -141,7 +145,30 @@
         "bytes": { "type": "integer", "minimum": 1 },
         "triangles": { "type": "integer", "minimum": 1 },
         "vertices": { "type": "integer", "minimum": 1 },
+        "decodedGpuBytes": { "type": "integer", "minimum": 1 },
+        "boundsMetres": { "$ref": "#/$defs/boundsMetres" },
         "default": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "boundsMetres": {
+      "type": "object",
+      "required": ["min", "max"],
+      "properties": {
+        "min": {
+          "type": "array",
+          "prefixItems": [{ "type": "number" }, { "type": "number" }, { "type": "number" }],
+          "items": false,
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "max": {
+          "type": "array",
+          "prefixItems": [{ "type": "number" }, { "type": "number" }, { "type": "number" }],
+          "items": false,
+          "minItems": 3,
+          "maxItems": 3
+        }
       },
       "additionalProperties": false
     }

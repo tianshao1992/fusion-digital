@@ -1,0 +1,175 @@
+{
+  "$schema": "/models/device-manifest.schema.json",
+  "schemaVersion": "1.1",
+  "id": "iter-public-simplified-v1",
+  "title": "ITER public simplified browser visualization derivative",
+  "asOf": "2026-08-16",
+  "devicePackage": {
+    "kind": "public-simplified-derivative",
+    "deviceClass": "ITER educational full-device visualization derivative",
+    "authority": "illustrative",
+    "replacementContract": [
+      "project-owner authorization for public browser visualization",
+      "exactly 18 stable selectable component identities",
+      "single detail-prioritized Meshopt preview with no high-detail or source-CAD asset",
+      "metre-scale Y-up right-handed web coordinate frame",
+      "content hash, geometry budgets and non-engineering-use boundary"
+    ]
+  },
+  "access": {
+    "classification": "PUBLIC",
+    "redistributionAllowed": true,
+    "engineeringUseAllowed": false,
+    "statement": "Project-owner-authorized public simplified browser visualization derivative. Source STEP, B-Rep topology, authoritative dimensions, manufacturing metadata and high-detail engineering geometry remain private. This release does not claim ITER Organization endorsement."
+  },
+  "coordinateSystem": {
+    "linearUnit": "metre",
+    "upAxis": "Y",
+    "handedness": "right",
+    "sourceToWebScale": 1
+  },
+  "assets": {
+    "webModel": {
+      "path": "/models/iter-public-simplified/iter-public-simplified-preview.meshopt.glb",
+      "format": "glTF 2.0 binary + EXT_meshopt_compression + KHR_mesh_quantization; 16-bit position / 10-bit normal",
+      "bytes": 5149964,
+      "sha256": "BBA68F7C94AA606A941D3D678ABDA2EC0E0959EF6278D4A25B04D446884424C4",
+      "triangles": 399499,
+      "vertices": 738938,
+      "decodedGpuBytes": 10936437,
+      "boundsMetres": {
+        "min": [-15.01108, -13.01996, -14.89584],
+        "max": [15.01133, 16.20763, 14.95982]
+      }
+    }
+  },
+  "systems": [
+    {
+      "id": "central-solenoid",
+      "title": "中央螺线管",
+      "shortTitle": "CS",
+      "category": "pf",
+      "color": "#B98263",
+      "description": "用于浏览器选择和性能测试的中央螺线管简化网格。",
+      "parts": [
+        {
+          "id": "ITER-CS",
+          "title": "中央螺线管",
+          "nodeName": "ITER_PART__cs",
+          "description": "轻量化可选择节点；不提供工程尺寸权威性。",
+          "engineeringTag": "ITER.WEB.CS"
+        }
+      ]
+    },
+    {
+      "id": "poloidal-field",
+      "title": "极向场线圈",
+      "shortTitle": "PF",
+      "category": "pf",
+      "color": "#C08A68",
+      "description": "PF1–PF6 极向场线圈的浏览器可视化节点。",
+      "parts": [
+        { "id": "ITER-PF1", "title": "PF1 线圈", "nodeName": "ITER_PART__pf1", "description": "PF1 简化可选择节点。", "engineeringTag": "ITER.WEB.PF1" },
+        { "id": "ITER-PF2", "title": "PF2 线圈", "nodeName": "ITER_PART__pf2", "description": "PF2 简化可选择节点。", "engineeringTag": "ITER.WEB.PF2" },
+        { "id": "ITER-PF3", "title": "PF3 线圈", "nodeName": "ITER_PART__pf3", "description": "PF3 简化可选择节点。", "engineeringTag": "ITER.WEB.PF3" },
+        { "id": "ITER-PF4", "title": "PF4 线圈与支架", "nodeName": "ITER_PART__pf4", "description": "PF4 与支架的简化可选择节点。", "engineeringTag": "ITER.WEB.PF4" },
+        { "id": "ITER-PF5", "title": "PF5 线圈", "nodeName": "ITER_PART__pf5", "description": "PF5 简化可选择节点。", "engineeringTag": "ITER.WEB.PF5" },
+        { "id": "ITER-PF6", "title": "PF6 线圈", "nodeName": "ITER_PART__pf6", "description": "PF6 简化可选择节点。", "engineeringTag": "ITER.WEB.PF6" }
+      ]
+    },
+    {
+      "id": "toroidal-field",
+      "title": "环向场线圈",
+      "shortTitle": "TF",
+      "category": "tf",
+      "color": "#83958B",
+      "description": "两组环向场线圈装配的浏览器可视化节点。",
+      "parts": [
+        { "id": "ITER-TF-A", "title": "TF 线圈 A", "nodeName": "ITER_PART__tf-a", "description": "TF A 简化可选择节点。", "engineeringTag": "ITER.WEB.TF_A" },
+        { "id": "ITER-TF-B", "title": "TF 线圈 B", "nodeName": "ITER_PART__tf-b", "description": "TF B 简化可选择节点。", "engineeringTag": "ITER.WEB.TF_B" }
+      ]
+    },
+    {
+      "id": "cryostat",
+      "title": "低温恒温器",
+      "shortTitle": "CRYOSTAT",
+      "category": "structure",
+      "color": "#A7A59D",
+      "description": "低温恒温器四个主要分段的浏览器可视化节点。",
+      "parts": [
+        { "id": "ITER-CRYOSTAT-BASE", "title": "低温恒温器底座", "nodeName": "ITER_PART__cryostat-base", "description": "底座简化可选择节点。", "engineeringTag": "ITER.WEB.CRYOSTAT_BASE" },
+        { "id": "ITER-CRYOSTAT-LOWER", "title": "低温恒温器下筒体", "nodeName": "ITER_PART__cryostat-lower", "description": "下筒体简化可选择节点。", "engineeringTag": "ITER.WEB.CRYOSTAT_LOWER" },
+        { "id": "ITER-CRYOSTAT-TOP", "title": "低温恒温器顶盖", "nodeName": "ITER_PART__cryostat-top", "description": "顶盖简化可选择节点。", "engineeringTag": "ITER.WEB.CRYOSTAT_TOP" },
+        { "id": "ITER-CRYOSTAT-UPPER", "title": "低温恒温器上筒体", "nodeName": "ITER_PART__cryostat-upper", "description": "上筒体简化可选择节点。", "engineeringTag": "ITER.WEB.CRYOSTAT_UPPER" }
+      ]
+    },
+    {
+      "id": "divertor",
+      "title": "偏滤器三联盒",
+      "shortTitle": "DIVERTOR",
+      "category": "structure",
+      "color": "#B86F52",
+      "description": "官方库存中的 Divertor triple cassette 条目，仅对应 cassette 01–03，不表示完整 54 盒偏滤器环。",
+      "parts": [
+        {
+          "id": "ITER-DIVERTOR",
+          "title": "偏滤器三联盒（01–03）",
+          "nodeName": "ITER_PART__divertor",
+          "description": "经装配坐标复核的三联盒轻量化节点；未做角向复制。",
+          "engineeringTag": "ITER.WEB.DIVERTOR_TRIPLE_CASSETTE"
+        }
+      ]
+    },
+    {
+      "id": "vacuum-vessel",
+      "title": "真空室扇区",
+      "shortTitle": "VESSEL",
+      "category": "structure",
+      "color": "#7F898A",
+      "description": "四个真空室扇区的浏览器可视化节点。",
+      "parts": [
+        { "id": "ITER-VV1", "title": "真空室扇区 1", "nodeName": "ITER_PART__vv1", "description": "扇区 1 简化可选择节点。", "engineeringTag": "ITER.WEB.VV1" },
+        { "id": "ITER-VV2", "title": "真空室扇区 2", "nodeName": "ITER_PART__vv2", "description": "扇区 2 简化可选择节点。", "engineeringTag": "ITER.WEB.VV2" },
+        { "id": "ITER-VV3", "title": "真空室扇区 3", "nodeName": "ITER_PART__vv3", "description": "扇区 3 简化可选择节点。", "engineeringTag": "ITER.WEB.VV3" },
+        { "id": "ITER-VV4", "title": "真空室扇区 4", "nodeName": "ITER_PART__vv4", "description": "扇区 4 简化可选择节点。", "engineeringTag": "ITER.WEB.VV4" }
+      ]
+    }
+  ],
+  "generator": {
+    "name": "FusionDigital controlled ITER browser derivative builder",
+    "version": "0.2.0",
+    "license": "Project-owner-authorized public simplified visualization derivative",
+    "licenseUrl": "/licenses/ITER-PUBLIC-VISUALIZATION-DERIVATIVE.txt",
+    "conversion": {
+      "pipeline": "reviewed component transforms -> detail-prioritized bounded simplification -> stable identity assembly -> glTF 2.0 Meshopt",
+      "targetTriangles": 400000,
+      "publishedTriangles": 399499,
+      "positionQuantizationBits": 16,
+      "normalQuantizationBits": 10,
+      "featureAngleDegrees": 55,
+      "qualityGates": [
+        "finite positions and normals",
+        "valid indices",
+        "zero degenerate triangles",
+        "zero duplicate triangles",
+        "18 exact stable component identities",
+        "one-owner mesh mapping",
+        "metre-space bounds preserved within reviewed tolerances"
+      ]
+    }
+  },
+  "coverage": {
+    "publishedSelectableParts": 18,
+    "webMeshes": 41,
+    "webTriangles": 399499,
+    "webVertices": 738938,
+    "divertorScope": "The published divertor inventory item is the reviewed cassette 01–03 triple-cassette assembly only; no unreviewed angular cloning is present.",
+    "notPublished": [
+      "source STEP/STP and B-Rep topology",
+      "PMI, authoritative dimensions and manufacturing tolerances",
+      "private source assembly metadata and download credentials",
+      "high-detail or engineering-authoritative geometry"
+    ]
+  },
+  "disclaimer": "Project-owner-authorized non-engineering browser visualization derivative only. It is not an authoritative ITER engineering model and must not be used for manufacturing, dimensional verification, CAE, physics or safety decisions. This release does not claim ITER Organization endorsement."
+}

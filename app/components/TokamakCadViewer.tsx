@@ -319,7 +319,7 @@ function TokamakCadViewerSession({
     fetch(manifestUrl, { cache: 'no-store', signal: controller.signal })
       .then(async (response) => {
         if (!response.ok) throw new Error(i18nRef.current.t('viewer.errorManifestHttp', { status: response.status }));
-        const loadedManifest = parseDeviceManifest(await response.json());
+        const loadedManifest = parseDeviceManifest(await response.json(), { manifestUrl });
         if (loadedManifest.access.classification !== 'PUBLIC') throw new Error(i18nRef.current.t('viewer.errorPublicOnly'));
         if (!loadedManifest.access.redistributionAllowed) throw new Error(i18nRef.current.t('viewer.errorRedistribution'));
         if (controller.signal.aborted) return;

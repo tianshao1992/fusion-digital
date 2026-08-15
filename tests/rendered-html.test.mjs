@@ -32,11 +32,12 @@ async function listFiles(root) {
 test('deployment surface contains no controlled CAD or engineering mesh', async () => {
   const publicFiles = await listFiles(new URL('../public/', import.meta.url));
   const protectedGeometry = publicFiles.filter((file) => /(?:exl|iter)[^/]*\.(?:glb|gltf|step|stp|iges|igs|stl|obj|fbx)$/i.test(decodeURIComponent(file.pathname)));
-  const authorizedExlDerivatives = [
+  const authorizedBrowserDerivatives = [
     new URL('../public/models/exl50u-interactive/exl50u-interactive-high.meshopt.glb', import.meta.url).href,
     new URL('../public/models/exl50u-interactive/exl50u-interactive.glb', import.meta.url).href,
+    new URL('../public/models/iter-public-simplified/iter-public-simplified-preview.meshopt.glb', import.meta.url).href,
   ];
-  assert.deepEqual(protectedGeometry.map((file) => file.href), authorizedExlDerivatives);
+  assert.deepEqual(new Set(protectedGeometry.map((file) => file.href)), new Set(authorizedBrowserDerivatives));
 
   const serverFiles = (await listFiles(new URL('../dist/server/', import.meta.url)))
     .filter((file) => /\.(?:js|mjs|json|html|css)$/i.test(file.pathname));
@@ -74,6 +75,9 @@ test('ships non-empty reports and structured download assets', async () => {
     '../public/models/paramak-full-device/paramak-full-device.glb',
     '../public/models/paramak-full-device/PARAMAK-LICENSE.txt',
     '../public/models/paramak-full-device/model-manifest.json',
+    '../public/models/iter-public-simplified/iter-public-simplified-preview.meshopt.glb',
+    '../public/models/iter-public-simplified/model-manifest.json',
+    '../public/licenses/ITER-PUBLIC-VISUALIZATION-DERIVATIVE.txt',
     '../public/models/device-catalog.json',
   ];
   for (const asset of assets) {
@@ -285,7 +289,7 @@ test('homepage owns the public full-device digital-prototype workspace', async (
   assert.match(html, /EXL(?:‑|-)?50U 2026 升级版/);
   assert.match(html, /ITER 教育简化模型/);
   assert.match(html, /简化派生实时三维/);
-  assert.match(html, /仅展示装置信息/);
+  assert.match(html, /轻量化实时三维/);
   assert.match(html, /360°/);
   for (const removedWorkbenchCopy of [
     /MODEL COVERAGE/,
@@ -301,7 +305,9 @@ test('homepage owns the public full-device digital-prototype workspace', async (
   ]) assert.doesNotMatch(html, removedWorkbenchCopy);
   assert.match(html, /按需加载约 (?:<!-- -->)?2\.2(?:<!-- -->)? MB/);
   assert.doesNotMatch(html, /paramak-tokamak-demo-poster\.png/);
-  assert.doesNotMatch(html, /iter-cad-private|127\.0\.0\.1|\/models\/iter[^"']*\.glb/i);
+  assert.doesNotMatch(html, /iter-cad-private|127\.0\.0\.1/i);
+  assert.doesNotMatch(html, /href=["'][^"']*\/models\/iter[^"']*\.glb/i,
+    'the homepage must not expose the ITER GLB as a direct download link');
 
   const catalog = JSON.parse(await readFile(
     new URL('../public/models/device-catalog.json', import.meta.url),
@@ -311,7 +317,7 @@ test('homepage owns the public full-device digital-prototype workspace', async (
   assert.equal(catalog.schemaVersion, '2.0');
   assert.equal(catalog.securityPolicy.showDownloadActions, false);
   assert.equal(catalog.securityPolicy.sourceCadDelivered, false);
-  assert.equal(catalog.devices.filter((device) => device.viewer.manifestEndpoint !== null).length, 2);
+  assert.equal(catalog.devices.filter((device) => device.viewer.manifestEndpoint !== null).length, 3);
   const exl = catalog.devices.find((device) => device.id === 'exl-50u-2026-upgrade');
   assert.equal(exl.delivery, 'public-static');
   assert.equal(exl.viewer.mode, 'real-3d');
@@ -328,8 +334,19 @@ test('homepage owns the public full-device digital-prototype workspace', async (
   assert.match(exl.copy, /12 个主要系统组件/);
   assert.match(exl.copy, /原始 CAD、STEP、完整磁通网格和工程权威模型不会由网站下发/);
   assert.match(exl.statement, /Browser-delivered geometry can be technically saved/);
-  assert.equal(catalog.devices.find((device) => device.id === 'iter-educational-model').viewer.mode, 'metadata-only');
-  assert.equal(catalog.devices.find((device) => device.id === 'iter-educational-model').delivery, 'local-only');
+  const iter = catalog.devices.find((device) => device.id === 'iter-educational-model');
+  assert.equal(iter.delivery, 'public-static');
+  assert.equal(iter.viewer.mode, 'real-3d');
+  assert.equal(iter.viewer.manifestEndpoint, '/models/iter-public-simplified/model-manifest.json');
+  assert.equal(iter.viewer.turntableManifestEndpoint, null);
+  assert.equal(iter.viewer.overlayEligible, false);
+  assert.equal(iter.physicsOverlays.length, 0);
+  assert.ok(iter.facts.includes('18 个稳定部件'));
+  assert.ok(iter.facts.includes('细节优先预览包 · ≤ 8 MB'));
+  assert.match(iter.copy, /源 STEP、B-Rep、工程尺寸与高精度模型不公开/);
+  assert.match(iter.statement, /Project-owner-authorized public simplified browser visualization derivative/);
+  assert.match(iter.statement, /Browser-delivered geometry can be technically saved/);
+  assert.match(iter.statement, /does not claim ITER Organization endorsement/);
   assert.ok(catalog.devices.filter((device) => device.id !== exl.id).every((device) => device.physicsOverlays.length === 0));
   assert.ok(catalog.devices.every((device) => !JSON.stringify(device).match(/iter-cad-private|127\.0\.0\.1|[A-Z]:\\/i)));
   assert.doesNotMatch(html, /下载 (?:STEP|GLB)/);
@@ -347,6 +364,26 @@ test('homepage owns the public full-device digital-prototype workspace', async (
   assert.equal(exlManifest.systems.length, 12);
   assert.equal(exlManifest.systems.flatMap((system) => system.parts).length, 12);
   assert.equal(new Set(exlManifest.systems.flatMap((system) => system.parts.map((part) => part.nodeName))).size, 12);
+
+  const iterManifest = JSON.parse(await readFile(
+    new URL('../public/models/iter-public-simplified/model-manifest.json', import.meta.url),
+    'utf8',
+  ));
+  assert.equal(iterManifest.devicePackage.kind, 'public-simplified-derivative');
+  assert.equal(iterManifest.devicePackage.authority, 'illustrative');
+  assert.equal(iterManifest.access.classification, 'PUBLIC');
+  assert.equal(iterManifest.access.redistributionAllowed, true);
+  assert.equal(iterManifest.access.engineeringUseAllowed, false);
+  assert.equal(iterManifest.assets.sourceCad, undefined);
+  assert.equal(iterManifest.assets.webModels, undefined);
+  assert.equal(iterManifest.assets.webModel.path, '/models/iter-public-simplified/iter-public-simplified-preview.meshopt.glb');
+  assert.ok(iterManifest.assets.webModel.bytes > 0 && iterManifest.assets.webModel.bytes <= 8 * 1024 * 1024);
+  const iterParts = iterManifest.systems.flatMap((system) => system.parts);
+  assert.equal(iterParts.length, 18);
+  assert.equal(new Set(iterParts.map((part) => part.id)).size, 18);
+  assert.equal(new Set(iterParts.map((part) => part.nodeName)).size, 18);
+  assert.ok(iterParts.every((part) => /^ITER_PART__[a-z0-9-]+$/.test(part.nodeName)));
+  assert.match(iterManifest.disclaimer, /(?:non-engineering|not an engineering|非工程)/i);
 
   const manifest = JSON.parse(await readFile(
     new URL('../public/models/paramak-full-device/model-manifest.json', import.meta.url),
