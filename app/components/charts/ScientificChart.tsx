@@ -1,7 +1,8 @@
 'use client';
 
 import type { EChartsCoreOption, EChartsType } from 'echarts/core';
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { applyScientificChartTheme, useChartTheme } from './chart-theme';
 import './scientific-chart.css';
 
 type ChartClickHandler = (params: unknown) => void;
@@ -29,22 +30,23 @@ export default function ScientificChart({
   className = '',
   height = 460,
   eager = false,
-  dark = false,
   onChartClick,
   fallback,
 }: ScientificChartProps) {
+  const chartTheme = useChartTheme();
+  const themedOption = useMemo(() => applyScientificChartTheme(option, chartTheme), [chartTheme, option]);
   const rootRef = useRef<HTMLDivElement>(null);
   const mountRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<EChartsType | null>(null);
-  const optionRef = useRef(option);
+  const optionRef = useRef(themedOption);
   const clickRef = useRef(onChartClick);
   const [nearViewport, setNearViewport] = useState(eager);
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
-    optionRef.current = option;
-  }, [option]);
+    optionRef.current = themedOption;
+  }, [themedOption]);
 
   useEffect(() => {
     clickRef.current = onChartClick;
@@ -111,14 +113,14 @@ export default function ScientificChart({
   useEffect(() => {
     if (!chartRef.current) return;
     const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    chartRef.current.setOption({ ...option, animation: !reduceMotion }, true);
-  }, [option]);
+    chartRef.current.setOption({ ...themedOption, animation: !reduceMotion }, true);
+  }, [themedOption]);
 
   function exportSvg() {
     const chart = chartRef.current;
     if (!chart) return;
     const anchor = document.createElement('a');
-    anchor.href = chart.getDataURL({ type: 'svg', backgroundColor: dark ? '#0b1511' : '#ffffff' });
+    anchor.href = chart.getDataURL({ type: 'svg', backgroundColor: chartTheme.background });
     anchor.download = `${id}.svg`;
     anchor.click();
   }
@@ -126,7 +128,8 @@ export default function ScientificChart({
   return (
     <div
       ref={rootRef}
-      className={`scientificChart${ready ? ' isReady' : ''}${failed ? ' hasFailed' : ''}${dark ? ' darkChart' : ''}${className ? ` ${className}` : ''}`}
+      className={`scientificChart${ready ? ' isReady' : ''}${failed ? ' hasFailed' : ''}${chartTheme.mode === 'dark' ? ' darkChart' : ''}${className ? ` ${className}` : ''}`}
+      data-chart-theme={chartTheme.mode}
       style={{ '--scientific-chart-height': `${height}px` } as CSSProperties}
       data-echart={id}
     >

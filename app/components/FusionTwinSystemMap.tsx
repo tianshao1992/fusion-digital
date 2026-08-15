@@ -2,6 +2,7 @@
 
 import type { EChartsCoreOption, EChartsType } from 'echarts/core';
 import { type CSSProperties, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useChartTheme } from './charts/chart-theme';
 import './fusion-twin-system-map.css';
 
 type PhaseId = 'overview' | 'design' | 'construction' | 'commissioning' | 'operation' | 'maintenance' | 'decommissioning';
@@ -142,6 +143,16 @@ function nodeLabel(module: TwinModule) {
   return `{no|${module.no}}  {cn|${module.cn}}\n{en|${module.en}}`;
 }
 
+function moduleAccent(item: TwinModule, mode: 'light' | 'dark') {
+  if (mode === 'dark') return item.color;
+  const lightAccents: Partial<Record<ModuleId, string>> = {
+    physics: '#b85b37', engineering: '#a66f3f', control: '#b85b37', diagnostics: '#49766a',
+    energy: '#91752f', auxiliary: '#48777a', hmi: '#52685b', data: '#49766a',
+    integration: '#455d51', ai: '#75617e',
+  };
+  return lightAccents[item.id] ?? '#52685b';
+}
+
 function readChartDatum(params: unknown) {
   if (!params || typeof params !== 'object') return null;
   const data = (params as { data?: unknown }).data;
@@ -150,6 +161,7 @@ function readChartDatum(params: unknown) {
 }
 
 export default function FusionTwinSystemMap() {
+  const chartTheme = useChartTheme();
   const mountRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<EChartsType | null>(null);
   const [selectedPhase, setSelectedPhase] = useState<PhaseId>('overview');
@@ -184,13 +196,13 @@ export default function FusionTwinSystemMap() {
         symbol: 'roundRect',
         symbolSize: [164, 62],
         itemStyle: {
-          color: isActive ? '#17372d' : '#0d1814',
-          borderColor: isActive ? '#ff8738' : '#345047',
+          color: isActive ? chartTheme.accentSoft : chartTheme.surface,
+          borderColor: isActive ? chartTheme.accent : chartTheme.line,
           borderWidth: isActive ? 2.4 : 1,
           shadowBlur: isActive ? 18 : 0,
-          shadowColor: '#ff873866',
+          shadowColor: chartTheme.accent,
         },
-        label: { color: isActive ? '#ffffff' : '#b7c9bf', fontSize: 11, lineHeight: 18, fontWeight: 700 },
+        label: { color: isActive ? chartTheme.text : chartTheme.muted, fontSize: 11, lineHeight: 18, fontWeight: 700 },
         tooltipText: `<b>${item.cn} / ${item.en}</b><br/>典型尺度：${item.scale}<br/>${item.focus}`,
       };
     });
@@ -200,6 +212,7 @@ export default function FusionTwinSystemMap() {
       const selected = selectedModule === item.id;
       const connected = !selectedModule || directlyRelated.has(item.id);
       const opacity = selectedModule ? (selected ? 1 : connected ? 0.72 : 0.18) : 0.46 + intensity * 0.135;
+      const accent = moduleAccent(item, chartTheme.mode);
       return {
         id: item.id,
         name: nodeLabel(item),
@@ -210,20 +223,20 @@ export default function FusionTwinSystemMap() {
         symbol: 'roundRect',
         symbolSize: item.size,
         itemStyle: {
-          color: item.id === 'ai' ? '#1b1530' : '#0d1815',
+          color: item.id === 'ai' ? (chartTheme.mode === 'dark' ? '#241c30' : '#eee7ef') : chartTheme.surface,
           opacity,
-          borderColor: item.color,
+          borderColor: accent,
           borderWidth: selected ? 3 : Math.max(1, intensity * 0.55),
           borderType: item.id === 'ai' ? 'dashed' : 'solid',
           shadowBlur: selected || item.id === 'ai' ? 18 : intensity >= 4 ? 8 : 0,
-          shadowColor: `${item.color}66`,
+          shadowColor: accent,
         },
         label: {
           formatter: nodeLabel(item),
           rich: {
-            no: { color: item.color, fontFamily: FONT, fontSize: 9, fontWeight: 800 },
-            cn: { color: '#f5fff9', fontFamily: FONT, fontSize: item.id === 'ai' ? 16 : 14, fontWeight: 700 },
-            en: { color: '#8ea79b', fontFamily: FONT, fontSize: 8, lineHeight: 18, fontWeight: 700 },
+            no: { color: accent, fontFamily: FONT, fontSize: 9, fontWeight: 800 },
+            cn: { color: chartTheme.text, fontFamily: FONT, fontSize: item.id === 'ai' ? 16 : 14, fontWeight: 700 },
+            en: { color: chartTheme.muted, fontFamily: FONT, fontSize: 8, lineHeight: 18, fontWeight: 700 },
           },
         },
         tooltipText: `<b>${item.no} · ${item.cn}</b><br/>${item.summary}<br/>阶段参与：${phaseIndex < 0 ? '跨全生命周期' : INTENSITY_LABELS[intensity - 1]}`,
@@ -241,25 +254,28 @@ export default function FusionTwinSystemMap() {
       },
       {
         id: 'asset', name: '实体聚变装置\nPHYSICAL ASSET', kind: 'boundary', x: 55, y: 365, symbol: 'circle', symbolSize: 116,
-        itemStyle: { color: '#27170f', borderColor: '#ff8738', borderWidth: 2.5, shadowBlur: 20, shadowColor: '#ff873844' },
-        label: { color: '#ffd8bd', fontSize: 11, lineHeight: 18, fontWeight: 700 },
+        itemStyle: { color: chartTheme.accentSoft, borderColor: chartTheme.accent, borderWidth: 2.5, shadowBlur: 20, shadowColor: chartTheme.accent },
+        label: { color: chartTheme.mode === 'dark' ? '#ffd8bd' : '#6c3322', fontSize: 11, lineHeight: 18, fontWeight: 700 },
         tooltipText: '<b>实体聚变装置</b><br/>实验系统、聚变堆或电厂及其真实传感器、执行器与配置状态。',
       },
       {
         id: 'gate', name: '安全与授权门\nSAFETY GATE', kind: 'boundary', x: 1125, y: 365, symbol: 'diamond', symbolSize: 122,
-        itemStyle: { color: '#261a10', borderColor: '#ff8738', borderWidth: 2.5, shadowBlur: 18, shadowColor: '#ff873844' },
-        label: { color: '#ffd8bd', fontSize: 11, lineHeight: 18, fontWeight: 700 },
+        itemStyle: { color: chartTheme.accentSoft, borderColor: chartTheme.accent, borderWidth: 2.5, shadowBlur: 18, shadowColor: chartTheme.accent },
+        label: { color: chartTheme.mode === 'dark' ? '#ffd8bd' : '#6c3322', fontSize: 11, lineHeight: 18, fontWeight: 700 },
         tooltipText: '<b>安全与授权门</b><br/>物理约束、V&V、确定性保护、联锁和人员授权共同限制动作通道。',
       },
     ];
 
     const linkData = links.map((link) => {
       const style = edgeStyle[link.type];
+      const lightEdgeColors: Record<TwinLink['type'], string> = {
+        data: '#49766a', model: '#b85b37', governance: '#718579', command: '#a94e33', ai: '#75617e',
+      };
       const relevant = !selectedModule || link.source === selectedModule || link.target === selectedModule;
       return {
         ...link,
         lineStyle: {
-          color: style.color,
+          color: chartTheme.mode === 'dark' ? style.color : lightEdgeColors[link.type],
           width: relevant ? style.width : 0.7,
           type: style.type,
           opacity: relevant ? (link.type === 'governance' ? 0.48 : 0.72) : 0.05,
@@ -270,7 +286,7 @@ export default function FusionTwinSystemMap() {
 
     return {
       backgroundColor: 'transparent',
-      textStyle: { fontFamily: FONT },
+      textStyle: { color: chartTheme.text, fontFamily: FONT },
       aria: {
         enabled: true,
         description: '聚变装置数字孪生全生命周期与十项能力的固定布局系统地图。智能原生跨域赋能，但所有控制动作必须通过安全与授权门。',
@@ -278,11 +294,11 @@ export default function FusionTwinSystemMap() {
       tooltip: {
         trigger: 'item',
         confine: true,
-        backgroundColor: '#07100ded',
-        borderColor: '#4d6a5d',
+        backgroundColor: chartTheme.tooltipBackground,
+        borderColor: chartTheme.tooltipBorder,
         borderWidth: 1,
         padding: [10, 12],
-        textStyle: { color: '#dcebe4', fontFamily: FONT, fontSize: 11, lineHeight: 18 },
+        textStyle: { color: chartTheme.tooltipText, fontFamily: FONT, fontSize: 11, lineHeight: 18 },
         formatter: (params: unknown) => {
           const datum = readChartDatum(params);
           if (!datum) return '';
@@ -310,7 +326,7 @@ export default function FusionTwinSystemMap() {
         emphasis: { focus: 'adjacency', scale: 1.04, lineStyle: { opacity: 1, width: 2.6 } },
       }],
     };
-  }, [phaseIndex, selectedModule, selectedPhase]);
+  }, [chartTheme, phaseIndex, selectedModule, selectedPhase]);
 
   const latestOptionRef = useRef(option);
   useLayoutEffect(() => {
@@ -402,7 +418,7 @@ export default function FusionTwinSystemMap() {
                 data-module-id={item.id}
                 className={selectedModule === item.id ? 'isActive' : ''}
                 aria-pressed={selectedModule === item.id}
-                style={{ '--module-color': item.color } as CSSProperties}
+                style={{ '--module-color': moduleAccent(item, chartTheme.mode) } as CSSProperties}
                 onClick={() => setSelectedModule((current) => current === item.id ? null : item.id)}
               >
                 <b>{item.no}</b><span>{item.cn}</span><small>{item.en}</small>

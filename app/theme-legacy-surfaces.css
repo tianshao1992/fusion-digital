@@ -1,0 +1,348 @@
+/*
+ * Light-theme bridge for legacy feature pages.
+ *
+ * Older page styles predate the semantic theme tokens and intentionally baked
+ * dark presentation colors into local components.  Keep those original rules
+ * as the dark-mode implementation, then lift their light-mode surfaces here.
+ * This layer is deliberately selector-scoped so scientific colour encodings,
+ * source images and dark mode retain their meaning.
+ */
+
+:root[data-theme='light'] .aiPage {
+  --ai-dark: var(--color-surface-muted);
+  --ai-dark-2: var(--color-surface-subtle);
+  --ai-paper: var(--color-canvas);
+  --ai-paper-2: var(--color-surface-muted);
+  --ai-ink: var(--color-ink);
+  --ai-muted: var(--color-ink-muted);
+  --ai-fusion: var(--color-accent);
+  --ai-cyan: var(--color-info-strong);
+  --ai-mint: var(--color-info-soft);
+  --ai-deep: var(--color-info-strong);
+  --ai-purple: var(--color-violet);
+  --ai-line: var(--color-border);
+}
+:root[data-theme='light'] .aiHero {
+  color: var(--color-ink);
+  background:
+    linear-gradient(90deg,var(--color-grid) 1px,transparent 1px),
+    linear-gradient(var(--color-grid) 1px,transparent 1px),
+    radial-gradient(circle at 76% 18%,var(--color-info-soft),var(--color-canvas) 68%);
+}
+:root[data-theme='light'] .aiHero > div > p:not(.aiEyebrow),
+:root[data-theme='light'] .aiArchitecture > div:first-child > p:last-child,
+:root[data-theme='light'] .archStack i { color: var(--color-ink-muted); }
+:root[data-theme='light'] .aiActions a { border-color: var(--color-border-strong); }
+:root[data-theme='light'] .aiHeroStats { border-color: var(--color-border); background: var(--color-border); }
+:root[data-theme='light'] .aiHeroStats div { background: var(--color-surface); }
+:root[data-theme='light'] .aiHeroStats dd { color: var(--color-ink-muted); }
+:root[data-theme='light'] .catalogToolbar,
+:root[data-theme='light'] .deviceEvidenceHeader,
+:root[data-theme='light'] .aiArchitecture {
+  color: var(--color-ink);
+  background: var(--color-surface-muted);
+  border-color: var(--color-border);
+}
+:root[data-theme='light'] .catalogSearch span,
+:root[data-theme='light'] .catalogSelects label > span,
+:root[data-theme='light'] .catalogDomainFilters legend,
+:root[data-theme='light'] .deviceEvidenceHeader span { color: var(--color-ink-muted) !important; }
+:root[data-theme='light'] .catalogSearch input,
+:root[data-theme='light'] .catalogSelects select,
+:root[data-theme='light'] .catalogDomainFilters button,
+:root[data-theme='light'] .catalogReset {
+  color: var(--color-ink);
+  border-color: var(--color-border-strong);
+  background: var(--color-surface-raised);
+}
+:root[data-theme='light'] .catalogSearch input::placeholder { color: var(--color-ink-subtle); }
+:root[data-theme='light'] .catalogSelects { border-color: var(--color-border); }
+:root[data-theme='light'] .catalogDomainFilters button:hover,
+:root[data-theme='light'] .catalogDomainFilters button.isActive {
+  color: var(--color-accent-strong);
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+:root[data-theme='light'] .archStack article {
+  color: var(--color-ink);
+  border-color: var(--color-border);
+  background: var(--color-surface-raised);
+}
+:root[data-theme='light'] .archStack article:nth-child(2) {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+
+:root[data-theme='light'] .facilitiesPage {
+  --f-dark: var(--color-inverse);
+  --f-paper: var(--color-canvas);
+  --f-ai: var(--color-info-strong);
+  --f-ai-deep: var(--color-info-strong);
+  --f-fusion: var(--color-accent);
+  color: var(--color-ink);
+}
+:root[data-theme='light'] .facilitiesHero {
+  color: var(--color-ink);
+  background: radial-gradient(circle at 80% 18%,var(--color-info-soft),var(--color-canvas) 56%);
+}
+:root[data-theme='light'] .facilitiesHero > div > p { color: var(--color-info-strong); }
+:root[data-theme='light'] .facilitiesHero > div > div,
+:root[data-theme='light'] .facilitiesHero aside span { color: var(--color-ink-muted); }
+:root[data-theme='light'] .facilitiesHero aside,
+:root[data-theme='light'] .facilitiesHero aside span { border-color: var(--color-border); }
+:root[data-theme='light'] .facilitiesHero aside b { color: var(--color-ink); }
+:root[data-theme='light'] .facilityFilters button.active {
+  color: var(--color-on-inverse);
+  border-color: var(--color-info-strong);
+  background: var(--color-info-strong);
+}
+
+/* Search and answer workspace */
+:root[data-theme='light'] .knowledgePage {
+  --k-bg: var(--color-surface-muted);
+  --k-panel: var(--color-surface-subtle);
+  --k-paper: var(--color-canvas);
+  --k-ink: var(--color-ink);
+  --k-line: var(--color-border);
+  --k-muted: var(--color-ink-muted);
+  --k-orange: var(--color-accent);
+  --k-cyan: var(--color-info-strong);
+}
+:root[data-theme='light'] .knowledgeHero {
+  color: var(--color-ink);
+  background: radial-gradient(circle at 75% 15%,var(--color-info-soft),var(--color-canvas) 68%);
+}
+:root[data-theme='light'] .knowledgeHero::before { background-image: linear-gradient(var(--color-grid) 1px,transparent 1px),linear-gradient(90deg,var(--color-grid) 1px,transparent 1px); }
+:root[data-theme='light'] .knowledgePrinciples { border-color: var(--color-border); background: var(--color-border); }
+:root[data-theme='light'] .knowledgePrinciples span,
+:root[data-theme='light'] .knowledgeHero aside,
+:root[data-theme='light'] .searchConsole { color: var(--color-ink); border-color: var(--color-border); background: var(--color-surface-raised); box-shadow: var(--shadow-md); }
+:root[data-theme='light'] .knowledgeHero aside > span,
+:root[data-theme='light'] .knowledgeHero dt,
+:root[data-theme='light'] .queryField > span,
+:root[data-theme='light'] .citedToggle { color: var(--color-ink-muted); }
+:root[data-theme='light'] .knowledgeHero dl,
+:root[data-theme='light'] .knowledgeHero dl div { border-color: var(--color-border); }
+:root[data-theme='light'] .queryField textarea,
+:root[data-theme='light'] .searchControls select,
+:root[data-theme='light'] .searchControls button,
+:root[data-theme='light'] .queryExamples button {
+  color: var(--color-ink);
+  border-color: var(--color-border-strong);
+  background: var(--color-surface-muted);
+}
+:root[data-theme='light'] .searchControls .askButton { color: var(--color-on-inverse); border-color: var(--color-accent); background: var(--color-accent); }
+:root[data-theme='light'] .knowledgeBoundary,
+:root[data-theme='light'] .knowledgeGraphPortal {
+  color: var(--color-ink);
+  border-color: var(--color-border);
+  background: var(--color-surface-subtle);
+  box-shadow: var(--shadow-sm);
+}
+:root[data-theme='light'] .knowledgeBoundary p,
+:root[data-theme='light'] .knowledgeGraphPortal span { color: var(--color-ink-muted); }
+
+/* Account cards */
+:root[data-theme='light'] .accountPage {
+  --account-bg: var(--color-surface-muted);
+  --account-paper: var(--color-canvas);
+  --account-ink: var(--color-ink);
+  --account-line: var(--color-border);
+  --account-muted: var(--color-ink-muted);
+  --account-orange: var(--color-accent);
+  --account-cyan: var(--color-info-strong);
+}
+:root[data-theme='light'] .accountHero {
+  color: var(--color-ink);
+  background: radial-gradient(circle at 76% 20%,var(--color-info-soft),var(--color-canvas) 70%);
+}
+:root[data-theme='light'] .accountHero::before { background-image: linear-gradient(var(--color-grid) 1px,transparent 1px),linear-gradient(90deg,var(--color-grid) 1px,transparent 1px); }
+:root[data-theme='light'] .accountSignals { border-color: var(--color-border); background: var(--color-border); }
+:root[data-theme='light'] .accountSignals span,
+:root[data-theme='light'] .accountIdentityCard,
+:root[data-theme='light'] .accountDashboard > section,
+:root[data-theme='light'] .accountLoading,
+:root[data-theme='light'] .accountError { color: var(--color-ink); border-color: var(--color-border); background: var(--color-surface-raised); box-shadow: var(--shadow-sm); }
+:root[data-theme='light'] .accountIdentityCard strong,
+:root[data-theme='light'] .accountIdentityCard small,
+:root[data-theme='light'] .accountProfile p,
+:root[data-theme='light'] .accountLoading small,
+:root[data-theme='light'] .accountError small,
+:root[data-theme='light'] .accountError p { color: var(--color-ink-muted); }
+:root[data-theme='light'] .accountDashboard { border-color: var(--color-border); background: var(--color-border); }
+:root[data-theme='light'] .accountQuota header b { color: var(--color-ink); }
+:root[data-theme='light'] .accountQuota dl { border-color: var(--color-border); background: var(--color-border); }
+:root[data-theme='light'] .accountQuota dl div { background: var(--color-surface-muted); }
+:root[data-theme='light'] .accountBoundary { color: var(--color-ink); background: var(--color-surface-subtle); }
+:root[data-theme='light'] .accountBoundary > div > p { color: var(--color-ink-muted); }
+
+/* Knowledge graph chrome. The graph series itself is themed in chart-theme.ts. */
+:root[data-theme='light'] .kgPage {
+  --kg-bg: var(--color-canvas);
+  --kg-panel: var(--color-surface-muted);
+  --kg-paper: var(--color-canvas);
+  --kg-line: var(--color-border);
+  --kg-orange: var(--color-accent);
+  --kg-cyan: var(--color-info-strong);
+  --kg-purple: var(--color-violet);
+  color: var(--color-ink);
+  background: var(--color-canvas);
+}
+:root[data-theme='light'] .kgHero { color: var(--color-ink); border-color: var(--color-border); background: radial-gradient(circle at 76% 22%,var(--color-info-soft),var(--color-canvas) 68%); }
+:root[data-theme='light'] .kgHero::after { background-image: linear-gradient(var(--color-grid) 1px,transparent 1px),linear-gradient(90deg,var(--color-grid) 1px,transparent 1px); }
+:root[data-theme='light'] .kgHero > div > p:last-child,
+:root[data-theme='light'] .kgHero dd,
+:root[data-theme='light'] .kgDescription,
+:root[data-theme='light'] .kgSubtitle { color: var(--color-ink-muted); }
+:root[data-theme='light'] .kgHero dl,
+:root[data-theme='light'] .kgPrincipleBand,
+:root[data-theme='light'] .kgFilters,
+:root[data-theme='light'] .kgDetail,
+:root[data-theme='light'] .kgCanvasHeader,
+:root[data-theme='light'] .kgCanvasTools,
+:root[data-theme='light'] .kgAccessibleList { color: var(--color-ink); border-color: var(--color-border); background: var(--color-surface-muted); }
+:root[data-theme='light'] .kgHero dl div,
+:root[data-theme='light'] .kgWorkspace,
+:root[data-theme='light'] .kgFilters,
+:root[data-theme='light'] .kgDetail,
+:root[data-theme='light'] .kgCanvasHeader,
+:root[data-theme='light'] .kgCanvasTools { border-color: var(--color-border); }
+:root[data-theme='light'] .kgHero dt,
+:root[data-theme='light'] .kgLiveStats b { color: var(--color-ink); }
+:root[data-theme='light'] .kgPrincipleBand b,
+:root[data-theme='light'] .kgLiveStats,
+:root[data-theme='light'] .kgCanvasTools,
+:root[data-theme='light'] .kgBadges span,
+:root[data-theme='light'] .kgRelationList li button span { color: var(--color-ink-muted); }
+:root[data-theme='light'] .kgCanvasPanel,
+:root[data-theme='light'] .kgChartFallback { background: radial-gradient(circle at 50% 44%,var(--color-info-soft),var(--color-surface) 74%); }
+:root[data-theme='light'] .kgFilters input,
+:root[data-theme='light'] .kgFilters select,
+:root[data-theme='light'] .kgNeighborhood select,
+:root[data-theme='light'] .kgCanvasTools select,
+:root[data-theme='light'] .kgCanvasTools button { color: var(--color-ink); border-color: var(--color-border-strong); background: var(--color-surface-raised); }
+:root[data-theme='light'] .kgAccessibleList > div { background: var(--color-border); }
+:root[data-theme='light'] .kgAccessibleList button { color: var(--color-ink); background: var(--color-surface-raised); }
+:root[data-theme='light'] .kgAccessibleList button:focus-visible,
+:root[data-theme='light'] .kgAccessibleList button[aria-pressed='true'] { background: var(--color-info-soft); }
+
+/* Platform architecture and review workspaces */
+:root[data-theme='light'] .platformPage {
+  --pa-bg: var(--color-canvas);
+  --pa-panel: var(--color-surface-raised);
+  --pa-line: var(--color-border);
+  --pa-text: var(--color-ink);
+  --pa-muted: var(--color-ink-muted);
+  --pa-cyan: var(--color-info-strong);
+  --pa-orange: var(--color-accent);
+}
+:root[data-theme='light'] .platformHero { background: radial-gradient(circle at 82% 18%,var(--color-info-soft),transparent 42%),radial-gradient(circle at 12% 95%,var(--color-accent-soft),transparent 35%),var(--color-canvas); }
+:root[data-theme='light'] .platformHero > div,
+:root[data-theme='light'] .platformHero nav a,
+:root[data-theme='light'] .platformPlanes b,
+:root[data-theme='light'] .platformStorageTable strong,
+:root[data-theme='light'] .platformStackTable strong { color: var(--color-ink-muted); }
+:root[data-theme='light'] .platformArchitecture,
+:root[data-theme='light'] .platformStack,
+:root[data-theme='light'] .platformReferences { background: var(--color-surface-muted); }
+:root[data-theme='light'] .platformCurrentGrid article,
+:root[data-theme='light'] .platformPlanes article,
+:root[data-theme='light'] .platformContractGrid article,
+:root[data-theme='light'] .platformStorageTable .head,
+:root[data-theme='light'] .platformStackTable .head { color: var(--color-ink); background: var(--color-surface-raised); }
+:root[data-theme='light'] .platformPlanes article.science { background: var(--color-info-soft); }
+:root[data-theme='light'] .platformPlanes article.realtime,
+:root[data-theme='light'] .platformFirst90 { background: var(--color-accent-soft); }
+:root[data-theme='light'] .platformFirst90 b { color: var(--color-ink-muted); }
+:root[data-theme='light'] .platformReferences a { color: var(--color-info-strong); }
+
+:root[data-theme='light'] .reviewPage { color: var(--color-ink); background: var(--color-canvas); }
+:root[data-theme='light'] .reviewHero { border-color: var(--color-border); background: radial-gradient(circle at 82% 20%,var(--color-info-soft),transparent 42%),var(--color-canvas); }
+:root[data-theme='light'] .reviewRules span { color: var(--color-ink-muted); border-color: var(--color-border-strong); }
+:root[data-theme='light'] .reviewSignIn { color: var(--color-ink); border-color: var(--color-border); background: var(--color-surface-raised); }
+:root[data-theme='light'] .reviewSignIn p { color: var(--color-ink-muted); }
+:root[data-theme='light'] .reviewBoundary { background: var(--color-surface-muted); }
+:root[data-theme='light'] .reviewBoundary article span { color: var(--color-ink-muted); }
+
+/* Control and diagnostics were built from the same dark dashboard template. */
+:root[data-theme='light'] .controlPage {
+  --ctl-dark: var(--color-surface-muted);
+  --ctl-dark-2: var(--color-surface-subtle);
+  --ctl-ink: var(--color-ink);
+  --ctl-muted: var(--color-ink-muted);
+  --ctl-paper: var(--color-canvas);
+  --ctl-paper-2: var(--color-surface-muted);
+  --ctl-line: var(--color-border);
+  --ctl-deep: var(--color-info-strong);
+  --ctl-orange: var(--color-accent);
+  --ctl-cyan: var(--color-info-strong);
+  --ctl-purple: var(--color-violet);
+  --ctl-white: var(--color-surface-raised);
+  --ctl-pale: var(--color-surface);
+}
+:root[data-theme='light'] .controlHero { color: var(--color-ink); background: linear-gradient(90deg,var(--color-grid) 1px,transparent 1px),linear-gradient(var(--color-grid) 1px,transparent 1px),radial-gradient(circle at 74% 18%,var(--color-info-soft),var(--color-canvas) 70%); }
+:root[data-theme='light'] .controlHeroCopy > p:not(.controlEyebrow),
+:root[data-theme='light'] .controlTasks .controlSectionHead > p:last-child,
+:root[data-theme='light'] .controlGaps .controlSectionHead > p:last-child { color: var(--color-ink-muted); }
+:root[data-theme='light'] .controlHeroStats,
+:root[data-theme='light'] .controlTaskGrid,
+:root[data-theme='light'] .controlGapGrid { border-color: var(--color-border); background: var(--color-border); }
+:root[data-theme='light'] .controlHeroStats div,
+:root[data-theme='light'] .controlTasks,
+:root[data-theme='light'] .controlGaps,
+:root[data-theme='light'] .controlTimescale,
+:root[data-theme='light'] .controlTaskGrid article,
+:root[data-theme='light'] .controlTaskGrid article.crossCutting,
+:root[data-theme='light'] .controlGapGrid article { color: var(--color-ink); border-color: var(--color-border); background: var(--color-surface-raised); }
+:root[data-theme='light'] .controlTaskGrid > article > p,
+:root[data-theme='light'] .controlTaskGrid dd,
+:root[data-theme='light'] .controlGapGrid p { color: var(--color-ink-muted); }
+:root[data-theme='light'] .controlCatalogToolbar,
+:root[data-theme='light'] .deviceToolbar { color: var(--color-ink); background: var(--color-surface-muted); }
+:root[data-theme='light'] .controlSearch input,
+:root[data-theme='light'] .controlSelects select,
+:root[data-theme='light'] .deviceToolbar input,
+:root[data-theme='light'] .deviceToolbar select,
+:root[data-theme='light'] .controlTaskFilters button,
+:root[data-theme='light'] .controlReset { color: var(--color-ink); border-color: var(--color-border-strong); background: var(--color-surface-raised); }
+
+:root[data-theme='light'] .diagnosticsPage {
+  --diag-orange: var(--color-accent);
+  --diag-cyan: var(--color-info-strong);
+  --diag-purple: var(--color-violet);
+  --diag-deep: var(--color-info-strong);
+  --diag-dark: var(--color-surface-muted);
+  --diag-paper: var(--color-canvas);
+  --diag-paper-2: var(--color-surface-muted);
+  --diag-line: var(--color-border);
+  --diag-muted: var(--color-ink-muted);
+  color: var(--color-ink);
+}
+:root[data-theme='light'] .diagnosticsHero { color: var(--color-ink); border-color: var(--color-border); background: radial-gradient(circle at 85% 18%,var(--color-info-soft),transparent 34%),var(--color-canvas); }
+:root[data-theme='light'] .diagnosticsHeroCopy > p:not(.diagnosticsEyebrow),
+:root[data-theme='light'] .diagnosticsTaxonomy .diagnosticsSectionHead > p:last-child,
+:root[data-theme='light'] .diagnosticsGaps .diagnosticsSectionHead > p:last-child { color: var(--color-ink-muted); }
+:root[data-theme='light'] .diagnosticsHeroStats,
+:root[data-theme='light'] .diagnosticsTaskGrid,
+:root[data-theme='light'] .diagnosticsGapGrid { border-color: var(--color-border); background: var(--color-border); }
+:root[data-theme='light'] .diagnosticsHeroStats div,
+:root[data-theme='light'] .diagnosticsTaxonomy,
+:root[data-theme='light'] .diagnosticsGaps,
+:root[data-theme='light'] .diagnosticsTaskGrid article,
+:root[data-theme='light'] .diagnosticsTaskGrid article.crossCutting,
+:root[data-theme='light'] .diagnosticsGapGrid article { color: var(--color-ink); border-color: var(--color-border); background: var(--color-surface-raised); }
+:root[data-theme='light'] .diagnosticsTaskGrid > article > p,
+:root[data-theme='light'] .diagnosticsTaskGrid dd,
+:root[data-theme='light'] .diagnosticsGapGrid p { color: var(--color-ink-muted); }
+:root[data-theme='light'] .diagnosticsCatalogToolbar,
+:root[data-theme='light'] .diagnosticsDeviceToolbar { color: var(--color-ink); background: var(--color-surface-muted); }
+:root[data-theme='light'] .diagnosticsSearch input,
+:root[data-theme='light'] .diagnosticsSelects select,
+:root[data-theme='light'] .diagnosticsDeviceToolbar input,
+:root[data-theme='light'] .diagnosticsDeviceToolbar select,
+:root[data-theme='light'] .diagnosticsTaskFilters button,
+:root[data-theme='light'] .diagnosticsReset { color: var(--color-ink); border-color: var(--color-border-strong); background: var(--color-surface-raised); }
+
+@media (prefers-contrast:more) {
+  :root[data-theme='light'] :is(.catalogToolbar,.facilitiesHero,.searchConsole,.accountDashboard,.kgWorkspace,.platformPage,.reviewPage,.controlCatalogToolbar,.diagnosticsCatalogToolbar) { border-color: currentColor; }
+}

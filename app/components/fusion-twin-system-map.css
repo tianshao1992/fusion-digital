@@ -608,3 +608,65 @@
   .fusionTwinMapFallback,
   .fusionTwinPhaseTabs button { transition: none; }
 }
+
+/* Warm-paper presentation for the global light theme. Scientific relation
+   colours stay intact, while every neutral surface and label follows the
+   same semantic palette as the rest of the site. */
+:root[data-theme='light'] .fusionTwinMapSection {
+  --map-bg: var(--color-canvas);
+  --map-panel: var(--color-surface);
+  --map-line: var(--color-border);
+  --map-muted: var(--color-ink-muted);
+  color: var(--color-ink);
+  background:
+    radial-gradient(circle at 15% 8%,color-mix(in srgb,var(--color-accent-soft) 74%,transparent),transparent 29%),
+    radial-gradient(circle at 82% 13%,color-mix(in srgb,var(--color-violet) 13%,transparent),transparent 30%),
+    radial-gradient(circle at 50% 75%,color-mix(in srgb,var(--color-info-soft) 72%,transparent),transparent 38%),
+    var(--map-bg);
+}
+:root[data-theme='light'] .fusionTwinMapSection::before { opacity:.55;background-image:linear-gradient(var(--color-grid) 1px,transparent 1px),linear-gradient(90deg,var(--color-grid) 1px,transparent 1px) }
+:root[data-theme='light'] .fusionTwinMapIntro .sectionIndex { color:var(--color-info-strong) }
+:root[data-theme='light'] .fusionTwinMapIntro>div>p:not(.sectionIndex),
+:root[data-theme='light'] .fusionTwinMapIntro>div>small { color:var(--color-ink-muted) }
+:root[data-theme='light'] .fusionTwinMapIntro aside { border-color:color-mix(in srgb,var(--color-violet) 48%,transparent);background:linear-gradient(135deg,color-mix(in srgb,var(--color-violet) 12%,transparent),var(--color-surface));box-shadow:inset 3px 0 var(--color-violet),var(--shadow-md) }
+:root[data-theme='light'] .fusionTwinMapIntro aside b { color:var(--color-violet) }
+:root[data-theme='light'] .fusionTwinMapIntro aside p { color:var(--color-ink) }
+:root[data-theme='light'] .fusionTwinMapShell { border-color:var(--color-border);background:color-mix(in srgb,var(--color-surface) 92%,transparent);box-shadow:var(--shadow-md) }
+:root[data-theme='light'] .fusionTwinPhaseTabs button { color:var(--color-ink-muted);background:color-mix(in srgb,var(--color-surface) 88%,transparent) }
+:root[data-theme='light'] .fusionTwinPhaseTabs button:hover,
+:root[data-theme='light'] .fusionTwinPhaseTabs button:focus-visible { color:var(--color-ink);background:var(--color-info-soft);box-shadow:inset 0 -2px var(--color-info) }
+:root[data-theme='light'] .fusionTwinPhaseTabs button.isActive { color:var(--color-ink);background:linear-gradient(180deg,var(--color-accent-soft),var(--color-info-soft));box-shadow:inset 0 -3px var(--color-accent) }
+:root[data-theme='light'] .fusionTwinModuleDock { background:var(--color-surface-muted) }
+:root[data-theme='light'] .fusionTwinModuleDock>p,
+:root[data-theme='light'] .fusionTwinModuleDock small { color:var(--color-ink-muted) }
+:root[data-theme='light'] .fusionTwinModuleDock button { color:var(--color-ink);border-color:var(--color-border) }
+:root[data-theme='light'] .fusionTwinModuleDock button:hover,
+:root[data-theme='light'] .fusionTwinModuleDock button:focus-visible,
+:root[data-theme='light'] .fusionTwinModuleDock button.isActive { color:var(--color-ink);background:color-mix(in srgb,var(--module-color) 11%,var(--color-surface)) }
+:root[data-theme='light'] .fusionTwinMapCanvas { background:linear-gradient(90deg,transparent 49.94%,var(--color-grid) 50%,transparent 50.06%),linear-gradient(var(--color-grid) 1px,transparent 1px),linear-gradient(90deg,var(--color-grid) 1px,transparent 1px),radial-gradient(circle at 50% 45%,var(--color-info-soft),transparent 42%);background-size:auto,36px 36px,36px 36px,auto }
+:root[data-theme='light'] .fallbackAi { color:var(--color-violet);background:color-mix(in srgb,var(--color-violet) 9%,transparent) }
+:root[data-theme='light'] .fallbackCore span,
+:root[data-theme='light'] .fallbackModels button { color:var(--color-ink);background:var(--color-surface-raised);border-color:var(--color-info) }
+:root[data-theme='light'] .fusionTwinMapStatus { color:var(--color-ink-muted);background:var(--color-glass);border-color:var(--color-border) }
+:root[data-theme='light'] .phaseDetail { background:linear-gradient(145deg,var(--color-accent-soft),transparent 65%) }
+:root[data-theme='light'] .moduleDetail { background:color-mix(in srgb,var(--color-info-soft) 56%,transparent) }
+:root[data-theme='light'] .fusionTwinMapDetails h3 small,
+:root[data-theme='light'] .phaseDetail>span,
+:root[data-theme='light'] .moduleDetail>span,
+:root[data-theme='light'] .moduleDetail>p:not(:first-child),
+:root[data-theme='light'] .fusionTwinTimeScale>p,
+:root[data-theme='light'] .fusionTwinTimeScale small,
+:root[data-theme='light'] .fusionTwinMapLegend>span,
+:root[data-theme='light'] .fusionTwinMapLegend p { color:var(--color-ink-muted) }
+:root[data-theme='light'] .phaseDetail>div,
+:root[data-theme='light'] .moduleDetail>div,
+:root[data-theme='light'] .moduleDetail>p b,
+:root[data-theme='light'] .fusionTwinTimeScale b { color:var(--color-ink) }
+:root[data-theme='light'] .moduleIo span,
+:root[data-theme='light'] .fusionTwinTimeScale span { background:var(--color-surface-muted);border-color:var(--color-border) }
+:root[data-theme='light'] .fusionTwinTimeScale { background:var(--color-surface) }
+:root[data-theme='light'] .fusionTwinMapLegend .dataFlow::before { border-color:#49766a }
+:root[data-theme='light'] .fusionTwinMapLegend .modelFlow::before { border-color:#b85b37 }
+:root[data-theme='light'] .fusionTwinMapLegend .evidenceFlow::before { border-color:#718579 }
+:root[data-theme='light'] .fusionTwinMapLegend .commandFlow::before { border-color:#a94e33 }
+:root[data-theme='light'] .fusionTwinMapLegend .aiFlow::before { border-color:#75617e }

@@ -3,6 +3,7 @@
 import type { EChartsCoreOption } from 'echarts/core';
 import { useMemo } from 'react';
 import { useI18n } from '../../i18n';
+import { useChartTheme } from '../charts/chart-theme';
 import EfitCanvasChart from './EfitCanvasChart';
 import { buildGapAwareSignalSeries } from './signal-series';
 import type { EfitFrameSummary } from './types';
@@ -22,16 +23,20 @@ function chartTimeFromClick(params: unknown): number | null {
 
 export default function EfitSignalsChart({ timeline, currentTimeMs, onSeekTimeMs }: EfitSignalsChartProps) {
   const { locale, t } = useI18n();
+  const chartTheme = useChartTheme();
   const option = useMemo<EChartsCoreOption>(() => {
+    const signalColors = chartTheme.mode === 'dark'
+      ? ['#45ddc7', '#80a7ff', '#ff9c70']
+      : ['#287b6f', '#526fa8', '#b85b37'];
     const cursor = {
       silent: true,
       symbol: 'none',
-      lineStyle: { color: '#f5c077', width: 1.2, type: 'dashed' as const },
+      lineStyle: { color: chartTheme.accent, width: 1.2, type: 'dashed' as const },
       label: {
         show: true,
         formatter: `${(currentTimeMs / 1000).toFixed(3)} s`,
-        color: '#13221f',
-        backgroundColor: '#f5c077',
+        color: chartTheme.mode === 'dark' ? '#13221f' : '#fffdf8',
+        backgroundColor: chartTheme.accent,
         padding: [3, 6],
       },
       data: [{ xAxis: currentTimeMs }],
@@ -41,21 +46,21 @@ export default function EfitSignalsChart({ timeline, currentTimeMs, onSeekTimeMs
       animation: false,
       backgroundColor: 'transparent',
       aria: { enabled: true, description: t('efit.signalsAria') },
-      color: ['#45ddc7', '#80a7ff', '#ff9c70'],
+      color: signalColors,
       legend: {
         top: 4,
         right: 12,
         itemWidth: 16,
         itemHeight: 3,
-        textStyle: { color: '#a8c8c2', fontSize: 10 },
+        textStyle: { color: chartTheme.muted, fontSize: 10 },
       },
       grid: { left: 58, right: 52, top: 38, bottom: 50 },
       tooltip: {
         trigger: 'axis',
-        axisPointer: { type: 'line', lineStyle: { color: 'rgba(123, 234, 220, .45)' } },
-        backgroundColor: 'rgba(5, 19, 23, .94)',
-        borderColor: 'rgba(98, 211, 195, .4)',
-        textStyle: { color: '#d8f4ef', fontSize: 11 },
+        axisPointer: { type: 'line', lineStyle: { color: chartTheme.line } },
+        backgroundColor: chartTheme.tooltipBackground,
+        borderColor: chartTheme.tooltipBorder,
+        textStyle: { color: chartTheme.tooltipText, fontSize: 11 },
       },
       dataZoom: [{ type: 'inside', xAxisIndex: 0, filterMode: 'none', zoomOnMouseWheel: 'ctrl' }],
       xAxis: {
@@ -65,28 +70,28 @@ export default function EfitSignalsChart({ timeline, currentTimeMs, onSeekTimeMs
         name: 't / s',
         nameLocation: 'middle',
         nameGap: 30,
-        axisLine: { lineStyle: { color: '#55766f' } },
-        axisLabel: { color: '#8dafaa', fontSize: 10, formatter: (value: number) => (value / 1000).toFixed(2) },
-        nameTextStyle: { color: '#a9cbc5', fontSize: 10 },
-        splitLine: { lineStyle: { color: 'rgba(120, 164, 157, .1)' } },
+        axisLine: { lineStyle: { color: chartTheme.line } },
+        axisLabel: { color: chartTheme.muted, fontSize: 10, formatter: (value: number) => (value / 1000).toFixed(2) },
+        nameTextStyle: { color: chartTheme.muted, fontSize: 10 },
+        splitLine: { lineStyle: { color: chartTheme.grid } },
       },
       yAxis: [
         {
           type: 'value',
           name: 'Ip / kA',
           scale: true,
-          axisLine: { show: true, lineStyle: { color: '#45ddc7' } },
-          axisLabel: { color: '#75bdb3', fontSize: 10 },
-          nameTextStyle: { color: '#75bdb3', fontSize: 10 },
-          splitLine: { lineStyle: { color: 'rgba(120, 164, 157, .1)' } },
+          axisLine: { show: true, lineStyle: { color: signalColors[0] } },
+          axisLabel: { color: signalColors[0], fontSize: 10 },
+          nameTextStyle: { color: signalColors[0], fontSize: 10 },
+          splitLine: { lineStyle: { color: chartTheme.grid } },
         },
         {
           type: 'value',
           name: t('efit.axisPosition'),
           scale: true,
-          axisLine: { show: true, lineStyle: { color: '#80a7ff' } },
-          axisLabel: { color: '#8fa9d9', fontSize: 10 },
-          nameTextStyle: { color: '#8fa9d9', fontSize: 10 },
+          axisLine: { show: true, lineStyle: { color: signalColors[1] } },
+          axisLabel: { color: signalColors[1], fontSize: 10 },
+          nameTextStyle: { color: signalColors[1], fontSize: 10 },
           splitLine: { show: false },
         },
       ],
@@ -126,7 +131,7 @@ export default function EfitSignalsChart({ timeline, currentTimeMs, onSeekTimeMs
         },
       ],
     };
-  }, [currentTimeMs, t, timeline]);
+  }, [chartTheme, currentTimeMs, t, timeline]);
 
   const validIp = timeline.filter((frame) => Number.isFinite(frame.currentA));
   const fallback = (

@@ -117,6 +117,105 @@
 
 .tokamakCadFootnotes{display:grid;grid-template-columns:1fr 1fr;gap:4vw;max-width:1440px;margin:24px auto 0}.tokamakCadFootnotes p{margin:0;color:#829a90;font-size:11px;line-height:1.75}.tokamakCadFootnotes b{display:block;margin-bottom:4px;color:var(--cad-orange);font-size:9px;letter-spacing:.13em}.tokamakCadFootnotes a{margin-right:14px;color:var(--cad-cyan);font-weight:800;border-bottom:1px solid #64ead54a}
 
+/* Morandi light studio. The dark declarations above remain the dark-theme
+   contract; this layer replaces every workbench surface without muting the
+   scientific plasma/EFIT palette. */
+:root[data-theme='light'] .tokamakCadSection{
+  --cad-bg:var(--color-canvas);
+  --cad-panel:var(--color-surface);
+  --cad-panel-2:var(--color-surface-muted);
+  --cad-line:var(--color-border);
+  --cad-cyan:var(--color-info-strong);
+  --cad-orange:var(--color-accent);
+  --cad-violet:var(--color-violet);
+  --cad-text:var(--color-ink);
+  --cad-muted:var(--color-ink-muted);
+  color:var(--cad-text);
+  background:
+    radial-gradient(circle at 82% 16%,var(--color-info-soft) 0,transparent 34%),
+    radial-gradient(circle at 15% 78%,var(--color-accent-soft) 0,transparent 30%),
+    var(--cad-bg);
+}
+:root[data-theme='light'] .tokamakCadSection:before{opacity:.7;background-image:linear-gradient(var(--color-grid) 1px,transparent 1px),linear-gradient(90deg,var(--color-grid) 1px,transparent 1px)}
+:root[data-theme='light'] .tokamakCadIntro div>p{color:var(--color-ink-muted)}
+:root[data-theme='light'] .tokamakCadShell{border-color:var(--color-border-strong);background:var(--color-surface);box-shadow:var(--shadow-md),inset 0 0 0 1px color-mix(in srgb,var(--color-surface-raised) 70%,transparent)}
+:root[data-theme='light'] .tokamakCadShell:fullscreen{background:var(--color-canvas)}
+:root[data-theme='light'] .tokamakCadTopbar{background:linear-gradient(90deg,var(--color-surface-raised),var(--color-info-soft))}
+:root[data-theme='light'] .tokamakCadIdentity b{color:var(--color-ink)}
+:root[data-theme='light'] .tokamakCadIdentity small{color:var(--color-ink-muted)}
+:root[data-theme='light'] .tokamakCadPulse{box-shadow:0 0 0 5px color-mix(in srgb,var(--color-accent) 13%,transparent),0 0 16px color-mix(in srgb,var(--color-accent) 40%,transparent)}
+:root[data-theme='light'] .tokamakCadLodSelector button{border-color:var(--color-border);color:var(--color-ink-muted);background:var(--color-surface)}
+:root[data-theme='light'] .tokamakCadLodSelector button small{color:var(--color-ink-subtle)}
+:root[data-theme='light'] .tokamakCadLodSelector button.active{color:var(--color-on-inverse);background:var(--color-info-strong);box-shadow:0 7px 18px color-mix(in srgb,var(--color-info) 20%,transparent)}
+:root[data-theme='light'] .tokamakCadLodSelector button.active small{color:var(--color-on-inverse-muted)}
+:root[data-theme='light'] .tokamakCadStatus i{background:var(--color-ink-subtle);box-shadow:0 0 0 4px color-mix(in srgb,var(--color-ink-subtle) 14%,transparent)}
+:root[data-theme='light'] .status-ready .tokamakCadStatus i{background:var(--color-positive);box-shadow:0 0 0 4px color-mix(in srgb,var(--color-positive) 15%,transparent),0 0 14px color-mix(in srgb,var(--color-positive) 38%,transparent)}
+:root[data-theme='light'] .status-error .tokamakCadStatus{color:var(--color-danger)}
+
+:root[data-theme='light'] .tokamakCadWorkspace{background:var(--color-surface)}
+:root[data-theme='light'] .tokamakCadViewportShell{background:radial-gradient(ellipse at 50% 48%,#f7f3ec 0,#e9e4dc 42%,#d8d0c5 100%)}
+:root[data-theme='light'] .tokamakCadViewportShell:before{border-color:color-mix(in srgb,var(--color-info) 30%,transparent)}
+:root[data-theme='light'] .tokamakCadViewportShell:after{background:radial-gradient(ellipse at 50% 52%,transparent 50%,rgb(89 76 65 / 18%) 100%)}
+:root[data-theme='light'] .tokamakCadSection.appearance-industrial-silver-v1 .tokamakCadViewportShell{background:radial-gradient(circle at 50% 42%,#fbf8f2 0,#e7e2da 48%,#cfc7bc 100%)}
+:root[data-theme='light'] .tokamakCadSection.appearance-industrial-silver-v1 .tokamakCadViewportShell:after{background:radial-gradient(ellipse at 50% 52%,transparent 52%,rgb(70 64 57 / 17%) 100%)}
+:root[data-theme='light'] .tokamakCadSection.appearance-industrial-silver-v1 .tokamakCadViewportShell:before{border-color:color-mix(in srgb,var(--color-border-strong) 62%,transparent)}
+:root[data-theme='light'] .tokamakCadPoster{filter:saturate(.82) contrast(.96) brightness(1.02)}
+:root[data-theme='light'] .tokamakCadScan{background:linear-gradient(to bottom,transparent,color-mix(in srgb,var(--color-info) 13%,transparent),transparent);mix-blend-mode:multiply}
+:root[data-theme='light'] .tokamakCadSection.appearance-industrial-silver-v1 .tokamakCadScan{background:linear-gradient(to bottom,transparent,rgb(113 133 121 / 12%),transparent)}
+:root[data-theme='light'] .tokamakCadReticle{border-color:color-mix(in srgb,var(--color-info) 24%,transparent)}
+:root[data-theme='light'] .tokamakCadReticle:before,:root[data-theme='light'] .tokamakCadReticle:after{border-color:color-mix(in srgb,var(--color-info) 20%,transparent)}
+:root[data-theme='light'] .tokamakCadReticle i{background:color-mix(in srgb,var(--color-info) 18%,transparent)}
+
+:root[data-theme='light'] .tokamakCadLaunch,:root[data-theme='light'] .tokamakCadLoading,:root[data-theme='light'] .tokamakCadFallback{color:var(--color-ink-muted);background:color-mix(in srgb,var(--color-surface) 91%,transparent);backdrop-filter:blur(8px)}
+:root[data-theme='light'] .tokamakCadLaunch{background:radial-gradient(circle at 50% 47%,color-mix(in srgb,var(--color-info-soft) 78%,transparent),color-mix(in srgb,var(--color-surface) 94%,transparent) 70%)}
+:root[data-theme='light'] .tokamakCadFallback{background:radial-gradient(circle at 50% 47%,color-mix(in srgb,var(--color-accent-soft) 82%,transparent),color-mix(in srgb,var(--color-surface) 96%,transparent) 68%)}
+:root[data-theme='light'] .tokamakCadLaunch h3,:root[data-theme='light'] .tokamakCadFallback h3{color:var(--color-ink)}
+:root[data-theme='light'] .tokamakCadLaunch>span,:root[data-theme='light'] .tokamakCadFallback>span{color:var(--color-ink-muted)}
+:root[data-theme='light'] .tokamakCadLaunch button,:root[data-theme='light'] .tokamakCadFallback button{color:var(--color-on-inverse);box-shadow:0 12px 30px color-mix(in srgb,var(--color-accent) 20%,transparent)}
+:root[data-theme='light'] .tokamakCadLaunch button:hover,:root[data-theme='light'] .tokamakCadLaunch button:focus-visible{background:var(--color-accent-strong);box-shadow:0 15px 34px color-mix(in srgb,var(--color-accent) 28%,transparent)}
+:root[data-theme='light'] .tokamakCadLoading>div{background:var(--color-surface-subtle)}
+:root[data-theme='light'] .tokamakCadLoading>b{color:var(--color-ink)}
+:root[data-theme='light'] .tokamakCadLodNotice,:root[data-theme='light'] .tokamakCadLoading .tokamakCadLodNotice{color:var(--color-warning)}
+
+:root[data-theme='light'] .tokamakCadLegend,:root[data-theme='light'] .tokamakCadReadout{border-color:var(--color-border);background:color-mix(in srgb,var(--color-surface-raised) 88%,transparent);box-shadow:var(--shadow-sm)}
+:root[data-theme='light'] .tokamakCadLegend span{color:var(--color-ink-muted)}
+:root[data-theme='light'] .tokamakCadLegend .structure{color:#957351;background:#957351}
+:root[data-theme='light'] .tokamakCadReadout>span{border-color:var(--color-border)}
+:root[data-theme='light'] .tokamakCadReadout small{color:var(--color-ink-subtle)}
+:root[data-theme='light'] .tokamakCadReadout b{color:var(--color-ink)}
+
+:root[data-theme='light'] .tokamakCadTree,:root[data-theme='light'] .tokamakCadProperties{background:linear-gradient(180deg,var(--color-surface-raised),var(--color-surface));border-color:var(--color-border)}
+:root[data-theme='light'] .tokamakCadPanelHead{background:var(--color-surface-muted)}
+:root[data-theme='light'] .tokamakCadPanelHead span{color:var(--color-ink-muted)}
+:root[data-theme='light'] .tokamakCadSearch input{border-color:var(--color-border);color:var(--color-ink);background:var(--color-surface-raised)}
+:root[data-theme='light'] .tokamakCadSearch input::placeholder{color:var(--color-ink-subtle)}
+:root[data-theme='light'] .tokamakCadTreeScroll{scrollbar-color:var(--color-border-strong) var(--color-surface)}
+:root[data-theme='light'] .tokamakCadSystem{border-color:var(--color-border)}
+:root[data-theme='light'] .tokamakCadSystemButton{color:var(--color-ink);background:var(--color-surface)}
+:root[data-theme='light'] .tokamakCadSystemButton:hover,:root[data-theme='light'] .tokamakCadSystemButton:focus-visible{background:var(--color-info-soft)}
+:root[data-theme='light'] .tokamakCadSystemButton small,:root[data-theme='light'] .tokamakCadSystemButton>b{color:var(--color-ink-subtle)}
+:root[data-theme='light'] .tokamakCadParts{background:var(--color-surface-raised)}
+:root[data-theme='light'] .tokamakCadPart.active{background:var(--color-accent-soft)}
+:root[data-theme='light'] .tokamakCadPartSelect,:root[data-theme='light'] .tokamakCadIconButton{color:var(--color-ink-muted)}
+:root[data-theme='light'] .tokamakCadPartSelect:hover,:root[data-theme='light'] .tokamakCadPartSelect:focus-visible{background:var(--color-info-soft)}
+:root[data-theme='light'] .tokamakCadPartSelect small,:root[data-theme='light'] .tokamakCadEmpty{color:var(--color-ink-subtle)}
+:root[data-theme='light'] .tokamakCadPropertyBody h3{color:var(--color-ink)}
+:root[data-theme='light'] .tokamakCadPropertyBody>p:not(.tokamakCadPropertyKicker),:root[data-theme='light'] .tokamakCadPropertyBody dt{color:var(--color-ink-muted)}
+:root[data-theme='light'] .tokamakCadPropertyBody dl div{border-color:var(--color-border)}
+:root[data-theme='light'] .tokamakCadPropertyBody dd{color:var(--color-ink)}
+:root[data-theme='light'] .tokamakCadPropertyActions button{border-color:var(--color-border);color:var(--color-ink-muted);background:var(--color-surface-muted)}
+:root[data-theme='light'] .tokamakCadPropertyActions button:hover,:root[data-theme='light'] .tokamakCadPropertyActions button:focus-visible,:root[data-theme='light'] .tokamakCadPropertyActions button.active{color:var(--color-on-inverse);background:var(--color-info-strong)}
+:root[data-theme='light'] .tokamakCadPropertyEmpty>span{color:var(--color-info)}
+:root[data-theme='light'] .tokamakCadPropertyEmpty p{color:var(--color-ink-muted)}
+
+:root[data-theme='light'] .tokamakCadControls{background:var(--color-surface-muted)}
+:root[data-theme='light'] .tokamakCadPresets>span,:root[data-theme='light'] .tokamakCadClipControl label{color:var(--color-ink-muted)}
+:root[data-theme='light'] .tokamakCadControls button{border-color:var(--color-border);color:var(--color-ink-muted);background:var(--color-surface-raised)}
+:root[data-theme='light'] .tokamakCadControls button.active{color:var(--color-on-inverse);background:var(--color-info-strong);box-shadow:0 7px 18px color-mix(in srgb,var(--color-info) 22%,transparent)}
+:root[data-theme='light'] .tokamakCadControls button:disabled,:root[data-theme='light'] .tokamakCadTreeActions button:disabled{opacity:.52}
+:root[data-theme='light'] .tokamakCadFootnotes p{color:var(--color-ink-muted)}
+:root[data-theme='light'] .tokamakCadFootnotes a{border-color:color-mix(in srgb,var(--color-info) 45%,transparent)}
+
 @keyframes tokamakCadPulse{50%{opacity:.54;box-shadow:0 0 0 9px #ff7a2f08,0 0 28px #ff7a2f99}}
 @keyframes tokamakCadScan{from{transform:translateY(0)}to{transform:translateY(930%)}}
 @keyframes tokamakCadCore{50%{transform:scale(1.16);opacity:.72}}
@@ -173,5 +272,16 @@
 .tokamakCadEfitControls button{min-height:34px;padding:7px 12px;border:1px solid #ff7a2f55;color:#c4a18e;background:#20150f;font:800 8px/1 "Microsoft YaHei UI","Microsoft YaHei",sans-serif;cursor:pointer}
 .tokamakCadEfitControls button.active{color:#1b0f09;background:var(--cad-orange)}
 .tokamakCadEfitControls label{display:flex;align-items:center;gap:5px;min-height:34px;padding:0 8px;border:1px solid #759c8d2d;color:#91aa9f;font-size:8px;font-weight:800;white-space:nowrap}.tokamakCadEfitControls input{accent-color:var(--cad-orange)}
+:root[data-theme='light'] .tokamakCadTreeActions{background:var(--color-surface-muted)}
+:root[data-theme='light'] .tokamakCadTreeActions button{border-color:var(--color-border);color:var(--color-ink-muted);background:var(--color-surface-raised)}
+:root[data-theme='light'] .tokamakCadTreeActions button.active{color:var(--color-on-inverse);background:var(--color-info-strong)}
+:root[data-theme='light'] .tokamakCadPartToggle{border-color:var(--color-border-strong);color:var(--color-on-inverse)}
+:root[data-theme='light'] .tokamakCadSelectionSummary{border-color:color-mix(in srgb,var(--color-accent) 40%,transparent);color:var(--color-accent-strong)!important;background:var(--color-accent-soft)}
+:root[data-theme='light'] .tokamakCadOpacityControl label,:root[data-theme='light'] .tokamakCadClipControl label{color:var(--color-ink-muted)}
+:root[data-theme='light'] .tokamakCadOpacityControl b,:root[data-theme='light'] .tokamakCadClipControl label b{color:var(--color-ink)}
+:root[data-theme='light'] .tokamakCadEfitControls{border-color:color-mix(in srgb,var(--color-accent) 38%,transparent);background:linear-gradient(90deg,var(--color-accent-soft),var(--color-surface-muted))}
+:root[data-theme='light'] .tokamakCadEfitControls button{border-color:color-mix(in srgb,var(--color-accent) 45%,transparent);color:var(--color-accent-strong);background:var(--color-surface-raised)}
+:root[data-theme='light'] .tokamakCadEfitControls button.active{color:var(--color-on-inverse);background:var(--color-accent)}
+:root[data-theme='light'] .tokamakCadEfitControls label{border-color:var(--color-border);color:var(--color-ink-muted);background:color-mix(in srgb,var(--color-surface-raised) 75%,transparent)}
 @media(max-width:1100px){.tokamakCadControls{grid-template-columns:1fr auto}.tokamakCadPrecisionControls{grid-column:1/-1;grid-row:2;grid-template-columns:auto minmax(140px,1fr) minmax(110px,.7fr) minmax(110px,.7fr)}.tokamakCadTools{grid-column:2;grid-row:1}}
 @media(max-width:650px){.tokamakCadTreeScroll{height:calc(100% - 220px)}.tokamakCadControls{display:flex}.tokamakCadPrecisionControls{display:grid;grid-template-columns:auto 1fr}.tokamakCadOpacityControl.global{grid-column:1/-1}.tokamakCadClipAxes{align-self:end}.tokamakCadEfitControls{align-items:stretch;flex-wrap:wrap;padding:10px 14px}.tokamakCadEfitControls>span{width:100%;margin:0}.tokamakCadEfitControls button,.tokamakCadEfitControls label{flex:1;justify-content:center}}

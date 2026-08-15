@@ -3,6 +3,7 @@
 import type { EChartsCoreOption } from 'echarts/core';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import ScientificChart from '@/app/components/charts/ScientificChart';
+import { useChartTheme, type ChartThemePalette } from '@/app/components/charts/chart-theme';
 import type { GraphQueryResponse, KnowledgeGraphNode } from './types';
 
 type ExplorerProps = {
@@ -38,8 +39,15 @@ function escapeTooltip(value: unknown) {
     .replaceAll("'", '&#39;');
 }
 
-function graphOption(data: GraphQueryResponse, selectedId: string): EChartsCoreOption {
-  const categories = Object.entries(domainMeta).map(([name, meta]) => ({ name, itemStyle: { color: meta.color } }));
+function graphOption(data: GraphQueryResponse, selectedId: string, chartTheme: ChartThemePalette): EChartsCoreOption {
+  const domainColor = (domain: keyof typeof domainMeta) => {
+    if (chartTheme.mode === 'dark') return domainMeta[domain].color;
+    const lightColors: Record<keyof typeof domainMeta, string> = {
+      physics: '#b85b37', engineering: '#9b7633', control: '#49766a', diagnostics: '#426f98', ai: '#75617e', facility: '#52685b',
+    };
+    return lightColors[domain];
+  };
+  const categories = Object.entries(domainMeta).map(([name]) => ({ name, itemStyle: { color: domainColor(name as keyof typeof domainMeta) } }));
   const relationCounts = new Map<string, number>();
   for (const edge of data.edges) relationCounts.set(edge.relation, (relationCounts.get(edge.relation) ?? 0) + 1);
   return {
@@ -48,9 +56,9 @@ function graphOption(data: GraphQueryResponse, selectedId: string): EChartsCoreO
     tooltip: {
       trigger: 'item',
       confine: true,
-      backgroundColor: 'rgba(7, 16, 13, .96)',
-      borderColor: '#476356',
-      textStyle: { color: '#e9f3ed', fontFamily: 'Microsoft YaHei UI, Microsoft YaHei, sans-serif', fontSize: 11 },
+      backgroundColor: chartTheme.tooltipBackground,
+      borderColor: chartTheme.tooltipBorder,
+      textStyle: { color: chartTheme.tooltipText, fontFamily: 'Microsoft YaHei UI, Microsoft YaHei, sans-serif', fontSize: 11 },
       formatter(params: unknown) {
         const p = params as { dataType?: string; data?: Record<string, unknown> };
         if (p.dataType === 'edge') return `<b>${escapeTooltip(p.data?.relation)}</b><br/>${escapeTooltip(p.data?.evidenceLabel ?? '点击端点查看证据')}`;
@@ -58,7 +66,7 @@ function graphOption(data: GraphQueryResponse, selectedId: string): EChartsCoreO
         return `<b>${escapeTooltip(node.label)}</b><br/>${escapeTooltip(typeMeta[node.type]?.label ?? node.type)} · ${escapeTooltip(domainMeta[node.domain]?.label ?? node.domain)}<br/>关联 ${node.degree} 条`;
       },
     },
-    legend: [{ data: categories.map((item) => item.name), left: 18, top: 12, textStyle: { color: '#9eb3a8', fontSize: 10 }, itemWidth: 11, itemHeight: 8 }],
+    legend: [{ data: categories.map((item) => item.name), left: 18, top: 12, textStyle: { color: chartTheme.muted, fontSize: 10 }, itemWidth: 11, itemHeight: 8 }],
     series: [{
       type: 'graph',
       layout: data.nodes.length > 20 ? 'force' : 'circular',
@@ -70,13 +78,13 @@ function graphOption(data: GraphQueryResponse, selectedId: string): EChartsCoreO
         category: Object.keys(domainMeta).indexOf(node.domain),
         symbol: typeMeta[node.type]?.symbol ?? 'circle',
         symbolSize: Math.min(42, 10 + Math.sqrt(node.degree + 1) * 3.25) + (node.id === selectedId ? 7 : 0),
-        itemStyle: { color: domainMeta[node.domain]?.color ?? '#d9e4de', borderColor: node.id === selectedId ? '#fff' : '#07100d', borderWidth: node.id === selectedId ? 3 : 1, shadowBlur: node.id === selectedId ? 18 : 5, shadowColor: domainMeta[node.domain]?.color ?? '#fff' },
-        label: { show: node.id === selectedId || node.degree >= Math.max(8, Math.ceil(data.nodes.length / 18)), color: '#dcebe3', fontSize: 9, formatter: node.label.length > 22 ? `${node.label.slice(0, 21)}…` : node.label },
+        itemStyle: { color: domainColor(node.domain), borderColor: node.id === selectedId ? chartTheme.text : chartTheme.background, borderWidth: node.id === selectedId ? 3 : 1, shadowBlur: node.id === selectedId ? 18 : 5, shadowColor: domainColor(node.domain) },
+        label: { show: node.id === selectedId || node.degree >= Math.max(8, Math.ceil(data.nodes.length / 18)), color: chartTheme.text, fontSize: 9, formatter: node.label.length > 22 ? `${node.label.slice(0, 21)}…` : node.label },
       })),
       links: data.edges.map((edge) => ({
         ...edge,
         value: edge.relation,
-        lineStyle: { color: domainMeta[edge.domain]?.color ?? '#82968b', opacity: .22, width: Math.min(2.2, 0.7 + Math.log2((relationCounts.get(edge.relation) ?? 1) + 1) * .18), curveness: .07 },
+        lineStyle: { color: domainColor(edge.domain), opacity: chartTheme.mode === 'dark' ? .22 : .34, width: Math.min(2.2, 0.7 + Math.log2((relationCounts.get(edge.relation) ?? 1) + 1) * .18), curveness: .07 },
         emphasis: { lineStyle: { opacity: .9, width: 2.2 } },
       })),
       categories,
@@ -96,6 +104,7 @@ function nodeDescription(node: KnowledgeGraphNode) {
 }
 
 export default function KnowledgeGraphExplorer({ initial, devices }: ExplorerProps) {
+  const chartTheme = useChartTheme();
   const [data, setData] = useState(initial);
   const [query, setQuery] = useState('');
   const [domain, setDomain] = useState('all');
@@ -111,7 +120,7 @@ export default function KnowledgeGraphExplorer({ initial, devices }: ExplorerPro
   const selected = data.nodes.find((node) => node.id === selectedId) ?? null;
   const selectedRelations = useMemo(() => data.edges.filter((edge) => edge.source === selectedId || edge.target === selectedId).slice(0, 60), [data.edges, selectedId]);
   const nodeIndex = useMemo(() => new Map(data.nodes.map((node) => [node.id, node])), [data.nodes]);
-  const option = useMemo(() => graphOption(data, selectedId), [data, selectedId]);
+  const option = useMemo(() => graphOption(data, selectedId, chartTheme), [chartTheme, data, selectedId]);
 
   async function load(params: { focus?: string; requestedDepth?: 0 | 1 | 2; requestedLimit?: number } = {}) {
     requestRef.current?.abort();

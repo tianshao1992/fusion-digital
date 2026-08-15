@@ -4,6 +4,7 @@ import type { EChartsCoreOption } from 'echarts/core';
 import type { CustomSeriesRenderItem } from 'echarts/types/dist/option';
 import { useCallback, useMemo } from 'react';
 import { useI18n, type MessageKey } from '../../i18n';
+import { useChartTheme } from '../charts/chart-theme';
 import { deriveReviewedDivertorRegion } from './divertor-region';
 import EfitCanvasChart from './EfitCanvasChart';
 import { PSI_N_COLORS } from './psi-n-palette';
@@ -68,6 +69,7 @@ function finiteExtent(values: number[], paddingRatio = 0.05): [number, number] |
 
 export default function EfitEquilibriumChart({ frame, geometry }: EfitEquilibriumChartProps) {
   const { t } = useI18n();
+  const chartTheme = useChartTheme();
   const topologyLabel = useCallback((kind: EfitTopologyKind) => t(efitTopologyMessageKey(kind)), [t]);
   const extent = geometry?.gridExtentM;
   const dataAspectRatio = extent && extent[1] > extent[0] && extent[3] > extent[2]
@@ -167,7 +169,7 @@ export default function EfitEquilibriumChart({ frame, geometry }: EfitEquilibriu
         shape: { points },
         style: {
           fill: typeof visualColor === 'string' ? visualColor : PSI_N_COLORS[0],
-          stroke: 'rgba(241, 255, 252, .18)',
+          stroke: chartTheme.mode === 'dark' ? 'rgba(241, 255, 252, .18)' : 'rgba(47, 43, 39, .22)',
           lineWidth: 0.55,
           opacity: 0.86,
         },
@@ -182,11 +184,11 @@ export default function EfitEquilibriumChart({ frame, geometry }: EfitEquilibriu
         type: 'polygon',
         shape: { points },
         style: {
-          fill: 'rgba(255, 132, 55, .28)',
-          stroke: '#ff9a52',
+          fill: chartTheme.mode === 'dark' ? 'rgba(255, 132, 55, .28)' : 'rgba(200, 101, 69, .24)',
+          stroke: chartTheme.accent,
           lineWidth: 1.35,
           shadowBlur: 8,
-          shadowColor: 'rgba(255, 111, 37, .24)',
+          shadowColor: chartTheme.accent,
         },
         z2: 0,
       };
@@ -201,9 +203,11 @@ export default function EfitEquilibriumChart({ frame, geometry }: EfitEquilibriu
       connectNulls: false,
       lineStyle: {
         width: contour.kind === 'lcfs' ? 2.7 : 1.25,
-        color: contour.kind === 'lcfs' ? '#ffd5ef' : 'rgba(235, 255, 251, .56)',
+        color: contour.kind === 'lcfs'
+          ? (chartTheme.mode === 'dark' ? '#ffd5ef' : '#7d4e73')
+          : (chartTheme.mode === 'dark' ? 'rgba(235, 255, 251, .56)' : 'rgba(47, 83, 69, .58)'),
         shadowBlur: contour.kind === 'lcfs' ? 11 : 2,
-        shadowColor: contour.kind === 'lcfs' ? 'rgba(255, 104, 207, .56)' : 'rgba(61, 209, 195, .18)',
+        shadowColor: contour.kind === 'lcfs' ? chartTheme.violet : chartTheme.info,
       },
       z: contour.kind === 'lcfs' ? 12 : 11,
       emphasis: { disabled: true },
@@ -218,9 +222,9 @@ export default function EfitEquilibriumChart({ frame, geometry }: EfitEquilibriu
       connectNulls: false,
       lineStyle: {
         width: 2.35,
-        color: '#ff9a52',
+        color: chartTheme.accent,
         shadowBlur: 9,
-        shadowColor: 'rgba(255, 111, 37, .5)',
+        shadowColor: chartTheme.accent,
       },
       z: 15,
       emphasis: { disabled: true },
@@ -257,18 +261,18 @@ export default function EfitEquilibriumChart({ frame, geometry }: EfitEquilibriu
         calculable: false,
         text: ['ψN 1', '0'],
         textGap: 6,
-        textStyle: { color: '#9abdb6', fontSize: 9 },
+        textStyle: { color: chartTheme.muted, fontSize: 9 },
         inRange: { color: PSI_N_COLORS },
-        borderColor: 'rgba(185, 235, 226, .22)',
+        borderColor: chartTheme.line,
       } : undefined,
       grid: { left: 56, right: 64, top: 24, bottom: 48, containLabel: false },
       tooltip: {
         trigger: 'axis',
-        axisPointer: { type: 'cross', lineStyle: { color: 'rgba(123, 234, 220, .45)' } },
+        axisPointer: { type: 'cross', lineStyle: { color: chartTheme.line } },
         valueFormatter: (value: unknown) => typeof value === 'number' ? `${value.toFixed(3)} m` : String(value),
-        backgroundColor: 'rgba(5, 19, 23, .94)',
-        borderColor: 'rgba(98, 211, 195, .4)',
-        textStyle: { color: '#d8f4ef' },
+        backgroundColor: chartTheme.tooltipBackground,
+        borderColor: chartTheme.tooltipBorder,
+        textStyle: { color: chartTheme.tooltipText },
       },
       xAxis: {
         type: 'value',
@@ -278,10 +282,10 @@ export default function EfitEquilibriumChart({ frame, geometry }: EfitEquilibriu
         min: rExtent?.[0],
         max: rExtent?.[1],
         scale: true,
-        axisLine: { lineStyle: { color: '#55766f' } },
-        axisLabel: { color: '#8dafaa', fontSize: 11, formatter: (value: number) => value.toFixed(2) },
-        nameTextStyle: { color: '#a9cbc5', fontSize: 11 },
-        splitLine: { lineStyle: { color: 'rgba(120, 164, 157, .12)' } },
+        axisLine: { lineStyle: { color: chartTheme.line } },
+        axisLabel: { color: chartTheme.muted, fontSize: 11, formatter: (value: number) => value.toFixed(2) },
+        nameTextStyle: { color: chartTheme.muted, fontSize: 11 },
+        splitLine: { lineStyle: { color: chartTheme.grid } },
       },
       yAxis: {
         type: 'value',
@@ -291,10 +295,10 @@ export default function EfitEquilibriumChart({ frame, geometry }: EfitEquilibriu
         min: zExtent?.[0],
         max: zExtent?.[1],
         scale: true,
-        axisLine: { show: true, lineStyle: { color: '#55766f' } },
-        axisLabel: { color: '#8dafaa', fontSize: 11, formatter: (value: number) => value.toFixed(2) },
-        nameTextStyle: { color: '#a9cbc5', fontSize: 11 },
-        splitLine: { lineStyle: { color: 'rgba(120, 164, 157, .12)' } },
+        axisLine: { show: true, lineStyle: { color: chartTheme.line } },
+        axisLabel: { color: chartTheme.muted, fontSize: 11, formatter: (value: number) => value.toFixed(2) },
+        nameTextStyle: { color: chartTheme.muted, fontSize: 11 },
+        splitLine: { lineStyle: { color: chartTheme.grid } },
       },
       series: [
         {
@@ -316,7 +320,7 @@ export default function EfitEquilibriumChart({ frame, geometry }: EfitEquilibriu
           data: limiterData,
           showSymbol: false,
           silent: true,
-          lineStyle: { color: '#b7c4c1', width: 1.5, type: 'dashed', opacity: 0.78 },
+          lineStyle: { color: chartTheme.muted, width: 1.5, type: 'dashed', opacity: 0.78 },
           z: 13,
           animation: false,
         },
@@ -351,7 +355,7 @@ export default function EfitEquilibriumChart({ frame, geometry }: EfitEquilibriu
             show: true,
             position: 'right' as const,
             distance: 6,
-            color: '#ffe8bb',
+            color: chartTheme.mode === 'dark' ? '#ffe8bb' : '#6c4b1e',
             fontSize: 9,
             formatter: '{b}',
           },
@@ -386,7 +390,7 @@ export default function EfitEquilibriumChart({ frame, geometry }: EfitEquilibriu
         }] : []),
       ],
     };
-  }, [frame, geometry, t, topologyLabel]);
+  }, [chartTheme, frame, geometry, t, topologyLabel]);
 
   const fallback = frame ? (
     <div className="efitChartTextFallback">

@@ -25,8 +25,10 @@ import {
   resolveIndustrialMaterialSpec,
   type TokamakAppearancePreset,
 } from './device-viewer/industrialAppearance';
+import { resolveCadSceneTheme } from './device-viewer/cadSceneTheme';
 import { resolveShotGeometry, type EfitFrame, type EfitStore } from './efit';
 import { useI18n } from '../i18n';
+import { useTheme, type ResolvedTheme } from './theme';
 import {
   parseDeviceManifest,
   type DeviceManifest,
@@ -96,6 +98,7 @@ type ViewerApi = {
   setWireframe: (enabled: boolean) => void;
   setClipping: (enabled: boolean, axis: ClipAxis, offset: number) => void;
   setOpacity: (globalOpacity: number, selectedOpacity: number) => void;
+  setVisualTheme: (theme: ResolvedTheme) => void;
   applyVisibility: (hidden: Set<string>, isolated: Set<string>) => void;
   selectParts: (partIds: Set<string>) => void;
   pickPart: (event: PointerEvent) => string | null;
@@ -224,7 +227,9 @@ function TokamakCadViewerSession({
   efitControls,
 }: TokamakCadViewerProps = {}) {
   const { content, locale, t } = useI18n();
+  const { resolvedTheme } = useTheme();
   const i18nRef = useRef({ content, t });
+  const visualThemeRef = useRef(resolvedTheme);
   useEffect(() => {
     i18nRef.current = { content, t };
   }, [content, t]);
@@ -232,6 +237,10 @@ function TokamakCadViewerSession({
   const mountRef = useRef<HTMLDivElement>(null);
   const fullscreenRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<ViewerApi | null>(null);
+  useEffect(() => {
+    visualThemeRef.current = resolvedTheme;
+    viewerRef.current?.setVisualTheme(resolvedTheme);
+  }, [resolvedTheme]);
   const efitStateRef = useRef({
     frame: efitFrame,
     store: efitStore,
@@ -413,11 +422,12 @@ function TokamakCadViewerSession({
 
       const mount = mountRef.current;
       const industrialAppearance = appearancePreset === 'industrial-silver-v1';
+      const initialSceneTheme = resolveCadSceneTheme(visualThemeRef.current, appearancePreset);
       const scene = new THREE.Scene();
       localScene = scene;
       scene.fog = new THREE.FogExp2(
-        industrialAppearance ? INDUSTRIAL_STUDIO.fogColor : 0x07110e,
-        industrialAppearance ? INDUSTRIAL_STUDIO.fogDensity : 0.032,
+        initialSceneTheme.fogColor,
+        initialSceneTheme.fogDensity,
       );
       const camera = new THREE.PerspectiveCamera(36, 1, 0.02, 120);
       const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'high-performance' });
@@ -425,8 +435,8 @@ function TokamakCadViewerSession({
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = industrialAppearance ? INDUSTRIAL_STUDIO.exposure : 1.2;
-      renderer.setClearColor(industrialAppearance ? INDUSTRIAL_STUDIO.clearColor : 0x07110e, 0);
+      renderer.toneMappingExposure = initialSceneTheme.exposure;
+      renderer.setClearColor(initialSceneTheme.clearColor, initialSceneTheme.clearAlpha);
       renderer.localClippingEnabled = true;
       renderer.domElement.setAttribute('aria-label', i18nRef.current.t('viewer.threeAria', {
         title: i18nRef.current.content(loadedManifest.title),
@@ -446,6 +456,7 @@ function TokamakCadViewerSession({
       controls.maxDistance = 15;
       controls.autoRotateSpeed = 0.72;
 
+      let applyLightTheme: (theme: ResolvedTheme) => void;
       if (industrialAppearance) {
         if (!environmentModule) throw new Error(i18nRef.current.t('viewer.errorEnvironment'));
         const roomEnvironment = new environmentModule.RoomEnvironment();
@@ -454,31 +465,52 @@ function TokamakCadViewerSession({
           pmremGenerator.compileEquirectangularShader();
           localEnvironmentTarget = pmremGenerator.fromScene(roomEnvironment, 0.04);
           scene.environment = localEnvironmentTarget.texture;
-          scene.environmentIntensity = INDUSTRIAL_STUDIO.environmentIntensity;
+          scene.environmentIntensity = initialSceneTheme.environmentIntensity;
         } finally {
           roomEnvironment.dispose();
           pmremGenerator.dispose();
         }
-        const hemisphere = INDUSTRIAL_STUDIO.hemisphere;
-        scene.add(new THREE.HemisphereLight(hemisphere.sky, hemisphere.ground, hemisphere.intensity));
-        const key = new THREE.DirectionalLight(INDUSTRIAL_STUDIO.key.color, INDUSTRIAL_STUDIO.key.intensity);
-        key.position.set(...INDUSTRIAL_STUDIO.key.position);
-        const fill = new THREE.DirectionalLight(INDUSTRIAL_STUDIO.fill.color, INDUSTRIAL_STUDIO.fill.intensity);
-        fill.position.set(...INDUSTRIAL_STUDIO.fill.position);
-        const rim = new THREE.DirectionalLight(INDUSTRIAL_STUDIO.rim.color, INDUSTRIAL_STUDIO.rim.intensity);
-        rim.position.set(...INDUSTRIAL_STUDIO.rim.position);
-        scene.add(key, fill, rim);
+        const rig = initialSceneTheme.lights;
+        if (rig.kind !== 'industrial') throw new Error(i18nRef.current.t('viewer.errorEnvironment'));
+        const hemisphere = new THREE.HemisphereLight(rig.hemisphere.sky, rig.hemisphere.ground, rig.hemisphere.intensity);
+        const key = new THREE.DirectionalLight(rig.key.color, rig.key.intensity);
+        key.position.set(...rig.key.position);
+        const fill = new THREE.DirectionalLight(rig.fill.color, rig.fill.intensity);
+        fill.position.set(...rig.fill.position);
+        const rim = new THREE.DirectionalLight(rig.rim.color, rig.rim.intensity);
+        rim.position.set(...rig.rim.position);
+        scene.add(hemisphere, key, fill, rim);
+        applyLightTheme = (theme) => {
+          const next = resolveCadSceneTheme(theme, appearancePreset).lights;
+          if (next.kind !== 'industrial') return;
+          hemisphere.color.setHex(next.hemisphere.sky);
+          hemisphere.groundColor.setHex(next.hemisphere.ground);
+          hemisphere.intensity = next.hemisphere.intensity;
+          key.color.setHex(next.key.color); key.intensity = next.key.intensity;
+          fill.color.setHex(next.fill.color); fill.intensity = next.fill.intensity;
+          rim.color.setHex(next.rim.color); rim.intensity = next.rim.intensity;
+        };
       } else {
-        scene.add(new THREE.HemisphereLight(0xbdeee2, 0x11100f, 2.4));
-        const cyanLight = new THREE.DirectionalLight(0x67eed8, 3.2);
-        cyanLight.position.set(4, 5, 6);
-        scene.add(cyanLight);
-        const orangeLight = new THREE.PointLight(0xff6b24, 26, 20, 1.7);
-        orangeLight.position.set(-4, 1.5, 3);
-        scene.add(orangeLight);
-        const violetLight = new THREE.PointLight(0x8e6cff, 25, 16, 1.8);
-        violetLight.position.set(1, -3, -4);
-        scene.add(violetLight);
+        const rig = initialSceneTheme.lights;
+        if (rig.kind !== 'semantic') throw new Error(i18nRef.current.t('viewer.errorEnvironment'));
+        const hemisphere = new THREE.HemisphereLight(rig.hemisphere.sky, rig.hemisphere.ground, rig.hemisphere.intensity);
+        const key = new THREE.DirectionalLight(rig.key.color, rig.key.intensity);
+        key.position.set(...rig.key.position);
+        const warm = new THREE.PointLight(rig.warm.color, rig.warm.intensity, 20, 1.7);
+        warm.position.set(...rig.warm.position);
+        const violet = new THREE.PointLight(rig.violet.color, rig.violet.intensity, 16, 1.8);
+        violet.position.set(...rig.violet.position);
+        scene.add(hemisphere, key, warm, violet);
+        applyLightTheme = (theme) => {
+          const next = resolveCadSceneTheme(theme, appearancePreset).lights;
+          if (next.kind !== 'semantic') return;
+          hemisphere.color.setHex(next.hemisphere.sky);
+          hemisphere.groundColor.setHex(next.hemisphere.ground);
+          hemisphere.intensity = next.hemisphere.intensity;
+          key.color.setHex(next.key.color); key.intensity = next.key.intensity;
+          warm.color.setHex(next.warm.color); warm.intensity = next.warm.intensity;
+          violet.color.setHex(next.violet.color); violet.intensity = next.violet.intensity;
+        };
       }
 
       const viewerMaterials = new Set<Material>();
@@ -599,20 +631,20 @@ function TokamakCadViewerSession({
       const grid = new THREE.GridHelper(
         18,
         36,
-        industrialAppearance ? INDUSTRIAL_STUDIO.grid.center : 0x3ab7a4,
-        industrialAppearance ? INDUSTRIAL_STUDIO.grid.line : 0x1b4238,
+        initialSceneTheme.grid.center,
+        initialSceneTheme.grid.line,
       );
       grid.position.y = floorY;
       materialList(grid.material).forEach((material) => {
         material.transparent = true;
-        material.opacity = industrialAppearance ? INDUSTRIAL_STUDIO.grid.opacity : 0.28;
+        material.opacity = initialSceneTheme.grid.opacity;
         disposableMaterials.add(material);
       });
       scene.add(grid);
       const orbitMaterial = new THREE.MeshBasicMaterial({
-        color: industrialAppearance ? INDUSTRIAL_STUDIO.orbit.color : 0x53e6cf,
+        color: initialSceneTheme.orbit.color,
         transparent: true,
-        opacity: industrialAppearance ? INDUSTRIAL_STUDIO.orbit.opacity : 0.22,
+        opacity: initialSceneTheme.orbit.opacity,
         side: THREE.DoubleSide,
       });
       const orbit = new THREE.Mesh(new THREE.TorusGeometry(3.72, 0.008, 6, 180), orbitMaterial);
@@ -620,6 +652,39 @@ function TokamakCadViewerSession({
       orbit.rotation.x = Math.PI / 2;
       orbit.position.y = floorY + 0.03;
       scene.add(orbit);
+
+      const setVisualTheme = (theme: ResolvedTheme) => {
+        const next = resolveCadSceneTheme(theme, appearancePreset);
+        if (scene.fog instanceof THREE.FogExp2) {
+          scene.fog.color.setHex(next.fogColor);
+          scene.fog.density = next.fogDensity;
+        }
+        renderer.toneMappingExposure = next.exposure;
+        renderer.setClearColor(next.clearColor, next.clearAlpha);
+        scene.environmentIntensity = next.environmentIntensity;
+        applyLightTheme(theme);
+
+        const positions = grid.geometry.getAttribute('position');
+        const colors = grid.geometry.getAttribute('color');
+        const center = new THREE.Color(next.grid.center);
+        const line = new THREE.Color(next.grid.line);
+        if (positions && colors) {
+          for (let index = 0; index < positions.count; index += 1) {
+            const isCenterLine = Math.abs(positions.getX(index)) < 0.0001
+              || Math.abs(positions.getZ(index)) < 0.0001;
+            const color = isCenterLine ? center : line;
+            colors.setXYZ(index, color.r, color.g, color.b);
+          }
+          colors.needsUpdate = true;
+        }
+        materialList(grid.material).forEach((material) => {
+          material.opacity = next.grid.opacity;
+          material.needsUpdate = true;
+        });
+        orbitMaterial.color.setHex(next.orbit.color);
+        orbitMaterial.opacity = next.orbit.opacity;
+        orbitMaterial.needsUpdate = true;
+      };
 
       const target = fittedSphere.center.clone();
       const modelRadius = Math.max(fittedSphere.radius, 0.1);
@@ -840,6 +905,7 @@ function TokamakCadViewerSession({
           localEfitOverlay?.setClippingEnabled(enabled);
         },
         setOpacity,
+        setVisualTheme,
         applyVisibility,
         selectParts,
         pickPart,
@@ -860,6 +926,7 @@ function TokamakCadViewerSession({
         resize,
         efitOverlay: localEfitOverlay,
       };
+      setVisualTheme(visualThemeRef.current);
       selectParts(selectedPartIdsRef.current);
       applyVisibility(hiddenPartIdsRef.current, isolatedPartIdsRef.current);
       setOpacity(opacityRef.current.global, opacityRef.current.selected);
@@ -1045,7 +1112,7 @@ function TokamakCadViewerSession({
   const applicabilityStatement = manifest?.disclaimer ? content(manifest.disclaimer) : t('viewer.defaultDisclaimer');
 
   return (
-    <section id={sectionId ?? (workspace ? 'prototype-workspace' : 'device-3d')} className={`tokamakCadSection${workspace ? ' tokamakCadSection--workspace' : ''} appearance-${appearancePreset}`} data-three-viewer={viewerId} aria-labelledby={`${viewerId}-title`}>
+    <section id={sectionId ?? (workspace ? 'prototype-workspace' : 'device-3d')} className={`tokamakCadSection${workspace ? ' tokamakCadSection--workspace' : ''} appearance-${appearancePreset}`} data-three-viewer={viewerId} data-cad-theme={resolvedTheme} aria-labelledby={`${viewerId}-title`}>
       <div className="tokamakCadIntro">
         <p className="tokamakCadIndex">{workspace ? 'WORKSPACE / FULL-DEVICE DIGITAL MOCK-UP' : '03D / DEVICE PACKAGE VIEWER'}</p>
         <div>

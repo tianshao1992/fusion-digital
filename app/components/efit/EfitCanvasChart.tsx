@@ -1,7 +1,8 @@
 'use client';
 
 import type { EChartsCoreOption, EChartsType } from 'echarts/core';
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { applyScientificChartTheme, useChartTheme } from '../charts/chart-theme';
 import { useI18n } from '../../i18n';
 
 type EfitCanvasChartProps = {
@@ -53,17 +54,19 @@ export default function EfitCanvasChart({
   dataAspectRatio,
 }: EfitCanvasChartProps) {
   const { t } = useI18n();
+  const chartTheme = useChartTheme();
+  const themedOption = useMemo(() => applyScientificChartTheme(option, chartTheme), [chartTheme, option]);
   const mountRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<EChartsType | null>(null);
-  const optionRef = useRef(option);
+  const optionRef = useRef(themedOption);
   const clickRef = useRef(onChartClick);
   const aspectRef = useRef(dataAspectRatio);
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
 
   useLayoutEffect(() => {
-    optionRef.current = option;
-  }, [option]);
+    optionRef.current = themedOption;
+  }, [themedOption]);
 
   useEffect(() => {
     clickRef.current = onChartClick;
@@ -125,11 +128,11 @@ export default function EfitCanvasChart({
 
   useEffect(() => {
     if (!chartRef.current || !mountRef.current) return;
-    chartRef.current.setOption(optionWithEqualScale(option, mountRef.current, dataAspectRatio), { notMerge: true, lazyUpdate: true });
-  }, [dataAspectRatio, option]);
+    chartRef.current.setOption(optionWithEqualScale(themedOption, mountRef.current, dataAspectRatio), { notMerge: true, lazyUpdate: true });
+  }, [dataAspectRatio, themedOption]);
 
   return (
-    <div className={`efitChart ${ready ? 'isReady' : ''} ${failed ? 'hasFailed' : ''} ${className}`.trim()}>
+    <div className={`efitChart ${ready ? 'isReady' : ''} ${failed ? 'hasFailed' : ''} ${className}`.trim()} data-chart-theme={chartTheme.mode}>
       <div className="efitChartFallback" aria-hidden={ready || undefined}>{fallback}</div>
       <div
         ref={mountRef}

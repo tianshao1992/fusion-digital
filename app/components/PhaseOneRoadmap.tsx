@@ -3,6 +3,7 @@
 import type { EChartsCoreOption } from 'echarts/core';
 import { useMemo, useState, type KeyboardEvent } from 'react';
 import ScientificChart from './charts/ScientificChart';
+import { useChartTheme } from './charts/chart-theme';
 import './phase-one-roadmap.css';
 
 type ModuleId = 'physics' | 'engineering' | 'control' | 'diagnostics' | 'energy' | 'auxiliary' | 'hmi' | 'data' | 'integration' | 'ai';
@@ -66,12 +67,15 @@ function readModuleId(params: unknown): ModuleId | null {
 }
 
 export default function PhaseOneRoadmap() {
+  const chartTheme = useChartTheme();
   const [selectedId, setSelectedId] = useState<ModuleId>('data');
   const selected = modules.find((item) => item.id === selectedId) ?? modules[0];
 
   const option = useMemo<EChartsCoreOption>(() => {
     const chartModules = [...modules].reverse();
-    const colors = { baseline: '#65e6d2', phase: '#ff8738', gap: '#263a32' } as const;
+    const colors = chartTheme.mode === 'dark'
+      ? { baseline: '#65e6d2', phase: '#ff8738', gap: '#263a32' } as const
+      : { baseline: '#a8c8b5', phase: '#df9b7e', gap: '#ded7cd' } as const;
     const labels = { baseline: '已形成', phase: '一期', gap: '后续' } as const;
     const cells = chartModules.flatMap((item, row) => capabilityGates.map((gate, column) => {
       const status = column < item.baselineGates ? 'baseline' : column < item.baselineGates + item.phaseOneGates ? 'phase' : 'gap';
@@ -83,11 +87,11 @@ export default function PhaseOneRoadmap() {
         statusLabel: labels[status],
         itemStyle: {
           color: colors[status],
-          borderColor: item.id === selectedId ? '#f5fff9' : '#07100d',
+          borderColor: item.id === selectedId ? chartTheme.text : chartTheme.background,
           borderWidth: item.id === selectedId ? 2 : 4,
           opacity: status === 'gap' ? 0.78 : 0.96,
         },
-        label: { color: status === 'gap' ? '#b8cbc1' : '#07100d' },
+        label: { color: status === 'gap' ? chartTheme.muted : chartTheme.text },
       };
     }));
     return {
@@ -101,6 +105,9 @@ export default function PhaseOneRoadmap() {
       tooltip: {
         trigger: 'item',
         confine: true,
+        backgroundColor: chartTheme.tooltipBackground,
+        borderColor: chartTheme.tooltipBorder,
+        textStyle: { color: chartTheme.tooltipText },
         formatter: (params: unknown) => {
           if (!params || typeof params !== 'object') return '';
           const data = (params as { data?: unknown }).data;
@@ -115,24 +122,24 @@ export default function PhaseOneRoadmap() {
         type: 'category',
         data: capabilityGates.map((gate) => `${gate.id}\n${gate.label}`),
         name: '能力逐级累积：没有通过前一门，就不进入后一门 →', nameLocation: 'middle', nameGap: 52,
-        axisLine: { lineStyle: { color: '#486157' } },
+        axisLine: { lineStyle: { color: chartTheme.line } },
         axisTick: { show: false },
-        axisLabel: { color: '#93a99e', fontSize: 9, lineHeight: 14, interval: 0 },
+        axisLabel: { color: chartTheme.muted, fontSize: 9, lineHeight: 14, interval: 0 },
         splitLine: { show: false },
-        nameTextStyle: { color: '#71887d', fontSize: 9, fontWeight: 700 },
+        nameTextStyle: { color: chartTheme.muted, fontSize: 9, fontWeight: 700 },
       },
       yAxis: {
         type: 'category',
         data: chartModules.map((item) => `${item.no}  ${item.cn}`),
         axisLine: { show: false }, axisTick: { show: false },
-        axisLabel: { color: '#dbe9e2', fontSize: 11, fontWeight: 700, margin: 15 },
+        axisLabel: { color: chartTheme.text, fontSize: 11, fontWeight: 700, margin: 15 },
       },
       series: [
         {
           name: '十模块能力门', type: 'heatmap', data: cells,
           label: {
             show: true,
-            color: '#07100d',
+            color: chartTheme.text,
             fontSize: 8,
             fontWeight: 900,
             formatter: (params: unknown) => {
@@ -142,19 +149,19 @@ export default function PhaseOneRoadmap() {
               return String((data as { statusLabel?: unknown }).statusLabel ?? '');
             },
           },
-          emphasis: { itemStyle: { shadowBlur: 16, shadowColor: 'rgba(255,135,56,.45)' } },
+          emphasis: { itemStyle: { shadowBlur: 16, shadowColor: chartTheme.accent } },
           markArea: {
             silent: true,
-            label: { show: true, color: '#ffb17b', fontSize: 9, fontWeight: 800 },
+            label: { show: true, color: chartTheme.accent, fontSize: 9, fontWeight: 800 },
             data: [
               [{ name: '第一期能力边界 G0—G2', xAxis: 0 }, { xAxis: 2 }],
-              [{ name: '一期后能力缺口 G3—G5', xAxis: 3, itemStyle: { color: 'rgba(82,107,96,.08)' } }, { xAxis: 5 }],
+              [{ name: '一期后能力缺口 G3—G5', xAxis: 3, itemStyle: { color: chartTheme.infoSoft } }, { xAxis: 5 }],
             ],
           },
         },
       ],
     };
-  }, [selectedId]);
+  }, [chartTheme, selectedId]);
 
   function selectFromKeyboard(event: KeyboardEvent<HTMLButtonElement>, index: number) {
     const keys = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'];

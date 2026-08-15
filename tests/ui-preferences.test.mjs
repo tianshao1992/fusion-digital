@@ -69,6 +69,35 @@ test('theme registry exposes system, Morandi light and dark modes with pre-hydra
   assert.match(css, /@media \(forced-colors:active\)/);
 });
 
+test('Morandi light mode covers legacy heroes, workspaces and filter modules', async () => {
+  const [globals, surfaces] = await Promise.all([
+    source('app/globals.css'),
+    source('app/theme-legacy-surfaces.css'),
+  ]);
+
+  assert.match(globals, /@import "\.\/theme-legacy-surfaces\.css"/);
+  for (const selector of [
+    '.aiHero',
+    '.catalogToolbar',
+    '.facilitiesHero',
+    '.searchConsole',
+    '.accountDashboard',
+    '.kgWorkspace',
+    '.platformPage',
+    '.reviewPage',
+    '.controlCatalogToolbar',
+    '.diagnosticsCatalogToolbar',
+  ]) {
+    assert.ok(
+      surfaces.includes(`:root[data-theme='light'] ${selector}`),
+      `${selector} must opt into the light semantic surface layer`,
+    );
+  }
+  assert.match(surfaces, /var\(--color-surface-raised\)/);
+  assert.match(surfaces, /var\(--color-info-soft\)/);
+  assert.doesNotMatch(surfaces, /:root\[data-theme='dark'\]/);
+});
+
 test('digital prototype operational UI consumes the shared locale layer', async () => {
   const paths = [
     'app/digital-prototype/DigitalPrototypeContent.tsx',
@@ -84,4 +113,32 @@ test('digital prototype operational UI consumes the shared locale layer', async 
   for (const [index, file] of files.entries()) {
     assert.match(file, /useI18n/, `${paths[index]} must use the shared locale layer`);
   }
+});
+
+test('scientific visualizations consume the resolved theme and redraw with semantic palettes', async () => {
+  const [theme, scientific, systemMap, roadmap, efitCanvas, efitSignals, efitEquilibrium, roadmapCss] = await Promise.all([
+    source('app/components/charts/chart-theme.ts'),
+    source('app/components/charts/ScientificChart.tsx'),
+    source('app/components/FusionTwinSystemMap.tsx'),
+    source('app/components/PhaseOneRoadmap.tsx'),
+    source('app/components/efit/EfitCanvasChart.tsx'),
+    source('app/components/efit/EfitSignalsChart.tsx'),
+    source('app/components/efit/EfitEquilibriumChart.tsx'),
+    source('app/components/phase-one-roadmap.css'),
+  ]);
+
+  assert.match(theme, /PALETTES: Record<ChartThemePalette\['mode'\], ChartThemePalette>/);
+  assert.match(theme, /applyScientificChartTheme/);
+  assert.match(theme, /scientific series colours untouched/);
+  assert.match(scientific, /useChartTheme\(\)/);
+  assert.match(scientific, /chartRef\.current\.setOption\(\{ \.\.\.themedOption/);
+  assert.match(scientific, /data-chart-theme=\{chartTheme\.mode\}/);
+  assert.match(systemMap, /const chartTheme = useChartTheme\(\)/);
+  assert.match(systemMap, /\[chartTheme, phaseIndex, selectedModule, selectedPhase\]/);
+  assert.match(roadmap, /chartTheme\.mode === 'dark'/);
+  assert.match(roadmap, /\[chartTheme, selectedId\]/);
+  assert.match(efitCanvas, /applyScientificChartTheme\(option, chartTheme\)/);
+  assert.match(efitSignals, /const signalColors = chartTheme\.mode === 'dark'/);
+  assert.match(efitEquilibrium, /chartTheme\.mode === 'dark'/);
+  assert.match(roadmapCss, /:root\[data-theme='light'\] \.phaseOneRoadmap/);
 });

@@ -4,6 +4,7 @@ import type { EChartsCoreOption } from 'echarts/core';
 import type { CustomSeriesRenderItem } from 'echarts/types/dist/option';
 import type { CSSProperties } from 'react';
 import ScientificChart from '../components/charts/ScientificChart';
+import { useChartTheme } from '../components/charts/chart-theme';
 import {
   diagnosticsDeviceProfiles,
   diagnosticsResearchItems,
@@ -80,6 +81,7 @@ const renderTimescaleRange: CustomSeriesRenderItem = (_params, api) => {
 };
 
 export function DiagnosticsClosedLoopGraph() {
+  const chartTheme = useChartTheme();
   const nodes = [
     { id: 'device', name: '真实装置', subtitle: 'PLASMA · PLANT', x: 70, y: 215, symbolSize: 84, category: 0 },
     { id: 'instrument', name: '诊断仪器', subtitle: 'RESPONSE · GEOMETRY', x: 250, y: 95, symbolSize: 76, category: 1 },
@@ -107,7 +109,7 @@ export function DiagnosticsClosedLoopGraph() {
   ];
 
   const option: EChartsCoreOption = {
-    backgroundColor: '#07120f',
+    backgroundColor: chartTheme.background,
     animationDuration: 650,
     aria: {
       enabled: true,
@@ -117,9 +119,9 @@ export function DiagnosticsClosedLoopGraph() {
     tooltip: {
       trigger: 'item',
       borderWidth: 1,
-      borderColor: '#4e6f63',
-      backgroundColor: 'rgba(5,16,13,.97)',
-      textStyle: { color: '#eef8f3', fontFamily: 'Microsoft YaHei UI, Microsoft YaHei, sans-serif', fontSize: 12 },
+      borderColor: chartTheme.tooltipBorder,
+      backgroundColor: chartTheme.tooltipBackground,
+      textStyle: { color: chartTheme.tooltipText, fontFamily: 'Microsoft YaHei UI, Microsoft YaHei, sans-serif', fontSize: 12 },
       formatter: (params: unknown) => {
         const data = objectData(params);
         if (!data) return '';
@@ -130,7 +132,7 @@ export function DiagnosticsClosedLoopGraph() {
     legend: {
       bottom: 12,
       data: ['物理实体', '测量链', '状态', '数字模型', '证据治理', '决策'],
-      textStyle: { color: '#9bb1a6', fontSize: 9 },
+      textStyle: { color: chartTheme.muted, fontSize: 9 },
       itemWidth: 10,
       itemHeight: 10,
     },
@@ -152,12 +154,12 @@ export function DiagnosticsClosedLoopGraph() {
       ],
       edgeSymbol: ['none', 'arrow'],
       edgeSymbolSize: [0, 8],
-      lineStyle: { color: '#6c8b7e', width: 1.5, opacity: 0.78, curveness: 0.08 },
+      lineStyle: { color: chartTheme.info, width: 1.5, opacity: 0.78, curveness: 0.08 },
       emphasis: { focus: 'adjacency', lineStyle: { width: 3, opacity: 1 } },
       label: {
         show: true,
         position: 'inside',
-        color: '#07120f',
+        color: '#241f1b',
         fontFamily: 'Microsoft YaHei UI, Microsoft YaHei, sans-serif',
         fontSize: 10,
         fontWeight: 800,
@@ -165,9 +167,9 @@ export function DiagnosticsClosedLoopGraph() {
       },
       edgeLabel: {
         show: true,
-        color: '#b9ccc2',
+        color: chartTheme.text,
         fontSize: 8,
-        backgroundColor: 'rgba(7,18,15,.8)',
+        backgroundColor: chartTheme.mode === 'dark' ? 'rgba(7,18,15,.8)' : 'rgba(255,253,248,.88)',
         padding: [2, 3],
         formatter: (params: unknown) => String(objectData(params)?.value ?? ''),
       },

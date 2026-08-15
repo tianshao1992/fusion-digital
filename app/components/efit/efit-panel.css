@@ -297,6 +297,19 @@
   font-size: 0.58rem;
 }
 
+:root[data-theme='light'] .efitChartCard {
+  color: var(--color-ink);
+  background: var(--color-surface-raised);
+  border-color: var(--color-border);
+  box-shadow: var(--shadow-sm);
+}
+:root[data-theme='light'] .efitCardHeading > span { color: var(--color-info-strong); }
+:root[data-theme='light'] .efitCardHeading h3,
+:root[data-theme='light'] .efitChartTextFallback strong { color: var(--color-ink); }
+:root[data-theme='light'] .efitCardHeading p,
+:root[data-theme='light'] .efitChartTextFallback,
+:root[data-theme='light'] .efitChartStatus { color: var(--color-ink-muted); }
+
 .efitTransport {
   display: grid;
   grid-template-columns: auto minmax(260px, 1fr) auto;

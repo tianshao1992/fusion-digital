@@ -3,6 +3,7 @@
 import type { EChartsCoreOption } from 'echarts/core';
 import type { CustomSeriesRenderItem } from 'echarts/types/dist/option';
 import ScientificChart from '../components/charts/ScientificChart';
+import { useChartTheme } from '../components/charts/chart-theme';
 import {
   controlResearchItems,
   type ControlDeploymentLevel,
@@ -130,11 +131,16 @@ const renderTimescaleRange: CustomSeriesRenderItem = (_params, api) => {
 };
 
 export function ControlTimescaleChart({ tasks }: { tasks: ControlTimescaleDatum[] }) {
+  const chartTheme = useChartTheme();
+  const lightTaskColors: Record<ControlTaskId, string> = {
+    T0: '#287b6f', T1: '#b85b37', T2: '#b85b37', T3: '#6c5a9f', T4: '#a14c3c',
+    T5: '#436f98', T6: '#366b58', T7: '#a14c3c', T8: '#6c5a9f', T9: '#49766a',
+  };
   const data = tasks.map((task, index) => [
     index,
     task.minSeconds,
     task.maxSeconds,
-    taskColors[task.id],
+    chartTheme.mode === 'dark' ? taskColors[task.id] : lightTaskColors[task.id],
     task.openEnded ? 1 : 0,
     task.id,
     task.label,
@@ -142,7 +148,7 @@ export function ControlTimescaleChart({ tasks }: { tasks: ControlTimescaleDatum[
   ]);
 
   const option: EChartsCoreOption = {
-    backgroundColor: '#0b1511',
+    backgroundColor: chartTheme.background,
     animationDuration: 520,
     grid: { left: 176, right: 40, top: 48, bottom: 58 },
     aria: {
@@ -153,14 +159,14 @@ export function ControlTimescaleChart({ tasks }: { tasks: ControlTimescaleDatum[
     tooltip: {
       trigger: 'item',
       borderWidth: 1,
-      borderColor: '#456158',
-      backgroundColor: 'rgba(7,17,14,.96)',
-      textStyle: { color: '#edf5f1', fontFamily: 'Microsoft YaHei UI, Microsoft YaHei, sans-serif', fontSize: 12 },
+      borderColor: chartTheme.tooltipBorder,
+      backgroundColor: chartTheme.tooltipBackground,
+      textStyle: { color: chartTheme.tooltipText, fontFamily: 'Microsoft YaHei UI, Microsoft YaHei, sans-serif', fontSize: 12 },
       formatter: (params: unknown) => {
         const row = eventData(params);
         if (!row) return '';
         const open = Number(row[4]) === 1;
-        return `<b>${String(row[5])} · ${String(row[6])}</b><br/>典型时间：${String(row[7])}<br/><span style="color:#9fb4a9">${open ? '箭头表示上限开放至脉冲生命周期；区间仅作架构数量级示意。' : '区间表示常见数量级，不是统一控制周期。'}</span><br/><span style="color:#65e6d2">点击检索该任务工作 →</span>`;
+        return `<b>${String(row[5])} · ${String(row[6])}</b><br/>典型时间：${String(row[7])}<br/><span style="color:${chartTheme.muted}">${open ? '箭头表示上限开放至脉冲生命周期；区间仅作架构数量级示意。' : '区间表示常见数量级，不是统一控制周期。'}</span><br/><span style="color:${chartTheme.info}">点击检索该任务工作 →</span>`;
       },
     },
     xAxis: {
@@ -171,12 +177,12 @@ export function ControlTimescaleChart({ tasks }: { tasks: ControlTimescaleDatum[
       name: '典型响应 / 决策 / 执行时间尺度（对数）',
       nameLocation: 'middle',
       nameGap: 38,
-      nameTextStyle: { color: '#88a096', fontSize: 10 },
-      axisLine: { lineStyle: { color: '#4a6056' } },
+      nameTextStyle: { color: chartTheme.muted, fontSize: 10 },
+      axisLine: { lineStyle: { color: chartTheme.line } },
       axisTick: { show: false },
-      splitLine: { show: true, lineStyle: { color: '#263c33', type: 'dashed' } },
+      splitLine: { show: true, lineStyle: { color: chartTheme.grid, type: 'dashed' } },
       minorSplitLine: { show: false },
-      axisLabel: { color: '#a7bdb2', fontSize: 10, formatter: formatTimescaleTick },
+      axisLabel: { color: chartTheme.muted, fontSize: 10, formatter: formatTimescaleTick },
     },
     yAxis: {
       type: 'category',
@@ -184,7 +190,7 @@ export function ControlTimescaleChart({ tasks }: { tasks: ControlTimescaleDatum[
       data: tasks.map((task) => `${task.id}  ${task.label}`),
       axisLine: { show: false },
       axisTick: { show: false },
-      axisLabel: { color: '#e5eee9', fontSize: 11, fontWeight: 700, margin: 16 },
+      axisLabel: { color: chartTheme.text, fontSize: 11, fontWeight: 700, margin: 16 },
     },
     dataZoom: [{ type: 'inside', xAxisIndex: 0, filterMode: 'none', zoomOnMouseWheel: 'shift', moveOnMouseMove: true }],
     series: [
