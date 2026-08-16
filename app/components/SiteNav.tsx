@@ -18,7 +18,6 @@ const links = [
   { key: 'control', href: '/control', label: 'nav.control', priority: 1 },
   { key: 'diagnostics', href: '/diagnostics', label: 'nav.diagnostics', priority: 2 },
   { key: 'ai', href: '/ai', label: 'nav.ai', priority: 2 },
-  { key: 'knowledge', href: '/knowledge-graph', label: 'nav.knowledge', priority: 3 },
   { key: 'facilities', href: '/facilities', label: 'nav.facilities', priority: 4 },
   { key: 'prototype', href: '/#prototype-workspace', label: 'nav.prototype', priority: 2 },
   { key: 'resources', href: '/#resources', label: 'nav.resources', priority: 5 },
@@ -27,6 +26,19 @@ const links = [
 
 type NavigationLink = (typeof links)[number];
 
+const knowledgeModules = [
+  { id: 'physics', no: '01', zh: '物理模拟', en: 'Physics', href: '/physics' },
+  { id: 'engineering', no: '02', zh: '工程仿真', en: 'Engineering', href: '/engineering' },
+  { id: 'control', no: '03', zh: '集成控制', en: 'Control', href: '/control' },
+  { id: 'diagnostics', no: '04', zh: '诊断感知', en: 'Diagnostics', href: '/diagnostics' },
+  { id: 'energy', no: '05', zh: '能量转化', en: 'Energy', href: '/#domains' },
+  { id: 'auxiliary', no: '06', zh: '辅机模拟', en: 'Auxiliary', href: '/#domains' },
+  { id: 'hmi', no: '07', zh: '人机交互', en: 'Human-machine', href: '/#domains' },
+  { id: 'data', no: '08', zh: '数据基座', en: 'Data', href: '/#domains' },
+  { id: 'integration', no: '09', zh: '总体集成', en: 'Integration', href: '/physics#integrated' },
+  { id: 'ai', no: '10', zh: '智能原生', en: 'AI-native', href: '/ai' },
+] as const;
+
 export default function SiteNav({active = 'home'}: SiteNavProps) {
   const { locale, setLocale, t } = useI18n();
   const menuId = useId();
@@ -34,6 +46,7 @@ export default function SiteNav({active = 'home'}: SiteNavProps) {
   const linksRef = useRef<HTMLDivElement>(null);
   const measureRef = useRef<HTMLDivElement>(null);
   const moreRef = useRef<HTMLDivElement>(null);
+  const knowledgeRef = useRef<HTMLDetailsElement>(null);
   // SSR deliberately exposes every destination. JavaScript then contracts the
   // row after measuring it, while no-script visitors retain a complete nav.
   const [visibleKeys, setVisibleKeys] = useState<string[]>(() => links.map(({ key }) => key));
@@ -164,6 +177,35 @@ export default function SiteNav({active = 'home'}: SiteNavProps) {
     onClick={menuItem ? () => setMoreOpen(false) : undefined}
   >{t(item.label)}</Link>;
 
+  const renderKnowledgeMenu = (mobile = false) => <details
+    className={mobile ? 'mobileKnowledgeNav' : 'siteKnowledgeNav'}
+    ref={mobile ? undefined : knowledgeRef}
+  >
+    <summary className={active === 'knowledge' ? 'active' : ''} aria-label={t('nav.knowledgeModules')}>
+      {t('nav.knowledge')}<span aria-hidden="true">⌄</span>
+    </summary>
+    <div className="siteKnowledgeMenu">
+      <Link
+        className={`siteKnowledgeHome${active === 'knowledge' ? ' active' : ''}`}
+        href="/knowledge-graph"
+        aria-current={active === 'knowledge' ? 'page' : undefined}
+        onClick={() => { if (!mobile && knowledgeRef.current) knowledgeRef.current.open = false; }}
+      >
+        <span aria-hidden="true">←</span><b>{t('nav.knowledgeHome')}</b>
+      </Link>
+      <p>{t('nav.knowledgeModules')}</p>
+      <div className="siteKnowledgeGrid">
+        {knowledgeModules.map((item) => <Link
+          href={item.href}
+          key={item.id}
+          data-knowledge-module={item.id}
+          className={active === item.id ? 'active' : ''}
+          onClick={() => { if (!mobile && knowledgeRef.current) knowledgeRef.current.open = false; }}
+        ><small>{item.no}</small><span>{locale === 'zh-CN' ? item.zh : item.en}</span></Link>)}
+      </div>
+    </div>
+  </details>;
+
   return <nav className="siteNav" aria-label={t('nav.main')}>
     <Link className="siteBrand" href="/" aria-label={t('nav.brandHome')}>
       <img src="/fusiondigital-mark.png" alt="" />
@@ -198,6 +240,7 @@ export default function SiteNav({active = 'home'}: SiteNavProps) {
         <span data-nav-more>{t('nav.more')}<i>⌄</i></span>
       </div>
     </div>
+    {renderKnowledgeMenu()}
     <div className="siteDesktopPreferences" aria-label={t('preferences.group')}>
       {localeButton()}
       <ThemeSwitcher labels={themeLabels} compact />
@@ -205,7 +248,7 @@ export default function SiteNav({active = 'home'}: SiteNavProps) {
     <Link className={`siteAccountAccess${active === 'account' ? ' active' : ''}`} href="/account" aria-label={t('nav.accountCenter')}>{t('nav.account')}</Link>
     <details className="mobileNav">
       <summary aria-label={t('nav.open')}>{t('nav.menu')}</summary>
-      <div>{links.map((item) => renderLink(item))}<Link className={active === 'account' ? 'active' : ''} href="/account" aria-current={active === 'account' ? 'page' : undefined}>{t('nav.accountCenter')}</Link><div className="siteMobilePreferences" aria-label={t('preferences.group')}>{localeButton('siteLocaleSwitch siteLocaleSwitch--mobile')}<ThemeSwitcher labels={themeLabels} compact /></div></div>
+      <div>{links.slice(0, 6).map((item) => renderLink(item))}{renderKnowledgeMenu(true)}{links.slice(6).map((item) => renderLink(item))}<Link className={active === 'account' ? 'active' : ''} href="/account" aria-current={active === 'account' ? 'page' : undefined}>{t('nav.accountCenter')}</Link><div className="siteMobilePreferences" aria-label={t('preferences.group')}>{localeButton('siteLocaleSwitch siteLocaleSwitch--mobile')}<ThemeSwitcher labels={themeLabels} compact /></div></div>
     </details>
   </nav>;
 }

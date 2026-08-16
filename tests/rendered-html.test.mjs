@@ -200,7 +200,8 @@ test('server-renders the FusionDigital community portal', async () => {
   assert.match(html, /href="\/ai"/);
   assert.match(html, /href="\/facilities"/);
   assert.match(html, /href="\/#prototype-workspace"/);
-  assert.equal((html.match(/href="\/knowledge-graph"[^>]*>知识图谱<\/a>/g) ?? []).length, 2, 'desktop and mobile navigation must use the 知识图谱 primary label');
+  assert.equal((html.match(/class="siteKnowledgeHome[^\"]*"[^>]*href="\/knowledge-graph"|href="\/knowledge-graph"[^>]*class="siteKnowledgeHome[^\"]*"/g) ?? []).length, 2, 'desktop and mobile Knowledge menus must link to the graph home');
+  assert.equal((html.match(/data-knowledge-module=/g) ?? []).length, 20, 'desktop and mobile Knowledge menus must expose all ten modules');
   assert.doesNotMatch(html, /知识智能/);
   assert.match(html, /fusiondigital-mark\.png/);
   assert.match(html, /class="brandWordmark"/);
@@ -276,6 +277,13 @@ test('server-renders the FusionDigital community portal', async () => {
     'domain-ai-native-dark-image2.png',
   ]) assert.match(html, new RegExp(figure.replaceAll('.', '\\.')));
   assert.doesNotMatch(html, /发电系统|POWER SYSTEMS|本质安全/);
+});
+
+test('standalone knowledge-module pages return to the Knowledge graph', async () => {
+  for (const route of ['/physics', '/engineering', '/control', '/diagnostics', '/ai']) {
+    const html = await htmlFor(route);
+    assert.match(html, /class="knowledgeBackLink"[^>]*href="\/knowledge-graph"|href="\/knowledge-graph"[^>]*class="knowledgeBackLink"/, `${route} must expose the Knowledge return link`);
+  }
 });
 
 test('homepage owns the public full-device digital-prototype workspace', async () => {

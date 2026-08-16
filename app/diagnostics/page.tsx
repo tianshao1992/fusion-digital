@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import type { Metadata } from 'next';
+import KnowledgeBackLink from '../components/KnowledgeBackLink';
 import SiteFooter from '../components/SiteFooter';
 import SiteNav from '../components/SiteNav';
 import DiagnosticsResearchCatalog from './DiagnosticsResearchCatalog';
@@ -137,6 +138,7 @@ export default async function DiagnosticsPage({ searchParams }: { searchParams?:
   return (
     <main className="diagnosticsPage">
       <SiteNav active="diagnostics" />
+      <KnowledgeBackLink />
 
       <header className="diagnosticsHero">
         <div className="diagnosticsHeroCopy">

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import KnowledgeBackLink from '../components/KnowledgeBackLink';
 import SiteFooter from '../components/SiteFooter';
 import SiteNav from '../components/SiteNav';
 import { ControlEvidenceHeatmap, ControlTimescaleChart, type ControlTimescaleDatum } from './ControlCharts';
@@ -70,6 +71,7 @@ export default function ControlPage() {
 
   return <main className="controlPage">
     <SiteNav active="control" />
+    <KnowledgeBackLink />
 
     <header className="controlHero">
       <div className="controlHeroCopy">

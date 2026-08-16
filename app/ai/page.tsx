@@ -1,3 +1,4 @@
+import KnowledgeBackLink from '../components/KnowledgeBackLink';
 import SiteFooter from '../components/SiteFooter';
 import SiteNav from '../components/SiteNav';
 import TwinAgentMotion from '../components/TwinAgentMotion';
@@ -127,6 +128,7 @@ export default function AIPage() {
   return (
     <main className="aiPage">
       <SiteNav active="ai" />
+      <KnowledgeBackLink />
 
       <header className="aiHero">
         <div>

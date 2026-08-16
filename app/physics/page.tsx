@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { domains, references, tools } from '../data';
 import { integratedGroups } from '../integrated-data';
 import SiteFooter from '../components/SiteFooter';
+import KnowledgeBackLink from '../components/KnowledgeBackLink';
 import SiteNav from '../components/SiteNav';
 import {
   CouplingMatrixChart,
@@ -22,6 +23,7 @@ export default function Home(){
  const filtered=useMemo(()=>tools.filter(t=>(domain==='全部'||t.domain===domain)&&(`${t.name} ${t.scope} ${t.devices} ${t.stack}`.toLowerCase().includes(query.toLowerCase()))),[query,domain]);
  return <main className="physicsPage">
   <SiteNav active="physics" />
+  <KnowledgeBackLink />
   <header id="top" className="hero"><div className="heroCopy"><p className="eyebrow">聚变数字孪生 · 物理模拟技术底座</p><h1>从等离子体控制，走向<br/><em>聚变电厂级可信预测</em></h1><p className="lede">面向非聚变专业的决策者与系统工程师：用一张可追溯的物理地图连接 DINA、MEQ、输运、MHD、边界、中子学、氚与整厂系统模型。</p><div className="actions"><a className="primary" href="/fusion-physics-simulation-report.pdf">下载物理报告</a><a href="/engineering">进入工程仿真分页</a><a href="#catalog">浏览 {tools.length} 项工具</a></div><div className="stats"><span><b>14</b> 类物理域</span><span><b>{tools.length}</b> 项代码/平台</span><span><b>2026-08</b> 证据截止</span></div></div><img src="/figures/fusion-plant-cutaway-image2.png" alt="托卡马克聚变电厂剖面科学示意图"/></header>
   <section className="thesis"><p>关键判断</p><h2>聚变数字孪生不是一个“万能大模型”，而是一套围绕具体决策、按时间尺度编排的模型组合。</h2><div className="three"><article><b>控制闭环</b><p>毫秒到秒；重建、状态估计、执行器响应和风险预测必须确定、可降级、可审计。</p></article><article><b>设计闭环</b><p>小时到月；高保真物理与工程模型提供约束、训练数据和不确定度，而非直接进入实时回路。</p></article><article><b>证据闭环</b><p>每个预测携带版本、输入、适用域、验证层级和置信区间，才能用于工程与安全决策。</p></article></div></section>
   <section id="map" className="map"><div className="sectionHead"><p className="eyebrow">01 / 从微观到电网</p><h2>一台聚变电厂跨越约二十个数量级</h2><p>碰撞、湍流、宏观不稳定性、壁材料、中子、冷却回路和电网不会被同一种数值方法同时高效求解。系统架构的核心是分解、耦合与证据管理。</p></div><img src="/figures/fusion-multiscale-image2.png" alt="Nature风格聚变物理多尺度图版"/><div className="scale"><span>10⁻¹² s<br/><b>碰撞与波</b></span><span>10⁻⁶—10⁻³ s<br/><b>湍流与 MHD</b></span><span>秒—小时<br/><b>放电与热循环</b></span><span>年—十年<br/><b>寿命与经济性</b></span></div></section>

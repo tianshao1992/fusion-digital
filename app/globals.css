@@ -77,6 +77,23 @@ h1,h2,h3,h4 { font-family: "Microsoft YaHei UI", "Microsoft YaHei", "Noto Sans S
 .siteLinksMeasure > span[data-nav-active='true'] { font-weight: 900; }
 .siteLinksMeasure > span[data-nav-more] { display: flex; gap: 4px; font-weight: 900; }
 .siteLinksMeasure i { font: inherit; }
+.siteKnowledgeNav { position: relative; flex: 0 0 auto; }
+.siteKnowledgeNav > summary { display: flex; align-items: center; gap: 5px; padding: 29px 0 25px; border-bottom: 2px solid transparent; color: var(--color-ink-muted); font-size: 12px; font-weight: 800; line-height: 18px; list-style: none; white-space: nowrap; cursor: pointer; }
+.siteKnowledgeNav > summary::-webkit-details-marker,.mobileKnowledgeNav > summary::-webkit-details-marker { display: none; }
+.siteKnowledgeNav > summary:hover,.siteKnowledgeNav > summary.active,.siteKnowledgeNav[open] > summary { color: var(--color-accent-strong); border-color: var(--color-accent); }
+.siteKnowledgeNav > summary span,.mobileKnowledgeNav > summary span { transition: transform 140ms ease; }
+.siteKnowledgeNav[open] > summary span,.mobileKnowledgeNav[open] > summary span { transform: rotate(180deg); }
+.siteKnowledgeMenu { position: absolute; top: calc(100% - 7px); right: 0; z-index: 45; width: 390px; padding: 12px; border: 1px solid var(--color-border-strong); border-radius: 12px; background: var(--color-surface-raised); box-shadow: var(--shadow-md); }
+.siteKnowledgeHome { display: flex; align-items: center; gap: 9px; padding: 11px 12px; border-radius: 8px; color: var(--color-ink); font-size: 12px; }
+.siteKnowledgeHome:hover,.siteKnowledgeHome.active { color: var(--color-accent-strong); background: var(--color-accent-soft); }
+.siteKnowledgeMenu > p { margin: 10px 12px 7px; color: var(--color-ink-subtle); font-size: 8px; font-weight: 900; letter-spacing: .13em; text-transform: uppercase; }
+.siteKnowledgeGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; }
+.siteKnowledgeGrid a { display: grid; grid-template-columns: 24px 1fr; align-items: center; min-width: 0; padding: 9px 10px; border-radius: 7px; color: var(--color-ink-muted); font-size: 11px; font-weight: 700; }
+.siteKnowledgeGrid a:hover,.siteKnowledgeGrid a:focus-visible,.siteKnowledgeGrid a.active { color: var(--color-accent-strong); background: var(--color-accent-soft); outline: none; font-weight: 900; }
+.siteKnowledgeGrid small { color: var(--color-accent); font: 900 8px/1 Arial,sans-serif; letter-spacing: .08em; }
+.knowledgeBackLink { display: inline-flex; align-items: center; gap: 9px; margin: 14px 6vw 0; padding: 8px 0; color: var(--color-ink-muted); font-size: 11px; font-weight: 800; }
+.knowledgeBackLink span { color: var(--color-accent); font-size: 18px; line-height: 1; }
+.knowledgeBackLink:hover { color: var(--color-accent-strong); }
 .siteDesktopPreferences { display: flex; flex: 0 0 auto; align-items: center; gap: 7px; margin-left: 0; }
 .siteLocaleSwitch { min-width: 38px; height: 38px; padding: 0 9px; border: 1px solid var(--color-border-strong); border-radius: 999px; color: var(--color-ink-muted); background: var(--color-glass); cursor: pointer; font-size: 10px; font-weight: 900; }
 .siteLocaleSwitch:hover { border-color: var(--color-accent); color: var(--color-accent-strong); background: var(--color-accent-soft); }
@@ -84,9 +101,17 @@ h1,h2,h3,h4 { font-family: "Microsoft YaHei UI", "Microsoft YaHei", "Noto Sans S
 .siteAccountAccess:hover,.siteAccountAccess.active { border-color: var(--color-accent); color: var(--color-accent-strong); background: var(--color-accent-soft); }
 .mobileNav { display: none; position: relative; }
 .mobileNav summary { list-style: none; cursor: pointer; color: var(--color-accent-strong); font-weight: 800; }
-.mobileNav > div { position: absolute; right: 0; top: 34px; width: 210px; display: grid; padding: 8px; border: 1px solid var(--color-border); background: var(--color-surface-raised); box-shadow: var(--shadow-md); }
+.mobileNav > div { position: absolute; right: 0; top: 34px; width: 230px; max-height: calc(100vh - 104px); display: grid; padding: 8px; overflow-y: auto; border: 1px solid var(--color-border); background: var(--color-surface-raised); box-shadow: var(--shadow-md); }
 .mobileNav a { padding: 12px; color: var(--color-ink-muted); font-size: 13px; }
 .mobileNav a.active { color: var(--color-accent-strong); font-weight: 900; }
+.mobileKnowledgeNav { border-top: 1px solid var(--color-border); border-bottom: 1px solid var(--color-border); }
+.mobileKnowledgeNav > summary { display: flex; align-items: center; justify-content: space-between; padding: 12px; color: var(--color-ink-muted); font-size: 13px; font-weight: 800; list-style: none; cursor: pointer; }
+.mobileKnowledgeNav > summary.active,.mobileKnowledgeNav[open] > summary { color: var(--color-accent-strong); }
+.mobileKnowledgeNav .siteKnowledgeMenu { position: static; width: auto; padding: 0 5px 9px; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.mobileKnowledgeNav .siteKnowledgeHome { padding: 9px 8px; }
+.mobileKnowledgeNav .siteKnowledgeMenu > p { margin-left: 8px; }
+.mobileKnowledgeNav .siteKnowledgeGrid { grid-template-columns: 1fr; }
+.mobileKnowledgeNav .siteKnowledgeGrid a { padding: 8px; }
 .siteMobilePreferences { display: grid; gap: 8px; margin-top: 7px; padding: 10px 8px 4px; border-top: 1px solid var(--color-border); }
 .siteMobilePreferences .siteLocaleSwitch { width: 100%; border-radius: 8px; }
 .siteMobilePreferences .themeSwitcher { grid-auto-columns: minmax(0,1fr); width: 100%; border-radius: 10px; }
@@ -99,7 +124,7 @@ h1,h2,h3,h4 { font-family: "Microsoft YaHei UI", "Microsoft YaHei", "Noto Sans S
 .footerBrandName { font-size: 20px; font-weight: 800; }
 .siteFooter a:hover { color: var(--color-accent-strong); }
 
-@media(max-width:1400px) and (min-width:1241px) { .siteLinks,.siteLinksMeasure { gap: 13px; } .siteLinks > a,.siteMoreButton,.siteLinksMeasure > span { font-size: 11px; } .siteAccountAccess { margin-left: 5px; } }
-@media(max-width:1240px) { .siteLinksShell,.siteDesktopPreferences { display: none; } .mobileNav { display: block; } }
+@media(max-width:1400px) and (min-width:1241px) { .siteLinks,.siteLinksMeasure { gap: 13px; } .siteLinks > a,.siteMoreButton,.siteLinksMeasure > span,.siteKnowledgeNav > summary { font-size: 11px; } .siteAccountAccess { margin-left: 5px; } }
+@media(max-width:1240px) { .siteLinksShell,.siteKnowledgeNav,.siteDesktopPreferences { display: none; } .mobileNav { display: block; } }
 @media(max-width:1000px) { .siteFooter { grid-template-columns: 1fr 1fr; } }
 @media(max-width:600px) { .siteNav { padding: 0 5vw; } .siteBrandCopy { font-size: 16px; } .siteAccountAccess { margin-left: auto; margin-right: 14px; } .siteFooter { grid-template-columns: 1fr; } }
