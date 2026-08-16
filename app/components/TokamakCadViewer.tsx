@@ -175,13 +175,15 @@ function allMeshes(root: Object3D) {
 
 function webModelVariants(manifest: DeviceManifest | null): ViewerModelChoice[] {
   if (!manifest) return [];
-  const monolithic = (manifest.assets.webModels ?? [{
-      ...manifest.assets.webModel,
-      id: 'standard',
-      label: '标准',
-      quality: 'preview' as const,
-      default: true,
-    }]).map((asset) => ({ ...asset, delivery: 'monolithic' as const }));
+  const compatibilityModels = manifest.assets.webModel ? [{
+    ...manifest.assets.webModel,
+    id: 'standard',
+    label: '标准',
+    quality: 'preview' as const,
+    default: true,
+  }] : [];
+  const monolithic = (manifest.assets.webModels ?? compatibilityModels)
+    .map((asset) => ({ ...asset, delivery: 'monolithic' as const }));
   return [...monolithic, ...(manifest.assets.componentBundles ?? [])];
 }
 
@@ -343,10 +345,13 @@ function TokamakCadViewerSession({
         if (!loadedManifest.access.redistributionAllowed) throw new Error(i18nRef.current.t('viewer.errorRedistribution'));
         if (controller.signal.aborted) return;
         const variants = webModelVariants(loadedManifest);
-        const preview = variants.find((asset) => asset.quality === 'preview') ?? variants[0];
-        const declaredDefault = variants.find((asset) => 'default' in asset && asset.default === true) ?? preview;
-        const constrained = variants.length > 1 && shouldPreferPreview();
-        const preferred = constrained ? preview : declaredDefault;
+        const preview = variants.find((asset) => asset.quality === 'preview');
+        const declaredDefault = variants.find((asset) => 'default' in asset && asset.default === true)
+          ?? preview
+          ?? variants[0];
+        if (!declaredDefault) throw new Error(i18nRef.current.t('viewer.errorManifest'));
+        const constrained = Boolean(preview) && variants.length > 1 && shouldPreferPreview();
+        const preferred = constrained ? preview as ViewerModelChoice : declaredDefault;
         setManifest(loadedManifest);
         setOpenSystems(new Set(loadedManifest.systems.map((system) => system.id)));
         setSelectedModelId((current) => variants.some((asset) => asset.id === current) ? current : preferred.id);
@@ -1262,10 +1267,10 @@ function TokamakCadViewerSession({
   const sourceCadPath = manifest?.assets.sourceCad?.path ?? `${packageBase}/${viewerId}.step`;
   const webModelPath = selectedModel?.delivery === 'monolithic'
     ? selectedModel.path
-    : manifest?.assets.webModel.path ?? `${packageBase}/${viewerId}.glb`;
+    : manifest?.assets.webModel?.path ?? `${packageBase}/${viewerId}.glb`;
   const posterPath = manifest?.assets.poster?.path ?? (workspace ? null : '/models/paramak-tokamak-demo/paramak-tokamak-demo-poster.png');
   const isParamakPackage = manifest?.devicePackage.kind === 'public-demonstrator' || viewerId.includes('paramak');
-  const estimatedMegabytes = selectedModel?.bytes ? megabytes(selectedModel.bytes) : manifest?.assets.webModel.bytes ? megabytes(manifest.assets.webModel.bytes) : workspace ? '2.2' : '1.1';
+  const estimatedMegabytes = selectedModel?.bytes ? megabytes(selectedModel.bytes) : manifest?.assets.webModel?.bytes ? megabytes(manifest.assets.webModel.bytes) : workspace ? '2.2' : '1.1';
   const applicabilityStatement = manifest?.disclaimer ? content(manifest.disclaimer) : t('viewer.defaultDisclaimer');
 
   return (

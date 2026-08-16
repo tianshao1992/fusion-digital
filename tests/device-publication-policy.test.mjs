@@ -24,11 +24,7 @@ const maxExlHighDerivativeBytes = 30 * 1024 * 1024;
 const maxExlPreviewTriangles = 750_000;
 const maxExlHighTriangles = 2_000_000;
 const maxExlMobileDecodedGpuBytes = 160 * 1024 * 1024;
-const maxIterPublicDerivativeBytes = 8 * 1024 * 1024;
-const maxIterPreviewTriangles = 400_000;
-const maxIterDecodedGpuBytes = 64 * 1024 * 1024;
 const iterManifestEndpoint = '/models/iter-public-simplified/model-manifest.json';
-const iterPreviewEndpoint = '/models/iter-public-simplified/iter-public-simplified-preview.meshopt.glb';
 const maxTurntableFrames = 36;
 const maxTurntableFrameBytes = 64 * 1024;
 const maxTurntableModeBytes = 1024 * 1024;
@@ -164,22 +160,6 @@ function meshNodeSignatures(glb) {
   }));
 }
 
-function descendantMeshNodeIndexes(glb, rootIndex) {
-  const meshNodeIndexes = [];
-  const pending = [rootIndex];
-  const visited = new Set();
-  while (pending.length > 0) {
-    const nodeIndex = pending.pop();
-    assert.ok(Number.isInteger(nodeIndex) && !visited.has(nodeIndex), 'ITER stable-node hierarchy must be finite and acyclic');
-    visited.add(nodeIndex);
-    const node = glb.nodes?.[nodeIndex];
-    assert.ok(node && typeof node === 'object', `ITER node ${nodeIndex} must exist`);
-    if (Number.isInteger(node.mesh)) meshNodeIndexes.push(nodeIndex);
-    for (const child of node.children ?? []) pending.push(child);
-  }
-  return meshNodeIndexes;
-}
-
 async function renderHomepageWorkspace() {
   const workerUrl = new URL('../dist/server/index.js', import.meta.url);
   workerUrl.searchParams.set('publication-policy-test', `${process.pid}-${Date.now()}`);
@@ -225,12 +205,8 @@ test('publishes only catalog-declared EXL and ITER browser derivatives and no pr
   assert.equal(iterManifest.assets?.webModels, undefined, 'ITER high detail must not be a monolithic LOD');
   assert.equal(iterManifest.assets?.componentBundles?.length, 1, 'ITER must expose one reviewed component-sharded high-detail bundle');
   assert.equal(iterManifest.assets.componentBundles[0].components.length, 18);
-  assert.equal(iterManifest.assets?.webModel?.path, iterPreviewEndpoint);
-  const iterPublicModelPath = relative(repositoryRoot, endpointToPublicPath(iterPreviewEndpoint)).replaceAll('\\', '/').toLowerCase();
-  const allowedIterGeometry = new Set([
-    iterPublicModelPath,
-    iterPublicModelPath.replace(/^public\//, 'dist/client/'),
-  ]);
+  assert.equal(iterManifest.assets?.webModel, undefined, 'ITER must not ship the invalid compact fallback model');
+  const allowedIterGeometry = new Set();
 
   const tracked = execFileSync('git', ['ls-files', '-z'], {
     cwd: repositoryRoot,
@@ -273,22 +249,26 @@ test('public device catalog is fail-closed and authorizes only bounded, verifiab
       assert.equal(manifest.access?.engineeringUseAllowed, false);
       const isExlDerivative = identifiesExlDevice(device.id);
       const isIterDerivative = identifiesIterDevice(device.id);
-      const byteBudget = isExlDerivative
-        ? maxExlPublicDerivativeBytes
-        : isIterDerivative ? maxIterPublicDerivativeBytes : maxParamakWebModelBytes;
-      assert.ok(manifest.assets?.webModel?.bytes > 0 && manifest.assets.webModel.bytes <= byteBudget,
-        `${device.id} browser model exceeds the ${byteBudget}-byte budget`);
-      assert.match(manifest.assets.webModel.path, /^\/(?:models|device-assets\/exl50u-interactive)\/[a-z0-9_./-]+\.glb$/i);
-      assert.ok(manifest.assets.webModel.path.startsWith(`${manifestEndpoint.slice(0, manifestEndpoint.lastIndexOf('/') + 1)}`),
-        `${device.id} web model must stay inside its declared public package`);
-      assert.match(manifest.assets.webModel.sha256, /^[a-f0-9]{64}$/i);
-      const webModelPath = endpointToPublicPath(manifest.assets.webModel.path);
-      const webModel = await readFile(webModelPath);
-      assert.equal(webModel.byteLength, manifest.assets.webModel.bytes,
-        `${device.id} manifest byte count must match the shipped browser model`);
-      assert.equal(createHash('sha256').update(webModel).digest('hex'), manifest.assets.webModel.sha256.toLowerCase(),
-        `${device.id} manifest hash must match the shipped browser model`);
-      const glb = parseGlb(webModel, `${device.id} webModel`);
+      let glb = null;
+      if (isIterDerivative) {
+        assert.equal(manifest.schemaVersion, '1.3', 'component-only ITER delivery requires manifest 1.3');
+        assert.equal(manifest.assets?.webModel, undefined, 'ITER must not expose a monolithic fallback model');
+      } else {
+        const byteBudget = isExlDerivative ? maxExlPublicDerivativeBytes : maxParamakWebModelBytes;
+        assert.ok(manifest.assets?.webModel?.bytes > 0 && manifest.assets.webModel.bytes <= byteBudget,
+          `${device.id} browser model exceeds the ${byteBudget}-byte budget`);
+        assert.match(manifest.assets.webModel.path, /^\/(?:models|device-assets\/exl50u-interactive)\/[a-z0-9_./-]+\.glb$/i);
+        assert.ok(manifest.assets.webModel.path.startsWith(`${manifestEndpoint.slice(0, manifestEndpoint.lastIndexOf('/') + 1)}`),
+          `${device.id} web model must stay inside its declared public package`);
+        assert.match(manifest.assets.webModel.sha256, /^[a-f0-9]{64}$/i);
+        const webModelPath = endpointToPublicPath(manifest.assets.webModel.path);
+        const webModel = await readFile(webModelPath);
+        assert.equal(webModel.byteLength, manifest.assets.webModel.bytes,
+          `${device.id} manifest byte count must match the shipped browser model`);
+        assert.equal(createHash('sha256').update(webModel).digest('hex'), manifest.assets.webModel.sha256.toLowerCase(),
+          `${device.id} manifest hash must match the shipped browser model`);
+        glb = parseGlb(webModel, `${device.id} webModel`);
+      }
 
       if (manifest.assets.poster) {
         const posterPath = endpointToPublicPath(manifest.assets.poster.path);
@@ -416,11 +396,10 @@ test('public device catalog is fail-closed and authorizes only bounded, verifiab
         assert.equal(manifest.devicePackage?.kind, 'public-simplified-derivative');
         assert.equal(manifest.devicePackage?.authority, 'illustrative');
         assert.equal(manifest.assets.sourceCad, undefined, 'ITER source CAD must remain private');
-        assert.equal(manifest.assets.poster, undefined, 'ITER static package must contain only its manifest and compact preview');
+        assert.equal(manifest.assets.poster, undefined, 'ITER local Sites package must contain only its high-detail manifest');
         assert.equal(manifest.assets.webModels, undefined, 'ITER high detail must never be delivered as a monolithic LOD');
         assert.equal(manifest.assets.componentBundles?.length, 1, 'ITER must declare one reviewed high-detail component bundle');
-        assert.equal(manifest.assets.webModel.path, iterPreviewEndpoint);
-        assert.match(manifest.assets.webModel.format, /(?:glTF\s*2\.0|GLB).*meshopt|meshopt.*(?:glTF\s*2\.0|GLB)/i);
+        assert.equal(manifest.assets.webModel, undefined, 'ITER compact preview must be removed rather than used as a fallback');
         assert.match(manifest.access.statement, /(?:project[- ]owner[- ]authorized|project owner (?:explicitly )?authorized|项目方授权)/i);
         assert.match(manifest.disclaimer, /(?:not\s+(?:an?\s+)?(?:authoritative\s+)?(?:ITER\s+)?engineering|non-engineering|非工程)/i);
         assert.match(manifest.disclaimer, /(?:does not claim|no)\s+(?:ITER Organization\s+)?endorsement|不代表.*ITER.*认可/i);
@@ -430,7 +409,7 @@ test('public device catalog is fail-closed and authorizes only bounded, verifiab
 
         const systems = Array.isArray(manifest.systems) ? manifest.systems : [];
         const parts = systems.flatMap((system) => Array.isArray(system.parts) ? system.parts : []);
-        assert.equal(parts.length, 18, 'ITER public preview must expose all 18 approved component identities');
+        assert.equal(parts.length, 18, 'ITER high-detail bundle must expose all 18 approved component identities');
         assert.equal(new Set(parts.map((part) => part.id)).size, 18, 'ITER component IDs must be unique');
         const approvedNodeNames = new Set(parts.map((part) => part.nodeName));
         const approvedPartIds = new Set(parts.map((part) => part.id));
@@ -443,8 +422,8 @@ test('public device catalog is fail-closed and authorizes only bounded, verifiab
         assert.equal(highBundle.quality, 'high');
         assert.ok(highBundle.bytes >= 80_000_000 && highBundle.bytes <= 110_000_000,
           'ITER high-detail transfer must remain near the reviewed ~100 MB target');
-        assert.ok(highBundle.triangles > manifest.assets.webModel.triangles,
-          'ITER high-detail bundle must contain more detail than the compatibility preview');
+        assert.ok(highBundle.triangles > 10_000_000,
+          'ITER high-detail bundle must retain a substantial reviewed geometry budget');
         assert.equal(highBundle.components.length, 18);
         assert.deepEqual(new Set(highBundle.components.map((component) => component.partId)), approvedPartIds);
         assert.deepEqual(new Set(highBundle.components.map((component) => component.nodeName)), approvedNodeNames);
@@ -473,75 +452,6 @@ test('public device catalog is fail-closed and authorizes only bounded, verifiab
         assert.equal(manifest.visualizations?.analyticPlasma?.hasXPoint, false);
         assert.equal(manifest.visualizations?.analyticPlasma?.isEfit, false);
 
-        const asset = manifest.assets.webModel;
-        assert.ok(Number.isSafeInteger(asset.triangles) && asset.triangles > 0 && asset.triangles <= maxIterPreviewTriangles,
-          'ITER preview must declare a bounded triangle count');
-        assert.ok(Number.isSafeInteger(asset.vertices) && asset.vertices > 0, 'ITER preview must declare its vertex count');
-        assert.ok(Number.isSafeInteger(asset.decodedGpuBytes) && asset.decodedGpuBytes > 0
-          && asset.decodedGpuBytes <= maxIterDecodedGpuBytes, 'ITER preview exceeds its decoded GPU budget');
-        assert.ok(Array.isArray(asset.boundsMetres?.min) && Array.isArray(asset.boundsMetres?.max),
-          'ITER preview must declare metre-space bounds');
-        const counts = glbGeometryCounts(glb);
-        assert.deepEqual(counts, { triangles: asset.triangles, vertices: asset.vertices },
-          'ITER declared geometry counts must match the GLB');
-        assert.equal(decodedAttributeBytes(glb), asset.decodedGpuBytes,
-          'ITER decoded GPU byte estimate must match its accessors');
-        assert.ok(glb.extensionsRequired?.includes('EXT_meshopt_compression'),
-          'ITER preview must require EXT_meshopt_compression');
-        assert.ok(glb.extensionsRequired?.includes('KHR_mesh_quantization'),
-          'ITER preview must require KHR_mesh_quantization');
-        assert.equal(glb.asset?.extras?.publicationStatus, 'PUBLIC_VISUALIZATION_DERIVATIVE_REVIEWED');
-        assert.equal(glb.asset?.extras?.candidateStatus, undefined,
-          'public ITER GLB metadata must not retain a private candidate status');
-        assert.doesNotMatch(JSON.stringify(glb), /(?:[a-z]:[\\/]|\/(?:Users|home)\/|\bprivate\b|source\.path|PRIVATE_PREVIEW_INCOMPLETE)/i,
-          'public ITER GLB JSON must not expose private provenance or local paths');
-
-        const stableNodeEntries = glb.nodes
-          .map((node, index) => ({ node, index }))
-          .filter(({ node }) => approvedNodeNames.has(node.name));
-        assert.equal(stableNodeEntries.length, 18, 'all 18 manifest node names must exist in the GLB');
-        const allStableNames = glb.nodes
-          .map((node) => node.name)
-          .filter((name) => typeof name === 'string' && name.startsWith('ITER_PART__'));
-        assert.deepEqual(new Set(allStableNames), approvedNodeNames,
-          'the GLB must not contain undeclared ITER stable identity nodes');
-        const allMeshNodeIndexes = new Set(glb.nodes
-          .map((node, index) => Number.isInteger(node.mesh) ? index : null)
-          .filter(Number.isInteger));
-        const meshOwners = new Map();
-        const meshResourceOwners = new Map();
-        for (const { node, index } of stableNodeEntries) {
-          assert.equal(node.extras?.geometryStatus, 'registered-public-visualization-derivative',
-            `${node.name} must carry a public visualization status, not private candidate provenance`);
-          const descendants = descendantMeshNodeIndexes(glb, index);
-          assert.ok(descendants.length > 0, `${node.name} must own visible geometry`);
-          for (const meshNodeIndex of descendants) {
-            assert.equal(meshOwners.has(meshNodeIndex), false,
-              `mesh node ${meshNodeIndex} must not be shared by multiple ITER component identities`);
-            meshOwners.set(meshNodeIndex, node.name);
-            const meshResourceIndex = glb.nodes[meshNodeIndex].mesh;
-            assert.equal(meshResourceOwners.has(meshResourceIndex), false,
-              `mesh resource ${meshResourceIndex} must not be shared by multiple ITER component identities`);
-            meshResourceOwners.set(meshResourceIndex, node.name);
-          }
-        }
-        assert.deepEqual(new Set(meshOwners.keys()), allMeshNodeIndexes,
-          'every ITER mesh must belong to exactly one declared stable component node');
-
-        const nodeBounds = [...allMeshNodeIndexes].map((index) => meshNodeBounds(glb, glb.nodes[index]));
-        const actualMin = nodeBounds.reduce((result, bounds) => result.map((value, axis) => Math.min(value, bounds.min[axis])), [Infinity, Infinity, Infinity]);
-        const actualMax = nodeBounds.reduce((result, bounds) => result.map((value, axis) => Math.max(value, bounds.max[axis])), [-Infinity, -Infinity, -Infinity]);
-        for (let axis = 0; axis < 3; axis += 1) {
-          assert.ok(asset.boundsMetres.min[axis] < asset.boundsMetres.max[axis]);
-          assert.ok(Math.abs(asset.boundsMetres.min[axis] - actualMin[axis]) <= 0.02,
-            `ITER boundsMetres.min[${axis}] must match the GLB`);
-          assert.ok(Math.abs(asset.boundsMetres.max[axis] - actualMax[axis]) <= 0.02,
-            `ITER boundsMetres.max[${axis}] must match the GLB`);
-        }
-        const worldExtents = actualMax.map((value, axis) => value - actualMin[axis]);
-        assert.ok(worldExtents.every((extent) => extent > 5 && extent < 40),
-          `ITER public-preview bounds are implausible: ${worldExtents.join(', ')}`);
-
         const licenseNoticePath = exactPublicPath(
           manifest.generator.licenseUrl,
           '/licenses/ITER-PUBLIC-VISUALIZATION-DERIVATIVE.txt',
@@ -552,19 +462,17 @@ test('public device catalog is fail-closed and authorizes only bounded, verifiab
         assert.match(licenseNotice, /must not be used for manufacturing.*CAE.*safety decisions/is);
 
         const packageFiles = await walkFiles(resolve(endpointToPublicPath(manifestEndpoint), '..'));
-        const allowedPackageFiles = new Set([
-          endpointToPublicPath(manifestEndpoint),
-          endpointToPublicPath(asset.path),
-        ].map((pathname) => resolve(pathname).toLowerCase()));
+        const allowedPackageFiles = new Set([endpointToPublicPath(manifestEndpoint)]
+          .map((pathname) => resolve(pathname).toLowerCase()));
         for (const pathname of packageFiles) {
           assert.ok(allowedPackageFiles.has(resolve(pathname).toLowerCase()),
             `ITER public derivative package contains an undeclared asset: ${relative(publicRoot, pathname)}`);
         }
-        assert.equal(packageFiles.length, 2, 'ITER Sites package must contain exactly one manifest and one compact preview GLB');
+        assert.equal(packageFiles.length, 1, 'ITER Sites package must contain exactly one manifest; geometry is external high-detail shards');
         for (const value of collectStrings(manifest)) {
           assert.doesNotMatch(value, localPathPattern, 'ITER manifest must not expose a private filesystem path');
           if (hasGeometryOrSourceExtension(value)) assert.ok(
-            value === iterPreviewEndpoint || /^\/device-assets\/iter-high-detail\/v1\/[a-z0-9-]+\.[a-f0-9]{64}\.high\.meshopt\.glb$/.test(value),
+            /^\/device-assets\/iter-high-detail\/v1\/[a-z0-9-]+\.[a-f0-9]{64}\.high\.meshopt\.glb$/.test(value),
             `ITER manifest exposes an undeclared geometry/source path: ${value}`,
           );
         }

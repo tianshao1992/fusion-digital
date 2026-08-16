@@ -36,8 +36,9 @@ A public release is allowed only when all of the following are true:
 4. Geometry validation covers finite positions and normals, valid indices,
    non-degenerate triangles, bounded decoded memory, and stable component
    mapping across LODs.
-5. This release contains exactly one compact preview GLB. No high-detail LOD,
-   source CAD, or secondary geometry package is published.
+5. The compact fallback GLB is not published. Browser geometry is delivered
+   only through the reviewed 18-file high-detail component bundle; each shard
+   remains content-addressed, independently bounded, and fail-closed.
 6. The public catalog labels the package as a visualization derivative and
    keeps the source package private.
 

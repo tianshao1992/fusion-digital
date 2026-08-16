@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import type { DeviceComponentBundle, DeviceComponentModel, DeviceWebModel } from '../app/components/deviceManifest';
 import { createSerialTaskGate, loadVerifiedComponentBundle, loadVerifiedMonolithicModel } from '../app/components/device-viewer/componentModelLoader';
@@ -358,54 +357,6 @@ test('reviewed GLB containers reject external buffers and image URIs before pars
       }), external === 'buffer' ? /embedded BIN\/Meshopt-fallback payloads/ : /external image resource/);
     }
     assert.equal(parseCalls, 0);
-  } finally {
-    globalThis.fetch = originalFetch;
-  }
-});
-
-test('the published compact ITER preview passes the verified two-buffer Meshopt path', async () => {
-  if (globalThis.ProgressEvent === undefined) {
-    globalThis.ProgressEvent = class ProgressEvent {
-      type: string;
-      constructor(type: string) { this.type = type; }
-    } as typeof ProgressEvent;
-  }
-  const manifest = JSON.parse(await readFile(
-    new URL('../public/models/iter-public-simplified/model-manifest.json', import.meta.url),
-    'utf8',
-  ));
-  const fileBytes = await readFile(
-    new URL('../public/models/iter-public-simplified/iter-public-simplified-preview.meshopt.glb', import.meta.url),
-  );
-  const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
-  const { MeshoptDecoder } = await import('meshoptimizer');
-  await MeshoptDecoder.ready;
-  const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
-  const originalFetch = globalThis.fetch;
-  globalThis.fetch = (async () => response(
-    new Uint8Array(fileBytes.buffer, fileBytes.byteOffset, fileBytes.byteLength),
-  )) as typeof fetch;
-  try {
-    const scene = await loadVerifiedMonolithicModel(manifest.assets.webModel, {
-      loader,
-      signal: new AbortController().signal,
-    });
-    const stableNodes = new Set<string>();
-    scene.traverse((node) => {
-      if (node.name.startsWith('ITER_PART__')) stableNodes.add(node.name);
-    });
-    assert.equal(stableNodes.size, 18);
-    scene.traverse((node) => {
-      const renderable = node as typeof node & {
-        geometry?: { dispose(): void };
-        material?: { dispose(): void } | Array<{ dispose(): void }>;
-      };
-      renderable.geometry?.dispose();
-      const materials = Array.isArray(renderable.material)
-        ? renderable.material
-        : renderable.material ? [renderable.material] : [];
-      materials.forEach((material) => material.dispose());
-    });
   } finally {
     globalThis.fetch = originalFetch;
   }

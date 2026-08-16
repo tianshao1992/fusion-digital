@@ -14,7 +14,6 @@ const repositoryRoot = fileURLToPath(new URL('../', import.meta.url));
 const publicRoot = fileURLToPath(new URL('../public/', import.meta.url));
 const iterManifestEndpoint = '/models/iter-public-simplified/model-manifest.json';
 const iterManifestPath = fileURLToPath(new URL('../public/models/iter-public-simplified/model-manifest.json', import.meta.url));
-const maxPublicPreviewBytes = 8 * 1024 * 1024;
 
 const iterPartIds = [
   'cs', 'pf1', 'pf2', 'pf3', 'pf4', 'pf5', 'pf6', 'tf-a', 'tf-b',
@@ -43,7 +42,7 @@ function candidateManifest() {
   });
   return {
     $schema: '/models/device-manifest.schema.json',
-    schemaVersion: '1.2',
+    schemaVersion: '1.3',
     id: 'iter-public-simplified-v1',
     title: 'ITER public simplified browser visualization derivative',
     asOf: '2026-08-15',
@@ -53,7 +52,7 @@ function candidateManifest() {
       authority: 'illustrative',
       replacementContract: [
         'project-owner authorization for a public simplified visualization derivative',
-        'one compact preview GLB with eighteen stable selectable component nodes',
+        'one high-detail component bundle with eighteen stable selectable component nodes',
         'source STEP, B-Rep topology and engineering metadata remain private',
       ],
     },
@@ -70,16 +69,6 @@ function candidateManifest() {
       sourceToWebScale: 1,
     },
     assets: {
-      webModel: {
-        path: '/models/iter-public-simplified/iter-public-simplified-preview.meshopt.glb',
-    format: 'glTF 2.0 binary + EXT_meshopt_compression + KHR_mesh_quantization; POSITION normalized Int16 per mesh; NORMAL normalized Int8 (8-bit)',
-        sha256: 'a'.repeat(64),
-        bytes: 6_500_000,
-        triangles: 400_000,
-        vertices: 300_000,
-        decodedGpuBytes: 30_000_000,
-        boundsMetres: { min: [-15, -15, -15], max: [15, 15, 15] },
-      },
       componentBundles: [{
         id: 'iter-education-high-v1',
         label: '高精度分片',
@@ -132,7 +121,7 @@ function candidateManifest() {
         id: `ITER-${id.toUpperCase()}`,
         title: id.toUpperCase(),
         nodeName: `ITER_PART__${id}`,
-        description: 'Stable top-level node in the simplified public preview GLB.',
+        description: 'Stable top-level node in the reviewed high-detail component bundle.',
         engineeringTag: `ITER.WEB.${id.replaceAll('-', '_').toUpperCase()}`,
       }],
     })),
@@ -155,7 +144,7 @@ function candidateManifest() {
   };
 }
 
-test('preview plus verified high-detail component bundle carries the complete 18-node ITER browser contract', () => {
+test('high-detail-only component bundle carries the complete 18-node ITER browser contract', () => {
   const manifest = parseDeviceManifest(candidateManifest(), { manifestUrl: iterManifestEndpoint });
   const parts = manifest.systems.flatMap((system) => system.parts);
 
@@ -163,9 +152,7 @@ test('preview plus verified high-detail component bundle carries the complete 18
   assert.equal(manifest.assets.componentBundles?.length, 1);
   assert.equal(manifest.assets.componentBundles?.[0]?.components.length, 18);
   assert.equal(manifest.assets.componentBundles?.[0]?.bytes, 90_000_000);
-  assert.ok(manifest.assets.webModel.bytes <= maxPublicPreviewBytes);
-  assert.ok((manifest.assets.webModel.decodedGpuBytes ?? 0) > 0);
-  assert.ok(manifest.assets.webModel.boundsMetres);
+  assert.equal(manifest.assets.webModel, undefined);
   assert.equal(parts.length, 18);
   assert.equal(new Set(parts.map((part) => part.id)).size, 18);
   assert.equal(new Set(parts.map((part) => part.nodeName)).size, 18);
@@ -180,26 +167,19 @@ test('preview plus verified high-detail component bundle carries the complete 18
 
 test('manifest parsing fails closed on cross-package assets and invalid performance metadata', () => {
   const crossPackage = candidateManifest();
-  crossPackage.assets.webModel.path = '/models/another-package/iter-preview.glb';
+  crossPackage.assets.componentBundles[0].components[0].path = '/models/another-package/iter-high.glb';
   assert.throws(
     () => parseDeviceManifest(crossPackage, { manifestUrl: iterManifestEndpoint }),
-    /同一精确包目录/,
-  );
-
-  const highNamespacePreviewBypass = candidateManifest();
-  highNamespacePreviewBypass.assets.webModel.path = `/device-assets/iter-high-detail/v1/cs.${'a'.repeat(64)}.high.meshopt.glb`;
-  assert.throws(
-    () => parseDeviceManifest(highNamespacePreviewBypass, { manifestUrl: iterManifestEndpoint }),
-    /同一精确包目录/,
+    /部件身份/,
   );
 
   const invertedBounds = candidateManifest();
-  invertedBounds.assets.webModel.boundsMetres = { min: [15, -15, -15], max: [-15, 15, 15] };
-  assert.throws(() => parseDeviceManifest(invertedBounds, { manifestUrl: iterManifestEndpoint }), /webModel/);
+  invertedBounds.assets.componentBundles[0].components[0].boundsMetres = { min: [15, -15, -15], max: [-15, 15, 15] };
+  assert.throws(() => parseDeviceManifest(invertedBounds, { manifestUrl: iterManifestEndpoint }), /(?:部件身份|无效部件)/);
 
   const invalidGpuBudget = candidateManifest();
-  invalidGpuBudget.assets.webModel.decodedGpuBytes = 0;
-  assert.throws(() => parseDeviceManifest(invalidGpuBudget, { manifestUrl: iterManifestEndpoint }), /webModel/);
+  invalidGpuBudget.assets.componentBundles[0].components[0].decodedGpuBytes = 0;
+  assert.throws(() => parseDeviceManifest(invalidGpuBudget, { manifestUrl: iterManifestEndpoint }), /(?:部件身份|无效部件)/);
 
   const mismatchedIdentity = candidateManifest();
   mismatchedIdentity.assets.componentBundles[0].components[0].nodeName = 'ITER_PART__pf1';
@@ -236,7 +216,7 @@ test('manifest parsing fails closed on cross-package assets and invalid performa
   assert.throws(() => parseDeviceManifest(extraComponentField, { manifestUrl: iterManifestEndpoint }), /部件身份/);
 
   const collidingChoiceId = candidateManifest();
-  collidingChoiceId.assets.componentBundles[0].id = 'standard';
+  collidingChoiceId.assets.componentBundles[0].id = 'Standard';
   assert.throws(() => parseDeviceManifest(collidingChoiceId, { manifestUrl: iterManifestEndpoint }), /无效或重复/);
 
   const fakeHighDefault = candidateManifest() as ReturnType<typeof candidateManifest> & {
@@ -252,6 +232,10 @@ test('manifest parsing fails closed on cross-package assets and invalid performa
   const legacyExtension = candidateManifest();
   legacyExtension.schemaVersion = '1.1';
   assert.throws(() => parseDeviceManifest(legacyExtension, { manifestUrl: iterManifestEndpoint }), /1\.1 不支持/);
+
+  const legacyPreviewContract = candidateManifest();
+  legacyPreviewContract.schemaVersion = '1.2';
+  assert.throws(() => parseDeviceManifest(legacyPreviewContract, { manifestUrl: iterManifestEndpoint }), /必须使用 1\.3/);
 });
 
 test('ITER analytic plasma uses the published Miller-style design proxy without inventing X-point topology', () => {
@@ -294,20 +278,18 @@ test('catalog keeps ITER fail-closed until the complete public preview package i
   assert.equal(new Set(parts.map((part) => part.nodeName)).size, 18);
   assert.equal(manifest.assets.webModels, undefined, 'ITER high detail is sharded, never a monolithic LOD');
   assert.equal(manifest.assets.componentBundles?.[0]?.components.length, 18);
-  assert.ok(manifest.assets.webModel.bytes <= maxPublicPreviewBytes);
+  assert.equal(manifest.assets.webModel, undefined, 'ITER must not publish the invalid compact fallback model');
   assert.equal(manifest.assets.sourceCad, undefined);
 });
 
-test('viewer preserves preview safety, verified component loading, 18-node selection and model fallback', async () => {
+test('viewer supports a verified component-only model while preserving 18-node selection', async () => {
   const viewer = await readFile(new URL('../app/components/TokamakCadViewer.tsx', import.meta.url), 'utf8');
   const workspace = await readFile(new URL('../app/digital-prototype/MultiDeviceWorkspace.tsx', import.meta.url), 'utf8');
 
-  assert.match(viewer, /manifest\.assets\.componentBundles\s*\?\?\s*\[\]/,
-    'component bundles must be opt-in additions to the compatibility preview');
-  assert.match(viewer, /variants\.length\s*>\s*1\s*&&\s*shouldPreferPreview\(\)/,
-    'resource hints must never remove the sole public preview');
-  assert.match(viewer, /setSelectedModelId\(preview\.id\)/,
-    'a failed optional high variant must fall back to preview');
+  assert.match(viewer, /const compatibilityModels = manifest\.assets\.webModel \?/,
+    'the viewer must not synthesize a standard model when the manifest is component-only');
+  assert.match(viewer, /Boolean\(preview\)[\s\S]*shouldPreferPreview\(\)/,
+    'resource hints may constrain only manifests that actually publish a preview');
   assert.match(viewer, /disabled=\{status === 'loading' && selectedModel\?\.id === asset\.id\}/,
     'a user must be able to cancel a large in-flight LOD by selecting the other model');
   assert.match(viewer, /missingParts\.length\s*>\s*0[\s\S]*errorMissingNodes/,

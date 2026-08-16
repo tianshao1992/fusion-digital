@@ -118,7 +118,7 @@ export type DeviceManifest = {
     sourceToWebScale: number;
   };
   assets: {
-    webModel: DeviceWebModel;
+    webModel?: DeviceWebModel;
     webModels?: DeviceWebModelVariant[];
     componentBundles?: DeviceComponentBundle[];
     sourceCad?: { path: string; format: string; sha256: string; bytes: number };
@@ -419,7 +419,7 @@ function validateWebModels(value: unknown, compatibilityAsset: DeviceWebModel) {
 
 function localManifestAssetPaths(manifest: DeviceManifest) {
   return [
-    manifest.assets.webModel.path,
+    ...(manifest.assets.webModel ? [manifest.assets.webModel.path] : []),
     ...(manifest.assets.webModels?.map((asset) => asset.path) ?? []),
     ...(manifest.assets.poster ? [manifest.assets.poster.path] : []),
     ...(manifest.assets.sourceCad ? [manifest.assets.sourceCad.path] : []),
@@ -456,7 +456,7 @@ export function parseDeviceManifest(value: unknown, options: ParseDeviceManifest
   if (!value || typeof value !== 'object') throw new Error('装置清单不是有效的 JSON 对象。');
   const manifest = value as Partial<DeviceManifest>;
   if (!manifest.id || !manifest.title || !manifest.schemaVersion) throw new Error('装置清单缺少 id、title 或 schemaVersion。');
-  if (!['1.1', '1.2'].includes(manifest.schemaVersion)) throw new Error(`不支持的装置清单版本：${manifest.schemaVersion}。`);
+  if (!['1.1', '1.2', '1.3'].includes(manifest.schemaVersion)) throw new Error(`不支持的装置清单版本：${manifest.schemaVersion}。`);
   if (manifest.schemaVersion === '1.1'
     && (manifest.assets?.componentBundles !== undefined || manifest.visualizations !== undefined)) {
     throw new Error('装置清单 1.1 不支持分片资产或解析可视化扩展。');
@@ -484,10 +484,18 @@ export function parseDeviceManifest(value: unknown, options: ParseDeviceManifest
     || !(manifest.coordinateSystem.sourceToWebScale > 0)) {
     throw new Error('装置清单缺少有效的单位或坐标系。');
   }
-  if (!manifest.assets || !isAsset(manifest.assets.webModel)) throw new Error('装置清单缺少可加载的 webModel 资产。');
-  if (manifest.assets.webModels !== undefined) validateWebModels(manifest.assets.webModels, manifest.assets.webModel);
-  if (manifest.assets.sourceCad !== undefined && !isAsset(manifest.assets.sourceCad)) throw new Error('装置清单包含无效的 sourceCad 资产。');
-  if (manifest.assets.poster !== undefined && !isAssetWithoutFormat(manifest.assets.poster)) throw new Error('装置清单包含无效的 poster 资产。');
+  if (!manifest.assets) throw new Error('装置清单缺少可加载的浏览器资产。');
+  const assets = manifest.assets;
+  const hasWebModel = isAsset(assets.webModel);
+  const hasComponentBundles = Array.isArray(assets.componentBundles) && assets.componentBundles.length > 0;
+  if (!hasWebModel && !hasComponentBundles) throw new Error('装置清单至少需要 webModel 或 componentBundles。');
+  if (!hasWebModel && manifest.schemaVersion !== '1.3') throw new Error('仅分片的高精度装置清单必须使用 1.3 版本。');
+  if (assets.webModels !== undefined) {
+    if (!hasWebModel) throw new Error('webModels 需要兼容 webModel 资产。');
+    validateWebModels(assets.webModels, assets.webModel as DeviceWebModel);
+  }
+  if (assets.sourceCad !== undefined && !isAsset(assets.sourceCad)) throw new Error('装置清单包含无效的 sourceCad 资产。');
+  if (assets.poster !== undefined && !isAssetWithoutFormat(assets.poster)) throw new Error('装置清单包含无效的 poster 资产。');
   if (!Array.isArray(manifest.systems) || manifest.systems.length === 0) throw new Error('装置清单没有系统/部件映射。');
   const partIds = new Set<string>();
   const nodeNames = new Set<string>();
@@ -508,13 +516,13 @@ export function parseDeviceManifest(value: unknown, options: ParseDeviceManifest
       manifestParts.set(part.id, part.nodeName);
     }
   }
-  if (manifest.assets.componentBundles !== undefined) {
+  if (assets.componentBundles !== undefined) {
     validateComponentBundles(
-      manifest.assets.componentBundles,
+      assets.componentBundles,
       manifestParts,
-      new Set(manifest.assets.webModels?.map((asset) => asset.id) ?? ['standard']),
+      new Set(assets.webModels?.map((asset) => asset.id) ?? (hasWebModel ? ['standard'] : [])),
     );
-    if (manifest.assets.componentBundles.some((bundle) => bundle.triangles <= Number(manifest.assets?.webModel.triangles ?? 0))) {
+    if (hasWebModel && assets.componentBundles.some((bundle) => bundle.triangles <= Number(assets.webModel?.triangles ?? 0))) {
       throw new Error('分片高清资产必须提供高于兼容预览的几何细节。');
     }
   }
@@ -527,14 +535,14 @@ export function parseDeviceManifest(value: unknown, options: ParseDeviceManifest
     throw new Error('装置清单的生成脚本血缘无效。');
   }
   const conversion = manifest.generator.conversion;
-  if (manifest.assets.webModels?.some((asset) => asset.quality === 'high')
+  if (assets.webModels?.some((asset) => asset.quality === 'high')
     && (!conversion
       || !(Number(conversion.highLodAbsoluteDeflectionMillimetres) > 0)
       || !(Number(conversion.highLodAngularDeflectionRadians) > 0)
       || conversion.highLodSharpEdgeNormals !== true)) {
     throw new Error('高清 LOD 缺少离散化精度或锐边法线声明。');
   }
-  if (manifest.assets.componentBundles?.length
+  if (assets.componentBundles?.length
     && (!conversion?.pipeline || !conversion.converter || !conversion.converterVersion)) {
     throw new Error('分片高清 LOD 缺少可复现的转换流水线声明。');
   }

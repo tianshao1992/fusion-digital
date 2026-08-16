@@ -35,7 +35,6 @@ test('deployment surface contains no controlled CAD or engineering mesh', async 
   const authorizedBrowserDerivatives = [
     new URL('../public/models/exl50u-interactive/exl50u-interactive-high.meshopt.glb', import.meta.url).href,
     new URL('../public/models/exl50u-interactive/exl50u-interactive.glb', import.meta.url).href,
-    new URL('../public/models/iter-public-simplified/iter-public-simplified-preview.meshopt.glb', import.meta.url).href,
   ];
   assert.deepEqual(new Set(protectedGeometry.map((file) => file.href)), new Set(authorizedBrowserDerivatives));
 
@@ -75,7 +74,6 @@ test('ships non-empty reports and structured download assets', async () => {
     '../public/models/paramak-full-device/paramak-full-device.glb',
     '../public/models/paramak-full-device/PARAMAK-LICENSE.txt',
     '../public/models/paramak-full-device/model-manifest.json',
-    '../public/models/iter-public-simplified/iter-public-simplified-preview.meshopt.glb',
     '../public/models/iter-public-simplified/model-manifest.json',
     '../public/licenses/ITER-PUBLIC-VISUALIZATION-DERIVATIVE.txt',
     '../public/models/device-catalog.json',
@@ -180,7 +178,7 @@ test('ships a closed, public DeviceManifest for the CAD viewer', async () => {
   assert.equal(manifest.schemaVersion, '1.1');
   assert.equal(manifest.access.classification, 'PUBLIC');
   assert.equal(manifest.access.redistributionAllowed, true);
-  assert.deepEqual(schema.properties.schemaVersion.enum, ['1.1', '1.2']);
+  assert.deepEqual(schema.properties.schemaVersion.enum, ['1.1', '1.2', '1.3']);
   const parts = manifest.systems.flatMap((system) => system.parts);
   assert.equal(parts.length, 17);
   assert.equal(new Set(parts.map((part) => part.id)).size, parts.length);
@@ -219,7 +217,7 @@ test('server-renders the FusionDigital community portal', async () => {
   assert.match(html, /data-three-viewer="paramak-full-device"/);
   assert.match(html, /装置、三维与 EFIT 联动/);
   assert.match(html, /EXL(?:‑|-)?50U 2026 升级版/);
-  assert.match(html, /ITER 教育简化模型/);
+  assert.match(html, /ITER 教育高精度模型/);
   assert.match(html, /搜索名称、ID 或工程标签/);
   assert.doesNotMatch(html, /class="tokamakCadTrust"|class="tokamakCadFootnotes"/);
   assert.match(html, /data-echart="fusion-twin-system-map"/);
@@ -301,9 +299,9 @@ test('homepage owns the public full-device digital-prototype workspace', async (
   assert.match(html, /data-three-viewer="paramak-full-device"/);
   assert.match(html, /Paramak/);
   assert.match(html, /EXL(?:‑|-)?50U 2026 升级版/);
-  assert.match(html, /ITER 教育简化模型/);
+  assert.match(html, /ITER 教育高精度模型/);
   assert.match(html, /简化派生实时三维/);
-  assert.match(html, /轻量化实时三维/);
+  assert.match(html, /高精度分片三维/);
   assert.match(html, /360°/);
   for (const removedWorkbenchCopy of [
     /MODEL COVERAGE/,
@@ -356,7 +354,7 @@ test('homepage owns the public full-device digital-prototype workspace', async (
   assert.equal(iter.viewer.overlayEligible, false);
   assert.equal(iter.physicsOverlays.length, 0);
   assert.ok(iter.facts.includes('18 个稳定部件'));
-  assert.ok(iter.facts.includes('5 MB 快速预览 + 约 100 MB 分片高精度'));
+  assert.ok(iter.facts.includes('约 100 MB 分片高精度'));
   assert.match(iter.copy, /源 STEP、B-Rep、工程尺寸与工程权威模型不公开/);
   assert.match(iter.statement, /Project-owner-authorized public browser visualization derivative/);
   assert.match(iter.statement, /Browser-delivered geometry can be technically saved/);
@@ -388,14 +386,13 @@ test('homepage owns the public full-device digital-prototype workspace', async (
   assert.equal(iterManifest.access.classification, 'PUBLIC');
   assert.equal(iterManifest.access.redistributionAllowed, true);
   assert.equal(iterManifest.access.engineeringUseAllowed, false);
-  assert.equal(iterManifest.schemaVersion, '1.2');
+  assert.equal(iterManifest.schemaVersion, '1.3');
   assert.equal(iterManifest.assets.sourceCad, undefined);
   assert.equal(iterManifest.assets.webModels, undefined);
   assert.equal(iterManifest.assets.componentBundles?.[0]?.components.length, 18);
   assert.equal(iterManifest.visualizations?.analyticPlasma?.isEfit, false);
   assert.equal(iterManifest.visualizations?.analyticPlasma?.hasXPoint, false);
-  assert.equal(iterManifest.assets.webModel.path, '/models/iter-public-simplified/iter-public-simplified-preview.meshopt.glb');
-  assert.ok(iterManifest.assets.webModel.bytes > 0 && iterManifest.assets.webModel.bytes <= 8 * 1024 * 1024);
+  assert.equal(iterManifest.assets.webModel, undefined);
   const iterParts = iterManifest.systems.flatMap((system) => system.parts);
   assert.equal(iterParts.length, 18);
   assert.equal(new Set(iterParts.map((part) => part.id)).size, 18);

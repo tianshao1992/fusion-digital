@@ -1,6 +1,6 @@
 {
   "$schema": "/models/device-manifest.schema.json",
-  "schemaVersion": "1.2",
+  "schemaVersion": "1.3",
   "id": "iter-public-simplified-v1",
   "title": "ITER public simplified browser visualization derivative",
   "asOf": "2026-08-16",
@@ -11,7 +11,7 @@
     "replacementContract": [
       "project-owner authorization for public browser visualization",
       "exactly 18 stable selectable component identities",
-      "compact all-part Meshopt preview plus an optional reviewed 18-file high-detail visualization bundle",
+      "one reviewed 18-file high-detail visualization bundle with no compact fallback geometry",
       "metre-scale Y-up right-handed web coordinate frame",
       "content hash, geometry budgets and non-engineering-use boundary"
     ]
@@ -20,7 +20,7 @@
     "classification": "PUBLIC",
     "redistributionAllowed": true,
     "engineeringUseAllowed": false,
-    "statement": "Project-owner-authorized public browser visualization derivative. The compact preview and optional high-detail component shards are non-engineering display meshes. Source STEP, B-Rep topology, authoritative dimensions and manufacturing metadata remain private. This release does not claim ITER Organization endorsement."
+    "statement": "Project-owner-authorized public browser visualization derivative. Only the reviewed high-detail component shards are delivered; no compact fallback geometry is published. Source STEP, B-Rep topology, authoritative dimensions and manufacturing metadata remain private. This release does not claim ITER Organization endorsement."
   },
   "coordinateSystem": {
     "linearUnit": "metre",
@@ -29,27 +29,6 @@
     "sourceToWebScale": 1
   },
   "assets": {
-    "webModel": {
-      "path": "/models/iter-public-simplified/iter-public-simplified-preview.meshopt.glb",
-      "format": "glTF 2.0 binary + EXT_meshopt_compression + KHR_mesh_quantization; POSITION normalized Int16 per mesh; NORMAL normalized Int8 (8-bit)",
-      "bytes": 5150212,
-      "sha256": "96AD760708E5E8BFA8B23BDC715ACE4591B0F1F543BC541A83DA86064C2E1EC3",
-      "triangles": 399499,
-      "vertices": 738938,
-      "decodedGpuBytes": 10936437,
-      "boundsMetres": {
-        "min": [
-          -15.01108,
-          -13.01996,
-          -14.89584
-        ],
-        "max": [
-          15.01133,
-          16.20763,
-          14.95982
-        ]
-      }
-    },
     "componentBundles": [
       {
         "id": "iter-high-v1",

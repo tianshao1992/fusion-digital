@@ -250,13 +250,13 @@ def write_plan(candidate: Path, private_root: Path, inputs: dict[str, Any], max_
         },
         "parts": parts,
         "runtimeContract": {
-            "bootstrap": "Load the 5.15 MB all-part preview first; load no high shard eagerly.",
-            "activation": "Only an explicit user selection starts the reviewed 18-shard high-detail bundle.",
-            "swap": "Release the compact preview when high mode is selected, show a loading state, and present the high scene only after all 18 shards pass byte, SHA-256, identity and parse checks.",
-            "queue": "Use one concurrent transfer on lower-memory devices and at most two otherwise; AbortController cancels the complete bundle when the user returns to preview.",
+            "bootstrap": "The component-only manifest exposes no compact fallback geometry.",
+            "activation": "Activating the ITER viewer starts the sole reviewed 18-shard high-detail bundle.",
+            "swap": "Show a loading state and present the high scene only after all 18 shards pass byte, SHA-256, identity and parse checks.",
+            "queue": "Use one concurrent transfer on lower-memory devices and at most two otherwise; AbortController cancels the complete bundle when the viewer is left or reset.",
             "residency": "The selected high mode keeps the complete reviewed bundle resident; no per-part LRU or proximity streaming is claimed in version 1.",
             "cache": "Use content-hashed immutable HTTP URLs and release CPU ArrayBuffers after parsing.",
-            "fallback": "Any shard failure disposes the partial high bundle and reloads the complete compact preview.",
+            "fallback": "Any shard failure disposes the partial bundle and exposes an explicit retryable error; no unreviewed fallback geometry is substituted.",
         },
         "hardGates": [
             "exactly 18 unique stable ITER_PART__ IDs",
@@ -297,12 +297,11 @@ Expected generation time on the current workstation is 15–35 minutes for a
 cold sequential build, plus 5–10 minutes for decoded geometry QA. The build is
 resumable per part and recursively monitors each worker process tree.
 
-Runtime policy: load the existing all-part preview first. An explicit high-mode
-selection releases the preview, shows a loading state, fetches the complete
-18-shard bundle with one or two concurrent transfers, and presents the high
-scene only after every shard passes verification. Any failure disposes the
-partial high bundle and reloads the preview. Version 1 claims no per-part LRU
-or proximity streaming.
+Runtime policy: activation shows a loading state, fetches the complete 18-shard
+bundle with one or two concurrent transfers, and presents the high scene only
+after every shard passes verification. Any failure disposes the partial bundle
+and exposes a retryable error. No compact fallback geometry, per-part LRU, or
+proximity streaming is claimed in version 1.
 """
     (candidate / "REPORT.private.md").write_text(report, encoding="utf-8")
     return plan
@@ -1001,11 +1000,11 @@ def build(args: argparse.Namespace) -> int:
         "status": "PRIVATE_HIGH_DETAIL_COMPLETE_PUBLICATION_REVIEW_REQUIRED",
         "distribution": "private candidate only; no public write, commit or deployment performed",
         "lodContract": {
-            "previewCandidate": "iter-full-device-preview-v1",
+            "previewCandidate": None,
             "highReplacementGranularity": "one reviewed 18-part bundle assembled from independently verified stable-part shards",
-            "initialHighLoads": [],
-            "activation": "explicit user selection only",
-            "fallback": "dispose any partial high bundle and reload the complete preview if any shard fails fetch, byte/hash, identity or parse checks",
+            "initialHighLoads": "all 18 reviewed shards after viewer activation",
+            "activation": "sole component-only browser model",
+            "fallback": "dispose any partial bundle and expose a retryable error if any shard fails fetch, byte/hash, identity or parse checks",
         },
         "budgets": {
             "targetTriangles": sum(HIGH_TARGETS.values()),
