@@ -250,7 +250,7 @@ test('scientific visualizations consume the resolved theme and redraw with seman
   assert.match(roadmap, /chartTheme\.mode === 'dark'/);
   assert.match(roadmap, /\[chartTheme, selectedId\]/);
   assert.match(efitCanvas, /applyScientificChartTheme\(option, chartTheme\)/);
-  assert.match(efitSignals, /const signalColors = chartTheme\.mode === 'dark'/);
+  assert.match(efitSignals, /const signalColors = useMemo\([\s\S]*chartTheme\.mode === 'dark'[\s\S]*\[chartTheme\.mode\]/);
   assert.match(efitEquilibrium, /chartTheme\.mode === 'dark'/);
   assert.match(roadmapCss, /:root\[data-theme='light'\] \.phaseOneRoadmap/);
 });

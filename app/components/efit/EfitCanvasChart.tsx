@@ -7,6 +7,8 @@ import { useI18n } from '../../i18n';
 
 type EfitCanvasChartProps = {
   option: EChartsCoreOption;
+  /** A small option patch applied with ECharts merge semantics after the base option. */
+  incrementalOption?: EChartsCoreOption;
   ariaLabel: string;
   fallback: ReactNode;
   className?: string;
@@ -47,6 +49,7 @@ function optionWithEqualScale(option: EChartsCoreOption, element: HTMLElement, d
 
 export default function EfitCanvasChart({
   option,
+  incrementalOption,
   ariaLabel,
   fallback,
   className = '',
@@ -59,6 +62,7 @@ export default function EfitCanvasChart({
   const mountRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<EChartsType | null>(null);
   const optionRef = useRef(themedOption);
+  const incrementalOptionRef = useRef(incrementalOption);
   const clickRef = useRef(onChartClick);
   const aspectRef = useRef(dataAspectRatio);
   const [ready, setReady] = useState(false);
@@ -67,6 +71,10 @@ export default function EfitCanvasChart({
   useLayoutEffect(() => {
     optionRef.current = themedOption;
   }, [themedOption]);
+
+  useLayoutEffect(() => {
+    incrementalOptionRef.current = incrementalOption;
+  }, [incrementalOption]);
 
   useEffect(() => {
     clickRef.current = onChartClick;
@@ -92,6 +100,9 @@ export default function EfitCanvasChart({
         });
         chartRef.current = chart;
         chart.setOption(optionWithEqualScale(optionRef.current, mountRef.current, aspectRef.current), { notMerge: true, lazyUpdate: false });
+        if (incrementalOptionRef.current) {
+          chart.setOption(incrementalOptionRef.current, { notMerge: false, lazyUpdate: false });
+        }
         chart.on('click', (params: unknown) => clickRef.current?.(params));
 
         if (typeof ResizeObserver !== 'undefined') {
@@ -129,7 +140,15 @@ export default function EfitCanvasChart({
   useEffect(() => {
     if (!chartRef.current || !mountRef.current) return;
     chartRef.current.setOption(optionWithEqualScale(themedOption, mountRef.current, dataAspectRatio), { notMerge: true, lazyUpdate: true });
+    if (incrementalOptionRef.current) {
+      chartRef.current.setOption(incrementalOptionRef.current, { notMerge: false, lazyUpdate: true });
+    }
   }, [dataAspectRatio, themedOption]);
+
+  useEffect(() => {
+    if (!chartRef.current || !incrementalOption) return;
+    chartRef.current.setOption(incrementalOption, { notMerge: false, lazyUpdate: true });
+  }, [incrementalOption]);
 
   return (
     <div className={`efitChart ${ready ? 'isReady' : ''} ${failed ? 'hasFailed' : ''} ${className}`.trim()} data-chart-theme={chartTheme.mode}>

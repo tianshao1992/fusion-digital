@@ -262,13 +262,45 @@
   font-weight: 570;
 }
 
-.efitSignalsChartShell { position: relative; }
+.efitSignalsChartShell {
+  position: relative;
+  container-type: inline-size;
+}
+
+.efitSignalToolbar {
+  display: grid;
+  grid-template-columns: minmax(150px, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 34px;
+  margin: 4px 12px 0 58px;
+}
+
+.efitSignalLegend {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px 12px;
+  color: #83aaa1;
+  font-size: 0.62rem;
+}
+
+.efitSignalLegend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.efitSignalLegend i {
+  width: 16px;
+  height: 3px;
+  flex: 0 0 auto;
+  border-radius: 2px;
+}
 
 .efitSignalPicker {
-  position: absolute;
-  z-index: 6;
-  top: 6px;
-  right: 12px;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -278,7 +310,8 @@
 }
 
 .efitSignalPicker select {
-  min-width: 126px;
+  width: 180px;
+  min-width: 0;
   height: 28px;
   padding: 0 24px 0 8px;
   color: #d8eee9;
@@ -434,6 +467,7 @@
 :root[data-theme='light'] .efitCardHeading p,
 :root[data-theme='light'] .efitChartTextFallback,
 :root[data-theme='light'] .efitChartStatus { color: var(--color-ink-muted); }
+:root[data-theme='light'] .efitSignalLegend,
 :root[data-theme='light'] .efitSignalPicker { color: var(--color-ink-muted); }
 :root[data-theme='light'] .efitSignalPicker select {
   color: var(--color-ink);
@@ -584,6 +618,23 @@
   .efitTransportTopline { align-items: flex-start; flex-direction: column; }
   .efitTransportButtons { width: 100%; }
   .efitPlayButton { flex: 1; }
+}
+
+@container (max-width: 420px) {
+  .efitSignalToolbar {
+    grid-template-columns: 1fr;
+    gap: 6px;
+    margin-inline: 12px;
+  }
+
+  .efitSignalPicker {
+    grid-row: 1;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .efitSignalPicker select { width: 100%; }
+  .efitSignalLegend { grid-row: 2; }
 }
 
 @media (prefers-reduced-motion: reduce) {

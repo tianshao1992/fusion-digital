@@ -187,7 +187,7 @@ export default function EfitPanel({
           <div className="efitCardHeading"><span>01</span><div><h3>{t('efit.equilibriumCard')}</h3></div></div>
           <EfitEquilibriumChart frame={frame} geometry={activeGeometry} />
         </article>
-        <article className="efitChartCard efitSignalsCard" title={t('efit.timelineCardCopy')} aria-label={`${t('efit.timelineCard')}. ${t('efit.timelineCardCopy')}`}>
+        <article className="efitChartCard efitSignalsCard" aria-label={`${t('efit.timelineCard')}. ${t('efit.timelineCardCopy')}`}>
           <div className="efitCardHeading"><span>02</span><div><h3>{t('efit.timelineCard')}</h3></div></div>
           <EfitSignalsChart timeline={snapshot.timeline} currentTimeMs={snapshot.currentTimeMs} onSeekTimeMs={(timeMs) => void store.actions.seekTimeMs(timeMs)} />
         </article>

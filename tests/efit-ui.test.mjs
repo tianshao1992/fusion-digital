@@ -196,6 +196,8 @@ test('EFIT sidebar keeps operational evidence compact and uses designed tabular 
 
 test('EFIT signal groups keep Ip/R/Z as default and expose reviewed G-file scalars without bridging gaps', async () => {
   const signals = await source('app/components/efit/EfitSignalsChart.tsx');
+  const canvas = await source('app/components/efit/EfitCanvasChart.tsx');
+  const panel = await source('app/components/efit/EfitPanel.tsx');
   const messages = await source('app/i18n/messages.ts');
   const css = await source('app/components/efit/efit-panel.css');
   assert.match(signals, /useState<EfitSignalGroupId>\('axis'\)/);
@@ -207,7 +209,19 @@ test('EFIT signal groups keep Ip/R/Z as default and expose reviewed G-file scala
   assert.match(signals, /name: 'q95'.*?frame\.q95/s);
   assert.match(signals, /<select[\s\S]*?value=\{signalGroupId\}/);
   assert.match(signals, /activeGroup\.signals\.map/);
+  assert.match(signals, /legend:\s*\{\s*show:\s*false\s*\}/);
+  assert.match(signals, /className="efitSignalToolbar"[\s\S]*className="efitSignalLegend"[\s\S]*className="efitSignalPicker"/);
+  assert.match(signals, /backgroundColor:\s*signalColors\[index\]/);
   assert.match(signals, /connectNulls:\s*false/);
+  const staticOption = signals.slice(signals.indexOf('const option = useMemo'), signals.indexOf('const cursorOption = useMemo'));
+  assert.doesNotMatch(staticOption, /currentTimeMs/,
+    'playback time must not rebuild the full signal-series option');
+  assert.match(signals, /const cursorOption = useMemo<EChartsCoreOption>/);
+  assert.match(signals, /id:\s*EFIT_SIGNAL_CURSOR_SERIES_ID[\s\S]*?markLine:/);
+  assert.match(signals, /incrementalOption=\{cursorOption\}/);
+  assert.match(canvas, /incrementalOption\?: EChartsCoreOption/);
+  assert.match(canvas, /setOption\(incrementalOption, \{ notMerge: false, lazyUpdate: true \}\)/,
+    'cursor-only updates must use ECharts merge semantics');
   assert.match(signals, /EFIT_SIGNAL_WINDOW_MS = Object\.freeze\(\{ min: 0, max: 1000 \}\)/);
   assert.match(signals, /min: EFIT_SIGNAL_WINDOW_MS\.min/);
   assert.match(signals, /max: EFIT_SIGNAL_WINDOW_MS\.max/);
@@ -215,8 +229,13 @@ test('EFIT signal groups keep Ip/R/Z as default and expose reviewed G-file scala
   assert.doesNotMatch(signals, /dataZoom:/, 'the reviewed 0–1.0 s window must not be silently zoomed to another range');
   assert.match(messages, /'efit\.signalGroupLcfs': 'LCFS Rmin \/ Rmax'/);
   assert.match(messages, /'efit\.signalGroupField': '中心磁场 B₀'/);
+  assert.doesNotMatch(panel, /className="efitChartCard efitSignalsCard"\s+title=/);
+  assert.match(panel, /className="efitChartCard efitSignalsCard"\s+aria-label=/);
+  assert.match(cssRule(css, '.efitSignalToolbar'), /grid-template-columns:\s*minmax\(150px, 1fr\) auto/);
+  assert.match(cssRule(css, '.efitSignalLegend'), /display:\s*flex/);
   assert.match(cssRule(css, '.efitSignalPicker select'), /border:\s*1px solid var\(--efit-line\)/);
   assert.match(cssRule(css, ":root[data-theme='light'] .efitSignalPicker select"), /var\(--color-surface-raised\)/);
+  assert.match(css, /@container\s*\(max-width:\s*420px\)[\s\S]*\.efitSignalToolbar\s*\{[\s\S]*grid-template-columns:\s*1fr/);
 });
 
 test('EFIT plasma colour field is a contour-constrained psiN display in both 2D and 3D', async () => {
