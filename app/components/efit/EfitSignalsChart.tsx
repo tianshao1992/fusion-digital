@@ -1,7 +1,7 @@
 'use client';
 
 import type { EChartsCoreOption } from 'echarts/core';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useI18n } from '../../i18n';
 import { useChartTheme } from '../charts/chart-theme';
 import EfitCanvasChart from './EfitCanvasChart';
@@ -16,6 +16,20 @@ type EfitSignalsChartProps = {
 
 export const EFIT_SIGNAL_WINDOW_MS = Object.freeze({ min: 0, max: 1000 });
 
+type EfitSignalGroupId = 'axis' | 'lcfs' | 'field' | 'safety';
+
+type EfitSignal = {
+  name: string;
+  value: (frame: EfitFrameSummary) => number | null | undefined;
+};
+
+type EfitSignalGroup = {
+  id: EfitSignalGroupId;
+  label: string;
+  axisName: string;
+  signals: readonly EfitSignal[];
+};
+
 function chartTimeFromClick(params: unknown): number | null {
   if (!params || typeof params !== 'object' || !('value' in params)) return null;
   const value = (params as { value?: unknown }).value;
@@ -26,6 +40,37 @@ function chartTimeFromClick(params: unknown): number | null {
 export default function EfitSignalsChart({ timeline, currentTimeMs, onSeekTimeMs }: EfitSignalsChartProps) {
   const { locale, t } = useI18n();
   const chartTheme = useChartTheme();
+  const [signalGroupId, setSignalGroupId] = useState<EfitSignalGroupId>('axis');
+  const signalGroups = useMemo<readonly EfitSignalGroup[]>(() => {
+    const ip: EfitSignal = { name: 'Ip', value: (frame) => frame.currentA / 1000 };
+    return [
+      {
+        id: 'axis',
+        label: t('efit.signalGroupAxis'),
+        axisName: t('efit.axisPosition'),
+        signals: [ip, { name: 'Raxis', value: (frame) => frame.rAxisM }, { name: 'Zaxis', value: (frame) => frame.zAxisM }],
+      },
+      {
+        id: 'lcfs',
+        label: t('efit.signalGroupLcfs'),
+        axisName: t('efit.axisLcfsRadius'),
+        signals: [ip, { name: 'Rmin', value: (frame) => frame.lcfsRMinM }, { name: 'Rmax', value: (frame) => frame.lcfsRMaxM }],
+      },
+      {
+        id: 'field',
+        label: t('efit.signalGroupField'),
+        axisName: t('efit.axisField'),
+        signals: [ip, { name: 'B₀', value: (frame) => frame.bcentrT }],
+      },
+      {
+        id: 'safety',
+        label: t('efit.signalGroupSafety'),
+        axisName: t('efit.axisSafety'),
+        signals: [ip, { name: 'q95', value: (frame) => frame.q95 }],
+      },
+    ];
+  }, [t]);
+  const activeGroup = signalGroups.find((group) => group.id === signalGroupId) ?? signalGroups[0];
   const timelineInWindow = useMemo(
     () => timeline.filter((frame) => frame.timeMs >= EFIT_SIGNAL_WINDOW_MS.min && frame.timeMs <= EFIT_SIGNAL_WINDOW_MS.max),
     [timeline],
@@ -53,16 +98,16 @@ export default function EfitSignalsChart({ timeline, currentTimeMs, onSeekTimeMs
     return {
       animation: false,
       backgroundColor: 'transparent',
-      aria: { enabled: true, description: t('efit.signalsAria') },
+      aria: { enabled: true, description: t('efit.signalsAria', { signals: activeGroup.signals.map((signal) => signal.name).join(' · ') }) },
       color: signalColors,
       legend: {
-        top: 4,
+        top: 34,
         right: 12,
         itemWidth: 16,
         itemHeight: 3,
         textStyle: { color: chartTheme.muted, fontSize: 10 },
       },
-      grid: { left: 58, right: 52, top: 38, bottom: 50 },
+      grid: { left: 58, right: 52, top: 66, bottom: 50 },
       tooltip: {
         trigger: 'axis',
         axisPointer: { type: 'line', lineStyle: { color: chartTheme.line } },
@@ -95,7 +140,7 @@ export default function EfitSignalsChart({ timeline, currentTimeMs, onSeekTimeMs
         },
         {
           type: 'value',
-          name: t('efit.axisPosition'),
+          name: activeGroup.axisName,
           scale: true,
           axisLine: { show: true, lineStyle: { color: signalColors[1] } },
           axisLabel: { color: signalColors[1], fontSize: 10 },
@@ -103,43 +148,20 @@ export default function EfitSignalsChart({ timeline, currentTimeMs, onSeekTimeMs
           splitLine: { show: false },
         },
       ],
-      series: [
-        {
-          name: 'Ip',
-          type: 'line',
-          data: buildGapAwareSignalSeries(timelineInWindow, (frame) => frame.currentA / 1000),
-          connectNulls: false,
-          showSymbol: false,
-          lineStyle: { width: 1.8 },
-          sampling: 'lttb',
-          markLine: cursor,
-          animation: false,
-        },
-        {
-          name: 'Raxis',
-          type: 'line',
-          yAxisIndex: 1,
-          data: buildGapAwareSignalSeries(timelineInWindow, (frame) => frame.rAxisM),
-          connectNulls: false,
-          showSymbol: false,
-          lineStyle: { width: 1.4 },
-          sampling: 'lttb',
-          animation: false,
-        },
-        {
-          name: 'Zaxis',
-          type: 'line',
-          yAxisIndex: 1,
-          data: buildGapAwareSignalSeries(timelineInWindow, (frame) => frame.zAxisM),
-          connectNulls: false,
-          showSymbol: false,
-          lineStyle: { width: 1.4 },
-          sampling: 'lttb',
-          animation: false,
-        },
-      ],
+      series: activeGroup.signals.map((signal, index) => ({
+        name: signal.name,
+        type: 'line',
+        yAxisIndex: index === 0 ? 0 : 1,
+        data: buildGapAwareSignalSeries(timelineInWindow, signal.value),
+        connectNulls: false,
+        showSymbol: false,
+        lineStyle: { width: index === 0 ? 1.8 : 1.4 },
+        sampling: 'lttb',
+        markLine: index === 0 ? cursor : undefined,
+        animation: false,
+      })),
     };
-  }, [chartTheme, currentTimeMs, t, timelineInWindow]);
+  }, [activeGroup, chartTheme, currentTimeMs, t, timelineInWindow]);
 
   const validIp = timelineInWindow.filter((frame) => Number.isFinite(frame.currentA));
   const fallback = (
@@ -152,15 +174,27 @@ export default function EfitSignalsChart({ timeline, currentTimeMs, onSeekTimeMs
   );
 
   return (
-    <EfitCanvasChart
-      option={option}
-      ariaLabel={t('efit.signalChartAria')}
-      fallback={fallback}
-      className="efitSignalsChart"
-      onChartClick={(params) => {
-        const timeMs = chartTimeFromClick(params);
-        if (timeMs !== null) onSeekTimeMs?.(timeMs);
-      }}
-    />
+    <div className="efitSignalsChartShell">
+      <label className="efitSignalPicker">
+        <span>{t('efit.signalSelect')}</span>
+        <select
+          value={signalGroupId}
+          aria-label={t('efit.signalSelect')}
+          onChange={(event) => setSignalGroupId(event.target.value as EfitSignalGroupId)}
+        >
+          {signalGroups.map((group) => <option key={group.id} value={group.id}>{group.label}</option>)}
+        </select>
+      </label>
+      <EfitCanvasChart
+        option={option}
+        ariaLabel={t('efit.signalChartAria', { signals: activeGroup.signals.map((signal) => signal.name).join(' · ') })}
+        fallback={fallback}
+        className="efitSignalsChart"
+        onChartClick={(params) => {
+          const timeMs = chartTimeFromClick(params);
+          if (timeMs !== null) onSeekTimeMs?.(timeMs);
+        }}
+      />
+    </div>
   );
 }

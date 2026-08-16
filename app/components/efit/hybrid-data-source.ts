@@ -72,6 +72,10 @@ function finite(value: unknown, label: string): number {
   return value;
 }
 
+function nullableFinite(value: unknown, label: string): number | null {
+  return value === null ? null : finite(value, label);
+}
+
 function integer(value: unknown, label: string, minimum = 0, maximum = Number.MAX_SAFE_INTEGER): number {
   const parsed = finite(value, label);
   if (!Number.isSafeInteger(parsed) || parsed < minimum || parsed > maximum) throw new Error(`${label} must be an integer in range.`);
@@ -334,8 +338,15 @@ function summaryFromCatalog(
   const rAxisM = finite(item.rAxisM, `shot ${shot} frames[${index}].rAxisM`);
   const zAxisM = finite(item.zAxisM, `shot ${shot} frames[${index}].zAxisM`);
   const bcentrT = finite(item.bcentrT, `shot ${shot} frames[${index}].bcentrT`);
+  const lcfsRMinM = nullableFinite(item.lcfsRMinM, `shot ${shot} frames[${index}].lcfsRMinM`);
+  const lcfsRMaxM = nullableFinite(item.lcfsRMaxM, `shot ${shot} frames[${index}].lcfsRMaxM`);
   if (rAxisM < extent[0] || rAxisM > extent[1] || zAxisM < extent[2] || zAxisM > extent[3]) {
     throw new Error(`Shot ${shot} lightweight magnetic axis is outside the reviewed grid.`);
+  }
+  if ((lcfsRMinM === null) !== (lcfsRMaxM === null)
+    || (lcfsRMinM !== null && lcfsRMaxM !== null
+      && (lcfsRMinM < extent[0] || lcfsRMaxM > extent[1] || lcfsRMinM > rAxisM || lcfsRMaxM < rAxisM))) {
+    throw new Error(`Shot ${shot} lightweight LCFS radial extrema are invalid.`);
   }
   const validity = item.qualityValidity === 'usable' || item.qualityValidity === 'partial' || item.qualityValidity === 'unavailable'
     ? item.qualityValidity
@@ -361,6 +372,8 @@ function summaryFromCatalog(
     rAxisM,
     zAxisM,
     bcentrT,
+    lcfsRMinM,
+    lcfsRMaxM,
     psiAxisWbPerRad: Number.NaN,
     psiBoundaryWbPerRad: Number.NaN,
     q95,
@@ -583,6 +596,11 @@ function contourFromSurface(surface: EfitTopologyGraphFramePayload['closedFluxSu
 function frameFromPayload(payload: EfitTopologyGraphFramePayload, shot: EfitShotId, index: number): EfitFrame {
   const contours = payload.closedFluxSurfaces.map(contourFromSurface);
   const lcfs = contours.find((contour) => contour.kind === 'lcfs');
+  const sourceLcfs = payload.closedFluxSurfaces.find((surface) => surface.source === 'g-eqdsk-boundary-polyline');
+  const lcfsRValues = sourceLcfs
+    ? Array.from({ length: sourceLcfs.pointsRzM.length / 2 }, (_, pointIndex) => Number(sourceLcfs.pointsRzM[pointIndex * 2]))
+      .filter(Number.isFinite)
+    : [];
   const quality = qualityFromPayload(payload);
   return {
     shot,
@@ -598,6 +616,8 @@ function frameFromPayload(payload: EfitTopologyGraphFramePayload, shot: EfitShot
     q95: payload.scalars.q95 ?? undefined,
     efitError: payload.scalars.efitError ?? undefined,
     iconvr: payload.scalars.iconvr ?? undefined,
+    lcfsRMinM: lcfsRValues.length > 1 ? Math.min(...lcfsRValues) : null,
+    lcfsRMaxM: lcfsRValues.length > 1 ? Math.max(...lcfsRValues) : null,
     surfaceMask: contours.reduce((mask, _contour, contourIndex) => contourIndex < 31 ? mask | (1 << contourIndex) : mask, 0) >>> 0,
     lcfsValidPoints: lcfs?.validPoints ?? 0,
     offsetBytes: 0,
@@ -618,6 +638,15 @@ function assertPayloadMatchesSummary(payload: EfitTopologyGraphFramePayload, sum
   });
   const payloadQ95 = payload.scalars.q95 ?? undefined;
   if (payloadQ95 !== summary.q95) throw new Error('EFIT topology chunk q95 disagrees with its catalog timeline summary.');
+  const sourceLcfs = payload.closedFluxSurfaces.find((surface) => surface.source === 'g-eqdsk-boundary-polyline');
+  const radialValues = sourceLcfs
+    ? Array.from({ length: sourceLcfs.pointsRzM.length / 2 }, (_, index) => Number(sourceLcfs.pointsRzM[index * 2])).filter(Number.isFinite)
+    : [];
+  const lcfsRMinM = radialValues.length > 1 ? Math.min(...radialValues) : null;
+  const lcfsRMaxM = radialValues.length > 1 ? Math.max(...radialValues) : null;
+  if (lcfsRMinM !== summary.lcfsRMinM || lcfsRMaxM !== summary.lcfsRMaxM) {
+    throw new Error('EFIT topology chunk LCFS extrema disagree with its catalog timeline summary.');
+  }
   if (payload.quality.validity !== summary.qualityValidity
     || payload.quality.flags.length !== summary.qualityFlags?.length
     || payload.quality.flags.some((flag, index) => flag !== summary.qualityFlags?.[index])) {

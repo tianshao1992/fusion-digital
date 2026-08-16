@@ -62,6 +62,20 @@ function graphFrame(geometryId: string) {
       // edge from the last point to the first is implicit.
       pointsRzM: [0.5, -0.5, 1, -0.5, 1, 0.5, 0.5, 0.5],
       evidence: evidence(),
+    }, {
+      surfaceId: 'source-lcfs',
+      source: 'g-eqdsk-boundary-polyline',
+      psiN: 1,
+      closed: true,
+      containsMagneticAxis: true,
+      areaM2: 0.84,
+      pointsRzM: [0.4, -0.6, 1.1, -0.6, 1.1, 0.6, 0.4, 0.6],
+      evidence: {
+        source: 'g-eqdsk-boundary-polyline',
+        state: 'source-derived',
+        confidence: 'source-record',
+        flags: ['RESAMPLED', 'EXPLICITLY_CLOSED'],
+      },
     }],
     topologyGraph: {
       canonicalRepresentation: {
@@ -178,6 +192,8 @@ function fixture() {
         zAxisM: 0,
         bcentrT: 0.86,
         q95: 4.2,
+        lcfsRMinM: 0.4,
+        lcfsRMaxM: 1.1,
         qualityValidity: 'usable',
         qualityFlags: [],
       }],
@@ -295,12 +311,16 @@ test('hybrid v2 source exposes legacy and graph shots, finite signal summaries, 
   assert.equal(timeline.length, 1);
   assert.equal(timeline[0].currentA, 321_000);
   assert.equal(timeline[0].rAxisM, 0.75);
+  assert.equal(timeline[0].lcfsRMinM, 0.4);
+  assert.equal(timeline[0].lcfsRMaxM, 1.1);
   assert.equal(timeline[0].quality.state, 'good');
   const frame = await source.loadFrame(20289, 0);
   assert.equal(frame.timeMs, 110);
   assert.equal(frame.topologyGraphPayload?.topologyGraph.nodes[0].kind, 'magnetic-axis');
   assert.equal(frame.contours[0].validPoints, 4);
   assert.equal(frame.contours[0].closed, true);
+  assert.equal(frame.lcfsRMinM, 0.4);
+  assert.equal(frame.lcfsRMaxM, 1.1);
   await source.loadFrame(20289, 0);
   assert.equal(network.chunkRequests(), 1, 'the verified chunk should be served from the bounded LRU');
 });
@@ -480,6 +500,8 @@ test('published 10-shot catalog and all 219 graph chunks decode through the prod
 
   const totals = {
     frames: 0,
+    lcfsAvailable: 0,
+    lcfsUnavailable: 0,
     xPoints: 0,
     boundaryXPoints: 0,
     candidateXPoints: 0,
@@ -498,13 +520,22 @@ test('published 10-shot catalog and all 219 graph chunks decode through the prod
     assert.ok(timeline.every((frame, index) => Number.isFinite(frame.currentA)
       && Number.isFinite(frame.rAxisM)
       && Number.isFinite(frame.zAxisM)
+      && ((typeof frame.lcfsRMinM === 'number' && typeof frame.lcfsRMaxM === 'number')
+        || (frame.lcfsRMinM === null && frame.lcfsRMaxM === null))
       && (index === 0 || frame.timeMs > timeline[index - 1]!.timeMs)));
+    if (shot.sourceKind === 'legacy-contours-v1') {
+      assert.ok(timeline.every((frame) => typeof frame.lcfsRMinM === 'number' && typeof frame.lcfsRMaxM === 'number'));
+    }
     if (shot.sourceKind !== 'topology-graph-v2') continue;
     for (let frameIndex = 0; frameIndex < shot.frameCount; frameIndex += 1) {
       const frame = await source.loadFrame(shot.shot, frameIndex);
       const payload = frame.topologyGraphPayload;
       assert.ok(payload);
       assert.equal(frame.timeMs, timeline[frameIndex]!.timeMs);
+      assert.equal(frame.lcfsRMinM, timeline[frameIndex]!.lcfsRMinM);
+      assert.equal(frame.lcfsRMaxM, timeline[frameIndex]!.lcfsRMaxM);
+      if (frame.lcfsRMinM === null) totals.lcfsUnavailable += 1;
+      else totals.lcfsAvailable += 1;
       assert.equal(payload.geometryId, shot.geometryId);
       assert.equal(payload.quality.algorithmVersion, '2.0.0');
       const features = payload.topologyGraph.features;
@@ -526,6 +557,8 @@ test('published 10-shot catalog and all 219 graph chunks decode through the prod
 
   assert.deepEqual(totals, {
     frames: 3_446,
+    lcfsAvailable: 3_338,
+    lcfsUnavailable: 108,
     xPoints: 3_100,
     boundaryXPoints: 1_605,
     candidateXPoints: 1_495,

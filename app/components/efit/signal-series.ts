@@ -10,7 +10,7 @@ export type EfitSignalSeriesPoint = [timeMs: number, value: number | null];
  */
 export function buildGapAwareSignalSeries(
   timeline: readonly EfitFrameSummary[],
-  value: (frame: EfitFrameSummary) => number,
+  value: (frame: EfitFrameSummary) => number | null | undefined,
 ): EfitSignalSeriesPoint[] {
   const points: EfitSignalSeriesPoint[] = [];
   let previousTimeMs: number | undefined;
@@ -20,7 +20,7 @@ export function buildGapAwareSignalSeries(
       points.push([previousTimeMs + 1, null]);
     }
     const sample = value(frame);
-    points.push([frame.timeMs, Number.isFinite(sample) ? sample : null]);
+    points.push([frame.timeMs, typeof sample === 'number' && Number.isFinite(sample) ? sample : null]);
     previousTimeMs = frame.timeMs;
   });
 

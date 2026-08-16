@@ -112,6 +112,11 @@ function optionalFinite(value: unknown): number | undefined {
   return Number.isFinite(parsed) ? parsed : undefined;
 }
 
+function optionalNullableFinite(value: unknown): number | null | undefined {
+  if (value === null) return null;
+  return optionalFinite(value);
+}
+
 function optionalUnsignedInteger(value: unknown, maximum = 0xffff_ffff): number | undefined {
   return typeof value === 'number'
     && Number.isFinite(value)
@@ -304,6 +309,14 @@ function normalizeSummary(raw: unknown, shot: EfitShotId, index: number, binary:
   const flags = integer(record.qualityFlags ?? record.flags, 0) >>> 0;
   const surfaceMask = integer(record.surfaceMask, (1 << binary.surfaceCount) - 1) >>> 0;
   const lcfsValidPoints = integer(record.lcfsValidPoints ?? record.lcfsValid, binary.pointsPerContour);
+  const lcfsRMinM = optionalNullableFinite(record.lcfsRMinM);
+  const lcfsRMaxM = optionalNullableFinite(record.lcfsRMaxM);
+  if ((lcfsRMinM === undefined) !== (lcfsRMaxM === undefined)
+    || (lcfsRMinM === null) !== (lcfsRMaxM === null)
+    || (typeof lcfsRMinM === 'number' && typeof lcfsRMaxM === 'number'
+      && (lcfsRMinM > lcfsRMaxM || lcfsRMinM > finiteNumber(record.rAxisM) || lcfsRMaxM < finiteNumber(record.rAxisM)))) {
+    throw new Error(`EFIT shot ${shot} frame ${index} has invalid LCFS radial extrema.`);
+  }
   return {
     shot,
     index,
@@ -318,6 +331,8 @@ function normalizeSummary(raw: unknown, shot: EfitShotId, index: number, binary:
     q95: optionalFinite(record.q95),
     efitError: optionalFinite(record.efitError),
     iconvr: optionalFinite(record.iconvr),
+    lcfsRMinM,
+    lcfsRMaxM,
     surfaceMask,
     lcfsValidPoints,
     offsetBytes: integer(
@@ -706,6 +721,17 @@ function parseFrame(
   }
 
   const lcfs = parsePolyline(view, curveOffset, binary.pointsPerContour);
+  if (summary.lcfsRMinM !== undefined || summary.lcfsRMaxM !== undefined) {
+    const radialValues = Array.from(lcfs.rM.slice(0, lcfsValidPoints)).filter(Number.isFinite);
+    const actualMin = radialValues.length > 1 ? Math.min(...radialValues) : null;
+    const actualMax = radialValues.length > 1 ? Math.max(...radialValues) : null;
+    const extremaMatch = summary.lcfsRMinM === null && summary.lcfsRMaxM === null
+      ? actualMin === null && actualMax === null
+      : typeof summary.lcfsRMinM === 'number' && typeof summary.lcfsRMaxM === 'number'
+        && actualMin !== null && actualMax !== null
+        && Math.fround(summary.lcfsRMinM) === actualMin && Math.fround(summary.lcfsRMaxM) === actualMax;
+    if (!extremaMatch) throw new Error(`EFIT base frame ${summary.index} LCFS extrema disagree with its index summary.`);
+  }
   if (lcfsValidPoints > 1) {
     contours.push({
       ...lcfs,

@@ -74,6 +74,8 @@ PUBLIC_FRAME_SUMMARY_KEYS = (
     "zAxisM",
     "bcentrT",
     "q95",
+    "lcfsRMinM",
+    "lcfsRMaxM",
     "qualityValidity",
     "qualityFlags",
 )
@@ -477,6 +479,19 @@ def build_candidate(
                     frames.append(derived)
                     quality = derived["quality"]
                     scalars = derived["scalars"]
+                    source_lcfs = next(
+                        (
+                            surface
+                            for surface in derived["closedFluxSurfaces"]
+                            if surface["source"] == "g-eqdsk-boundary-polyline"
+                        ),
+                        None,
+                    )
+                    lcfs_r = (
+                        [float(value) for value in source_lcfs["pointsRzM"][0::2]]
+                        if source_lcfs is not None
+                        else []
+                    )
                     frame_summaries.append(
                         {
                             "timeMs": int(derived["timeMs"]),
@@ -485,6 +500,8 @@ def build_candidate(
                             "zAxisM": scalars["zAxisM"],
                             "bcentrT": scalars["bcentrT"],
                             "q95": scalars["q95"],
+                            "lcfsRMinM": min(lcfs_r) if lcfs_r else None,
+                            "lcfsRMaxM": max(lcfs_r) if lcfs_r else None,
                             "qualityValidity": quality["validity"],
                             "qualityFlags": quality["flags"],
                         }

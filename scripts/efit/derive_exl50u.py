@@ -1112,6 +1112,7 @@ def build(archive: Path, output: Path, allow_unknown_source: bool = False) -> di
                         names = [name for name, bit in QUALITY_FLAGS.items() if flags & bit]
                         quality_counts.update(names)
                         q95 = q_at_psi_n(frame.qpsi, 0.95)
+                        published_lcfs = resample_closed(frame.lcfs)
                         frame_summary = {
                             "timeMs": time_ms,
                             "offsetBytes": FILE_HEADER_BYTES + frame_index * FRAME_STRIDE_BYTES,
@@ -1125,6 +1126,8 @@ def build(archive: Path, output: Path, allow_unknown_source: bool = False) -> di
                             "q95": q95,
                             "efitError": frame.efit_error if math.isfinite(frame.efit_error) else None,
                             "iconvr": frame.iconvr if frame.iconvr >= 0 else None,
+                            "lcfsRMinM": float(np.min(published_lcfs[:, 0])) if published_lcfs is not None else None,
+                            "lcfsRMaxM": float(np.max(published_lcfs[:, 0])) if published_lcfs is not None else None,
                             "lcfsValidPoints": lcfs_valid,
                             "surfaceMask": surface_mask,
                         }

@@ -114,6 +114,12 @@ for (const shot of manifest.shots) {
           assert.ok(twiceArea > 0, `contour ${contour} has canonical counter-clockwise orientation`);
           const meanSegment = segments.reduce((sum, value) => sum + value, 0) / segments.length;
           assert.ok(Math.max(...segments) / meanSegment < 1.02, `contour ${contour} is equal-arc-length sampled`);
+          if (contour === 9) {
+            const radial = points.map((point) => point[0]);
+            assert.equal(Math.fround(frame.lcfsRMinM), Math.min(...radial));
+            assert.equal(Math.fround(frame.lcfsRMaxM), Math.max(...radial));
+            assert.ok(frame.lcfsRMinM <= frame.rAxisM && frame.rAxisM <= frame.lcfsRMaxM);
+          }
         }
       }
       previousTime = timeMs;

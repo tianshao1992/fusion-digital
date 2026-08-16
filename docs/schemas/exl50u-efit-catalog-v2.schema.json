@@ -223,8 +223,8 @@
     },
     "frameSummary": {
       "type": "object", "additionalProperties": false,
-      "required": ["timeMs", "currentA", "rAxisM", "zAxisM", "bcentrT", "q95", "qualityValidity", "qualityFlags"],
-      "properties": {"timeMs": {"type": "integer"}, "currentA": {"type": "number"}, "rAxisM": {"type": "number"}, "zAxisM": {"type": "number"}, "bcentrT": {"type": "number"}, "q95": {"type": ["number", "null"]}, "qualityValidity": {"enum": ["usable", "partial", "unavailable"]}, "qualityFlags": {"type": "array", "items": {"type": "string", "pattern": "^[A-Z0-9_]+$"}}}
+      "required": ["timeMs", "currentA", "rAxisM", "zAxisM", "bcentrT", "q95", "lcfsRMinM", "lcfsRMaxM", "qualityValidity", "qualityFlags"],
+      "properties": {"timeMs": {"type": "integer"}, "currentA": {"type": "number"}, "rAxisM": {"type": "number"}, "zAxisM": {"type": "number"}, "bcentrT": {"type": "number"}, "q95": {"type": ["number", "null"]}, "lcfsRMinM": {"type": ["number", "null"]}, "lcfsRMaxM": {"type": ["number", "null"]}, "qualityValidity": {"enum": ["usable", "partial", "unavailable"]}, "qualityFlags": {"type": "array", "items": {"type": "string", "pattern": "^[A-Z0-9_]+$"}}}
     },
     "asset": {
       "type": "object", "additionalProperties": false,

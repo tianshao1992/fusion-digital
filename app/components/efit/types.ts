@@ -253,6 +253,9 @@ export type EfitFrameSummary = {
   q95?: number;
   efitError?: number;
   iconvr?: number;
+  /** Extrema of the published, resampled LCFS polyline; null when no LCFS is published. */
+  lcfsRMinM?: number | null;
+  lcfsRMaxM?: number | null;
   surfaceMask: number;
   lcfsValidPoints: number;
   offsetBytes: number;

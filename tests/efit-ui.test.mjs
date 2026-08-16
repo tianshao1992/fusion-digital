@@ -194,15 +194,29 @@ test('EFIT sidebar keeps operational evidence compact and uses designed tabular 
   assert.match(cssRule(css, ":root[data-theme='light'] .efitTransport"), /var\(--color-surface-raised\)/);
 });
 
-test('EFIT Ip and magnetic-axis curves break across missing source frames', async () => {
+test('EFIT signal groups keep Ip/R/Z as default and expose reviewed G-file scalars without bridging gaps', async () => {
   const signals = await source('app/components/efit/EfitSignalsChart.tsx');
-  assert.equal((signals.match(/buildGapAwareSignalSeries\(timelineInWindow,/g) ?? []).length, 3);
-  assert.equal((signals.match(/connectNulls:\s*false/g) ?? []).length, 3);
+  const messages = await source('app/i18n/messages.ts');
+  const css = await source('app/components/efit/efit-panel.css');
+  assert.match(signals, /useState<EfitSignalGroupId>\('axis'\)/);
+  assert.match(signals, /signals: \[ip, \{ name: 'Raxis'/);
+  assert.match(signals, /name: 'Zaxis'/);
+  assert.match(signals, /name: 'Rmin'.*?frame\.lcfsRMinM/s);
+  assert.match(signals, /name: 'Rmax'.*?frame\.lcfsRMaxM/s);
+  assert.match(signals, /name: 'B₀'.*?frame\.bcentrT/s);
+  assert.match(signals, /name: 'q95'.*?frame\.q95/s);
+  assert.match(signals, /<select[\s\S]*?value=\{signalGroupId\}/);
+  assert.match(signals, /activeGroup\.signals\.map/);
+  assert.match(signals, /connectNulls:\s*false/);
   assert.match(signals, /EFIT_SIGNAL_WINDOW_MS = Object\.freeze\(\{ min: 0, max: 1000 \}\)/);
   assert.match(signals, /min: EFIT_SIGNAL_WINDOW_MS\.min/);
   assert.match(signals, /max: EFIT_SIGNAL_WINDOW_MS\.max/);
   assert.match(signals, /interval: 200/);
   assert.doesNotMatch(signals, /dataZoom:/, 'the reviewed 0–1.0 s window must not be silently zoomed to another range');
+  assert.match(messages, /'efit\.signalGroupLcfs': 'LCFS Rmin \/ Rmax'/);
+  assert.match(messages, /'efit\.signalGroupField': '中心磁场 B₀'/);
+  assert.match(cssRule(css, '.efitSignalPicker select'), /border:\s*1px solid var\(--efit-line\)/);
+  assert.match(cssRule(css, ":root[data-theme='light'] .efitSignalPicker select"), /var\(--color-surface-raised\)/);
 });
 
 test('EFIT plasma colour field is a contour-constrained psiN display in both 2D and 3D', async () => {
