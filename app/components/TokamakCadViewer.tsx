@@ -48,6 +48,14 @@ const DEFAULT_MANIFEST_URL = '/models/paramak-tokamak-demo/model-manifest.json';
 // keyed viewer remounts, route transitions and multiple viewers cannot stack
 // stale large parses and multiply peak memory.
 const globalModelDecodeGate = createSerialTaskGate();
+const ANALYTIC_FLUX_LIGHT_COLORS = [
+  0xc95038, 0xdc7137, 0xd79a28, 0x9ba83e, 0x3f9d79,
+  0x248ba8, 0x466fb2, 0x6859ad, 0x8c4e91,
+];
+const ANALYTIC_FLUX_DARK_COLORS = [
+  0xff7054, 0xff9b45, 0xf4ca54, 0xb6d75d, 0x62d2a8,
+  0x49c5de, 0x6095ed, 0x8977e8, 0xb767bd,
+];
 
 export type TokamakCadViewerProps = {
   manifestUrl?: string;
@@ -773,6 +781,7 @@ function TokamakCadViewerSession({
       const clippingPlane = new THREE.Plane(new THREE.Vector3(-1, 0, 0), 0);
       const analyticPlasmaDefinition = loadedManifest.visualizations?.analyticPlasma;
       let analyticPlasmaRoot: Object3D | null = null;
+      let analyticFluxBandRoot: Object3D | null = null;
       if (analyticPlasmaDefinition) {
         const geometryData = buildAnalyticPlasmaGeometry(analyticPlasmaDefinition);
         const plasmaRoot = new THREE.Group();
@@ -827,12 +836,49 @@ function TokamakCadViewerSession({
           depthWrite: false,
         });
         contourMaterial.name = 'FusionDigital:analytic-plasma-proxy:separatrix-reference';
+        const fluxBandRoot = new THREE.Group();
+        fluxBandRoot.name = 'ITER_ANALYTIC_FLUX_COORDINATE_SECTION';
+        fluxBandRoot.userData = { ...ANALYTIC_PLASMA_RUNTIME_SEMANTICS };
+        plasmaRoot.add(fluxBandRoot);
+        const fluxBandMaterials = geometryData.fluxCoordinateBands.map((band, bandIndex) => {
+          const bandGeometry = new THREE.BufferGeometry();
+          bandGeometry.setAttribute('position', new THREE.Float32BufferAttribute(band.positions, 3));
+          bandGeometry.setIndex(new THREE.Uint32BufferAttribute(band.indices, 1));
+          bandGeometry.computeBoundingSphere();
+          const bandMaterial = new THREE.MeshBasicMaterial({
+            color: ANALYTIC_FLUX_DARK_COLORS[bandIndex],
+            transparent: true,
+            opacity: 0.88,
+            depthTest: false,
+            depthWrite: false,
+            side: THREE.DoubleSide,
+          });
+          bandMaterial.name = `FusionDigital:analytic-flux-coordinate:${bandIndex + 1}`;
+          const bandMesh = new THREE.Mesh(bandGeometry, bandMaterial);
+          bandMesh.name = `ITER_ANALYTIC_FLUX_COORDINATE_BAND_${bandIndex + 1}`;
+          bandMesh.raycast = () => undefined;
+          bandMesh.userData = {
+            ...ANALYTIC_PLASMA_RUNTIME_SEMANTICS,
+            normalizedRadiusMin: band.normalizedRadiusMin,
+            normalizedRadiusMax: band.normalizedRadiusMax,
+          };
+          bandMesh.renderOrder = 10 + bandIndex;
+          fluxBandRoot.add(bandMesh);
+          viewerMaterials.add(bandMaterial);
+          disposableMaterials.add(bandMaterial);
+          return bandMaterial;
+        });
         analyticPlasmaSurfaceMaterial = surfaceMaterial;
         applyAnalyticPlasmaTheme = (theme) => {
           const light = theme === 'light';
           surfaceMaterial.color.setHex(light ? 0xc86236 : 0xff7a35);
           surfaceMaterial.emissive.setHex(light ? 0x7c2815 : 0xff4f16);
           contourMaterial.color.setHex(light ? 0x99482f : 0xffb06d);
+          fluxBandMaterials.forEach((material, index) => {
+            material.color.setHex((light ? ANALYTIC_FLUX_LIGHT_COLORS : ANALYTIC_FLUX_DARK_COLORS)[index]);
+            material.opacity = light ? 0.84 : 0.9;
+            material.needsUpdate = true;
+          });
           analyticPlasmaPulseBase = light ? 1.05 : 3.15;
           analyticPlasmaPulseAmplitude = light ? 0.12 : 0.35;
           surfaceMaterial.needsUpdate = true;
@@ -855,6 +901,7 @@ function TokamakCadViewerSession({
 
         model.add(plasmaRoot);
         analyticPlasmaRoot = plasmaRoot;
+        analyticFluxBandRoot = fluxBandRoot;
       }
       const initialEfitState = efitStateRef.current;
       // `model` began as the identity glTF scene wrapper and now owns only the
@@ -1049,6 +1096,7 @@ function TokamakCadViewerSession({
             material.needsUpdate = true;
           });
           localEfitOverlay?.setClippingEnabled(enabled);
+          if (analyticFluxBandRoot) analyticFluxBandRoot.visible = enabled && axis === 'z';
         },
         setOpacity,
         setVisualTheme,

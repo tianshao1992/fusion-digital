@@ -1039,12 +1039,13 @@ test('EXL alone uses a lifecycle-safe industrial silver appearance without chang
     'the silver scheme must retain enough finish contrast to distinguish structures');
 });
 
-test('EXL real-time viewer opens and resets to an active Z section through the device centre', async () => {
+test('EXL and ITER viewers open and reset to an active Z section through the device centre', async () => {
   const source = await readFile(resolve(repositoryRoot, 'app/components/TokamakCadViewer.tsx'), 'utf8');
   const workspace = await readFile(resolve(repositoryRoot, 'app/digital-prototype/MultiDeviceWorkspace.tsx'), 'utf8');
 
-  assert.match(workspace, /defaultClipping=\{Boolean\(efitOverlay\)\}/);
-  assert.match(workspace, /defaultClipAxis=\{efitOverlay\s*\?\s*['"]z['"]\s*:\s*['"]x['"]\}/);
+  assert.match(workspace, /const defaultCoreSection\s*=\s*Boolean\(efitOverlay\)\s*\|\|\s*device\.id\s*===\s*['"]iter-educational-model['"]/);
+  assert.match(workspace, /defaultClipping=\{defaultCoreSection\}/);
+  assert.match(workspace, /defaultClipAxis=\{defaultCoreSection\s*\?\s*['"]z['"]\s*:\s*['"]x['"]\}/);
   assert.match(workspace, /defaultClipOffset=\{efitOverlay\s*\?\s*0\.08\s*:\s*0\}/);
   assert.match(source, /useState\(defaultInteraction\.clipping\)/);
   assert.match(source, /useState<ClipAxis>\(defaultInteraction\.clipAxis\)/);

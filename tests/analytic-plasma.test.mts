@@ -4,6 +4,7 @@ import test from 'node:test';
 
 import type { AnalyticPlasmaVisualization } from '../app/components/deviceManifest';
 import {
+  ANALYTIC_FLUX_BAND_RADII,
   ANALYTIC_PLASMA_POLOIDAL_SEGMENTS,
   ANALYTIC_PLASMA_RUNTIME_SEMANTICS,
   ANALYTIC_PLASMA_TOROIDAL_SEGMENTS,
@@ -203,11 +204,52 @@ test('separatrix reference contours are finite, closed and remain reference-only
     hasPsiGrid: false,
     hasXPoint: false,
     hasDiagnostics: false,
+    hasAnalyticFluxCoordinateBands: true,
+    fluxCoordinateIsPsi: false,
     pickable: false,
   });
   assert.equal(ANALYTIC_PLASMA_VISIBLE_BY_DEFAULT, true);
   assert.equal(definition.topologyReference, 'single-null');
   assert.equal(definition.hasXPoint, false);
+  assert.equal(definition.isEfit, false);
+});
+
+test('analytic flux-coordinate bands fill both Z-section lobes without inventing psi data', () => {
+  const geometry = buildAnalyticPlasmaGeometry(definition);
+  assert.equal(geometry.fluxCoordinateBands.length, ANALYTIC_FLUX_BAND_RADII.length - 1);
+
+  geometry.fluxCoordinateBands.forEach((band, bandIndex) => {
+    close(band.normalizedRadiusMin, ANALYTIC_FLUX_BAND_RADII[bandIndex]);
+    close(band.normalizedRadiusMax, ANALYTIC_FLUX_BAND_RADII[bandIndex + 1]);
+    assert.ok(Array.from(band.positions).every(Number.isFinite));
+    assert.ok(Array.from(band.indices).every((index) => Number.isSafeInteger(index)
+      && index >= 0 && index < band.positions.length / 3));
+    assert.ok(band.indices.length > 0);
+
+    let positiveLobe = false;
+    let negativeLobe = false;
+    for (let offset = 0; offset < band.positions.length; offset += 3) {
+      positiveLobe ||= band.positions[offset] > 0;
+      negativeLobe ||= band.positions[offset] < 0;
+      close(band.positions[offset + 2], -0.012, 1e-6);
+    }
+    assert.ok(positiveLobe && negativeLobe, `band ${bandIndex} must contain both section lobes`);
+
+    for (let offset = 0; offset < band.indices.length; offset += 3) {
+      const a = band.indices[offset] * 3;
+      const b = band.indices[offset + 1] * 3;
+      const c = band.indices[offset + 2] * 3;
+      const abx = band.positions[b] - band.positions[a];
+      const aby = band.positions[b + 1] - band.positions[a + 1];
+      const acx = band.positions[c] - band.positions[a];
+      const acy = band.positions[c + 1] - band.positions[a + 1];
+      assert.ok(Math.abs(abx * acy - aby * acx) > 1e-8, `degenerate flux-band triangle ${offset / 3}`);
+    }
+  });
+
+  assert.equal(ANALYTIC_PLASMA_RUNTIME_SEMANTICS.hasAnalyticFluxCoordinateBands, true);
+  assert.equal(ANALYTIC_PLASMA_RUNTIME_SEMANTICS.fluxCoordinateIsPsi, false);
+  assert.equal(definition.hasPsiGrid, false);
   assert.equal(definition.isEfit, false);
 });
 
@@ -220,6 +262,9 @@ test('viewer and bilingual copy preserve the geometry-only interaction boundary'
   assert.match(viewer, /ANALYTIC_PLASMA_VISIBLE_BY_DEFAULT/);
   assert.match(viewer, /surface\.raycast\s*=\s*\(\)\s*=>\s*undefined/);
   assert.match(viewer, /contour\.raycast\s*=\s*\(\)\s*=>\s*undefined/);
+  assert.match(viewer, /bandMesh\.raycast\s*=\s*\(\)\s*=>\s*undefined/);
+  assert.match(viewer, /ITER_ANALYTIC_FLUX_COORDINATE_BAND_/);
+  assert.match(viewer, /analyticFluxBandRoot\.visible\s*=\s*enabled\s*&&\s*axis\s*===\s*['"]z['"]/);
   assert.match(viewer, /viewerMaterials\.add\(surfaceMaterial\)/);
   assert.match(viewer, /viewerMaterials\.add\(contourMaterial\)/);
   assert.match(viewer, /material\.clippingPlanes\s*=\s*enabled\s*\?\s*\[clippingPlane\]\s*:\s*null/);
@@ -237,10 +282,12 @@ test('viewer and bilingual copy preserve the geometry-only interaction boundary'
   assert.match(zhHelp, /不是 EFIT/);
   assert.match(zhHelp, /真实 LCFS/);
   assert.match(zhHelp, /ψ 网格/);
+  assert.match(zhHelp, /解析磁通坐标/);
   assert.match(zhHelp, /X 点/);
   assert.match(enHelp, /geometry only/i);
   assert.match(enHelp, /not EFIT/i);
   assert.match(enHelp, /real LCFS/i);
   assert.match(enHelp, /psi grid/i);
+  assert.match(enHelp, /analytic flux coordinates/i);
   assert.match(enHelp, /X point/i);
 });

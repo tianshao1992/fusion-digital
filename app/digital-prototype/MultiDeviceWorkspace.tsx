@@ -40,6 +40,7 @@ function DeviceViewer({
   const [showEfitSurface, setShowEfitSurface] = useState(true);
   const [showEfitAxis, setShowEfitAxis] = useState(true);
   const [efitMode, setEfitMode] = useState<'physical' | 'xray'>('xray');
+  const defaultCoreSection = Boolean(efitOverlay) || device.id === 'iter-educational-model';
 
   if (device.viewer.mode === 'real-3d' && device.viewer.manifestEndpoint) return <TokamakCadViewer
     manifestUrl={device.viewer.manifestEndpoint}
@@ -52,8 +53,8 @@ function DeviceViewer({
     appearancePreset={device.id === 'exl-50u-2026-upgrade' || device.id === 'iter-educational-model'
       ? 'industrial-silver-v1'
       : 'semantic'}
-    defaultClipping={Boolean(efitOverlay)}
-    defaultClipAxis={efitOverlay ? 'z' : 'x'}
+    defaultClipping={defaultCoreSection}
+    defaultClipAxis={defaultCoreSection ? 'z' : 'x'}
     defaultClipOffset={efitOverlay ? 0.08 : 0}
     efitStore={efitStore}
     efitAlignment={efitOverlay ? {

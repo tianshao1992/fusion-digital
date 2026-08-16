@@ -3,6 +3,9 @@ import type { AnalyticPlasmaVisualization } from '../deviceManifest';
 export const ANALYTIC_PLASMA_POLOIDAL_SEGMENTS = 160;
 export const ANALYTIC_PLASMA_TOROIDAL_SEGMENTS = 192;
 export const ANALYTIC_PLASMA_VISIBLE_BY_DEFAULT = true;
+export const ANALYTIC_FLUX_BAND_RADII = Object.freeze([
+  0, 0.18, 0.31, 0.43, 0.54, 0.64, 0.73, 0.82, 0.91, 1,
+] as const);
 
 /**
  * Fail-closed runtime semantics shared by the manifest contract, viewer and
@@ -15,6 +18,8 @@ export const ANALYTIC_PLASMA_RUNTIME_SEMANTICS = Object.freeze({
   hasPsiGrid: false,
   hasXPoint: false,
   hasDiagnostics: false,
+  hasAnalyticFluxCoordinateBands: true,
+  fluxCoordinateIsPsi: false,
   pickable: false,
 } as const);
 
@@ -26,6 +31,10 @@ export type AnalyticPlasmaSurfaceData = {
 export type AnalyticPlasmaGeometryData = {
   surface95: AnalyticPlasmaSurfaceData;
   separatrixReferenceContours: [Float32Array, Float32Array];
+  fluxCoordinateBands: Array<AnalyticPlasmaSurfaceData & {
+    normalizedRadiusMin: number;
+    normalizedRadiusMax: number;
+  }>;
 };
 
 type MillerPoint = readonly [x: number, y: number, z: number];
@@ -165,6 +174,91 @@ function buildMillerContour(
   return positions;
 }
 
+function fluxBandPoint(
+  definition: AnalyticPlasmaVisualization,
+  normalizedRadius: number,
+  theta: number,
+  lobe: 1 | -1,
+): MillerPoint {
+  const point = millerPointToWebUnchecked(
+    definition.majorRadiusMetres,
+    definition.minorRadiusMetres * normalizedRadius,
+    definition.kappa95,
+    definition.delta95,
+    theta,
+    lobe === 1 ? 0 : Math.PI,
+  );
+  // Both poloidal lobes occupy the same reviewed meridional section. A tiny
+  // negative web-Z offset keeps the section visible on the retained side of
+  // the default Z clip without claiming a second physical flux surface.
+  return [point[0], point[1], -0.012];
+}
+
+function buildFluxCoordinateBand(
+  definition: AnalyticPlasmaVisualization,
+  normalizedRadiusMin: number,
+  normalizedRadiusMax: number,
+): AnalyticPlasmaSurfaceData {
+  const segments = ANALYTIC_PLASMA_POLOIDAL_SEGMENTS;
+  const disk = normalizedRadiusMin === 0;
+  const verticesPerLobe = disk ? segments + 1 : segments * 2;
+  const indicesPerLobe = disk ? segments * 3 : segments * 6;
+  const positions = new Float32Array(verticesPerLobe * 2 * 3);
+  const indices = new Uint32Array(indicesPerLobe * 2);
+
+  ([1, -1] as const).forEach((lobe, lobeIndex) => {
+    const vertexBase = lobeIndex * verticesPerLobe;
+    const positionBase = vertexBase * 3;
+    const indexBase = lobeIndex * indicesPerLobe;
+    if (disk) {
+      positions[positionBase] = lobe * definition.majorRadiusMetres;
+      positions[positionBase + 1] = 0;
+      positions[positionBase + 2] = -0.012;
+      for (let segment = 0; segment < segments; segment += 1) {
+        const point = fluxBandPoint(
+          definition,
+          normalizedRadiusMax,
+          (segment / segments) * Math.PI * 2,
+          lobe,
+        );
+        positions.set(point, positionBase + (segment + 1) * 3);
+        const next = (segment + 1) % segments;
+        const target = indexBase + segment * 3;
+        indices[target] = vertexBase;
+        indices[target + 1] = vertexBase + segment + 1;
+        indices[target + 2] = vertexBase + next + 1;
+      }
+      return;
+    }
+
+    for (let segment = 0; segment < segments; segment += 1) {
+      const theta = (segment / segments) * Math.PI * 2;
+      positions.set(
+        fluxBandPoint(definition, normalizedRadiusMin, theta, lobe),
+        positionBase + segment * 3,
+      );
+      positions.set(
+        fluxBandPoint(definition, normalizedRadiusMax, theta, lobe),
+        positionBase + (segments + segment) * 3,
+      );
+      const next = (segment + 1) % segments;
+      const inner = vertexBase + segment;
+      const nextInner = vertexBase + next;
+      const outer = vertexBase + segments + segment;
+      const nextOuter = vertexBase + segments + next;
+      const target = indexBase + segment * 6;
+      indices[target] = inner;
+      indices[target + 1] = outer;
+      indices[target + 2] = nextInner;
+      indices[target + 3] = outer;
+      indices[target + 4] = nextOuter;
+      indices[target + 5] = nextInner;
+    }
+  });
+
+  return { positions, indices };
+}
+
 export function buildAnalyticPlasmaGeometry(
   definition: AnalyticPlasmaVisualization,
 ): AnalyticPlasmaGeometryData {
@@ -194,5 +288,10 @@ export function buildAnalyticPlasmaGeometry(
       buildMillerContour(definition, 0, ANALYTIC_PLASMA_POLOIDAL_SEGMENTS),
       buildMillerContour(definition, Math.PI, ANALYTIC_PLASMA_POLOIDAL_SEGMENTS),
     ],
+    fluxCoordinateBands: ANALYTIC_FLUX_BAND_RADII.slice(1).map((radiusMax, index) => ({
+      ...buildFluxCoordinateBand(definition, ANALYTIC_FLUX_BAND_RADII[index], radiusMax),
+      normalizedRadiusMin: ANALYTIC_FLUX_BAND_RADII[index],
+      normalizedRadiusMax: radiusMax,
+    })),
   };
 }

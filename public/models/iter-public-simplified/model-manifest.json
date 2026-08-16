@@ -531,7 +531,7 @@
   "visualizations": {
     "analyticPlasma": {
       "kind": "analytic-design-proxy",
-      "label": "ITER 名义设计参数解析等离子体",
+      "label": "ITER 名义设计参数等离子体与解析磁通坐标",
       "sourceLabel": "IAEA ITER EDA Documentation Series No. 22, Table 2.1-1",
       "sourceUrl": "https://www-pub.iaea.org/MTCD/Publications/PDF/ITER-EDA-DS-22.pdf",
       "majorRadiusMetres": 6.2,
@@ -790,5 +790,5 @@
       "decodedGpuBytes": 302896614
     }
   },
-  "disclaimer": "Project-owner-authorized non-engineering browser visualization derivative only. It is not an authoritative ITER engineering model and must not be used for manufacturing, dimensional verification, CAE, physics or safety decisions. The analytic plasma is a Miller-style nominal design-parameter geometry proxy, not EFIT, a real LCFS or a reconstructed equilibrium; it contains no psi grid or X point. This release does not claim ITER Organization endorsement."
+  "disclaimer": "Project-owner-authorized non-engineering browser visualization derivative only. It is not an authoritative ITER engineering model and must not be used for manufacturing, dimensional verification, CAE, physics or safety decisions. The analytic plasma and colored flux-coordinate bands are Miller-style nominal design-parameter geometry proxies, not EFIT psi, a real LCFS or a reconstructed equilibrium; they contain no psi grid or X point. This release does not claim ITER Organization endorsement."
 }
