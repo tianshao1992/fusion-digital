@@ -163,6 +163,11 @@ function currentEfitFrame(store: EfitStoreLike | null | undefined): EfitRenderab
   return 'timeMs' in snapshot ? snapshot : null;
 }
 
+function efitFrameIdentity(frame: EfitRenderableFrame | null): string {
+  if (!frame) return 'empty';
+  return `${String(frame.shot ?? 'unknown')}:${String(frame.index ?? 'unknown')}:${frame.timeMs}`;
+}
+
 function disposeObject(root: Object3D) {
   root.traverse((node) => {
     const mesh = node as Mesh;
@@ -1163,7 +1168,14 @@ function TokamakCadViewerSession({
   useEffect(() => {
     const overlay = viewerRef.current?.efitOverlay;
     if (!overlay || !efitStore) return;
-    const sync = () => overlay.setFrame(efitStateRef.current.frame ?? currentEfitFrame(efitStore));
+    let renderedIdentity: string | null = null;
+    const sync = () => {
+      const frame = efitStateRef.current.frame ?? currentEfitFrame(efitStore);
+      const identity = efitFrameIdentity(frame);
+      if (identity === renderedIdentity) return;
+      renderedIdentity = identity;
+      overlay.setFrame(frame);
+    };
     sync();
     return efitStore.subscribe(sync);
   }, [efitStore, selectedModelId, status]);

@@ -49,6 +49,12 @@ export type EfitStore = {
 
 type FrameReason = 'initial' | 'shot' | 'seek' | 'step' | 'playback';
 
+export type EfitPlaybackRuntime = {
+  now(): number;
+  schedule(callback: (timestamp: number) => void): unknown;
+  cancel(handle: unknown): void;
+};
+
 const INITIAL_SNAPSHOT: EfitStoreSnapshot = Object.freeze({
   manifest: null,
   activeShot: null,
@@ -97,6 +103,21 @@ function closestFrameIndex(timeline: readonly EfitFrameSummary[], timeMs: number
   return timeMs - timeline[before].timeMs <= timeline[after].timeMs - timeMs ? before : after;
 }
 
+function frameAtOrBeforeIndex(timeline: readonly EfitFrameSummary[], timeMs: number): number {
+  if (timeline.length === 0) return -1;
+  if (timeMs <= timeline[0].timeMs) return 0;
+  if (timeMs >= timeline[timeline.length - 1].timeMs) return timeline.length - 1;
+
+  let low = 0;
+  let high = timeline.length - 1;
+  while (low <= high) {
+    const middle = (low + high) >>> 1;
+    if (timeline[middle].timeMs <= timeMs) low = middle + 1;
+    else high = middle - 1;
+  }
+  return Math.max(0, high);
+}
+
 function crossedGap(
   gaps: readonly EfitGap[],
   fromTimeMs: number,
@@ -117,16 +138,36 @@ function animationNow(): number {
   return typeof performance !== 'undefined' ? performance.now() : Date.now();
 }
 
-export function createEfitStore(dataSource: EfitDataSource): EfitStore {
+const DEFAULT_PLAYBACK_RUNTIME: EfitPlaybackRuntime = {
+  now: animationNow,
+  schedule(callback) {
+    if (typeof requestAnimationFrame === 'function') {
+      return { kind: 'animation-frame', id: requestAnimationFrame(callback) };
+    }
+    return { kind: 'timeout', id: setTimeout(() => callback(animationNow()), 32) };
+  },
+  cancel(handle) {
+    if (!handle || typeof handle !== 'object' || !('kind' in handle) || !('id' in handle)) return;
+    if (handle.kind === 'animation-frame' && typeof handle.id === 'number' && typeof cancelAnimationFrame === 'function') {
+      cancelAnimationFrame(handle.id);
+      return;
+    }
+    if (handle.kind === 'timeout') clearTimeout(handle.id as ReturnType<typeof setTimeout>);
+  },
+};
+
+export function createEfitStore(
+  dataSource: EfitDataSource,
+  playbackRuntime: EfitPlaybackRuntime = DEFAULT_PLAYBACK_RUNTIME,
+): EfitStore {
   let snapshot = INITIAL_SNAPSHOT;
   const listeners = new Set<() => void>();
   let destroyed = false;
   let requestSequence = 0;
   let requestController: AbortController | null = null;
-  let playbackHandle: number | ReturnType<typeof setTimeout> | null = null;
+  let playbackHandle: unknown | null = null;
   let playbackAnchorClock = 0;
   let playbackAnchorTimeMs = 0;
-  let lastPlaybackCommitClock = Number.NEGATIVE_INFINITY;
 
   function emit(patch: Partial<EfitStoreSnapshot>): void {
     if (destroyed) return;
@@ -140,20 +181,12 @@ export function createEfitStore(dataSource: EfitDataSource): EfitStore {
 
   function cancelPlaybackFrame(): void {
     if (playbackHandle === null) return;
-    if (typeof playbackHandle === 'number' && typeof cancelAnimationFrame === 'function') {
-      cancelAnimationFrame(playbackHandle);
-    } else {
-      clearTimeout(playbackHandle);
-    }
+    playbackRuntime.cancel(playbackHandle);
     playbackHandle = null;
   }
 
   function schedulePlaybackFrame(callback: (timestamp: number) => void): void {
-    if (typeof requestAnimationFrame === 'function') {
-      playbackHandle = requestAnimationFrame(callback);
-    } else {
-      playbackHandle = setTimeout(() => callback(animationNow()), 32);
-    }
+    playbackHandle = playbackRuntime.schedule(callback);
   }
 
   async function commitFrame(frameIndex: number, reason: FrameReason, requestedTimeMs?: number): Promise<void> {
@@ -191,6 +224,11 @@ export function createEfitStore(dataSource: EfitDataSource): EfitStore {
         gapNotice: crossedGap(gaps, previousTime, frame.timeMs, requestedTimeMs),
       });
       if (reason === 'playback') {
+        // Decode/network time must not advance the displayed discharge. Re-anchor
+        // after the committed frame so playback never catches up by jumping over
+        // an arbitrary number of real frames after a slow load.
+        playbackAnchorClock = playbackRuntime.now();
+        playbackAnchorTimeMs = frame.timeMs;
         dataSource.prefetchFrame?.(shot, nextIndex + 1 < timeline.length ? nextIndex + 1 : 0);
       } else {
         dataSource.prefetchFrame?.(shot, Math.min(timeline.length - 1, nextIndex + 1));
@@ -281,12 +319,15 @@ export function createEfitStore(dataSource: EfitDataSource): EfitStore {
       playbackAnchorTimeMs = targetTime;
     }
 
-    const nextIndex = closestFrameIndex(timeline, targetTime);
+    // Hold the last published frame inside a declared time gap. Selecting the
+    // nearest frame would show a future equilibrium before its source time.
+    const nextIndex = frameAtOrBeforeIndex(timeline, targetTime);
     if (nextIndex !== snapshot.currentFrameIndex
-      && snapshot.status !== 'loading-frame'
-      && timestamp - lastPlaybackCommitClock >= 1000 / 30) {
-      lastPlaybackCommitClock = timestamp;
-      void commitFrame(nextIndex, 'playback', targetTime);
+      && snapshot.status !== 'loading-frame') {
+      void commitFrame(nextIndex, 'playback', targetTime).finally(() => {
+        if (!destroyed && snapshot.isPlaying && playbackHandle === null) schedulePlaybackFrame(playbackTick);
+      });
+      return;
     }
     schedulePlaybackFrame(playbackTick);
   }
@@ -299,14 +340,14 @@ export function createEfitStore(dataSource: EfitDataSource): EfitStore {
       if (index < 0) return;
       await commitFrame(index, 'seek', timeMs);
       if (snapshot.isPlaying) {
-        playbackAnchorClock = animationNow();
+        playbackAnchorClock = playbackRuntime.now();
         playbackAnchorTimeMs = snapshot.currentTimeMs;
       }
     },
     async seekFrame(frameIndex) {
       await commitFrame(frameIndex, 'seek');
       if (snapshot.isPlaying) {
-        playbackAnchorClock = animationNow();
+        playbackAnchorClock = playbackRuntime.now();
         playbackAnchorTimeMs = snapshot.currentTimeMs;
       }
     },
@@ -321,9 +362,8 @@ export function createEfitStore(dataSource: EfitDataSource): EfitStore {
       if (snapshot.isPlaying || snapshot.timeline.length === 0 || snapshot.status === 'error') return;
       const atEnd = snapshot.currentFrameIndex >= snapshot.timeline.length - 1;
       if (atEnd && snapshot.loop) void commitFrame(0, 'playback');
-      playbackAnchorClock = animationNow();
+      playbackAnchorClock = playbackRuntime.now();
       playbackAnchorTimeMs = atEnd && snapshot.loop ? snapshot.timeline[0].timeMs : snapshot.currentTimeMs;
-      lastPlaybackCommitClock = Number.NEGATIVE_INFINITY;
       emit({ isPlaying: true });
       schedulePlaybackFrame(playbackTick);
     },
@@ -339,7 +379,7 @@ export function createEfitStore(dataSource: EfitDataSource): EfitStore {
     setPlaybackRate(rate) {
       if (!Number.isFinite(rate) || rate <= 0) return;
       if (snapshot.isPlaying) {
-        const now = animationNow();
+        const now = playbackRuntime.now();
         playbackAnchorTimeMs += (now - playbackAnchorClock) * snapshot.playbackRate;
         playbackAnchorClock = now;
       }

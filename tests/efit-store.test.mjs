@@ -96,6 +96,57 @@ test('shared EFIT store switches shots and seeks the nearest real source frame',
   store.destroy();
 });
 
+test('EFIT playback commits serially, re-anchors after slow loads and holds the prior frame inside gaps', async () => {
+  const shot = shotManifest(404, [0, 20, 40, 100, 120]);
+  shot.gaps = [{ afterMs: 40, beforeMs: 100, missingFrames: 59 }];
+  const manifest = {
+    schema: 'test',
+    device: 'EXL-50U',
+    psiNLevels: [0.1],
+    geometry: { limiterRzM: { rM: [], zM: [], validPoints: 0 } },
+    shots: [shot],
+  };
+  const source = createInMemoryEfitDataSource(manifest, shot.frames);
+  const pending = [];
+  let now = 0;
+  const runtime = {
+    now: () => now,
+    schedule(callback) {
+      const handle = { callback, cancelled: false };
+      pending.push(handle);
+      return handle;
+    },
+    cancel(handle) {
+      handle.cancelled = true;
+    },
+  };
+  const store = createEfitStore(source, runtime);
+  await store.actions.initialize(404);
+  store.actions.play();
+
+  const runNext = async (timestamp) => {
+    now = timestamp;
+    const handle = pending.shift();
+    assert.ok(handle && !handle.cancelled, 'playback should have exactly one live scheduled callback');
+    handle.callback(timestamp);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  };
+
+  await runNext(40);
+  assert.equal(store.getSnapshot().currentTimeMs, 40);
+  assert.equal(pending.length, 1, 'the next callback is scheduled only after the frame commit settles');
+
+  // A large wall-clock delay after the commit must not cause catch-up to 120 ms.
+  // The 70 ms source target falls in the 40–100 ms gap and must hold 40 ms.
+  await runNext(70);
+  assert.equal(store.getSnapshot().currentTimeMs, 40);
+  await runNext(100);
+  assert.equal(store.getSnapshot().currentTimeMs, 100);
+
+  store.actions.pause();
+  store.destroy();
+});
+
 test('EFIT index rejects cross-origin assets and inconsistent frame offsets', async () => {
   const original = JSON.parse(await readFile(new URL('../public/data/exl50u-efit/index.json', import.meta.url), 'utf8'));
   const fetchIndex = (payload) => async () => new Response(JSON.stringify(payload), {

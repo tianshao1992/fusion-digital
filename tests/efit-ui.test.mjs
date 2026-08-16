@@ -62,8 +62,12 @@ test('EFIT controls, store and Three overlay share one external frame state', as
   assert.match(workspace, /efitStore=\{efitStore\}/);
   assert.match(workspace, /onShowSurfaceChange/);
   assert.match(viewer, /return efitStore\.subscribe\(sync\)/);
+  assert.match(viewer, /efitFrameIdentity/);
+  assert.match(viewer, /if \(identity === renderedIdentity\) return/,
+    'loading and other non-frame state emissions must not rebuild the same 3D EFIT frame');
   assert.match(viewer, /EFIT OVERLAY/);
-  assert.match(store, /1000 \/ 30/);
+  assert.match(store, /frameAtOrBeforeIndex/);
+  assert.match(store, /playbackAnchorTimeMs = frame\.timeMs/);
   assert.match(store, /closestFrameIndex/);
   assert.match(dataSource, /Range: `bytes=\$\{start\}-\$\{start \+ length - 1\}`/);
   assert.match(dataSource, /maxCachedFrames/);
