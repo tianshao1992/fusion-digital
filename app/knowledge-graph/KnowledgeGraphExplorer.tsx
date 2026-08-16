@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import ScientificChart from '@/app/components/charts/ScientificChart';
 import { useChartTheme, type ChartThemePalette } from '@/app/components/charts/chart-theme';
 import KnowledgeChat from '@/app/components/knowledge-chat/KnowledgeChat';
+import { formatKnowledgeGraphTooltip } from './knowledgeGraphTooltip';
 import type { GraphQueryResponse, KnowledgeGraphNode } from './types';
 
 type ExplorerProps = {
@@ -31,15 +32,6 @@ const typeMeta = {
   organization: { label: '机构', symbol: 'hexagon' },
 } as const;
 
-function escapeTooltip(value: unknown) {
-  return String(value ?? '')
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;');
-}
-
 function graphOption(data: GraphQueryResponse, selectedId: string, chartTheme: ChartThemePalette): EChartsCoreOption {
   const domainColor = (domain: keyof typeof domainMeta) => {
     if (chartTheme.mode === 'dark') return domainMeta[domain].color;
@@ -60,12 +52,7 @@ function graphOption(data: GraphQueryResponse, selectedId: string, chartTheme: C
       backgroundColor: chartTheme.tooltipBackground,
       borderColor: chartTheme.tooltipBorder,
       textStyle: { color: chartTheme.tooltipText, fontFamily: 'Microsoft YaHei UI, Microsoft YaHei, sans-serif', fontSize: 11 },
-      formatter(params: unknown) {
-        const p = params as { dataType?: string; data?: Record<string, unknown> };
-        if (p.dataType === 'edge') return `<b>${escapeTooltip(p.data?.relation)}</b><br/>${escapeTooltip(p.data?.evidenceLabel ?? '点击端点查看证据')}`;
-        const node = p.data as unknown as KnowledgeGraphNode;
-        return `<b>${escapeTooltip(node.label)}</b><br/>${escapeTooltip(typeMeta[node.type]?.label ?? node.type)} · ${escapeTooltip(domainMeta[node.domain]?.label ?? node.domain)}<br/>关联 ${node.degree} 条`;
-      },
+      formatter: formatKnowledgeGraphTooltip,
     },
     legend: [{ data: categories.map((item) => item.name), left: 18, top: 12, textStyle: { color: chartTheme.muted, fontSize: 10 }, itemWidth: 11, itemHeight: 8 }],
     series: [{
@@ -76,6 +63,11 @@ function graphOption(data: GraphQueryResponse, selectedId: string, chartTheme: C
       data: data.nodes.map((node) => ({
         ...node,
         name: node.label,
+        entityLabel: node.label,
+        entityDescription: nodeDescription(node),
+        entityType: node.type,
+        entityDomain: node.domain,
+        entityDegree: node.degree,
         category: Object.keys(domainMeta).indexOf(node.domain),
         symbol: typeMeta[node.type]?.symbol ?? 'circle',
         symbolSize: Math.min(42, 10 + Math.sqrt(node.degree + 1) * 3.25) + (node.id === selectedId ? 7 : 0),
@@ -184,7 +176,7 @@ export default function KnowledgeGraphExplorer({ initial, devices }: ExplorerPro
         <div className="kgLiveStats" aria-live="polite"><span><b>{data.nodes.length}</b>实体</span><span><b>{data.edges.length}</b>关系</span>{data.truncated && <span className="kgWarning">已按关联度截断</span>}</div>
       </header>
       {error && <p className="kgError" role="alert">{error}</p>}
-      <ScientificChart id="fusion-knowledge-graph" option={option} ariaLabel="论文、代码、装置、工具、任务和机构构成的 FusionDigital 交互知识图谱" fallbackSrc="" fallbackAlt="" height={670} eager dark onChartClick={handleChartClick} fallback={<div className="kgChartFallback"><b>ENTITY → CLAIM → EVIDENCE</b><span>正在加载论文、代码、装置与任务的关系子图；下方文本列表提供完整的键盘浏览入口。</span></div>} />
+      <ScientificChart id="fusion-knowledge-graph" option={option} ariaLabel="论文、代码、装置、工具、任务和机构构成的 FusionDigital 交互知识图谱" fallbackSrc="" fallbackAlt="" height={670} eager onChartClick={handleChartClick} fallback={<div className="kgChartFallback"><b>ENTITY → CLAIM → EVIDENCE</b><span>正在加载论文、代码、装置与任务的关系子图；下方文本列表提供完整的键盘浏览入口。</span></div>} />
       <div className="kgCanvasTools">
         <span>滚轮缩放 · 拖动平移 · 点击节点查看关系</span>
         <label>节点上限 <select value={limit} onChange={(event) => setLimit(Number(event.target.value))}><option value="200">200</option><option value="350">350</option><option value="500">500</option><option value="800">800</option></select></label>

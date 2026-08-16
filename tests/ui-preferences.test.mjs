@@ -126,6 +126,27 @@ test('Morandi light mode covers legacy heroes, workspaces and filter modules', a
   assert.doesNotMatch(surfaces, /:root\[data-theme='dark'\]/);
 });
 
+test('knowledge graph explorer has a complete light surface and semantic tooltip fields', async () => {
+  const [css, explorer, tooltip] = await Promise.all([
+    source('app/knowledge-graph/knowledge-graph.css'),
+    source('app/knowledge-graph/KnowledgeGraphExplorer.tsx'),
+    source('app/knowledge-graph/knowledgeGraphTooltip.ts'),
+  ]);
+
+  for (const selector of [
+    ":root[data-theme='light'] .kgPage",
+    ":root[data-theme='light'] .kgFilters",
+    ":root[data-theme='light'] .kgCanvasPanel",
+    ":root[data-theme='light'] .kgDetail",
+    ":root[data-theme='light'] .kgAccessibleList",
+  ]) assert.ok(css.includes(selector), `missing light knowledge-graph surface: ${selector}`);
+  assert.match(explorer, /entityLabel: node\.label/);
+  assert.match(explorer, /entityDescription: nodeDescription\(node\)/);
+  assert.match(explorer, /formatter: formatKnowledgeGraphTooltip/);
+  assert.doesNotMatch(explorer, /node = p\.data as unknown as KnowledgeGraphNode/);
+  assert.match(tooltip, /text\(data\.entityLabel/);
+});
+
 test('Morandi light mode covers every digital-prototype workspace shell while preserving dark tokens', async () => {
   const [theme, prototype, turntable] = await Promise.all([
     source('app/theme.css'),
