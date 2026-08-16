@@ -41,9 +41,18 @@ The current reviewed defaults apply these independent gates before deriving acti
 Only boundary X points have `activeBranchEligible: true`. Near-boundary points are marker-only
 evidence and never create active branches or regions. A resolved branch terminates at a canonical
 wall intersection, another accepted boundary X point or a validated self-loop. Missing arms are
-serialized under `unresolvedArms` with `extrapolated: false`; open-field face classification stays
-under `unresolvedRegions` until independently reviewed. This fail-closed graph model supports
-more than two X points and does not infer USN/LSN labels or fabricate a strict double-null state.
+serialized under `unresolvedArms` with `extrapolated: false`; open-field physical face
+classification stays under `unresolvedRegions` until independently reviewed. This fail-closed
+graph model supports more than two X points and does not infer USN/LSN labels or fabricate a
+strict double-null state.
+
+The browser may add an orange **display-only** divertor polygon without changing that physical
+classification. The closure gate requires exactly one active primary boundary X point, no
+unresolved arm on that point, exactly two published open branches to distinct published wall
+nodes, and exactly one published wall arc that forms a simple finite polygon excluding the
+magnetic axis. Both branch and wall-arc endpoints must agree with their referenced nodes. If any
+condition is missing or ambiguous, the frame remains wireframe-only. This polygon is not a SOL
+field, heat-flux estimate, density/temperature fill or inferred USN/LSN label.
 
 Auxiliary A-record X/strike fields are not used to create active topology in this release. Their
 reviewed status flags indicate an error state, so they may only be retained as separately marked

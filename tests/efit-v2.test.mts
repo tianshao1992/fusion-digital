@@ -6,6 +6,7 @@ import { gzipSync } from 'node:zlib';
 
 import { createEfitHybridDataSource, normalizeEfitHybridCatalog } from '../app/components/efit/hybrid-data-source.ts';
 import { efitXPointMarkerRole } from '../app/components/device-viewer/EfitThreeOverlay.ts';
+import { deriveVerifiedDivertorGraphRegion } from '../app/components/efit/divertor-region.ts';
 import { validateEfitTopologyGraphFrame } from '../app/components/efit/topology-graph-runtime.ts';
 
 const LEGACY_INDEX_URL = '/device-data/exl50u-efit/index.json';
@@ -496,6 +497,44 @@ test('hybrid catalog rejects geometry lies, unknown geometry ids, and duplicate 
   const oddLimiter = structuredClone(fixtureValue.catalog);
   oddLimiter.geometries[1].limiterRzM.pop();
   assert.throws(() => normalizeEfitHybridCatalog(oddLimiter, legacyManifest), /complete bounded R-Z pairs/);
+});
+
+test('published shot 20708 conservatively closes its graph-v2 divertor display region at 172 ms', async () => {
+  const source = createEfitHybridDataSource({ fetch: publicAssetFetch().fetch, maxCachedChunks: 2 });
+  const manifest = await source.loadManifest();
+  const shot = manifest.shots.find((candidate) => candidate.shot === 20708);
+  assert.ok(shot);
+  const frameIndex = shot.frames.findIndex((frame) => frame.timeMs === 172);
+  assert.ok(frameIndex >= 0);
+  const frame = await source.loadFrame(20708, frameIndex);
+  const graph = frame.topologyGraphPayload?.topologyGraph;
+  assert.ok(graph);
+
+  const region = deriveVerifiedDivertorGraphRegion(graph, { rM: frame.rAxisM, zM: frame.zAxisM });
+  assert.equal(region.state, 'filled');
+  assert.equal(region.code, 'closed-published-graph-boundary');
+  assert.ok(region.polygon.length > 100, 'the display region must preserve both 64-point branches and the published wall arc');
+  assert.ok(region.limiterArc.length > 2, 'the region must use the published multi-segment wall arc, never a strike-point chord');
+
+  const ambiguousEvidence = {
+    ...graph,
+    unresolvedRegions: [...graph.unresolvedRegions, structuredClone(graph.unresolvedRegions[0])],
+  };
+  const ambiguous = deriveVerifiedDivertorGraphRegion(ambiguousEvidence, { rM: frame.rAxisM, zM: frame.zAxisM });
+  assert.equal(ambiguous.state, 'wireframe');
+  assert.equal(ambiguous.code, 'partial-topology');
+
+  const incompleteIndex = shot.frames.findIndex((candidate) => candidate.timeMs === 176);
+  assert.ok(incompleteIndex >= 0);
+  const incompleteFrame = await source.loadFrame(20708, incompleteIndex);
+  const incompleteGraph = incompleteFrame.topologyGraphPayload?.topologyGraph;
+  assert.ok(incompleteGraph);
+  const rejected = deriveVerifiedDivertorGraphRegion(incompleteGraph, {
+    rM: incompleteFrame.rAxisM,
+    zM: incompleteFrame.zAxisM,
+  });
+  assert.equal(rejected.state, 'wireframe');
+  assert.equal(rejected.code, 'partial-topology');
 });
 
 test('published 10-shot catalog and all 219 graph chunks decode through the production hybrid path', async () => {

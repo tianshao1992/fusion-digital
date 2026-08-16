@@ -23,7 +23,7 @@ import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js';
 import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js';
-import { deriveReviewedDivertorRegion } from '../efit/divertor-region';
+import { deriveReviewedDivertorRegion, deriveVerifiedDivertorGraphRegion } from '../efit/divertor-region';
 import { colorForPsiN } from '../efit/psi-n-palette';
 import type { EfitGeometryCatalog } from '../efit/shot-geometry';
 
@@ -93,19 +93,43 @@ export type EfitRenderableTopology = {
 
 export type EfitRenderableTopologyGraph = {
   nodes: readonly ({
+    nodeId?: string;
     kind: 'magnetic-axis' | 'x-point' | 'wall-intersection' | string;
     rM: number;
     zM: number;
     role?: 'boundary' | 'near-boundary' | string;
     activityRole?: 'primary' | 'secondary' | string;
+    activeBranchEligible?: boolean;
+    evidenceOnly?: boolean;
     wallSegment?: number;
   })[];
   edges: readonly ({
+    edgeId?: string;
+    kind?: string;
+    status?: string;
+    fromNodeId?: string;
+    toNodeId?: string;
+    sourceArmIndex?: number;
     pointsRzM: ArrayLike<number>;
     closed?: boolean;
   })[];
-  unresolvedArms?: readonly unknown[];
-  unresolvedRegions?: readonly unknown[];
+  wallArcs?: readonly ({
+    wallArcId?: string;
+    fromNodeId?: string;
+    toNodeId?: string;
+    pointsRzM: ArrayLike<number>;
+  })[];
+  unresolvedArms?: readonly {
+    xPointNodeId?: string;
+    extrapolated?: boolean;
+  }[];
+  unresolvedRegions?: readonly {
+    kind?: string;
+    state?: string;
+    edgeIds?: readonly string[];
+    wallArcIds?: readonly string[];
+    fabricated?: boolean;
+  }[];
 };
 
 export type EfitRenderableFrame = {
@@ -917,14 +941,15 @@ export function createEfitThreeOverlay(
     const magneticAxis = Number.isFinite(rAxis) && Number.isFinite(zAxis)
       ? { rM: Number(rAxis), zM: Number(zAxis) }
       : undefined;
-    // The v2 graph currently publishes resolved branches and explicit
-    // unresolved open regions, not a reviewed open-field face cycle. Never
-    // synthesize a divertor volume from graph edges. Legacy v1 may still use
-    // the independently reviewed limiter-arc closure helper.
-    if (topology) {
-      const region = deriveReviewedDivertorRegion(topology, frame.limiterRzM, magneticAxis);
-      if (region.state === 'filled') updateDivertorRegionGeometry(region.polygon, phi);
-    }
+    // Both paths fail closed. Legacy v1 uses its independently reviewed
+    // topology sidecar. Graph v2 may shade only when two published open
+    // branches and one published wall arc form the unique simple display
+    // boundary that excludes the magnetic axis; unresolved or ambiguous
+    // evidence remains wireframe-only.
+    const region = topology
+      ? deriveReviewedDivertorRegion(topology, frame.limiterRzM, magneticAxis)
+      : deriveVerifiedDivertorGraphRegion(topologyGraph, magneticAxis);
+    if (region.state === 'filled') updateDivertorRegionGeometry(region.polygon, phi);
     if (!options.showSection) return;
 
     const sectionPhis = [phi, phi + Math.PI] as const;

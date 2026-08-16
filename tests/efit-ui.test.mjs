@@ -324,8 +324,10 @@ test('optional divertor topology renders as open scientific overlays without con
     'topology must appear on both sides of the axisymmetric section');
   assert.match(overlay, /frame\.topologyGraphPayload\?\.topologyGraph/,
     'the Three overlay must render arbitrary v2 graph nodes and edges directly');
-  assert.match(overlay, /Never[\s\S]*?synthesize a divertor volume from graph edges/,
-    'unreviewed v2 open regions must remain wireframe-only');
+  assert.match(overlay, /deriveVerifiedDivertorGraphRegion/,
+    'v2 graph evidence must use the shared conservative display-closure gate');
+  assert.match(overlay, /unique simple display[\s\S]*?unresolved or ambiguous[\s\S]*?wireframe-only/,
+    'unresolved or ambiguous v2 evidence must remain wireframe-only');
   assert.match(overlay, /hideTopology\(\);[\s\S]*?frameUsable/,
     'every frame update must clear stale topology before validating the next frame');
   const clippingBlock = overlay.slice(overlay.indexOf('const applyClipping'), overlay.indexOf('setLineResolution(context.renderer'));
@@ -418,10 +420,12 @@ test('divertor region has independent honest 2D and 3D rendering lifecycles', as
   const viewer = await source('app/components/TokamakCadViewer.tsx');
 
   assert.match(equilibrium, /deriveReviewedDivertorRegion/);
+  assert.match(equilibrium, /deriveVerifiedDivertorGraphRegion/);
   assert.match(equilibrium, /name: t\('efit\.chart\.divertorRegion'\)/);
   assert.match(equilibrium, /rgba\(255, 132, 55, \.28\)/);
   assert.match(panel, /t\('efit\.boundaryRegion'\)/);
-  assert.match(panel, /t\('efit\.reviewedClosed'\)/);
+  assert.match(panel, /'efit\.reviewedClosed'/);
+  assert.match(panel, /'efit\.graphVerifiedClosed'/);
   assert.match(panel, /t\('efit\.wireframeOnly'\)/);
   assert.match(panel, /t\('efit\.equilibriumCardCopy'\)/);
   assert.match(overlay, /EFIT_DIVERTOR_TOPOLOGY_SECTION_REGION/);

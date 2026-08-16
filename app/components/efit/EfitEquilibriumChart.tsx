@@ -5,7 +5,7 @@ import type { CustomSeriesRenderItem } from 'echarts/types/dist/option';
 import { useCallback, useMemo } from 'react';
 import { useI18n, type MessageKey } from '../../i18n';
 import { useChartTheme } from '../charts/chart-theme';
-import { deriveReviewedDivertorRegion } from './divertor-region';
+import { deriveReviewedDivertorRegion, deriveVerifiedDivertorGraphRegion } from './divertor-region';
 import EfitCanvasChart from './EfitCanvasChart';
 import { PSI_N_COLORS } from './psi-n-palette';
 import type { EfitFrame, EfitGeometry, EfitNumericVector, EfitTopologyKind } from './types';
@@ -85,11 +85,10 @@ export default function EfitEquilibriumChart({ frame, geometry }: EfitEquilibriu
     }));
     const topology = frame?.topology;
     const topologyGraph = frame?.topologyGraphPayload?.topologyGraph;
-    const divertorRegion = deriveReviewedDivertorRegion(
-      topology,
-      limiter,
-      frame ? { rM: frame.rAxisM, zM: frame.zAxisM } : undefined,
-    );
+    const magneticAxis = frame ? { rM: frame.rAxisM, zM: frame.zAxisM } : undefined;
+    const divertorRegion = topology
+      ? deriveReviewedDivertorRegion(topology, limiter, magneticAxis)
+      : deriveVerifiedDivertorGraphRegion(topologyGraph, magneticAxis);
     const legacySeparatrixData = (topology?.separatrixLegs ?? []).map((leg, index) => ({
       index,
       // Divertor legs are open curves. Never close them or pass them to the

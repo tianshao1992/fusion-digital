@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, type KeyboardEvent } from 'react';
-import { deriveReviewedDivertorRegion } from './divertor-region';
+import { deriveReviewedDivertorRegion, deriveVerifiedDivertorGraphRegion } from './divertor-region';
 import EfitEquilibriumChart, { efitTopologyMessageKey } from './EfitEquilibriumChart';
 import { useI18n } from '../../i18n';
 import EfitSignalsChart from './EfitSignalsChart';
@@ -79,11 +79,10 @@ export default function EfitPanel({
   const graphCandidateXPoints = graphXPoints.filter((node) => node.role === 'near-boundary');
   const graphIsPartial = Boolean(topologyGraph && (topologyGraph.unresolvedArms.length > 0 || topologyGraph.unresolvedRegions.length > 0));
   const activeGeometry = resolveShotGeometry(snapshot.manifest, snapshot.activeShot);
-  const divertorRegion = deriveReviewedDivertorRegion(
-    topology,
-    activeGeometry?.limiterRzM,
-    frame ? { rM: frame.rAxisM, zM: frame.zAxisM } : undefined,
-  );
+  const magneticAxis = frame ? { rM: frame.rAxisM, zM: frame.zAxisM } : undefined;
+  const divertorRegion = topology
+    ? deriveReviewedDivertorRegion(topology, activeGeometry?.limiterRzM, magneticAxis)
+    : deriveVerifiedDivertorGraphRegion(topologyGraph, magneticAxis);
   const qualityLabel = quality
     ? quality.state === 'good' ? t('efit.good') : quality.state === 'warning' ? t('efit.warning') : t('efit.invalid')
     : '';
@@ -99,8 +98,10 @@ export default function EfitPanel({
         topologyGraph
           ? `${t('efit.graphSummary', { boundary: graphBoundaryXPoints.length, candidate: graphCandidateXPoints.length, branches: topologyGraph.edges.length })} · ${graphIsPartial ? t('efit.graphPartialHelp') : t('efit.graphValidHelp')}`
           : null,
-        topology && divertorRegion.state !== 'unavailable'
-          ? `${t('efit.boundaryRegion')}: ${divertorRegion.state === 'filled' ? t('efit.reviewedClosed') : t('efit.wireframeOnly')} · ${divertorRegion.message}`
+        (topology || topologyGraph) && divertorRegion.state !== 'unavailable'
+          ? `${t('efit.boundaryRegion')}: ${divertorRegion.state === 'filled'
+            ? t(divertorRegion.code === 'closed-published-graph-boundary' ? 'efit.graphVerifiedClosed' : 'efit.reviewedClosed')
+            : t('efit.wireframeOnly')} · ${divertorRegion.message}`
           : null,
       ].filter(Boolean).join(' · ')
     : undefined;

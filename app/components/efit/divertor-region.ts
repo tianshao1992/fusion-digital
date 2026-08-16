@@ -30,10 +30,49 @@ export type DivertorRegionTopologyInput = {
   })[];
 };
 
+export type DivertorRegionGraphInput = {
+  nodes?: readonly {
+    nodeId?: string;
+    kind?: string;
+    role?: string;
+    activityRole?: string;
+    activeBranchEligible?: boolean;
+    evidenceOnly?: boolean;
+    rM?: number;
+    zM?: number;
+  }[];
+  edges?: readonly (DivertorRegionCurveInput & {
+    edgeId?: string;
+    kind?: string;
+    status?: string;
+    fromNodeId?: string;
+    toNodeId?: string;
+    sourceArmIndex?: number;
+    closed?: boolean;
+  })[];
+  wallArcs?: readonly (DivertorRegionCurveInput & {
+    wallArcId?: string;
+    fromNodeId?: string;
+    toNodeId?: string;
+  })[];
+  unresolvedArms?: readonly {
+    xPointNodeId?: string;
+    extrapolated?: boolean;
+  }[];
+  unresolvedRegions?: readonly {
+    kind?: string;
+    state?: string;
+    edgeIds?: readonly string[];
+    wallArcIds?: readonly string[];
+    fabricated?: boolean;
+  }[];
+};
+
 export type DivertorRegionResult = {
   state: 'filled' | 'wireframe' | 'unavailable';
   code:
     | 'closed-reviewed-boundary'
+    | 'closed-published-graph-boundary'
     | 'no-divertor-topology'
     | 'partial-topology'
     | 'primary-x-point'
@@ -341,5 +380,126 @@ export function deriveReviewedDivertorRegion(
     limiterArc: candidates[0].limiterArc,
     primaryXPointIndex,
     legIndices: indexedLegs.map(({ index }) => index),
+  };
+}
+
+/**
+ * Closes a display-only divertor polygon from topology-graph v2 evidence.
+ *
+ * The graph publisher deliberately keeps the open-field face classification
+ * unresolved. The renderer may nevertheless shade the bounded visual region
+ * when, and only when, one active primary boundary X point has exactly two
+ * published open branches to distinct wall nodes and exactly one published
+ * wall arc closes a simple polygon that excludes the magnetic axis. No chord,
+ * extrapolated arm, topology label or SOL field is invented here.
+ */
+export function deriveVerifiedDivertorGraphRegion(
+  graph: DivertorRegionGraphInput | null | undefined,
+  magneticAxis?: { rM: number; zM: number } | null,
+): DivertorRegionResult {
+  if (!graph) {
+    return fallback('no-divertor-topology', '当前帧没有可核验的拓扑图边界。', 'unavailable');
+  }
+
+  const nodes = graph.nodes ?? [];
+  const primaryNodes = nodes.filter((node) => node.kind === 'x-point'
+    && node.role === 'boundary'
+    && node.activityRole === 'primary'
+    && node.activeBranchEligible === true
+    && node.evidenceOnly === false
+    && typeof node.nodeId === 'string');
+  if (primaryNodes.length !== 1) {
+    return fallback('primary-x-point', '拓扑图无法唯一确认活动主 X 点，区域填充已关闭，仅显示线框。');
+  }
+  const primary = primaryNodes[0];
+  const primaryId = primary.nodeId!;
+  const primaryPoint = finitePoint(primary.rM, primary.zM);
+  if (!primaryPoint) {
+    return fallback('primary-x-point', '拓扑图主 X 点坐标无效，区域填充已关闭，仅显示线框。');
+  }
+  if ((graph.unresolvedArms ?? []).some((arm) => arm.xPointNodeId === primaryId || arm.extrapolated === true)) {
+    return fallback('partial-topology', '活动主 X 点仍有未解析或外推分离臂，区域填充已关闭，仅显示线框。');
+  }
+
+  const wallNodes = new Map(nodes.flatMap((node) => (
+    node.kind === 'wall-intersection' && typeof node.nodeId === 'string'
+      ? [[node.nodeId, node] as const]
+      : []
+  )));
+  const openEdges = (graph.edges ?? []).flatMap((edge) => {
+    if (edge.kind !== 'constant-flux-separatrix-branch'
+      || edge.status !== 'active-derived'
+      || edge.closed !== false
+      || typeof edge.edgeId !== 'string') return [];
+    const primaryAtStart = edge.fromNodeId === primaryId;
+    const primaryAtEnd = edge.toNodeId === primaryId;
+    if (primaryAtStart === primaryAtEnd) return [];
+    const wallNodeId = primaryAtStart ? edge.toNodeId : edge.fromNodeId;
+    if (typeof wallNodeId !== 'string') return [];
+    const wallNode = wallNodes.get(wallNodeId);
+    const wallPoint = wallNode ? finitePoint(wallNode.rM, wallNode.zM) : null;
+    const rawPoints = curvePoints(edge);
+    if (!wallPoint || !rawPoints || rawPoints.length < 2) return [];
+    const points = primaryAtStart ? rawPoints : [...rawPoints].reverse();
+    if (distance(points[0], primaryPoint) > POINT_TOLERANCE_M
+      || distance(points.at(-1)!, wallPoint) > POINT_TOLERANCE_M) return [];
+    return [{ edge, edgeId: edge.edgeId, wallNodeId, wallPoint, points }];
+  });
+  if (openEdges.length !== 2
+    || openEdges[0].edgeId === openEdges[1].edgeId
+    || openEdges[0].wallNodeId === openEdges[1].wallNodeId
+    || !Number.isInteger(openEdges[0].edge.sourceArmIndex)
+    || !Number.isInteger(openEdges[1].edge.sourceArmIndex)
+    || openEdges[0].edge.sourceArmIndex === openEdges[1].edge.sourceArmIndex) {
+    return fallback('separatrix-leg-count', '活动主 X 点未关联恰好两条到不同壁面交点的开放分离支，区域填充已关闭，仅显示线框。');
+  }
+
+  const evidenceRegions = (graph.unresolvedRegions ?? []).filter((region) => region.kind === 'open-field-separatrix-region'
+    && region.state === 'unresolved'
+    && region.fabricated === false
+    && openEdges.every(({ edgeId }) => region.edgeIds?.includes(edgeId)));
+  if (evidenceRegions.length !== 1) {
+    return fallback('partial-topology', '拓扑图未发布唯一且与开放分离支一致的非虚构区域证据，区域填充已关闭，仅显示线框。');
+  }
+  const evidenceRegion = evidenceRegions[0];
+
+  const axis = magneticAxis ? finitePoint(magneticAxis.rM, magneticAxis.zM) : null;
+  if (!axis) {
+    return fallback('ambiguous-limiter-arc', '缺少磁轴坐标，无法唯一排除包围等离子体的壁面弧；区域填充已关闭，仅显示线框。');
+  }
+
+  const fromWall = openEdges[0];
+  const toWall = openEdges[1];
+  const candidates: Candidate[] = (graph.wallArcs ?? []).flatMap((arc) => {
+    if (typeof arc.wallArcId !== 'string' || !evidenceRegion.wallArcIds?.includes(arc.wallArcId)) return [];
+    const forward = arc.fromNodeId === fromWall.wallNodeId && arc.toNodeId === toWall.wallNodeId;
+    const reverse = arc.fromNodeId === toWall.wallNodeId && arc.toNodeId === fromWall.wallNodeId;
+    if (!forward && !reverse) return [];
+    const rawArc = curvePoints(arc);
+    if (!rawArc || rawArc.length < 2) return [];
+    const limiterArc = forward ? rawArc : [...rawArc].reverse();
+    if (distance(limiterArc[0], fromWall.wallPoint) > POINT_TOLERANCE_M
+      || distance(limiterArc.at(-1)!, toWall.wallPoint) > POINT_TOLERANCE_M) return [];
+    const polygon = joinBoundary(fromWall.points, limiterArc, toWall.points);
+    return isSimplePolygon(polygon) && !containsPoint(polygon, axis)
+      ? [{ polygon, limiterArc }]
+      : [];
+  });
+  if (candidates.length !== 1) {
+    return fallback(
+      candidates.length > 1 ? 'ambiguous-limiter-arc' : 'invalid-closed-boundary',
+      candidates.length > 1
+        ? '多条发布壁面弧均可闭合，无法唯一判定显示边界；区域填充已关闭，仅显示线框。'
+        : '发布的开放分离支与壁面弧无法形成简单、有限且不包围磁轴的闭合显示边界；仅显示线框。',
+    );
+  }
+
+  return {
+    state: 'filled',
+    code: 'closed-published-graph-boundary',
+    message: '橙色区域由 v2 活动主 X 点、两条已发布开放分离支和唯一壁面弧通过显示闭合核验构成；不代表 SOL 场量。',
+    polygon: candidates[0].polygon,
+    limiterArc: candidates[0].limiterArc,
+    legIndices: openEdges.map(({ edge }) => Number(edge.sourceArmIndex)).filter(Number.isInteger),
   };
 }
