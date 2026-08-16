@@ -32,7 +32,15 @@ fix(engineering): correct commercial tool link
 
 ```bash
 npm ci
+npm run assets:verify:tracked
 npm run check
+```
+
+需要验证 ITER 高清模式或准备内网自包含部署时再运行：
+
+```bash
+npm run assets:hydrate
+npm run assets:verify
 ```
 
 修改智能原生、控制或诊断源数据时还要运行相应生成器；诊断域使用：
@@ -95,6 +103,8 @@ npm run research:diagnostics:report
 
 - 不提交访问令牌、账号、内部 URL、未脱敏日志或个人敏感信息。
 - 不提交未经批准的装置参数、实验数据、CAD、商业软件模型或合作方资料。
+- 原始 EXL-50U / ITER CAD、STEP、B-Rep、PMI、尺寸、公差、完整装配元数据，以及原始 EFIT 档案、G-file 和 psi 网格，只能保留在受控工程/实验数据系统中；禁止放入 GitHub、Codeup、Git LFS、内网公开下载或百度网盘。
+- 仓库和外置资产包只能包含经过授权与审核的浏览器运行时派生物。EXL-50U、公开 EFIT 派生数据和 Paramak 资产随 Git；ITER 高清模式的 18 个 GLB 分片由 `assets/runtime-assets.lock.json` 锁定并独立分发。
 - 第三方论文图、商标和软件说明必须保留来源与许可边界。
 - 对推断性结论使用“可能、推断、公开证据未证明”等明确口径。
 - 任何 AI 建议都不得被描述为已获装置控制或安全权限，除非有直接、可核验的公开证据。
@@ -110,6 +120,25 @@ npm run research:diagnostics:report
 
 不要手工修改生成文件后遗漏源数据。若生成结果发生非预期大规模变化，应先停止提交并检查 `projectId`、领域映射、日期和脚本版本。
 
+## 运行时资产变更
+
+完整分发流程见[运行时资产获取与校验](docs/ASSET_BOOTSTRAP.md)。一般页面开发不要修改资产锁；外置资产变更必须由获授权的维护者执行，并把“运行时派生物审核”和“源工程资料管控”作为两个独立边界。
+
+更新 ITER 18 片时：
+
+1. 在受控环境从获授权来源生成浏览器运行时派生物，不把源 CAD/STEP 或私密元数据复制到工作区；
+2. 同步更新网站模型清单、Worker 精确 allow-list 与 `assets/runtime-assets.lock.json`；
+3. 运行 `npm run assets:verify:tracked` 和 `npm run assets:verify`，确认文件名、字节数和 SHA-256 一致；
+4. 使用 `npm run assets:stage -- --output .runtime-assets/upload-pack` 生成上传区（根目录包含锁文件和 `iter-high-detail-v1/` 子目录）；
+5. 把上传区原样发布到稳定 HTTPS 对象存储，或打包后让使用者从百度网盘手工下载并用 `--source-dir` 导入；
+6. 在另一台无缓存机器完成冷恢复，再提交代码与锁文件。hydration 目录和 `.runtime-assets/` 不提交。
+
+镜像应能通过“根地址 + 锁定文件名”直接 `GET`，不能依赖个人 Cookie 或短期签名链接。下载失败或校验不一致时修复镜像/重新下载，不能关闭校验或随意刷新锁文件。
+
+Sites 发布必须使用没有 `public/models/iter-high-detail-v1/` hydration 目录的干净工作区，默认由 Worker 外部取回，避免静态包超过约 256 MiB。内网自包含构建则先 hydration，并保留该目录让 local-first 路径命中。
+
+Codeup SSH 地址为 `git@codeup.aliyun.com:fiatlux/DT/FusionDigital.git`。增加远端时先运行 `git ls-remote --heads codeup` 和 `git fetch codeup` 审计历史，确认兼容后再推送；禁止为“同步”直接强制覆盖。Git LFS 迁移会重写历史，未经团队迁移评审不得执行。
+
 ## Pull Request 检查清单
 
 - [ ] 改动范围单一，没有无关文件
@@ -118,6 +147,8 @@ npm run research:diagnostics:report
 - [ ] 代码状态没有夸大开放性
 - [ ] 生成文件与源数据同步
 - [ ] `npm run check` 通过
+- [ ] `npm run assets:verify:tracked` 通过；涉及完整资产时 `npm run assets:verify` 也通过
+- [ ] 资产变更已完成另一台机器的冷下载/导入验证，且未提交 hydration/stage 目录
 - [ ] 新链接可访问，或已在说明中记录限制
-- [ ] 没有敏感数据、凭证或版权风险
+- [ ] 没有源 CAD、源 EFIT、敏感数据、凭证、私密镜像地址或版权风险
 - [ ] 页面在键盘和移动端仍可使用

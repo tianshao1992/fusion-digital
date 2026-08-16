@@ -2,9 +2,9 @@
 
 ## Delivery contract
 
-The public viewer keeps the compact all-part preview as its compatibility and
-low-resource path. The optional high-detail mode is an independently verified
-18-file component bundle of roughly 100 MB. Each file owns exactly one stable
+The public viewer publishes no compact fallback geometry. Its reviewed delivery
+is an independently verified 18-file high-detail component bundle of
+98,507,692 bytes (roughly 98.5 MB). Each file owns exactly one stable
 `ITER_PART__*` identity, is Meshopt-compressed, declares its byte length,
 SHA-256, triangle/vertex counts, decoded byte budget and metre-space bounds,
 and remains below 24 MiB.
@@ -14,17 +14,53 @@ vectors use the encoder's verified normalized Int8 representation. The release
 gate requires zero post-decode degenerate or duplicate triangles,
 at most 300 mesh instances per shard, and at most 1,000 for the full bundle.
 
-The large files do not enter the Sites static archive. The manifest exposes
-same-origin `/device-assets/iter-high-detail/v1/*` paths; the Worker resolves only
-an exact allow-list to immutable, content-addressed release assets. Unknown
-paths fail closed. The browser downloads high detail only after explicit user
-selection, uses at most two concurrent transfers (one on lower-memory devices),
-verifies byte length and SHA-256 before parsing, and falls back to the compact
-preview if any component fails.
+The large files do not enter the default Sites static archive. The manifest
+exposes same-origin `/device-assets/iter-high-detail/v1/*` paths; the Worker
+resolves only an exact allow-list to immutable, content-addressed assets.
+Unknown paths fail closed. A hydrated internal deployment checks its verified
+local copy first; otherwise the Worker uses the configured HTTPS release mirror.
+The browser downloads high detail only after explicit user selection, uses at
+most two concurrent transfers (one on lower-memory devices), verifies byte
+length and SHA-256 before parsing, and reports a load failure rather than
+silently substituting unreviewed geometry.
 
-This is visualization geometry, not source CAD. STEP/STP, B-Rep topology, PMI,
-authoritative dimensions, tolerances and manufacturing metadata are not
-published.
+This is visualization geometry, not source CAD. Original EXL-50U or ITER
+STEP/STP, B-Rep topology, PMI, authoritative dimensions, tolerances,
+manufacturing metadata and private assembly records are not published to
+GitHub, Codeup, Git LFS, intranet public downloads or cloud drives. Original
+EFIT archives, G-files, psi grids and unredacted experimental data are also
+outside this package.
+
+## Reproducible asset recovery
+
+`public/models/iter-public-simplified/model-manifest.json` is committed with the
+site. The 18 GLB shards are external runtime assets and are independently locked
+by `assets/runtime-assets.lock.json`; the lock records every immutable filename,
+byte count and SHA-256. A complete local or internal deployment restores them
+with:
+
+```bash
+npm run assets:hydrate
+npm run assets:verify
+```
+
+An internal stable HTTPS mirror can be selected for the local recovery tool via
+`FUSION_ASSET_BASE_URL`. A browser/cloud-drive package such as Baidu Netdisk is
+downloaded and extracted manually, then imported without trusting its archive
+name:
+
+```bash
+npm run assets:hydrate -- --source-dir "/path/to/extracted/iter-high-detail-v1"
+npm run assets:verify
+```
+
+Sites is built from a clean checkout without the hydrated 18-file directory so
+the static archive remains below its roughly 256 MiB limit. The production
+Worker can use `ITER_HIGH_DETAIL_ASSET_BASE_URL` for a stable runtime mirror.
+Internal self-contained deployments hydrate before build and use the local-first
+path. Both modes expose the same reviewed same-origin routes and enforce the same
+allow-list. See [runtime asset bootstrap](./ASSET_BOOTSTRAP.md) for Codeup SSH,
+mirror staging, Baidu manual import and failure recovery.
 
 ## Analytic plasma proxy
 

@@ -6,6 +6,7 @@ import { ITER_HIGH_DETAIL_RELEASE_ASSETS } from "./iter-high-assets.generated";
 export interface Env {
   ASSETS: Fetcher;
   DB: NonNullable<Cloudflare.Env["DB"]>;
+  ITER_HIGH_DETAIL_ASSET_BASE_URL?: string;
   IMAGES: {
     input(stream: ReadableStream): {
       transform(options: Record<string, unknown>): {
@@ -51,6 +52,8 @@ interface IterHighDetailReleaseAsset {
 
 export interface IterHighDetailProxyAsset {
   upstreamUrl: string;
+  filename?: string;
+  localPath?: string;
   bytes: number;
 }
 
@@ -81,6 +84,8 @@ function createControlledIterHighDetailAssets(
     const filename = `${asset.partId}.${asset.sha256}.high.meshopt.glb`;
     result.set(`/device-assets/iter-high-detail/v1/${filename}`, {
       upstreamUrl: `${ITER_HIGH_DETAIL_RELEASE_BASE}/${filename}`,
+      filename,
+      localPath: `/models/iter-high-detail-v1/${filename}`,
       bytes: asset.bytes,
     });
   }
@@ -364,6 +369,53 @@ export async function proxyIterHighDetailAsset(
   });
 }
 
+function normalizeIterHighDetailMirrorBase(value: string | undefined): string | null {
+  if (value === undefined || value === "") return ITER_HIGH_DETAIL_RELEASE_BASE;
+  if (value !== value.trim() || value.includes("?") || value.includes("#")) return null;
+
+  let parsed: URL;
+  try {
+    parsed = new URL(value);
+  } catch {
+    return null;
+  }
+  if (
+    (parsed.protocol !== "https:" && parsed.protocol !== "http:")
+    || !parsed.hostname
+    || parsed.username !== ""
+    || parsed.password !== ""
+    || parsed.search !== ""
+    || parsed.hash !== ""
+    || /^[a-z]+:\/\/[^/]*@/i.test(value)
+  ) return null;
+
+  parsed.pathname = parsed.pathname.replace(/\/+$/, "");
+  return parsed.href.replace(/\/$/, "");
+}
+
+function createIterHighDetailLocalFirstFetch(
+  request: Request,
+  env: Env,
+  asset: IterHighDetailProxyAsset,
+): typeof fetch {
+  return async (_input, init) => {
+    if (!asset.filename || !asset.localPath) {
+      throw new Error("ITER high-detail asset is missing its controlled local path");
+    }
+
+    const localRequest = new Request(new URL(asset.localPath, request.url), init);
+    const localResponse = await env.ASSETS.fetch(localRequest);
+    if (localResponse.status !== 404) return localResponse;
+    await discardUpstreamBody(localResponse);
+
+    const mirrorBase = normalizeIterHighDetailMirrorBase(
+      env.ITER_HIGH_DETAIL_ASSET_BASE_URL,
+    );
+    if (mirrorBase === null) return new Response(null, { status: 503 });
+    return fetch(`${mirrorBase}/${asset.filename}`, init);
+  };
+}
+
 // Image security config. SVG sources with .svg extension auto-skip the
 // optimization endpoint on the client side (served directly, no proxy).
 // To route SVGs through the optimizer (with security headers), set
@@ -409,7 +461,11 @@ const worker = {
 
     const iterHighDetailAsset = controlledIterHighDetailAssets.get(url.pathname);
     if (iterHighDetailAsset && (request.method === "GET" || request.method === "HEAD")) {
-      return proxyIterHighDetailAsset(request, iterHighDetailAsset);
+      return proxyIterHighDetailAsset(
+        request,
+        iterHighDetailAsset,
+        createIterHighDetailLocalFirstFetch(request, env, iterHighDetailAsset),
+      );
     }
 
     const controlledAssetPath = controlledDeviceAssets.get(url.pathname);
@@ -431,7 +487,9 @@ const worker = {
     }
     if (
       url.pathname.startsWith("/device-assets/") ||
-      url.pathname.startsWith("/models/exl50u-interactive/")
+      url.pathname.startsWith("/models/exl50u-interactive/") ||
+      url.pathname === "/models/iter-high-detail-v1" ||
+      url.pathname.startsWith("/models/iter-high-detail-v1/")
     ) {
       return new Response("Not found", {
         status: 404,

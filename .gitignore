@@ -48,3 +48,8 @@ next-env.d.ts
 /outputs/
 /work/
 /research/agent/artifacts/
+
+# Reproducible runtime-model hydration and upload staging. The reviewed ITER
+# derivative is restored from assets/runtime-assets.lock.json, not committed.
+/public/models/iter-high-detail-v1/
+/.runtime-assets/

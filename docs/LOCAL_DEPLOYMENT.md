@@ -1,6 +1,6 @@
 # FusionDigital 本地部署与复现手册
 
-这份手册用于新同事从 GitHub 全新克隆后，在 Windows、macOS 或 Linux 上复现当前网站。以下命令都应在仓库根目录执行；以 `package-lock.json` 为依赖事实基线，不使用全局安装的框架命令。
+这份手册用于新同事从 Codeup 或 GitHub 全新克隆后，在 Windows、macOS 或 Linux 上复现当前网站。以下命令都应在仓库根目录执行；以 `package-lock.json` 为依赖事实基线，不使用全局安装的框架命令。公开运行时资产的完整清单、下载和授权边界见[运行时资产获取与校验](./ASSET_BOOTSTRAP.md)。
 
 ## 1. 能复现到什么程度
 
@@ -10,6 +10,8 @@
 - vinext + Vite + Cloudflare Worker 的开发和生产构建；
 - 本地 D1 schema，以及账户、配额、知识实体、候选审核等数据库表；
 - 配置密钥后的 OpenAI、Anthropic、DeepSeek 与 Kimi/Moonshot 调用链。
+
+Git 克隆已经包含 Paramak、EXL-50U 浏览器模型、公开 EFIT 派生数据和其余网页下载资源。ITER 高清教育可视化的 18 个运行时 GLB 分片独立分发：联网部署可由 Worker 从审核过的 HTTPS 镜像按需获取；离线/自包含部署须先运行资产 hydration。两种模式使用同一个锁文件校验字节数和 SHA-256。
 
 以下能力只在 OpenAI Sites 托管环境中成立，普通本地启动不会自动复现：
 
@@ -29,12 +31,12 @@
 | Node.js | `>=22.13.0` | CI 固定使用 `22.13.0`；推荐使用最新 Node 22 LTS |
 | npm | 随 Node 22 提供 | 必须使用 `npm ci` |
 | 内存 | 建议 8 GB+ | 构建包含较大的知识索引和三维资产 |
-| 可用磁盘 | 建议 2 GB+ | 源码、约 400 MB 依赖、构建物和本地 D1 状态 |
+| 可用磁盘 | 建议 3 GB+ | 源码、约 400 MB 依赖、构建物、本地 D1 状态与可选 ITER hydration |
 
 可选：
 
 - Python 3.12：仅在重建研究数据、Word 报告或科学图时需要；浏览和构建网站不需要。
-- Git LFS：当前提交中的大文件是普通 Git blob，不是 LFS 指针；因此不是运行前置条件。
+- Git LFS：当前恢复合同不依赖 LFS；不要在个人分支自行迁移历史。
 
 先检查版本：
 
@@ -46,25 +48,74 @@ npm --version
 
 如使用 `nvm`、`fnm` 或 Volta，请先切换到 Node 22。不要使用 Node 20 或更早版本。
 
-## 3. 从 GitHub 全新克隆
+## 3. 从 Codeup 或 GitHub 全新克隆
+
+团队协作首选 Codeup SSH。先在个人 Codeup 账户登记本机 SSH **公钥**，然后执行：
+
+```bash
+git clone git@codeup.aliyun.com:fiatlux/DT/FusionDigital.git
+cd FusionDigital
+git rev-parse HEAD
+npm ci
+npm run assets:status
+npm run assets:verify:tracked
+```
+
+需要从 GitHub 恢复时：
 
 ```bash
 git clone https://github.com/tianshao1992/fusion-physics-atlas.git fusion-physics-atlas
 cd fusion-physics-atlas
 git rev-parse HEAD
 npm ci
+npm run assets:status
+npm run assets:verify:tracked
 ```
 
 复现负责人应记录 `git rev-parse HEAD` 的完整 40 位 SHA。`npm ci` 会严格安装锁文件版本，并在依赖与锁文件不一致时直接失败；不要用 `npm install` 悄悄改写 `package-lock.json`。
 
-克隆会下载较大的公开报告、图片和浏览器三维派生模型，仓库传输量明显高于普通前端项目。尤其不要删除以下资产后再判断网站“可运行”：
+克隆会下载较大的公开报告、图片和适合 Git 分发的浏览器三维派生模型，仓库传输量明显高于普通前端项目。尤其不要删除以下资产后再判断网站“可运行”：
 
 - `public/data/`：站内检索和知识图谱快照；
-- `public/models/`：Paramak 与 EXL‑50U 浏览器模型；
+- `public/models/`：Paramak 与 EXL‑50U 浏览器模型，以及 ITER 运行时清单；
+- `public/data/exl50u-efit/`、`public/data/exl50u-efit-v2/`：公开的 EFIT 标量、轮廓、拓扑派生物和分片；
 - `public/figures/`：页面科学图；
 - `public/*.pdf`、`public/*.docx`：公开报告下载。
 
 如克隆中断，优先重新运行 `git fetch` / `git pull --ff-only`，并通过 `git status --short` 确认工作区干净。
+
+### 3.1 补齐 ITER 18 个高清运行时分片
+
+日常联网开发可让 Worker 使用默认外部镜像；需要验证全部公开内容、准备内网部署或断网运行时执行：
+
+```bash
+npm run assets:hydrate
+npm run assets:verify
+```
+
+使用内网稳定 HTTPS 根地址：
+
+```powershell
+# Windows PowerShell
+$env:FUSION_ASSET_BASE_URL = "https://download.example.internal/FusionDigital/iter-high-detail-v1"
+npm run assets:hydrate
+npm run assets:verify
+```
+
+```bash
+# macOS / Linux
+FUSION_ASSET_BASE_URL="https://download.example.internal/FusionDigital/iter-high-detail-v1" npm run assets:hydrate
+npm run assets:verify
+```
+
+百度网盘文件应手工下载并解压，再从本地目录导入；不要把网盘分享页或临时 URL 当作自动下载地址：
+
+```bash
+npm run assets:hydrate -- --source-dir "/path/to/extracted/iter-high-detail-v1"
+npm run assets:verify
+```
+
+脚本只接受 `assets/runtime-assets.lock.json` 声明的精确文件，并核对长度和 SHA-256。`public/models/iter-high-detail-v1/` 是被 Git 忽略的本机恢复目录。原始 EXL-50U / ITER CAD、STEP、B-Rep、PMI 和原始 EFIT/G-file/psi 网格不是这个资产包的一部分，也不得放入 Codeup、网盘或普通内网下载区。
 
 ## 4. 环境变量
 
@@ -95,9 +146,12 @@ ${EDITOR:-vi} .env.local
 | `DEEPSEEK_API_KEY` / `DEEPSEEK_MODEL` | 否 | DeepSeek 服务端密钥及模型 |
 | `MOONSHOT_API_KEY` / `MOONSHOT_MODEL` | 否 | Kimi/Moonshot 服务端密钥及模型 |
 | `MOONSHOT_REGION` | 否 | `cn` 或 `international`；默认 `cn` |
+| `ITER_HIGH_DETAIL_ASSET_BASE_URL` | 否 | ITER 18 片运行时镜像根地址；生产建议稳定 HTTPS，未设时使用审核过的默认源 |
 | `PORT` | 否 | `npm run start` 的端口，默认 `3000` |
 
 线上供应商密钥应在 Sites 的 Runtime environment variables 中设置为 Secret；不要写入 `.openai/hosting.json`。完整说明见 [大模型供应商配置](./LLM_PROVIDER_CONFIGURATION.md)。
+
+`FUSION_ASSET_BASE_URL` 与 `FUSION_ASSET_SOURCE_DIR` 是运行 `assets:hydrate` 时的本机进程变量，不是网站运行时密钥；应按 3.1 节只在当前终端设置。`ITER_HIGH_DETAIL_ASSET_BASE_URL` 才是 Worker 运行时镜像配置，且不能包含账号、口令、query 或 hash。
 
 安全规则：
 
@@ -157,6 +211,7 @@ npm run db:local:verify
 ### 6.1 与 GitHub CI 相同的核心检查
 
 ```bash
+npm run assets:verify:tracked
 npm run check
 ```
 
@@ -183,6 +238,7 @@ npm run check
 - [ ] `/search` 搜索 `EXL-50U` 能返回带来源记录。
 - [ ] `/knowledge-graph` 能加载关系图和筛选器。
 - [ ] `/digital-prototype#prototype-workspace` 能切换 Paramak、EXL‑50U 与 ITER；EXL‑50U 标准/高清模型能显示。
+- [ ] 完整资产模式下，`npm run assets:verify` 通过，ITER 可加载 18 个高清分片并显示部件选择。
 - [ ] 未配置密钥时，“询问 FusionDigital”显示确定性检索回退，而不是白屏或泄漏配置。
 - [ ] `/account` 与 `/research-review` 在没有 Sites 身份时显示登录边界，而不是把客户端输入当作身份。
 
@@ -284,10 +340,19 @@ SIWC 是 Sites 平台能力，不是本仓库自建的本地用户名密码系�
 
 ### 数字样机空白、加载慢或高清模型失败
 
-- 确认 Git 克隆完整，尤其是 `public/models/` 中的 GLB；
+- 先运行 `npm run assets:status` 和 `npm run assets:verify:tracked`，确认 Git 内资产完整；
+- ITER 高清模式还要运行 `npm run assets:hydrate` 和 `npm run assets:verify`；如用内网镜像，根地址必须能直接拼接锁文件中的精确文件名，不能是登录页或网盘分享页；
 - 使用支持 WebGL2 的当前版 Chrome、Edge、Firefox 或 Safari；
 - 关闭会拦截本地大文件请求的浏览器插件；
 - 低内存设备先切换“标准”精度；高清 EXL‑50U 文件约 13 MB，解压后的 GPU 占用远大于下载大小。
+
+### Sites 构建包超过约 256 MiB
+
+不要在已经 hydration 的工作区发布 Sites。把本机 `public/models/iter-high-detail-v1/` 移出仓库，或从干净克隆执行 `npm run assets:verify:tracked` 与构建；Sites 生产默认由 Worker 从外部镜像按需取得 ITER 18 片。不要通过删除 Git 已跟踪页面内容或进一步压缩模型来规避上限。
+
+### Codeup SSH 连接失败
+
+执行 `ssh -Tv git@codeup.aliyun.com`。在 SSH banner 前断开通常是网络出口阻断；`Permission denied (publickey)` 表示应检查个人 Codeup 账户登记的公钥。不要共用或上传私钥，也不要在没有审计远端历史时强制推送。更完整说明见[运行时资产获取与校验](./ASSET_BOOTSTRAP.md#6-codeup-ssh-协作)。
 
 ### `npm run build` 内存不足
 
@@ -317,14 +382,17 @@ OS / architecture:
 Node / npm version:
 Fresh clone: PASS / FAIL
 npm ci: PASS / FAIL
+assets:verify:tracked: PASS / FAIL
+assets:hydrate: PASS / FAIL / intentionally skipped
+assets:verify: PASS / FAIL / intentionally skipped
 npm run db:local:migrate: PASS / FAIL
 npm run db:local:verify: PASS / FAIL
 npm run check: PASS / FAIL
 npm run dev URL:
 npm run build + npm run start: PASS / FAIL
-Search / graph / digital prototype smoke tests: PASS / FAIL
+Search / graph / Paramak / EXL-50U / EFIT / ITER smoke tests: PASS / FAIL
 LLM provider keys configured: provider names only (never record values)
 Known deviations:
 ```
 
-复现通过的最低标准是：指定 SHA 可全新克隆、`npm ci` 和 `npm run check` 成功、开发与本地生产服务器均可打开、公开检索/图谱/数字样机通过冒烟检查，并且工作区最终仍然干净。
+复现通过的最低标准是：指定 SHA 可全新克隆、Git 内公开资产通过 `assets:verify:tracked`、需要完整/离线模式时 ITER 18 片通过 `assets:verify`、`npm ci` 和 `npm run check` 成功、开发与本地生产服务器均可打开、公开检索/图谱/数字样机通过冒烟检查，并且没有受控源 CAD、源 EFIT 或凭证混入工作区。

@@ -4,6 +4,7 @@ FusionDigital 是由新奥聚变人工智能团队维护的聚变数字孪生知
 
 - 在线站点：[fusion-physics-atlas-2026.tianyuanliu1992.chatgpt.site](https://fusion-physics-atlas-2026.tianyuanliu1992.chatgpt.site)
 - GitHub 源码：[tianshao1992/fusion-physics-atlas](https://github.com/tianshao1992/fusion-physics-atlas)
+- Codeup 协作仓库：[fiatlux/DT/FusionDigital](https://codeup.aliyun.com/fiatlux/DT/FusionDigital)（SSH：`git@codeup.aliyun.com:fiatlux/DT/FusionDigital.git`）
 - 开发团队：新奥聚变人工智能团队
 - 联系人：tianshao1992@gmail.com
 
@@ -26,14 +27,21 @@ FusionDigital 是由新奥聚变人工智能团队维护的聚变数字孪生知
 
 ## 快速开始
 
-要求 Node.js `>=22.13.0`。首次克隆后执行：
+要求 Node.js `>=22.13.0`。团队成员可从 Codeup 通过 SSH 克隆；首次恢复全部公开网页内容时执行：
 
 ```bash
+git clone git@codeup.aliyun.com:fiatlux/DT/FusionDigital.git
+cd FusionDigital
 npm ci
+npm run assets:verify:tracked
+npm run assets:hydrate
+npm run assets:verify
 npm run dev
 ```
 
-需要从一台干净电脑完整复现安装、数据库、检查、生产构建与本地启动时，请直接使用[本地部署与复现手册](docs/LOCAL_DEPLOYMENT.md)。
+Git 已包含 Paramak、EXL-50U 浏览器模型、公开 EFIT 派生数据、报告、图片、检索与知识图谱内容。ITER 高清教育可视化的 18 个运行时 GLB 分片（约 98.5 MB）由资产锁从稳定 HTTPS 镜像下载，也可在手工下载百度网盘包后用 `--source-dir` 导入。原始 EXL-50U / ITER CAD、STEP、B-Rep、PMI，以及原始 EFIT/G-file/psi 网格始终留在受控系统，不进入 Codeup、网盘或普通协作包。
+
+需要从一台干净电脑完整复现资产、安装、数据库、检查、生产构建与本地启动时，请使用[运行时资产获取与校验](docs/ASSET_BOOTSTRAP.md)和[本地部署与复现手册](docs/LOCAL_DEPLOYMENT.md)。
 
 常用命令：
 
@@ -43,6 +51,11 @@ npm run build            # 生产构建
 npm test                 # 构建并运行页面渲染测试
 npm run lint             # 代码规范检查
 npm run check            # lint + build + tests
+npm run assets:status    # 查看 Git 内与外置运行时资产状态
+npm run assets:verify:tracked  # 校验随 Git 分发的公开资产
+npm run assets:hydrate   # 下载/导入 ITER 18 个高清运行时分片
+npm run assets:verify    # 校验完整运行时资产集合
+npm run assets:stage -- --output .runtime-assets/upload-pack  # 生成含锁文件与18片子目录的镜像上传区
 npm run research:ai      # 重建智能原生 JSON、CSV 与 TypeScript 数据
 npm run research:audit   # 审计智能原生条目、领域、论文和代码链接结构
 npm run research:report  # 重新生成智能原生 Word 报告（需要 Python）
@@ -100,7 +113,7 @@ public/fusion-control-references.bib
 ## 与 Codex 协同开发
 
 1. 在 Codex 中直接打开本目录作为项目根目录。
-2. 让 Codex 先阅读 `CONTRIBUTING.md`、`docs/ARCHITECTURE.md` 和 `docs/CONTENT_MAINTENANCE.md`。
+2. 让 Codex 先阅读 `CONTRIBUTING.md`、`docs/ARCHITECTURE.md`、`docs/ASSET_BOOTSTRAP.md` 和 `docs/CONTENT_MAINTENANCE.md`。
 3. 每个主题使用独立 Git 分支；多人或多个 Codex 任务并行时，优先使用独立 worktree。
 4. 终端脚本可以与 Codex 同时运行，但不要让两者同时写同一文件或同时重建同一份生成数据。
 5. 所有变更通过 Pull Request 合并，由领域专家和软件维护者分别审核科学口径与实现质量。
@@ -119,28 +132,34 @@ fix/mobile-navigation
 ```text
 app/                         网站路由、组件、样式与页面数据
 public/                      报告、图片、CSV/JSON 与下载资源
+assets/                      运行时资产锁；不存放源 CAD、源 EFIT 或凭证
 research/ai-native/sources/  智能原生调研源数据和研究说明
 research/control/sources/    集成控制任务、PCS、装置档案与专题说明
 research/3d/                 公开三维演示模型生成脚本与可复现说明
 scripts/research/            数据生成、审计与 Word 报告脚本
+scripts/assets/              外置资产状态、下载/导入、校验与镜像暂存工具
 tests/                       服务端渲染与关键内容断言
 docs/                        架构、内容维护与协作说明
 .github/                     CI 与 Pull Request 模板
 .openai/hosting.json         Sites 项目标识和可选资源声明
 ```
 
-详细说明见 [项目架构](docs/ARCHITECTURE.md)、[内容维护手册](docs/CONTENT_MAINTENANCE.md) 和 [贡献指南](CONTRIBUTING.md)。
+详细说明见 [项目架构](docs/ARCHITECTURE.md)、[运行时资产获取与校验](docs/ASSET_BOOTSTRAP.md)、[内容维护手册](docs/CONTENT_MAINTENANCE.md) 和 [贡献指南](CONTRIBUTING.md)。
 
 ## 托管与发布
 
-生产站点由 OpenAI Sites 托管。源码的协作主仓库建议使用组织名下的私有 GitHub 仓库，`main` 只接收通过检查和审核的 Pull Request。Sites 内部远端用于生产发布，不应作为合作伙伴的唯一协作入口，也不要在 Git 配置、脚本或文档中保存短期发布凭证。
+生产站点由 OpenAI Sites 托管；GitHub 与 Codeup 保存同一审核提交，`main` 只接收通过检查和审核的 Pull Request。Sites 内部远端用于生产发布，不应作为合作伙伴的唯一协作入口，也不要在 Git 配置、脚本或文档中保存短期发布凭证。
+
+Sites 默认不把 ITER 18 个高清分片打入静态归档，以避免突破约 256 MiB 上限；Worker 仅按清单中的精确路径从审核过的 HTTPS 镜像读取。内网自包含部署可以先 hydration，再使用 local-first 运行时。两种模式均以 `assets/runtime-assets.lock.json` 的字节数和 SHA-256 为准。
 
 发布原则：
 
 - 合并前运行 `npm run check`。
+- 涉及运行时资产时先运行 `npm run assets:verify:tracked`；完整/内网部署还要运行 `npm run assets:verify`。
 - 调研数据变更同时运行对应生成器：`npm run research:ai` 和/或 `npm run research:control`。
 - 只部署已经推送并通过验证的同一提交。
 - 报告、图片和公开数据不得包含装置敏感参数、访问令牌或未获授权资料。
+- 禁止向任一 Git 远端、LFS、内网公开下载或网盘加入原始 EXL-50U / ITER 工程模型和原始 EFIT 数据。
 
 ## Collaboration in English
 

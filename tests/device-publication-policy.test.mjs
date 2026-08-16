@@ -178,7 +178,11 @@ async function fetchFromWorker(pathname, init) {
   return worker.fetch(
     new Request(`http://localhost${pathname}`, init),
     { ASSETS: { fetch: async (request) => {
-      const path = fileURLToPath(new URL(new URL(request.url).pathname.slice(1), new URL('../public/', import.meta.url)));
+      const assetPathname = new URL(request.url).pathname;
+      if (assetPathname.startsWith('/models/iter-high-detail-v1/')) {
+        return new Response('Not found', { status: 404 });
+      }
+      const path = fileURLToPath(new URL(assetPathname.slice(1), new URL('../public/', import.meta.url)));
       try { return new Response(await readFile(path), { status: 200 }); } catch { return new Response('Not found', { status: 404 }); }
     } } },
     { waitUntil() {}, passThroughOnException() {} },
@@ -899,6 +903,138 @@ test('ITER high-detail proxy enforces its content-addressed HTTP and header boun
     } finally {
       globalThis.fetch = originalFetch;
     }
+  });
+});
+
+test('ITER high-detail delivery is local-first and only uses a strictly configured mirror after a local 404', async (t) => {
+  const manifest = JSON.parse(await readFile(endpointToPublicPath(iterManifestEndpoint), 'utf8'));
+  const component = manifest.assets?.componentBundles?.[0]?.components?.find((item) => item.path.split('/').at(-1)?.startsWith('cs.'));
+  assert.ok(component);
+  const filename = component.path.split('/').at(-1);
+  const localPath = `/models/iter-high-detail-v1/${filename}`;
+  const workerUrl = new URL('../dist/server/index.js', import.meta.url);
+  workerUrl.searchParams.set('iter-local-first-test', `${process.pid}-${Date.now()}`);
+  const { default: worker } = await import(workerUrl.href);
+  const context = { waitUntil() {}, passThroughOnException() {} };
+
+  await t.test('serves the exact local allowlisted file before consulting any mirror', async () => {
+    const originalFetch = globalThis.fetch;
+    let remoteCalls = 0;
+    let localRequest;
+    globalThis.fetch = async () => {
+      remoteCalls += 1;
+      throw new Error('the mirror must not be reached');
+    };
+    try {
+      const response = await worker.fetch(
+        new Request(`http://localhost${component.path}`, {
+          method: 'HEAD',
+          headers: { Authorization: 'Bearer never-forward', Cookie: 'never=forward' },
+        }),
+        {
+          ITER_HIGH_DETAIL_ASSET_BASE_URL: 'not a valid URL',
+          ASSETS: { fetch: async (request) => {
+            localRequest = request;
+            return new Response(null, {
+              status: 200,
+              headers: { 'Content-Length': String(component.bytes), ETag: `"${component.sha256}"` },
+            });
+          } },
+        },
+        context,
+      );
+      assert.equal(new URL(localRequest.url).pathname, localPath);
+      assert.equal(localRequest.method, 'HEAD');
+      assert.equal(localRequest.headers.get('authorization'), null);
+      assert.equal(localRequest.headers.get('cookie'), null);
+      assert.equal(localRequest.headers.get('accept-encoding'), 'identity');
+      assert.equal(response.status, 200);
+      assert.equal(response.body, null);
+      assert.equal(response.headers.get('content-length'), String(component.bytes));
+      assert.equal(remoteCalls, 0);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  await t.test('appends only the allowlisted filename to a valid mirror base', async () => {
+    const originalFetch = globalThis.fetch;
+    const mirrorBase = 'https://assets.internal.example/fusion/iter-v1/';
+    let remoteRequest;
+    let localCalls = 0;
+    globalThis.fetch = async (input, init) => {
+      remoteRequest = { input, init };
+      return new Response(null, {
+        status: 200,
+        headers: { 'Content-Length': String(component.bytes), ETag: `"${component.sha256}"` },
+      });
+    };
+    try {
+      const response = await worker.fetch(
+        new Request(`http://localhost${component.path}`, { method: 'HEAD' }),
+        {
+          ITER_HIGH_DETAIL_ASSET_BASE_URL: mirrorBase,
+          ASSETS: { fetch: async (request) => {
+            localCalls += 1;
+            assert.equal(new URL(request.url).pathname, localPath);
+            return new Response('Not found', { status: 404 });
+          } },
+        },
+        context,
+      );
+      assert.equal(response.status, 200);
+      assert.equal(localCalls, 1);
+      assert.equal(remoteRequest.input, `${mirrorBase}${filename}`);
+      assert.equal(remoteRequest.init.method, 'HEAD');
+      assert.equal(new Headers(remoteRequest.init.headers).get('accept-encoding'), 'identity');
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  await t.test('fails closed for credentials, query, hash, non-http or non-canonical mirror values', async () => {
+    const originalFetch = globalThis.fetch;
+    let remoteCalls = 0;
+    globalThis.fetch = async () => {
+      remoteCalls += 1;
+      return new Response(null, { status: 200, headers: { 'Content-Length': String(component.bytes) } });
+    };
+    try {
+      for (const base of [
+        'ftp://assets.internal.example/iter',
+        'https://user:secret@assets.internal.example/iter',
+        'https://assets.internal.example/iter?token=secret',
+        'https://assets.internal.example/iter#release',
+        '../relative',
+        ' https://assets.internal.example/iter',
+      ]) {
+        const response = await worker.fetch(
+          new Request(`http://localhost${component.path}`, { method: 'HEAD' }),
+          {
+            ITER_HIGH_DETAIL_ASSET_BASE_URL: base,
+            ASSETS: { fetch: async () => new Response('Not found', { status: 404 }) },
+          },
+          context,
+        );
+        assert.equal(response.status, 503, base);
+        assert.match(response.headers.get('cache-control') ?? '', /no-store/i);
+      }
+      assert.equal(remoteCalls, 0);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  await t.test('never exposes the hydrated storage path as a public bypass', async () => {
+    let localCalls = 0;
+    const response = await worker.fetch(
+      new Request(`http://localhost${localPath}`, { method: 'HEAD' }),
+      { ASSETS: { fetch: async () => { localCalls += 1; return new Response(null, { status: 200 }); } } },
+      context,
+    );
+    assert.equal(response.status, 404);
+    assert.equal(localCalls, 0);
+    assert.match(response.headers.get('cache-control') ?? '', /no-store/i);
   });
 });
 
