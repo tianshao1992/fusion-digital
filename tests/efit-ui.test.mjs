@@ -67,8 +67,12 @@ test('EFIT controls, store and Three overlay share one external frame state', as
     'loading and other non-frame state emissions must not rebuild the same 3D EFIT frame');
   assert.match(viewer, /EFIT OVERLAY/);
   assert.match(store, /frameAtOrBeforeIndex/);
-  assert.match(store, /EFIT_PLAYBACK_PRESENTATION_INTERVAL_MS = 1000 \/ 30/);
-  assert.match(store, /EFIT_DEFAULT_PLAYBACK_RATE = 0\.5/);
+  assert.match(store, /EFIT_PLAYBACK_PRESENTATION_FPS = 60/);
+  assert.match(store, /EFIT_PLAYBACK_PRESENTATION_INTERVAL_MS = 1000 \/ EFIT_PLAYBACK_PRESENTATION_FPS/);
+  assert.match(store, /EFIT_DEFAULT_PLAYBACK_RATE = 0\.1/);
+  assert.match(store, /EFIT_PLAYBACK_RATES = Object\.freeze\(\[0\.05, 0\.1, 0\.2, 0\.5, 1\] as const\)/);
+  assert.match(store, /elapsedPresentationSlots/,
+    '60 fps scheduling must retain phase instead of resetting to each display timestamp');
   assert.match(store, /prefetchPlaybackWindow/);
   assert.doesNotMatch(store, /playbackAnchorTimeMs = frame\.timeMs/,
     'network latency must not stretch every 1 ms source frame into a display frame');
@@ -80,9 +84,9 @@ test('EFIT controls, store and Three overlay share one external frame state', as
   assert.match(overlay, /alignment basis must be orthonormal and right-handed/);
 
   const controls = await source('app/components/efit/EfitTimelineControls.tsx');
-  assert.match(controls, /SPEEDS = \[0\.25, 0\.5, 1, 2\]/);
-  assert.doesNotMatch(controls, /SPEEDS = \[[^\]]*4/,
-    'the primary observation control must not expose the overly sparse 4x mode');
+  assert.match(controls, /EFIT_PLAYBACK_RATES\.map/);
+  assert.doesNotMatch(controls, /const SPEEDS/,
+    'the UI and store must share one reviewed playback-rate contract');
 });
 
 test('digital-prototype split layout exposes an accessible and persistent resize contract', async () => {

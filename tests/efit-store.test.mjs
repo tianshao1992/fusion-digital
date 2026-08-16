@@ -9,6 +9,7 @@ import {
   EFIT_DEFAULT_PLAYBACK_RATE,
   EFIT_PLAYBACK_PREFETCH_STEPS,
   EFIT_PLAYBACK_PRESENTATION_INTERVAL_MS,
+  EFIT_PLAYBACK_RATES,
 } from '../app/components/efit/store.ts';
 
 async function localEfitFetch(input, init = {}) {
@@ -136,7 +137,12 @@ test('EFIT playback samples wall-clock time at a fixed cadence, prefetches a bou
   const store = createEfitStore(source, runtime);
   await store.actions.initialize(404);
   assert.equal(store.getSnapshot().playbackRate, EFIT_DEFAULT_PLAYBACK_RATE);
-  assert.equal(EFIT_DEFAULT_PLAYBACK_RATE, 0.5, 'the observation-first default should play a one-second discharge over two seconds');
+  assert.equal(EFIT_DEFAULT_PLAYBACK_RATE, 0.1, 'the observation-first default should play a one-second discharge over ten seconds');
+  assert.deepEqual(EFIT_PLAYBACK_RATES, [0.05, 0.1, 0.2, 0.5, 1]);
+  store.actions.setPlaybackRate(0.01);
+  assert.equal(store.getSnapshot().playbackRate, 0.05, 'the slowest reviewed rate must remain selectable');
+  store.actions.setPlaybackRate(2);
+  assert.equal(store.getSnapshot().playbackRate, 1, 'the transport must not exceed the fastest reviewed rate');
   store.actions.setPlaybackRate(1);
   prefetched.length = 0;
   store.actions.play();
@@ -166,6 +172,63 @@ test('EFIT playback samples wall-clock time at a fixed cadence, prefetches a bou
   await runNext(120);
   assert.equal(store.getSnapshot().currentTimeMs, 120);
 
+  store.actions.pause();
+  store.destroy();
+});
+
+test('EFIT playback preserves a 60 fps phase on a 90 Hz display without duplicate loading renders', async () => {
+  const times = Array.from({ length: 201 }, (_, index) => index);
+  const shot = shotManifest(405, times);
+  const manifest = {
+    schema: 'test',
+    device: 'EXL-50U',
+    psiNLevels: [0.1],
+    geometry: { limiterRzM: { rM: [], zM: [], validPoints: 0 } },
+    shots: [shot],
+  };
+  const pending = [];
+  let now = 0;
+  const runtime = {
+    now: () => now,
+    schedule(callback) {
+      const handle = { callback, cancelled: false };
+      pending.push(handle);
+      return handle;
+    },
+    cancel(handle) {
+      handle.cancelled = true;
+    },
+  };
+  const store = createEfitStore(createInMemoryEfitDataSource(manifest, shot.frames), runtime);
+  await store.actions.initialize(405);
+  const presented = [];
+  const statuses = [];
+  let lastIndex = store.getSnapshot().currentFrameIndex;
+  const unsubscribe = store.subscribe(() => {
+    const next = store.getSnapshot();
+    statuses.push(next.status);
+    if (next.currentFrameIndex !== lastIndex) {
+      lastIndex = next.currentFrameIndex;
+      presented.push(next.currentFrameIndex);
+    }
+  });
+
+  store.actions.play();
+  statuses.length = 0;
+  for (let displayFrame = 1; displayFrame <= 90; displayFrame += 1) {
+    now = displayFrame * (1000 / 90);
+    const handle = pending.shift();
+    assert.ok(handle && !handle.cancelled, 'playback should retain one live rAF chain');
+    handle.callback(now);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  }
+
+  assert.ok(presented.length >= 58 && presented.length <= 61,
+    `a 90 Hz display should average 60 EFIT presentations, received ${presented.length}`);
+  assert.ok(store.getSnapshot().currentTimeMs >= 99 && store.getSnapshot().currentTimeMs <= 100,
+    '0.1x playback should advance about 100 ms of source time per wall-clock second');
+  assert.ok(!statuses.includes('loading-frame'), 'playback should notify React only when the next frame is ready');
+  unsubscribe();
   store.actions.pause();
   store.destroy();
 });

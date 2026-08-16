@@ -49,9 +49,13 @@ export type EfitStore = {
 
 type FrameReason = 'initial' | 'shot' | 'seek' | 'step' | 'playback';
 
-export const EFIT_PLAYBACK_PRESENTATION_INTERVAL_MS = 1000 / 30;
-export const EFIT_PLAYBACK_PREFETCH_STEPS = 4;
-export const EFIT_DEFAULT_PLAYBACK_RATE = 0.5;
+export const EFIT_PLAYBACK_PRESENTATION_FPS = 60;
+export const EFIT_PLAYBACK_PRESENTATION_INTERVAL_MS = 1000 / EFIT_PLAYBACK_PRESENTATION_FPS;
+export const EFIT_PLAYBACK_PREFETCH_STEPS = 8;
+export const EFIT_PLAYBACK_RATES = Object.freeze([0.05, 0.1, 0.2, 0.5, 1] as const);
+export const EFIT_DEFAULT_PLAYBACK_RATE = 0.1;
+
+const EFIT_PLAYBACK_CLOCK_EPSILON_MS = 0.5;
 
 export type EfitPlaybackRuntime = {
   now(): number;
@@ -148,7 +152,10 @@ const DEFAULT_PLAYBACK_RUNTIME: EfitPlaybackRuntime = {
     if (typeof requestAnimationFrame === 'function') {
       return { kind: 'animation-frame', id: requestAnimationFrame(callback) };
     }
-    return { kind: 'timeout', id: setTimeout(() => callback(animationNow()), 32) };
+    return {
+      kind: 'timeout',
+      id: setTimeout(() => callback(animationNow()), Math.ceil(EFIT_PLAYBACK_PRESENTATION_INTERVAL_MS)),
+    };
   },
   cancel(handle) {
     if (!handle || typeof handle !== 'object' || !('kind' in handle) || !('id' in handle)) return;
@@ -241,7 +248,13 @@ export function createEfitStore(
     const sequence = ++requestSequence;
     requestController?.abort();
     requestController = new AbortController();
-    emit({ status: 'loading-frame', error: null });
+    // During playback the previously rendered frame remains valid while the
+    // next reviewed frame resolves. Avoid a second, loading-only React render
+    // on every 60 fps presentation slot. Direct seeks and initial loads retain
+    // their explicit loading state.
+    if (reason !== 'playback' || !snapshot.isPlaying) {
+      emit({ status: 'loading-frame', error: null });
+    }
 
     try {
       const frame = await dataSource.loadFrame(shot, nextIndex, { signal: requestController.signal });
@@ -337,11 +350,18 @@ export function createEfitStore(
     const minTime = timeline[0].timeMs;
     const maxTime = timeline[timeline.length - 1].timeMs;
     const duration = Math.max(0, maxTime - minTime);
-    if (timestamp - playbackLastPresentationClock < EFIT_PLAYBACK_PRESENTATION_INTERVAL_MS) {
+    const elapsedPresentationMs = timestamp - playbackLastPresentationClock;
+    const elapsedPresentationSlots = Math.floor(
+      (elapsedPresentationMs + EFIT_PLAYBACK_CLOCK_EPSILON_MS) / EFIT_PLAYBACK_PRESENTATION_INTERVAL_MS,
+    );
+    if (elapsedPresentationSlots < 1) {
       schedulePlaybackFrame(playbackTick);
       return;
     }
-    playbackLastPresentationClock = timestamp;
+    // Preserve the 60 Hz phase instead of resetting it to an arbitrary rAF
+    // timestamp. This averages to 60 fps on 60/90/120/144 Hz displays and
+    // drops missed slots after a long task rather than bursting catch-up work.
+    playbackLastPresentationClock += elapsedPresentationSlots * EFIT_PLAYBACK_PRESENTATION_INTERVAL_MS;
     let targetTime = playbackAnchorTimeMs + (timestamp - playbackAnchorClock) * snapshot.playbackRate;
 
     if (targetTime > maxTime) {
@@ -424,7 +444,9 @@ export function createEfitStore(
         playbackAnchorClock = now;
         playbackLastPresentationClock = now;
       }
-      emit({ playbackRate: Math.min(16, Math.max(0.1, rate)) });
+      const minimumRate = EFIT_PLAYBACK_RATES[0];
+      const maximumRate = EFIT_PLAYBACK_RATES[EFIT_PLAYBACK_RATES.length - 1];
+      emit({ playbackRate: Math.min(maximumRate, Math.max(minimumRate, rate)) });
       if (snapshot.isPlaying) prefetchPlaybackWindow(playbackAnchorTimeMs);
     },
     setLoop(loop) {

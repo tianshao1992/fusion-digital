@@ -1,17 +1,12 @@
 'use client';
 
-import type { EfitStore, EfitStoreSnapshot } from './store';
+import { EFIT_PLAYBACK_RATES, type EfitStore, type EfitStoreSnapshot } from './store';
 import { useI18n } from '../../i18n';
 
 type EfitTimelineControlsProps = {
   store: EfitStore;
   snapshot: EfitStoreSnapshot;
 };
-
-// Keep observation-oriented rates in the primary control. At the 30 fps
-// presentation cadence, 4x skips roughly 133 ms of source time per update and
-// makes a one-second discharge too sparse to inspect reliably.
-const SPEEDS = [0.25, 0.5, 1, 2] as const;
 
 function formatTime(timeMs: number): string {
   return `${(timeMs / 1000).toFixed(3)} s`;
@@ -89,7 +84,7 @@ export default function EfitTimelineControls({ store, snapshot }: EfitTimelineCo
         <label>
           <span>{t('efit.speed')}</span>
           <select value={snapshot.playbackRate} onChange={(event) => actions.setPlaybackRate(Number(event.currentTarget.value))}>
-            {SPEEDS.map((speed) => <option key={speed} value={speed}>{speed}×</option>)}
+            {EFIT_PLAYBACK_RATES.map((speed) => <option key={speed} value={speed}>{speed.toFixed(speed < 0.1 ? 2 : 1)}×</option>)}
           </select>
         </label>
         <label className="efitLoopToggle">
