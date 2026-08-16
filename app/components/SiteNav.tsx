@@ -12,16 +12,9 @@ type SiteNavProps = {
 };
 
 const links = [
-  { key: 'home', href: '/', label: 'nav.home', priority: 0 },
-  { key: 'physics', href: '/physics', label: 'nav.physics', priority: 1 },
-  { key: 'engineering', href: '/engineering', label: 'nav.engineering', priority: 1 },
-  { key: 'control', href: '/control', label: 'nav.control', priority: 1 },
-  { key: 'diagnostics', href: '/diagnostics', label: 'nav.diagnostics', priority: 2 },
-  { key: 'ai', href: '/ai', label: 'nav.ai', priority: 2 },
-  { key: 'facilities', href: '/facilities', label: 'nav.facilities', priority: 4 },
-  { key: 'prototype', href: '/#prototype-workspace', label: 'nav.prototype', priority: 2 },
-  { key: 'resources', href: '/#resources', label: 'nav.resources', priority: 5 },
-  { key: 'roadmap', href: '/#roadmap', label: 'nav.roadmap', priority: 5 },
+  { key: 'facilities', href: '/facilities', label: 'nav.facilities', priority: 1 },
+  { key: 'prototype', href: '/#prototype-workspace', label: 'nav.prototype', priority: 1 },
+  { key: 'resources', href: '/#resources', label: 'nav.resources', priority: 1 },
 ] as const;
 
 type NavigationLink = (typeof links)[number];
@@ -174,11 +167,13 @@ export default function SiteNav({active = 'home'}: SiteNavProps) {
     aria-current={active === item.key ? 'page' : undefined}
     role={menuItem ? 'menuitem' : undefined}
     tabIndex={menuItem ? -1 : undefined}
+    data-primary-nav={item.key}
     onClick={menuItem ? () => setMoreOpen(false) : undefined}
   >{t(item.label)}</Link>;
 
   const renderKnowledgeMenu = (mobile = false) => <details
     className={mobile ? 'mobileKnowledgeNav' : 'siteKnowledgeNav'}
+    data-primary-nav="knowledge"
     ref={mobile ? undefined : knowledgeRef}
   >
     <summary className={active === 'knowledge' ? 'active' : ''} aria-label={t('nav.knowledgeModules')}>
@@ -234,13 +229,13 @@ export default function SiteNav({active = 'home'}: SiteNavProps) {
             {overflowItems.map((item) => renderLink(item, true))}
           </div>
         </div>}
+        {renderKnowledgeMenu()}
       </div>
       <div className="siteLinksMeasure" ref={measureRef} aria-hidden="true">
         {links.map((item) => <span data-nav-key={item.key} data-nav-active={active === item.key ? 'true' : undefined} key={item.key}>{t(item.label)}</span>)}
         <span data-nav-more>{t('nav.more')}<i>⌄</i></span>
       </div>
     </div>
-    {renderKnowledgeMenu()}
     <div className="siteDesktopPreferences" aria-label={t('preferences.group')}>
       {localeButton()}
       <ThemeSwitcher labels={themeLabels} compact />
@@ -248,7 +243,7 @@ export default function SiteNav({active = 'home'}: SiteNavProps) {
     <Link className={`siteAccountAccess${active === 'account' ? ' active' : ''}`} href="/account" aria-label={t('nav.accountCenter')}>{t('nav.account')}</Link>
     <details className="mobileNav">
       <summary aria-label={t('nav.open')}>{t('nav.menu')}</summary>
-      <div>{links.slice(0, 6).map((item) => renderLink(item))}{renderKnowledgeMenu(true)}{links.slice(6).map((item) => renderLink(item))}<Link className={active === 'account' ? 'active' : ''} href="/account" aria-current={active === 'account' ? 'page' : undefined}>{t('nav.accountCenter')}</Link><div className="siteMobilePreferences" aria-label={t('preferences.group')}>{localeButton('siteLocaleSwitch siteLocaleSwitch--mobile')}<ThemeSwitcher labels={themeLabels} compact /></div></div>
+      <div>{links.map((item) => renderLink(item))}{renderKnowledgeMenu(true)}<Link className={active === 'account' ? 'active' : ''} href="/account" aria-current={active === 'account' ? 'page' : undefined}>{t('nav.accountCenter')}</Link><div className="siteMobilePreferences" aria-label={t('preferences.group')}>{localeButton('siteLocaleSwitch siteLocaleSwitch--mobile')}<ThemeSwitcher labels={themeLabels} compact /></div></div>
     </details>
   </nav>;
 }

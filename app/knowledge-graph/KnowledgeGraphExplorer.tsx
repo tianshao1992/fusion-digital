@@ -14,13 +14,39 @@ type ExplorerProps = {
 };
 
 const domainMeta = {
-  physics: { label: '物理模拟', color: '#ff8738' },
-  engineering: { label: '工程仿真', color: '#ffc857' },
-  control: { label: '集成控制', color: '#65e6d2' },
-  diagnostics: { label: '诊断感知', color: '#4eb8ff' },
-  ai: { label: '智能原生', color: '#bf8cff' },
-  facility: { label: '装置', color: '#f2f4ef' },
+  physics: { label: '物理模拟' },
+  engineering: { label: '工程仿真' },
+  control: { label: '集成控制' },
+  diagnostics: { label: '诊断感知' },
+  ai: { label: '智能原生' },
+  facility: { label: '装置' },
 } as const;
+
+type DomainKey = keyof typeof domainMeta;
+type DomainAppearance = { fill: string; border: string; line: string };
+
+const graphDomainPalettes: Record<ChartThemePalette['mode'], Record<DomainKey, DomainAppearance>> = {
+  dark: {
+    physics: { fill: '#f28c52', border: '#ffd1b0', line: '#d97236' },
+    engineering: { fill: '#e4b84d', border: '#ffe6a0', line: '#b78a28' },
+    control: { fill: '#55cdb2', border: '#aaf3df', line: '#3aa58e' },
+    diagnostics: { fill: '#58aee5', border: '#b5ddf7', line: '#3a80b0' },
+    ai: { fill: '#a77bd6', border: '#dec5f6', line: '#7652a0' },
+    facility: { fill: '#b8c8bf', border: '#f2f7f4', line: '#7d9789' },
+  },
+  light: {
+    physics: { fill: '#e98c5c', border: '#8f3f22', line: '#b44d28' },
+    engineering: { fill: '#dbb553', border: '#7a5a15', line: '#96701f' },
+    control: { fill: '#69bfa9', border: '#236858', line: '#347d6b' },
+    diagnostics: { fill: '#67a9d5', border: '#245f86', line: '#3678a3' },
+    ai: { fill: '#a487c2', border: '#563f74', line: '#735694' },
+    facility: { fill: '#9aafa2', border: '#3f594b', line: '#5b7566' },
+  },
+};
+
+function graphDomainAppearance(domain: DomainKey, mode: ChartThemePalette['mode']) {
+  return graphDomainPalettes[mode][domain];
+}
 
 const typeMeta = {
   research: { label: '研究工作', symbol: 'roundRect' },
@@ -33,14 +59,10 @@ const typeMeta = {
 } as const;
 
 function graphOption(data: GraphQueryResponse, selectedId: string, chartTheme: ChartThemePalette): EChartsCoreOption {
-  const domainColor = (domain: keyof typeof domainMeta) => {
-    if (chartTheme.mode === 'dark') return domainMeta[domain].color;
-    const lightColors: Record<keyof typeof domainMeta, string> = {
-      physics: '#b85b37', engineering: '#9b7633', control: '#49766a', diagnostics: '#426f98', ai: '#75617e', facility: '#52685b',
-    };
-    return lightColors[domain];
-  };
-  const categories = Object.entries(domainMeta).map(([name]) => ({ name, itemStyle: { color: domainColor(name as keyof typeof domainMeta) } }));
+  const categories = Object.entries(domainMeta).map(([name]) => {
+    const appearance = graphDomainAppearance(name as DomainKey, chartTheme.mode);
+    return { name, itemStyle: { color: appearance.fill, borderColor: appearance.border, borderWidth: 1.5 } };
+  });
   const relationCounts = new Map<string, number>();
   for (const edge of data.edges) relationCounts.set(edge.relation, (relationCounts.get(edge.relation) ?? 0) + 1);
   return {
@@ -54,38 +76,76 @@ function graphOption(data: GraphQueryResponse, selectedId: string, chartTheme: C
       textStyle: { color: chartTheme.tooltipText, fontFamily: 'Microsoft YaHei UI, Microsoft YaHei, sans-serif', fontSize: 11 },
       formatter: formatKnowledgeGraphTooltip,
     },
-    legend: [{ data: categories.map((item) => item.name), left: 18, top: 12, textStyle: { color: chartTheme.muted, fontSize: 10 }, itemWidth: 11, itemHeight: 8 }],
+    legend: [{
+      data: categories.map((item) => item.name),
+      left: 18,
+      top: 12,
+      padding: 8,
+      backgroundColor: chartTheme.mode === 'dark' ? 'rgba(7,16,13,.86)' : 'rgba(255,253,248,.94)',
+      borderColor: chartTheme.line,
+      borderWidth: 1,
+      textStyle: { color: chartTheme.mode === 'dark' ? '#dce8e2' : '#3d3935', fontSize: 10, fontWeight: 700 },
+      itemWidth: 11,
+      itemHeight: 8,
+    }],
     series: [{
       type: 'graph',
       layout: data.nodes.length > 20 ? 'force' : 'circular',
       roam: true,
       draggable: true,
-      data: data.nodes.map((node) => ({
-        ...node,
-        name: node.label,
-        entityLabel: node.label,
-        entityDescription: nodeDescription(node),
-        entityType: node.type,
-        entityDomain: node.domain,
-        entityDegree: node.degree,
-        category: Object.keys(domainMeta).indexOf(node.domain),
-        symbol: typeMeta[node.type]?.symbol ?? 'circle',
-        symbolSize: Math.min(42, 10 + Math.sqrt(node.degree + 1) * 3.25) + (node.id === selectedId ? 7 : 0),
-        itemStyle: { color: domainColor(node.domain), borderColor: node.id === selectedId ? chartTheme.text : chartTheme.background, borderWidth: node.id === selectedId ? 3 : 1, shadowBlur: node.id === selectedId ? 18 : 5, shadowColor: domainColor(node.domain) },
-        label: { show: node.id === selectedId || node.degree >= Math.max(8, Math.ceil(data.nodes.length / 18)), color: chartTheme.text, fontSize: 9, formatter: node.label.length > 22 ? `${node.label.slice(0, 21)}…` : node.label },
-      })),
-      links: data.edges.map((edge) => ({
-        ...edge,
-        value: edge.relation,
-        lineStyle: { color: domainColor(edge.domain), opacity: chartTheme.mode === 'dark' ? .22 : .34, width: Math.min(2.2, 0.7 + Math.log2((relationCounts.get(edge.relation) ?? 1) + 1) * .18), curveness: .07 },
-        emphasis: { lineStyle: { opacity: .9, width: 2.2 } },
-      })),
+      data: data.nodes.map((node) => {
+        const selected = node.id === selectedId;
+        const appearance = graphDomainAppearance(node.domain, chartTheme.mode);
+        return {
+          ...node,
+          name: node.label,
+          entityLabel: node.label,
+          entityDescription: nodeDescription(node),
+          entityType: node.type,
+          entityDomain: node.domain,
+          entityDegree: node.degree,
+          category: Object.keys(domainMeta).indexOf(node.domain),
+          symbol: typeMeta[node.type]?.symbol ?? 'circle',
+          symbolSize: Math.min(42, 10 + Math.sqrt(node.degree + 1) * 3.25) + (selected ? 7 : 0),
+          itemStyle: {
+            color: appearance.fill,
+            borderColor: selected ? chartTheme.text : appearance.border,
+            borderWidth: selected ? 4 : 1.5,
+            shadowBlur: selected ? 10 : 0,
+            shadowColor: appearance.line,
+          },
+          label: {
+            show: selected || node.degree >= Math.max(8, Math.ceil(data.nodes.length / 18)),
+            color: chartTheme.mode === 'dark' ? '#f8fbf9' : '#17201b',
+            fontSize: selected ? 10 : 9,
+            fontWeight: 700,
+            lineHeight: 13,
+            textBorderColor: chartTheme.mode === 'dark' ? 'rgba(4,10,8,.96)' : 'rgba(255,253,248,.98)',
+            textBorderWidth: 3,
+            formatter: node.label.length > 22 ? `${node.label.slice(0, 21)}…` : node.label,
+          },
+        };
+      }),
+      links: data.edges.map((edge) => {
+        const appearance = graphDomainAppearance(edge.domain, chartTheme.mode);
+        return {
+          ...edge,
+          value: edge.relation,
+          lineStyle: {
+            color: appearance.line,
+            opacity: chartTheme.mode === 'dark' ? .48 : .6,
+            width: Math.min(2.6, .9 + Math.log2((relationCounts.get(edge.relation) ?? 1) + 1) * .2),
+            curveness: .07,
+          },
+          emphasis: { lineStyle: { opacity: .95, width: 2.6 } },
+        };
+      }),
       categories,
       force: { repulsion: Math.min(560, 155 + data.nodes.length * 1.45), gravity: .045, edgeLength: [58, 135], layoutAnimation: data.nodes.length < 500 },
       edgeSymbol: ['none', 'arrow'],
-      edgeSymbolSize: [0, 4],
-      emphasis: { focus: 'adjacency', scale: 1.35, lineStyle: { opacity: .86 } },
-      blur: { itemStyle: { opacity: .18 }, lineStyle: { opacity: .04 } },
+      edgeSymbolSize: [0, 5],
+      emphasis: { focus: 'adjacency', scale: 1.18, label: { show: true }, lineStyle: { opacity: .95, width: 2.6 } },
+      blur: { itemStyle: { opacity: chartTheme.mode === 'dark' ? .42 : .34 }, lineStyle: { opacity: .14 } },
       labelLayout: { hideOverlap: true },
     }],
     aria: { enabled: true, label: { description: `FusionDigital 知识图谱，当前显示 ${data.nodes.length} 个实体和 ${data.edges.length} 条关系。` } },
@@ -111,6 +171,7 @@ export default function KnowledgeGraphExplorer({ initial, devices }: ExplorerPro
   const requestRef = useRef<AbortController | null>(null);
 
   const selected = data.nodes.find((node) => node.id === selectedId) ?? null;
+  const selectedAppearance = selected ? graphDomainAppearance(selected.domain, chartTheme.mode) : null;
   const selectedRelations = useMemo(() => data.edges.filter((edge) => edge.source === selectedId || edge.target === selectedId).slice(0, 60), [data.edges, selectedId]);
   const nodeIndex = useMemo(() => new Map(data.nodes.map((node) => [node.id, node])), [data.nodes]);
   const option = useMemo(() => graphOption(data, selectedId, chartTheme), [chartTheme, data, selectedId]);
@@ -191,7 +252,11 @@ export default function KnowledgeGraphExplorer({ initial, devices }: ExplorerPro
     <aside className="kgDetail" aria-live="polite">
       <p className="kgPanelIndex">03 / EVIDENCE</p>
       {selected ? <>
-        <div className="kgDetailType" style={{ '--node-accent': domainMeta[selected.domain].color } as React.CSSProperties}><span>{typeMeta[selected.type].label}</span><b>{domainMeta[selected.domain].label}</b></div>
+        <div className="kgDetailType" style={{
+          '--node-accent': selectedAppearance?.fill,
+          '--node-border': selectedAppearance?.border,
+          '--node-accent-ink': chartTheme.mode === 'dark' ? '#07100d' : '#17201b',
+        } as React.CSSProperties}><span>{typeMeta[selected.type].label}</span><b>{domainMeta[selected.domain].label}</b></div>
         <h2>{selected.label}</h2>
         {selected.subtitle && <p className="kgSubtitle">{selected.subtitle}</p>}
         <p className="kgDescription">{nodeDescription(selected)}</p>

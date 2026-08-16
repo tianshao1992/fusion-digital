@@ -59,6 +59,11 @@ test('root shell and navigation wire locale and theme preferences without changi
   assert.match(nav, /href="\/knowledge-graph"/);
   assert.match(backLink, /className="knowledgeBackLink"/);
   assert.match(backLink, /href="\/knowledge-graph"/);
+  const primaryLinks = nav.match(/const links = \[([\s\S]*?)\] as const;/)?.[1] ?? '';
+  assert.match(primaryLinks, /key: 'facilities'/);
+  assert.match(primaryLinks, /key: 'prototype'/);
+  assert.match(primaryLinks, /key: 'resources'/);
+  assert.doesNotMatch(primaryLinks, /key: '(?:home|physics|engineering|control|diagnostics|ai|roadmap)'/);
 });
 
 test('navigation selected state remains bold orange across page and theme overrides', async () => {
@@ -126,7 +131,7 @@ test('Morandi light mode covers legacy heroes, workspaces and filter modules', a
   assert.doesNotMatch(surfaces, /:root\[data-theme='dark'\]/);
 });
 
-test('knowledge graph explorer has a complete light surface and semantic tooltip fields', async () => {
+test('knowledge graph explorer has distinct high-contrast light and dark surfaces with semantic tooltip fields', async () => {
   const [css, explorer, tooltip] = await Promise.all([
     source('app/knowledge-graph/knowledge-graph.css'),
     source('app/knowledge-graph/KnowledgeGraphExplorer.tsx'),
@@ -140,6 +145,18 @@ test('knowledge graph explorer has a complete light surface and semantic tooltip
     ":root[data-theme='light'] .kgDetail",
     ":root[data-theme='light'] .kgAccessibleList",
   ]) assert.ok(css.includes(selector), `missing light knowledge-graph surface: ${selector}`);
+  for (const selector of [
+    ":root[data-theme='dark'] .kgPage",
+    ":root[data-theme='dark'] .kgFilters",
+    ":root[data-theme='dark'] .kgCanvasPanel",
+    ":root[data-theme='dark'] .kgDetail",
+    ":root[data-theme='dark'] .kgAccessibleList",
+  ]) assert.ok(css.includes(selector), `missing dark knowledge-graph surface: ${selector}`);
+  assert.match(explorer, /const graphDomainPalettes/);
+  assert.match(explorer, /textBorderWidth: 3/);
+  assert.match(explorer, /fontWeight: 700/);
+  assert.match(explorer, /chartTheme\.mode === 'dark' \? \.48 : \.6/);
+  assert.match(explorer, /chartTheme\.mode === 'dark' \? \.42 : \.34/);
   assert.match(explorer, /entityLabel: node\.label/);
   assert.match(explorer, /entityDescription: nodeDescription\(node\)/);
   assert.match(explorer, /formatter: formatKnowledgeGraphTooltip/);

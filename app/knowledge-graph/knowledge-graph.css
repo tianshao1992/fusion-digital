@@ -39,6 +39,67 @@
 :root[data-theme='light'] .kgAccessibleList button small{color:var(--color-ink-subtle)}
 :root[data-theme='light'] .kgChartFallback{background:radial-gradient(circle at 50% 45%,var(--color-info-soft),var(--color-canvas) 72%)}
 :root[data-theme='light'] .kgChartFallback span{color:var(--color-ink-muted)}
+
+/* Knowledge graph contrast contract: each theme owns a complete, high-contrast surface. */
+.kgDetailType span{color:var(--node-accent-ink,#07100d)}
+.kgDetailType b{color:var(--node-border,var(--node-accent))}
+
+:root[data-theme='light'] .kgPage{--kg-bg:#f5f0e8;--kg-panel:#fffdfa;--kg-line:#b8aa99;--kg-orange:#9f4128;--kg-cyan:#345e51;--kg-purple:#604b72;background:#f5f0e8;color:#292622}
+:root[data-theme='light'] .kgHero{background:radial-gradient(circle at 76% 22%,#e3ebe5 0,#f0ebe3 33%,#f8f4ed 72%);border-color:#b8aa99}
+:root[data-theme='light'] .kgHero>div>p:last-child,:root[data-theme='light'] .kgDescription{color:#4f4a44}
+:root[data-theme='light'] .kgHero dd,:root[data-theme='light'] .kgLiveStats,:root[data-theme='light'] .kgSubtitle,:root[data-theme='light'] .kgTags span{color:#5f5952}
+:root[data-theme='light'] .kgPrincipleBand{border-color:#b8aa99;background:#eee8df}
+:root[data-theme='light'] .kgPrincipleBand b{color:#4e4943}
+:root[data-theme='light'] .kgWorkspace{border-color:#b8aa99;background:#fffdfa}
+:root[data-theme='light'] .kgFilters,:root[data-theme='light'] .kgDetail{background:#fffdfa;border-color:#b8aa99}
+:root[data-theme='light'] .kgFilters label span,:root[data-theme='light'] .kgNeighborhood label,:root[data-theme='light'] .kgTypeLegend span,:root[data-theme='light'] .kgCanvasTools{color:#5f5952}
+:root[data-theme='light'] .kgFilters input,:root[data-theme='light'] .kgFilters select,:root[data-theme='light'] .kgNeighborhood select,:root[data-theme='light'] .kgCanvasTools select{color:#292622;background:#fffefa;border-color:#a79887}
+:root[data-theme='light'] .kgFilters input::placeholder{color:#746c63}
+:root[data-theme='light'] .kgFilterFoot button,:root[data-theme='light'] .kgFilterFoot a{color:#514b45}
+:root[data-theme='light'] .kgTypeLegend,:root[data-theme='light'] .kgNeighborhood{border-color:#b8aa99}
+:root[data-theme='light'] .kgCanvasPanel{background:radial-gradient(circle at 50% 44%,#fffefa 0,#f6f0e7 74%)}
+:root[data-theme='light'] .kgCanvasHeader,:root[data-theme='light'] .kgCanvasTools{border-color:#b8aa99;background:rgb(255 253 250/.94)}
+:root[data-theme='light'] .kgBadges span{color:#514b45;border-color:#a79887}
+:root[data-theme='light'] .kgRelationList li{border-color:#c9bcad}
+:root[data-theme='light'] .kgRelationList li button span{color:#312e2a}
+:root[data-theme='light'] .kgRelationList>p{color:#625c55}
+:root[data-theme='light'] .kgAccessibleList{border-color:#b8aa99;background:#eee8df}
+:root[data-theme='light'] .kgAccessibleList summary{color:#514b45}
+:root[data-theme='light'] .kgAccessibleList>div{background:#b8aa99}
+:root[data-theme='light'] .kgAccessibleList button{color:#292622;background:#fffdfa}
+:root[data-theme='light'] .kgAccessibleList button small{color:#625c55}
+:root[data-theme='light'] .kgChartFallback{background:radial-gradient(circle at 50% 45%,#e4ece6,#f8f4ed 72%)}
+:root[data-theme='light'] .kgChartFallback span{color:#514b45}
+
+:root[data-theme='dark'] .kgPage{--kg-bg:#07100d;--kg-panel:#101c17;--kg-line:#587568;--kg-orange:#ff9b60;--kg-cyan:#7de8d2;--kg-purple:#c8a1ef;background:#07100d;color:#f5faf7}
+:root[data-theme='dark'] .kgHero{background:radial-gradient(circle at 76% 22%,#254436 0,#102019 34%,#07100d 72%);border-color:#587568}
+:root[data-theme='dark'] .kgHero>div>p:last-child,:root[data-theme='dark'] .kgDescription{color:#c2d0c9}
+:root[data-theme='dark'] .kgHero dl{border-color:#688579;background:rgb(7 16 13/.9)}
+:root[data-theme='dark'] .kgHero dl div{border-color:#4b685b}
+:root[data-theme='dark'] .kgHero dd,:root[data-theme='dark'] .kgLiveStats,:root[data-theme='dark'] .kgSubtitle,:root[data-theme='dark'] .kgTags span{color:#aebfb7}
+:root[data-theme='dark'] .kgPrincipleBand{border-color:#587568;background:#101c17}
+:root[data-theme='dark'] .kgPrincipleBand b{color:#d4dfda}
+:root[data-theme='dark'] .kgWorkspace{border-color:#587568;background:#101c17}
+:root[data-theme='dark'] .kgFilters,:root[data-theme='dark'] .kgDetail{background:#101c17;border-color:#587568}
+:root[data-theme='dark'] .kgFilters label span,:root[data-theme='dark'] .kgNeighborhood label,:root[data-theme='dark'] .kgTypeLegend span,:root[data-theme='dark'] .kgCanvasTools{color:#b6c7bf}
+:root[data-theme='dark'] .kgFilters input,:root[data-theme='dark'] .kgFilters select,:root[data-theme='dark'] .kgNeighborhood select,:root[data-theme='dark'] .kgCanvasTools select{color:#f5faf7;background:#07100d;border-color:#688579}
+:root[data-theme='dark'] .kgFilters input::placeholder{color:#99aca3}
+:root[data-theme='dark'] .kgFilterFoot button,:root[data-theme='dark'] .kgFilterFoot a{color:#b9c9c1}
+:root[data-theme='dark'] .kgTypeLegend,:root[data-theme='dark'] .kgNeighborhood{border-color:#4b685b}
+:root[data-theme='dark'] .kgCanvasPanel{background:radial-gradient(circle at 50% 44%,#13261e 0,#07100d 74%)}
+:root[data-theme='dark'] .kgCanvasHeader,:root[data-theme='dark'] .kgCanvasTools{border-color:#587568;background:rgb(16 28 23/.9)}
+:root[data-theme='dark'] .kgLiveStats b{color:#fff}
+:root[data-theme='dark'] .kgBadges span{color:#bdccc5;border-color:#587568}
+:root[data-theme='dark'] .kgRelationList li{border-color:#3d574b}
+:root[data-theme='dark'] .kgRelationList li button span{color:#eef5f1}
+:root[data-theme='dark'] .kgRelationList>p{color:#a6b9af}
+:root[data-theme='dark'] .kgAccessibleList{border-color:#587568;background:#0b1712}
+:root[data-theme='dark'] .kgAccessibleList summary{color:#bdccc5}
+:root[data-theme='dark'] .kgAccessibleList>div{background:#3d574b}
+:root[data-theme='dark'] .kgAccessibleList button{color:#f0f6f3;background:#101c17}
+:root[data-theme='dark'] .kgAccessibleList button small{color:#a6b9af}
+:root[data-theme='dark'] .kgChartFallback{background:radial-gradient(circle at 50% 45%,#183529,#07100d 72%)}
+:root[data-theme='dark'] .kgChartFallback span{color:#b9c9c1}
 @media(max-width:1320px){.kgWorkspace{grid-template-columns:240px minmax(470px,1fr) 290px}.kgHero{grid-template-columns:1fr}.kgHero dl{max-width:800px}.kgMethod>div{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:980px){.kgWorkspace{grid-template-columns:1fr}.kgFilters,.kgDetail{border:0;border-bottom:1px solid #31493d}.kgFilters form{grid-template-columns:1fr 1fr}.kgFilters form>button{grid-column:1/-1}.kgCanvasPanel{min-height:700px}.kgDetail{border-top:1px solid #31493d}.kgRelationList ul{max-height:360px}.kgAccessibleList>div{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:650px){.kgHero{padding:58px 6vw 48px}.kgHero h1{font-size:38px}.kgHero dl{grid-template-columns:1fr 1fr}.kgHero dl div{min-height:95px;padding:16px}.kgPrincipleBand{justify-content:flex-start}.kgFilters form{grid-template-columns:1fr}.kgWorkspace{min-height:0}.kgCanvasHeader{align-items:flex-start;gap:15px}.kgLiveStats{flex-wrap:wrap;justify-content:flex-end}.kgCanvasPanel .scientificChart{height:590px!important}.kgCanvasTools{flex-wrap:wrap}.kgCanvasTools>span{width:100%}.kgAccessibleList>div{grid-template-columns:1fr}.kgMethod{padding:70px 6vw}.kgMethod>div{grid-template-columns:1fr}.kgMethod article{min-height:210px}}

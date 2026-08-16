@@ -196,12 +196,17 @@ test('server-renders the FusionDigital community portal', async () => {
   assert.match(html, /href="\/engineering"/);
   assert.match(html, /href="\/control"/);
   assert.match(html, /href="\/diagnostics"/);
-  assert.match(html, /href="\/diagnostics"[^>]*>诊断感知<\/a>/);
+  assert.match(html, /href="\/diagnostics"[^>]*data-knowledge-module="diagnostics"[^>]*>[\s\S]*?<span>诊断感知<\/span><\/a>/);
   assert.match(html, /href="\/ai"/);
   assert.match(html, /href="\/facilities"/);
   assert.match(html, /href="\/#prototype-workspace"/);
   assert.equal((html.match(/class="siteKnowledgeHome[^\"]*"[^>]*href="\/knowledge-graph"|href="\/knowledge-graph"[^>]*class="siteKnowledgeHome[^\"]*"/g) ?? []).length, 2, 'desktop and mobile Knowledge menus must link to the graph home');
   assert.equal((html.match(/data-knowledge-module=/g) ?? []).length, 20, 'desktop and mobile Knowledge menus must expose all ten modules');
+  const primaryNavigation = [...html.matchAll(/data-primary-nav="([^"]+)"/g)].map((match) => match[1]);
+  assert.deepEqual(primaryNavigation, [
+    'facilities', 'prototype', 'resources', 'knowledge',
+    'facilities', 'prototype', 'resources', 'knowledge',
+  ], 'desktop and mobile navigation must expose the same four destinations with Knowledge last');
   assert.doesNotMatch(html, /知识智能/);
   assert.match(html, /fusiondigital-mark\.png/);
   assert.match(html, /class="brandWordmark"/);
@@ -501,7 +506,7 @@ test('server-renders the diagnostics and sensing research atlas', async () => {
     'diagnostics-device-task-coverage',
     'diagnostics-digital-twin-roadmap',
   ]) assert.match(html, new RegExp(`data-echart="${chart}"`));
-  assert.match(html, /href="\/diagnostics"[^>]*class="active"[^>]*>诊断感知<\/a>|class="active"[^>]*href="\/diagnostics"[^>]*>诊断感知<\/a>/);
+  assert.match(html, /href="\/diagnostics"[^>]*data-knowledge-module="diagnostics"[^>]*class="active"[^>]*>[\s\S]*?<span>诊断感知<\/span><\/a>/);
   assert.match(html, /target="_blank"/);
   assert.doesNotMatch(html, /METHOD &amp; LIMITS|如何严谨地使用本知识域/);
 });
