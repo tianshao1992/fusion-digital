@@ -29,10 +29,11 @@ test('typed locale registry supports Chinese and English with durable fallback',
 });
 
 test('root shell and navigation wire locale and theme preferences without changing routes', async () => {
-  const [layout, nav, backLink] = await Promise.all([
+  const [layout, nav, backLink, modules] = await Promise.all([
     source('app/layout.tsx'),
     source('app/components/SiteNav.tsx'),
     source('app/components/KnowledgeBackLink.tsx'),
+    source('app/data/knowledge-modules.ts'),
   ]);
 
   assert.match(layout, /await cookies\(\)/);
@@ -53,7 +54,8 @@ test('root shell and navigation wire locale and theme preferences without changi
   assert.match(nav, /event\.key === 'Escape'/);
   assert.match(nav, /aria-current=\{active === item\.key \? 'page' : undefined\}/);
   assert.match(nav, /data-nav-active=\{active === item\.key \? 'true' : undefined\}/);
-  assert.equal((nav.match(/no: '0[1-9]'|no: '10'/g) ?? []).length, 10);
+  assert.match(nav, /import \{ knowledgeModules \} from '\.\.\/data\/knowledge-modules'/);
+  assert.equal((modules.match(/no: '0[1-9]'|no: '10'/g) ?? []).length, 10);
   assert.match(nav, /data-knowledge-module=\{item\.id\}/);
   assert.match(nav, /className="siteKnowledgeGrid"/);
   assert.match(nav, /href="\/knowledge-graph"/);

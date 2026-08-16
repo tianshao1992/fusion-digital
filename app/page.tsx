@@ -6,24 +6,31 @@ import SiteNav from './components/SiteNav';
 import MultiDeviceWorkspace from './digital-prototype/MultiDeviceWorkspace';
 import { parseDeviceCatalog } from './digital-prototype/deviceCatalog';
 import deviceCatalogJson from '../public/models/device-catalog.json';
+import { knowledgeModules } from './data/knowledge-modules';
 import './portal.css';
 import './digital-prototype/prototype.css';
 import './digital-prototype/turntable.css';
 
 const deviceCatalog = parseDeviceCatalog(deviceCatalogJson);
 
-const domains = [
+const domainDefinitions = [
   {id:'01', status:'已开放', title:'物理模拟', en:'PHYSICS', copy:'从平衡、输运、MHD、边界到中子学与整厂系统模型，建立多保真物理地图和集成模拟证据链。', href:'/physics', figure:'/figures/domain-physics-dark-image2.png', meta:'14 类物理域 · 140+ 代码/平台'},
   {id:'02', status:'已开放', title:'工程仿真', en:'ENGINEERING', copy:'把等离子体载荷连接到电磁、结构、磁体、热流体、中子、氚、安全与维护的工程裕量。', href:'/engineering', figure:'/figures/domain-engineering-dark-image2.png', meta:'8 类工程域 · 55 个工具组'},
   {id:'03', status:'已开放', title:'集成控制', en:'INTEGRATED CONTROL', copy:'按 T0–T9 控制任务与装置 / PCS 双索引，连接状态估计、位形、剖面、稳定性、排热、功率、保护、多执行器协调和可验证实时基础设施。', href:'/control', figure:'/figures/domain-integrated-control-dark-image2.png', meta:'控制任务 · 装置 PCS · SIL/HIL · 论文代码'},
   {id:'04', status:'已开放', title:'诊断感知', en:'DIAGNOSTICS & SENSING', copy:'从传感器、几何与标定出发，连接采集质控、反演层析、合成诊断、数据同化与实时决策接口，形成带不确定度和证据链的可信状态。', href:'/diagnostics', figure:'/figures/domain-intelligent-diagnostics-dark-image2.png', meta:'12 类诊断任务 · 97 项关键工作 · 18 个装置档案'},
-  {id:'05', status:'规划中', title:'能量转化', en:'ENERGY CONVERSION', copy:'贯通包层热取出、一次/二次回路、蒸汽或先进发电循环、厂用电与电网，追踪从聚变热功率到稳定净电力的效率与约束。', href:'/#roadmap', figure:'/figures/domain-energy-conversion-dark-image2.png', meta:'包层热取出 · 热力循环 · 厂用电 · 电网'},
-  {id:'06', status:'规划中', title:'辅机模拟', en:'AUXILIARY SYSTEMS', copy:'模拟真空、低温、加热与电流驱动、燃料与氚处理、水冷和电源等辅助系统，评估动态负荷、联锁、故障传播与厂用能耗。', href:'/#roadmap', figure:'/figures/domain-auxiliary-systems-dark-image2.png', meta:'真空 · 低温 · 燃料 · 冷却 · 电源'},
-  {id:'07', status:'规划中', title:'人机交互', en:'HUMAN–MACHINE INTERACTION', copy:'面向运行员、物理学家和工程师组织态势感知、告警解释、方案比较、沉浸式操作与人在回路审批。', href:'/#roadmap', figure:'/figures/domain-human-machine-interaction-dark-image2.png', meta:'态势感知 · 解释交互 · 人在回路'},
-  {id:'08', status:'规划中', title:'数据基座', en:'DATA FOUNDATION', copy:'以装置资产、实验时间轴、模型本体、数据血缘和证据账本支撑一炮一链与跨团队协作。', href:'/#roadmap', figure:'/figures/domain-data-foundation-dark-image2.png', meta:'主数据 · 本体 · 血缘 · 权限'},
-  {id:'09', status:'重点规划', title:'总体集成', en:'WHOLE-PLANT INTEGRATION', copy:'以统一需求、系统架构、接口契约、配置基线和 VVUQ 证据编排各专业孪生，把局部最优连接为可验证的电厂级决策能力。', href:'/#roadmap', figure:'/figures/domain-whole-plant-integration-dark-image2.png', meta:'系统架构 · 协同仿真 · 配置管理 · VVUQ', featured:'fusion'},
+  {id:'05', status:'规划中', title:'能量转化', en:'ENERGY CONVERSION', copy:'贯通包层热取出、一次/二次回路、蒸汽或先进发电循环、厂用电与电网，追踪从聚变热功率到稳定净电力的效率与约束。', href:'/#domain-energy', figure:'/figures/domain-energy-conversion-dark-image2.png', meta:'包层热取出 · 热力循环 · 厂用电 · 电网'},
+  {id:'06', status:'规划中', title:'辅机模拟', en:'AUXILIARY SYSTEMS', copy:'模拟真空、低温、加热与电流驱动、燃料与氚处理、水冷和电源等辅助系统，评估动态负荷、联锁、故障传播与厂用能耗。', href:'/#domain-auxiliary', figure:'/figures/domain-auxiliary-systems-dark-image2.png', meta:'真空 · 低温 · 燃料 · 冷却 · 电源'},
+  {id:'07', status:'规划中', title:'人机交互', en:'HUMAN–MACHINE INTERACTION', copy:'面向运行员、物理学家和工程师组织态势感知、告警解释、方案比较、沉浸式操作与人在回路审批。', href:'/#domain-hmi', figure:'/figures/domain-human-machine-interaction-dark-image2.png', meta:'态势感知 · 解释交互 · 人在回路'},
+  {id:'08', status:'规划中', title:'数据基座', en:'DATA FOUNDATION', copy:'以装置资产、实验时间轴、模型本体、数据血缘和证据账本支撑一炮一链与跨团队协作。', href:'/#domain-data', figure:'/figures/domain-data-foundation-dark-image2.png', meta:'主数据 · 本体 · 血缘 · 权限'},
+  {id:'09', status:'重点规划', title:'总体集成', en:'WHOLE-PLANT INTEGRATION', copy:'以统一需求、系统架构、接口契约、配置基线和 VVUQ 证据编排各专业孪生，把局部最优连接为可验证的电厂级决策能力。', href:'/#domain-integration', figure:'/figures/domain-whole-plant-integration-dark-image2.png', meta:'系统架构 · 协同仿真 · 配置管理 · VVUQ', featured:'fusion'},
   {id:'10', status:'初步开放', title:'智能原生', en:'AI-NATIVE', copy:'把机器学习、深度学习、基础模型和智能体嵌入孪生的观测、预测、规划、执行与持续学习。', href:'/ai', figure:'/figures/domain-ai-native-dark-image2.png', meta:'代理模型 · 基础模型 · 智能体 · AI安全', featured:'ai'},
 ];
+
+const domains = domainDefinitions.map((domain) => {
+  const knowledgeModule = knowledgeModules.find((candidate) => candidate.no === domain.id);
+  if (!knowledgeModule) throw new Error(`Missing shared knowledge module ${domain.id}.`);
+  return { ...domain, moduleId: knowledgeModule.id, href: knowledgeModule.href };
+});
 
 const plantValues = [
   {id:'01', cn:'成本可控', en:'COST-CONTROLLED', copy:'在设计、建造、调试、运行、维护与退役之间提前识别代价，降低全生命周期成本、实体试错和非计划停机。'},
@@ -82,7 +89,7 @@ export default function Home() {
 
     <section className="domainSection" id="domains">
       <div className="sectionIntro"><p className="sectionIndex">02 / KNOWLEDGE DOMAINS</p><h2>从专业孪生走向总体集成与智能原生</h2><p>十个知识域共同覆盖聚变电厂的物理规律、工程系统、运行认知、能量链、辅机、人机协同、数据与智能；总体集成和智能原生作为并列重点，将各域组织为可验证的整体能力。</p></div>
-      <div className="domainCards">{domains.map(domain=><a href={domain.href} key={domain.id} className={`domainCard${domain.featured?` featuredDomainCard ${domain.featured}Featured`:''}`}><div className="domainFigure">{domain.figure?<img src={domain.figure} alt={`${domain.title}核心结构科学信息图`} loading="lazy" decoding="async"/>:<div className="aiDomainVisual" aria-hidden="true"><span className="miniPlasma"/><span className="miniTwin">Δt</span><span className="miniAgent">A</span><i/><i/></div>}<span>{domain.status}</span></div><div className="domainBody"><p>{domain.id} / {domain.en}</p><h3>{domain.title}</h3><div>{domain.copy}</div><b>{domain.meta}</b><i>进入知识域 ↗</i></div></a>)}</div>
+      <div className="domainCards">{domains.map(domain=><a id={`domain-${domain.moduleId}`} href={domain.href} key={domain.id} className={`domainCard${domain.featured?` featuredDomainCard ${domain.featured}Featured`:''}`}><div className="domainFigure">{domain.figure?<img src={domain.figure} alt={`${domain.title}核心结构科学信息图`} loading="lazy" decoding="async"/>:<div className="aiDomainVisual" aria-hidden="true"><span className="miniPlasma"/><span className="miniTwin">Δt</span><span className="miniAgent">A</span><i/><i/></div>}<span>{domain.status}</span></div><div className="domainBody"><p>{domain.id} / {domain.en}</p><h3>{domain.title}</h3><div>{domain.copy}</div><b>{domain.meta}</b><i>{domain.status.includes('开放') ? '进入知识域 ↗' : '查看模块定义 ↗'}</i></div></a>)}</div>
     </section>
 
     <section className="facilityPreview">

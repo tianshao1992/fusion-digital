@@ -2,13 +2,14 @@
 
 import Link from 'next/link';
 import { type KeyboardEvent, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { knowledgeModules } from '../data/knowledge-modules';
 import { useI18n } from '../i18n';
 import BrandWordmark from './BrandWordmark';
 import { selectVisibleNavigationKeys } from './site-nav-layout';
 import { ThemeSwitcher, type ThemeSwitcherLabels } from './theme';
 
 type SiteNavProps = {
-  active?: 'home' | 'physics' | 'engineering' | 'control' | 'diagnostics' | 'ai' | 'facilities' | 'prototype' | 'knowledge' | 'account' | 'platform';
+  active?: 'home' | 'physics' | 'engineering' | 'control' | 'diagnostics' | 'ai' | 'facilities' | 'prototype' | 'knowledge' | 'roadmap' | 'account' | 'platform';
 };
 
 const links = [
@@ -18,19 +19,6 @@ const links = [
 ] as const;
 
 type NavigationLink = (typeof links)[number];
-
-const knowledgeModules = [
-  { id: 'physics', no: '01', zh: '物理模拟', en: 'Physics', href: '/physics' },
-  { id: 'engineering', no: '02', zh: '工程仿真', en: 'Engineering', href: '/engineering' },
-  { id: 'control', no: '03', zh: '集成控制', en: 'Control', href: '/control' },
-  { id: 'diagnostics', no: '04', zh: '诊断感知', en: 'Diagnostics', href: '/diagnostics' },
-  { id: 'energy', no: '05', zh: '能量转化', en: 'Energy', href: '/#domains' },
-  { id: 'auxiliary', no: '06', zh: '辅机模拟', en: 'Auxiliary', href: '/#domains' },
-  { id: 'hmi', no: '07', zh: '人机交互', en: 'Human-machine', href: '/#domains' },
-  { id: 'data', no: '08', zh: '数据基座', en: 'Data', href: '/#domains' },
-  { id: 'integration', no: '09', zh: '总体集成', en: 'Integration', href: '/physics#integrated' },
-  { id: 'ai', no: '10', zh: '智能原生', en: 'AI-native', href: '/ai' },
-] as const;
 
 export default function SiteNav({active = 'home'}: SiteNavProps) {
   const { locale, setLocale, t } = useI18n();
@@ -176,7 +164,7 @@ export default function SiteNav({active = 'home'}: SiteNavProps) {
     data-primary-nav="knowledge"
     ref={mobile ? undefined : knowledgeRef}
   >
-    <summary className={active === 'knowledge' ? 'active' : ''} aria-label={t('nav.knowledgeModules')}>
+    <summary className={active === 'knowledge' || active === 'roadmap' ? 'active' : ''} aria-label={t('nav.knowledgeModules')}>
       {t('nav.knowledge')}<span aria-hidden="true">⌄</span>
     </summary>
     <div className="siteKnowledgeMenu">
@@ -198,6 +186,12 @@ export default function SiteNav({active = 'home'}: SiteNavProps) {
           onClick={() => { if (!mobile && knowledgeRef.current) knowledgeRef.current.open = false; }}
         ><small>{item.no}</small><span>{locale === 'zh-CN' ? item.zh : item.en}</span></Link>)}
       </div>
+      <Link
+        className={`siteKnowledgeRoadmap${active === 'roadmap' ? ' active' : ''}`}
+        href="/roadmap"
+        aria-current={active === 'roadmap' ? 'page' : undefined}
+        onClick={() => { if (!mobile && knowledgeRef.current) knowledgeRef.current.open = false; }}
+      ><span aria-hidden="true">↗</span><b>{t('nav.roadmap')}</b><small>EXL‑50U → EHL‑2</small></Link>
     </div>
   </details>;
 

@@ -200,6 +200,7 @@ test('server-renders the FusionDigital community portal', async () => {
   assert.match(html, /href="\/#prototype-workspace"/);
   assert.equal((html.match(/class="siteKnowledgeHome[^\"]*"[^>]*href="\/knowledge-graph"|href="\/knowledge-graph"[^>]*class="siteKnowledgeHome[^\"]*"/g) ?? []).length, 2, 'desktop and mobile Knowledge menus must link to the graph home');
   assert.equal((html.match(/data-knowledge-module=/g) ?? []).length, 20, 'desktop and mobile Knowledge menus must expose all ten modules');
+  assert.equal((html.match(/class="siteKnowledgeRoadmap[^"]*"[^>]*href="\/roadmap"|href="\/roadmap"[^>]*class="siteKnowledgeRoadmap[^"]*"/g) ?? []).length, 2, 'desktop and mobile Knowledge menus must expose the program roadmap');
   const primaryNavigation = [...html.matchAll(/data-primary-nav="([^"]+)"/g)].map((match) => match[1]);
   assert.deepEqual(primaryNavigation, [
     'facilities', 'prototype', 'resources', 'knowledge',
@@ -281,6 +282,37 @@ test('server-renders the FusionDigital community portal', async () => {
     'domain-ai-native-dark-image2.png',
   ]) assert.match(html, new RegExp(figure.replaceAll('.', '\\.')));
   assert.doesNotMatch(html, /发电系统|POWER SYSTEMS|本质安全/);
+});
+
+test('server-renders the EXL-50U to EHL-2 program roadmap', async () => {
+  const html = await htmlFor('/roadmap');
+  assert.match(html, /从 EXL(?:‑|-)?50U 最小闭环/);
+  assert.match(html, /EHL(?:‑|-)?2 首等离子体虚拟实验/);
+  assert.match(html, /12 周/);
+  assert.match(html, /6 个月/);
+  assert.match(html, /data-echart="phase-1-program-roadmap"/);
+  assert.match(html, /data-echart="phase-2-program-roadmap"/);
+  assert.match(html, /MDSplus \/ 权威档案 \/ 工程时序/);
+  assert.match(html, /IMAS \+ 工程资产合同/);
+  assert.match(html, /实际预电离源 \/ burn-through 模型/);
+  assert.match(html, /问题专用线性响应/);
+  assert.match(html, /17 MW NBI/);
+  assert.match(html, /0 网页控机写通道/);
+  assert.match(html, /展示成功 ≠ 科学验证/);
+  assert.match(html, /数字孪生 ≠ 安全联锁/);
+  assert.equal((html.match(/data-roadmap-module=/g) ?? []).length, 10);
+  assert.match(html, /href="\/#domain-energy"/);
+  assert.match(html, /href="\/#domain-auxiliary"/);
+  assert.match(html, /href="\/#domain-hmi"/);
+  assert.match(html, /href="\/#domain-data"/);
+  assert.match(html, /href="\/#domain-integration"/);
+  assert.match(html, /href="\/knowledge-graph"/);
+  assert.match(html, /href="\/physics"/);
+  assert.match(html, /href="\/engineering"/);
+  assert.match(html, /href="\/control"/);
+  assert.match(html, /href="\/diagnostics"/);
+  assert.match(html, /href="\/ai"/);
+  assert.doesNotMatch(html, /数字孪生替代|大模型直接控制/);
 });
 
 test('standalone knowledge-module pages return to the Knowledge graph', async () => {

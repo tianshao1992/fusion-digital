@@ -28,11 +28,11 @@ const modules: RoadmapModule[] = [
   { id: 'engineering', no: '02', cn: '工程仿真', en: 'ENGINEERING', role: 'core', baselineGates: 2, phaseOneGates: 1, baseline: '已形成工程知识域、CAD 数字样机、多装置目录和部件级显隐、剖切与透明控制。', phaseOne: '冻结 EXL‑50U 几何、材料、载荷和坐标基线，接入首个可校核 CAE 模型及版本化结果场。', gap: '仍缺电磁—热—结构—流体—中子跨域耦合、网格映射、试验校核、寿命模型和持续 VVUQ。', href: '/engineering' },
   { id: 'control', no: '03', cn: '集成控制', en: 'INTEGRATED CONTROL', role: 'support', baselineGates: 1, phaseOneGates: 1, baseline: '已按 T0–T9 建立控制任务、装置 PCS、论文代码与证据等级图谱。', phaseOne: '先定义状态、目标、约束、执行器和回放接口，完成离线场景复现；一期不让 AI 或网页直连装置。', gap: '仍缺实时状态估计、确定性调度、SIL/HIL、故障注入、保护独立性和经授权的闭环验证。', href: '/control' },
   { id: 'diagnostics', no: '04', cn: '诊断感知', en: 'DIAGNOSTICS & SENSING', role: 'core', baselineGates: 2, phaseOneGates: 1, baseline: '已建立 DG0–DG11 诊断知识域、装置档案、反演证据链和 EFIT 位形/信号联动界面。', phaseOne: '把炮号、采样时间、诊断几何、标定、质量标记和反演版本绑定到同一可追溯观测包。', gap: '仍缺更多诊断原始链路、实时质控、多模态融合、合成诊断、漂移监测和盲测验收。', href: '/diagnostics' },
-  { id: 'energy', no: '05', cn: '能量转化', en: 'ENERGY CONVERSION', role: 'future', baselineGates: 0, phaseOneGates: 1, baseline: '总览中已定义包层热取出、热力循环、厂用电和电网的能力边界。', phaseOne: '一期只保留数据与接口占位，明确未来从聚变热源到净电力的输入输出合同。', gap: '仍缺包层与一次/二次回路模型、发电循环、动态效率、储能、厂用电和电网协同的完整验证链。', href: '/#domains' },
-  { id: 'auxiliary', no: '06', cn: '辅机模拟', en: 'AUXILIARY SYSTEMS', role: 'future', baselineGates: 0, phaseOneGates: 1, baseline: '总览中已划定真空、低温、加热、燃料、冷却和电源等辅机范围。', phaseOne: '一期在装置资产和接口模型中预留辅机身份、状态、设定值、联锁与负载字段。', gap: '仍缺设备动态、故障传播、联锁逻辑、维护状态、厂用能耗和整厂瞬态联合仿真。', href: '/#domains' },
-  { id: 'hmi', no: '07', cn: '人机交互', en: 'HUMAN–MACHINE INTERACTION', role: 'support', baselineGates: 2, phaseOneGates: 1, baseline: '已形成知识检索、三维样机、部件控制、炮号切换、动画回放和证据查看界面。', phaseOne: '把模型、数据、时间轴、告警解释和人工审核组织为面向研究人员的统一工作台。', gap: '仍缺运行员任务分析、告警治理、方案比较、沉浸交互、可用性试验和人在回路授权设计。', href: '/#domains' },
-  { id: 'data', no: '08', cn: '数据基座', en: 'DATA FOUNDATION', role: 'core', baselineGates: 2, phaseOneGates: 1, baseline: '已具备模型清单、公开资产边界、派生数据索引、知识快照、来源链接和基础版本合同。', phaseOne: '统一装置/部件/炮号/时间/坐标/单位标识，固化血缘、校验和、权限与模型—结果版本关系。', gap: '仍缺生产级时序与对象存储、主数据治理、流式接入、质量规则、长期归档、灾备和私有空间。', href: '/#domains' },
-  { id: 'integration', no: '09', cn: '总体集成', en: 'WHOLE-PLANT INTEGRATION', role: 'support', baselineGates: 1, phaseOneGates: 2, baseline: '已形成十模块总架构、多装置数字样机入口和跨知识域导航，但尚不是整厂协同仿真器。', phaseOne: '以 EXL‑50U 为样板冻结装置包、场景配置、模型 API、结果合同和证据门，跑通一条可复现数字线程。', gap: '仍缺需求与配置管理、联合求解、跨域时间协调、全局不确定度、变更影响和电厂级 VVUQ。', href: '/#domains' },
+  { id: 'energy', no: '05', cn: '能量转化', en: 'ENERGY CONVERSION', role: 'future', baselineGates: 0, phaseOneGates: 1, baseline: '总览中已定义包层热取出、热力循环、厂用电和电网的能力边界。', phaseOne: '一期只保留数据与接口占位，明确未来从聚变热源到净电力的输入输出合同。', gap: '仍缺包层与一次/二次回路模型、发电循环、动态效率、储能、厂用电和电网协同的完整验证链。', href: '/#domain-energy' },
+  { id: 'auxiliary', no: '06', cn: '辅机模拟', en: 'AUXILIARY SYSTEMS', role: 'future', baselineGates: 0, phaseOneGates: 1, baseline: '总览中已划定真空、低温、加热、燃料、冷却和电源等辅机范围。', phaseOne: '一期在装置资产和接口模型中预留辅机身份、状态、设定值、联锁与负载字段。', gap: '仍缺设备动态、故障传播、联锁逻辑、维护状态、厂用能耗和整厂瞬态联合仿真。', href: '/#domain-auxiliary' },
+  { id: 'hmi', no: '07', cn: '人机交互', en: 'HUMAN–MACHINE INTERACTION', role: 'support', baselineGates: 2, phaseOneGates: 1, baseline: '已形成知识检索、三维样机、部件控制、炮号切换、动画回放和证据查看界面。', phaseOne: '把模型、数据、时间轴、告警解释和人工审核组织为面向研究人员的统一工作台。', gap: '仍缺运行员任务分析、告警治理、方案比较、沉浸交互、可用性试验和人在回路授权设计。', href: '/#domain-hmi' },
+  { id: 'data', no: '08', cn: '数据基座', en: 'DATA FOUNDATION', role: 'core', baselineGates: 2, phaseOneGates: 1, baseline: '已具备模型清单、公开资产边界、派生数据索引、知识快照、来源链接和基础版本合同。', phaseOne: '统一装置/部件/炮号/时间/坐标/单位标识，固化血缘、校验和、权限与模型—结果版本关系。', gap: '仍缺生产级时序与对象存储、主数据治理、流式接入、质量规则、长期归档、灾备和私有空间。', href: '/#domain-data' },
+  { id: 'integration', no: '09', cn: '总体集成', en: 'WHOLE-PLANT INTEGRATION', role: 'support', baselineGates: 1, phaseOneGates: 2, baseline: '已形成十模块总架构、多装置数字样机入口和跨知识域导航，但尚不是整厂协同仿真器。', phaseOne: '以 EXL‑50U 为样板冻结装置包、场景配置、模型 API、结果合同和证据门，跑通一条可复现数字线程。', gap: '仍缺需求与配置管理、联合求解、跨域时间协调、全局不确定度、变更影响和电厂级 VVUQ。', href: '/#domain-integration' },
   { id: 'ai', no: '10', cn: '智能原生', en: 'AI-NATIVE', role: 'core', baselineGates: 2, phaseOneGates: 1, baseline: '已形成证据检索、知识图谱、受控问答、身份/额度设计和智能体候选审核边界。', phaseOne: '让模型只在受治理数据和工具权限内完成检索、分析、代理模型调用与候选建议，并保留人工审核。', gap: '仍缺生产模型服务、评测与漂移监控、私有数据隔离、可靠任务编排、回退机制和独立安全批准。', href: '/ai' },
 ];
 
@@ -253,7 +253,7 @@ export default function PhaseOneRoadmap() {
         <tbody>{modules.map((item) => <tr key={item.id}><td>{item.no}</td><th>{item.cn}</th><td>{roleLabels[item.role]}</td><td>{item.baseline}</td><td>{item.phaseOne}</td><td>{item.gap}</td></tr>)}</tbody>
       </table>
 
-      <footer className="phaseOneBoundary"><b>一期能力边界</b><p>当前路线以“可追溯、可重放、可校核”为交付标准。它不宣称已形成实时装置闭环、核安全结论或完整整厂数字孪生；AI 只生成受约束的分析与候选建议，控制和发布仍经过独立验证与人工授权。</p></footer>
+      <footer className="phaseOneBoundary"><b>一期能力边界</b><p>当前路线以“可追溯、可重放、可校核”为交付标准。它不宣称已形成实时装置闭环、核安全结论或完整整厂数字孪生；AI 只生成受约束的分析与候选建议，控制和发布仍经过独立验证与人工授权。</p><a href="/roadmap">打开 EXL‑50U / EHL‑2 完整两期路线 →</a></footer>
     </section>
   );
 }
