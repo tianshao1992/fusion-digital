@@ -458,7 +458,8 @@ function TokamakCadViewerSession({
       const camera = new THREE.PerspectiveCamera(36, 1, 0.02, 120);
       const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'high-performance' });
       localRenderer = renderer;
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+      const pixelRatioLimit = loadedModel.quality === 'high' && window.innerWidth >= 1200 ? 2 : 1.5;
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, pixelRatioLimit));
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
       renderer.toneMappingExposure = initialSceneTheme.exposure;

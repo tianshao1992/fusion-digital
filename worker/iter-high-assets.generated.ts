@@ -15,8 +15,8 @@ export const ITER_HIGH_DETAIL_RELEASE_ASSETS = [
   { partId: "pf6", sha256: "81c6fbba0bd99cab6b861995bcbbdca8feea7c9cca4a64da645a8201a0f6eeec", bytes: 839244 },
   { partId: "tf-a", sha256: "ca14bb03eac8ac74edcd6861c39c78c80a11bcbbb0f5f12a7cf75f19c3e4222f", bytes: 439032 },
   { partId: "tf-b", sha256: "219e07618fc984e5f6e15f6092c59387cc614beaf273f4a88c73bca2f14ef0a2", bytes: 605324 },
-  { partId: "vv1", sha256: "dfbc4da888f415a62bed27c1dda45700cd191f9d8652f5ddcb28c591c59f5503", bytes: 7979988 },
+  { partId: "vv1", sha256: "524980abe319c144b017a1a20431c06f601f5b48c926b00736737a8723338ce2", bytes: 9950628 },
   { partId: "vv2", sha256: "397d0424f70525335d3d167bce13308dac70d8d6a66ee173b350c05cfadfe5b4", bytes: 7908704 },
-  { partId: "vv3", sha256: "730d0b8df6ca92bef654f5dcf777f37de3065cfbc45cfc0f5ae74753002cc2a2", bytes: 8686100 },
-  { partId: "vv4", sha256: "c3719d8d84ba66ec35d3bff6ba656ccb576d680b353f78feea432d169a08ba53", bytes: 8068908 },
+  { partId: "vv3", sha256: "e1154b634adec00e92203625992e29a882f81bf6e62d97d1423ce6af63034c7f", bytes: 10757064 },
+  { partId: "vv4", sha256: "99bd85facbc174b9cd3f1385e3204c082920bb87adb50cbbb174dece0ae6afda", bytes: 10302684 },
 ] as const;

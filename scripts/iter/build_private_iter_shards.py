@@ -28,7 +28,7 @@ if str(SCRIPT_DIR) not in sys.path:
 import build_private_iter_preview as base  # noqa: E402
 
 
-TOOL_VERSION = "0.9.0"
+TOOL_VERSION = "1.0.0"
 DEFAULT_CANDIDATE_ID = "iter-high-detail-sharded-v1"
 DEFAULT_MAX_SHARD_BYTES = 24 * 1024 * 1024
 DEFAULT_MAX_TOTAL_BYTES = 110_000_000
@@ -42,8 +42,10 @@ ESTIMATE_OVERHEAD_PER_SHARD = 64 * 1024
 RUNTIME_QA_SCRIPT = SCRIPT_DIR / "qa_meshopt_runtime.mjs"
 
 # Detail policy: retain every triangle for already-small education parts and
-# devote the remaining budget to the visually dense cryostat/vessel systems.
-# Total target = 12,280,970 triangles; real geometry, never transfer padding.
+# devote the extra budget to three visually dense vacuum-vessel sectors where
+# the first reviewed web derivative still lost visible openings and internal
+# interfaces. Total target = 13,580,970 triangles; real geometry, never
+# transfer padding.
 HIGH_TARGETS: dict[str, int] = {
     "cs": 1_000_000,
     "pf1": 53_777,
@@ -59,10 +61,10 @@ HIGH_TARGETS: dict[str, int] = {
     "cryostat-top": 173_254,
     "cryostat-upper": 2_100_000,
     "divertor": 293_652,
-    "vv1": 1_200_000,
+    "vv1": 1_650_000,
     "vv2": 1_200_000,
-    "vv3": 1_300_000,
-    "vv4": 1_200_000,
+    "vv3": 1_700_000,
+    "vv4": 1_650_000,
 }
 
 

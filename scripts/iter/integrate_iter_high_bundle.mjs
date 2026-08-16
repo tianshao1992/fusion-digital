@@ -264,6 +264,14 @@ if (!isWithin(canonicalCandidate.toLowerCase(), canonicalShardsRoot.toLowerCase(
 }
 const filenames = (await readdir(shardsRoot)).filter((name) => name.endsWith('.high.manifest.json')).sort();
 if (filenames.length !== 18) throw new Error(`Expected 18 reviewed shard manifests, found ${filenames.length}.`);
+const candidatePackage = JSON.parse(await readFile(path.join(canonicalCandidate, 'manifest.candidate.json'), 'utf8'));
+if (
+  candidatePackage?.schemaVersion !== 'fusiondigital.iter.high-shard-package.v1'
+  || !Number.isSafeInteger(candidatePackage?.budgets?.targetTriangles)
+  || candidatePackage.budgets.targetTriangles <= 0
+) {
+  throw new Error('Reviewed candidate package has no valid versioned triangle budget.');
+}
 
 const publicManifest = JSON.parse(await readFile(publicManifestPath, 'utf8'));
 const publicPartByNode = new Map(
@@ -275,6 +283,8 @@ const components = [];
 const copyJobs = [];
 const seenNodes = new Set();
 const seenDigests = new Set();
+const pipelineVersions = new Set();
+let reviewedTargetTriangles = 0;
 for (const filename of filenames) {
   const record = JSON.parse(await readFile(path.join(shardsRoot, filename), 'utf8'));
   const slugFromFilename = filename.slice(0, -'.high.manifest.json'.length);
@@ -288,6 +298,14 @@ for (const filename of filenames) {
   const failedGate = Object.entries(gates).find(([, status]) => status !== 'PASS');
   if (failedGate) throw new Error(`${slugFromFilename} failed quality gate ${failedGate[0]}=${failedGate[1]}.`);
   const artifact = record.artifact;
+  const pipelineVersion = record.buildFingerprint?.pipelineVersion;
+  const targetTriangles = record.buildFingerprint?.targetTriangles;
+  if (typeof pipelineVersion !== 'string' || pipelineVersion.trim() === ''
+    || !Number.isSafeInteger(targetTriangles) || targetTriangles <= 0) {
+    throw new Error(`${slugFromFilename} has no valid reviewed build fingerprint.`);
+  }
+  pipelineVersions.add(pipelineVersion);
+  reviewedTargetTriangles += targetTriangles;
   const nodeName = record.stableNode;
   const expectedNodeName = `ITER_PART__${slugFromFilename}`;
   if (
@@ -382,6 +400,9 @@ for (const filename of filenames) {
 components.sort((left, right) => left.nodeName.localeCompare(right.nodeName));
 const formats = new Set(components.map((component) => component.format));
 if (formats.size !== 1) throw new Error('All high-detail shards must use one exact reviewed format declaration.');
+if (pipelineVersions.size !== 1 || reviewedTargetTriangles !== candidatePackage.budgets.targetTriangles) {
+  throw new Error('Reviewed shards do not share the candidate package pipeline version and triangle budget.');
+}
 const union = {
   min: [Infinity, Infinity, Infinity],
   max: [-Infinity, -Infinity, -Infinity],
@@ -488,8 +509,8 @@ if (mode === 'apply') {
   publicManifest.generator.conversion = {
     ...publicManifest.generator.conversion,
     converter: 'FusionDigital ITER reviewed component-shard pipeline',
-    converterVersion: '0.9.0 / glTF-Transform 4.4.2',
-    highDetailTargetTriangles: 12_280_970,
+    converterVersion: `${[...pipelineVersions][0]} / glTF-Transform 4.4.2`,
+    highDetailTargetTriangles: reviewedTargetTriangles,
     highDetailPublishedTriangles: bundle.triangles,
     highDetailTransferBytes: bundle.bytes,
     highDetailMeshInstances: bundle.meshInstances,

@@ -36,13 +36,13 @@
         "quality": "high",
         "delivery": "components",
         "format": "glTF 2.0 binary + EXT_meshopt_compression + KHR_mesh_quantization; POSITION normalized Int16 per mesh; NORMAL normalized Int8 (8-bit)",
-        "bytes": 92232312,
-        "triangles": 12256550,
-        "vertices": 15410663,
-        "sceneDrawTriangles": 12256550,
-        "sceneDrawVertices": 15410663,
-        "meshInstances": 892,
-        "decodedGpuBytes": 279017055,
+        "bytes": 98507692,
+        "triangles": 13556553,
+        "vertices": 16337948,
+        "sceneDrawTriangles": 13556553,
+        "sceneDrawVertices": 16337948,
+        "meshInstances": 914,
+        "decodedGpuBytes": 302896614,
         "boundsMetres": {
           "min": [
             -15.011083602905273,
@@ -423,16 +423,16 @@
           {
             "partId": "ITER-VV1",
             "nodeName": "ITER_PART__vv1",
-            "path": "/device-assets/iter-high-detail/v1/vv1.dfbc4da888f415a62bed27c1dda45700cd191f9d8652f5ddcb28c591c59f5503.high.meshopt.glb",
+            "path": "/device-assets/iter-high-detail/v1/vv1.524980abe319c144b017a1a20431c06f601f5b48c926b00736737a8723338ce2.high.meshopt.glb",
             "format": "glTF 2.0 binary + EXT_meshopt_compression + KHR_mesh_quantization; POSITION normalized Int16 per mesh; NORMAL normalized Int8 (8-bit)",
-            "sha256": "dfbc4da888f415a62bed27c1dda45700cd191f9d8652f5ddcb28c591c59f5503",
-            "bytes": 7979988,
-            "triangles": 1199969,
-            "vertices": 1208794,
-            "sceneDrawTriangles": 1199969,
-            "sceneDrawVertices": 1208794,
-            "meshInstances": 3,
-            "decodedGpuBytes": 25251162,
+            "sha256": "524980abe319c144b017a1a20431c06f601f5b48c926b00736737a8723338ce2",
+            "bytes": 9950628,
+            "triangles": 1649966,
+            "vertices": 1498598,
+            "sceneDrawTriangles": 1649966,
+            "sceneDrawVertices": 1498598,
+            "meshInstances": 7,
+            "decodedGpuBytes": 33253632,
             "boundsMetres": {
               "min": [
                 2.112940513324042,
@@ -442,7 +442,7 @@
               "max": [
                 9.878515995312434,
                 6.639473915100098,
-                -0.6096747245147398
+                -0.6097107822488237
               ]
             }
           },
@@ -475,25 +475,25 @@
           {
             "partId": "ITER-VV3",
             "nodeName": "ITER_PART__vv3",
-            "path": "/device-assets/iter-high-detail/v1/vv3.730d0b8df6ca92bef654f5dcf777f37de3065cfbc45cfc0f5ae74753002cc2a2.high.meshopt.glb",
+            "path": "/device-assets/iter-high-detail/v1/vv3.e1154b634adec00e92203625992e29a882f81bf6e62d97d1423ce6af63034c7f.high.meshopt.glb",
             "format": "glTF 2.0 binary + EXT_meshopt_compression + KHR_mesh_quantization; POSITION normalized Int16 per mesh; NORMAL normalized Int8 (8-bit)",
-            "sha256": "730d0b8df6ca92bef654f5dcf777f37de3065cfbc45cfc0f5ae74753002cc2a2",
-            "bytes": 8686100,
-            "triangles": 1299972,
-            "vertices": 1320718,
-            "sceneDrawTriangles": 1299972,
-            "sceneDrawVertices": 1320718,
+            "sha256": "e1154b634adec00e92203625992e29a882f81bf6e62d97d1423ce6af63034c7f",
+            "bytes": 10757064,
+            "triangles": 1699973,
+            "vertices": 1630756,
+            "sceneDrawTriangles": 1699973,
+            "sceneDrawVertices": 1630756,
             "meshInstances": 9,
-            "decodedGpuBytes": 27451692,
+            "decodedGpuBytes": 35002230,
             "boundsMetres": {
               "min": [
                 -6.195433768293891,
                 -6.075099945068359,
-                -10.431687882630015
+                -10.431696454836208
               ],
               "max": [
                 -0.04205652061935883,
-                6.639479859222275,
+                6.639473915100098,
                 -2.5046262233575334
               ]
             }
@@ -501,16 +501,16 @@
           {
             "partId": "ITER-VV4",
             "nodeName": "ITER_PART__vv4",
-            "path": "/device-assets/iter-high-detail/v1/vv4.c3719d8d84ba66ec35d3bff6ba656ccb576d680b353f78feea432d169a08ba53.high.meshopt.glb",
+            "path": "/device-assets/iter-high-detail/v1/vv4.99bd85facbc174b9cd3f1385e3204c082920bb87adb50cbbb174dece0ae6afda.high.meshopt.glb",
             "format": "glTF 2.0 binary + EXT_meshopt_compression + KHR_mesh_quantization; POSITION normalized Int16 per mesh; NORMAL normalized Int8 (8-bit)",
-            "sha256": "c3719d8d84ba66ec35d3bff6ba656ccb576d680b353f78feea432d169a08ba53",
-            "bytes": 8068908,
-            "triangles": 1199967,
-            "vertices": 1214543,
-            "sceneDrawTriangles": 1199967,
-            "sceneDrawVertices": 1214543,
-            "meshInstances": 3,
-            "decodedGpuBytes": 25301475,
+            "sha256": "99bd85facbc174b9cd3f1385e3204c082920bb87adb50cbbb174dece0ae6afda",
+            "bytes": 10302684,
+            "triangles": 1649972,
+            "vertices": 1541986,
+            "sceneDrawTriangles": 1649972,
+            "sceneDrawVertices": 1541986,
+            "meshInstances": 21,
+            "decodedGpuBytes": 33628026,
             "boundsMetres": {
               "min": [
                 -9.878515995312434,
@@ -748,13 +748,13 @@
     "conversion": {
       "pipeline": "reviewed component transforms -> detail-prioritized bounded simplification -> stable identity assembly -> glTF 2.0 Meshopt",
       "converter": "FusionDigital ITER reviewed component-shard pipeline",
-      "converterVersion": "0.9.0 / glTF-Transform 4.4.2",
+      "converterVersion": "1.0.0 / glTF-Transform 4.4.2",
       "targetTriangles": 400000,
       "publishedTriangles": 399499,
-      "highDetailTargetTriangles": 12280970,
-      "highDetailPublishedTriangles": 12256550,
-      "highDetailTransferBytes": 92232312,
-      "highDetailMeshInstances": 892,
+      "highDetailTargetTriangles": 13580970,
+      "highDetailPublishedTriangles": 13556553,
+      "highDetailTransferBytes": 98507692,
+      "highDetailMeshInstances": 914,
       "positionQuantizationBits": 16,
       "normalQuantizationBits": 8,
       "featureAngleDegrees": 55,
@@ -783,11 +783,11 @@
     ],
     "highDetail": {
       "delivery": "18 independently verified immutable component shards",
-      "transferBytes": 92232312,
-      "triangles": 12256550,
-      "sceneDrawTriangles": 12256550,
-      "vertices": 15410663,
-      "decodedGpuBytes": 279017055
+      "transferBytes": 98507692,
+      "triangles": 13556553,
+      "sceneDrawTriangles": 13556553,
+      "vertices": 16337948,
+      "decodedGpuBytes": 302896614
     }
   },
   "disclaimer": "Project-owner-authorized non-engineering browser visualization derivative only. It is not an authoritative ITER engineering model and must not be used for manufacturing, dimensional verification, CAE, physics or safety decisions. The analytic plasma is a Miller-style nominal design-parameter geometry proxy, not EFIT, a real LCFS or a reconstructed equilibrium; it contains no psi grid or X point. This release does not claim ITER Organization endorsement."
