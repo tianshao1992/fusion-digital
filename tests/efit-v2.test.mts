@@ -325,6 +325,23 @@ test('hybrid v2 source exposes legacy and graph shots, finite signal summaries, 
   assert.equal(network.chunkRequests(), 1, 'the verified chunk should be served from the bounded LRU');
 });
 
+test('hybrid v2 source shares one in-flight chunk across concurrent consumers', async () => {
+  const fixtureValue = fixture();
+  const network = mockFetch(fixtureValue.catalog, fixtureValue.compressed, { delayChunk: true });
+  const source = createEfitHybridDataSource({ fetch: network.fetch });
+  await source.loadManifest();
+  const firstController = new AbortController();
+  const secondController = new AbortController();
+  const first = source.loadFrame(20289, 0, { signal: firstController.signal });
+  const second = source.loadFrame(20289, 0, { signal: secondController.signal });
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.equal(network.chunkRequests(), 1, 'concurrent frame consumers must share one chunk request');
+  firstController.abort();
+  secondController.abort();
+  const results = await Promise.allSettled([first, second]);
+  assert.ok(results.every((result) => result.status === 'rejected' && result.reason?.name === 'AbortError'));
+});
+
 test('3D X-point marker semantics keep near-boundary evidence visually inactive', () => {
   assert.equal(efitXPointMarkerRole({ rM: 0.8, zM: 0.2, role: 'primary', evidenceRole: 'near-boundary' }), 'near-boundary-evidence');
   assert.equal(efitXPointMarkerRole({ rM: 0.8, zM: -0.2, role: 'secondary', evidenceOnly: true }), 'near-boundary-evidence');

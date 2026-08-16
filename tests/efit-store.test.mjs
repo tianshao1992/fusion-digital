@@ -4,7 +4,11 @@ import test from 'node:test';
 
 import { createEfitBinaryDataSource, createInMemoryEfitDataSource } from '../app/components/efit/data-source.ts';
 import { buildGapAwareSignalSeries } from '../app/components/efit/signal-series.ts';
-import { createEfitStore } from '../app/components/efit/store.ts';
+import {
+  createEfitStore,
+  EFIT_PLAYBACK_PREFETCH_STEPS,
+  EFIT_PLAYBACK_PRESENTATION_INTERVAL_MS,
+} from '../app/components/efit/store.ts';
 
 async function localEfitFetch(input, init = {}) {
   const pathname = new URL(String(input), 'http://localhost').pathname;
@@ -96,7 +100,7 @@ test('shared EFIT store switches shots and seeks the nearest real source frame',
   store.destroy();
 });
 
-test('EFIT playback commits serially, re-anchors after slow loads and holds the prior frame inside gaps', async () => {
+test('EFIT playback samples wall-clock time at a fixed cadence, prefetches a bounded window and holds gaps', async () => {
   const shot = shotManifest(404, [0, 20, 40, 100, 120]);
   shot.gaps = [{ afterMs: 40, beforeMs: 100, missingFrames: 59 }];
   const manifest = {
@@ -106,7 +110,15 @@ test('EFIT playback commits serially, re-anchors after slow loads and holds the 
     geometry: { limiterRzM: { rM: [], zM: [], validPoints: 0 } },
     shots: [shot],
   };
-  const source = createInMemoryEfitDataSource(manifest, shot.frames);
+  const memorySource = createInMemoryEfitDataSource(manifest, shot.frames);
+  const prefetched = [];
+  const source = {
+    ...memorySource,
+    prefetchFrame(shotId, frameIndex) {
+      prefetched.push([shotId, frameIndex]);
+      memorySource.prefetchFrame?.(shotId, frameIndex);
+    },
+  };
   const pending = [];
   let now = 0;
   const runtime = {
@@ -122,7 +134,10 @@ test('EFIT playback commits serially, re-anchors after slow loads and holds the 
   };
   const store = createEfitStore(source, runtime);
   await store.actions.initialize(404);
+  prefetched.length = 0;
   store.actions.play();
+  assert.ok(prefetched.length <= EFIT_PLAYBACK_PREFETCH_STEPS);
+  assert.ok(new Set(prefetched.map(([, index]) => index)).size <= EFIT_PLAYBACK_PREFETCH_STEPS);
 
   const runNext = async (timestamp) => {
     now = timestamp;
@@ -132,16 +147,20 @@ test('EFIT playback commits serially, re-anchors after slow loads and holds the 
     await new Promise((resolve) => setTimeout(resolve, 0));
   };
 
+  await runNext(EFIT_PLAYBACK_PRESENTATION_INTERVAL_MS - 1);
+  assert.equal(store.getSnapshot().currentTimeMs, 0, 'no frame is presented before the fixed display interval');
   await runNext(40);
   assert.equal(store.getSnapshot().currentTimeMs, 40);
   assert.equal(pending.length, 1, 'the next callback is scheduled only after the frame commit settles');
 
-  // A large wall-clock delay after the commit must not cause catch-up to 120 ms.
-  // The 70 ms source target falls in the 40–100 ms gap and must hold 40 ms.
+  // The 70 ms tick is below the next presentation interval. At 80 ms the
+  // source target lies in the declared 40–100 ms gap and must still hold 40.
   await runNext(70);
   assert.equal(store.getSnapshot().currentTimeMs, 40);
-  await runNext(100);
-  assert.equal(store.getSnapshot().currentTimeMs, 100);
+  await runNext(80);
+  assert.equal(store.getSnapshot().currentTimeMs, 40);
+  await runNext(120);
+  assert.equal(store.getSnapshot().currentTimeMs, 120);
 
   store.actions.pause();
   store.destroy();
@@ -261,4 +280,28 @@ test('EFIT loader validates Content-Range and honors AbortSignal for cached fram
   const controller = new AbortController();
   controller.abort();
   await assert.rejects(source.loadFrame(18301, 0, { signal: controller.signal }), { name: 'AbortError' });
+});
+
+test('EFIT loader retains a full 200 response when a static host ignores byte ranges', async () => {
+  const requestCounts = new Map();
+  const fullBodyFetch = async (input) => {
+    const pathname = new URL(String(input), 'http://localhost').pathname;
+    const filename = pathname.replace('/device-data/exl50u-efit/', '');
+    requestCounts.set(filename, (requestCounts.get(filename) ?? 0) + 1);
+    if (filename === 'index.json') {
+      const payload = await readFile(new URL('../public/data/exl50u-efit/index.json', import.meta.url));
+      return new Response(payload, { status: 200, headers: { 'Content-Type': 'application/json' } });
+    }
+    if (!['shot-18303.bin', 'shot-18303-topology.bin'].includes(filename)) return new Response('Not found', { status: 404 });
+    const payload = await readFile(new URL(`../public/data/exl50u-efit/${filename}`, import.meta.url));
+    return new Response(payload, {
+      status: 200,
+      headers: { 'Content-Type': 'application/octet-stream', 'Content-Length': String(payload.byteLength) },
+    });
+  };
+  const source = createEfitBinaryDataSource({ fetch: fullBodyFetch });
+  await source.loadFrame(18303, 0);
+  await source.loadFrame(18303, 1);
+  assert.equal(requestCounts.get('shot-18303.bin'), 1, 'the complete contour binary should be downloaded once');
+  assert.equal(requestCounts.get('shot-18303-topology.bin'), 1, 'the complete topology binary should be downloaded once');
 });

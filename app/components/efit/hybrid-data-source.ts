@@ -57,6 +57,25 @@ function checkAborted(signal?: AbortSignal): void {
   if (signal?.aborted) throw abortError();
 }
 
+function raceWithAbort<T>(promise: Promise<T>, signal?: AbortSignal): Promise<T> {
+  checkAborted(signal);
+  if (!signal) return promise;
+  return new Promise<T>((resolve, reject) => {
+    const abort = () => reject(abortError());
+    signal.addEventListener('abort', abort, { once: true });
+    promise.then(
+      (value) => {
+        signal.removeEventListener('abort', abort);
+        resolve(value);
+      },
+      (error) => {
+        signal.removeEventListener('abort', abort);
+        reject(error);
+      },
+    );
+  });
+}
+
 function record(value: unknown, label: string): JsonRecord {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error(`${label} must be an object.`);
   return value as JsonRecord;
@@ -670,6 +689,7 @@ export function createEfitHybridDataSource(options: EfitHybridDataSourceOptions 
   let catalogPromise: Promise<NormalizedGraphCatalog> | null = null;
   let legacyFallback = false;
   const chunkCache = new Map<string, readonly EfitTopologyGraphFramePayload[]>();
+  const pendingChunks = new Map<string, Promise<readonly EfitTopologyGraphFramePayload[]>>();
 
   async function loadCatalog(request: EfitDataRequest = {}): Promise<NormalizedGraphCatalog> {
     checkAborted(request.signal);
@@ -725,51 +745,57 @@ export function createEfitHybridDataSource(options: EfitHybridDataSourceOptions 
       return cached;
     }
     checkAborted(signal);
-    const response = await fetcher(chunk.url, { signal });
-    if (!response.ok) throw new Error(`EFIT topology chunk request failed (${response.status}).`);
-    if (response.headers.get('content-encoding')) {
-      throw new Error('EFIT topology proxy must expose raw gzip bytes for hash verification.');
-    }
-    const responseType = response.headers.get('content-type')?.split(';', 1)[0].trim().toLowerCase();
-    if (responseType !== chunk.contentType) throw new Error('EFIT topology chunk content type mismatch.');
-    const responseLength = response.headers.get('content-length');
-    if (responseLength !== null && Number(responseLength) !== chunk.byteLength) throw new Error('EFIT topology chunk Content-Length mismatch.');
-    const bytes = await response.arrayBuffer();
-    checkAborted(signal);
-    if (bytes.byteLength !== chunk.byteLength) throw new Error('EFIT topology chunk byte length mismatch.');
-    const gzipHeader = new Uint8Array(bytes, 0, Math.min(bytes.byteLength, 10));
-    if (gzipHeader.length < 10 || gzipHeader[0] !== 0x1f || gzipHeader[1] !== 0x8b || gzipHeader[2] !== 8
-      || gzipHeader[4] !== 0 || gzipHeader[5] !== 0 || gzipHeader[6] !== 0 || gzipHeader[7] !== 0) {
-      throw new Error('EFIT topology chunk is not the reviewed deterministic raw-gzip format.');
-    }
-    if (await digestHex(bytes) !== chunk.sha256) throw new Error('EFIT topology chunk SHA-256 mismatch.');
-    checkAborted(signal);
-    const decoded = await decompressGzipText(bytes, signal);
-    const lines = decoded.split(/\r?\n/).filter((line) => line.length > 0);
-    if (lines.length !== chunk.frameCount) throw new Error('EFIT topology chunk frame count mismatch.');
-    const descriptor = shot.topologyGraph;
-    if (!descriptor) throw new Error(`Shot ${shot.shot} has no topology graph descriptor.`);
-    const frames = lines.map((line, localIndex) => {
-      if (new TextEncoder().encode(line).byteLength > 4 * 1024 * 1024) {
-        throw new Error(`EFIT topology chunk frame ${localIndex} exceeds its line budget.`);
+    const existing = pendingChunks.get(key);
+    if (existing) return raceWithAbort(existing, signal);
+    // Chunk fetch/decode is shared by playback, lookahead and scrubbing. A
+    // caller abort only stops waiting; it must not cancel work another caller
+    // is already relying on or cause duplicate network/decompression work.
+    const pending = (async () => {
+      const response = await fetcher(chunk.url);
+      if (!response.ok) throw new Error(`EFIT topology chunk request failed (${response.status}).`);
+      if (response.headers.get('content-encoding')) {
+        throw new Error('EFIT topology proxy must expose raw gzip bytes for hash verification.');
       }
-      let value: unknown;
-      try {
-        value = JSON.parse(line) as unknown;
-      } catch {
-        throw new Error(`EFIT topology chunk contains invalid NDJSON at frame ${localIndex}.`);
+      const responseType = response.headers.get('content-type')?.split(';', 1)[0].trim().toLowerCase();
+      if (responseType !== chunk.contentType) throw new Error('EFIT topology chunk content type mismatch.');
+      const responseLength = response.headers.get('content-length');
+      if (responseLength !== null && Number(responseLength) !== chunk.byteLength) throw new Error('EFIT topology chunk Content-Length mismatch.');
+      const bytes = await response.arrayBuffer();
+      if (bytes.byteLength !== chunk.byteLength) throw new Error('EFIT topology chunk byte length mismatch.');
+      const gzipHeader = new Uint8Array(bytes, 0, Math.min(bytes.byteLength, 10));
+      if (gzipHeader.length < 10 || gzipHeader[0] !== 0x1f || gzipHeader[1] !== 0x8b || gzipHeader[2] !== 8
+        || gzipHeader[4] !== 0 || gzipHeader[5] !== 0 || gzipHeader[6] !== 0 || gzipHeader[7] !== 0) {
+        throw new Error('EFIT topology chunk is not the reviewed deterministic raw-gzip format.');
       }
-      return validateEfitTopologyGraphFrame(value, {
-        geometry,
-        numericQuantization,
-        expectedShotId: descriptor.shotId,
-        expectedReconstructionId: descriptor.reconstructionId,
-        expectedTimeMs: chunk.availableTimesMs[localIndex],
+      if (await digestHex(bytes) !== chunk.sha256) throw new Error('EFIT topology chunk SHA-256 mismatch.');
+      const decoded = await decompressGzipText(bytes);
+      const lines = decoded.split(/\r?\n/).filter((line) => line.length > 0);
+      if (lines.length !== chunk.frameCount) throw new Error('EFIT topology chunk frame count mismatch.');
+      const descriptor = shot.topologyGraph;
+      if (!descriptor) throw new Error(`Shot ${shot.shot} has no topology graph descriptor.`);
+      const frames = lines.map((line, localIndex) => {
+        if (new TextEncoder().encode(line).byteLength > 4 * 1024 * 1024) {
+          throw new Error(`EFIT topology chunk frame ${localIndex} exceeds its line budget.`);
+        }
+        let value: unknown;
+        try {
+          value = JSON.parse(line) as unknown;
+        } catch {
+          throw new Error(`EFIT topology chunk contains invalid NDJSON at frame ${localIndex}.`);
+        }
+        return validateEfitTopologyGraphFrame(value, {
+          geometry,
+          numericQuantization,
+          expectedShotId: descriptor.shotId,
+          expectedReconstructionId: descriptor.reconstructionId,
+          expectedTimeMs: chunk.availableTimesMs[localIndex],
+        });
       });
-    });
-    checkAborted(signal);
-    rememberChunk(key, frames);
-    return frames;
+      rememberChunk(key, frames);
+      return frames;
+    })().finally(() => pendingChunks.delete(key));
+    pendingChunks.set(key, pending);
+    return raceWithAbort(pending, signal);
   }
 
   async function loadFrame(shotId: EfitShotId, frameIndex: number, request: EfitDataRequest = {}): Promise<EfitFrame> {

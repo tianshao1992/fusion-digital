@@ -67,7 +67,10 @@ test('EFIT controls, store and Three overlay share one external frame state', as
     'loading and other non-frame state emissions must not rebuild the same 3D EFIT frame');
   assert.match(viewer, /EFIT OVERLAY/);
   assert.match(store, /frameAtOrBeforeIndex/);
-  assert.match(store, /playbackAnchorTimeMs = frame\.timeMs/);
+  assert.match(store, /EFIT_PLAYBACK_PRESENTATION_INTERVAL_MS = 1000 \/ 30/);
+  assert.match(store, /prefetchPlaybackWindow/);
+  assert.doesNotMatch(store, /playbackAnchorTimeMs = frame\.timeMs/,
+    'network latency must not stretch every 1 ms source frame into a display frame');
   assert.match(store, /closestFrameIndex/);
   assert.match(dataSource, /Range: `bytes=\$\{start\}-\$\{start \+ length - 1\}`/);
   assert.match(dataSource, /maxCachedFrames/);

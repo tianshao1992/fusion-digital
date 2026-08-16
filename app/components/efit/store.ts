@@ -49,6 +49,9 @@ export type EfitStore = {
 
 type FrameReason = 'initial' | 'shot' | 'seek' | 'step' | 'playback';
 
+export const EFIT_PLAYBACK_PRESENTATION_INTERVAL_MS = 1000 / 30;
+export const EFIT_PLAYBACK_PREFETCH_STEPS = 4;
+
 export type EfitPlaybackRuntime = {
   now(): number;
   schedule(callback: (timestamp: number) => void): unknown;
@@ -168,6 +171,7 @@ export function createEfitStore(
   let playbackHandle: unknown | null = null;
   let playbackAnchorClock = 0;
   let playbackAnchorTimeMs = 0;
+  let playbackLastPresentationClock = 0;
 
   function emit(patch: Partial<EfitStoreSnapshot>): void {
     if (destroyed) return;
@@ -187,6 +191,33 @@ export function createEfitStore(
 
   function schedulePlaybackFrame(callback: (timestamp: number) => void): void {
     playbackHandle = playbackRuntime.schedule(callback);
+  }
+
+  function wrappedPlaybackTime(timeMs: number, timeline: readonly EfitFrameSummary[]): number {
+    if (timeline.length === 0) return timeMs;
+    const minTime = timeline[0].timeMs;
+    const maxTime = timeline[timeline.length - 1].timeMs;
+    const duration = maxTime - minTime;
+    if (timeMs <= maxTime || !snapshot.loop || duration <= 0) return Math.min(maxTime, Math.max(minTime, timeMs));
+    return minTime + ((timeMs - minTime) % duration);
+  }
+
+  function prefetchPlaybackWindow(fromTimeMs: number): void {
+    const shot = snapshot.activeShot;
+    const timeline = snapshot.timeline;
+    if (shot === null || timeline.length === 0 || !dataSource.prefetchFrame) return;
+    const indices = new Set<number>();
+    for (let step = 1; step <= EFIT_PLAYBACK_PREFETCH_STEPS; step += 1) {
+      const futureTime = wrappedPlaybackTime(
+        fromTimeMs + step * EFIT_PLAYBACK_PRESENTATION_INTERVAL_MS * snapshot.playbackRate,
+        timeline,
+      );
+      indices.add(frameAtOrBeforeIndex(timeline, futureTime));
+    }
+    indices.delete(snapshot.currentFrameIndex);
+    indices.forEach((index) => {
+      if (index >= 0) dataSource.prefetchFrame?.(shot, index);
+    });
   }
 
   async function commitFrame(frameIndex: number, reason: FrameReason, requestedTimeMs?: number): Promise<void> {
@@ -224,12 +255,11 @@ export function createEfitStore(
         gapNotice: crossedGap(gaps, previousTime, frame.timeMs, requestedTimeMs),
       });
       if (reason === 'playback') {
-        // Decode/network time must not advance the displayed discharge. Re-anchor
-        // after the committed frame so playback never catches up by jumping over
-        // an arbitrary number of real frames after a slow load.
-        playbackAnchorClock = playbackRuntime.now();
-        playbackAnchorTimeMs = frame.timeMs;
-        dataSource.prefetchFrame?.(shot, nextIndex + 1 < timeline.length ? nextIndex + 1 : 0);
+        // Source timelines are commonly sampled at 1 kHz while a display can
+        // present only tens of frames per second. Preserve wall-clock discharge
+        // time and deterministically sample the latest published frame at the
+        // fixed presentation cadence instead of stretching every source frame.
+        prefetchPlaybackWindow(requestedTimeMs ?? frame.timeMs);
       } else {
         dataSource.prefetchFrame?.(shot, Math.min(timeline.length - 1, nextIndex + 1));
       }
@@ -306,6 +336,11 @@ export function createEfitStore(
     const minTime = timeline[0].timeMs;
     const maxTime = timeline[timeline.length - 1].timeMs;
     const duration = Math.max(0, maxTime - minTime);
+    if (timestamp - playbackLastPresentationClock < EFIT_PLAYBACK_PRESENTATION_INTERVAL_MS) {
+      schedulePlaybackFrame(playbackTick);
+      return;
+    }
+    playbackLastPresentationClock = timestamp;
     let targetTime = playbackAnchorTimeMs + (timestamp - playbackAnchorClock) * snapshot.playbackRate;
 
     if (targetTime > maxTime) {
@@ -342,6 +377,7 @@ export function createEfitStore(
       if (snapshot.isPlaying) {
         playbackAnchorClock = playbackRuntime.now();
         playbackAnchorTimeMs = snapshot.currentTimeMs;
+        playbackLastPresentationClock = playbackAnchorClock;
       }
     },
     async seekFrame(frameIndex) {
@@ -349,6 +385,7 @@ export function createEfitStore(
       if (snapshot.isPlaying) {
         playbackAnchorClock = playbackRuntime.now();
         playbackAnchorTimeMs = snapshot.currentTimeMs;
+        playbackLastPresentationClock = playbackAnchorClock;
       }
     },
     async step(delta) {
@@ -364,7 +401,9 @@ export function createEfitStore(
       if (atEnd && snapshot.loop) void commitFrame(0, 'playback');
       playbackAnchorClock = playbackRuntime.now();
       playbackAnchorTimeMs = atEnd && snapshot.loop ? snapshot.timeline[0].timeMs : snapshot.currentTimeMs;
+      playbackLastPresentationClock = playbackAnchorClock;
       emit({ isPlaying: true });
+      prefetchPlaybackWindow(playbackAnchorTimeMs);
       schedulePlaybackFrame(playbackTick);
     },
     pause() {
@@ -382,8 +421,10 @@ export function createEfitStore(
         const now = playbackRuntime.now();
         playbackAnchorTimeMs += (now - playbackAnchorClock) * snapshot.playbackRate;
         playbackAnchorClock = now;
+        playbackLastPresentationClock = now;
       }
       emit({ playbackRate: Math.min(16, Math.max(0.1, rate)) });
+      if (snapshot.isPlaying) prefetchPlaybackWindow(playbackAnchorTimeMs);
     },
     setLoop(loop) {
       emit({ loop });

@@ -619,8 +619,15 @@ async function fetchBytes(
   start: number,
   length: number,
   signal?: AbortSignal,
+  wholeFileCache?: Map<string, ArrayBuffer>,
+  expectedFileBytes?: number,
 ): Promise<ArrayBuffer> {
   checkAborted(signal);
+  const cachedFile = wholeFileCache?.get(url);
+  if (cachedFile) {
+    if (cachedFile.byteLength < start + length) throw new Error('Cached EFIT binary is shorter than the requested byte interval.');
+    return cachedFile.slice(start, start + length);
+  }
   const response = await fetcher(url, {
     headers: { Range: `bytes=${start}-${start + length - 1}` },
     signal,
@@ -641,7 +648,17 @@ async function fetchBytes(
     }
     return bytes;
   }
-  if (bytes.byteLength >= start + length) return bytes.slice(start, start + length);
+  if (bytes.byteLength >= start + length) {
+    // Some static hosts advertise byte ranges but answer every Range request
+    // with the complete object. Retain that response once so a dense timeline
+    // does not download the same multi-megabyte binary for every frame.
+    if (wholeFileCache
+      && expectedFileBytes !== undefined
+      && bytes.byteLength === expectedFileBytes) {
+      wholeFileCache.set(url, bytes);
+    }
+    return bytes.slice(start, start + length);
+  }
   if (bytes.byteLength === length) return bytes;
   throw new Error('Server did not honor the EFIT byte range request.');
 }
@@ -912,6 +929,7 @@ export function createEfitBinaryDataSource(options: EfitBinaryDataSourceOptions 
   let manifestPromise: Promise<EfitManifest> | null = null;
   const verifiedFiles = new Map<EfitShotId, Promise<void>>();
   const verifiedTopologyFiles = new Map<EfitShotId, Promise<void>>();
+  const wholeFileCache = new Map<string, ArrayBuffer>();
   const frameCache = new Map<string, EfitFrame>();
   const pendingFrames = new Map<string, Promise<EfitFrame>>();
 
@@ -944,7 +962,15 @@ export function createEfitBinaryDataSource(options: EfitBinaryDataSourceOptions 
   async function verifyFile(shot: LegacyShotManifest, signal?: AbortSignal): Promise<void> {
     let pending = verifiedFiles.get(shot.shot);
     if (!pending) {
-      pending = fetchBytes(fetcher, shot.binary.url, 0, shot.binary.fileHeaderBytes)
+      pending = fetchBytes(
+        fetcher,
+        shot.binary.url,
+        0,
+        shot.binary.fileHeaderBytes,
+        undefined,
+        wholeFileCache,
+        shot.binary.byteLength,
+      )
         .then((header) => {
           const view = new DataView(header);
           if (readMagic(header) !== EXPECTED_MAGIC) throw new Error(`Shot ${shot.shot} has an unknown EFIT binary format.`);
@@ -981,7 +1007,15 @@ export function createEfitBinaryDataSource(options: EfitBinaryDataSourceOptions 
     if (!binary) return;
     let pending = verifiedTopologyFiles.get(shot.shot);
     if (!pending) {
-      pending = fetchBytes(fetcher, binary.url, 0, binary.fileHeaderBytes)
+      pending = fetchBytes(
+        fetcher,
+        binary.url,
+        0,
+        binary.fileHeaderBytes,
+        undefined,
+        wholeFileCache,
+        binary.byteLength,
+      )
         .then((header) => {
           const view = new DataView(header);
           const hashPrefix = Array.from(new Uint8Array(header, 48, 16))
@@ -1049,6 +1083,9 @@ export function createEfitBinaryDataSource(options: EfitBinaryDataSourceOptions 
           shot.binary.url,
           summary.offsetBytes,
           shot.binary.frameStrideBytes,
+          undefined,
+          wholeFileCache,
+          shot.binary.byteLength,
         ),
         shot.topologyBinary && topologyOffset !== undefined
           ? fetchBytes(
@@ -1056,6 +1093,9 @@ export function createEfitBinaryDataSource(options: EfitBinaryDataSourceOptions 
             shot.topologyBinary.url,
             topologyOffset,
             shot.topologyBinary.frameStrideBytes,
+            undefined,
+            wholeFileCache,
+            shot.topologyBinary.byteLength,
           )
           : Promise.resolve<ArrayBuffer | undefined>(undefined),
       ]);
