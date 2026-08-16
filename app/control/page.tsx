@@ -69,7 +69,7 @@ export default function ControlPage() {
   const directCode = controlResearchItems.filter((item) => item.code.some((code) => code.status === 'official-direct')).length;
 
   return <main className="controlPage">
-    <SiteNav active="knowledge" />
+    <SiteNav active="control" />
 
     <header className="controlHero">
       <div className="controlHeroCopy">
@@ -92,6 +92,12 @@ export default function ControlPage() {
         <figcaption>控制闭环：诊断、状态估计、任务控制、执行器协调与 PCS。</figcaption>
       </figure>
     </header>
+
+    <section className="controlThesis">
+      <p className="controlIndex">00 / CENTRAL THESIS</p>
+      <h2>集成控制不是把所有回路写进一个程序；它是在多时间尺度下，<span>让状态、目标、约束、执行器、事件和责任保持一致。</span></h2>
+      <div><p>控制任务回答“如何改变等离子体与装置状态”；PCS 回答“算法怎样按时、按配置、按权限运行”；数字孪生再增加真实状态同步、模型适用域、预测—实测残差、版本和验证证据。</p><p>因此本专题不以算法名称排序，而以控制对象与证据排序，并从装置角度反查每项能力是否真正进入实时、影子、闭环或常规运行。</p></div>
+    </section>
 
     <section className="controlArchitecture" id="architecture">
       <div className="controlSectionHead"><p className="controlIndex">01 / CLOSED-LOOP ARCHITECTURE</p><h2>同一闭环，六类信息和两条权威链</h2><p>诊断与设备数据形成状态，任务控制提出物理效果请求，监督/分配层处理共享执行器和约束，PCS 确定性执行；数字孪生在旁路完成预测、回放和证据更新。独立机器保护/安全链可以消费相同状态，却不能被孪生或优化器取代。</p></div>
@@ -134,6 +140,7 @@ export default function ControlPage() {
       <div className="controlRoadmapGrid">{roadmap.map((item)=><article key={item[0]}><header><span>{item[0]}</span><b>{item[1]}</b></header><p>{item[2]}</p><footer>{item[3]}</footer></article>)}</div>
     </section>
 
+    <section className="controlClosing"><div><p className="controlIndex">07 / NEXT</p><h2>从控制研究进入平台实施。</h2></div><div><Link href="/platform#contracts">查看统一数据契约与技术路线 →</Link></div></section>
     <SiteFooter />
   </main>;
 }

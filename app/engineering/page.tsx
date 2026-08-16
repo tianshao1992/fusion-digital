@@ -1,5 +1,4 @@
 'use client';
-import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import SiteFooter from '../components/SiteFooter';
 import SiteNav from '../components/SiteNav';
@@ -59,8 +58,10 @@ export default function Engineering(){
   const categories=useMemo(()=>['全部',...Array.from(new Set(tools.map(t=>t.category)))],[tools]);
   const filtered=useMemo(()=>tools.filter(t=>(category==='全部'||t.category===category)&&Object.values(t).join(' ').toLowerCase().includes(query.toLowerCase())),[tools,query,category]);
   return <main className="engPage">
-    <SiteNav active="knowledge" />
-    <header id="top" className="engHero"><div><p className="eyebrow">TOKAMAK ENGINEERING SIMULATION · 2026</p><h1>把等离子体载荷，转化为<br/><em>可验证的工程裕量</em></h1><p className="lede">系统梳理 CAD/PLM、电磁、结构、磁体失超、热流体、中子学、包层、氚、安全和远程维护工具。</p><div className="engActions"><a className="primary" href="/tokamak-engineering-simulation-report.pdf">下载 PDF 报告</a><a href="/tokamak-engineering-simulation-report.docx">下载 Word</a><Link href="/knowledge-graph/modules/engineering">返回工程模块</Link><a href="#tools">浏览工具矩阵</a></div><div className="engStats"><span><b>55</b> 工具/平台组</span><span><b>87</b> 来源</span><span><b>12</b> 开放全文</span><span><b>15</b> 解释图</span></div></div><img src="/figures/engineering-tokamak-systems-nature.png" alt="Tokamak工程系统科学剖面图"/></header>
+    <SiteNav active="engineering" />
+    <header id="top" className="engHero"><div><p className="eyebrow">TOKAMAK ENGINEERING SIMULATION · 2026</p><h1>把等离子体载荷，转化为<br/><em>可验证的工程裕量</em></h1><p className="lede">一份面向数字孪生与系统工程团队的 Tokamak 工程仿真图谱：系统梳理 CAD/PLM、电磁、结构、磁体失超、热流体、中子学、包层、氚、安全和远程维护工具，并解释它们如何与物理模型和实验数据闭环。</p><div className="engActions"><a className="primary" href="/tokamak-engineering-simulation-report.pdf">下载 PDF 报告</a><a href="/tokamak-engineering-simulation-report.docx">下载 Word</a><a href="#tools">浏览工具矩阵</a></div><div className="engStats"><span><b>55</b> 工具/平台组</span><span><b>87</b> 来源</span><span><b>12</b> 开放全文</span><span><b>15</b> 解释图</span></div></div><img src="/figures/engineering-tokamak-systems-nature.png" alt="Tokamak工程系统科学剖面图"/></header>
+
+    <section className="engThesis"><p className="eyebrow">核心判断</p><h2>没有一个“Tokamak 工程超级求解器”。应统一资产身份、场景、载荷和证据，而不是强迫所有方程进入一个网格。</h2><div className="engThree"><article><b>物理给载荷</b><p>平衡、线圈电流、VDE/CQ/halo、热流、中子和粒子源必须成为带版本、坐标、单位、时间和不确定度的正式载荷包。</p></article><article><b>工程算响应</b><p>不同求解器负责涡流、温度、应力、压降、核热、活化、氚库存、失效概率和维修时间，并回传可执行限值。</p></article><article><b>实验定可信度</b><p>磁探针、应变、IR、量热、模型线圈、HHF、活化箔、停机剂量和维护训练共同决定模型是否适合指定决策。</p></article></div></section>
 
     <section className="loadThread"><div className="sectionHead"><p className="eyebrow">01 / 载荷数字线程</p><h2>求解器之前，先把物理与工程的接口做对</h2><p>工程风险往往来自错误 CAD 版本、坐标/单位不一致、过度平滑、非守恒映射或缺失的不确定度，而不是有限元迭代器本身。</p></div><img src="/figures/engineering-load-chain-nature.png" alt="物理载荷到工程决策数字线程"/><div className="principles"><span>资产身份</span><span>单位与坐标</span><span>力/能量/电流守恒</span><span>数值误差预算</span><span>适用域与 UQ</span></div></section>
 

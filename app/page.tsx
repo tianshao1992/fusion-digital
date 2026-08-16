@@ -1,5 +1,6 @@
-import Link from 'next/link';
 import BrandWordmark from './components/BrandWordmark';
+import FusionTwinSystemMap from './components/FusionTwinSystemMap';
+import PhaseOneRoadmap from './components/PhaseOneRoadmap';
 import SiteFooter from './components/SiteFooter';
 import SiteNav from './components/SiteNav';
 import MultiDeviceWorkspace from './digital-prototype/MultiDeviceWorkspace';
@@ -10,6 +11,19 @@ import './digital-prototype/prototype.css';
 import './digital-prototype/turntable.css';
 
 const deviceCatalog = parseDeviceCatalog(deviceCatalogJson);
+
+const domains = [
+  {id:'01', status:'已开放', title:'物理模拟', en:'PHYSICS', copy:'从平衡、输运、MHD、边界到中子学与整厂系统模型，建立多保真物理地图和集成模拟证据链。', href:'/physics', figure:'/figures/domain-physics-dark-image2.png', meta:'14 类物理域 · 140+ 代码/平台'},
+  {id:'02', status:'已开放', title:'工程仿真', en:'ENGINEERING', copy:'把等离子体载荷连接到电磁、结构、磁体、热流体、中子、氚、安全与维护的工程裕量。', href:'/engineering', figure:'/figures/domain-engineering-dark-image2.png', meta:'8 类工程域 · 55 个工具组'},
+  {id:'03', status:'已开放', title:'集成控制', en:'INTEGRATED CONTROL', copy:'按 T0–T9 控制任务与装置 / PCS 双索引，连接状态估计、位形、剖面、稳定性、排热、功率、保护、多执行器协调和可验证实时基础设施。', href:'/control', figure:'/figures/domain-integrated-control-dark-image2.png', meta:'控制任务 · 装置 PCS · SIL/HIL · 论文代码'},
+  {id:'04', status:'已开放', title:'诊断感知', en:'DIAGNOSTICS & SENSING', copy:'从传感器、几何与标定出发，连接采集质控、反演层析、合成诊断、数据同化与实时决策接口，形成带不确定度和证据链的可信状态。', href:'/diagnostics', figure:'/figures/domain-intelligent-diagnostics-dark-image2.png', meta:'12 类诊断任务 · 97 项关键工作 · 18 个装置档案'},
+  {id:'05', status:'规划中', title:'能量转化', en:'ENERGY CONVERSION', copy:'贯通包层热取出、一次/二次回路、蒸汽或先进发电循环、厂用电与电网，追踪从聚变热功率到稳定净电力的效率与约束。', href:'/#roadmap', figure:'/figures/domain-energy-conversion-dark-image2.png', meta:'包层热取出 · 热力循环 · 厂用电 · 电网'},
+  {id:'06', status:'规划中', title:'辅机模拟', en:'AUXILIARY SYSTEMS', copy:'模拟真空、低温、加热与电流驱动、燃料与氚处理、水冷和电源等辅助系统，评估动态负荷、联锁、故障传播与厂用能耗。', href:'/#roadmap', figure:'/figures/domain-auxiliary-systems-dark-image2.png', meta:'真空 · 低温 · 燃料 · 冷却 · 电源'},
+  {id:'07', status:'规划中', title:'人机交互', en:'HUMAN–MACHINE INTERACTION', copy:'面向运行员、物理学家和工程师组织态势感知、告警解释、方案比较、沉浸式操作与人在回路审批。', href:'/#roadmap', figure:'/figures/domain-human-machine-interaction-dark-image2.png', meta:'态势感知 · 解释交互 · 人在回路'},
+  {id:'08', status:'规划中', title:'数据基座', en:'DATA FOUNDATION', copy:'以装置资产、实验时间轴、模型本体、数据血缘和证据账本支撑一炮一链与跨团队协作。', href:'/#roadmap', figure:'/figures/domain-data-foundation-dark-image2.png', meta:'主数据 · 本体 · 血缘 · 权限'},
+  {id:'09', status:'重点规划', title:'总体集成', en:'WHOLE-PLANT INTEGRATION', copy:'以统一需求、系统架构、接口契约、配置基线和 VVUQ 证据编排各专业孪生，把局部最优连接为可验证的电厂级决策能力。', href:'/#roadmap', figure:'/figures/domain-whole-plant-integration-dark-image2.png', meta:'系统架构 · 协同仿真 · 配置管理 · VVUQ', featured:'fusion'},
+  {id:'10', status:'初步开放', title:'智能原生', en:'AI-NATIVE', copy:'把机器学习、深度学习、基础模型和智能体嵌入孪生的观测、预测、规划、执行与持续学习。', href:'/ai', figure:'/figures/domain-ai-native-dark-image2.png', meta:'代理模型 · 基础模型 · 智能体 · AI安全', featured:'ai'},
+];
 
 const plantValues = [
   {id:'01', cn:'成本可控', en:'COST-CONTROLLED', copy:'在设计、建造、调试、运行、维护与退役之间提前识别代价，降低全生命周期成本、实体试错和非计划停机。'},
@@ -27,7 +41,7 @@ export default function Home() {
         <h1>聚变数字孪生：支撑未来电厂<span className="heroTitleValues">成本可控 · 高效运行 · 可靠可用 · 安全可证</span></h1>
         <p className="heroValueEnglish">FUSION DIGITAL TWIN FOR FUTURE POWER PLANTS<br/><b>LIFECYCLE COST CONTROL · EFFICIENT OPERATION · RELIABLE AVAILABILITY · EVIDENCE-BASED SAFETY</b></p>
         <p className="heroLead">以经过验证的多物理模型、运行与实验数据及智能决策技术，贯通设计、建造、调试、运行、维护与退役全过程，为降低全寿命成本、提升系统效能和电厂可用率、强化安全论证提供持续更新、可追溯且带有不确定度说明的工程依据。</p>
-        <div className="heroActions"><a className="solid" href="#prototype-workspace">进入数字样机工作台</a><a href="/knowledge-graph#modules">进入十大知识模块</a><a href="/facilities">查看全球装置状态</a></div>
+        <div className="heroActions"><a className="solid" href="#prototype-workspace">进入数字样机工作台</a><a href="#prototype-workspace">三维与 EFIT 联动</a><a href="#domains">探索知识域</a><a href="/facilities">查看全球装置状态</a></div>
         <div className="heroMetrics"><span><b>05</b>已开放知识域</span><span><b>195+</b>代码与工具条目</span><span><b>18+</b>重点装置/项目</span><span><b>2026-08</b>证据截止</span></div>
       </div>
       <figure className="heroArchitectureFigure">
@@ -50,17 +64,25 @@ export default function Home() {
       <MultiDeviceWorkspace catalog={deviceCatalog} />
     </div>
 
+    <FusionTwinSystemMap />
+
     <section className="aiNativePortal" aria-labelledby="ai-native-portal-title">
       <div className="aiNativePortalIntro">
-        <p className="sectionIndex">KNOWLEDGE</p>
-        <h2 id="ai-native-portal-title">从模块、文档或关系图进入已有研究。</h2>
-        <p>十大模块由 Knowledge 统一管理；搜索用于快速定位条目，图谱用于查看装置、论文、代码和任务之间的关系。</p>
+        <p className="sectionIndex">AI-NATIVE KNOWLEDGE OPERATING SYSTEM</p>
+        <h2 id="ai-native-portal-title">让调研、证据、关系与更新，成为一套可持续运行的知识基础设施。</h2>
+        <p>大模型只负责连接问题与已核验资料；论文、代码、装置和结论仍由结构化来源、权限、配额、审核与版本记录共同约束。模型不可用时，系统自动回退到确定性检索。</p>
       </div>
       <div className="aiNativePortalGrid">
-        <a href="/knowledge-graph#modules"><span>01 / MODULES</span><h3>十大知识模块</h3><p>集中访问各模块页面、研究报告、数据索引和建设状态。</p><b>选择模块 →</b></a>
-        <a href="/search"><span>02 / SEARCH</span><h3>检索与问答</h3><p>跨模块检索论文、代码、装置和研究工作。</p><b>开始检索 →</b></a>
-        <a href="/knowledge-graph#graph"><span>03 / GRAPH</span><h3>知识关系图</h3><p>从装置或任务展开邻域，查看论文、代码和机构关系。</p><b>查看关系 →</b></a>
+        <a href="/search"><span>01 / SEARCH & ASK</span><h3>证据检索与问答</h3><p>跨知识域检索论文、代码、装置与工作，并以来源白名单约束模型回答。</p><b>开始检索 →</b></a>
+        <a href="/knowledge-graph"><span>02 / KNOWLEDGE GRAPH</span><h3>知识图谱</h3><p>从装置或任务展开一至两跳邻域，追溯论文、代码、机构和验证关系。</p><b>探索图谱 →</b></a>
+        <a href="/research-review"><span>03 / HUMAN REVIEW</span><h3>智能体候选审核</h3><p>一期已建立候选生成与职责分离审核；联网发现仍处于安全演练阶段，任何接受项也不会自动发布。</p><b>进入审核台 →</b></a>
+        <a href="/account"><span>04 / IDENTITY & GOVERNANCE</span><h3>账户、角色与配额</h3><p>使用可信平台身份，统一管理成员角色、模型额度、使用记录和审计边界。</p><b>查看账户 →</b></a>
       </div>
+    </section>
+
+    <section className="domainSection" id="domains">
+      <div className="sectionIntro"><p className="sectionIndex">02 / KNOWLEDGE DOMAINS</p><h2>从专业孪生走向总体集成与智能原生</h2><p>十个知识域共同覆盖聚变电厂的物理规律、工程系统、运行认知、能量链、辅机、人机协同、数据与智能；总体集成和智能原生作为并列重点，将各域组织为可验证的整体能力。</p></div>
+      <div className="domainCards">{domains.map(domain=><a href={domain.href} key={domain.id} className={`domainCard${domain.featured?` featuredDomainCard ${domain.featured}Featured`:''}`}><div className="domainFigure">{domain.figure?<img src={domain.figure} alt={`${domain.title}核心结构科学信息图`} loading="lazy" decoding="async"/>:<div className="aiDomainVisual" aria-hidden="true"><span className="miniPlasma"/><span className="miniTwin">Δt</span><span className="miniAgent">A</span><i/><i/></div>}<span>{domain.status}</span></div><div className="domainBody"><p>{domain.id} / {domain.en}</p><h3>{domain.title}</h3><div>{domain.copy}</div><b>{domain.meta}</b><i>进入知识域 ↗</i></div></a>)}</div>
     </section>
 
     <section className="facilityPreview">
@@ -70,8 +92,10 @@ export default function Home() {
 
     <section className="resourceSection" id="resources">
       <div className="sectionIntro"><p className="sectionIndex">04 / TOOLCHAINS</p><h2>工具不是孤立清单，而是从输入、求解、验证到决策的链条。</h2><p>每条工具链都明确数据接口、尺度转换、验证证据、适用域和输出责任；任何一个环节不可追溯，整条链就不能进入数字孪生。</p></div>
-      <div className="resourceGrid"><Link href="/knowledge-graph/modules/physics"><span>P</span><h3>物理预测链</h3><p>平衡 → 输运 → MHD → 边界 → 中子与燃料循环。</p><b>浏览物理模块 ↗</b></Link><Link href="/knowledge-graph/modules/engineering"><span>E</span><h3>工程裕量链</h3><p>载荷 → 电磁 → 结构/热流 → 损伤 → 寿命与维护。</p><b>浏览工程模块 ↗</b></Link><Link href="/knowledge-graph/modules/control"><span>C</span><h3>集成控制链</h3><p>状态 → 位形/剖面/MHD/排热 → 多执行器协调 → PCS。</p><b>浏览控制模块 ↗</b></Link><Link href="/knowledge-graph/modules/diagnostics"><span>D</span><h3>诊断证据链</h3><p>传感器/标定 → 质控 → 反演/合成诊断 → 同化。</p><b>浏览诊断模块 ↗</b></Link><Link href="/knowledge-graph/modules/ai"><span>A</span><h3>智能原生链</h3><p>数据 → 表征 → 代理模型 → 智能体。</p><b>浏览智能模块 ↗</b></Link></div>
+      <div className="resourceGrid"><a href="/physics#catalog"><span>P</span><h3>物理预测链</h3><p>平衡 → 输运 → MHD → 边界 → 中子与燃料循环。</p><b>浏览物理工具链 ↗</b></a><a href="/engineering#tools"><span>E</span><h3>工程裕量链</h3><p>载荷 → 电磁 → 结构/热流 → 损伤 → 寿命与维护。</p><b>浏览工程工具链 ↗</b></a><a href="/control"><span>C</span><h3>集成控制链</h3><p>状态 → 位形/剖面/MHD/排热 → 多执行器协调 → PCS → SIL/HIL 与闭环证据。</p><b>进入集成控制图谱 ↗</b></a><a href="/diagnostics"><span>D</span><h3>诊断证据链</h3><p>传感器/标定 → 采集与质控 → 反演/合成诊断 → 同化 → 实时决策接口。</p><b>进入诊断感知图谱 ↗</b></a><a href="/ai"><span>A</span><h3>智能原生链</h3><p>数据 → 表征 → 代理模型 → 智能体 → 权限与安全门。</p><b>进入智能原生 ↗</b></a></div>
     </section>
+
+    <PhaseOneRoadmap />
 
     <section className="communityBand" id="community"><div><p className="sectionIndex">06 / BUILD WITH US</p><h2>让聚变模型、实验与工程经验真正互相理解。</h2></div><div><p><BrandWordmark className="brandWordmarkInline" /> 将逐步开放装置、控制、诊断、数据、AI、VVUQ 与社区协作模块。欢迎研究机构、装置团队、软件开发者和工业伙伴共同完善工具条目、验证证据与装置案例。</p><a href="mailto:tianshao1992@gmail.com">联系新奥聚变人工智能团队 →</a></div></section>
     <SiteFooter />
