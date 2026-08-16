@@ -1,0 +1,74 @@
+.knowledgeChatHeader > .knowledgeChatHeaderTools {
+  display: flex;
+  align-items: flex-end;
+  gap: 18px;
+  text-align: left;
+}
+
+.knowledgeChatProvider {
+  display: grid;
+  min-width: min(320px, 42vw);
+  gap: 5px;
+}
+
+.knowledgeChatHeaderTools .knowledgeChatProvider > span {
+  color: var(--chat-info);
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: .1em;
+}
+
+.knowledgeChatProvider select {
+  min-width: 0;
+  padding: 9px 32px 9px 10px;
+  color: var(--chat-ink);
+  background: var(--chat-raised);
+  border: 1px solid var(--chat-line);
+  font: inherit;
+  font-size: 10px;
+  outline: none;
+}
+
+.knowledgeChatProvider select:focus-visible {
+  border-color: var(--chat-info);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--chat-info) 12%, transparent);
+}
+
+.knowledgeChatProvider select:disabled { opacity: .65; }
+.knowledgeChatProvider small { color: var(--chat-subtle); font-size: 8px; }
+
+.knowledgeChatStats {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: baseline;
+  gap: 2px 8px;
+  text-align: right;
+}
+
+.knowledgeChatHeaderTools .knowledgeChatStats b {
+  color: var(--chat-accent);
+  font: 700 28px/1 Bahnschrift, "Arial Narrow", sans-serif;
+}
+
+.knowledgeChatHeaderTools .knowledgeChatStats span {
+  color: var(--chat-subtle);
+  font-size: 9px;
+}
+
+.knowledgeChatTurn > header b > small {
+  display: block;
+  margin-top: 3px;
+  font: 500 7px/1.25 Bahnschrift, "Arial Narrow", sans-serif;
+  text-transform: none;
+}
+
+@media (max-width: 820px) {
+  .knowledgeChatHeader > .knowledgeChatHeaderTools { width: 100%; align-items: flex-start; }
+  .knowledgeChatProvider { min-width: 0; flex: 1; }
+  .knowledgeChatStats { text-align: left; }
+}
+
+@media (max-width: 560px) {
+  .knowledgeChatHeader > .knowledgeChatHeaderTools { flex-direction: column; }
+  .knowledgeChatProvider, .knowledgeChatStats { width: 100%; }
+}

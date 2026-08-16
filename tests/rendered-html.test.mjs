@@ -669,7 +669,7 @@ test('server-renders the identity-aware account entry without exposing credentia
   assert.match(html, /href="\/account"[^>]*aria-label="账户中心"/);
   assert.match(html, /href="\/platform#architecture"/);
   assert.doesNotMatch(html, /02 \/ SECURITY BOUNDARY/);
-  assert.doesNotMatch(html, /OPENAI_API_KEY|sk-[A-Za-z0-9_-]{16,}/);
+  assert.doesNotMatch(html, /(?:OPENAI|ANTHROPIC|DEEPSEEK|MOONSHOT)_API_KEY|sk-[A-Za-z0-9_-]{16,}/);
 });
 
 test('server-renders the signed-out research review boundary without D1 access', async () => {
@@ -678,5 +678,5 @@ test('server-renders the signed-out research review boundary without D1 access',
   assert.match(html, /智能体负责发现/);
   assert.match(html, /href="\/signin-with-chatgpt\?return_to=%2Fresearch-review"/);
   assert.match(html, /“接受”不等于“发布”|接受.*不等于.*发布/);
-  assert.doesNotMatch(html, /OPENAI_API_KEY|sk-[A-Za-z0-9_-]{16,}/);
+  assert.doesNotMatch(html, /(?:OPENAI|ANTHROPIC|DEEPSEEK|MOONSHOT)_API_KEY|sk-[A-Za-z0-9_-]{16,}/);
 });

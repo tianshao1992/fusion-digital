@@ -1,4 +1,5 @@
 export type ChatRole = 'user' | 'assistant';
+export type ChatProviderId = 'openai' | 'anthropic' | 'deepseek' | 'kimi';
 
 export type ChatCitation = {
   ref: string;
@@ -17,6 +18,8 @@ export type ChatTurn = {
   citations?: ChatCitation[];
   caveats?: string[];
   notice?: string;
+  provider?: ChatProviderId;
+  model?: string;
 };
 
 export type AskHistoryMessage = Pick<ChatTurn, 'role' | 'content'>;
@@ -63,6 +66,8 @@ export function compactConversation(input: unknown): ChatTurn[] {
       citations,
       caveats: Array.isArray(item.caveats) ? item.caveats.map((entry) => cleanText(entry, 500)).filter(Boolean).slice(0, 5) : undefined,
       notice: cleanText(item.notice, 500) || undefined,
+      provider: isProviderId(item.provider) ? item.provider : undefined,
+      model: cleanText(item.model, 120) || undefined,
     }];
   }).slice(-CHAT_LIMITS.maxStoredTurns);
 }
@@ -116,4 +121,8 @@ function safeHttpUrl(value: unknown): value is string {
 
 function validDate(value: unknown): value is string {
   return typeof value === 'string' && Number.isFinite(Date.parse(value));
+}
+
+function isProviderId(value: unknown): value is ChatProviderId {
+  return value === 'openai' || value === 'anthropic' || value === 'deepseek' || value === 'kimi';
 }

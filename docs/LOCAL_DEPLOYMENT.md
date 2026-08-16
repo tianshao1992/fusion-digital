@@ -9,7 +9,7 @@
 - 所有公开页面、站内确定性检索、知识图谱与数字样机；
 - vinext + Vite + Cloudflare Worker 的开发和生产构建；
 - 本地 D1 schema，以及账户、配额、知识实体、候选审核等数据库表；
-- 配置密钥后的 OpenAI Responses API 调用链。
+- 配置密钥后的 OpenAI、Anthropic、DeepSeek 与 Kimi/Moonshot 调用链。
 
 以下能力只在 OpenAI Sites 托管环境中成立，普通本地启动不会自动复现：
 
@@ -17,7 +17,7 @@
 - Sites 生产 D1、生产密钥及其访问策略；
 - Sites 版本保存、公开发布和生产域名。
 
-因此，未登录的本地环境仍能使用 `/search` 和 `/api/search`；`/api/ask` 会安全回退为带来源的确定性检索。即便本机配置了 `OPENAI_API_KEY`，当前实现也不会在缺少可信 SIWC 身份和配额账本时进行不计费的模型调用，这是预期的安全行为。
+因此，未登录的本地环境仍能使用 `/search` 和 `/api/search`；`/api/ask` 会安全回退为带来源的确定性检索。即便本机配置了任一供应商密钥，当前实现也不会在缺少可信 SIWC 身份和配额账本时进行不计费的模型调用，这是预期的安全行为。
 
 ## 2. 前置条件
 
@@ -88,9 +88,15 @@ ${EDITOR:-vi} .env.local
 
 | 变量 | 必需 | 作用 |
 | --- | --- | --- |
-| `OPENAI_API_KEY` | 否 | 仅由服务端 `/api/ask` 读取；不配置则回退到确定性检索 |
-| `OPENAI_MODEL` | 否 | 覆盖模型名；不配置时使用代码默认值 |
+| `LLM_DEFAULT_PROVIDER` | 否 | 默认供应商：`openai` / `anthropic` / `deepseek` / `kimi` |
+| `OPENAI_API_KEY` / `OPENAI_MODEL` | 否 | OpenAI 服务端密钥及模型 |
+| `ANTHROPIC_API_KEY` / `ANTHROPIC_MODEL` | 否 | Anthropic 服务端密钥及模型 |
+| `DEEPSEEK_API_KEY` / `DEEPSEEK_MODEL` | 否 | DeepSeek 服务端密钥及模型 |
+| `MOONSHOT_API_KEY` / `MOONSHOT_MODEL` | 否 | Kimi/Moonshot 服务端密钥及模型 |
+| `MOONSHOT_REGION` | 否 | `cn` 或 `international`；默认 `cn` |
 | `PORT` | 否 | `npm run start` 的端口，默认 `3000` |
+
+线上供应商密钥应在 Sites 的 Runtime environment variables 中设置为 Secret；不要写入 `.openai/hosting.json`。完整说明见 [大模型供应商配置](./LLM_PROVIDER_CONFIGURATION.md)。
 
 安全规则：
 
@@ -271,7 +277,7 @@ npm run research:diagnostics:report
 
 SIWC 是 Sites 平台能力，不是本仓库自建的本地用户名密码系统。普通 localhost 应按“匿名只读检索”验证；不要通过手工伪造 `oai-authenticated-user-*` 请求头绕过身份边界。
 
-### 已配置 OpenAI Key 但仍返回检索结果
+### 已配置模型 Key 但仍返回检索结果
 
 模型调用同时要求可信 SIWC 身份和可用的 D1 配额账本。普通本地匿名会话回退是设计行为，不表示 key 失效。禁止为了演示而移除这一授权门。
 
@@ -316,7 +322,7 @@ npm run check: PASS / FAIL
 npm run dev URL:
 npm run build + npm run start: PASS / FAIL
 Search / graph / digital prototype smoke tests: PASS / FAIL
-OPENAI_API_KEY configured: no / yes (never record the value)
+LLM provider keys configured: provider names only (never record values)
 Known deviations:
 ```
 
