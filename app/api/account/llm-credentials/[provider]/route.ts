@@ -15,6 +15,7 @@ import {
 import {
   cleanProviderId,
   getProviderDefinition,
+  normalizeProviderApiKey,
   normalizeProviderModel,
 } from "../../../ask/provider-registry";
 import {
@@ -37,7 +38,10 @@ export async function PUT(request: Request, context: RouteContext) {
     if (!provider) throw new ApiError(404, "NOT_FOUND", "Model provider was not found");
     const definition = getProviderDefinition(provider)!;
     const body = await readJson<{ apiKey?: unknown; model?: unknown; region?: unknown }>(request, 2_048);
-    if (typeof body.apiKey !== "string") throw new ApiError(400, "BAD_REQUEST", "API key is required");
+    const apiKey = normalizeProviderApiKey(body.apiKey);
+    if (!apiKey) {
+      throw new ApiError(400, "BAD_REQUEST", "API key must be 8–512 visible ASCII characters without internal spaces");
+    }
     const model = normalizeProviderModel(body.model, definition.defaultModel);
     if (!model) throw new ApiError(400, "BAD_REQUEST", "Model ID is invalid");
     const region = provider === "kimi"
@@ -50,13 +54,13 @@ export async function PUT(request: Request, context: RouteContext) {
     let encrypted;
     try {
       encrypted = await encryptCredentialApiKey({
-        apiKey: body.apiKey,
+        apiKey,
         userId: principal.user.id,
         provider,
       });
     } catch (error) {
       if (error instanceof CredentialCryptoError && error.kind === "validation") {
-        throw new ApiError(400, "BAD_REQUEST", "API key must be 8–512 bytes and contain no control characters");
+        throw new ApiError(400, "BAD_REQUEST", "API key must be 8–512 visible ASCII characters without internal spaces");
       }
       throw new ApiError(503, "INTERNAL_ERROR", "Credential encryption is unavailable");
     }
@@ -67,7 +71,7 @@ export async function PUT(request: Request, context: RouteContext) {
       ciphertext: encrypted.ciphertext,
       iv: encrypted.iv,
       keyVersion: encrypted.keyVersion,
-      keyHint: keyHint(body.apiKey),
+      keyHint: keyHint(apiKey),
       model,
       region,
       enabled: true,

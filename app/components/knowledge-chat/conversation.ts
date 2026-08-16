@@ -14,7 +14,7 @@ export type ChatTurn = {
   role: ChatRole;
   content: string;
   createdAt: string;
-  mode?: 'ai-grounded' | 'retrieval-only';
+  mode?: 'ai-grounded' | 'retrieval-only' | 'assistant-direct';
   citations?: ChatCitation[];
   caveats?: string[];
   notice?: string;
@@ -62,7 +62,7 @@ export function compactConversation(input: unknown): ChatTurn[] {
       role: item.role,
       content,
       createdAt: validDate(item.createdAt) ? item.createdAt! : new Date().toISOString(),
-      mode: item.mode === 'ai-grounded' || item.mode === 'retrieval-only' ? item.mode : undefined,
+      mode: item.mode === 'ai-grounded' || item.mode === 'retrieval-only' || item.mode === 'assistant-direct' ? item.mode : undefined,
       citations,
       caveats: Array.isArray(item.caveats) ? item.caveats.map((entry) => cleanText(entry, 500)).filter(Boolean).slice(0, 5) : undefined,
       notice: cleanText(item.notice, 500) || undefined,

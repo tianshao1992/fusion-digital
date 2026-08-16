@@ -98,13 +98,35 @@ test("a different or malformed KEK cannot decrypt a credential", async () => {
   );
 });
 
-test("API keys are limited to 8-512 UTF-8 bytes and reject control characters", async () => {
-  for (const apiKey of ["1234567", "x".repeat(513), "valid-key\nwith-newline", `valid-key${String.fromCharCode(0x7f)}control`]) {
+test("API keys normalize surrounding ASCII spaces and reject non-visible ASCII", async () => {
+  for (const apiKey of [
+    "1234567",
+    "x".repeat(513),
+    "valid-key\nwith-newline",
+    "valid-key\rwith-return",
+    "valid-key\twith-tab",
+    "valid key with space",
+    "valid-key-密钥",
+    `valid-key${String.fromCharCode(0x7f)}control`,
+  ]) {
     await assert.rejects(
       encryptCredentialApiKey({ apiKey, userId: "usr_alice", provider: "openai", env: ENV_A }),
       validationFailure,
     );
   }
+
+  const normalized = await encryptCredentialApiKey({
+    apiKey: "  sk-pasted-with-padding  ",
+    userId: "usr_alice",
+    provider: "openai",
+    env: ENV_A,
+  });
+  assert.equal(await decryptCredentialApiKey({
+    encrypted: normalized,
+    userId: "usr_alice",
+    provider: "openai",
+    env: ENV_A,
+  }), "sk-pasted-with-padding");
 
   const boundary = "x".repeat(512);
   const encrypted = await encryptCredentialApiKey({

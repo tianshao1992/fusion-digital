@@ -72,6 +72,8 @@ const PROVIDERS: readonly ProviderDefinition[] = Object.freeze([
 ]);
 
 const MODEL_ID = /^[A-Za-z0-9][A-Za-z0-9._:/-]{0,119}$/;
+const RAW_API_KEY = /^[\x20-\x7e]+$/;
+const NORMALIZED_API_KEY = /^[\x21-\x7e]{8,512}$/;
 
 export function getProviderDefinition(value: unknown): ProviderDefinition | null {
   const id = cleanProviderId(value);
@@ -89,6 +91,19 @@ export function normalizeProviderModel(value: unknown, fallback: string): string
   return model && MODEL_ID.test(model) ? model : null;
 }
 
+/**
+ * Normalizes a pasted credential without ever accepting characters that are
+ * unsafe in an HTTP header. Only surrounding ordinary ASCII spaces are
+ * removed; tabs, newlines, Unicode whitespace and internal spaces are
+ * rejected. Because the accepted alphabet is ASCII, the character and UTF-8
+ * byte limits are identical.
+ */
+export function normalizeProviderApiKey(value: unknown): string | null {
+  if (typeof value !== "string" || !RAW_API_KEY.test(value)) return null;
+  const apiKey = value.trim();
+  return NORMALIZED_API_KEY.test(apiKey) ? apiKey : null;
+}
+
 export function resolveProviderWithCredential(input: {
   provider: LlmProviderId;
   apiKey: string;
@@ -97,10 +112,9 @@ export function resolveProviderWithCredential(input: {
 }): ResolvedLlmProvider | null {
   const definition = getProviderDefinition(input.provider);
   if (!definition) return null;
-  const apiKey = readSecret(input.apiKey);
-  const apiKeyBytes = new TextEncoder().encode(apiKey).byteLength;
+  const apiKey = normalizeProviderApiKey(input.apiKey);
   const model = normalizeProviderModel(input.model, definition.defaultModel);
-  if (!apiKey || apiKeyBytes < 8 || /[\u0000-\u001f\u007f-\u009f]/.test(apiKey) || !model) return null;
+  if (!apiKey || !model) return null;
   return {
     id: definition.id,
     label: definition.label,
@@ -196,6 +210,5 @@ function readModel(value: string | undefined, fallback: string) {
 }
 
 function readSecret(value: string | undefined) {
-  const key = value?.trim();
-  return key && key.length <= 512 ? key : "";
+  return normalizeProviderApiKey(value) ?? "";
 }

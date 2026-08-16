@@ -19,10 +19,19 @@ test("deterministic search ranks exact device and tool matches", async () => {
   assert.ok(exl.length > 0);
   assert.ok(exl.some((hit) => hit.devices.some((device) => device.includes("EXL-50U"))));
   assert.ok(exl.every((hit) => hit.sources.length > 0));
+  assert.ok(exl.every((hit) => hit.matchedTerms.length > 0));
 
   const dina = searchKnowledge("DINA", { domain: "control", citedOnly: true }, 10);
   assert.ok(dina.length > 0);
   assert.ok(dina.some((hit) => /DINA/i.test(`${hit.title} ${hit.summary} ${hit.tags.join(" ")}`)));
+  assert.ok(dina.every((hit) => hit.matchedTerms.length > 0));
+});
+
+test("source quality never manufactures relevance for a non-empty query", async () => {
+  const { searchKnowledge } = await modulePromise;
+  assert.deepEqual(searchKnowledge("你是谁", { citedOnly: true }, 20), []);
+  assert.ok(searchKnowledge("氚", { citedOnly: true }, 20).length > 0);
+  assert.ok(searchKnowledge("氘", { citedOnly: true }, 20).length > 0);
 });
 
 test("filters and public result shape are enforced", async () => {

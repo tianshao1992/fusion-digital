@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import {
   cleanProviderId,
+  normalizeProviderApiKey,
   resolveProviderWithCredential,
 } from "../app/api/ask/provider-registry.ts";
 
@@ -36,6 +37,11 @@ test("personal provider resolution keeps fixed upstreams and accepts only allowl
   assert.equal(cleanProviderId("http://169.254.169.254/latest/meta-data"), null);
   assert.equal(cleanProviderId("__proto__"), null);
   assert.equal(resolveProviderWithCredential({ provider: "openai", apiKey: "short", model: "model" }), null);
+  assert.equal(normalizeProviderApiKey("  private-api-key  "), "private-api-key");
+  for (const invalid of ["private api key", "private\tapi-key", "private\napi-key", "private-api-密钥"]) {
+    assert.equal(normalizeProviderApiKey(invalid), null);
+    assert.equal(resolveProviderWithCredential({ provider: "openai", apiKey: invalid, model: "model" }), null);
+  }
 });
 
 test("D1 schema and migration isolate credentials by user and provider", () => {
@@ -58,6 +64,8 @@ test("credential APIs derive ownership from the authenticated principal and neve
   const responseProjection = providerRouteSource.match(/return ok\(\{[\s\S]*?\n    \}\);/)?.[0] ?? "";
   assert.ok(responseProjection);
   assert.doesNotMatch(responseProjection, /ciphertext:|iv:|apiKey:/);
+  assert.match(providerRouteSource, /const apiKey = normalizeProviderApiKey\(body\.apiKey\)/);
+  assert.match(providerRouteSource, /keyHint: keyHint\(apiKey\)/);
 });
 
 test("credential mutations and their success audits share one atomic D1 batch", () => {

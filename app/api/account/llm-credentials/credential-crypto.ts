@@ -1,4 +1,7 @@
-import type { LlmProviderId } from "../../ask/provider-registry";
+import {
+  normalizeProviderApiKey,
+  type LlmProviderId,
+} from "../../ask/provider-registry";
 
 const CIPHER_SUITE = "AES-256-GCM" as const;
 const CREDENTIAL_KEY_VERSION = 1 as const;
@@ -97,8 +100,7 @@ export async function decryptCredentialApiKey(input: {
       ownedBuffer(ciphertext),
     );
     const apiKey = decoder.decode(validateApiKeyBytes(new Uint8Array(plaintext)));
-    validateApiKey(apiKey);
-    return apiKey;
+    return decoder.decode(validateApiKey(apiKey));
   } catch (error) {
     if (error instanceof CredentialCryptoError && error.kind === "configuration") throw error;
     throw new CredentialCryptoError("decryption");
@@ -151,10 +153,9 @@ function runtimeEnvironment(env?: CredentialCryptoEnvironment): CredentialCrypto
 }
 
 function validateApiKey(value: string): Uint8Array {
-  if (typeof value !== "string" || CONTROL_CHARACTERS.test(value)) {
-    throw new CredentialCryptoError("validation");
-  }
-  return validateApiKeyBytes(encoder.encode(value));
+  const apiKey = normalizeProviderApiKey(value);
+  if (!apiKey) throw new CredentialCryptoError("validation");
+  return validateApiKeyBytes(encoder.encode(apiKey));
 }
 
 function validateApiKeyBytes(value: Uint8Array): Uint8Array {

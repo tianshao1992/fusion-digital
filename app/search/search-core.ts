@@ -107,6 +107,9 @@ export function searchKnowledge(query: string, rawFilters: SearchFilters = {}, r
   }
 
   return candidates.map((entry) => scoreEntry(entry, phrase, terms))
+    // Source count is a tie-breaker for relevant records, never a way to
+    // manufacture relevance. Phrase-only matches remain valid for short
+    // scientific terms that the tokenizer intentionally does not split.
     .filter((hit) => hit.score > 0)
     .sort((a, b) => b.score - a.score || b.sources.length - a.sources.length || (b.year || 0) - (a.year || 0))
     .slice(0, limit);
@@ -145,6 +148,9 @@ function scoreEntry(entry: KnowledgeEntry, phrase: string, terms: string[]): Sea
     }
   }
   if (terms.length > 1 && matchedTerms.length === terms.length) score += 25;
+  if (score <= 0) {
+    return toHit(entry, 0, matchedTerms, excerpt(entry.summary, phrase, terms));
+  }
   score += Math.min(entry.sources.length, 3) * 1.5;
   return toHit(entry, Math.round(score * 10) / 10, matchedTerms, excerpt(entry.summary, phrase, terms));
 }

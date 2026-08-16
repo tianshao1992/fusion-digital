@@ -81,6 +81,52 @@ test('ask endpoint rejects unknown providers before any upstream call', async ()
   }
 });
 
+test('site-assistant identity questions bypass retrieval, provider calls and quota', async () => {
+  const originalFetch = globalThis.fetch;
+  let called = false;
+  globalThis.fetch = async () => { called = true; throw new Error('must not call upstream'); };
+  try {
+    const { POST } = await import('../app/api/ask/route.ts');
+    const response = await POST(new Request('http://localhost/api/ask', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', origin: 'http://localhost', 'sec-fetch-site': 'same-origin' },
+      body: JSON.stringify({ question: '你是谁', provider: 'deepseek', conversationId: 'conversation-identity-20260817' }),
+    }));
+    const payload = await response.json() as Record<string, unknown>;
+    assert.equal(response.status, 200);
+    assert.equal(payload.mode, 'assistant-direct');
+    assert.equal(payload.conversationId, 'conversation-identity-20260817');
+    assert.deepEqual(payload.citations, []);
+    assert.deepEqual(payload.results, []);
+    assert.equal('provider' in payload, false);
+    assert.equal(called, false);
+    assert.equal(response.headers.get('cache-control'), 'no-store');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('standalone questions are not polluted by prior dialogue or page focus', async () => {
+  const { POST } = await import('../app/api/ask/route.ts');
+  const response = await POST(new Request('http://localhost/api/ask', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', origin: 'http://localhost', 'sec-fetch-site': 'same-origin' },
+    body: JSON.stringify({
+      question: 'zzqv987654xkcd',
+      history: [{ role: 'user', content: '请先介绍 DINA' }],
+      context: { path: '/knowledge-graph', title: '知识图谱', focusId: 'tool-dina', focusLabel: 'DINA' },
+      conversationId: 'conversation-standalone-20260817',
+      provider: 'retrieval',
+    }),
+  }));
+  const payload = await response.json() as Record<string, unknown>;
+  assert.equal(response.status, 200);
+  assert.equal(payload.mode, 'retrieval-only');
+  assert.deepEqual(payload.citations, []);
+  assert.deepEqual(payload.results, []);
+  assert.doesNotMatch(String(payload.answer), /DINA/i);
+});
+
 test('ask endpoint uses prior dialogue and page focus for grounded retrieval fallback', async () => {
   const keyNames = ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'DEEPSEEK_API_KEY', 'MOONSHOT_API_KEY'] as const;
   const previousKeys = Object.fromEntries(keyNames.map((name) => [name, process.env[name]]));
@@ -111,5 +157,25 @@ test('ask endpoint uses prior dialogue and page focus for grounded retrieval fal
       if (previousKeys[name] === undefined) delete process.env[name];
       else process.env[name] = previousKeys[name];
     }
+  }
+});
+
+test('short elliptical follow-ups retain the latest entity anchor', async () => {
+  const { POST } = await import('../app/api/ask/route.ts');
+  for (const question of ['性能如何？', '有什么证据？', '再详细介绍一下']) {
+    const response = await POST(new Request('http://localhost/api/ask', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', origin: 'http://localhost', 'sec-fetch-site': 'same-origin' },
+      body: JSON.stringify({
+        question,
+        history: [{ role: 'user', content: '请先介绍 DINA' }],
+        context: { path: '/knowledge-graph', title: '知识图谱', focusId: 'tool-dina', focusLabel: 'DINA' },
+        provider: 'retrieval',
+      }),
+    }));
+    const payload = await response.json() as Record<string, unknown>;
+    assert.equal(response.status, 200);
+    assert.equal(payload.mode, 'retrieval-only');
+    assert.match(String(payload.answer), /DINA/i);
   }
 });

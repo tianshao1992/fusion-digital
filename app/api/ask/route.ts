@@ -37,6 +37,17 @@ export async function POST(request: Request) {
   const history = normalizeHistory(body.history);
   const pageContext = normalizePageContext(body.context);
   const conversationId = normalizeConversationId(body.conversationId);
+  const assistantDirectAnswer = siteAssistantAnswer(question);
+  if (assistantDirectAnswer) {
+    return NextResponse.json({
+      mode: "assistant-direct",
+      answer: assistantDirectAnswer,
+      citations: [],
+      results: [],
+      notice: "这是 FusionDigital 站内助手的能力说明，不调用外部模型，也不消耗模型配额。",
+      conversationId,
+    }, { headers: noStoreHeaders() });
+  }
   const filters = normalizeFilters(body.filters);
   const retrievalQuery = buildRetrievalQuery(question, history, pageContext);
   const allHits = searchKnowledge(retrievalQuery, filters, 30);
@@ -175,10 +186,39 @@ export async function POST(request: Request) {
       status: reason instanceof ProviderRequestError ? reason.status : undefined,
     });
     await settleAsk(access, { status: cancelled ? "cancelled" : "failed", provider: provider.id, model });
-    return retrievalFallback(question, citedHits, "问答服务超时或暂时不可用，已自动回退到确定性检索分析。", 502, conversationId, provider);
+    const failure = publicProviderFailure(reason);
+    return retrievalFallback(question, citedHits, failure.notice, failure.status, conversationId, provider);
   } finally {
     deadline.cleanup();
   }
+}
+
+function publicProviderFailure(reason: unknown): { notice: string; status: number } {
+  if (!(reason instanceof ProviderRequestError)) {
+    return { notice: "问答服务网络连接失败，已自动回退到确定性检索分析。", status: 502 };
+  }
+  if (reason.kind === "http") {
+    if (reason.status === 401 || reason.status === 403) {
+      return { notice: "模型供应商拒绝了当前 API 密钥，请在账户中心更新或重新保存密钥；本轮已回退到确定性检索分析。", status: reason.status };
+    }
+    if (reason.status === 402) {
+      return { notice: "模型供应商报告账户余额不足，本轮已回退到确定性检索分析。", status: 402 };
+    }
+    if (reason.status === 429) {
+      return { notice: "模型供应商当前限流，请稍后重试；本轮已回退到确定性检索分析。", status: 429 };
+    }
+    return { notice: "模型供应商暂时不可用，本轮已回退到确定性检索分析。", status: reason.status ?? 502 };
+  }
+  if (reason.kind === "timeout") {
+    return { notice: "模型供应商响应超时，本轮已回退到确定性检索分析。", status: 504 };
+  }
+  if (reason.kind === "request") {
+    return { notice: "模型请求或个人 API 密钥格式无效，请在账户中心重新保存；本轮已回退到确定性检索分析。", status: 502 };
+  }
+  if (["truncated", "filtered", "incomplete", "malformed", "empty"].includes(reason.kind)) {
+    return { notice: "模型响应未形成完整、可验证的结构化答案，本轮已回退到确定性检索分析。", status: 502 };
+  }
+  return { notice: "问答服务网络连接失败，已自动回退到确定性检索分析。", status: 502 };
 }
 
 async function readBody(request: Request): Promise<AskBody | null> {
@@ -230,8 +270,39 @@ function buildContext(hits: SearchHit[], citations: Citation[]): string {
 }
 
 function buildRetrievalQuery(question: string, history: AskHistoryMessage[], context: AskPageContext | null) {
-  const priorQuestions = history.filter((message) => message.role === "user").slice(-2).map((message) => message.content);
-  return normalizeQuery([question, context?.focusLabel, ...priorQuestions].filter(Boolean).join(" "));
+  if (!isFollowUpQuestion(question)) return normalizeQuery(question);
+  const latestQuestion = history.filter((message) => message.role === "user").at(-1)?.content;
+  return normalizeQuery([question, context?.focusLabel, latestQuestion].filter(Boolean).join(" "));
+}
+
+function isFollowUpQuestion(question: string) {
+  const folded = question.normalize("NFKC").toLowerCase();
+  const chineseFollowUp = /(?:它|它们|他们|她们|这个|这些|那个|那些|该(?:装置|模型|工具|方法|代码|论文|系统|项目|技术)?|上述|上面|前述|刚才|此前|前者|后者|继续|接着|上一(?:个|轮|条|问|次)|其中|对此|同样)/;
+  const englishFollowUp = /\b(?:it|its|they|them|their|this|these|that|those|above|aforementioned|previous|prior|former|latter|continue|continuing|further|same)\b/;
+  const compact = folded.replace(/[\s，。！？、；：,.!?;:'"“”‘’()（）【】\[\]]+/g, "");
+  const ellipticalChinese = /^(?:再|请再|继续|接着|然后|进一步|具体|详细|展开|补充|那么)?(?:性能如何|效果如何|怎么样|如何|为什么|原因是什么|有什么证据|证据是什么|有哪些证据|有什么限制|有哪些限制|有什么优势|有哪些优势|有什么风险|有哪些风险|具体呢|详细说说|详细介绍一下|再介绍一下|再说明一下|再解释一下)$/;
+  const ellipticalEnglish = /^(?:please )?(?:tell me more|go on|continue|why|how|how so|what evidence|what are the limitations|what are the advantages|what are the risks)$/;
+  return chineseFollowUp.test(folded)
+    || englishFollowUp.test(folded)
+    || ellipticalChinese.test(compact)
+    || ellipticalEnglish.test(folded.trim());
+}
+
+function siteAssistantAnswer(question: string) {
+  const folded = question
+    .normalize("NFKC")
+    .toLowerCase()
+    .replace(/[\s，。！？、；：,.!?;:'"“”‘’()（）【】\[\]]+/g, " ")
+    .trim();
+  const compact = folded.replace(/\s+/g, "");
+  const identityQuestion = /^(?:请问)?(?:你是谁|你是什么(?:助手|模型|系统)?|介绍(?:一下)?你自己)$/.test(compact)
+    || /^(?:please )?(?:who are you|what are you|introduce yourself)$/.test(folded);
+  const capabilityQuestion = /^(?:请问)?(?:你能做什么|你可以做什么|你会做什么|你的能力是什么|你有什么能力)$/.test(compact)
+    || /^(?:please )?(?:what can you do|what do you do|what are your capabilities)$/.test(folded);
+  if (!identityQuestion && !capabilityQuestion) return null;
+  return capabilityQuestion
+    ? "我可以检索 FusionDigital 站内的聚变数字孪生知识，围绕装置、物理模拟、工程仿真、集成控制、诊断感知、智能原生、数字样机和工具链进行解释、比较与连续追问。涉及外部事实时，我只依据本轮检索到的可核验证据回答并展示引用；没有可靠证据时会明确说明。"
+    : "我是 FusionDigital 站内知识助手，负责帮助你检索、理解和比较本站收录的聚变数字孪生资料。我不是某一家模型供应商本身；当你选择并配置个人模型 API 时，我会在本站证据约束下调用该模型，未调用模型时也会如实标明。";
 }
 
 function buildModelInput(question: string, history: AskHistoryMessage[], pageContext: AskPageContext | null, context: string) {
