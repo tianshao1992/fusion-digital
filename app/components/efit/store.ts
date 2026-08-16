@@ -51,6 +51,7 @@ type FrameReason = 'initial' | 'shot' | 'seek' | 'step' | 'playback';
 
 export const EFIT_PLAYBACK_PRESENTATION_INTERVAL_MS = 1000 / 30;
 export const EFIT_PLAYBACK_PREFETCH_STEPS = 4;
+export const EFIT_DEFAULT_PLAYBACK_RATE = 0.5;
 
 export type EfitPlaybackRuntime = {
   now(): number;
@@ -68,7 +69,7 @@ const INITIAL_SNAPSHOT: EfitStoreSnapshot = Object.freeze({
   status: 'idle',
   error: null,
   isPlaying: false,
-  playbackRate: 1,
+  playbackRate: EFIT_DEFAULT_PLAYBACK_RATE,
   loop: true,
   gapNotice: null,
 });

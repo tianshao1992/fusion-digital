@@ -6,6 +6,7 @@ import { createEfitBinaryDataSource, createInMemoryEfitDataSource } from '../app
 import { buildGapAwareSignalSeries } from '../app/components/efit/signal-series.ts';
 import {
   createEfitStore,
+  EFIT_DEFAULT_PLAYBACK_RATE,
   EFIT_PLAYBACK_PREFETCH_STEPS,
   EFIT_PLAYBACK_PRESENTATION_INTERVAL_MS,
 } from '../app/components/efit/store.ts';
@@ -134,6 +135,9 @@ test('EFIT playback samples wall-clock time at a fixed cadence, prefetches a bou
   };
   const store = createEfitStore(source, runtime);
   await store.actions.initialize(404);
+  assert.equal(store.getSnapshot().playbackRate, EFIT_DEFAULT_PLAYBACK_RATE);
+  assert.equal(EFIT_DEFAULT_PLAYBACK_RATE, 0.5, 'the observation-first default should play a one-second discharge over two seconds');
+  store.actions.setPlaybackRate(1);
   prefetched.length = 0;
   store.actions.play();
   assert.ok(prefetched.length <= EFIT_PLAYBACK_PREFETCH_STEPS);

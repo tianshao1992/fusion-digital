@@ -8,7 +8,10 @@ type EfitTimelineControlsProps = {
   snapshot: EfitStoreSnapshot;
 };
 
-const SPEEDS = [0.25, 0.5, 1, 2, 4] as const;
+// Keep observation-oriented rates in the primary control. At the 30 fps
+// presentation cadence, 4x skips roughly 133 ms of source time per update and
+// makes a one-second discharge too sparse to inspect reliably.
+const SPEEDS = [0.25, 0.5, 1, 2] as const;
 
 function formatTime(timeMs: number): string {
   return `${(timeMs / 1000).toFixed(3)} s`;
