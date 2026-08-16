@@ -290,8 +290,18 @@ test('server-renders the EXL-50U to EHL-2 program roadmap', async () => {
   assert.match(html, /EHL(?:‑|-)?2 首等离子体虚拟实验/);
   assert.match(html, /12 周/);
   assert.match(html, /6 个月/);
+  assert.match(html, /data-echart="fusion-twin-system-support-map"/);
   assert.match(html, /data-echart="phase-1-program-roadmap"/);
   assert.match(html, /data-echart="phase-2-program-roadmap"/);
+  assert.match(html, /五大专业环节如何支撑两期目标/);
+  assert.equal((html.match(/id="program-pillar-tab-/g) ?? []).length, 5);
+  assert.equal((html.match(/aria-controls="program-pillar-detail"/g) ?? []).length, 5);
+  assert.match(html, /id="program-pillar-detail"[^>]*role="region"|role="region"[^>]*id="program-pillar-detail"/);
+  for (const pillar of ['位形与等离子体物理', '电磁、热与结构工程', '集成控制与虚拟调试', '诊断感知与状态重构', '数据、模型与证据基础设施']) assert.match(html, new RegExp(pillar));
+  assert.match(html, /核心科学 \/ 工程问题/);
+  assert.match(html, /不允许作出的结论/);
+  assert.match(html, /关键路径/);
+  assert.match(html, /条件式交付/);
   assert.match(html, /MDSplus \/ 权威档案 \/ 工程时序/);
   assert.match(html, /IMAS \+ 工程资产合同/);
   assert.match(html, /实际预电离源 \/ burn-through 模型/);

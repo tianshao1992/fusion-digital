@@ -3,7 +3,7 @@ import Link from 'next/link';
 import KnowledgeBackLink from '../components/KnowledgeBackLink';
 import SiteFooter from '../components/SiteFooter';
 import SiteNav from '../components/SiteNav';
-import { ProgramPhaseChart } from './ProgramRoadmapCharts';
+import { ProgramPhaseChart, ProgramSystemMap } from './ProgramRoadmapCharts';
 import {
   acceptanceDimensions,
   deanDecisions,
@@ -23,6 +23,7 @@ export const metadata: Metadata = {
 export default function ProgramRoadmapPage() {
   const phaseOne = roadmapPhases[0];
   const phaseTwo = roadmapPhases[1];
+  const moduleById = new Map(knowledgeModuleRoutes.map((module) => [module.id, module]));
   return <main className="programRoadmapPage">
     <SiteNav active="roadmap" />
     <KnowledgeBackLink />
@@ -32,7 +33,7 @@ export default function ProgramRoadmapPage() {
         <p className="programEyebrow">FUSION DIGITAL TWIN PROGRAM · 3 + 6 MONTHS</p>
         <h1>从 EXL‑50U 最小闭环，走向<br/><em>EHL‑2 首等离子体虚拟实验</em></h1>
         <p className="programHeroLead">以装置描述（Machine Description）为基础、以统一数据契约为骨架、以经过验证的物理与工程模型为核心、以真实实验闭环作为验收对象，建设可安全演进的聚变数字孪生基础设施。</p>
-        <div className="programHeroActions"><a href="#phase-one">一期实施计划</a><a href="#phase-two">二期实施计划</a><a href="#technology">技术路线选型</a><Link href="/knowledge-graph">进入知识图谱</Link></div>
+        <div className="programHeroActions"><a href="#system-map">总体技术路线</a><a href="#phase-one">一期实施计划</a><a href="#phase-two">二期实施计划</a><a href="#technology">选型审计表</a><Link href="/knowledge-graph">进入知识图谱</Link></div>
       </div>
       <aside className="programMandate">
         <span>汇报主张 / EXECUTIVE THESIS</span>
@@ -64,14 +65,23 @@ export default function ProgramRoadmapPage() {
       </div>
     </section>
 
+    <section className="programSystemMap" id="system-map" aria-labelledby="system-map-title">
+      <div className="programSectionHead">
+        <p>01 / INTEGRATED TECHNICAL ROUTE</p>
+        <h2 id="system-map-title">五大专业环节，共同把模型变成可验证的实验能力。</h2>
+        <span>先看总览中的支撑关系，再点击任一环节下钻模型链、输入输出、验证证据与“不允许作出的结论”；两期甘特继续回答何时交付和如何过门。</span>
+      </div>
+      <ProgramSystemMap />
+    </section>
+
     <section className="programPhase programPhaseOne" id="phase-one" aria-labelledby="phase-one-title">
-      <PhaseHeader phase={phaseOne} number="01" titleId="phase-one-title" />
+      <PhaseHeader phase={phaseOne} number="02A" titleId="phase-one-title" />
       <ProgramPhaseChart phaseId="phase-1" />
       <GateStrip phase={phaseOne} />
     </section>
 
     <section className="programPhase programPhaseTwo" id="phase-two" aria-labelledby="phase-two-title">
-      <PhaseHeader phase={phaseTwo} number="02" titleId="phase-two-title" />
+      <PhaseHeader phase={phaseTwo} number="02B" titleId="phase-two-title" />
       <div className="firstPlasmaSequence" aria-label="EHL-2 首等离子体任务边界">
         {['真空场 / 电源 dry-run', 'null / 误差场与涡流', '实际预电离源 / 击穿', 'burn-through / Ip 建立', '成形后 R / Z 控制', '基础诊断确认', '安全终止'].map((step, index) => <span key={step}><small>{String(index + 1).padStart(2, '0')}</small>{step}</span>)}
       </div>
@@ -102,7 +112,7 @@ export default function ProgramRoadmapPage() {
       </div>
       <div className="technologyTable" role="table" aria-label="聚变数字孪生技术路线选型">
         <div className="technologyTableHead" role="row"><span role="columnheader">架构层</span><span role="columnheader">推荐路线</span><span role="columnheader">选择依据与边界</span><span role="columnheader">模块</span></div>
-        {technologyDecisions.map((item, index) => <div className="technologyRow" role="row" key={item.layer}><span role="cell"><small>{String(index + 1).padStart(2, '0')}</small><b>{item.layer}</b></span><strong role="cell">{item.choice}</strong><p role="cell">{item.rationale}</p><span role="cell" className="technologyModules">{item.modules.map((module) => <i key={module}>{module}</i>)}</span></div>)}
+        {technologyDecisions.map((item, index) => <div className="technologyRow" role="row" key={item.layer}><span role="cell"><small>{String(index + 1).padStart(2, '0')}</small><b>{item.layer}</b></span><strong role="cell">{item.choice}</strong><p role="cell">{item.rationale}</p><span role="cell" className="technologyModules">{item.modules.map((moduleId) => { const moduleMeta = moduleById.get(moduleId); return <a href={`#module-${moduleId}`} key={moduleId}>{moduleMeta?.title ?? moduleId}</a>; })}</span></div>)}
       </div>
     </section>
 
