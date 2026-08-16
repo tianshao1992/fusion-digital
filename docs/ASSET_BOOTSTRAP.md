@@ -21,7 +21,7 @@
 要求 Git 2.40+、Node.js 22.13.0+ 和随 Node 提供的 npm。Codeup 使用团队成员自己的 SSH 公钥授权；不要复制他人的私钥。
 
 ```bash
-git clone git@codeup.aliyun.com:fiatlux/DT/FusionDigital.git
+git clone --branch main --single-branch git@codeup.aliyun.com:fiatlux/DT/FusionDigital.git
 cd FusionDigital
 git rev-parse HEAD
 npm ci
@@ -136,7 +136,7 @@ git@codeup.aliyun.com:fiatlux/DT/FusionDigital.git
 ```bash
 ssh-keygen -t ed25519 -C "your-name@company"
 ssh -T git@codeup.aliyun.com
-git clone git@codeup.aliyun.com:fiatlux/DT/FusionDigital.git
+git clone --branch main --single-branch git@codeup.aliyun.com:fiatlux/DT/FusionDigital.git
 ```
 
 已有本地仓库需要增加 Codeup 镜像时，先只读检查目标历史：

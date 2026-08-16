@@ -30,7 +30,7 @@ FusionDigital 是由新奥聚变人工智能团队维护的聚变数字孪生知
 要求 Node.js `>=22.13.0`。团队成员可从 Codeup 通过 SSH 克隆；首次恢复全部公开网页内容时执行：
 
 ```bash
-git clone git@codeup.aliyun.com:fiatlux/DT/FusionDigital.git
+git clone --branch main --single-branch git@codeup.aliyun.com:fiatlux/DT/FusionDigital.git
 cd FusionDigital
 npm ci
 npm run assets:verify:tracked
