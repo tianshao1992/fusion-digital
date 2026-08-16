@@ -215,6 +215,7 @@ test('server-renders the FusionDigital community portal', async () => {
   assert.match(html, /TOOLCHAINS/);
   assert.equal((html.match(/id="prototype-workspace"/g) ?? []).length, 1);
   assert.match(html, /class="prototypePage prototypePage--embedded"/);
+  assert.doesNotMatch(html, />三维与 EFIT 联动<\/a>/);
   assert.match(html, /data-three-viewer="paramak-full-device"/);
   assert.match(html, /装置、三维与 EFIT 联动/);
   assert.match(html, /EXL(?:‑|-)?50U 2026 升级版/);

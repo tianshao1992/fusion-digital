@@ -41,7 +41,7 @@ export default function Home() {
         <h1>聚变数字孪生：支撑未来电厂<span className="heroTitleValues">成本可控 · 高效运行 · 可靠可用 · 安全可证</span></h1>
         <p className="heroValueEnglish">FUSION DIGITAL TWIN FOR FUTURE POWER PLANTS<br/><b>LIFECYCLE COST CONTROL · EFFICIENT OPERATION · RELIABLE AVAILABILITY · EVIDENCE-BASED SAFETY</b></p>
         <p className="heroLead">以经过验证的多物理模型、运行与实验数据及智能决策技术，贯通设计、建造、调试、运行、维护与退役全过程，为降低全寿命成本、提升系统效能和电厂可用率、强化安全论证提供持续更新、可追溯且带有不确定度说明的工程依据。</p>
-        <div className="heroActions"><a className="solid" href="#prototype-workspace">进入数字样机工作台</a><a href="#prototype-workspace">三维与 EFIT 联动</a><a href="#domains">探索知识域</a><a href="/facilities">查看全球装置状态</a></div>
+        <div className="heroActions"><a className="solid" href="#prototype-workspace">进入数字样机工作台</a><a href="#domains">探索知识域</a><a href="/facilities">查看全球装置状态</a></div>
         <div className="heroMetrics"><span><b>05</b>已开放知识域</span><span><b>195+</b>代码与工具条目</span><span><b>18+</b>重点装置/项目</span><span><b>2026-08</b>证据截止</span></div>
       </div>
       <figure className="heroArchitectureFigure">
