@@ -196,8 +196,13 @@ test('EFIT sidebar keeps operational evidence compact and uses designed tabular 
 
 test('EFIT Ip and magnetic-axis curves break across missing source frames', async () => {
   const signals = await source('app/components/efit/EfitSignalsChart.tsx');
-  assert.equal((signals.match(/buildGapAwareSignalSeries\(timeline,/g) ?? []).length, 3);
+  assert.equal((signals.match(/buildGapAwareSignalSeries\(timelineInWindow,/g) ?? []).length, 3);
   assert.equal((signals.match(/connectNulls:\s*false/g) ?? []).length, 3);
+  assert.match(signals, /EFIT_SIGNAL_WINDOW_MS = Object\.freeze\(\{ min: 0, max: 1000 \}\)/);
+  assert.match(signals, /min: EFIT_SIGNAL_WINDOW_MS\.min/);
+  assert.match(signals, /max: EFIT_SIGNAL_WINDOW_MS\.max/);
+  assert.match(signals, /interval: 200/);
+  assert.doesNotMatch(signals, /dataZoom:/, 'the reviewed 0–1.0 s window must not be silently zoomed to another range');
 });
 
 test('EFIT plasma colour field is a contour-constrained psiN display in both 2D and 3D', async () => {

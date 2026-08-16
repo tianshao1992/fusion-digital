@@ -14,6 +14,8 @@ type EfitSignalsChartProps = {
   onSeekTimeMs?: (timeMs: number) => void;
 };
 
+export const EFIT_SIGNAL_WINDOW_MS = Object.freeze({ min: 0, max: 1000 });
+
 function chartTimeFromClick(params: unknown): number | null {
   if (!params || typeof params !== 'object' || !('value' in params)) return null;
   const value = (params as { value?: unknown }).value;
@@ -24,6 +26,10 @@ function chartTimeFromClick(params: unknown): number | null {
 export default function EfitSignalsChart({ timeline, currentTimeMs, onSeekTimeMs }: EfitSignalsChartProps) {
   const { locale, t } = useI18n();
   const chartTheme = useChartTheme();
+  const timelineInWindow = useMemo(
+    () => timeline.filter((frame) => frame.timeMs >= EFIT_SIGNAL_WINDOW_MS.min && frame.timeMs <= EFIT_SIGNAL_WINDOW_MS.max),
+    [timeline],
+  );
   const option = useMemo<EChartsCoreOption>(() => {
     const signalColors = chartTheme.mode === 'dark'
       ? ['#45ddc7', '#80a7ff', '#ff9c70']
@@ -39,7 +45,9 @@ export default function EfitSignalsChart({ timeline, currentTimeMs, onSeekTimeMs
         backgroundColor: chartTheme.accent,
         padding: [3, 6],
       },
-      data: [{ xAxis: currentTimeMs }],
+      data: currentTimeMs >= EFIT_SIGNAL_WINDOW_MS.min && currentTimeMs <= EFIT_SIGNAL_WINDOW_MS.max
+        ? [{ xAxis: currentTimeMs }]
+        : [],
     };
 
     return {
@@ -62,11 +70,11 @@ export default function EfitSignalsChart({ timeline, currentTimeMs, onSeekTimeMs
         borderColor: chartTheme.tooltipBorder,
         textStyle: { color: chartTheme.tooltipText, fontSize: 11 },
       },
-      dataZoom: [{ type: 'inside', xAxisIndex: 0, filterMode: 'none', zoomOnMouseWheel: 'ctrl' }],
       xAxis: {
         type: 'value',
-        min: timeline[0]?.timeMs,
-        max: timeline.at(-1)?.timeMs,
+        min: EFIT_SIGNAL_WINDOW_MS.min,
+        max: EFIT_SIGNAL_WINDOW_MS.max,
+        interval: 200,
         name: 't / s',
         nameLocation: 'middle',
         nameGap: 30,
@@ -99,7 +107,7 @@ export default function EfitSignalsChart({ timeline, currentTimeMs, onSeekTimeMs
         {
           name: 'Ip',
           type: 'line',
-          data: buildGapAwareSignalSeries(timeline, (frame) => frame.currentA / 1000),
+          data: buildGapAwareSignalSeries(timelineInWindow, (frame) => frame.currentA / 1000),
           connectNulls: false,
           showSymbol: false,
           lineStyle: { width: 1.8 },
@@ -111,7 +119,7 @@ export default function EfitSignalsChart({ timeline, currentTimeMs, onSeekTimeMs
           name: 'Raxis',
           type: 'line',
           yAxisIndex: 1,
-          data: buildGapAwareSignalSeries(timeline, (frame) => frame.rAxisM),
+          data: buildGapAwareSignalSeries(timelineInWindow, (frame) => frame.rAxisM),
           connectNulls: false,
           showSymbol: false,
           lineStyle: { width: 1.4 },
@@ -122,7 +130,7 @@ export default function EfitSignalsChart({ timeline, currentTimeMs, onSeekTimeMs
           name: 'Zaxis',
           type: 'line',
           yAxisIndex: 1,
-          data: buildGapAwareSignalSeries(timeline, (frame) => frame.zAxisM),
+          data: buildGapAwareSignalSeries(timelineInWindow, (frame) => frame.zAxisM),
           connectNulls: false,
           showSymbol: false,
           lineStyle: { width: 1.4 },
@@ -131,13 +139,13 @@ export default function EfitSignalsChart({ timeline, currentTimeMs, onSeekTimeMs
         },
       ],
     };
-  }, [chartTheme, currentTimeMs, t, timeline]);
+  }, [chartTheme, currentTimeMs, t, timelineInWindow]);
 
-  const validIp = timeline.filter((frame) => Number.isFinite(frame.currentA));
+  const validIp = timelineInWindow.filter((frame) => Number.isFinite(frame.currentA));
   const fallback = (
     <div className="efitChartTextFallback">
       <strong>{t('efit.signalFallback')}</strong>
-      <span>{t('efit.frames', { count: timeline.length.toLocaleString(locale) })}</span>
+      <span>{t('efit.frames', { count: timelineInWindow.length.toLocaleString(locale) })}</span>
       <span>{validIp.length ? `Ip ${Math.min(...validIp.map((frame) => frame.currentA / 1000)).toFixed(1)} – ${Math.max(...validIp.map((frame) => frame.currentA / 1000)).toFixed(1)} kA` : t('efit.noIp')}</span>
       <span>{t('efit.currentTime', { time: (currentTimeMs / 1000).toFixed(3) })}</span>
     </div>
