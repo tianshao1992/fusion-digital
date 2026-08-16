@@ -36,6 +36,7 @@
 
 .knowledgeChatProvider select:disabled { opacity: .65; }
 .knowledgeChatProvider small { color: var(--chat-subtle); font-size: 8px; }
+.knowledgeChatProvider small a { margin-left: 6px; color: var(--chat-info); font-weight: 900; text-decoration: underline; text-underline-offset: 3px; }
 
 .knowledgeChatStats {
   display: grid;

@@ -1,6 +1,6 @@
 # 大模型供应商配置
 
-知识检索对话统一通过服务端 `POST /api/ask` 调用模型。浏览器只能选择经过允许的供应商；不能提交 API Key、任意模型地址、请求头或自定义上游 URL。每轮回答仍必须通过 FusionDigital 的检索、逐结论引用校验和配额账本，校验失败时自动回退到确定性检索。
+知识检索对话统一通过服务端 `POST /api/ask` 调用模型。已登录用户可在 `/account#ai-models` 分别管理自己的 OpenAI、Anthropic、DeepSeek 和 Kimi API Key；浏览器仍不能提交任意模型地址、请求头或自定义上游 URL。每轮回答必须通过 FusionDigital 的检索、逐结论引用校验和配额账本，校验失败时自动回退到确定性检索。
 
 ## 1. 在哪里配置
 
@@ -18,6 +18,14 @@ notepad .env.local
 ### 线上 Sites
 
 在当前 Sites 项目的 **Runtime environment variables** 中设置同名变量，并把所有 `*_API_KEY` 标记为 Secret。变量保存在 Sites，不写入 `.openai/hosting.json`。环境变量更新后必须重新部署一个已保存版本，新的 environment revision 才会进入生产运行时。
+
+用户级密钥库还要求设置 `LLM_CREDENTIAL_KEK_V1`：它必须是 32 个随机字节的无填充 base64url 值，并标记为 Secret。该值只用于服务端 AES-256-GCM 加解密，不是任何模型供应商的 API Key。缺失或格式错误时，个人密钥保存与调用会关闭，系统不会降级为明文存储。
+
+部署者可用以下命令生成一次：
+
+```powershell
+node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
+```
 
 ## 2. 可用变量
 
@@ -54,18 +62,28 @@ MOONSHOT_MODEL=kimi-k3
 MOONSHOT_REGION=cn
 ```
 
-不要把上面占位文本替换后提交。线上设置完成后，打开知识图谱页；“模型服务”下拉框会把已配置供应商启用，并显示服务端批准的模型 ID。未配置项保持禁用，“仅检索”始终可用。
+不要把上面占位文本替换后提交。站点级密钥是可选的公共回退；用户也可登录后进入账户中心保存自己的密钥与模型 ID。个人密钥优先于站点密钥，“仅检索”始终可用。
 
 ## 4. 安全边界
 
-- API Key 只由服务端读取；`GET /api/ask/providers` 只公开供应商 ID、显示名、模型 ID 和是否可用。
+- 用户密钥由服务端使用 AES-256-GCM、随机 IV 和绑定用户/供应商的认证数据加密后写入 D1。密钥不会重新显示，也不会进入浏览器存储、日志、审计元数据或模型状态响应。
+- 每条记录以内部 `user_id + provider` 隔离；管理 API 从登录身份取得用户 ID，不接受客户端提供的用户 ID。用户只能替换或删除自己的密钥。
+- `GET /api/ask/providers` 与账户接口只公开供应商、模型、来源、配置状态和末尾提示，不公开密文、IV 或主加密密钥。
 - 上游 URL 在代码中固定且禁止重定向，客户端不能覆盖，避免 SSRF 或把密钥发送到错误主机。
 - 未登录、账户停用、配额/D1 不可用或供应商未配置时，不会调用外部模型。
 - 上游响应必须是受大小限制的 JSON；错误正文和模型原始输出不会写入客户端或应用日志。
 - Anthropic、DeepSeek 和 Kimi 的自由文本输出仍通过同一严格 JSON 结构与引用编号校验，不能绕过证据规则。
-- 当前不支持用户自行上传密钥（BYOK）。未来如需每用户密钥，必须使用独立加密密钥库、RBAC、轮换和审计，不能用浏览器存储或明文 D1 字段。
+- 删除个人密钥后应用立即停止使用该记录；D1 Time Travel/备份中的历史副本会依托平台保留策略到期，不应对用户承诺即时物理擦除。
 
-## 5. 官方接口资料
+## 5. 用户自助管理
+
+1. 使用 ChatGPT 身份登录站点并打开 `/account#ai-models`。
+2. 在对应供应商卡片中输入 API Key、模型 ID；Kimi 还需选择中国区或国际区。
+3. 保存成功后输入框立即清空，之后只显示“已保存”和末尾提示，旧密钥永不回填。
+4. 可把一个已可用供应商设为账户默认；知识图谱对话的模型选择也会写入该用户的服务端偏好，不再依赖共享浏览器的 `localStorage`。
+5. 删除个人密钥后，如果部署者配置了该供应商的站点级密钥，会明确回退为“站点提供”；否则回到“仅检索”。
+
+## 6. 官方接口资料
 
 - OpenAI Responses API: <https://developers.openai.com/api/reference/resources/responses/methods/create>
 - Anthropic Messages API: <https://platform.claude.com/docs/en/api/messages/create>

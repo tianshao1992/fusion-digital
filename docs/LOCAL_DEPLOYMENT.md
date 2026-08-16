@@ -89,6 +89,7 @@ ${EDITOR:-vi} .env.local
 | 变量 | 必需 | 作用 |
 | --- | --- | --- |
 | `LLM_DEFAULT_PROVIDER` | 否 | 默认供应商：`openai` / `anthropic` / `deepseek` / `kimi` |
+| `LLM_CREDENTIAL_KEK_V1` | 用户级 API 管理必需 | 32-byte 无填充 base64url；必须作为 Secret，用于个人密钥 AES-256-GCM 加密 |
 | `OPENAI_API_KEY` / `OPENAI_MODEL` | 否 | OpenAI 服务端密钥及模型 |
 | `ANTHROPIC_API_KEY` / `ANTHROPIC_MODEL` | 否 | Anthropic 服务端密钥及模型 |
 | `DEEPSEEK_API_KEY` / `DEEPSEEK_MODEL` | 否 | DeepSeek 服务端密钥及模型 |

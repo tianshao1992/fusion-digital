@@ -4,7 +4,7 @@ export type LlmProviderId = (typeof LLM_PROVIDER_IDS)[number];
 export type LlmProviderProtocol = "openai-responses" | "anthropic-messages" | "chat-completions";
 export type ProviderEnvironment = Readonly<Record<string, string | undefined>>;
 
-type ProviderDefinition = {
+export type ProviderDefinition = {
   id: LlmProviderId;
   label: string;
   protocol: LlmProviderProtocol;
@@ -19,6 +19,11 @@ export type PublicLlmProvider = {
   label: string;
   model: string;
   available: boolean;
+  configured?: boolean;
+  source?: "personal" | "platform" | "none";
+  keyHint?: string | null;
+  region?: "cn" | "international" | null;
+  updatedAt?: string | null;
 };
 
 export type ResolvedLlmProvider = PublicLlmProvider & {
@@ -67,6 +72,55 @@ const PROVIDERS: readonly ProviderDefinition[] = Object.freeze([
 ]);
 
 const MODEL_ID = /^[A-Za-z0-9][A-Za-z0-9._:/-]{0,119}$/;
+
+export function getProviderDefinition(value: unknown): ProviderDefinition | null {
+  const id = cleanProviderId(value);
+  return id ? PROVIDERS.find((candidate) => candidate.id === id) ?? null : null;
+}
+
+export function listProviderDefinitions(): readonly ProviderDefinition[] {
+  return PROVIDERS;
+}
+
+export function normalizeProviderModel(value: unknown, fallback: string): string | null {
+  if (value === undefined || value === null || value === "") return fallback;
+  if (typeof value !== "string") return null;
+  const model = value.trim();
+  return model && MODEL_ID.test(model) ? model : null;
+}
+
+export function resolveProviderWithCredential(input: {
+  provider: LlmProviderId;
+  apiKey: string;
+  model?: string | null;
+  region?: "cn" | "international" | null;
+}): ResolvedLlmProvider | null {
+  const definition = getProviderDefinition(input.provider);
+  if (!definition) return null;
+  const apiKey = readSecret(input.apiKey);
+  const apiKeyBytes = new TextEncoder().encode(apiKey).byteLength;
+  const model = normalizeProviderModel(input.model, definition.defaultModel);
+  if (!apiKey || apiKeyBytes < 8 || /[\u0000-\u001f\u007f-\u009f]/.test(apiKey) || !model) return null;
+  return {
+    id: definition.id,
+    label: definition.label,
+    model,
+    available: true,
+    configured: true,
+    source: "personal",
+    protocol: definition.protocol,
+    endpoint: definition.id === "kimi" && input.region === "international"
+      ? "https://api.moonshot.ai/v1/chat/completions"
+      : definition.endpoint,
+    apiKey,
+  };
+}
+
+export function cleanProviderId(value: unknown): LlmProviderId | null {
+  return typeof value === "string" && (LLM_PROVIDER_IDS as readonly string[]).includes(value)
+    ? value as LlmProviderId
+    : null;
+}
 
 export function listPublicProviders(env: ProviderEnvironment = process.env): PublicLlmProvider[] {
   return PROVIDERS.map((definition) => {
@@ -144,10 +198,4 @@ function readModel(value: string | undefined, fallback: string) {
 function readSecret(value: string | undefined) {
   const key = value?.trim();
   return key && key.length <= 512 ? key : "";
-}
-
-function cleanProviderId(value: unknown): LlmProviderId | null {
-  return typeof value === "string" && (LLM_PROVIDER_IDS as readonly string[]).includes(value)
-    ? value as LlmProviderId
-    : null;
 }

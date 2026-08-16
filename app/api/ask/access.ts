@@ -1,3 +1,5 @@
+import type { Principal } from "@/db/accounts";
+
 export type AskAccess = {
   authenticated: boolean;
   userId: string | null;
@@ -6,15 +8,18 @@ export type AskAccess = {
   reserved: boolean;
 };
 
-export async function authorizeAsk(input: { requestedTokens: number; provider: string; model: string; questionLength: number; contextEntries: number; historyTurns?: number; conversationId?: string }): Promise<AskAccess> {
+export async function authorizeAsk(input: { requestedTokens: number; provider: string; model: string; questionLength: number; contextEntries: number; historyTurns?: number; conversationId?: string; principal?: Principal | null }): Promise<AskAccess> {
   const requestId = crypto.randomUUID();
-  const { getChatGPTUser } = await import("@/app/chatgpt-auth");
-  const identity = await getChatGPTUser();
-  if (!identity) return { authenticated: false, userId: null, requestId, quotaPolicy: "anonymous-retrieval-only", reserved: false };
-
   const [accounts, usage] = await Promise.all([import("@/db/accounts"), import("@/db/usage")]);
   try {
-    const principal = await accounts.provisionUser(identity);
+    let principal = input.principal;
+    if (principal === undefined) {
+      const { getChatGPTUser } = await import("@/app/chatgpt-auth");
+      const identity = await getChatGPTUser();
+      if (!identity) return { authenticated: false, userId: null, requestId, quotaPolicy: "anonymous-retrieval-only", reserved: false };
+      principal = await accounts.provisionUser(identity);
+    }
+    if (!principal) return { authenticated: false, userId: null, requestId, quotaPolicy: "anonymous-retrieval-only", reserved: false };
     if (principal.user.status !== "active") {
       const inactive = new Error("This account is not active") as Error & { code?: string };
       inactive.code = "ACCOUNT_INACTIVE";

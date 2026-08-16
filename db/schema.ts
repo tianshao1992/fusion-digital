@@ -94,6 +94,88 @@ export const quotaOverrides = sqliteTable(
   ],
 );
 
+export const userLlmCredentials = sqliteTable(
+  "user_llm_credentials",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    provider: text("provider", {
+      enum: ["openai", "anthropic", "deepseek", "kimi"],
+    }).notNull(),
+    ciphertext: text("ciphertext").notNull(),
+    iv: text("iv").notNull(),
+    keyVersion: integer("key_version").notNull().default(1),
+    keyHint: text("key_hint").notNull(),
+    model: text("model"),
+    region: text("region", { enum: ["cn", "international"] }),
+    enabled: integer("enabled", { mode: "boolean" }).notNull().default(true),
+    version: integer("version").notNull().default(1),
+    createdAt: text("created_at").notNull().default(now),
+    updatedAt: text("updated_at").notNull().default(now),
+  },
+  (table) => [
+    primaryKey({ columns: [table.userId, table.provider] }),
+    check(
+      "ck_user_llm_credentials_provider",
+      sql`${table.provider} in ('openai', 'anthropic', 'deepseek', 'kimi')`,
+    ),
+    check(
+      "ck_user_llm_credentials_ciphertext",
+      sql`length(${table.ciphertext}) between 1 and 4096`,
+    ),
+    check(
+      "ck_user_llm_credentials_iv",
+      sql`length(${table.iv}) between 1 and 128`,
+    ),
+    check(
+      "ck_user_llm_credentials_key_version",
+      sql`${table.keyVersion} >= 1`,
+    ),
+    check(
+      "ck_user_llm_credentials_key_hint",
+      sql`length(${table.keyHint}) between 1 and 64`,
+    ),
+    check(
+      "ck_user_llm_credentials_model",
+      sql`${table.model} is null or length(${table.model}) between 1 and 120`,
+    ),
+    check(
+      "ck_user_llm_credentials_region",
+      sql`${table.region} is null or ${table.region} in ('cn', 'international')`,
+    ),
+    check(
+      "ck_user_llm_credentials_enabled",
+      sql`${table.enabled} in (0, 1)`,
+    ),
+    check("ck_user_llm_credentials_version", sql`${table.version} >= 1`),
+  ],
+);
+
+export const userLlmPreferences = sqliteTable(
+  "user_llm_preferences",
+  {
+    userId: text("user_id")
+      .primaryKey()
+      .references(() => users.id, { onDelete: "cascade" }),
+    defaultProvider: text("default_provider", {
+      enum: ["retrieval", "openai", "anthropic", "deepseek", "kimi"],
+    })
+      .notNull()
+      .default("retrieval"),
+    revision: integer("revision").notNull().default(1),
+    createdAt: text("created_at").notNull().default(now),
+    updatedAt: text("updated_at").notNull().default(now),
+  },
+  (table) => [
+    check(
+      "ck_user_llm_preferences_default_provider",
+      sql`${table.defaultProvider} in ('retrieval', 'openai', 'anthropic', 'deepseek', 'kimi')`,
+    ),
+    check("ck_user_llm_preferences_revision", sql`${table.revision} >= 1`),
+  ],
+);
+
 export const usageDaily = sqliteTable(
   "usage_daily",
   {
@@ -546,6 +628,8 @@ export const candidateReviews = sqliteTable(
 );
 
 export type UserRow = typeof users.$inferSelect;
+export type UserLlmCredentialRow = typeof userLlmCredentials.$inferSelect;
+export type UserLlmPreferenceRow = typeof userLlmPreferences.$inferSelect;
 export type EntityRow = typeof entities.$inferSelect;
 export type ClaimRow = typeof claims.$inferSelect;
 export type EvidenceRow = typeof evidence.$inferSelect;

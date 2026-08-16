@@ -4,6 +4,7 @@ import { chatGPTSignInPath, chatGPTSignOutPath, getChatGPTUser } from "@/app/cha
 import SiteFooter from "@/app/components/SiteFooter";
 import SiteNav from "@/app/components/SiteNav";
 import AccountDashboard from "./AccountDashboard";
+import LlmCredentialManager from "./LlmCredentialManager";
 import "./account.css";
 
 export const dynamic = "force-dynamic";
@@ -29,8 +30,9 @@ export default async function AccountPage() {
       </aside>
     </header>
     {user ? <section className="accountWorkspace">
-      <div className="accountWorkspaceIntro"><p>01 / ACCOUNT CONSOLE</p><div><h2>账户已由可信身份自动建立。</h2><p>本站不保存独立密码。账户以当前 ChatGPT 身份为唯一入口；数据库只保存站内角色、配额、用量与审计所需记录。</p></div></div>
+      <div className="accountWorkspaceIntro"><p>01 / ACCOUNT CONSOLE</p><div><h2>账户已由可信身份自动建立。</h2><p>本站不保存独立密码。账户以当前 ChatGPT 身份为唯一入口；数据库保存站内角色、配额、用量、审计，以及按用户隔离的加密模型连接。</p></div></div>
       <AccountDashboard fallbackIdentity={{ displayName: user.displayName, email: user.email }} />
+      <LlmCredentialManager />
       <div className="accountActions"><Link href="/search">进入知识检索 <b>↗</b></Link><Link href="/knowledge-graph">打开知识图谱 <b>↗</b></Link><a className="accountSignOut" href={chatGPTSignOutPath("/")}>退出当前账户</a></div>
     </section> : <section className="accountRegistration">
       <div><p>01 / REGISTER & SIGN IN</p><h2>无需创建新密码，使用 ChatGPT 完成注册与登录。</h2><p>首次登录时，系统会自动建立 FusionDigital 站内账户，并分配基础访问角色与每日额度。模型密钥始终保留在服务端，不会发送到浏览器。</p><a className="accountPrimaryAction" href={chatGPTSignInPath("/account")}>使用 ChatGPT 注册 / 登录 <b>↗</b></a></div>

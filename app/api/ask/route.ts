@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { getIndexMetadata, normalizeFilters, normalizeQuery, searchKnowledge, SEARCH_LIMITS, type KnowledgeSource, type SearchHit } from "@/app/search/search-core";
+import { optionalPrincipal } from "../_lib/auth";
 import { authorizeAsk, settleAsk, type AskAccess } from "./access";
 import { ProviderRequestError, requestProviderAnswer } from "./provider-adapters";
-import { resolveProvider, type PublicLlmProvider } from "./provider-registry";
+import { cleanProviderId, type PublicLlmProvider } from "./provider-registry";
+import { resolveProviderForUser } from "./user-provider";
 
 export const dynamic = "force-dynamic";
 
@@ -24,8 +26,13 @@ export async function POST(request: Request) {
   if (!body) return error("invalid_json", "JSON 请求体无效或超过大小限制。", 400);
   const question = cleanDialogueText(body.question ?? body.q, 600);
   if (question.length < 2) return error("question_required", "请输入至少两个字符的问题。", 400);
-  const providerResolution = resolveProvider(body.provider);
-  if (providerResolution.status === "invalid") return error("provider_invalid", "模型供应商不在服务端允许列表中。", 400);
+  if (
+    body.provider !== undefined
+    && body.provider !== null
+    && body.provider !== ""
+    && body.provider !== "retrieval"
+    && !cleanProviderId(body.provider)
+  ) return error("provider_invalid", "模型供应商不在服务端允许列表中。", 400);
 
   const history = normalizeHistory(body.history);
   const pageContext = normalizePageContext(body.context);
@@ -45,17 +52,46 @@ export async function POST(request: Request) {
     }, { headers: noStoreHeaders() });
   }
 
-  if (providerResolution.status === "retrieval") {
+  if (body.provider === "retrieval") {
     const notice = body.provider === "retrieval"
       ? "已按所选检索模式返回可核验的确定性分析。"
       : "服务端尚未配置可用的大模型供应商，已返回可核验的确定性检索分析。";
     return retrievalFallback(question, citedHits, notice, undefined, conversationId);
   }
+
+  let principal: Awaited<ReturnType<typeof optionalPrincipal>> = null;
+  try {
+    principal = await optionalPrincipal();
+  } catch {
+    // The final quota gate still prevents anonymous or unmetered upstream
+    // calls. Continue as anonymous so deterministic retrieval remains usable.
+    principal = null;
+  }
+  if (principal && principal.user.status !== "active") {
+    return retrievalFallback(question, citedHits, "当前账户不可使用模型调用，已回退到确定性检索分析。", 403, conversationId);
+  }
+
+  let providerResolution;
+  try {
+    providerResolution = await resolveProviderForUser(body.provider, principal);
+  } catch {
+    return retrievalFallback(question, citedHits, "模型凭据服务暂时不可用，已回退到确定性检索分析。", 503, conversationId);
+  }
+  if (providerResolution.status === "invalid") return error("provider_invalid", "模型供应商不在服务端允许列表中。", 400);
+  if (providerResolution.status === "retrieval") {
+    return retrievalFallback(
+      question,
+      citedHits,
+      principal ? "当前账户尚未选择可用模型，已返回确定性检索分析。" : "登录并在账户中心配置个人模型 API 后可使用大模型问答；当前已返回确定性检索分析。",
+      undefined,
+      conversationId,
+    );
+  }
   if (providerResolution.status === "unavailable") {
     return retrievalFallback(
       question,
       citedHits,
-      `${providerResolution.provider.label} 尚未在服务端配置 API 密钥，已回退到确定性检索分析。`,
+      `${providerResolution.provider.label} 尚未配置可用的个人或站点 API 密钥，已回退到确定性检索分析。`,
       503,
       conversationId,
       providerResolution.provider,
@@ -78,6 +114,7 @@ export async function POST(request: Request) {
       contextEntries: citedHits.length,
       historyTurns: history.length,
       conversationId,
+      principal,
     });
   } catch (reason) {
     if (reason instanceof Error && (reason as Error & { code?: string }).code === "QUOTA_EXCEEDED") return error("quota_exceeded", "今日的大模型问答配额已经用完；确定性检索仍可继续使用。", 429);

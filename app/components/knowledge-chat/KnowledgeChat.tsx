@@ -32,10 +32,8 @@ type AskResponse = {
   error?: { message?: string };
 };
 
-type ProviderOption = { id: ChatProviderId; label: string; model: string; available: boolean };
-type ProviderEnvelope = { defaultProvider: ChatProviderId | null; providers: ProviderOption[] };
-
-const PROVIDER_STORAGE_KEY = 'fusiondigital.knowledge-chat.provider.v1';
+type ProviderOption = { id: ChatProviderId; label: string; model: string; available: boolean; source?: 'personal' | 'platform' | 'none' };
+type ProviderEnvelope = { authenticated?: boolean; defaultProvider: ChatProviderId | 'retrieval' | null; providers: ProviderOption[] };
 
 export type KnowledgeChatContext = {
   path: string;
@@ -79,6 +77,7 @@ export default function KnowledgeChat({
   const [providers, setProviders] = useState<ProviderOption[]>([]);
   const [selectedProvider, setSelectedProvider] = useState<ChatProviderId | 'retrieval'>('retrieval');
   const [providersLoaded, setProvidersLoaded] = useState(false);
+  const [providerPreferencesEnabled, setProviderPreferencesEnabled] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const logRef = useRef<HTMLDivElement | null>(null);
   const currentDraft = draft ?? localDraft;
@@ -114,13 +113,10 @@ export default function KnowledgeChat({
         ? payload.providers.filter((provider) => provider && typeof provider.id === 'string' && typeof provider.label === 'string' && typeof provider.model === 'string')
         : [];
       setProviders(safeProviders);
-      let stored = '';
-      try { stored = window.localStorage.getItem(PROVIDER_STORAGE_KEY) || ''; } catch { /* use server default */ }
-      const storedAvailable = safeProviders.some((provider) => provider.id === stored && provider.available);
-      const defaultAvailable = payload.defaultProvider && safeProviders.some((provider) => provider.id === payload.defaultProvider && provider.available);
-      setSelectedProvider(stored === 'retrieval' || storedAvailable
-        ? stored as ChatProviderId | 'retrieval'
-        : defaultAvailable ? payload.defaultProvider! : 'retrieval');
+      setProviderPreferencesEnabled(payload.authenticated === true);
+      const defaultAvailable = payload.defaultProvider === 'retrieval'
+        || Boolean(payload.defaultProvider && safeProviders.some((provider) => provider.id === payload.defaultProvider && provider.available));
+      setSelectedProvider(defaultAvailable ? payload.defaultProvider! : 'retrieval');
     }).catch((reason) => {
       if ((reason as Error).name !== 'AbortError') setSelectedProvider('retrieval');
     }).finally(() => {
@@ -128,11 +124,6 @@ export default function KnowledgeChat({
     });
     return () => controller.abort();
   }, []);
-
-  useEffect(() => {
-    if (!providersLoaded) return;
-    try { window.localStorage.setItem(PROVIDER_STORAGE_KEY, selectedProvider); } catch { /* preference remains in memory */ }
-  }, [providersLoaded, selectedProvider]);
 
   useEffect(() => {
     if (!restored) return;
@@ -157,6 +148,16 @@ export default function KnowledgeChat({
   const activePrompts = prompts ?? [t('chat.promptEvidence'), t('chat.promptCompare'), t('chat.promptGaps')];
   const activeTitle = locale === 'en' ? (titleEn || t('chat.defaultTitle')) : (title || t('chat.defaultTitle'));
   const activeProvider = providers.find((provider) => provider.id === selectedProvider);
+
+  function selectProvider(value: ChatProviderId | 'retrieval') {
+    setSelectedProvider(value);
+    if (!providerPreferencesEnabled) return;
+    void fetch('/api/account/llm-credentials', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ defaultProvider: value }),
+    }).catch(() => { /* The in-page selection remains usable if preference persistence is unavailable. */ });
+  }
 
   async function submit(event?: FormEvent, suggested?: string) {
     event?.preventDefault();
@@ -207,10 +208,10 @@ export default function KnowledgeChat({
     <header className="knowledgeChatHeader">
       <div><p>{eyebrow || t('chat.eyebrow')}</p><h2 id="knowledge-chat-title">{activeTitle}</h2><span>{t('chat.persistence')}</span></div>
       <div className="knowledgeChatHeaderTools">
-        <label className="knowledgeChatProvider"><span>{t('chat.provider')}</span><select value={selectedProvider} onChange={(event) => setSelectedProvider(event.target.value as ChatProviderId | 'retrieval')} disabled={!providersLoaded || pending}>
+        <label className="knowledgeChatProvider"><span>{t('chat.provider')}</span><select value={selectedProvider} onChange={(event) => selectProvider(event.target.value as ChatProviderId | 'retrieval')} disabled={!providersLoaded || pending}>
           <option value="retrieval">{t('chat.providerRetrieval')}</option>
-          {providers.map((provider) => <option key={provider.id} value={provider.id} disabled={!provider.available}>{provider.label} · {provider.available ? provider.model : t('chat.providerUnavailable')}</option>)}
-        </select><small>{activeProvider ? `${activeProvider.label} · ${activeProvider.model}` : t('chat.providerHint')}</small></label>
+          {providers.map((provider) => <option key={provider.id} value={provider.id} disabled={!provider.available}>{provider.label} · {provider.available ? `${provider.model} · ${provider.source === 'personal' ? t('chat.providerPersonal') : t('chat.providerPlatform')}` : t('chat.providerUnavailable')}</option>)}
+        </select><small>{activeProvider ? `${activeProvider.label} · ${activeProvider.model}` : t('chat.providerHint')} <Link href="/account#ai-models">{t('chat.providerManage')}</Link></small></label>
         <div className="knowledgeChatStats"><b>{turns.length}</b><span>{t('chat.messages')}</span><button type="button" onClick={newConversation} disabled={!turns.length && !pending}>{t('chat.new')}</button></div>
       </div>
     </header>
