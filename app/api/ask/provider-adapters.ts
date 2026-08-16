@@ -1,6 +1,15 @@
-import type { ResolvedLlmProvider } from "./provider-registry";
+import { normalizeProviderApiKey, type ResolvedLlmProvider } from "./provider-registry";
 
 const MAX_PROVIDER_RESPONSE_BYTES = 1_048_576;
+const FIXED_PROVIDER_ENDPOINTS = Object.freeze({
+  openai: Object.freeze(["https://api.openai.com/v1/responses"]),
+  anthropic: Object.freeze(["https://api.anthropic.com/v1/messages"]),
+  deepseek: Object.freeze(["https://api.deepseek.com/chat/completions"]),
+  kimi: Object.freeze([
+    "https://api.moonshot.cn/v1/chat/completions",
+    "https://api.moonshot.ai/v1/chat/completions",
+  ]),
+}) satisfies Readonly<Record<ResolvedLlmProvider["id"], readonly string[]>>;
 
 export type ProviderUsage = { inputTokens: number; outputTokens: number };
 export type ProviderAnswer = ProviderUsage & { outputText: string };
@@ -34,25 +43,28 @@ export async function requestProviderAnswer(input: {
   signal: AbortSignal;
 }): Promise<ProviderAnswer> {
   const { provider } = input;
-  let request: Request;
+  let endpoint: string;
+  let init: RequestInit;
   try {
-    const init = provider.protocol === "openai-responses"
+    endpoint = fixedProviderEndpoint(provider);
+    init = provider.protocol === "openai-responses"
       ? openAiRequest(input)
       : provider.protocol === "anthropic-messages"
         ? anthropicRequest(input)
         : chatCompletionRequest(input);
-    request = new Request(provider.endpoint, {
-      ...init,
-      redirect: "error",
-      signal: input.signal,
-    });
   } catch {
     throw new ProviderRequestError("request");
   }
 
   let response: Response;
   try {
-    response = await fetch(request);
+    response = await fetch(endpoint, {
+      ...init,
+      // Never forward a user's credential to a redirected origin. Returning
+      // the 3xx response also keeps redirects in the normal HTTP error path.
+      redirect: "manual",
+      signal: input.signal,
+    });
   } catch {
     throw new ProviderRequestError(abortedRequestKind(input.signal));
   }
@@ -64,6 +76,15 @@ export async function requestProviderAnswer(input: {
   if (provider.protocol === "openai-responses") return parseOpenAi(payload);
   if (provider.protocol === "anthropic-messages") return parseAnthropic(payload);
   return parseChatCompletion(payload);
+}
+
+function fixedProviderEndpoint(provider: ResolvedLlmProvider): string {
+  const allowed = FIXED_PROVIDER_ENDPOINTS[provider.id];
+  if (!allowed.includes(provider.endpoint)) throw new ProviderRequestError("request");
+  if (normalizeProviderApiKey(provider.apiKey) !== provider.apiKey) {
+    throw new ProviderRequestError("request");
+  }
+  return provider.endpoint;
 }
 
 function openAiRequest(input: Parameters<typeof requestProviderAnswer>[0]): RequestInit {

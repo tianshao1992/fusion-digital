@@ -97,13 +97,13 @@ test('all provider adapters use fixed HTTPS endpoints, private auth headers and 
       const resolution = resolveProvider(entry.id, entry.env);
       assert.equal(resolution.status, 'selected');
       if (resolution.status !== 'selected') throw new Error('provider was not selected');
-      globalThis.fetch = async (request) => {
-        assert.ok(request instanceof Request);
-        assert.equal(request.url, entry.endpoint);
-        assert.equal(request.redirect, 'error');
-        assert.equal(request.cache, 'default');
-        const headers = request.headers;
-        const serializedBody = await request.clone().text();
+      globalThis.fetch = async (url, init) => {
+        assert.equal(url, entry.endpoint);
+        assert.equal(init?.redirect, 'manual');
+        assert.equal('cache' in (init ?? {}), false);
+        assert.ok(init?.signal instanceof AbortSignal);
+        const headers = new Headers(init?.headers);
+        const serializedBody = String(init?.body ?? '');
         const body = JSON.parse(serializedBody) as Record<string, unknown>;
         entry.assertRequest(headers, body);
         assert.doesNotMatch(serializedBody, /secret-openai|secret-anthropic|secret-deepseek|secret-kimi/);
@@ -156,6 +156,11 @@ test('provider adapter classifies request construction, network, timeout and inc
   };
   const originalFetch = globalThis.fetch;
   try {
+    let fetchCalls = 0;
+    globalThis.fetch = async () => {
+      fetchCalls += 1;
+      throw new Error('fetch must not run for an invalid request');
+    };
     await assert.rejects(
       requestProviderAnswer({
         ...base,
@@ -164,6 +169,15 @@ test('provider adapter classifies request construction, network, timeout and inc
       }),
       providerFailure('request'),
     );
+    await assert.rejects(
+      requestProviderAnswer({
+        ...base,
+        provider: { ...resolution.provider, endpoint: 'https://attacker.example/v1/chat/completions' },
+        signal: new AbortController().signal,
+      }),
+      providerFailure('request'),
+    );
+    assert.equal(fetchCalls, 0);
 
     globalThis.fetch = async () => { throw new Error('SECRET_UPSTREAM_FAILURE'); };
     await assert.rejects(
