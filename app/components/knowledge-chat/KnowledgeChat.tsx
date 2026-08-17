@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { useI18n } from '@/app/i18n';
+import { isPublicAnonymousMode } from '@/app/deployment-mode';
 import type { SearchHit } from '@/app/search/search-core';
 import {
   CHAT_LIMITS,
@@ -67,6 +68,7 @@ export default function KnowledgeChat({
   onDraftChange,
   onEvidenceResults,
 }: KnowledgeChatProps) {
+  const publicAnonymousMode = isPublicAnonymousMode();
   const { locale, t } = useI18n();
   const [localDraft, setLocalDraft] = useState('');
   const [turns, setTurns] = useState<ChatTurn[]>([]);
@@ -76,7 +78,7 @@ export default function KnowledgeChat({
   const [restored, setRestored] = useState(false);
   const [providers, setProviders] = useState<ProviderOption[]>([]);
   const [selectedProvider, setSelectedProvider] = useState<ChatProviderId | 'retrieval'>('retrieval');
-  const [providersLoaded, setProvidersLoaded] = useState(false);
+  const [providersLoaded, setProvidersLoaded] = useState(publicAnonymousMode);
   const [providerPreferencesEnabled, setProviderPreferencesEnabled] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const logRef = useRef<HTMLDivElement | null>(null);
@@ -100,6 +102,7 @@ export default function KnowledgeChat({
   }, []);
 
   useEffect(() => {
+    if (publicAnonymousMode) return;
     const controller = new AbortController();
     void fetch('/api/ask/providers', {
       headers: { Accept: 'application/json' },
@@ -123,7 +126,7 @@ export default function KnowledgeChat({
       if (!controller.signal.aborted) setProvidersLoaded(true);
     });
     return () => controller.abort();
-  }, []);
+  }, [publicAnonymousMode]);
 
   useEffect(() => {
     if (!restored) return;
@@ -208,10 +211,10 @@ export default function KnowledgeChat({
     <header className="knowledgeChatHeader">
       <div><p>{eyebrow || t('chat.eyebrow')}</p><h2 id="knowledge-chat-title">{activeTitle}</h2><span>{t('chat.persistence')}</span></div>
       <div className="knowledgeChatHeaderTools">
-        <label className="knowledgeChatProvider"><span>{t('chat.provider')}</span><select value={selectedProvider} onChange={(event) => selectProvider(event.target.value as ChatProviderId | 'retrieval')} disabled={!providersLoaded || pending}>
+        {!publicAnonymousMode && <label className="knowledgeChatProvider"><span>{t('chat.provider')}</span><select value={selectedProvider} onChange={(event) => selectProvider(event.target.value as ChatProviderId | 'retrieval')} disabled={!providersLoaded || pending}>
           <option value="retrieval">{t('chat.providerRetrieval')}</option>
           {providers.map((provider) => <option key={provider.id} value={provider.id} disabled={!provider.available}>{provider.label} · {provider.available ? `${provider.model} · ${provider.source === 'personal' ? t('chat.providerPersonal') : t('chat.providerPlatform')}` : t('chat.providerUnavailable')}</option>)}
-        </select><small>{activeProvider ? `${activeProvider.label} · ${activeProvider.model}` : t('chat.providerHint')} <Link href="/account#ai-models">{t('chat.providerManage')}</Link></small></label>
+        </select><small>{activeProvider ? `${activeProvider.label} · ${activeProvider.model}` : t('chat.providerHint')} <Link href="/account#ai-models">{t('chat.providerManage')}</Link></small></label>}
         <div className="knowledgeChatStats"><b>{turns.length}</b><span>{t('chat.messages')}</span><button type="button" onClick={newConversation} disabled={!turns.length && !pending}>{t('chat.new')}</button></div>
       </div>
     </header>
@@ -224,7 +227,7 @@ export default function KnowledgeChat({
       {turns.map((turn) => <article className={`knowledgeChatTurn is-${turn.role}`} key={turn.id}>
         <header><span>{turn.role === 'user' ? t('chat.user') : t('chat.assistant')}</span>{turn.role === 'assistant' && <b data-mode={turn.mode}>{turn.mode === 'ai-grounded' ? t('chat.aiMode') : turn.mode === 'assistant-direct' ? t('chat.assistantMode') : t('chat.retrievalMode')}{turn.provider && turn.model ? <small>{turn.provider} · {turn.model}</small> : null}</b>}</header>
         <div>{turn.content.split(/\n{2,}/).map((paragraph, index) => <p key={`${turn.id}-${index}`}>{paragraph}</p>)}</div>
-        {turn.notice && <p className="knowledgeChatNotice">{turn.notice}{turn.mode === 'retrieval-only' && /登录/.test(turn.notice) ? <> <Link href={signInHref}>{t('chat.signIn')}</Link></> : null}</p>}
+        {turn.notice && <p className="knowledgeChatNotice">{turn.notice}{!publicAnonymousMode && turn.mode === 'retrieval-only' && /登录/.test(turn.notice) ? <> <Link href={signInHref}>{t('chat.signIn')}</Link></> : null}</p>}
         {turn.citations?.length ? <div className="knowledgeChatCitations">{turn.citations.map((citation) => <a href={citation.url} target="_blank" rel="noreferrer" key={`${turn.id}-${citation.ref}-${citation.url}`}><b>{citation.ref}</b><span>{citation.label}</span><small>{citation.entryTitle}</small></a>)}</div> : null}
         {turn.caveats?.length ? <details><summary>{t('chat.caveats')}</summary><ul>{turn.caveats.map((item) => <li key={item}>{item}</li>)}</ul></details> : null}
       </article>)}

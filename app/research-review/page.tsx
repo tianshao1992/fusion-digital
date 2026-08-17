@@ -4,6 +4,7 @@ import SiteNav from "@/app/components/SiteNav";
 import SiteFooter from "@/app/components/SiteFooter";
 import { chatGPTSignInPath, getChatGPTUser } from "@/app/chatgpt-auth";
 import ReviewWorkspace from "./ReviewWorkspace";
+import { isPublicAnonymousMode } from "@/app/deployment-mode";
 import "./research-review.css";
 
 export const dynamic = "force-dynamic";
@@ -14,6 +15,21 @@ export const metadata: Metadata = {
 };
 
 export default async function ResearchReviewPage() {
+  if (isPublicAnonymousMode()) {
+    return <main className="reviewPage">
+      <SiteNav active="knowledge" />
+      <header className="reviewHero">
+        <p>FUSIONDIGITAL / PUBLIC ANONYMOUS EDITION</p>
+        <h1>公开站点只展示已发布内容，<br /><em>不开放候选审核与写操作。</em></h1>
+        <div className="reviewRules"><span>匿名访问</span><span>只读发布物</span><span>审核入口关闭</span><span>不接受身份请求头</span></div>
+      </header>
+      <section className="reviewSignIn">
+        <div><small>REVIEW WORKSPACE UNAVAILABLE</small><h2>候选审核台未部署到公开匿名版</h2><p>审核依赖可信身份、服务端角色和审计数据库。当前临时公网镜像不具备这些信任条件，因此不会显示登录入口或审核数据。</p></div>
+        <Link href="/knowledge-graph">查看已发布知识 <b>→</b></Link>
+      </section>
+      <SiteFooter />
+    </main>;
+  }
   const identity = await getChatGPTUser();
   return <main className="reviewPage">
     <SiteNav active="knowledge" />

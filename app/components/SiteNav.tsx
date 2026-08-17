@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { type KeyboardEvent, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { knowledgeModules } from '../data/knowledge-modules';
 import { useI18n } from '../i18n';
+import { isPublicAnonymousMode } from '../deployment-mode';
 import BrandWordmark from './BrandWordmark';
 import { selectVisibleNavigationKeys } from './site-nav-layout';
 import { ThemeSwitcher, type ThemeSwitcherLabels } from './theme';
@@ -21,6 +22,7 @@ const links = [
 type NavigationLink = (typeof links)[number];
 
 export default function SiteNav({active = 'home'}: SiteNavProps) {
+  const publicAnonymousMode = isPublicAnonymousMode();
   const { locale, setLocale, t } = useI18n();
   const menuId = useId();
   const linksShellRef = useRef<HTMLDivElement>(null);
@@ -228,10 +230,10 @@ export default function SiteNav({active = 'home'}: SiteNavProps) {
       {localeButton()}
       <ThemeSwitcher labels={themeLabels} compact />
     </div>
-    <Link className={`siteAccountAccess${active === 'account' ? ' active' : ''}`} href="/account" aria-label={t('nav.accountCenter')}>{t('nav.account')}</Link>
+    {!publicAnonymousMode && <Link className={`siteAccountAccess${active === 'account' ? ' active' : ''}`} href="/account" aria-label={t('nav.accountCenter')}>{t('nav.account')}</Link>}
     <details className="mobileNav">
       <summary aria-label={t('nav.open')}>{t('nav.menu')}</summary>
-      <div>{links.map((item) => renderLink(item))}{renderKnowledgeMenu(true)}<Link className={active === 'account' ? 'active' : ''} href="/account" aria-current={active === 'account' ? 'page' : undefined}>{t('nav.accountCenter')}</Link><div className="siteMobilePreferences" aria-label={t('preferences.group')}>{localeButton('siteLocaleSwitch siteLocaleSwitch--mobile')}<ThemeSwitcher labels={themeLabels} compact /></div></div>
+      <div>{links.map((item) => renderLink(item))}{renderKnowledgeMenu(true)}{!publicAnonymousMode && <Link className={active === 'account' ? 'active' : ''} href="/account" aria-current={active === 'account' ? 'page' : undefined}>{t('nav.accountCenter')}</Link>}<div className="siteMobilePreferences" aria-label={t('preferences.group')}>{localeButton('siteLocaleSwitch siteLocaleSwitch--mobile')}<ThemeSwitcher labels={themeLabels} compact /></div></div>
     </details>
   </nav>;
 }

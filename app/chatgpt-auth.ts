@@ -1,5 +1,6 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { isPublicAnonymousMode } from "./deployment-mode";
 
 export type ChatGPTUser = {
   userId: string;
@@ -19,6 +20,11 @@ const SIGN_OUT_PATH = "/signout-with-chatgpt";
 const CALLBACK_PATH = "/callback";
 
 export async function getChatGPTUser(): Promise<ChatGPTUser | null> {
+  // The standalone public mirror has no trusted platform identity boundary.
+  // Ignore identity-shaped request headers even if a client or proxy supplies
+  // them, so self-hosting can never turn forged headers into a signed-in user.
+  if (isPublicAnonymousMode()) return null;
+
   const requestHeaders = await headers();
   const userId = requestHeaders.get(USER_ID_HEADER);
   const email = requestHeaders.get(USER_EMAIL_HEADER);

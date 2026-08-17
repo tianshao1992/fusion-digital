@@ -2,10 +2,19 @@ import { NextResponse } from "next/server";
 import { optionalPrincipal } from "../../_lib/auth";
 import { publicProviderEnvelope } from "../provider-registry";
 import { userProviderEnvelope } from "../user-provider";
+import { isPublicAnonymousMode } from "@/app/deployment-mode";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  if (isPublicAnonymousMode()) {
+    return NextResponse.json({ authenticated: false, defaultProvider: "retrieval", providers: [] }, {
+      headers: {
+        "Cache-Control": "no-store",
+        "X-Content-Type-Options": "nosniff",
+      },
+    });
+  }
   let envelope;
   try {
     const principal = await optionalPrincipal();

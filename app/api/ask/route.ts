@@ -5,6 +5,7 @@ import { authorizeAsk, settleAsk, type AskAccess } from "./access";
 import { ProviderRequestError, requestProviderAnswer } from "./provider-adapters";
 import { cleanProviderId, type PublicLlmProvider } from "./provider-registry";
 import { resolveProviderForUser } from "./user-provider";
+import { isPublicAnonymousMode } from "@/app/deployment-mode";
 
 export const dynamic = "force-dynamic";
 
@@ -44,7 +45,9 @@ export async function POST(request: Request) {
       answer: assistantDirectAnswer,
       citations: [],
       results: [],
-      notice: "这是 FusionDigital 站内助手的能力说明，不调用外部模型，也不消耗模型配额。",
+      notice: isPublicAnonymousMode()
+        ? "当前为公开匿名版，仅提供站内说明与确定性检索，不调用外部模型。"
+        : "这是 FusionDigital 站内助手的能力说明，不调用外部模型，也不消耗模型配额。",
       conversationId,
     }, { headers: noStoreHeaders() });
   }
@@ -61,6 +64,16 @@ export async function POST(request: Request) {
       notice: "没有证据时系统不会要求模型生成答案。",
       conversationId,
     }, { headers: noStoreHeaders() });
+  }
+
+  if (isPublicAnonymousMode()) {
+    return retrievalFallback(
+      question,
+      citedHits,
+      "当前为公开匿名版，问答固定使用站内可核验资料，不调用外部模型，也不读取账户或个人密钥。",
+      undefined,
+      conversationId,
+    );
   }
 
   if (body.provider === "retrieval") {

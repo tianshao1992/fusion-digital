@@ -63,6 +63,42 @@ test('provider status endpoint returns only public configuration metadata', asyn
   }
 });
 
+test('public-anonymous mode exposes retrieval only and never calls an upstream model', async () => {
+  const previousMode = process.env.NEXT_PUBLIC_FUSIONDIGITAL_MODE;
+  const originalFetch = globalThis.fetch;
+  let called = false;
+  process.env.NEXT_PUBLIC_FUSIONDIGITAL_MODE = 'public-anonymous';
+  globalThis.fetch = async () => { called = true; throw new Error('must not call upstream'); };
+  try {
+    const [{ GET }, { POST }] = await Promise.all([
+      import('../app/api/ask/providers/route.ts'),
+      import('../app/api/ask/route.ts'),
+    ]);
+    const providerResponse = await GET();
+    assert.deepEqual(await providerResponse.json(), {
+      authenticated: false,
+      defaultProvider: 'retrieval',
+      providers: [],
+    });
+
+    const askResponse = await POST(new Request('http://localhost/api/ask', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', origin: 'http://localhost', 'sec-fetch-site': 'same-origin' },
+      body: JSON.stringify({ question: '请介绍 DINA', provider: 'deepseek' }),
+    }));
+    const payload = await askResponse.json() as Record<string, unknown>;
+    assert.equal(askResponse.status, 200);
+    assert.equal(payload.mode, 'retrieval-only');
+    assert.match(String(payload.notice), /公开匿名版/);
+    assert.equal('provider' in payload, false);
+    assert.equal(called, false);
+  } finally {
+    globalThis.fetch = originalFetch;
+    if (previousMode === undefined) delete process.env.NEXT_PUBLIC_FUSIONDIGITAL_MODE;
+    else process.env.NEXT_PUBLIC_FUSIONDIGITAL_MODE = previousMode;
+  }
+});
+
 test('ask endpoint rejects unknown providers before any upstream call', async () => {
   const originalFetch = globalThis.fetch;
   let called = false;

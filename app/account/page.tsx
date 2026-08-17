@@ -5,6 +5,7 @@ import SiteFooter from "@/app/components/SiteFooter";
 import SiteNav from "@/app/components/SiteNav";
 import AccountDashboard from "./AccountDashboard";
 import LlmCredentialManager from "./LlmCredentialManager";
+import { isPublicAnonymousMode } from "@/app/deployment-mode";
 import "./account.css";
 
 export const dynamic = "force-dynamic";
@@ -15,6 +16,24 @@ export const metadata: Metadata = {
 };
 
 export default async function AccountPage() {
+  if (isPublicAnonymousMode()) {
+    return <main className="accountPage">
+      <SiteNav active="account" />
+      <header className="accountHero">
+        <div className="accountHeroCopy">
+          <p>FUSIONDIGITAL / PUBLIC ANONYMOUS EDITION</p>
+          <h1>当前站点为公开匿名版，<br /><em>不提供账户与密钥管理。</em></h1>
+          <div className="accountSignals" aria-label="公开匿名版边界"><span>无需登录</span><span>不识别用户身份</span><span>不保存个人密钥</span><span>仅开放公开内容</span></div>
+        </div>
+        <aside className="accountIdentityCard"><span>IDENTITY STATUS</span><strong>匿名访问</strong><p>账户功能未启用</p><small>请返回公开知识与数字样机页面继续浏览</small></aside>
+      </header>
+      <section className="accountRegistration">
+        <div><p>01 / PUBLIC ACCESS BOUNDARY</p><h2>登录、角色、配额与个人模型连接在此部署中不可用。</h2><p>该临时公网镜像不会信任身份请求头，也不会展示登录或模型密钥入口。检索问答固定使用站内可核验资料。</p><Link className="accountPrimaryAction" href="/search">进入公开知识检索 <b>↗</b></Link></div>
+        <ol><li><b>01</b><span><strong>公开浏览</strong>访问知识域、装置和数字样机。</span></li><li><b>02</b><span><strong>匿名检索</strong>问答仅使用站内确定性检索。</span></li><li><b>03</b><span><strong>写操作关闭</strong>账户、密钥与审核能力不对公网开放。</span></li></ol>
+      </section>
+      <SiteFooter />
+    </main>;
+  }
   const user = await getChatGPTUser();
   return <main className="accountPage">
     <SiteNav active="account" />
