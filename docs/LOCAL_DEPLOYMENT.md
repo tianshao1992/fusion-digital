@@ -64,12 +64,18 @@ npm run assets:verify:tracked
 需要从 GitHub 恢复时：
 
 ```bash
-git clone https://github.com/tianshao1992/fusion-physics-atlas.git fusion-physics-atlas
-cd fusion-physics-atlas
+git clone --branch main --single-branch git@github.com:tianshao1992/fusion-digital.git FusionDigital
+cd FusionDigital
 git rev-parse HEAD
 npm ci
 npm run assets:status
 npm run assets:verify:tracked
+```
+
+若当前网络阻断 GitHub SSH 的 22 端口，可使用 GitHub 官方 SSH-over-443 入口：
+
+```bash
+git clone --branch main --single-branch ssh://git@ssh.github.com:443/tianshao1992/fusion-digital.git FusionDigital
 ```
 
 复现负责人应记录 `git rev-parse HEAD` 的完整 40 位 SHA。`npm ci` 会严格安装锁文件版本，并在依赖与锁文件不一致时直接失败；不要用 `npm install` 悄悄改写 `package-lock.json`。
