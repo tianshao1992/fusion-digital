@@ -69,7 +69,7 @@ export default function ProgramRoadmapPage() {
       <div className="programSectionHead">
         <p>01 / INTEGRATED TECHNICAL ROUTE</p>
         <h2 id="system-map-title">五大专业环节，共同把模型变成可验证的实验能力。</h2>
-        <span>先看总览中的支撑关系，再点击任一环节下钻模型链、输入输出、验证证据与“不允许作出的结论”；两期甘特继续回答何时交付和如何过门。</span>
+        <span>先看总览中的支撑关系，再点击任一环节，下钻“聚变专业覆盖 → 候选工具链 → 技术子路线 → 一期 / 二期交付”；每条路线同步显示输入输出、V&amp;V 证据、适用边界、工作包与阶段门。</span>
       </div>
       <ProgramSystemMap />
     </section>
@@ -112,7 +112,7 @@ export default function ProgramRoadmapPage() {
       </div>
       <div className="technologyTable" role="table" aria-label="聚变数字孪生技术路线选型">
         <div className="technologyTableHead" role="row"><span role="columnheader">架构层</span><span role="columnheader">推荐路线</span><span role="columnheader">选择依据与边界</span><span role="columnheader">模块</span></div>
-        {technologyDecisions.map((item, index) => <div className="technologyRow" role="row" key={item.layer}><span role="cell"><small>{String(index + 1).padStart(2, '0')}</small><b>{item.layer}</b></span><strong role="cell">{item.choice}</strong><p role="cell">{item.rationale}</p><span role="cell" className="technologyModules">{item.modules.map((moduleId) => { const moduleMeta = moduleById.get(moduleId); return <a href={`#module-${moduleId}`} key={moduleId}>{moduleMeta?.title ?? moduleId}</a>; })}</span></div>)}
+        {technologyDecisions.map((item, index) => <div className="technologyRow" role="row" key={item.layer}><span role="cell"><small>{String(index + 1).padStart(2, '0')}</small><b>{item.layer}</b></span><strong role="cell">{item.choice}</strong><p role="cell">{item.rationale}</p><span role="cell" className="technologyModules">{item.modules.map((moduleId) => { const knowledgeMeta = moduleById.get(moduleId); return <a href={`#module-${moduleId}`} key={moduleId}>{knowledgeMeta?.title ?? moduleId}</a>; })}</span></div>)}
       </div>
     </section>
 

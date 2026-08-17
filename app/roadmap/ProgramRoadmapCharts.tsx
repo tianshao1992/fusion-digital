@@ -15,6 +15,12 @@ import {
   type RoadmapPhase,
   type RoadmapWorkPackage,
 } from './program-roadmap-data';
+import {
+  programPillarRouteMaps,
+  type PillarTechnicalRoute as ProgramPillarRoute,
+  type ProgramPillarRouteMap,
+  type ProgramToolRole,
+} from './program-pillar-route-maps';
 
 function chartData(params: unknown): unknown[] | null {
   if (!params || typeof params !== 'object' || !('data' in params)) return null;
@@ -380,6 +386,424 @@ function moduleTitle(id: string) {
   return knowledgeModuleRoutes.find((module) => module.id === id)?.title ?? id;
 }
 
+function moduleHref(id: string) {
+  return knowledgeModuleRoutes.find((module) => module.id === id)?.route ?? `/knowledge-graph#module-${id}`;
+}
+
+type ProgramRoutePhaseFilter = 'all' | RoadmapPhase['id'];
+
+const phaseDeliveryMeta: Record<RoadmapPhase['id'], { short: string; title: string }> = {
+  'phase-1': { short: '一期', title: 'EXL‑50U · 3 个月闭环交付' },
+  'phase-2': { short: '二期', title: 'EHL‑2 · 虚拟首炮就绪交付' },
+};
+
+const programToolRoleLabels: Record<ProgramToolRole, string> = {
+  'fact-archive': '权威事实档案',
+  'semantic-exchange': '跨模型语义交换',
+  'pre-shot-forward': '实验前正问题预演',
+  'as-shot-inverse': '实验后逆问题重构',
+  'realtime-plant': '实时控制 plant',
+  'offline-hi-fi': '离线高保真分析',
+  'synthetic-diagnostic': '合成诊断前向模型',
+  'control-test': '控制验证与故障注入',
+  'supervisory-readonly': '监督层只读接入',
+  'engineering-solver': '工程多物理场求解',
+  vvuq: '验证、确认与不确定度',
+  'evidence-ui': '证据导航与决策界面',
+};
+
+function evenlySpacedY(index: number, count: number, start = 68, end = 550) {
+  return count <= 1 ? (start + end) / 2 : start + (end - start) * index / (count - 1);
+}
+
+function compactChartLabel(value: string, maxCharacters = 11) {
+  const characters = Array.from(value);
+  if (characters.length <= maxCharacters) return value;
+  const lines: string[] = [];
+  for (let index = 0; index < characters.length && lines.length < 3; index += maxCharacters) {
+    lines.push(characters.slice(index, index + maxCharacters).join(''));
+  }
+  const consumed = lines.join('').length;
+  if (consumed < characters.length) lines[lines.length - 1] = `${lines.at(-1)?.slice(0, -1) ?? ''}…`;
+  return lines.join('\n');
+}
+
+function pillarSubrouteOption(
+  routeMap: ProgramPillarRouteMap,
+  selectedRouteId: string,
+  phaseFilter: ProgramRoutePhaseFilter,
+  pillarColor: string,
+  chartTheme: ReturnType<typeof useChartTheme>,
+): EChartsCoreOption {
+  const routeMapTitle = programPillars.find((pillar) => pillar.id === routeMap.pillarId)?.title ?? routeMap.pillarId;
+  const visibleRoutes = phaseFilter === 'all'
+    ? routeMap.routes
+    : routeMap.routes.filter((route) => route.phases.includes(phaseFilter));
+  const selectedRoute = visibleRoutes.find((route) => route.id === selectedRouteId) ?? visibleRoutes[0] ?? routeMap.routes[0];
+  const visibleCoverageIds = new Set(visibleRoutes.flatMap((route) => route.coverageIds));
+  const visibleToolIds = new Set(visibleRoutes.flatMap((route) => route.toolIds));
+  const coverages = routeMap.coverage.filter((item) => visibleCoverageIds.has(item.id)).sort((a, b) => a.order - b.order);
+  const tools = routeMap.tools.filter((item) => visibleToolIds.has(item.id)).sort((a, b) => a.order - b.order);
+  const phases = (['phase-1', 'phase-2'] as const).filter((phase) => phaseFilter === 'all' || phase === phaseFilter);
+  const activeCoverageIds = new Set(selectedRoute?.coverageIds ?? []);
+  const activeToolIds = new Set(selectedRoute?.toolIds ?? []);
+  const activePhases = new Set(selectedRoute?.phases ?? []);
+  const coverageColor = chartTheme.mode === 'dark' ? '#315044' : '#dbe9e2';
+  const toolColor = chartTheme.mode === 'dark' ? '#30485b' : '#d7e5ef';
+  const phaseColors: Record<RoadmapPhase['id'], string> = chartTheme.mode === 'dark'
+    ? { 'phase-1': '#e18766', 'phase-2': '#93c5b2' }
+    : { 'phase-1': '#b7593b', 'phase-2': '#477365' };
+  const nodes = [
+    ...coverages.map((coverage, index) => ({
+      id: `coverage:${coverage.id}`,
+      entityId: coverage.id,
+      nodeKind: 'coverage',
+      name: compactChartLabel(coverage.label),
+      value: `${coverage.description}\n术语：${coverage.terms.join(' · ')}`,
+      x: 95,
+      y: evenlySpacedY(index, coverages.length),
+      symbol: 'roundRect',
+      symbolSize: [178, 54],
+      category: 0,
+      itemStyle: {
+        color: coverageColor,
+        borderColor: activeCoverageIds.has(coverage.id) ? pillarColor : chartTheme.line,
+        borderWidth: activeCoverageIds.has(coverage.id) ? 3 : 1.4,
+        opacity: 1,
+      },
+      label: { color: chartTheme.text },
+    })),
+    ...tools.map((tool, index) => ({
+      id: `tool:${tool.id}`,
+      entityId: tool.id,
+      nodeKind: 'tool',
+      name: compactChartLabel(tool.label),
+      value: `${tool.fullName}\n${programToolRoleLabels[tool.role]}\n${tool.maturity}`,
+      x: 405,
+      y: evenlySpacedY(index, tools.length),
+      symbol: 'rect',
+      symbolSize: [188, 56],
+      category: 1,
+      itemStyle: {
+        color: toolColor,
+        borderColor: activeToolIds.has(tool.id) ? pillarColor : chartTheme.line,
+        borderWidth: activeToolIds.has(tool.id) ? 3 : 1.4,
+        opacity: 1,
+      },
+      label: { color: chartTheme.text },
+    })),
+    ...visibleRoutes.map((route, index) => ({
+      id: `route:${route.id}`,
+      entityId: route.id,
+      nodeKind: 'route',
+      name: compactChartLabel(route.title),
+      value: route.detail,
+      x: 725,
+      y: evenlySpacedY(index, visibleRoutes.length),
+      symbol: 'diamond',
+      symbolSize: route.id === selectedRoute?.id ? 118 : 104,
+      category: 2,
+      selected: route.id === selectedRoute?.id,
+      itemStyle: {
+        color: pillarColor,
+        borderColor: route.id === selectedRoute?.id ? chartTheme.text : chartTheme.background,
+        borderWidth: route.id === selectedRoute?.id ? 4 : 2,
+        opacity: 1,
+        shadowBlur: route.id === selectedRoute?.id ? 16 : 0,
+        shadowColor: pillarColor,
+      },
+      label: { color: contrastingLabel(pillarColor) },
+    })),
+    ...phases.map((phase, index) => {
+      const outcome = visibleRoutes
+        .flatMap((route) => route.deliveries)
+        .filter((delivery) => delivery.phase === phase)
+        .map((delivery) => delivery.outcome)
+        .join('；');
+      return {
+        id: `phase:${phase}`,
+        entityId: phase,
+        nodeKind: 'phase',
+        name: `${phaseDeliveryMeta[phase].short}\n${compactChartLabel(phaseDeliveryMeta[phase].title, 12)}`,
+        value: outcome,
+        x: 1045,
+        y: evenlySpacedY(index, phases.length, 168, 450),
+        symbol: 'roundRect',
+        symbolSize: [202, 76],
+        category: 3,
+        itemStyle: {
+          color: phaseColors[phase],
+          borderColor: chartTheme.background,
+          borderWidth: activePhases.has(phase) ? 3 : 2,
+          opacity: 1,
+        },
+        label: { color: contrastingLabel(phaseColors[phase]) },
+      };
+    }),
+  ];
+  const links = [
+    ...tools.flatMap((tool) => tool.coverageIds
+      .filter((coverageId) => visibleCoverageIds.has(coverageId))
+      .map((coverageId) => {
+        const active = activeCoverageIds.has(coverageId) && activeToolIds.has(tool.id);
+        return {
+          source: `coverage:${coverageId}`,
+          target: `tool:${tool.id}`,
+          value: tool.role,
+          lineStyle: { color: active ? pillarColor : chartTheme.text, opacity: active ? 0.92 : 0.48, width: active ? 2.8 : 1.2, curveness: 0.04 },
+        };
+      })),
+    ...visibleRoutes.flatMap((route) => route.toolIds
+      .filter((toolId) => visibleToolIds.has(toolId))
+      .map((toolId) => {
+        const active = route.id === selectedRoute?.id;
+        return {
+          source: `tool:${toolId}`,
+          target: `route:${route.id}`,
+          value: route.detail,
+          lineStyle: { color: active ? pillarColor : chartTheme.text, opacity: active ? 0.94 : 0.48, width: active ? 3 : 1.2, curveness: 0.04 },
+        };
+      })),
+    ...visibleRoutes.flatMap((route) => route.deliveries
+      .filter((delivery) => phases.includes(delivery.phase))
+      .map((delivery) => {
+        const active = route.id === selectedRoute?.id;
+        return {
+          source: `route:${route.id}`,
+          target: `phase:${delivery.phase}`,
+          value: `${delivery.outcome}\n${delivery.workPackageIds.join(' / ')} → ${delivery.gateIds.join(' / ') || '非阶段门'}`,
+          lineStyle: { color: active ? phaseColors[delivery.phase] : chartTheme.text, opacity: active ? 0.94 : 0.48, width: active ? 3 : 1.2, curveness: 0.04 },
+        };
+      })),
+  ];
+  const mobileCoverage = selectedRoute
+    ? routeMap.coverage.filter((coverage) => selectedRoute.coverageIds.includes(coverage.id))
+    : [];
+  const mobileTools = selectedRoute ? routeMap.tools.filter((tool) => selectedRoute.toolIds.includes(tool.id)) : [];
+  const mobileDeliveries = selectedRoute?.deliveries.filter((delivery) => phaseFilter === 'all' || delivery.phase === phaseFilter) ?? [];
+  const mobileNodes = selectedRoute ? [
+    {
+      id: 'mobile:coverage', entityId: selectedRoute.id, nodeKind: 'route',
+      name: `L0 · 专业覆盖\n${compactChartLabel(mobileCoverage.map((item) => item.label).join(' · '), 18)}`,
+      value: mobileCoverage.map((item) => `${item.label}：${item.description}`).join('\n'), x: 50, y: 40,
+      symbol: 'roundRect', symbolSize: [270, 88], category: 0,
+      itemStyle: { color: coverageColor, borderColor: pillarColor, borderWidth: 2 }, label: { color: chartTheme.text },
+    },
+    {
+      id: 'mobile:tools', entityId: selectedRoute.id, nodeKind: 'route',
+      name: `L1 · 候选工具链\n${compactChartLabel(mobileTools.map((item) => item.label).join(' · '), 18)}`,
+      value: mobileTools.map((item) => `${item.label}：${item.role}`).join('\n'), x: 50, y: 170,
+      symbol: 'roundRect', symbolSize: [270, 88], category: 1,
+      itemStyle: { color: toolColor, borderColor: pillarColor, borderWidth: 2 }, label: { color: chartTheme.text },
+    },
+    {
+      id: `route:${selectedRoute.id}`, entityId: selectedRoute.id, nodeKind: 'route',
+      name: `L2 · 技术子路线\n${compactChartLabel(selectedRoute.title, 16)}`, value: selectedRoute.detail, x: 50, y: 300,
+      symbol: 'diamond', symbolSize: 126, category: 2,
+      itemStyle: { color: pillarColor, borderColor: chartTheme.text, borderWidth: 3 }, label: { color: contrastingLabel(pillarColor) },
+    },
+    ...mobileDeliveries.map((delivery, index) => ({
+      id: `phase:${delivery.phase}`, entityId: delivery.phase, nodeKind: 'phase',
+      name: `L3 · ${phaseDeliveryMeta[delivery.phase].short}交付\n${compactChartLabel(delivery.outcome, 18)}`,
+      value: `${delivery.outcome}\n${delivery.workPackageIds.join(' / ')} → ${delivery.gateIds.join(' / ') || '非阶段门'}`,
+      x: 50, y: 430 + index * 122, symbol: 'roundRect', symbolSize: [278, 88], category: 3,
+      itemStyle: { color: phaseColors[delivery.phase], borderColor: chartTheme.background, borderWidth: 2 },
+      label: { color: contrastingLabel(phaseColors[delivery.phase]) },
+    })),
+  ] : [];
+  const mobileLinks = selectedRoute ? [
+    { source: 'mobile:coverage', target: 'mobile:tools', lineStyle: { color: pillarColor, opacity: 0.9, width: 2.6 } },
+    { source: 'mobile:tools', target: `route:${selectedRoute.id}`, lineStyle: { color: pillarColor, opacity: 0.9, width: 2.8 } },
+    ...mobileDeliveries.map((delivery) => ({
+      source: `route:${selectedRoute.id}`, target: `phase:${delivery.phase}`,
+      lineStyle: { color: phaseColors[delivery.phase], opacity: 0.92, width: 2.8 },
+    })),
+  ] : [];
+  return {
+    backgroundColor: chartTheme.background,
+    animationDuration: 420,
+    aria: {
+      enabled: true,
+      decal: { show: true },
+      description: `${routeMapTitle}四层技术子路线图。专业覆盖经候选工具链形成可验证技术子路线，并映射到一期 EXL-50U 与二期 EHL-2 交付。当前聚焦${selectedRoute?.title ?? '第一条子路线'}。`,
+    },
+    legend: {
+      bottom: 4,
+      data: ['专业覆盖', '候选工具链', '技术子路线', '一期 / 二期交付'],
+      itemWidth: 14,
+      itemHeight: 9,
+      textStyle: { fontSize: 10 },
+    },
+    graphic: [
+      { type: 'text', left: '6%', top: 14, style: { text: 'L0  专业覆盖', fill: chartTheme.muted, font: '800 11px sans-serif' } },
+      { type: 'text', left: '31%', top: 14, style: { text: 'L1  候选工具链', fill: chartTheme.muted, font: '800 11px sans-serif' } },
+      { type: 'text', left: '57%', top: 14, style: { text: 'L2  技术子路线', fill: chartTheme.muted, font: '800 11px sans-serif' } },
+      { type: 'text', right: '6%', top: 14, style: { text: 'L3  阶段交付', fill: chartTheme.muted, font: '800 11px sans-serif' } },
+    ],
+    tooltip: {
+      trigger: 'item',
+      borderWidth: 1,
+      formatter: (params: unknown) => {
+        const data = chartObjectData(params);
+        if (!data) return '';
+        if (typeof data.source === 'string' && typeof data.target === 'string') {
+          return `<b>受控技术接口</b><br/>${String(data.value ?? '输入 / 输出契约')}`;
+        }
+        const kind = data.nodeKind === 'coverage' ? '专业覆盖'
+          : data.nodeKind === 'tool' ? '候选工具链'
+            : data.nodeKind === 'route' ? '技术子路线' : '阶段交付';
+        return `<b>${kind} · ${String(data.name ?? '').replaceAll('\n', ' ')}</b><br/>${String(data.value ?? '').replaceAll('\n', '<br/>')}`;
+      },
+    },
+    series: [{
+      type: 'graph',
+      name: '专业覆盖',
+      layout: 'none',
+      left: 64,
+      right: 64,
+      top: 44,
+      bottom: 52,
+      roam: false,
+      selectedMode: 'single',
+      edgeSymbol: ['none', 'arrow'],
+      edgeSymbolSize: [0, 8],
+      data: nodes,
+      links,
+      categories: [
+        { name: '专业覆盖', itemStyle: { color: coverageColor } },
+        { name: '候选工具链', itemStyle: { color: toolColor } },
+        { name: '技术子路线', itemStyle: { color: pillarColor } },
+        { name: '一期 / 二期交付', itemStyle: { color: phaseColors['phase-1'] } },
+      ],
+      label: { show: true, position: 'inside', fontSize: 10, fontWeight: 750, lineHeight: 14, overflow: 'break' },
+      lineStyle: { color: chartTheme.text, opacity: 0.48, width: 1.2, curveness: 0.04 },
+      emphasis: { focus: 'adjacency', blurScope: 'coordinateSystem', lineStyle: { opacity: 1, width: 3 } },
+      blur: { itemStyle: { opacity: 0.2 }, label: { opacity: 0.28 }, lineStyle: { opacity: 0.06 } },
+      select: { itemStyle: { borderWidth: 4 } },
+    }],
+    media: [{
+      query: { maxWidth: 700 },
+      option: {
+        legend: { show: false },
+        graphic: [],
+        series: [{
+          left: 48,
+          right: 48,
+          top: 34,
+          bottom: 34,
+          data: mobileNodes,
+          links: mobileLinks,
+          label: { fontSize: 10, lineHeight: 15 },
+        }],
+      },
+    }],
+  };
+}
+
+function routeCoverageLabels(routeMap: ProgramPillarRouteMap, route: ProgramPillarRoute) {
+  return route.coverageIds.map((id) => routeMap.coverage.find((item) => item.id === id)?.label ?? id);
+}
+
+function routeTools(routeMap: ProgramPillarRouteMap, route: ProgramPillarRoute) {
+  return route.toolIds.map((id) => routeMap.tools.find((item) => item.id === id)).filter((item): item is ProgramPillarRouteMap['tools'][number] => Boolean(item));
+}
+
+function ProgramPillarSubrouteMap({ pillar }: { pillar: ProgramPillar }) {
+  const chartTheme = useChartTheme();
+  const colors = useMemo(() => pillarPalette(chartTheme), [chartTheme]);
+  const routeMap = programPillarRouteMaps[pillar.id];
+  const [phaseFilter, setPhaseFilter] = useState<ProgramRoutePhaseFilter>('all');
+  const [selectedRouteId, setSelectedRouteId] = useState(routeMap.routes[0]?.id ?? '');
+  const visibleRoutes = phaseFilter === 'all' ? routeMap.routes : routeMap.routes.filter((route) => route.phases.includes(phaseFilter));
+  const selectedRoute = visibleRoutes.find((route) => route.id === selectedRouteId) ?? visibleRoutes[0] ?? routeMap.routes[0];
+  const selectedTools = selectedRoute ? routeTools(routeMap, selectedRoute) : [];
+  const option = useMemo(
+    () => pillarSubrouteOption(routeMap, selectedRouteId, phaseFilter, colors[pillar.id], chartTheme),
+    [routeMap, selectedRouteId, phaseFilter, colors, pillar.id, chartTheme],
+  );
+  const chartId = `program-pillar-subroute-${pillar.id}`;
+  function choosePhase(nextPhase: ProgramRoutePhaseFilter) {
+    setPhaseFilter(nextPhase);
+    const nextRoutes = nextPhase === 'all' ? routeMap.routes : routeMap.routes.filter((route) => route.phases.includes(nextPhase));
+    if (!nextRoutes.some((route) => route.id === selectedRouteId)) setSelectedRouteId(nextRoutes[0]?.id ?? routeMap.routes[0]?.id ?? '');
+  }
+  return <section className="programPillarSubrouteMap" aria-labelledby={`${chartId}-title`}>
+    <header className="programPillarSubrouteHeader">
+      <div><small>PROFESSIONAL SUBROUTE MAP</small><h4 id={`${chartId}-title`}>专业覆盖 → 工具链 → 技术子路线 → 阶段交付</h4></div>
+      <p>节点展示“研究覆盖什么、用什么工具、如何接成受控技术链、形成什么可验收结果”。工具为候选技术栈，须经装置基准题与适用域审查后固化。</p>
+    </header>
+    <div className="programPillarSubrouteControls">
+      <nav className="programPillarPhaseFilter" aria-label={`${pillar.title}路线阶段筛选`}>
+        {([['all', '全部阶段'], ['phase-1', '一期 · EXL‑50U'], ['phase-2', '二期 · EHL‑2']] as const).map(([id, label]) => <button
+          type="button"
+          key={id}
+          className={phaseFilter === id ? 'isActive' : ''}
+          aria-pressed={phaseFilter === id}
+          aria-controls={chartId}
+          onClick={() => choosePhase(id)}
+        >{label}</button>)}
+      </nav>
+      <nav className="programPillarRouteSelector" aria-label={`${pillar.title}技术子路线`}>
+        {visibleRoutes.map((route, index) => <button
+          type="button"
+          key={route.id}
+          className={route.id === selectedRoute?.id ? 'isActive' : ''}
+          aria-pressed={route.id === selectedRoute?.id}
+          aria-controls={`${chartId} ${chartId}-detail`}
+          style={{ '--program-pillar-color': colors[pillar.id] } as CSSProperties}
+          onClick={() => setSelectedRouteId(route.id)}
+        ><small>{String(index + 1).padStart(2, '0')}</small><b>{route.title}</b><span>{route.status}</span></button>)}
+      </nav>
+    </div>
+    <ScientificChart
+      id={chartId}
+      option={option}
+      ariaLabel={`${pillar.title}专业覆盖、候选工具链、技术子路线与一期二期交付的四层关系图。可用上方原生按钮选择阶段和子路线，或点击图中节点聚焦关联路线。`}
+      fallbackSrc=""
+      fallbackAlt={`${pillar.title}四层技术子路线静态回退`}
+      height={650}
+      eager
+      className="programPillarSubrouteChart"
+      fallback={<table className="programChartFallback programPillarSubrouteFallback">
+        <caption>{pillar.title}：专业覆盖—工具—子路线—交付映射</caption>
+        <thead><tr><th>专业覆盖</th><th>候选工具链</th><th>技术子路线</th><th>一期 / 二期交付</th></tr></thead>
+        <tbody>{routeMap.routes.map((route) => <tr key={route.id}>
+          <td>{routeCoverageLabels(routeMap, route).join('；')}</td>
+          <td>{routeTools(routeMap, route).map((tool) => `${tool.label}（${tool.maturity}）`).join('；')}</td>
+          <th>{route.title}<small>{route.detail}</small><small>边界：{route.boundary}</small></th>
+          <td>{route.deliveries.map((delivery) => `${phaseDeliveryMeta[delivery.phase].short}：${delivery.outcome}`).join('；')}</td>
+        </tr>)}</tbody>
+      </table>}
+      onChartClick={(params) => {
+        const data = chartObjectData(params);
+        const kind = typeof data?.nodeKind === 'string' ? data.nodeKind : '';
+        const id = typeof data?.entityId === 'string' ? data.entityId : '';
+        if (kind === 'route' && routeMap.routes.some((route) => route.id === id)) {
+          setSelectedRouteId(id);
+          return;
+        }
+        if (kind === 'phase' && (id === 'phase-1' || id === 'phase-2')) {
+          choosePhase(id);
+          return;
+        }
+        const related = visibleRoutes.find((route) => kind === 'tool' ? route.toolIds.includes(id) : kind === 'coverage' ? route.coverageIds.includes(id) : false);
+        if (related) setSelectedRouteId(related.id);
+      }}
+    />
+    {selectedRoute && <><span className="srOnly" aria-live="polite">已聚焦 {selectedRoute.id} {selectedRoute.title}</span><aside className="programPillarSubrouteFocus" id={`${chartId}-detail`} role="region" aria-labelledby={`${chartId}-focus-title`}>
+      <header><small>当前聚焦 · {selectedRoute.status}</small><h4 id={`${chartId}-focus-title`}>{selectedRoute.title}</h4><p>{selectedRoute.detail}</p><b className="programPillarSubrouteBoundary">适用边界：{selectedRoute.boundary}</b></header>
+      <section><h5>覆盖的聚变专业内容</h5><ul>{selectedRoute.coverageIds.map((id) => {
+        const coverage = routeMap.coverage.find((item) => item.id === id);
+        return coverage ? <li key={coverage.id}><b>{coverage.label}</b><span>{coverage.description}</span><small>术语：{coverage.terms.join(' · ')}</small></li> : null;
+      })}</ul></section>
+      <section><h5>候选工具与输入 / 输出</h5><ul>{selectedTools.map((tool) => {
+        return <li key={tool.id}><b>{tool.label}<em>{tool.maturity}</em></b><span>{tool.fullName} · {programToolRoleLabels[tool.role]}</span><small>输入：{tool.inputs.join('、')}；输出：{tool.outputs.join('、')}</small><small>V&amp;V：{tool.evidence}</small><small>边界：{tool.boundary}</small><small className="programPillarToolResearch">关联调研：{tool.moduleIds.map((moduleId) => <a href={moduleHref(moduleId)} key={moduleId}>{moduleTitle(moduleId)}</a>)}</small></li>;
+      })}</ul></section>
+      <section><h5>阶段交付与证据门</h5><ul>{selectedRoute.deliveries.map((delivery) => <li key={delivery.phase}><b>{phaseDeliveryMeta[delivery.phase].short} · {delivery.outcome}</b><span>{delivery.workPackageIds.join(' / ')} → {delivery.gateIds.join(' / ') || '非阶段门'}</span></li>)}</ul></section>
+    </aside></>}
+  </section>;
+}
+
 function ProgramPillarDetail({ pillar }: { pillar: ProgramPillar }) {
   const implementation = roadmapPhases.map((phase) => {
     const workPackages = phase.workPackages.filter((item) => item.pillars.includes(pillar.id));
@@ -404,6 +828,7 @@ function ProgramPillarDetail({ pillar }: { pillar: ProgramPillar }) {
       <section><span>PHASE I · EXL‑50U</span><p>{pillar.phase1}</p></section>
       <section><span>PHASE II · EHL‑2</span><p>{pillar.phase2}</p></section>
     </div>
+    <ProgramPillarSubrouteMap key={pillar.id} pillar={pillar} />
     <ol className="programPillarRoute" aria-label={`${pillar.title}技术路线`}>
       {pillar.route.map((step, index) => <li key={step.id} data-route-status={step.status}>
         <div><small>{step.id}</small><i>{phaseNames(step.phases)}</i><em>{step.status}</em></div>
@@ -482,9 +907,18 @@ export function ProgramSystemMap() {
     </nav>
     <ProgramPillarDetail pillar={selected} />
     <div className="programPrintPillars">
-      {programPillars.map((pillar) => <section key={pillar.id}>
+      {programPillars.map((pillar) => {
+        const routeMap = programPillarRouteMaps[pillar.id];
+        return <section key={pillar.id}>
         <h3>{pillar.no} · {pillar.title}</h3>
         <p>{pillar.mission}</p>
+        <p><b>专业覆盖：</b>{routeMap.coverage.map((item) => `${item.label}（${item.description}）`).join('；')}</p>
+        <p><b>候选工具：</b>{routeMap.tools.map((tool) => `${tool.label} / ${tool.fullName}（${tool.maturity}；${programToolRoleLabels[tool.role]}）`).join('；')}</p>
+        <h4>专业覆盖 → 工具 → 技术子路线 → 阶段交付</h4>
+        <ol>{routeMap.routes.map((route) => <li key={route.id}>
+          <b>{route.title}</b>：{routeCoverageLabels(routeMap, route).join('、')} → {routeTools(routeMap, route).map((tool) => tool.label).join('、')} → {route.deliveries.map((delivery) => `${phaseDeliveryMeta[delivery.phase].short} ${delivery.outcome}（${delivery.workPackageIds.join('/')}→${delivery.gateIds.join('/') || '非阶段门'}）`).join('；')}；边界：{route.boundary}
+        </li>)}</ol>
+        <h4>步骤详解</h4>
         <ol>{pillar.route.map((step) => <li key={step.id}><b>{step.title}</b>：{step.selection}（{phaseNames(step.phases)} · {step.status}）</li>)}</ol>
         <p><b>一期：</b>{pillar.phase1}</p><p><b>二期：</b>{pillar.phase2}</p>
         <p><b>输入：</b>{pillar.inputs.join('；')}</p>
@@ -492,19 +926,24 @@ export function ProgramSystemMap() {
         <p><b>验证证据：</b>{pillar.verification.join('；')}</p>
         <p><b>工作包→阶段门：</b>{roadmapPhases.flatMap((phase) => phase.workPackages.filter((item) => item.pillars.includes(pillar.id)).map((item) => `${item.id}→${item.gateIds.length ? item.gateIds.join('/') : '非阶段门'}`)).join('；')}</p>
         <p><b>适用边界：</b>{pillar.boundary}</p>
-      </section>)}
+      </section>})}
     </div>
-    <noscript><style>{'.programSystemMapChart,.programPillarTabs,.programPillarDetail{display:none!important}.scientificChartStatus{display:none!important}'}</style><div className="programNoScriptPillars">{programPillars.map((pillar) => <section key={pillar.id}>
+    <noscript><style>{'.programSystemMapChart,.programPillarTabs,.programPillarDetail{display:none!important}.scientificChartStatus{display:none!important}'}</style><div className="programNoScriptPillars">{programPillars.map((pillar) => {
+      const routeMap = programPillarRouteMaps[pillar.id];
+      return <section key={pillar.id}>
       <h3>{pillar.no} · {pillar.title}</h3>
       <p>{pillar.mission}</p>
       <h4>核心科学问题</h4><p>{pillar.physicsQuestion}</p>
+      <h4>专业覆盖</h4><ul>{routeMap.coverage.map((item) => <li key={item.id}><b>{item.label}</b>：{item.description}</li>)}</ul>
+      <h4>候选工具链</h4><ul>{routeMap.tools.map((tool) => <li key={tool.id}><b>{tool.label} / {tool.fullName}</b>（{tool.maturity}）：{programToolRoleLabels[tool.role]}；输入：{tool.inputs.join('、')}；输出：{tool.outputs.join('、')}；证据：{tool.evidence}；边界：{tool.boundary}</li>)}</ul>
+      <h4>专业覆盖 → 工具 → 技术子路线 → 阶段交付</h4><ol>{routeMap.routes.map((route) => <li key={route.id}><b>{route.title}</b>：{routeCoverageLabels(routeMap, route).join('、')} → {routeTools(routeMap, route).map((tool) => tool.label).join('、')} → {route.deliveries.map((delivery) => `${phaseDeliveryMeta[delivery.phase].short} ${delivery.outcome}（${delivery.workPackageIds.join('/')}→${delivery.gateIds.join('/') || '非阶段门'}）`).join('；')}；边界：{route.boundary}</li>)}</ol>
       <h4>技术链</h4><ol>{pillar.route.map((step) => <li key={step.id}><b>{step.title}</b>：{step.selection}（{phaseNames(step.phases)} · {step.status}）；边界：{step.boundary}</li>)}</ol>
       <h4>一期 / 二期</h4><p>{pillar.phase1}</p><p>{pillar.phase2}</p>
       <h4>输入 / 输出</h4><p>{pillar.inputs.join('；')}</p><p>{pillar.outputs.join('；')}</p>
       <h4>验证证据</h4><p>{pillar.verification.join('；')}</p>
       <h4>工作包→阶段门</h4><p>{roadmapPhases.flatMap((phase) => phase.workPackages.filter((item) => item.pillars.includes(pillar.id)).map((item) => `${item.id}→${item.gateIds.length ? item.gateIds.join('/') : '非阶段门'}`)).join('；')}</p>
       <h4>不允许作出的结论</h4><p>{pillar.boundary}</p>
-    </section>)}</div></noscript>
+    </section>})}</div></noscript>
   </div>;
 }
 

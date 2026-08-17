@@ -291,9 +291,23 @@ test('server-renders the EXL-50U to EHL-2 program roadmap', async () => {
   assert.match(html, /12 周/);
   assert.match(html, /6 个月/);
   assert.match(html, /data-echart="fusion-twin-system-support-map"/);
+  assert.match(html, /data-echart="program-pillar-subroute-physics"/);
   assert.match(html, /data-echart="phase-1-program-roadmap"/);
   assert.match(html, /data-echart="phase-2-program-roadmap"/);
   assert.match(html, /五大专业环节如何支撑两期目标/);
+  assert.match(html, /PROFESSIONAL SUBROUTE MAP/);
+  assert.match(html, /专业覆盖 → 工具链 → 技术子路线 → 阶段交付/);
+  assert.match(html, /节点展示“研究覆盖什么、用什么工具、如何接成受控技术链、形成什么可验收结果”/);
+  assert.match(html, /aria-label="位形与等离子体物理路线阶段筛选"/);
+  assert.match(html, /aria-label="位形与等离子体物理技术子路线"/);
+  assert.match(html, /位形与等离子体物理专业覆盖、候选工具链、技术子路线与一期二期交付的四层关系图/);
+  assert.match(html, /专业覆盖—工具—子路线—交付映射/);
+  assert.match(html, /候选工具与输入 \/ 输出/);
+  for (const professionalTerm of [
+    'FreeGSNKE / FIESTA / TokaMaker', 'DINA / MEQ', 'CHEASE / HELENA', 'ThinCurr/CARIDDI',
+    'Ansys Mechanical/Abaqus', 'MARTe2', 'Simulink Coder / Simulink Real-Time',
+    'CHERAB/Raysect/Tomotok', 'IMAS DD + IMAS-Python', 'content-addressed store',
+  ]) assert.ok(html.includes(professionalTerm), `roadmap must server-render ${professionalTerm}`);
   assert.equal((html.match(/id="program-pillar-tab-/g) ?? []).length, 5);
   assert.equal((html.match(/aria-controls="program-pillar-detail"/g) ?? []).length, 5);
   assert.match(html, /id="program-pillar-detail"[^>]*role="region"|role="region"[^>]*id="program-pillar-detail"/);

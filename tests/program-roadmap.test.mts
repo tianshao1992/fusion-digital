@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import { knowledgeModules } from '../app/data/knowledge-modules.ts';
+import { programPillarRouteMaps } from '../app/roadmap/program-pillar-route-maps.ts';
 import {
   knowledgeModuleRoutes,
   programPillars,
@@ -110,6 +111,171 @@ test('five professional pillars form a complete, evidence-gated path to both pro
   }
 });
 
+test('pillar drill-down maps form a closed four-layer professional route contract', () => {
+  const expectedPillars = programPillars.map((pillar) => pillar.id);
+  assert.deepEqual(Object.keys(programPillarRouteMaps).sort(), [...expectedPillars].sort());
+
+  const knownModules = new Set(knowledgeModules.map((module) => module.id));
+  const knownToolRoles = new Set([
+    'fact-archive', 'semantic-exchange', 'pre-shot-forward', 'as-shot-inverse', 'realtime-plant', 'offline-hi-fi',
+    'synthetic-diagnostic', 'control-test', 'supervisory-readonly', 'engineering-solver', 'vvuq', 'evidence-ui',
+  ]);
+  const phaseById = new Map(roadmapPhases.map((phase) => [phase.id, phase]));
+  const workPackageById = new Map(roadmapPhases.flatMap((phase) => phase.workPackages.map((item) => [item.id, { phase, item }] as const)));
+  const globallyKnownNodeIds = new Set<string>();
+
+  for (const pillar of programPillars) {
+    const map = programPillarRouteMaps[pillar.id];
+    assert.ok(map, `${pillar.id} must have a drill-down map`);
+    assert.equal(map.pillarId, pillar.id);
+    assert.ok(map.coverage.length >= 4, `${pillar.id} needs professional coverage, not a generic summary`);
+    assert.ok(map.tools.length >= 4, `${pillar.id} needs an explicit tool layer`);
+    assert.ok(map.routes.length >= 4, `${pillar.id} needs an explicit technical sub-route layer`);
+
+    const coverageIds = new Set(map.coverage.map((item) => item.id));
+    const toolIds = new Set(map.tools.map((item) => item.id));
+    const routeIds = new Set(map.routes.map((item) => item.id));
+    assert.equal(coverageIds.size, map.coverage.length, `${pillar.id} has duplicate coverage IDs`);
+    assert.equal(toolIds.size, map.tools.length, `${pillar.id} has duplicate tool IDs`);
+    assert.equal(routeIds.size, map.routes.length, `${pillar.id} has duplicate route IDs`);
+    assert.equal(new Set([...coverageIds, ...toolIds, ...routeIds]).size, coverageIds.size + toolIds.size + routeIds.size,
+      `${pillar.id} reuses an ID across graph layers and could create a self-loop`);
+    for (const id of [...coverageIds, ...toolIds, ...routeIds]) {
+      assert.ok(!globallyKnownNodeIds.has(id), `duplicate drill-down node ID ${id}`);
+      globallyKnownNodeIds.add(id);
+    }
+
+    assert.deepEqual([...map.coverage.map((item) => item.order)].sort((a, b) => a - b),
+      Array.from({ length: map.coverage.length }, (_, index) => index + 1));
+    assert.deepEqual([...map.tools.map((item) => item.order)].sort((a, b) => a - b),
+      Array.from({ length: map.tools.length }, (_, index) => index + 1));
+    assert.deepEqual([...map.routes.map((item) => item.order)].sort((a, b) => a - b),
+      Array.from({ length: map.routes.length }, (_, index) => index + 1));
+    for (const coverage of map.coverage) {
+      assert.ok(coverage.label.length > 2);
+      assert.ok(coverage.description.length > 12);
+      assert.ok(coverage.terms.length >= 3 && coverage.terms.every((term) => term.length > 1));
+      assert.ok(coverage.phases.length > 0 && coverage.phases.every((phase) => phaseById.has(phase)));
+    }
+
+    const toolCoverageRefs = new Set<string>();
+    const routeCoverageRefs = new Set<string>();
+    const routeToolRefs = new Set<string>();
+    const edgeKeys = new Set<string>();
+    const rememberEdge = (source: string, target: string) => {
+      assert.notEqual(source, target, `${pillar.id} contains a self-loop at ${source}`);
+      const key = `${source}->${target}`;
+      assert.ok(!edgeKeys.has(key), `${pillar.id} contains duplicate edge ${key}`);
+      edgeKeys.add(key);
+    };
+
+    for (const tool of map.tools) {
+      assert.ok(tool.label.length > 1);
+      assert.ok(tool.fullName.length >= tool.label.length);
+      assert.ok(knownToolRoles.has(tool.role), `${tool.id} must state a controlled model-chain role`);
+      assert.ok(tool.maturity.length > 2, `${tool.id} must expose selection maturity`);
+      assert.ok(tool.phases.length > 0 && tool.phases.every((phase) => phaseById.has(phase)), `${tool.id} has an unknown phase`);
+      assert.ok(tool.inputs.length > 0 && tool.inputs.every((item) => item.trim().length > 0), `${tool.id} must expose model inputs`);
+      assert.ok(tool.outputs.length > 0 && tool.outputs.every((item) => item.trim().length > 0), `${tool.id} must expose model outputs`);
+      assert.ok(tool.evidence.length > 12, `${tool.id} must state required V&V evidence`);
+      assert.ok(tool.boundary.length > 12, `${tool.id} must state an applicability boundary`);
+      assert.ok(tool.moduleIds.length > 0, `${tool.id} must link prior knowledge research`);
+      assert.ok(tool.moduleIds.every((moduleId) => knownModules.has(moduleId)), `${tool.id} links an unknown knowledge module`);
+      assert.ok(tool.coverageIds.length > 0, `${tool.id} must implement at least one professional coverage node`);
+      assert.equal(new Set(tool.coverageIds).size, tool.coverageIds.length, `${tool.id} repeats a coverage reference`);
+      for (const coverageId of tool.coverageIds) {
+        assert.ok(coverageIds.has(coverageId), `${tool.id} references unknown coverage ${coverageId}`);
+        toolCoverageRefs.add(coverageId);
+        rememberEdge(coverageId, tool.id);
+      }
+    }
+
+    const deliveredPhases = new Set<string>();
+    for (const route of map.routes) {
+      assert.ok(route.title.length > 3);
+      assert.ok(route.detail.length > 16);
+      assert.ok(route.boundary.length > 6, `${route.id} must state a scientific/engineering boundary`);
+      assert.ok(['现有基线', '关键路径', '条件式交付', '拓展研究'].includes(route.status));
+      assert.ok(route.coverageIds.length > 0, `${route.id} must declare covered physics/engineering content`);
+      assert.ok(route.toolIds.length > 0, `${route.id} must select at least one tool`);
+      assert.ok(route.deliveries.length > 0, `${route.id} must lead to a phase delivery`);
+      assert.equal(new Set(route.coverageIds).size, route.coverageIds.length, `${route.id} repeats a coverage reference`);
+      assert.equal(new Set(route.toolIds).size, route.toolIds.length, `${route.id} repeats a tool reference`);
+      assert.equal(new Set(route.phases).size, route.phases.length, `${route.id} repeats a phase reference`);
+
+      for (const coverageId of route.coverageIds) {
+        assert.ok(coverageIds.has(coverageId), `${route.id} references unknown coverage ${coverageId}`);
+        routeCoverageRefs.add(coverageId);
+        rememberEdge(coverageId, route.id);
+      }
+      for (const toolId of route.toolIds) {
+        assert.ok(toolIds.has(toolId), `${route.id} references unknown tool ${toolId}`);
+        routeToolRefs.add(toolId);
+        rememberEdge(toolId, route.id);
+      }
+
+      const deliveryPhases = route.deliveries.map((delivery) => delivery.phase);
+      assert.deepEqual([...route.phases].sort(), [...deliveryPhases].sort(), `${route.id} phase badges and deliveries diverge`);
+      assert.equal(new Set(deliveryPhases).size, deliveryPhases.length, `${route.id} repeats a delivery phase`);
+      for (const delivery of route.deliveries) {
+        const phase = phaseById.get(delivery.phase);
+        assert.ok(phase, `${route.id} references unknown phase ${delivery.phase}`);
+        deliveredPhases.add(delivery.phase);
+        assert.ok(delivery.outcome.length > 6, `${route.id}/${delivery.phase} needs a measurable outcome`);
+        assert.ok(delivery.workPackageIds.length > 0, `${route.id}/${delivery.phase} must reach a work package`);
+        assert.equal(new Set(delivery.workPackageIds).size, delivery.workPackageIds.length, `${route.id}/${delivery.phase} repeats a work package`);
+        assert.equal(new Set(delivery.gateIds).size, delivery.gateIds.length, `${route.id}/${delivery.phase} repeats a gate`);
+        const reachableGateIds = new Set<string>();
+        let reachesPillarWorkPackage = false;
+        for (const workPackageId of delivery.workPackageIds) {
+          const workPackage = workPackageById.get(workPackageId);
+          assert.ok(workPackage, `${route.id} references unknown work package ${workPackageId}`);
+          assert.equal(workPackage?.phase.id, delivery.phase, `${route.id} sends ${delivery.phase} output to ${workPackageId} in another phase`);
+          reachesPillarWorkPackage ||= Boolean(workPackage?.item.pillars.includes(pillar.id));
+          workPackage?.item.gateIds.forEach((gateId) => reachableGateIds.add(gateId));
+          rememberEdge(route.id, `${delivery.phase}:${workPackageId}`);
+        }
+        assert.ok(reachesPillarWorkPackage, `${route.id}/${delivery.phase} never reaches a ${pillar.id} work package`);
+        const knownPhaseGates = new Set(phase?.gates.map((gate) => gate.id));
+        for (const gateId of delivery.gateIds) {
+          assert.ok(knownPhaseGates.has(gateId), `${route.id} references unknown ${delivery.phase} gate ${gateId}`);
+          assert.ok(reachableGateIds.has(gateId), `${route.id} gate ${gateId} is not reached by its declared work packages`);
+          rememberEdge(route.id, `${delivery.phase}:${gateId}`);
+        }
+      }
+    }
+
+    assert.deepEqual(toolCoverageRefs, coverageIds, `${pillar.id} has professional coverage unused by tools`);
+    assert.deepEqual(routeCoverageRefs, coverageIds, `${pillar.id} has professional coverage unused by routes`);
+    assert.deepEqual(routeToolRefs, toolIds, `${pillar.id} has an orphan tool outside every technical route`);
+    assert.deepEqual(deliveredPhases, new Set(['phase-1', 'phase-2']), `${pillar.id} must reach both programme goals`);
+  }
+});
+
+test('pillar drill-down maps preserve fixed fusion-science and machine-control boundaries', () => {
+  const text = (pillarId: keyof typeof programPillarRouteMaps) => JSON.stringify(programPillarRouteMaps[pillarId]);
+  const physics = text('physics');
+  const engineering = text('engineering');
+  const control = text('control');
+  const diagnostics = text('diagnostics');
+  const data = text('data');
+
+  assert.match(physics, /EFIT\s*\/\s*PTEFIT.*(?:as-shot|逆问题)/i);
+  assert.match(physics, /RZIP.*(?:不是|不属于|不得替代).*MHD/);
+  assert.match(physics, /GENRAY\+CQL3D.*(?:形成后|已形成等离子体)/);
+  assert.match(physics, /(?:JOREK|MHD@Dalian).*(?:离线|精选|已有基准)/);
+  assert.match(engineering, /CQ\s*\/\s*VDE\s*\/\s*halo.{0,24}涡流/i);
+  assert.match(engineering, /TQ\s*\/\s*表面能量沉积/);
+  assert.match(engineering, /(?:并行分支|并行来源|并行载荷来源|不可串联|不串联)/);
+  assert.match(control, /(?:SIL.*HIL|HIL.*SIL)/);
+  assert.match(control, /HIL.*(?:条件|硬件)/);
+  assert.match(control, /(?:只读|不得|没有|无).{0,40}(?:PCS|控机).{0,12}(?:写|写入|权限|通道)/);
+  assert.match(diagnostics, /(?:原始.{0,8}(?:不可变|只读)|(?:不可变|只读).{0,8}(?:raw|原始))/i);
+  assert.match(diagnostics, /(?:合成|synthetic).{0,24}(?:不得混入|实验命名空间|不同命名空间|独立 synthetic namespace)/i);
+  assert.match(data, /(?:immutable|不可变).{0,24}(?:run manifest|运行清单|证据)/i);
+  assert.match(data, /(?:浏览器|知识图谱|大模型).{0,30}(?:控机写通道|PCS 写入|直接控制)/);
+});
+
 test('cross-phase technology steps do not contradict the promised delivery scope', () => {
   const step = (pillarId: string, stepId: string) => programPillars.find((pillar) => pillar.id === pillarId)?.route.find((item) => item.id === stepId);
   assert.ok(step('engineering', 'ENG-4')?.phases.includes('phase-1'), 'phase I structural response must be visible');
@@ -162,10 +328,21 @@ test('phase scope preserves scientific and machine-control boundaries', () => {
 test('roadmap preserves complete non-JavaScript and accessible responsive fallbacks', () => {
   const component = readFileSync(new URL('../app/roadmap/ProgramRoadmapCharts.tsx', import.meta.url), 'utf8');
   const css = readFileSync(new URL('../app/roadmap/roadmap.css', import.meta.url), 'utf8');
+  assert.match(component, /function ProgramPillarSubrouteMap/);
+  assert.match(component, /program-pillar-subroute-\$\{pillar\.id\}/);
+  assert.match(component, /专业覆盖 → 工具链 → 技术子路线 → 阶段交付/);
+  assert.match(component, /programPillarSubrouteFallback/);
+  assert.match(component, /<th>专业覆盖<\/th><th>候选工具链<\/th><th>技术子路线<\/th><th>一期 \/ 二期交付<\/th>/);
   assert.match(component, /<noscript><style>/);
   assert.match(component, /\.scientificChartStatus\{display:none!important\}/);
   assert.match(component, /programNoScriptPillars/);
+  assert.match(component, /programPillarRouteMaps\[pillar\.id\]/);
+  assert.match(component, /routeCoverageLabels\(routeMap, route\)/);
+  assert.match(component, /routeTools\(routeMap, route\)/);
   assert.match(css, /noscript \.programNoScriptPillars\{display:grid/);
+  assert.match(css, /@media print\{[^}]*\.programSystemMap/);
+  assert.match(css, /\.programPrintPillars\{display:grid/);
+  assert.match(css, /\.programPillarSubrouteChart\{--scientific-chart-height:650px!important\}/);
   assert.match(css, /--focus-ring/);
   assert.doesNotMatch(css, /--color-focus-ring/);
   assert.match(component, /fontSize: 11/);
