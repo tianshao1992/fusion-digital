@@ -190,6 +190,10 @@ test('ships a closed, public DeviceManifest for the CAD viewer', async () => {
 test('server-renders the FusionDigital community portal', async () => {
   const html = await htmlFor('/');
   assert.match(html, /FusionDigital/);
+  assert.match(html, /<link rel="canonical" href="https:\/\/fusiondigital\.club\/"/);
+  assert.match(html, /<meta property="og:url" content="https:\/\/fusiondigital\.club\/"/);
+  assert.match(html, /<meta property="og:image" content="https:\/\/fusiondigital\.club\/figures\/fusion-twin-ai-native-overview\.png"/);
+  assert.doesNotMatch(html, /fusion-physics-atlas-2026\.tianyuanliu1992\.chatgpt\.site/);
   assert.match(html, /href="\/physics"/);
   assert.match(html, /href="\/engineering"/);
   assert.match(html, /href="\/control"/);
