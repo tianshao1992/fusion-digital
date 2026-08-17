@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://fusiondigital.club/"><img alt="Website" src="https://img.shields.io/badge/Website-fusiondigital.club-20BFA9?logo=googlechrome&amp;logoColor=white" /></a>
   <a href="https://codeup.aliyun.com/fiatlux/DT/FusionDigital"><img alt="Codeup" src="https://img.shields.io/badge/Codeup-Aliyun-FF6A00?logo=alibabacloud&amp;logoColor=white" /></a>
-  <a href="https://github.com/tianshao1992/fusion-physics-atlas"><img alt="GitHub" src="https://img.shields.io/badge/GitHub-Mirror-181717?logo=github&amp;logoColor=white" /></a>
+  <a href="https://github.com/tianshao1992/fusion-digital"><img alt="GitHub" src="https://img.shields.io/badge/GitHub-Mirror-181717?logo=github&amp;logoColor=white" /></a>
   <img alt="Status" src="https://img.shields.io/badge/Status-Research_Preview-3758F9" />
 </p>
 
@@ -25,7 +25,7 @@
 <p align="center">
   <a href="https://fusiondigital.club/">在线站点</a> ·
   <a href="https://codeup.aliyun.com/fiatlux/DT/FusionDigital">Codeup 仓库</a> ·
-  <a href="https://github.com/tianshao1992/fusion-physics-atlas">GitHub 镜像</a> ·
+  <a href="https://github.com/tianshao1992/fusion-digital">GitHub 镜像</a> ·
   <a href="./docs/PLATFORM_TECHNICAL_ROADMAP.md">平台技术路线</a> ·
   <a href="./CONTRIBUTING.md">贡献指南</a>
 </p>
@@ -202,7 +202,7 @@ docs/                         架构、复现、平台路线和协作手册
 
 - 正式站点：[https://fusiondigital.club/](https://fusiondigital.club/)
 - 团队协作仓库：[Codeup / fiatlux/DT/FusionDigital](https://codeup.aliyun.com/fiatlux/DT/FusionDigital)
-- 公开镜像仓库：[GitHub / tianshao1992/fusion-physics-atlas](https://github.com/tianshao1992/fusion-physics-atlas)
+- 公开镜像仓库：[GitHub / tianshao1992/fusion-digital](https://github.com/tianshao1992/fusion-digital)
 - 生产托管：OpenAI Sites（Cloudflare Worker 兼容运行时 + D1）
 
 ### 双远端同步基线
