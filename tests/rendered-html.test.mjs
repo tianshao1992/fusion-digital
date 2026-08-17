@@ -204,11 +204,12 @@ test('server-renders the FusionDigital community portal', async () => {
   assert.match(html, /href="\/#prototype-workspace"/);
   assert.equal((html.match(/class="siteKnowledgeHome[^\"]*"[^>]*href="\/knowledge-graph"|href="\/knowledge-graph"[^>]*class="siteKnowledgeHome[^\"]*"/g) ?? []).length, 2, 'desktop and mobile Knowledge menus must link to the graph home');
   assert.equal((html.match(/data-knowledge-module=/g) ?? []).length, 20, 'desktop and mobile Knowledge menus must expose all ten modules');
-  assert.equal((html.match(/class="siteKnowledgeRoadmap[^"]*"[^>]*href="\/roadmap"|href="\/roadmap"[^>]*class="siteKnowledgeRoadmap[^"]*"/g) ?? []).length, 2, 'desktop and mobile Knowledge menus must expose the program roadmap');
+  assert.equal((html.match(/data-primary-nav="roadmap"/g) ?? []).length, 2, 'desktop and mobile primary navigation must expose the program roadmap');
+  assert.doesNotMatch(html, /class="siteKnowledgeRoadmap/, 'Knowledge menus must not duplicate the promoted program roadmap');
   const primaryNavigation = [...html.matchAll(/data-primary-nav="([^"]+)"/g)].map((match) => match[1]);
   assert.deepEqual(primaryNavigation, [
-    'facilities', 'prototype', 'resources', 'knowledge',
-    'facilities', 'prototype', 'resources', 'knowledge',
+    'facilities', 'prototype', 'roadmap', 'knowledge',
+    'facilities', 'prototype', 'roadmap', 'knowledge',
   ], 'desktop and mobile navigation must expose the same four destinations with Knowledge last');
   assert.doesNotMatch(html, /知识智能/);
   assert.match(html, /fusiondigital-mark\.png/);
@@ -290,6 +291,7 @@ test('server-renders the FusionDigital community portal', async () => {
 
 test('server-renders the EXL-50U to EHL-2 program roadmap', async () => {
   const html = await htmlFor('/roadmap');
+  assert.doesNotMatch(html, /class="knowledgeBackLink"/, 'the promoted roadmap is a primary destination, not a Knowledge child page');
   assert.match(html, /从 EXL(?:‑|-)?50U 最小闭环/);
   assert.match(html, /EHL(?:‑|-)?2 首等离子体虚拟实验/);
   assert.match(html, /12 周/);
