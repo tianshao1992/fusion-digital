@@ -229,13 +229,13 @@ curl -fsSI -H 'Host: fusiondigital.club' http://<SERVER_IP>/
 DNS 生效后申请同时覆盖两个名称的证书：
 
 ```bash
-sudo certbot --nginx --non-interactive --agree-tos --redirect \
-  -m '<ADMIN_EMAIL>' \
-  -d fusiondigital.club \
-  -d www.fusiondigital.club
-sudo nginx -t
-sudo certbot renew --dry-run
+sudo /srv/fusiondigital/current/deploy/aliyun-hk/finalize-https.sh \
+  '<ADMIN_EMAIL>'
 ```
+
+部署时若曾临时让 SSH 监听 443，脚本会先将 SSH 恢复为仅监听 22，再通过 Certbot
+签发双域名证书、启用 HTTPS 重定向并开启自动续期 timer。省略邮箱参数时脚本使用
+Certbot 的无邮箱注册方式，适合短期临时环境，但不会收到证书到期通知。
 
 如果暂时没有 `www` DNS，首轮只为 apex 申请证书；创建 `www` 解析后再扩展证书。
 
