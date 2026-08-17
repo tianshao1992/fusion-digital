@@ -64,8 +64,8 @@ test('root shell and navigation wire locale and theme preferences without changi
   const primaryLinks = nav.match(/const links = \[([\s\S]*?)\] as const;/)?.[1] ?? '';
   assert.match(primaryLinks, /key: 'facilities'/);
   assert.match(primaryLinks, /key: 'prototype'/);
-  assert.match(primaryLinks, /key: 'resources'/);
-  assert.doesNotMatch(primaryLinks, /key: '(?:home|physics|engineering|control|diagnostics|ai|roadmap)'/);
+  assert.match(primaryLinks, /key: 'roadmap'/);
+  assert.doesNotMatch(primaryLinks, /key: '(?:home|physics|engineering|control|diagnostics|ai|resources)'/);
 });
 
 test('navigation selected state remains bold orange across page and theme overrides', async () => {

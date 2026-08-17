@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import KnowledgeBackLink from '../components/KnowledgeBackLink';
 import SiteFooter from '../components/SiteFooter';
 import SiteNav from '../components/SiteNav';
 import { ProgramPhaseChart, ProgramSystemMap } from './ProgramRoadmapCharts';
@@ -26,7 +25,6 @@ export default function ProgramRoadmapPage() {
   const moduleById = new Map(knowledgeModuleRoutes.map((module) => [module.id, module]));
   return <main className="programRoadmapPage">
     <SiteNav active="roadmap" />
-    <KnowledgeBackLink />
 
     <header className="programHero">
       <div className="programHeroCopy">

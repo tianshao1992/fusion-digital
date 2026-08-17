@@ -15,7 +15,7 @@ type SiteNavProps = {
 const links = [
   { key: 'facilities', href: '/facilities', label: 'nav.facilities', priority: 1 },
   { key: 'prototype', href: '/#prototype-workspace', label: 'nav.prototype', priority: 1 },
-  { key: 'resources', href: '/#resources', label: 'nav.resources', priority: 1 },
+  { key: 'roadmap', href: '/roadmap', label: 'nav.roadmap', priority: 1 },
 ] as const;
 
 type NavigationLink = (typeof links)[number];
@@ -164,7 +164,7 @@ export default function SiteNav({active = 'home'}: SiteNavProps) {
     data-primary-nav="knowledge"
     ref={mobile ? undefined : knowledgeRef}
   >
-    <summary className={active === 'knowledge' || active === 'roadmap' ? 'active' : ''} aria-label={t('nav.knowledgeModules')}>
+    <summary className={active === 'knowledge' ? 'active' : ''} aria-label={t('nav.knowledgeModules')}>
       {t('nav.knowledge')}<span aria-hidden="true">⌄</span>
     </summary>
     <div className="siteKnowledgeMenu">
@@ -186,12 +186,6 @@ export default function SiteNav({active = 'home'}: SiteNavProps) {
           onClick={() => { if (!mobile && knowledgeRef.current) knowledgeRef.current.open = false; }}
         ><small>{item.no}</small><span>{locale === 'zh-CN' ? item.zh : item.en}</span></Link>)}
       </div>
-      <Link
-        className={`siteKnowledgeRoadmap${active === 'roadmap' ? ' active' : ''}`}
-        href="/roadmap"
-        aria-current={active === 'roadmap' ? 'page' : undefined}
-        onClick={() => { if (!mobile && knowledgeRef.current) knowledgeRef.current.open = false; }}
-      ><span aria-hidden="true">↗</span><b>{t('nav.roadmap')}</b><small>EXL‑50U → EHL‑2</small></Link>
     </div>
   </details>;
 
