@@ -2,8 +2,8 @@
 
 FusionDigital 是由新奥聚变人工智能团队维护的聚变数字孪生知识与协作平台。项目把聚变物理、工程仿真、集成控制、诊断感知、能量转化、辅机模拟、数据基座、人机交互、总体集成与智能原生工作组织为可检索、可引用、可持续更新的网站。
 
-- 在线站点：[fusion-physics-atlas-2026.tianyuanliu1992.chatgpt.site](https://fusion-physics-atlas-2026.tianyuanliu1992.chatgpt.site)
-- GitHub 源码：[tianshao1992/fusion-physics-atlas](https://github.com/tianshao1992/fusion-physics-atlas)
+- 在线站点：[fusiondigital.club](https://fusiondigital.club/)
+- GitHub 镜像：[tianshao1992/fusion-digital](https://github.com/tianshao1992/fusion-digital)
 - Codeup 协作仓库：[fiatlux/DT/FusionDigital](https://codeup.aliyun.com/fiatlux/DT/FusionDigital)（SSH：`git@codeup.aliyun.com:fiatlux/DT/FusionDigital.git`）
 - 开发团队：新奥聚变人工智能团队
 - 联系人：tianshao1992@gmail.com

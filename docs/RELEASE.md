@@ -1,11 +1,14 @@
 # FusionDigital 发布与回滚
 
-## 1. 远端职责
+## 1. 远端职责与正式入口
 
-- `origin`：GitHub 协作主仓库，保存分支、Pull Request、审核和 CI 结果。
-- `sites`：OpenAI Sites 生产发布远端，仅供授权发布维护者使用。
+- `origin`：Codeup 协作主仓库（SSH），作为团队协作与国内恢复基线。
+- `github`：GitHub 公开镜像（SSH），用于外部协作、Pull Request 和 CI。
+- Sites 内部源仓库：仅使用发布时生成的短期凭据，不保存为长期 Git 远端。
 
-`origin/main` 是协作事实基线。Sites 发布的源码提交必须与已经通过 CI 的 `origin/main` 提交完全一致。
+正式访问入口是 <https://fusiondigital.club/>；Sites 平台地址仅作为托管回源和故障排查入口。域名的 DNS、所有权验证和 TLS 状态由阿里云 DNS 与 Sites 控制面管理，不写入 `.openai/hosting.json`。
+
+`origin/main` 是协作事实基线。每次正式发布后，`origin/main`、`github/main` 和 Sites 版本记录的提交 SHA 必须完全一致。
 
 ## 2. 发布前条件
 
@@ -25,8 +28,8 @@
 3. 打包同一提交产生的 `dist/`，确认入口、托管声明和下载资产完整。
 4. 保存 Sites 版本。
 5. 经公开发布确认后部署该已保存版本。
-6. 等待状态成功并打开最终 URL。
-7. 在变更记录或 GitHub Release 中记录日期、提交、主要内容和已知限制。
+6. 等待部署状态成功，并确认 `https://fusiondigital.club/` 的 DNS、TLS 和 HTTP 状态正常。
+7. 把同一精确提交通过 SSH 推送到 Codeup 与 GitHub，再在变更记录或 GitHub Release 中记录日期、提交、主要内容和已知限制。
 
 不得把 Sites 临时令牌写入远端 URL、Git 配置、GitHub Actions、脚本、日志或文档。GitHub CI 只验证，不直接持有生产发布权限。
 

@@ -8,8 +8,8 @@
       "public/models/iter-high-detail-v1/"
     ],
     "fileCount": 409,
-    "totalBytes": 244133019,
-    "treeSha256": "1bb0916da50fdc43b84241548ae42838a3c6d566afd1a41fe4f78901b703a627",
+    "totalBytes": 244095335,
+    "treeSha256": "7a5d3dfaf120cb73f21e60ae00fc5819e19f6102a217c21bfd29cb5d3a50f245",
     "files": [
       {
         "path": "public/FusionDigital-technical-roadmap-2026-08-15.docx",
@@ -1148,28 +1148,28 @@
       },
       {
         "path": "public/data/fusion-ai-native-landscape.json",
-        "bytes": 181757,
-        "sha256": "ae639b12bc1376e2775cbe4c182b0f118b2cc2dbc1cf40f9eb5867514728da89"
+        "bytes": 178202,
+        "sha256": "10e49ee3435b76a64566405569730b90dd7e777e472922d550da96df0d6ba9f9"
       },
       {
         "path": "public/data/fusion-control-device-profiles.json",
-        "bytes": 65901,
-        "sha256": "0be47acb8c241b79f4881c522ef1d3b0f4aac957ed7a3eaab1a99d8ca904b758"
+        "bytes": 64180,
+        "sha256": "c8292b51dbc475572593a37310b609a33505b4644c63e88471971ba4490e85ae"
       },
       {
         "path": "public/data/fusion-control-landscape.json",
-        "bytes": 387933,
-        "sha256": "15ef635ff5577e094ef8276f94d646210dc845ade541dd8d8add32c585406aec"
+        "bytes": 379361,
+        "sha256": "9d80cf94eb7420cf5a47835c0cdc171bfa35983448f76f9c85f0f351e9d38291"
       },
       {
         "path": "public/data/fusion-diagnostics-device-profiles.json",
-        "bytes": 93505,
-        "sha256": "7e0749c4e4ddc201a6a9045b7b3289bf4a30ea514d3777c95bddcce0f499a237"
+        "bytes": 91525,
+        "sha256": "5c77a1cb3e5b4ce85d177dea27dd2a95003f42d19f138aedc38df2e99034face"
       },
       {
         "path": "public/data/fusion-diagnostics-landscape.json",
-        "bytes": 407471,
-        "sha256": "1a853e44ef959d1d597fbbd5bca51e0eb3d15894fc836b4c7286c543a55710a4"
+        "bytes": 397464,
+        "sha256": "3754d121892409c6d2c84c4dba6adc65ed20dbfaae87e5d0f9135da3c3d0b7e9"
       },
       {
         "path": "public/data/fusion-knowledge-graph.json",
@@ -1188,23 +1188,23 @@
       },
       {
         "path": "public/data/tokamak-engineering-literature-manifest.csv",
-        "bytes": 19647,
-        "sha256": "b1b2c2724823f03d582b3cab8164c058ec7a3256a9b47ab95b0af0557e4078c2"
+        "bytes": 19559,
+        "sha256": "e2d2ff3b07d1825c95ad7d7fe4383c4bccf817b44f097ec9322ce76a4f8bc24a"
       },
       {
         "path": "public/data/tokamak-engineering-tool-catalog.csv",
-        "bytes": 15468,
-        "sha256": "74ee9fc0fd80bcfb63a14f2f5c9143b9517bcd56e0827fe1886e6016c187f8bc"
+        "bytes": 15412,
+        "sha256": "930727c6c025c370626de3c9a59ad5b39679e5b4b04597b2f9135571ae310976"
       },
       {
         "path": "public/data/tokamak-engineering-tool-catalog.json",
-        "bytes": 27498,
-        "sha256": "bc61d6a0f38cd543fb709ba1b9dec1b77954599343403723b24c2388b74b812e"
+        "bytes": 26947,
+        "sha256": "b164d69896bb18935abf262e4e9f1a2d608386f220ffa37fc1d641aa49ea4a30"
       },
       {
         "path": "public/favicon.svg",
-        "bytes": 718,
-        "sha256": "3e8863288c2d43dd33d2a71de317dcf9198f09932ea8d61e0def1b846a865435"
+        "bytes": 712,
+        "sha256": "e6d2e59b7b5bbb0342e0fb496dfc262decbfe4426bbb7b047aec8d467d1dc6f7"
       },
       {
         "path": "public/figures/control-closed-loop-architecture-nature.png",
@@ -1433,8 +1433,8 @@
       },
       {
         "path": "public/figures/integrated-framework-landscape-nature.svg",
-        "bytes": 165285,
-        "sha256": "f004a787a2453582bdc7d199fbc8b940120d114701a14491ea38b9a706d253ef"
+        "bytes": 157554,
+        "sha256": "18f36f57139adcdb7b110b5e65215993f4863b1522a33198bcc21fed24e6843f"
       },
       {
         "path": "public/figures/integrated-maturity-gap-nature.png",
@@ -1503,8 +1503,8 @@
       },
       {
         "path": "public/fusion-ai-native-paper-code-index.csv",
-        "bytes": 110681,
-        "sha256": "acfca4a84ca5b5c5beb8b548c69e7b2434d8fbdf660a54116ee734ed1322a44f"
+        "bytes": 110609,
+        "sha256": "b9cbadacd2a7013e46d0f630750e540f9bb248074c5339b42b940baa7772c567"
       },
       {
         "path": "public/fusion-ai-native-research-report.docx",
@@ -1513,23 +1513,23 @@
       },
       {
         "path": "public/fusion-control-paper-code-index.csv",
-        "bytes": 144266,
-        "sha256": "3ae436d45d1ecfb4f838e18e6bbaf7d0218afd5c660e91016bc4b9d09a1d4fa7"
+        "bytes": 144137,
+        "sha256": "81750c7c171553bb61908ead696b88999982ce7bb3a08d559a162991f253d6ab"
       },
       {
         "path": "public/fusion-control-references.bib",
-        "bytes": 53347,
-        "sha256": "3c8699f2e0f2163df4383cc544cb7bd4b323667f7b00a4a59b4cc99e8ed26f90"
+        "bytes": 51963,
+        "sha256": "a4a667cca73fd4aa59563f385b99b0f1c0a7e26b721ad1761b1548ccfe882a19"
       },
       {
         "path": "public/fusion-diagnostics-paper-code-index.csv",
-        "bytes": 62831,
-        "sha256": "3f5e24be69d5297c7097bf933f65a515079621267a659a053eab4e7ac2c9dc27"
+        "bytes": 62733,
+        "sha256": "6ebea3b362eb80e4d8b1911b5894caf0d412ac97e873c960d37cc42e1d0a8ffc"
       },
       {
         "path": "public/fusion-diagnostics-references.bib",
-        "bytes": 62887,
-        "sha256": "b8c9cfff76e79203034b9d333f9e97d62a9a93b3df875526d417a76a76b065d0"
+        "bytes": 61425,
+        "sha256": "12711b05a68d8ebf4ba096d54c526a13c7dc376daaa9a8764bfedec38638c415"
       },
       {
         "path": "public/fusion-diagnostics-research-report.docx",
@@ -1558,8 +1558,8 @@
       },
       {
         "path": "public/licenses/EXL50U-PUBLIC-DERIVATIVE.txt",
-        "bytes": 690,
-        "sha256": "4af14c483c4fef3f2e6f91cf467db155ce329d952602a53611a54d2163510429"
+        "bytes": 686,
+        "sha256": "edf38c4d979c979eb43567101335d34684b92a16d9446627068ccaf442fd065a"
       },
       {
         "path": "public/licenses/ITER-PUBLIC-VISUALIZATION-DERIVATIVE.txt",
@@ -1593,8 +1593,8 @@
       },
       {
         "path": "public/models/exl50u-interactive/model-manifest.json",
-        "bytes": 11894,
-        "sha256": "ca6954ba2a0ed9e45d8370253049e627526ebf5dd679450f2bd210f72cb7421a"
+        "bytes": 11626,
+        "sha256": "06d6ef20200a80c4724bea06afa519026e7b8816641f06a788d1280317bacb06"
       },
       {
         "path": "public/models/exl50u-interactive/poster.webp",
