@@ -98,7 +98,7 @@ FusionDigital 由新奥聚变人工智能团队维护。项目将聚变物理、
 ### 2. 通过 SSH 克隆并启动
 
 ```bash
-git clone --branch main --single-branch git@codeup.aliyun.com:fiatlux/DT/FusionDigital.git
+git clone --branch master --single-branch git@codeup.aliyun.com:fiatlux/DT/FusionDigital.git
 cd FusionDigital
 npm ci
 npm run assets:verify:tracked
@@ -202,7 +202,7 @@ docs/                         架构、复现、平台路线和协作手册
 - 团队协作仓库：[Codeup / fiatlux/DT/FusionDigital](https://codeup.aliyun.com/fiatlux/DT/FusionDigital)
 - 生产托管：OpenAI Sites（Cloudflare Worker 兼容运行时 + D1）
 
-`main` 是可发布基线。发布维护者只部署已经推送、完成资产校验并通过质量门的同一提交；Sites 的短期源凭证不写入远端地址、脚本或文档。公网构建不打包本机 hydration 目录，避免突破静态归档上限；内网自包含部署则先补齐并校验运行时资产。
+`master` 是 Codeup 的可发布基线；原 `main` 暂时保留为兼容分支，不再作为新工作的起点。发布维护者只部署已经推送、完成资产校验并通过质量门的同一提交；Sites 的短期源凭证不写入远端地址、脚本或文档。公网构建不打包本机 hydration 目录，避免突破静态归档上限；内网自包含部署则先补齐并校验运行时资产。
 
 ## 🤵 维护者
 
@@ -218,7 +218,7 @@ docs/                         架构、复现、平台路线和协作手册
 
 欢迎提交科学内容、数据条目、代码实现、可视化、测试、文档和问题报告。
 
-1. 从最新 `main` 创建短生命周期分支。
+1. 从最新 `master` 创建短生命周期分支。
 2. 一个 Pull Request 聚焦一个主题，并说明证据来源、生成文件、验证结果和已知局限。
 3. 软件变更由软件维护者审核；科学结论变化同时由相应领域专家审核。
 4. 提交前至少运行 `npm run assets:verify:tracked` 和 `npm run check`。

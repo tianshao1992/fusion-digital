@@ -8,7 +8,7 @@
 
 正式访问入口是 <https://fusiondigital.club/>；Sites 平台地址仅作为托管回源和故障排查入口。域名的 DNS、所有权验证和 TLS 状态由阿里云 DNS 与 Sites 控制面管理，不写入 `.openai/hosting.json`。
 
-`origin/main` 是协作事实基线。每次正式发布后，`origin/main`、`github/main` 和 Sites 版本记录的提交 SHA 必须完全一致。
+`origin/master` 是 Codeup 协作事实基线。每次正式发布后，`origin/master`、`github/main` 和 Sites 版本记录的提交 SHA 必须完全一致；Codeup 的旧 `main` 仅作迁移期兼容，不作为新发布输入。
 
 ## 2. 发布前条件
 
@@ -40,7 +40,7 @@
 1. 立即停止新的内容合并和发布。
 2. 在 Sites 中重新部署最近一个已知正常的已保存版本。
 3. 在 GitHub 创建修复 Issue，记录影响页面和开始时间。
-4. 从 `main` 创建修复分支，不在生产远端直接修改历史。
+4. 从 `master` 创建修复分支，不在生产远端直接修改历史。
 5. 修复通过审核和 CI 后发布新版本。
 
 回滚站点不会自动撤销已经下载的报告或对外传播内容。若涉及敏感信息或凭证，先执行撤销、轮换和通知流程。

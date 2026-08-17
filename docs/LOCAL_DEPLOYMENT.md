@@ -53,7 +53,7 @@ npm --version
 团队协作首选 Codeup SSH。先在个人 Codeup 账户登记本机 SSH **公钥**，然后执行：
 
 ```bash
-git clone --branch main --single-branch git@codeup.aliyun.com:fiatlux/DT/FusionDigital.git
+git clone --branch master --single-branch git@codeup.aliyun.com:fiatlux/DT/FusionDigital.git
 cd FusionDigital
 git rev-parse HEAD
 npm ci
