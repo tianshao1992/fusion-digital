@@ -10,6 +10,7 @@
 <p align="center">
   <a href="https://fusiondigital.club/"><img alt="Website" src="https://img.shields.io/badge/Website-fusiondigital.club-20BFA9?logo=googlechrome&amp;logoColor=white" /></a>
   <a href="https://codeup.aliyun.com/fiatlux/DT/FusionDigital"><img alt="Codeup" src="https://img.shields.io/badge/Codeup-Aliyun-FF6A00?logo=alibabacloud&amp;logoColor=white" /></a>
+  <a href="https://github.com/tianshao1992/fusion-physics-atlas"><img alt="GitHub" src="https://img.shields.io/badge/GitHub-Mirror-181717?logo=github&amp;logoColor=white" /></a>
   <img alt="Status" src="https://img.shields.io/badge/Status-Research_Preview-3758F9" />
 </p>
 
@@ -24,6 +25,7 @@
 <p align="center">
   <a href="https://fusiondigital.club/">在线站点</a> ·
   <a href="https://codeup.aliyun.com/fiatlux/DT/FusionDigital">Codeup 仓库</a> ·
+  <a href="https://github.com/tianshao1992/fusion-physics-atlas">GitHub 镜像</a> ·
   <a href="./docs/PLATFORM_TECHNICAL_ROADMAP.md">平台技术路线</a> ·
   <a href="./CONTRIBUTING.md">贡献指南</a>
 </p>
@@ -200,9 +202,25 @@ docs/                         架构、复现、平台路线和协作手册
 
 - 正式站点：[https://fusiondigital.club/](https://fusiondigital.club/)
 - 团队协作仓库：[Codeup / fiatlux/DT/FusionDigital](https://codeup.aliyun.com/fiatlux/DT/FusionDigital)
+- 公开镜像仓库：[GitHub / tianshao1992/fusion-physics-atlas](https://github.com/tianshao1992/fusion-physics-atlas)
 - 生产托管：OpenAI Sites（Cloudflare Worker 兼容运行时 + D1）
 
-`master` 是 Codeup 的可发布基线；原 `main` 暂时保留为兼容分支，不再作为新工作的起点。发布维护者只部署已经推送、完成资产校验并通过质量门的同一提交；Sites 的短期源凭证不写入远端地址、脚本或文档。公网构建不打包本机 hydration 目录，避免突破静态归档上限；内网自包含部署则先补齐并校验运行时资产。
+### 双远端同步基线
+
+- Codeup `master` 是团队协作与集成基线；Codeup 原 `main` 仅作迁移兼容，不再作为新工作的起点。
+- GitHub `main` 是公开镜像基线，不维护独立于 Codeup 的产品提交。
+- 每次完成开发与审核后，先更新 Codeup `master`，再把**同一个提交**推送到 GitHub `main`；只有两个远端分支的完整 SHA 一致，才算同步完成。
+- 同步只允许普通 fast-forward 或经审核的合并提交，禁止为追求一致而强制覆盖任一远端历史。
+- Sites 只能发布已经同步到上述两个分支、完成资产校验并通过质量门的同一提交；Sites 短期凭证不写入远端地址、脚本或文档。
+
+维护者可用以下只读命令核对同步结果：
+
+```bash
+git ls-remote codeup refs/heads/master
+git ls-remote github refs/heads/main
+```
+
+两行输出的提交 SHA 必须完全相同。公网构建不打包本机 hydration 目录，避免突破静态归档上限；内网自包含部署则先补齐并校验运行时资产。
 
 ## 🤵 维护者
 
