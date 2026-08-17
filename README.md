@@ -1,170 +1,243 @@
-# FusionDigital
+<p align="center">
+  <img src="./public/fusiondigital-mark.png" alt="FusionDigital 标识" width="112" />
+</p>
 
-FusionDigital 是由新奥聚变人工智能团队维护的聚变数字孪生知识与协作平台。项目把聚变物理、工程仿真、集成控制、诊断感知、能量转化、辅机模拟、数据基座、人机交互、总体集成与智能原生工作组织为可检索、可引用、可持续更新的网站。
+<h1 align="center">🚀 FusionDigital</h1>
 
-- 在线站点：[fusiondigital.club](https://fusiondigital.club/)
-- GitHub 镜像：[tianshao1992/fusion-digital](https://github.com/tianshao1992/fusion-digital)
-- Codeup 协作仓库：[fiatlux/DT/FusionDigital](https://codeup.aliyun.com/fiatlux/DT/FusionDigital)（SSH：`git@codeup.aliyun.com:fiatlux/DT/FusionDigital.git`）
-- 开发团队：新奥聚变人工智能团队
-- 联系人：tianshao1992@gmail.com
+<p align="center"><strong>聚变数字孪生知识与协作平台</strong></p>
+<p align="center">Fusion Digital Twin Research Atlas &amp; Collaboration Portal</p>
 
-> 本项目是研究与工程规划知识库，不是装置保护系统、核安全分析结论或特定装置的实时控制软件。网页中的证据等级只描述公开材料直接证明到哪一步。
+<p align="center">
+  <a href="https://fusiondigital.club/"><img alt="Website" src="https://img.shields.io/badge/Website-fusiondigital.club-20BFA9?logo=googlechrome&amp;logoColor=white" /></a>
+  <a href="https://codeup.aliyun.com/fiatlux/DT/FusionDigital"><img alt="Codeup" src="https://img.shields.io/badge/Codeup-Aliyun-FF6A00?logo=alibabacloud&amp;logoColor=white" /></a>
+  <img alt="Status" src="https://img.shields.io/badge/Status-Research_Preview-3758F9" />
+</p>
 
-## 当前内容
+<p align="center">
+  <a href="https://nodejs.org/"><img alt="Node.js" src="https://img.shields.io/badge/Node.js-%E2%89%A522.13-339933?logo=nodedotjs&amp;logoColor=white" /></a>
+  <a href="https://www.typescriptlang.org/"><img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&amp;logoColor=white" /></a>
+  <a href="https://react.dev/"><img alt="React" src="https://img.shields.io/badge/React-19.2-61DAFB?logo=react&amp;logoColor=0B1020" /></a>
+  <a href="https://vite.dev/"><img alt="Vite" src="https://img.shields.io/badge/Vite-8.0-646CFF?logo=vite&amp;logoColor=white" /></a>
+  <a href="https://workers.cloudflare.com/"><img alt="Cloudflare Workers" src="https://img.shields.io/badge/Runtime-Cloudflare_Workers-F38020?logo=cloudflare&amp;logoColor=white" /></a>
+</p>
 
-| 模块 | 路由 | 主要内容 |
+<p align="center">
+  <a href="https://fusiondigital.club/">在线站点</a> ·
+  <a href="https://codeup.aliyun.com/fiatlux/DT/FusionDigital">Codeup 仓库</a> ·
+  <a href="./docs/PLATFORM_TECHNICAL_ROADMAP.md">平台技术路线</a> ·
+  <a href="./CONTRIBUTING.md">贡献指南</a>
+</p>
+
+FusionDigital 由新奥聚变人工智能团队维护。项目将聚变物理、工程仿真、集成控制、诊断感知、数字样机、实验数据、证据知识与 AI 原生协作组织在同一个可检索、可引用、可复现的入口中。
+
+它不是一个“万能聚变求解器”，而是连接**知识、数据、模型、实验与工程决策**的公开投影层和协作界面；高保真仿真、实验数据服务与实时控制保持在各自受控环境中，通过版本化合同逐步接入。
+
+> **重要边界**
+>
+> 本项目是研究与工程协作平台，不是装置保护系统、核安全分析结论或特定装置的实时控制软件。页面中的证据等级只说明公开材料直接证明到哪一步；AI 生成的分析或候选建议不会自动获得装置控制、审核或发布权限。
+
+## 💡 核心理念
+
+- **证据优先（Evidence First）**：结论回链到论文、官方资料、代码、装置和验证语境，明确“已证明、可推断、尚未知”。
+- **孪生闭环（Twin as a Loop）**：数字孪生不仅是三维展示，而是设备状态、数据质量、状态估计、模型预测、不确定度和残差更新组成的持续闭环。
+- **合同驱动（Contract First）**：装置、炮次、资产、仿真任务、结果、证据和发布均使用可版本化、可校验的对象合同连接。
+- **分域治理（Separated Authority）**：公网体验、内网科学计算和实验实时控制具有不同的权限、时延与可靠性要求，不由浏览器或 LLM 越权跨域。
+- **可复现发布（Reproducible Release）**：源码、生成数据和公开派生资产可追溯到提交与哈希；大型运行时资产由锁文件声明并独立校验。
+
+## 🎯 总体架构
+
+<p align="center">
+  <a href="./public/figures/fusion-twin-ai-native-overview.png">
+    <img src="./public/figures/fusion-twin-ai-native-overview.png" alt="FusionDigital 聚变数字孪生与 AI 原生总体架构" width="100%" />
+  </a>
+</p>
+
+<p align="center"><sub>设备现实 → 诊断观测 → 数字孪生 → 模型与智能体 → 安全门 → 经验证的候选动作</sub></p>
+
+### 🧭 三平面边界
+
+| 平面 | 当前定位 | 主要技术 | 权限边界 |
+| --- | --- | --- | --- |
+| **公开投影面** | 本仓库已实现 | React 19、vinext、Vite、Cloudflare Worker、D1、Three.js、ECharts | 公开知识、检索、图谱、三维派生物、EFIT 回放、账户与审核控制面 |
+| **内网科学平台面** | 目标架构，分阶段接入 | FastAPI、PostgreSQL、S3、MDSplus Gateway、Kubernetes/Slurm、MLflow | 原始实验数据、CAD/CAE、仿真容器、模型训练、结果与 VVUQ |
+| **实验实时面** | 独立安全域 | DAQ、PCS、Interlock、RT Linux | 确定性控制、联锁和保护；公网、浏览器与通用智能体不直连 |
+
+当前仓库没有直接连接 MDSplus、NAS、PLM、CAE、FGE/DINA 容器或 PCS。相关能力将通过 `DeviceRevision`、`Shot`、`SimulationRun`、`ResultManifest`、`Evidence` 和 `Release` 等版本化合同接入，而不是把长任务或敏感数据塞入 Web 请求。
+
+## 🔄 关键能力
+
+- **十域知识图谱**：统一组织物理、工程、控制、诊断、能量转化、辅机、数据、人机交互、总体集成与 AI 原生工作。
+- **证据检索与引用问答**：确定性站内检索始终可用；配置模型后，以来源白名单和引用约束生成回答。
+- **数字样机工作台**：在浏览器中查看 Paramak、EXL-50U 与 ITER 的获准公开派生模型，支持结构树、剖切、爆炸、测量和清单追溯。
+- **实验诊断复现**：展示经审核的 EFIT 标量、轮廓、拓扑和时间序列派生物，同时保持原始 G-file、psi 网格和实验档案的受控边界。
+- **控制与诊断图谱**：按任务、装置、代码、论文、证据等级和部署阶段双向索引控制与诊断工作。
+- **身份与人工治理**：D1 承载账户、角色、配额、审计、研究候选和职责分离审核；接受候选不等于自动发布。
+- **可复现研究流水线**：源数据经归一化、去重和审计后生成网页 JSON、CSV、BIB、TypeScript 与 Word 报告。
+- **中英双语与主题适配**：关键页面支持中英文切换、明暗主题、响应式布局和键盘访问。
+
+## 🗺️ 功能地图
+
+| 工作面 | 路由 | 内容 |
 | --- | --- | --- |
-| 总览 | `/` | FusionDigital 价值主张、十个知识模块、路线图 |
-| 物理模拟 | `/physics` | 多尺度物理、代码图谱、集成模拟与数字孪生差距 |
-| 工程仿真 | `/engineering` | 电磁、结构、热流体、中子、材料及实验验证链 |
-| 集成控制 | `/control` | T0–T9 控制任务、装置/PCS、论文代码、证据分级与数字孪生路线 |
-| 诊断感知 | `/diagnostics` | DG0–DG11 诊断任务、技术/装置双索引、论文代码、证据分级与孪生接口 |
-| 智能原生 | `/ai` | 九域 AI 工作、论文、代码、装置与证据分级检索 |
-| 知识图谱 | `/knowledge-graph` | 论文、代码、装置、工具、任务与机构的一至两跳证据关系 |
-| 证据检索 | `/search` | 站内确定性检索，以及配置服务端模型后启用的引用约束问答 |
-| 全球装置 | `/facilities` | 装置建设与运行状态、原始来源链接 |
-| 数字样机 | `/digital-prototype` | Paramak、EXL‑50U、ITER 多装置目录；公开模型交互、受控资产边界、CAD/CAE 数据主线与装置包合同 |
+| 总览与路线 | [`/`](https://fusiondigital.club/) · [`/roadmap`](https://fusiondigital.club/roadmap) · [`/platform`](https://fusiondigital.club/platform) | 产品总览、EXL-50U / EHL-2 路线图、三平面目标架构与技术选型 |
+| 科学与工程 | [`/physics`](https://fusiondigital.club/physics) · [`/engineering`](https://fusiondigital.club/engineering) | 多尺度物理、集成模拟、工程多物理、验证链与工具图谱 |
+| 控制与诊断 | [`/control`](https://fusiondigital.club/control) · [`/diagnostics`](https://fusiondigital.club/diagnostics) | T0–T9 控制任务、DG0–DG11 诊断任务、装置/PCS、证据与孪生接口 |
+| 智能与证据 | [`/ai`](https://fusiondigital.club/ai) · [`/search`](https://fusiondigital.club/search) · [`/knowledge-graph`](https://fusiondigital.club/knowledge-graph) | AI 工作目录、确定性检索、引用问答与一至两跳证据关系 |
+| 装置与样机 | [`/facilities`](https://fusiondigital.club/facilities) · [`/#prototype-workspace`](https://fusiondigital.club/#prototype-workspace) | 全球装置状态、Paramak / EXL-50U / ITER 目录、三维模型与 EFIT 工作台 |
+| 账户与治理 | [`/account`](https://fusiondigital.club/account) · [`/research-review`](https://fusiondigital.club/research-review) | 身份、模型偏好、角色、配额、审计、研究候选与人工审核 |
 
-## 快速开始
+## 🔥 快速上手
 
-要求 Node.js `>=22.13.0`。团队成员可从 Codeup 通过 SSH 克隆；首次恢复全部公开网页内容时执行：
+### 1. 环境要求
+
+- Git 2.40+
+- Node.js `>=22.13.0`
+- npm（随 Node.js 安装）
+- Python 3（仅研究数据和 Word 报告工作流需要）
+
+### 2. 通过 SSH 克隆并启动
 
 ```bash
 git clone --branch main --single-branch git@codeup.aliyun.com:fiatlux/DT/FusionDigital.git
 cd FusionDigital
 npm ci
 npm run assets:verify:tracked
-npm run assets:hydrate
-npm run assets:verify
 npm run dev
 ```
 
-Git 已包含 Paramak、EXL-50U 浏览器模型、公开 EFIT 派生数据、报告、图片、检索与知识图谱内容。ITER 高清教育可视化的 18 个运行时 GLB 分片（约 98.5 MB）由资产锁从稳定 HTTPS 镜像下载，也可在手工下载百度网盘包后用 `--source-dir` 导入。原始 EXL-50U / ITER CAD、STEP、B-Rep、PMI，以及原始 EFIT/G-file/psi 网格始终留在受控系统，不进入 Codeup、网盘或普通协作包。
+终端会打印本地访问地址。默认开发不需要下载 ITER 高清资产，也不需要任何模型 API Key。
 
-需要从一台干净电脑完整复现资产、安装、数据库、检查、生产构建与本地启动时，请使用[运行时资产获取与校验](docs/ASSET_BOOTSTRAP.md)和[本地部署与复现手册](docs/LOCAL_DEPLOYMENT.md)。
-
-常用命令：
+### 3. 按需补齐能力
 
 ```bash
-npm run dev              # 本地开发
-npm run build            # 生产构建
-npm test                 # 构建并运行页面渲染测试
-npm run lint             # 代码规范检查
-npm run check            # lint + build + tests
-npm run assets:status    # 查看 Git 内与外置运行时资产状态
-npm run assets:verify:tracked  # 校验随 Git 分发的公开资产
-npm run assets:hydrate   # 下载/导入 ITER 18 个高清运行时分片
-npm run assets:verify    # 校验完整运行时资产集合
-npm run assets:stage -- --output .runtime-assets/upload-pack  # 生成含锁文件与18片子目录的镜像上传区
-npm run research:ai      # 重建智能原生 JSON、CSV 与 TypeScript 数据
-npm run research:audit   # 审计智能原生条目、领域、论文和代码链接结构
-npm run research:report  # 重新生成智能原生 Word 报告（需要 Python）
-npm run research:control # 重建并审计集成控制 JSON、CSV、BIB 与 TypeScript 数据
-npm run research:control:audit  # 单独审计控制工作与装置档案
-npm run research:control:report # 生成集成控制 Word 报告（需要 Python）
-npm run research:diagnostics   # 重建并审计诊断 JSON、CSV、BIB 与 TypeScript 数据
-npm run research:diagnostics:audit  # 单独审计诊断工作与装置档案
-npm run research:diagnostics:report # 生成诊断感知 Word 报告与科学图（需要 Python）
+# 完整恢复 ITER 18 个高清运行时分片，并校验字节数与 SHA-256
+npm run assets:hydrate
+npm run assets:verify
+
+# 初始化并核验本地 D1（账户/审核等能力的本地开发）
+npm run db:local:migrate
+npm run db:local:verify
+
+# 提交前质量门：lint + build + 串行测试
+npm run check
 ```
 
-`dev`、`build` 与 `start` 命令不依赖 POSIX 环境变量写法，可在 Windows PowerShell、macOS 和 Linux 使用。
+完整复现流程见[运行时资产获取与校验](./docs/ASSET_BOOTSTRAP.md)和[本地部署手册](./docs/LOCAL_DEPLOYMENT.md)。
 
-## Python 调研工具
+## 🧰 常用工作流
 
-数据审计和网站数据生成仅依赖 Python 3 标准库。生成 Word 报告还需要：
+| 目标 | 命令 |
+| --- | --- |
+| 开发 / 构建 / 启动 | `npm run dev` · `npm run build` · `npm run start` |
+| 统一质量门 | `npm run check` |
+| 查看与校验公开资产 | `npm run assets:status` · `npm run assets:verify:tracked` |
+| 补齐并校验完整资产 | `npm run assets:hydrate` · `npm run assets:verify` |
+| 重建 AI 研究数据 | `npm run research:ai` · `npm run research:audit` |
+| 重建控制研究数据 | `npm run research:control` · `npm run research:control:audit` |
+| 重建诊断研究数据 | `npm run research:diagnostics` · `npm run research:diagnostics:audit` |
+| 重建图谱与检索索引 | `npm run research:graph` · `npm run search:build` |
+| 生成研究报告 | `npm run research:report` · `npm run research:control:report` · `npm run research:diagnostics:report` |
+
+生成 Word 报告前安装 Python 依赖：
 
 ```bash
 python -m pip install -r requirements-research.txt
 ```
 
-如果 Python 不在默认 PATH，可设置 `PYTHON` 指向解释器。源数据位于 `research/ai-native/sources/` 与 `research/control/sources/`，生成脚本位于 `scripts/research/`。
+研究源数据是事实维护入口。执行生成命令后必须同时审查并提交源数据与生成文件，避免网页、索引和报告分叉。详见[内容维护手册](./docs/CONTENT_MAINTENANCE.md)。
 
-智能原生数据链如下：
-
-```text
-research/ai-native/sources/*.json
-        ↓ normalize + projectId 去重 + 九域关联
-public/data/fusion-ai-native-landscape.json
-app/ai/aiResearch.ts
-public/fusion-ai-native-paper-code-index.csv
-        ↓ audit
-网页检索目录与 Word 报告
-```
-
-运行 `npm run research:ai` 后，应审查生成差异并提交源数据与生成文件，避免网页数据和研究底稿分叉。
-
-集成控制采用控制任务与装置/PCS双索引：
+## 🗂️ 项目结构
 
 ```text
-research/control/sources/core_tasks.json
-research/control/sources/protection_power_tasks.json
-research/control/sources/pcs_frameworks.json
-research/control/sources/device_control_profiles.json
-        ↓ T0–T9 规范化 + 证据/部署/代码关系审计
-public/data/fusion-control-landscape.json
-public/data/fusion-control-device-profiles.json
-app/control/controlResearch.ts
-public/fusion-control-paper-code-index.csv
-public/fusion-control-references.bib
-        ↓ audit
-/control 检索页面与 5 万字以上 Word 报告
+app/                          页面、组件、国际化与服务端接口
+worker/                       Cloudflare Worker 入口与受控资产路由
+db/                           D1 schema、查询与领域模型
+drizzle/                      版本化数据库迁移
+public/                       公开报告、图像、JSON/CSV、三维与 EFIT 派生物
+assets/                       运行时资产锁；不存放源 CAD 或源实验数据
+research/
+  ai-native/                  AI 原生研究源数据
+  control/                    控制任务、PCS 与装置档案
+  diagnostics/                诊断任务、装置档案与研究底稿
+  3d/                         公开三维演示模型的可复现生成说明
+scripts/
+  research/                   数据生成、审计、索引与报告脚本
+  assets/                     外置资产获取、校验与镜像暂存工具
+tests/                        SSR、数据合同、资产、安全边界与 UI 测试
+docs/                         架构、复现、平台路线和协作手册
+.openai/hosting.json          Sites 项目标识与逻辑资源声明
 ```
 
-## 与 Codex 协同开发
+架构入口：[项目架构](./docs/ARCHITECTURE.md) · [平台技术路线](./docs/PLATFORM_TECHNICAL_ROADMAP.md) · [知识对话](./docs/KNOWLEDGE_CONVERSATION.md) · [LLM 配置](./docs/LLM_PROVIDER_CONFIGURATION.md)
 
-1. 在 Codex 中直接打开本目录作为项目根目录。
-2. 让 Codex 先阅读 `CONTRIBUTING.md`、`docs/ARCHITECTURE.md`、`docs/ASSET_BOOTSTRAP.md` 和 `docs/CONTENT_MAINTENANCE.md`。
-3. 每个主题使用独立 Git 分支；多人或多个 Codex 任务并行时，优先使用独立 worktree。
-4. 终端脚本可以与 Codex 同时运行，但不要让两者同时写同一文件或同时重建同一份生成数据。
-5. 所有变更通过 Pull Request 合并，由领域专家和软件维护者分别审核科学口径与实现质量。
+## 📝 项目蓝图（Roadmap）
 
-推荐分支命名：
+- [x] 公开知识域、装置目录、证据检索和知识图谱
+- [x] Paramak / EXL-50U / ITER 浏览器数字样机与资产清单
+- [x] 公开 EFIT 派生数据的分片交付、回放和拓扑展示
+- [x] D1 账户、角色、配额、审计、研究候选和人工审核
+- [x] 版本化研究数据、报告、资产锁和发布质量门
+- [ ] 统一 `DeviceRevision`、`Shot`、`ArtifactManifest`、`SimulationRun` 与 `ResultManifest` 合同
+- [ ] MDSplus、NAS、对象存储、PLM/CAD 与科学计算的只读适配器
+- [ ] FGE / DINA / MEQ 等模型的容器化 Run API、结果目录和 VVUQ 门禁
+- [ ] 实验前场景验证、SIL/HIL 与只读影子孪生
+- [ ] 经独立验证、审批、签名与回滚保护的受控发布链
+
+更完整的阶段、技术栈和验收标准见[整体技术路线图](./docs/PLATFORM_TECHNICAL_ROADMAP.md)。
+
+## 🔐 数据与安全边界
+
+- Git 只保存获准公开的源码、知识数据、报告与浏览器运行时派生物。
+- 原始 EXL-50U / ITER CAD、STEP、B-Rep、PMI、尺寸、公差和完整装配元数据留在受控工程系统。
+- 原始 EFIT 档案、G-file、psi 网格、未脱敏诊断与实验数据留在受控实验数据系统。
+- ITER 高清教育可视化的 18 个 GLB 分片由 `assets/runtime-assets.lock.json` 锁定文件名、字节数和 SHA-256，并在 Git 之外分发。
+- 任何模型、智能体或网页建议都不能绕过装置控制器、联锁、保护系统、人工审批或独立 VVUQ。
+- 禁止提交账号、令牌、Cookie、私钥、内部下载地址、未脱敏日志和未经授权的第三方材料。
+
+详细规则见[贡献指南](./CONTRIBUTING.md)和[EXL-50U 公开派生物安全说明](./docs/EXL50U_PUBLIC_DERIVATIVE_SECURITY.md)。
+
+## 🚢 托管与发布
+
+- 正式站点：[https://fusiondigital.club/](https://fusiondigital.club/)
+- 团队协作仓库：[Codeup / fiatlux/DT/FusionDigital](https://codeup.aliyun.com/fiatlux/DT/FusionDigital)
+- 生产托管：OpenAI Sites（Cloudflare Worker 兼容运行时 + D1）
+
+`main` 是可发布基线。发布维护者只部署已经推送、完成资产校验并通过质量门的同一提交；Sites 的短期源凭证不写入远端地址、脚本或文档。公网构建不打包本机 hydration 目录，避免突破静态归档上限；内网自包含部署则先补齐并校验运行时资产。
+
+## 🤵 维护者
+
+### 🏆 Owners
+
+- 新奥聚变人工智能团队（ENN Fusion AI Team）
+
+### ✉️ Contact
+
+- [tianshao1992@gmail.com](mailto:tianshao1992@gmail.com)
+
+## 🎁 参与贡献
+
+欢迎提交科学内容、数据条目、代码实现、可视化、测试、文档和问题报告。
+
+1. 从最新 `main` 创建短生命周期分支。
+2. 一个 Pull Request 聚焦一个主题，并说明证据来源、生成文件、验证结果和已知局限。
+3. 软件变更由软件维护者审核；科学结论变化同时由相应领域专家审核。
+4. 提交前至少运行 `npm run assets:verify:tracked` 和 `npm run check`。
+
+推荐使用 Conventional Commits：
 
 ```text
-content/physics-transport-update
-content/facilities-2026q3
-feature/ai-catalog-filter
-fix/mobile-navigation
+feat(prototype): add reviewed device manifest
+content(control): update task evidence
+docs: clarify runtime asset workflow
+fix(search): preserve citation boundaries
 ```
 
-## 目录结构
+完整流程与检查清单见[贡献指南](./CONTRIBUTING.md)。
 
-```text
-app/                         网站路由、组件、样式与页面数据
-public/                      报告、图片、CSV/JSON 与下载资源
-assets/                      运行时资产锁；不存放源 CAD、源 EFIT 或凭证
-research/ai-native/sources/  智能原生调研源数据和研究说明
-research/control/sources/    集成控制任务、PCS、装置档案与专题说明
-research/3d/                 公开三维演示模型生成脚本与可复现说明
-scripts/research/            数据生成、审计与 Word 报告脚本
-scripts/assets/              外置资产状态、下载/导入、校验与镜像暂存工具
-tests/                       服务端渲染与关键内容断言
-docs/                        架构、内容维护与协作说明
-.github/                     CI 与 Pull Request 模板
-.openai/hosting.json         Sites 项目标识和可选资源声明
-```
+## 📄 许可证与数据权利
 
-详细说明见 [项目架构](docs/ARCHITECTURE.md)、[运行时资产获取与校验](docs/ASSET_BOOTSTRAP.md)、[内容维护手册](docs/CONTENT_MAINTENANCE.md) 和 [贡献指南](CONTRIBUTING.md)。
+当前仓库尚未声明开源许可证。除非项目负责人另行书面确认，代码、报告、图像和调研数据均按团队协作资料管理；外部复用前须分别核对原始论文、第三方图片、商业软件和装置数据的许可条件。
 
-## 托管与发布
+---
 
-生产站点由 OpenAI Sites 托管；GitHub 与 Codeup 保存同一审核提交，`main` 只接收通过检查和审核的 Pull Request。Sites 内部远端用于生产发布，不应作为合作伙伴的唯一协作入口，也不要在 Git 配置、脚本或文档中保存短期发布凭证。
-
-Sites 默认不把 ITER 18 个高清分片打入静态归档，以避免突破约 256 MiB 上限；Worker 仅按清单中的精确路径从审核过的 HTTPS 镜像读取。内网自包含部署可以先 hydration，再使用 local-first 运行时。两种模式均以 `assets/runtime-assets.lock.json` 的字节数和 SHA-256 为准。
-
-发布原则：
-
-- 合并前运行 `npm run check`。
-- 涉及运行时资产时先运行 `npm run assets:verify:tracked`；完整/内网部署还要运行 `npm run assets:verify`。
-- 调研数据变更同时运行对应生成器：`npm run research:ai` 和/或 `npm run research:control`。
-- 只部署已经推送并通过验证的同一提交。
-- 报告、图片和公开数据不得包含装置敏感参数、访问令牌或未获授权资料。
-- 禁止向任一 Git 远端、LFS、内网公开下载或网盘加入原始 EXL-50U / ITER 工程模型和原始 EFIT 数据。
-
-## Collaboration in English
-
-FusionDigital is a fusion digital-twin research atlas and collaboration portal maintained by the ENN Fusion AI Team. Clone the repository, run `npm ci` and `npm run dev`, work on a topic branch, and submit changes through pull requests. Scientific content and software implementation require separate review. See `CONTRIBUTING.md` and `docs/` before editing research data or generated artifacts.
-
-## License and data rights
-
-当前仓库尚未声明开源许可证。除非项目负责人另行确认，代码、报告、图像和调研数据均按团队协作资料管理；外部复用前应核对原始论文、第三方图片、商业软件和装置数据的许可条件。
+<p align="center"><strong>FusionDigital — 让聚变模型、实验与工程经验真正互相理解。</strong> ⚛️</p>
