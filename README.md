@@ -85,7 +85,7 @@ FusionDigital 由新奥聚变人工智能团队维护。项目将聚变物理、
 | 科学与工程 | [`/physics`](https://fusiondigital.club/physics) · [`/engineering`](https://fusiondigital.club/engineering) | 多尺度物理、集成模拟、工程多物理、验证链与工具图谱 |
 | 控制与诊断 | [`/control`](https://fusiondigital.club/control) · [`/diagnostics`](https://fusiondigital.club/diagnostics) | T0–T9 控制任务、DG0–DG11 诊断任务、装置/PCS、证据与孪生接口 |
 | 智能与证据 | [`/ai`](https://fusiondigital.club/ai) · [`/search`](https://fusiondigital.club/search) · [`/knowledge-graph`](https://fusiondigital.club/knowledge-graph) | AI 工作目录、确定性检索、引用问答与一至两跳证据关系 |
-| 装置与样机 | [`/facilities`](https://fusiondigital.club/facilities) · [`/#prototype-workspace`](https://fusiondigital.club/#prototype-workspace) | 全球装置状态、Paramak / EXL-50U / ITER 目录、三维模型与 EFIT 工作台 |
+| 装置与样机 | [`/facilities`](https://fusiondigital.club/facilities) · [`/#prototype-workspace`](https://fusiondigital.club/#prototype-workspace) | 全球装置状态、Paramak / EXL-50U / ITER / EHL-2 目录、三维模型与 EFIT 工作台 |
 | 账户与治理 | [`/account`](https://fusiondigital.club/account) · [`/research-review`](https://fusiondigital.club/research-review) | 身份、模型偏好、角色、配额、审计、研究候选与人工审核 |
 
 ## 🔥 快速上手
@@ -175,7 +175,7 @@ docs/                         架构、复现、平台路线和协作手册
 ## 📝 项目蓝图（Roadmap）
 
 - [x] 公开知识域、装置目录、证据检索和知识图谱
-- [x] Paramak / EXL-50U / ITER 浏览器数字样机与资产清单
+- [x] Paramak / EXL-50U / ITER / EHL-2 浏览器数字样机与资产清单
 - [x] 公开 EFIT 派生数据的分片交付、回放和拓扑展示
 - [x] D1 账户、角色、配额、审计、研究候选和人工审核
 - [x] 版本化研究数据、报告、资产锁和发布质量门
@@ -190,7 +190,7 @@ docs/                         架构、复现、平台路线和协作手册
 ## 🔐 数据与安全边界
 
 - Git 只保存获准公开的源码、知识数据、报告与浏览器运行时派生物。
-- 原始 EXL-50U / ITER CAD、STEP、B-Rep、PMI、尺寸、公差和完整装配元数据留在受控工程系统。
+- 原始 EXL-50U / EHL-2 / ITER CAD、STEP、B-Rep、PMI、尺寸、公差和完整装配元数据留在受控工程系统；Git 仅保存获准公开的浏览器派生物。
 - 原始 EFIT 档案、G-file、psi 网格、未脱敏诊断与实验数据留在受控实验数据系统。
 - ITER 高清教育可视化的 18 个 GLB 分片由 `assets/runtime-assets.lock.json` 锁定文件名、字节数和 SHA-256，并在 Git 之外分发。
 - 任何模型、智能体或网页建议都不能绕过装置控制器、联锁、保护系统、人工审批或独立 VVUQ。

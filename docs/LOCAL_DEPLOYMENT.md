@@ -121,7 +121,7 @@ npm run assets:hydrate -- --source-dir "/path/to/extracted/iter-high-detail-v1"
 npm run assets:verify
 ```
 
-脚本只接受 `assets/runtime-assets.lock.json` 声明的精确文件，并核对长度和 SHA-256。`public/models/iter-high-detail-v1/` 是被 Git 忽略的本机恢复目录。原始 EXL-50U / ITER CAD、STEP、B-Rep、PMI 和原始 EFIT/G-file/psi 网格不是这个资产包的一部分，也不得放入 Codeup、网盘或普通内网下载区。
+脚本只接受 `assets/runtime-assets.lock.json` 声明的精确文件，并核对长度和 SHA-256。`public/models/iter-high-detail-v1/` 是被 Git 忽略的本机恢复目录。原始 EXL-50U / EHL-2 / ITER CAD、STEP、B-Rep、PMI 和原始 EFIT/G-file/psi 网格不是这个资产包的一部分，也不得放入 Codeup、网盘或普通内网下载区。
 
 ## 4. 环境变量
 
@@ -396,7 +396,7 @@ npm run db:local:verify: PASS / FAIL
 npm run check: PASS / FAIL
 npm run dev URL:
 npm run build + npm run start: PASS / FAIL
-Search / graph / Paramak / EXL-50U / EFIT / ITER smoke tests: PASS / FAIL
+Search / graph / Paramak / EXL-50U / EFIT / ITER / EHL-2 smoke tests: PASS / FAIL
 LLM provider keys configured: provider names only (never record values)
 Known deviations:
 ```

@@ -1,6 +1,6 @@
 {
   "schemaVersion": "2.0",
-  "asOf": "2026-08-15",
+  "asOf": "2026-08-18",
   "securityPolicy": {
     "previewOnly": true,
     "showDownloadActions": false,
@@ -80,6 +80,27 @@
       "viewer": {
         "mode": "real-3d",
         "manifestEndpoint": "/models/iter-public-simplified/model-manifest.json",
+        "turntableManifestEndpoint": null,
+        "overlayEligible": false
+      },
+      "physicsOverlays": []
+    },
+    {
+      "id": "ehl-2-preliminary",
+      "index": "04",
+      "title": "EHL‑2 初步设计模型",
+      "eyebrow": "AUTHORIZED · PRELIMINARY 3D",
+      "state": "约半面数浏览器派生",
+      "tone": "controlled",
+      "facts": ["用户授权公开简化展示", "6 个稳定部件", "约 247 万三角面 · 14.2 MB Meshopt", "保留源模型约 50% 面数"],
+      "copy": "加载由 2026-08-12 EHL‑2 初步 CAD 基线生成的浏览器可视化派生模型。六个部件保持共同装配原点，几何面数约为源 GLB 的 50%，只采用一次受控 QEM 简化；位置保留 Float32，法线使用 Int8，并通过 Meshopt 降低传输体积，不再进行激进减面。该模型用于方案沟通、装配浏览、显隐、隔离、透明度和剖切，不代表 as-built 构型、尺寸计量、制造依据或工程 CAE 权威模型。源 GLB 不由网站下发。",
+      "availability": "online-public-simplified",
+      "delivery": "public-static",
+      "comparisonFrame": null,
+      "statement": "User-authorized public simplified derivative of the 2026-08-12 EHL-2 preliminary CAD baseline, retaining approximately 50% of source triangles. Browser-delivered geometry can be technically saved; source GLBs and engineering-authoritative geometry are not published.",
+      "viewer": {
+        "mode": "real-3d",
+        "manifestEndpoint": "/models/ehl2-preliminary-v1/model-manifest.json",
         "turntableManifestEndpoint": null,
         "overlayEligible": false
       },

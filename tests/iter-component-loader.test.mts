@@ -3,6 +3,14 @@ import { createHash } from 'node:crypto';
 import test from 'node:test';
 import type { DeviceComponentBundle, DeviceComponentModel, DeviceWebModel } from '../app/components/deviceManifest';
 import { createSerialTaskGate, loadVerifiedComponentBundle, loadVerifiedMonolithicModel } from '../app/components/device-viewer/componentModelLoader';
+import {
+  EHL2_MANIFEST_URL,
+  EHL2_MIN_DEVICE_MEMORY_GIB,
+  EHL2_MIN_VIEWPORT_WIDTH,
+  EHL2_VIEWER_ID,
+  evaluateEhl2RuntimePolicy,
+  isEhl2ViewerSession,
+} from '../app/components/device-viewer/ehl2RuntimePolicy';
 
 class FakeNode {
   name = '';
@@ -107,6 +115,48 @@ function bundle(components: DeviceComponentModel[]): DeviceComponentBundle {
     components,
   };
 }
+
+test('EHL-2 runtime policy permits only qualifying desktop sessions', () => {
+  assert.equal(isEhl2ViewerSession(EHL2_VIEWER_ID, '/unrelated.json'), true);
+  assert.equal(isEhl2ViewerSession('another-viewer', EHL2_MANIFEST_URL), true);
+  assert.equal(isEhl2ViewerSession('another-viewer', '/models/another/model-manifest.json'), false);
+
+  assert.deepEqual(evaluateEhl2RuntimePolicy({
+    viewportWidth: EHL2_MIN_VIEWPORT_WIDTH,
+    saveData: false,
+    deviceMemoryGiB: EHL2_MIN_DEVICE_MEMORY_GIB,
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+    maxTouchPoints: 0,
+  }), { allowed: true, reasons: [] });
+
+  assert.deepEqual(evaluateEhl2RuntimePolicy({
+    viewportWidth: EHL2_MIN_VIEWPORT_WIDTH - 1,
+    saveData: true,
+    deviceMemoryGiB: EHL2_MIN_DEVICE_MEMORY_GIB - 1,
+    userAgent: 'Mozilla/5.0 (Linux; Android 15; Mobile)',
+    userAgentDataMobile: true,
+    maxTouchPoints: 5,
+  }), {
+    allowed: false,
+    reasons: ['mobile', 'narrow-viewport', 'save-data', 'low-memory'],
+  });
+});
+
+test('EHL-2 runtime policy recognizes iPad desktop user agents and fails closed on invalid hints', () => {
+  assert.deepEqual(evaluateEhl2RuntimePolicy({
+    viewportWidth: 1024,
+    saveData: false,
+    userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15)',
+    maxTouchPoints: 5,
+  }), { allowed: false, reasons: ['mobile'] });
+
+  assert.deepEqual(evaluateEhl2RuntimePolicy({
+    viewportWidth: Number.NaN,
+    saveData: false,
+    deviceMemoryGiB: Number.NaN,
+    userAgent: 'desktop',
+  }), { allowed: false, reasons: ['narrow-viewport', 'low-memory'] });
+});
 
 function renderableScene(nodeName: string, counters?: { geometry: number; material: number }) {
   const root = new FakeNode();

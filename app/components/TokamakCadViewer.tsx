@@ -32,6 +32,11 @@ import {
   buildAnalyticPlasmaGeometry,
 } from './device-viewer/analyticPlasma';
 import { createSerialTaskGate, loadVerifiedComponentBundle, loadVerifiedMonolithicModel } from './device-viewer/componentModelLoader';
+import {
+  evaluateEhl2RuntimePolicy,
+  isEhl2ViewerSession,
+  type Ehl2RuntimePolicy,
+} from './device-viewer/ehl2RuntimePolicy';
 import { resolveShotGeometry, type EfitFrame, type EfitStore } from './efit';
 import { useI18n } from '../i18n';
 import { useTheme, type ResolvedTheme } from './theme';
@@ -214,6 +219,22 @@ function shouldPreferPreview() {
     || (typeof hintedNavigator.deviceMemory === 'number' && hintedNavigator.deviceMemory < 4);
 }
 
+function currentEhl2RuntimePolicy(): Ehl2RuntimePolicy {
+  const hintedNavigator = navigator as Navigator & {
+    connection?: { saveData?: boolean };
+    deviceMemory?: number;
+    userAgentData?: { mobile?: boolean };
+  };
+  return evaluateEhl2RuntimePolicy({
+    viewportWidth: window.innerWidth,
+    saveData: hintedNavigator.connection?.saveData === true,
+    deviceMemoryGiB: hintedNavigator.deviceMemory,
+    userAgent: hintedNavigator.userAgent,
+    userAgentDataMobile: hintedNavigator.userAgentData?.mobile,
+    maxTouchPoints: hintedNavigator.maxTouchPoints,
+  });
+}
+
 function defaultInteractionFor(clipping: boolean, clipAxis: ClipAxis, clipOffset: number): ViewerInteraction {
   const boundedClipOffset = Number.isFinite(clipOffset)
     ? Math.min(0.9, Math.max(-0.9, clipOffset))
@@ -258,6 +279,8 @@ function TokamakCadViewerSession({
 }: TokamakCadViewerProps = {}) {
   const { content, locale, t } = useI18n();
   const { resolvedTheme } = useTheme();
+  const ehl2Session = isEhl2ViewerSession(viewerId, manifestUrl);
+  const wireframeAllowed = !ehl2Session;
   const i18nRef = useRef({ content, t });
   const visualThemeRef = useRef(resolvedTheme);
   useEffect(() => {
@@ -292,6 +315,7 @@ function TokamakCadViewerSession({
   const [manifest, setManifest] = useState<DeviceManifest | null>(null);
   const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
   const [lodNotice, setLodNotice] = useState('');
+  const [ehl2RuntimePolicy, setEhl2RuntimePolicy] = useState<Ehl2RuntimePolicy | null>(null);
   const [autoRotate, setAutoRotate] = useState(false);
   const [wireframe, setWireframe] = useState(false);
   const [clipping, setClipping] = useState(defaultInteraction.clipping);
@@ -312,6 +336,37 @@ function TokamakCadViewerSession({
   const [hiddenPartIds, setHiddenPartIds] = useState<Set<string>>(() => new Set());
   const [isolatedPartIds, setIsolatedPartIds] = useState<Set<string>>(() => new Set());
   const [openSystems, setOpenSystems] = useState<Set<string>>(() => new Set());
+
+  useEffect(() => {
+    if (!ehl2Session) return;
+    const hintedNavigator = navigator as Navigator & {
+      connection?: {
+        addEventListener?: (type: 'change', listener: () => void) => void;
+        removeEventListener?: (type: 'change', listener: () => void) => void;
+      };
+    };
+    const updatePolicy = () => {
+      const policy = currentEhl2RuntimePolicy();
+      setEhl2RuntimePolicy(policy);
+      if (!policy.allowed) {
+        interactionRef.current.wireframe = false;
+        viewerRef.current?.setWireframe(false);
+        setWireframe(false);
+        setProgress(0);
+        setStatus('idle');
+        setActivated(false);
+      }
+    };
+    updatePolicy();
+    window.addEventListener('resize', updatePolicy);
+    hintedNavigator.connection?.addEventListener?.('change', updatePolicy);
+    return () => {
+      window.removeEventListener('resize', updatePolicy);
+      hintedNavigator.connection?.removeEventListener?.('change', updatePolicy);
+    };
+  }, [ehl2Session]);
+
+  const ehl2LoadBlocked = ehl2Session && ehl2RuntimePolicy?.allowed !== true;
 
   useEffect(() => {
     const nextState = { frame: efitFrame, store: efitStore, alignment: efitAlignment, options: efitOptions };
@@ -341,12 +396,22 @@ function TokamakCadViewerSession({
     || `${content(part.title)} ${part.title} ${part.id} ${part.engineeringTag}`.toLocaleLowerCase(locale).includes(normalizedQuery)).map((part) => part.id)), [content, locale, normalizedQuery, parts]);
 
   const activate = useCallback(() => {
+    if (ehl2Session) {
+      const policy = currentEhl2RuntimePolicy();
+      setEhl2RuntimePolicy(policy);
+      if (!policy.allowed) {
+        setErrorMessage('');
+        setProgress(0);
+        setStatus('idle');
+        return;
+      }
+    }
     setErrorMessage('');
     setProgress(0);
     setStatus('loading');
     if (!activated) setActivated(true);
     if (activated || status === 'error') setAttempt((value) => value + 1);
-  }, [activated, status]);
+  }, [activated, ehl2Session, status]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -607,29 +672,52 @@ function TokamakCadViewerSession({
       };
       localDisposableMaterials = disposableMaterials;
 
+      const meshoptDecoder = meshoptModule.MeshoptDecoder;
       const loader = new loaderModule.GLTFLoader();
-      loader.setMeshoptDecoder(meshoptModule.MeshoptDecoder);
+      loader.setMeshoptDecoder(meshoptDecoder);
       const model: Object3D = await globalModelDecodeGate.run(async () => {
-        if (loadedModel.delivery === 'components') {
-          const hintedNavigator = navigator as Navigator & { deviceMemory?: number };
-          const concurrency = typeof hintedNavigator.deviceMemory === 'number' && hintedNavigator.deviceMemory < 8 ? 1 : 2;
-          return loadVerifiedComponentBundle(loadedModel, {
-            loader,
-            createGroup: () => new THREE.Group(),
-            signal: modelLoadController.signal,
-            concurrency,
-            onProgress: (loadedBytes, totalBytes) => {
+        let ehl2MeshoptWorkerEnabled = false;
+        if (ehl2Session
+          && typeof Worker === 'function'
+          && typeof Blob === 'function'
+          && typeof URL.createObjectURL === 'function'
+          && typeof URL.revokeObjectURL === 'function'
+          && typeof meshoptDecoder.useWorkers === 'function') {
+          try {
+            // One worker removes the synchronous 2.47M-triangle decode from the
+            // UI thread without multiplying decoded-buffer concurrency.
+            meshoptDecoder.useWorkers(1);
+            ehl2MeshoptWorkerEnabled = true;
+          } catch {
+            // Worker creation can be unavailable under a restrictive CSP. Keep
+            // the existing decoder path, and do not affect other device loads.
+            try { meshoptDecoder.useWorkers(0); } catch { /* best-effort reset */ }
+          }
+        }
+        try {
+          if (loadedModel.delivery === 'components') {
+            const hintedNavigator = navigator as Navigator & { deviceMemory?: number };
+            const concurrency = typeof hintedNavigator.deviceMemory === 'number' && hintedNavigator.deviceMemory < 8 ? 1 : 2;
+            return loadVerifiedComponentBundle(loadedModel, {
+              loader,
+              createGroup: () => new THREE.Group(),
+              signal: modelLoadController.signal,
+              concurrency,
+              onProgress: (loadedBytes, totalBytes) => {
                 if (!disposed && totalBytes > 0) setProgress(Math.min(99, Math.round((loadedBytes / totalBytes) * 100)));
               },
+            });
+          }
+          return loadVerifiedMonolithicModel(loadedModel, {
+            loader,
+            signal: modelLoadController.signal,
+            onProgress: (loadedBytes, totalBytes) => {
+              if (!disposed && totalBytes > 0) setProgress(Math.min(99, Math.round((loadedBytes / totalBytes) * 100)));
+            },
           });
+        } finally {
+          if (ehl2MeshoptWorkerEnabled) meshoptDecoder.useWorkers(0);
         }
-        return loadVerifiedMonolithicModel(loadedModel, {
-          loader,
-          signal: modelLoadController.signal,
-          onProgress: (loadedBytes, totalBytes) => {
-            if (!disposed && totalBytes > 0) setProgress(Math.min(99, Math.round((loadedBytes / totalBytes) * 100)));
-          },
-        });
       });
       if (disposed) {
         disposeObject(model);
@@ -1090,9 +1178,14 @@ function TokamakCadViewerSession({
         disposableMaterials,
         setView,
         reset: () => setView('iso'),
-        setWireframe: (enabled) => interactiveMaterials().forEach((material) => {
-          if ('wireframe' in material) { (material as Material & { wireframe: boolean }).wireframe = enabled; material.needsUpdate = true; }
-        }),
+        setWireframe: (enabled) => {
+          // Three.js expands indexed triangles into a second line-index buffer
+          // for wireframe rendering. Never permit that allocation for EHL-2.
+          if (ehl2Session && enabled) return;
+          interactiveMaterials().forEach((material) => {
+            if ('wireframe' in material) { (material as Material & { wireframe: boolean }).wireframe = enabled; material.needsUpdate = true; }
+          });
+        },
         setClipping: (enabled, axis, offset) => {
           clippingPlane.normal.set(axis === 'x' ? -1 : 0, axis === 'y' ? -1 : 0, axis === 'z' ? -1 : 0);
           clippingPlane.constant = offset * modelRadius;
@@ -1132,7 +1225,7 @@ function TokamakCadViewerSession({
       selectParts(selectedPartIdsRef.current);
       applyVisibility(hiddenPartIdsRef.current, isolatedPartIdsRef.current);
       setOpacity(opacityRef.current.global, opacityRef.current.selected);
-      viewerRef.current.setWireframe(interactionRef.current.wireframe);
+      viewerRef.current.setWireframe(wireframeAllowed && interactionRef.current.wireframe);
       viewerRef.current.setClipping(
         interactionRef.current.clipping,
         interactionRef.current.clipAxis,
@@ -1163,7 +1256,7 @@ function TokamakCadViewerSession({
     });
 
     return () => { disposed = true; releaseResources(); viewerRef.current = null; };
-  }, [activated, appearancePreset, attempt, availableModels, manifest, selectedModel]);
+  }, [activated, appearancePreset, attempt, availableModels, ehl2Session, manifest, selectedModel, wireframeAllowed]);
 
   useEffect(() => {
     const overlay = viewerRef.current?.efitOverlay;
@@ -1209,6 +1302,7 @@ function TokamakCadViewerSession({
     setAutoRotate(next);
   };
   const toggleWireframe = () => {
+    if (!wireframeAllowed) return;
     const next = !wireframe;
     interactionRef.current.wireframe = next;
     viewerRef.current?.setWireframe(next);
@@ -1324,6 +1418,17 @@ function TokamakCadViewerSession({
     setSelectedModelId(next.id);
   };
   const ready = status === 'ready';
+  const ehl2ConstraintMessage = ehl2RuntimePolicy === null
+    ? t('viewer.ehlChecking')
+    : ehl2RuntimePolicy.reasons.map((reason) => {
+      switch (reason) {
+        case 'mobile': return t('viewer.ehlBlockedMobile');
+        case 'narrow-viewport': return t('viewer.ehlBlockedNarrow');
+        case 'save-data': return t('viewer.ehlBlockedSaveData');
+        case 'low-memory': return t('viewer.ehlBlockedMemory');
+        default: return '';
+      }
+    }).filter(Boolean).join(' · ');
   const packageBase = manifestUrl.slice(0, manifestUrl.lastIndexOf('/'));
   const sourceCadPath = manifest?.assets.sourceCad?.path ?? `${packageBase}/${viewerId}.step`;
   const webModelPath = selectedModel?.delivery === 'monolithic'
@@ -1400,7 +1505,8 @@ function TokamakCadViewerSession({
             </>}
             <div className="tokamakCadViewport" ref={mountRef} />
             <div className="tokamakCadScan" aria-hidden="true" /><div className="tokamakCadReticle" aria-hidden="true"><i /><i /></div>
-            {status === 'idle' && <div className="tokamakCadLaunch"><div className="tokamakCadLaunchGlyph" aria-hidden="true"><span /><i /><b /></div><p>MANIFEST-DRIVEN DIGITAL ASSET / 01</p><h3>{t('viewer.launchTitle')}</h3><span>{t('viewer.launchCopy', { model: content(selectedModel?.label ?? t('viewer.standard')), size: estimatedMegabytes })}</span>{lodNotice && <em className="tokamakCadLodNotice">{lodNotice}</em>}<button type="button" onClick={activate} disabled={!manifest || !selectedModel}>{t('viewer.launch')} <i>→</i></button></div>}
+            {status === 'idle' && ehl2LoadBlocked && <div className="tokamakCadLaunch tokamakCadLaunch--blocked" role="status"><div className="tokamakCadLaunchGlyph" aria-hidden="true"><span /><i /><b /></div><p>EHL-2 DESKTOP LOAD GATE</p><h3>{t('viewer.ehlBlockedTitle')}</h3><span>{t('viewer.ehlRequirements')}</span><em className="tokamakCadLodNotice">{ehl2ConstraintMessage}</em></div>}
+            {status === 'idle' && !ehl2LoadBlocked && <div className="tokamakCadLaunch"><div className="tokamakCadLaunchGlyph" aria-hidden="true"><span /><i /><b /></div><p>MANIFEST-DRIVEN DIGITAL ASSET / 01</p><h3>{t('viewer.launchTitle')}</h3><span>{ehl2Session ? t('viewer.ehlLaunchCopy', { size: estimatedMegabytes }) : t('viewer.launchCopy', { model: content(selectedModel?.label ?? t('viewer.standard')), size: estimatedMegabytes })}</span>{lodNotice && <em className="tokamakCadLodNotice">{lodNotice}</em>}<button type="button" onClick={activate} disabled={!manifest || !selectedModel}>{t('viewer.launch')} <i>→</i></button></div>}
             {status === 'loading' && <div className="tokamakCadLoading" role="status"><span>MANIFEST → {selectedModel?.quality === 'high' ? 'HIGH LOD' : 'PREVIEW LOD'} → GPU</span><div><i style={{ width: `${Math.max(6, progress)}%` }} /></div><b>{progress > 0 ? `${progress}% · ${content(selectedModel?.label ?? 'MODEL')} ${estimatedMegabytes} MB${selectedModel?.decodedGpuBytes ? ` · ${t('viewer.decodedMemory', { size: megabytes(selectedModel.decodedGpuBytes) })}` : ''}` : t('viewer.loadingModel', { model: content(selectedModel?.label ?? t('viewer.standard')) })}</b>{lodNotice && <em className="tokamakCadLodNotice">{lodNotice}</em>}</div>}
             {status === 'error' && <div className="tokamakCadFallback"><div className="tokamakFallbackTorus" aria-hidden="true"><span /><i /><b /></div><p>WEBGL FALLBACK</p><h3>{t('viewer.unavailable')}</h3><span>{errorMessage}</span><div><button type="button" onClick={activate}>{t('viewer.reload')}</button>{showDownloadActions && <a href={sourceCadPath} download>{t('viewer.downloadStep')}</a>}</div></div>}
             <div className="tokamakCadLegend" aria-label={t('viewer.legendAria')}><span title={manifest?.visualizations?.analyticPlasma ? t('viewer.analyticPlasmaHelp') : undefined}><i className="plasma" />{manifest?.visualizations?.analyticPlasma ? t('viewer.analyticPlasma') : 'PLASMA'}</span><span><i className="tf" />TF COILS</span><span><i className="pf" />PF COILS / CASES</span><span><i className="structure" />STRUCTURE</span></div>
@@ -1426,7 +1532,7 @@ function TokamakCadViewerSession({
             <div className="tokamakCadOpacityControl global"><label><span>{t('viewer.globalOpacity')}</span><b>{Math.round(globalOpacity * 100)}%</b><input type="range" min="0.1" max="1" step="0.05" value={globalOpacity} disabled={!ready} onChange={(event) => updateGlobalOpacity(Number(event.target.value))} /></label></div>
             <div className="tokamakCadOpacityControl global"><label><span>{t('viewer.selectedOpacity')}</span><b>{Math.round(selectedOpacity * 100)}%</b><input type="range" min="0.1" max="1" step="0.05" value={selectedOpacity} disabled={!ready || selectedPartIds.size === 0} onChange={(event) => updateSelectedOpacity(Number(event.target.value))} /></label></div>
           </div>
-          <div className="tokamakCadTools"><button type="button" disabled={!ready} onClick={resetView}>{t('viewer.reset')}</button><button type="button" disabled={!ready} className={autoRotate ? 'active' : ''} aria-pressed={autoRotate} onClick={toggleAutoRotate}>{t('viewer.rotate')}</button><button type="button" disabled={!ready} className={wireframe ? 'active' : ''} aria-pressed={wireframe} onClick={toggleWireframe}>{t('viewer.wireframe')}</button><button type="button" disabled={!ready} className={clipping ? 'active' : ''} aria-pressed={clipping} onClick={toggleClipping}>{t('viewer.clip')}</button>{manifest?.visualizations?.analyticPlasma && <button type="button" disabled={!ready} className={analyticPlasmaVisible ? 'active' : ''} aria-pressed={analyticPlasmaVisible} title={`${content(manifest.visualizations.analyticPlasma.label)} · ${t('viewer.analyticPlasmaHelp')}`} onClick={toggleAnalyticPlasma}>{t('viewer.analyticPlasma')}</button>}<button type="button" disabled={!ready} className={fullscreen ? 'active' : ''} aria-pressed={fullscreen} onClick={toggleFullscreen}>{t('viewer.fullscreen')}</button></div>
+          <div className="tokamakCadTools"><button type="button" disabled={!ready} onClick={resetView}>{t('viewer.reset')}</button><button type="button" disabled={!ready} className={autoRotate ? 'active' : ''} aria-pressed={autoRotate} onClick={toggleAutoRotate}>{t('viewer.rotate')}</button>{wireframeAllowed && <button type="button" disabled={!ready} className={wireframe ? 'active' : ''} aria-pressed={wireframe} onClick={toggleWireframe}>{t('viewer.wireframe')}</button>}<button type="button" disabled={!ready} className={clipping ? 'active' : ''} aria-pressed={clipping} onClick={toggleClipping}>{t('viewer.clip')}</button>{manifest?.visualizations?.analyticPlasma && <button type="button" disabled={!ready} className={analyticPlasmaVisible ? 'active' : ''} aria-pressed={analyticPlasmaVisible} title={`${content(manifest.visualizations.analyticPlasma.label)} · ${t('viewer.analyticPlasmaHelp')}`} onClick={toggleAnalyticPlasma}>{t('viewer.analyticPlasma')}</button>}<button type="button" disabled={!ready} className={fullscreen ? 'active' : ''} aria-pressed={fullscreen} onClick={toggleFullscreen}>{t('viewer.fullscreen')}</button></div>
         </div>
         {efitControls && <div className="tokamakCadEfitControls" aria-label={t('viewer.efitControls')}>
           <span>EFIT OVERLAY</span>

@@ -362,8 +362,10 @@ test('homepage owns the public full-device digital-prototype workspace', async (
   assert.match(html, /Paramak/);
   assert.match(html, /EXL(?:‑|-)?50U 2026 升级版/);
   assert.match(html, /ITER 教育高精度模型/);
+  assert.match(html, /EHL(?:‑|-)?2 初步设计模型/);
   assert.match(html, /简化派生实时三维/);
   assert.match(html, /高精度分片三维/);
+  assert.match(html, /约半面数浏览器派生/);
   assert.match(html, /360°/);
   for (const removedWorkbenchCopy of [
     /MODEL COVERAGE/,
@@ -382,16 +384,18 @@ test('homepage owns the public full-device digital-prototype workspace', async (
   assert.doesNotMatch(html, /iter-cad-private|127\.0\.0\.1/i);
   assert.doesNotMatch(html, /href=["'][^"']*\/models\/iter[^"']*\.glb/i,
     'the homepage must not expose the ITER GLB as a direct download link');
+  assert.doesNotMatch(html, /href=["'][^"']*\/models\/ehl2[^"']*\.glb/i,
+    'the homepage must not expose the EHL GLB as a direct download link');
 
   const catalog = JSON.parse(await readFile(
     new URL('../public/models/device-catalog.json', import.meta.url),
     'utf8',
   ));
-  assert.equal(catalog.devices.length, 3);
+  assert.equal(catalog.devices.length, 4);
   assert.equal(catalog.schemaVersion, '2.0');
   assert.equal(catalog.securityPolicy.showDownloadActions, false);
   assert.equal(catalog.securityPolicy.sourceCadDelivered, false);
-  assert.equal(catalog.devices.filter((device) => device.viewer.manifestEndpoint !== null).length, 3);
+  assert.equal(catalog.devices.filter((device) => device.viewer.manifestEndpoint !== null).length, 4);
   const exl = catalog.devices.find((device) => device.id === 'exl-50u-2026-upgrade');
   assert.equal(exl.delivery, 'public-static');
   assert.equal(exl.viewer.mode, 'real-3d');
@@ -421,8 +425,23 @@ test('homepage owns the public full-device digital-prototype workspace', async (
   assert.match(iter.statement, /Project-owner-authorized public browser visualization derivative/);
   assert.match(iter.statement, /Browser-delivered geometry can be technically saved/);
   assert.match(iter.statement, /does not claim ITER Organization endorsement/);
+  const ehl = catalog.devices.find((device) => device.id === 'ehl-2-preliminary');
+  assert.equal(ehl.delivery, 'public-static');
+  assert.equal(ehl.viewer.mode, 'real-3d');
+  assert.equal(ehl.viewer.manifestEndpoint, '/models/ehl2-preliminary-v1/model-manifest.json');
+  assert.equal(ehl.viewer.turntableManifestEndpoint, null);
+  assert.equal(ehl.viewer.overlayEligible, false);
+  assert.equal(ehl.physicsOverlays.length, 0);
+  assert.ok(ehl.facts.includes('6 个稳定部件'));
+  assert.ok(ehl.facts.some((fact) => /约 24[78] 万三角面 · [\d.]+ MB Meshopt/.test(fact)));
+  assert.ok(ehl.facts.includes('保留源模型约 50% 面数'));
+  assert.match(ehl.copy, /2026-08-12 EHL(?:‑|-)?2 初步 CAD 基线/);
+  assert.match(ehl.copy, /源 GLB 不由网站下发/);
+  assert.match(ehl.statement, /User-authorized public simplified derivative/);
+  assert.match(ehl.statement, /retaining approximately 50% of source triangles/);
+  assert.match(ehl.statement, /Browser-delivered geometry can be technically saved/);
   assert.ok(catalog.devices.filter((device) => device.id !== exl.id).every((device) => device.physicsOverlays.length === 0));
-  assert.ok(catalog.devices.every((device) => !JSON.stringify(device).match(/iter-cad-private|127\.0\.0\.1|[A-Z]:\\/i)));
+  assert.ok(catalog.devices.every((device) => !JSON.stringify(device).match(/iter-cad-private|ehl2-cad-private|127\.0\.0\.1|[A-Z]:\\/i)));
   assert.doesNotMatch(html, /下载 (?:STEP|GLB)/);
 
   const exlManifest = JSON.parse(await readFile(
@@ -461,6 +480,32 @@ test('homepage owns the public full-device digital-prototype workspace', async (
   assert.equal(new Set(iterParts.map((part) => part.nodeName)).size, 18);
   assert.ok(iterParts.every((part) => /^ITER_PART__[a-z0-9-]+$/.test(part.nodeName)));
   assert.match(iterManifest.disclaimer, /(?:non-engineering|not an engineering|非工程)/i);
+
+  const ehlManifest = JSON.parse(await readFile(
+    new URL('../public/models/ehl2-preliminary-v1/model-manifest.json', import.meta.url),
+    'utf8',
+  ));
+  assert.equal(ehlManifest.devicePackage.kind, 'public-simplified-derivative');
+  assert.equal(ehlManifest.devicePackage.authority, 'illustrative');
+  assert.equal(ehlManifest.access.classification, 'PUBLIC');
+  assert.equal(ehlManifest.access.redistributionAllowed, true);
+  assert.equal(ehlManifest.access.engineeringUseAllowed, false);
+  assert.equal(ehlManifest.assets.sourceCad, undefined);
+  assert.equal(ehlManifest.assets.webModels, undefined);
+  assert.equal(ehlManifest.assets.componentBundles, undefined);
+  assert.equal(ehlManifest.assets.webModel.path, '/models/ehl2-preliminary-v1/ehl2-preliminary.meshopt.glb');
+  assert.ok(ehlManifest.assets.webModel.bytes > 0 && ehlManifest.assets.webModel.bytes <= 16 * 1024 * 1024);
+  assert.equal(ehlManifest.assets.webModel.bytes, 14_219_976);
+  assert.equal(ehlManifest.assets.webModel.sha256.toLowerCase(), '983c04152d78f5520e68646c31bde74557061df8d90862e07f649afff4040f07');
+  assert.equal(ehlManifest.assets.webModel.triangles, 2_470_022);
+  assert.equal(ehlManifest.assets.webModel.vertices, 1_227_655);
+  assert.equal(ehlManifest.assets.webModel.decodedGpuBytes, 46_917_675);
+  const ehlParts = ehlManifest.systems.flatMap((system) => system.parts);
+  assert.equal(ehlParts.length, 6);
+  assert.equal(new Set(ehlParts.map((part) => part.id)).size, 6);
+  assert.equal(new Set(ehlParts.map((part) => part.nodeName)).size, 6);
+  assert.ok(ehlParts.every((part) => /^EHL2_PART__[a-z0-9-]+$/.test(part.nodeName)));
+  assert.match(ehlManifest.disclaimer, /(?:preliminary|not an engineering|non-authoritative|非工程|初步)/i);
 
   const manifest = JSON.parse(await readFile(
     new URL('../public/models/paramak-full-device/model-manifest.json', import.meta.url),

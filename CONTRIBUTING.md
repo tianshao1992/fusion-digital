@@ -103,7 +103,7 @@ npm run research:diagnostics:report
 
 - 不提交访问令牌、账号、内部 URL、未脱敏日志或个人敏感信息。
 - 不提交未经批准的装置参数、实验数据、CAD、商业软件模型或合作方资料。
-- 原始 EXL-50U / ITER CAD、STEP、B-Rep、PMI、尺寸、公差、完整装配元数据，以及原始 EFIT 档案、G-file 和 psi 网格，只能保留在受控工程/实验数据系统中；禁止放入 GitHub、Codeup、Git LFS、内网公开下载或百度网盘。
+- 原始 EXL-50U / EHL-2 / ITER CAD、STEP、B-Rep、PMI、尺寸、公差、完整装配元数据，以及原始 EFIT 档案、G-file 和 psi 网格，只能保留在受控工程/实验数据系统中；禁止放入 GitHub、Codeup、Git LFS、内网公开下载或百度网盘。
 - 仓库和外置资产包只能包含经过授权与审核的浏览器运行时派生物。EXL-50U、公开 EFIT 派生数据和 Paramak 资产随 Git；ITER 高清模式的 18 个 GLB 分片由 `assets/runtime-assets.lock.json` 锁定并独立分发。
 - 第三方论文图、商标和软件说明必须保留来源与许可边界。
 - 对推断性结论使用“可能、推断、公开证据未证明”等明确口径。

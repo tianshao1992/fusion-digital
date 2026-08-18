@@ -9,9 +9,10 @@
 | 网页源码、知识图谱、检索索引、报告、图片和公开下载文件 | 是 | Git | 以目标提交为准 |
 | Paramak 浏览器 GLB、公开 STEP、清单与许可证 | 是 | Git | 仅按其随附许可证使用 |
 | EXL-50U 标准/高清浏览器 GLB、海报和转台帧 | 是 | Git | 仅为经审核的非工程可视化派生物 |
+| EHL-2 初步设计约半面数 Meshopt GLB、清单与公开说明 | 是 | Git | 仅为用户授权的非工程浏览器派生物；不含五个源 GLB |
 | EXL-50U EFIT v1/v2 标量、重采样轮廓、拓扑派生数据和分片 | 是 | Git | 不含原始 G-EQDSK、psi 网格或源实验档案 |
 | ITER 高清教育可视化 18 个 Meshopt GLB 分片 | 否 | HTTPS 镜像下载，或从已下载目录导入 | 约 98.5 MB；只包含经审核的运行时派生物 |
-| 原始 EXL-50U / ITER CAD、STEP、B-Rep、PMI、尺寸、公差与装配元数据 | 否，且禁止补入 | 受控工程数据系统 | 不进入 Codeup、普通 Git、内网公开下载或百度网盘 |
+| 原始 EXL-50U / EHL-2 / ITER CAD、STEP、B-Rep、PMI、尺寸、公差与装配元数据 | 否，且禁止补入 | 受控工程数据系统 | 不进入 Codeup、普通 Git、内网公开下载或百度网盘 |
 | 原始 EFIT 档案、G-file、psi 网格和未脱敏实验数据 | 否，且禁止补入 | 受控实验数据系统 | 不进入 Codeup、普通 Git、内网公开下载或百度网盘 |
 
 因此，“展示当前网页所有内容”是指复现当前获准公开的网页与运行时派生物，不是把源 CAD、源 EFIT 或其他受控工程资料复制到协作仓库。
@@ -220,7 +221,7 @@ assets:verify: PASS / FAIL / intentionally skipped
 ITER 18-shard total bytes and verification result:
 npm run check: PASS / FAIL
 Deployment mode: Sites external / internal self-contained
-Smoke test: Paramak / EXL-50U / EFIT / ITER high-detail
+Smoke test: Paramak / EXL-50U / EFIT / ITER high-detail / EHL-2 preliminary derivative
 Known deviations:
 ```
 

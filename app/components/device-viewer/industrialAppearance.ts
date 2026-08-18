@@ -96,6 +96,14 @@ export const EXL50U_INDUSTRIAL_SYSTEM_PRESETS: Readonly<Record<string, Industria
   'vde-coil-supports': 'brushed-steel',
 };
 
+export const EHL2_INDUSTRIAL_SYSTEM_PRESETS: Readonly<Record<string, IndustrialMaterialPresetId>> = {
+  'ehl2-vessel-assembly': 'polished-steel',
+  'ehl2-center-post': 'copper-alloy',
+  'ehl2-divertor': 'matte-carbon',
+  'ehl2-bellows': 'brushed-steel',
+  'ehl2-dewar': 'dark-alloy',
+};
+
 const CATEGORY_FALLBACKS: Readonly<Record<DevicePartCategory, IndustrialMaterialPresetId>> = {
   plasma: 'plasma',
   tf: 'copper-alloy',
@@ -123,7 +131,9 @@ export function resolveIndustrialMaterialPreset(
   systemId: string,
   category: DevicePartCategory,
 ): IndustrialMaterialPresetId {
-  return EXL50U_INDUSTRIAL_SYSTEM_PRESETS[systemId] ?? CATEGORY_FALLBACKS[category];
+  return EXL50U_INDUSTRIAL_SYSTEM_PRESETS[systemId]
+    ?? EHL2_INDUSTRIAL_SYSTEM_PRESETS[systemId]
+    ?? CATEGORY_FALLBACKS[category];
 }
 
 export function resolveIndustrialMaterialSpec(

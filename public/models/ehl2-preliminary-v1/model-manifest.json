@@ -1,0 +1,207 @@
+{
+  "$schema": "/models/device-manifest.schema.json",
+  "schemaVersion": "1.1",
+  "id": "ehl2-preliminary-v1",
+  "title": "EHL-2 preliminary design browser visualization derivative",
+  "asOf": "2026-08-18",
+  "devicePackage": {
+    "kind": "public-simplified-derivative",
+    "deviceClass": "EHL-2 preliminary tokamak host-assembly visualization",
+    "authority": "illustrative",
+    "replacementContract": [
+      "user authorization for public display of the simplified browser derivative",
+      "approximately half of the reviewed source triangle count",
+      "six stable selectable assembly identities sharing one origin",
+      "metre-scale Y-up right-handed web coordinate frame",
+      "asset hash, byte size, runtime geometry gates and non-engineering-use boundary"
+    ]
+  },
+  "access": {
+    "classification": "PUBLIC",
+    "redistributionAllowed": true,
+    "engineeringUseAllowed": false,
+    "statement": "The user explicitly authorized public delivery of this simplified browser derivative from the 2026-08-12 EHL-2 preliminary CAD baseline. The five source GLBs, construction history, dimensions, tolerances, PMI and engineering metadata remain private and are not redistributed."
+  },
+  "coordinateSystem": {
+    "linearUnit": "metre",
+    "upAxis": "Y",
+    "handedness": "right",
+    "sourceToWebScale": 0.001
+  },
+  "assets": {
+    "webModel": {
+      "path": "/models/ehl2-preliminary-v1/ehl2-preliminary.meshopt.glb",
+      "format": "glTF 2.0 binary + EXT_meshopt_compression; POSITION Float32; NORMAL normalized Int8",
+      "bytes": 14219976,
+      "sha256": "983C04152D78F5520E68646C31BDE74557061DF8D90862E07F649AFFF4040F07",
+      "triangles": 2470022,
+      "vertices": 1227655,
+      "decodedGpuBytes": 46917675,
+      "boundsMetres": {
+        "min": [-5.202489376068115, -5.089799880981445, -4.12000036239624],
+        "max": [4.336404323577881, 5.436800003051758, 4.12000036239624]
+      }
+    }
+  },
+  "systems": [
+    {
+      "id": "ehl2-vessel-assembly",
+      "title": "真空室与固定限制器",
+      "shortTitle": "VESSEL / LIMITER",
+      "category": "structure",
+      "color": "#AEB9BE",
+      "description": "来自 2026-08-12 初步 CAD 基线的约半面数浏览器派生网格，仅用于方案沟通、装配浏览、显隐、透明与剖切交互。",
+      "parts": [
+        {
+          "id": "EHL2-WEB-01",
+          "title": "真空室",
+          "nodeName": "EHL2_PART__vacuum-vessel",
+          "description": "初步设计可选节点；保持共同装配原点，不包含制造尺寸或工程分析权威。",
+          "engineeringTag": "EHL2.WEB.VACUUM_VESSEL"
+        },
+        {
+          "id": "EHL2-WEB-02",
+          "title": "固定限制器",
+          "nodeName": "EHL2_PART__fixed-limiter",
+          "description": "初步设计可选节点；保持共同装配原点，不包含制造尺寸或工程分析权威。",
+          "engineeringTag": "EHL2.WEB.FIXED_LIMITER"
+        }
+      ]
+    },
+    {
+      "id": "ehl2-center-post",
+      "title": "中心管组件",
+      "shortTitle": "CENTER POST",
+      "category": "structure",
+      "color": "#BE7E4D",
+      "description": "来自 2026-08-12 初步 CAD 基线的约半面数浏览器派生网格，仅用于方案沟通、装配浏览、显隐、透明与剖切交互。",
+      "parts": [
+        {
+          "id": "EHL2-WEB-03",
+          "title": "中心管组件",
+          "nodeName": "EHL2_PART__center-post",
+          "description": "初步设计可选节点；保持共同装配原点，不包含制造尺寸或工程分析权威。",
+          "engineeringTag": "EHL2.WEB.CENTER_POST"
+        }
+      ]
+    },
+    {
+      "id": "ehl2-divertor",
+      "title": "偏滤器",
+      "shortTitle": "DIVERTOR",
+      "category": "structure",
+      "color": "#D86837",
+      "description": "来自 2026-08-12 初步 CAD 基线的约半面数浏览器派生网格，仅用于方案沟通、装配浏览、显隐、透明与剖切交互。",
+      "parts": [
+        {
+          "id": "EHL2-WEB-04",
+          "title": "偏滤器",
+          "nodeName": "EHL2_PART__divertor",
+          "description": "初步设计可选节点；保持共同装配原点，不包含制造尺寸或工程分析权威。",
+          "engineeringTag": "EHL2.WEB.DIVERTOR"
+        }
+      ]
+    },
+    {
+      "id": "ehl2-bellows",
+      "title": "波纹管组件",
+      "shortTitle": "BELLOWS",
+      "category": "structure",
+      "color": "#9AA9B0",
+      "description": "来自 2026-08-12 初步 CAD 基线的约半面数浏览器派生网格，仅用于方案沟通、装配浏览、显隐、透明与剖切交互。",
+      "parts": [
+        {
+          "id": "EHL2-WEB-05",
+          "title": "波纹管组件",
+          "nodeName": "EHL2_PART__bellows",
+          "description": "初步设计可选节点；保持共同装配原点，不包含制造尺寸或工程分析权威。",
+          "engineeringTag": "EHL2.WEB.BELLOWS"
+        }
+      ]
+    },
+    {
+      "id": "ehl2-dewar",
+      "title": "杜瓦总装",
+      "shortTitle": "DEWAR",
+      "category": "structure",
+      "color": "#74858E",
+      "description": "来自 2026-08-12 初步 CAD 基线的约半面数浏览器派生网格，仅用于方案沟通、装配浏览、显隐、透明与剖切交互。",
+      "parts": [
+        {
+          "id": "EHL2-WEB-06",
+          "title": "杜瓦总装",
+          "nodeName": "EHL2_PART__dewar",
+          "description": "初步设计可选节点；保持共同装配原点，不包含制造尺寸或工程分析权威。",
+          "engineeringTag": "EHL2.WEB.DEWAR"
+        }
+      ]
+    }
+  ],
+  "generator": {
+    "name": "FusionDigital EHL-2 preliminary derivative builder",
+    "version": "1.0.0",
+    "repository": "https://github.com/tianshao1992/fusion-physics-atlas",
+    "license": "User-authorized public visualization derivative",
+    "licenseUrl": "/models/ehl2-preliminary-v1/PUBLICATION-NOTICE.md",
+    "script": {
+      "path": "scripts/ehl2/build_ehl2_preliminary.py",
+      "sha256": "FB2C8EE76BC3B39A681E8291A1954448D1D9FDF73A20F2CA7CE554D5CDB1C928"
+    },
+    "compressionScript": {
+      "path": "scripts/ehl2/meshopt_float_position.mjs",
+      "sha256": "EF46DC3D8E94412C501DA6A013FB7D7EB44524CFB549F5678AA97714ADB25069"
+    },
+    "runtimeQa": {
+      "path": "scripts/ehl2/qa_ehl2_runtime.mjs",
+      "sha256": "871AC5D375776BA9D5B51EA5CC6142C70F6D0A5002A512618C0CAB694079B276",
+      "status": "PASS",
+      "localDegenerateTriangles": 0,
+      "localDuplicateTriangles": 0,
+      "worldDegenerateTriangles": 0,
+      "worldDuplicateTriangles": 0
+    },
+    "environment": {
+      "python": "3.12.6",
+      "trimesh": "4.8.3",
+      "fastSimplification": "0.1.12",
+      "gltfTransform": "4.4.2",
+      "meshoptimizer": "1.1.1"
+    },
+    "conversion": {
+      "pipeline": "reviewed GLB meshes -> common-origin metre transforms -> QEM approximately 50% -> delivered-Float32 geometry cleanup -> Int8 normal quantization -> EXT_meshopt_compression",
+      "triangleRetentionTarget": 0.5,
+      "actualTriangleRetention": 0.4982036590009875,
+      "positions": "Float32, non-normalized",
+      "normals": "normalized signed Int8",
+      "recentered": false
+    },
+    "sourceContract": [
+      { "filename": "VV.glb", "bytes": 23913500, "sha256": "65E19914C4276CFE135498DABF8730664A9348719126F519092E9F7F65748FCF" },
+      { "filename": "CenterPost.glb", "bytes": 12929492, "sha256": "692D0EF9F9DE767FA196AA848F481DE5BB701B2BFE179A9DDBAFA20C5273CD59" },
+      { "filename": "Divertor.glb", "bytes": 6927136, "sha256": "1562DE6E267318FE17BFAE7E17084FF463EFE13F3DF36F514B0AED8DF1ECB016" },
+      { "filename": "bowenguan.glb", "bytes": 159767060, "sha256": "BB89D72737AD651ACC53275ADC452352870046904DC6FF157D3EBDBE8E3AD7ED" },
+      { "filename": "duwa.glb", "bytes": 165630580, "sha256": "C43A21B0619FBD8603EAEC7CF86C159867A4280CD7BA5DB2201BFE06766C3E06" }
+    ]
+  },
+  "coverage": {
+    "sourceTriangles": 4957856,
+    "derivedTriangles": 2470022,
+    "triangleRetention": 0.4982036590009875,
+    "included": [
+      "vacuum vessel",
+      "fixed limiter",
+      "center-post assembly",
+      "divertor",
+      "bellows assembly",
+      "dewar assembly"
+    ],
+    "notIncluded": [
+      "five source GLBs and construction history",
+      "B-Rep topology, dimensions, tolerances and PMI",
+      "materials, loads, boundary conditions and CAE fields",
+      "as-built configuration authority",
+      "physics equilibrium or diagnostic data"
+    ]
+  },
+  "disclaimer": "Preliminary, non-authoritative browser visualization only. This public simplified derivative is not an engineering authority and must not be used for manufacturing, dimensional verification, configuration control, physics calculation, CAE analysis or safety decisions."
+}

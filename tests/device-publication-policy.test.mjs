@@ -9,9 +9,10 @@ import test from 'node:test';
 const repositoryRoot = fileURLToPath(new URL('../', import.meta.url));
 const publicRoot = resolve(repositoryRoot, 'public');
 
-const protectedDeviceTokens = new Set(['exl', 'exl50u', 'iter']);
+const protectedDeviceTokens = new Set(['exl', 'exl50u', 'iter', 'ehl', 'ehl2']);
 const exlDeviceTokens = new Set(['exl', 'exl50u']);
 const iterDeviceTokens = new Set(['iter']);
+const ehlDeviceTokens = new Set(['ehl', 'ehl2']);
 const geometryOrSourceExtensions = new Set([
   '.3mf', '.7z', '.brep', '.fbx', '.glb', '.gltf', '.iges', '.igs',
   '.obj', '.ppt', '.pptx', '.rar', '.step', '.stl', '.stp', '.zip',
@@ -25,6 +26,16 @@ const maxExlPreviewTriangles = 750_000;
 const maxExlHighTriangles = 2_000_000;
 const maxExlMobileDecodedGpuBytes = 160 * 1024 * 1024;
 const iterManifestEndpoint = '/models/iter-public-simplified/model-manifest.json';
+const ehlManifestEndpoint = '/models/ehl2-preliminary-v1/model-manifest.json';
+const maxEhlPublicDerivativeBytes = 16 * 1024 * 1024;
+const maxEhlDecodedGpuBytes = 128 * 1024 * 1024;
+const reviewedEhlArtifact = Object.freeze({
+  bytes: 14_219_976,
+  sha256: '983c04152d78f5520e68646c31bde74557061df8d90862e07f649afff4040f07',
+  triangles: 2_470_022,
+  vertices: 1_227_655,
+  decodedGpuBytes: 46_917_675,
+});
 const maxTurntableFrames = 36;
 const maxTurntableFrameBytes = 64 * 1024;
 const maxTurntableModeBytes = 1024 * 1024;
@@ -46,6 +57,10 @@ function identifiesExlDevice(pathname) {
 
 function identifiesIterDevice(pathname) {
   return pathTokens(pathname).some((token) => iterDeviceTokens.has(token));
+}
+
+function identifiesEhlDevice(pathname) {
+  return pathTokens(pathname).some((token) => ehlDeviceTokens.has(token));
 }
 
 function hasGeometryOrSourceExtension(pathname) {
@@ -189,7 +204,7 @@ async function fetchFromWorker(pathname, init) {
   );
 }
 
-test('publishes only catalog-declared EXL and ITER browser derivatives and no protected source geometry', async () => {
+test('publishes only catalog-declared EXL, ITER and EHL browser derivatives and no protected source geometry', async () => {
   const catalog = JSON.parse(await readFile(resolve(publicRoot, 'models/device-catalog.json'), 'utf8'));
   const exl = catalog.devices.find((device) => identifiesExlDevice(device.id));
   assert.equal(exl?.viewer?.mode, 'real-3d', 'EXL public geometry requires an explicit real-3d catalog entry');
@@ -211,6 +226,20 @@ test('publishes only catalog-declared EXL and ITER browser derivatives and no pr
   assert.equal(iterManifest.assets.componentBundles[0].components.length, 18);
   assert.equal(iterManifest.assets?.webModel, undefined, 'ITER must not ship the invalid compact fallback model');
   const allowedIterGeometry = new Set();
+  const ehl = catalog.devices.find((device) => identifiesEhlDevice(device.id));
+  assert.equal(ehl?.viewer?.mode, 'real-3d', 'EHL public geometry requires an explicit real-3d catalog entry');
+  assert.equal(ehl.viewer.manifestEndpoint, ehlManifestEndpoint);
+  const ehlManifest = JSON.parse(await readFile(endpointToPublicPath(ehlManifestEndpoint), 'utf8'));
+  assert.equal(ehlManifest.assets?.sourceCad, undefined, 'EHL source geometry must never be published');
+  assert.equal(ehlManifest.assets?.webModels, undefined, 'EHL must expose one reviewed derivative, not an open-ended LOD list');
+  const ehlAsset = ehlManifest.assets?.webModel;
+  assert.equal(ehlAsset?.path, '/models/ehl2-preliminary-v1/ehl2-preliminary.meshopt.glb');
+  assert.equal(ehlAsset?.bytes, reviewedEhlArtifact.bytes);
+  assert.equal(ehlAsset?.sha256?.toLowerCase(), reviewedEhlArtifact.sha256);
+  const allowedEhlGeometry = new Set([
+    relative(repositoryRoot, endpointToPublicPath(ehlAsset.path)).replaceAll('\\', '/').toLowerCase(),
+  ]);
+  allowedEhlGeometry.add([...allowedEhlGeometry][0].replace(/^public\//, 'dist/client/'));
 
   const tracked = execFileSync('git', ['ls-files', '-z'], {
     cwd: repositoryRoot,
@@ -230,12 +259,15 @@ test('publishes only catalog-declared EXL and ITER browser derivatives and no pr
     if (identifiesExlDevice(pathname)) {
       assert.ok(allowedExlGeometry.has(pathname.toLowerCase()), `undeclared EXL geometry/source must not be tracked or published: ${pathname}`);
     }
+    if (identifiesEhlDevice(pathname)) {
+      assert.ok(allowedEhlGeometry.has(pathname.toLowerCase()), `undeclared EHL geometry/source must not be tracked or published: ${pathname}`);
+    }
   }
 });
 
 test('public device catalog is fail-closed and authorizes only bounded, verifiable browser assets', async () => {
   const catalog = JSON.parse(await readFile(resolve(publicRoot, 'models/device-catalog.json'), 'utf8'));
-  assert.ok(Array.isArray(catalog.devices) && catalog.devices.length >= 3);
+  assert.ok(Array.isArray(catalog.devices) && catalog.devices.length === 4);
 
   for (const device of catalog.devices) {
     const viewer = device.viewer;
@@ -253,12 +285,15 @@ test('public device catalog is fail-closed and authorizes only bounded, verifiab
       assert.equal(manifest.access?.engineeringUseAllowed, false);
       const isExlDerivative = identifiesExlDevice(device.id);
       const isIterDerivative = identifiesIterDevice(device.id);
+      const isEhlDerivative = identifiesEhlDevice(device.id);
       let glb = null;
       if (isIterDerivative) {
         assert.equal(manifest.schemaVersion, '1.3', 'component-only ITER delivery requires manifest 1.3');
         assert.equal(manifest.assets?.webModel, undefined, 'ITER must not expose a monolithic fallback model');
       } else {
-        const byteBudget = isExlDerivative ? maxExlPublicDerivativeBytes : maxParamakWebModelBytes;
+        const byteBudget = isExlDerivative
+          ? maxExlPublicDerivativeBytes
+          : isEhlDerivative ? maxEhlPublicDerivativeBytes : maxParamakWebModelBytes;
         assert.ok(manifest.assets?.webModel?.bytes > 0 && manifest.assets.webModel.bytes <= byteBudget,
           `${device.id} browser model exceeds the ${byteBudget}-byte budget`);
         assert.match(manifest.assets.webModel.path, /^\/(?:models|device-assets\/exl50u-interactive)\/[a-z0-9_./-]+\.glb$/i);
@@ -480,6 +515,111 @@ test('public device catalog is fail-closed and authorizes only bounded, verifiab
             `ITER manifest exposes an undeclared geometry/source path: ${value}`,
           );
         }
+      } else if (isEhlDerivative) {
+        assert.equal(manifestEndpoint, ehlManifestEndpoint, 'EHL must use the reviewed preliminary derivative namespace');
+        assert.equal(manifest.devicePackage?.kind, 'public-simplified-derivative');
+        assert.equal(manifest.devicePackage?.authority, 'illustrative');
+        assert.equal(manifest.assets.sourceCad, undefined, 'EHL source GLBs must remain private');
+        assert.equal(manifest.assets.webModels, undefined, 'EHL must publish one bounded derivative rather than an open-ended LOD list');
+        assert.equal(manifest.assets.componentBundles, undefined, 'EHL must not publish undeclared source-derived component files');
+        assert.equal(manifest.assets.poster, undefined, 'EHL package is limited to its reviewed interactive derivative');
+        assert.equal(manifest.assets.webModel.path, '/models/ehl2-preliminary-v1/ehl2-preliminary.meshopt.glb');
+        assert.ok(manifest.assets.webModel.bytes > 0 && manifest.assets.webModel.bytes <= maxEhlPublicDerivativeBytes,
+          'EHL transfer must remain below the reviewed 16 MiB public budget');
+        assert.equal(manifest.assets.webModel.bytes, reviewedEhlArtifact.bytes);
+        assert.equal(manifest.assets.webModel.sha256.toLowerCase(), reviewedEhlArtifact.sha256);
+        assert.equal(manifest.assets.webModel.triangles, reviewedEhlArtifact.triangles);
+        assert.equal(manifest.assets.webModel.vertices, reviewedEhlArtifact.vertices);
+        assert.ok(Math.abs(manifest.assets.webModel.triangles / 4_957_856 - 0.5) <= 0.002,
+          'EHL derivative must retain approximately 50% of the reviewed source triangle count');
+        assert.match(manifest.access.statement, /(?:user(?:\s+explicitly)?[- ]authorized|用户授权)/i);
+        assert.match(manifest.access.statement, /(?:simplified(?:\s+browser)?\s+derivative|简化派生)/i);
+        assert.match(manifest.disclaimer, /(?:preliminary|not\s+(?:an?\s+)?engineering|non-authoritative|非工程|初步)/i);
+        assert.equal(viewer.overlayEligible, false, 'EHL preliminary geometry must not be presented as comparison-grade geometry');
+        assert.match(device.statement, /(?:technically saved|技术性保存|无法从技术上)/i,
+          'catalog must disclose that browser-delivered EHL geometry can be saved');
+
+        const systems = Array.isArray(manifest.systems) ? manifest.systems : [];
+        const parts = systems.flatMap((system) => Array.isArray(system.parts) ? system.parts : []);
+        assert.equal(parts.length, 6, 'EHL derivative must expose the six reviewed preliminary assembly identities');
+        assert.equal(new Set(parts.map((part) => part.id)).size, 6, 'EHL part IDs must be unique');
+        const approvedNodeNames = new Set(parts.map((part) => part.nodeName));
+        assert.equal(approvedNodeNames.size, 6, 'EHL stable node mappings must be unique');
+        for (const nodeName of approvedNodeNames) assert.match(nodeName, /^EHL2_PART__[a-z0-9-]+$/,
+          'EHL public nodes must use the stable EHL2_PART__<id> contract');
+
+        assert.deepEqual(glb.extensionsUsed, ['EXT_meshopt_compression'],
+          'EHL must declare exactly the transport extension it uses');
+        assert.deepEqual(glb.extensionsRequired, ['EXT_meshopt_compression'],
+          'EHL must require exactly Meshopt; normalized Int8 normals are glTF core');
+        assert.ok((glb.buffers ?? []).length > 0 && glb.buffers.every((buffer) => buffer.uri === undefined),
+          'EHL GLB must be self-contained without external buffer URIs');
+        assert.equal((glb.images ?? []).length, 0, 'EHL GLB must not embed or reference textures');
+        assert.equal((glb.textures ?? []).length, 0, 'EHL GLB must not declare textures');
+        assert.deepEqual(glbGeometryCounts(glb), {
+          triangles: manifest.assets.webModel.triangles,
+          vertices: manifest.assets.webModel.vertices,
+        }, 'EHL declared geometry counts must match the shipped GLB');
+        const meshNodes = glb.nodes.filter((node) => Number.isInteger(node.mesh));
+        assert.equal(glb.meshes.length, 6, 'EHL GLB must contain exactly six renderable meshes');
+        assert.equal(meshNodes.length, 6, 'EHL GLB must contain exactly six renderable mesh nodes');
+        assert.deepEqual(new Set(meshNodes.map((node) => node.name)), approvedNodeNames,
+          'EHL GLB mesh node names must exactly match the manifest');
+        for (const mesh of glb.meshes) for (const primitive of mesh.primitives ?? []) {
+          const position = glb.accessors?.[primitive.attributes?.POSITION];
+          const normal = glb.accessors?.[primitive.attributes?.NORMAL];
+          assert.equal(position?.componentType, 5126,
+            'EHL POSITION must remain Float32 so thin-wall geometry is not collapsed by position quantization');
+          assert.equal(position?.normalized, false, 'EHL Float32 POSITION must remain raw and non-normalized');
+          assert.equal(normal?.componentType, 5120, 'EHL NORMAL must use signed Int8 quantization');
+          assert.equal(normal?.normalized, true, 'EHL NORMAL must be normalized');
+        }
+        const decodedBytes = decodedAttributeBytes(glb);
+        assert.ok(decodedBytes > 0 && decodedBytes <= maxEhlDecodedGpuBytes,
+          `EHL decoded attribute/index estimate exceeds the 128 MiB budget: ${decodedBytes}`);
+        assert.equal(decodedBytes, reviewedEhlArtifact.decodedGpuBytes);
+        assert.equal(manifest.assets.webModel.decodedGpuBytes, decodedBytes,
+          'EHL declared decoded GPU bytes must match the GLB accessor contract');
+
+        const declaredPipelineScripts = [
+          [manifest.generator?.script, 'scripts/ehl2/build_ehl2_preliminary.py'],
+          [manifest.generator?.compressionScript, 'scripts/ehl2/meshopt_float_position.mjs'],
+          [manifest.generator?.runtimeQa, 'scripts/ehl2/qa_ehl2_runtime.mjs'],
+        ];
+        for (const [declaration, expectedPath] of declaredPipelineScripts) {
+          assert.equal(declaration?.path, expectedPath,
+            'EHL provenance must reference the reviewed in-repository pipeline script');
+          const pipelineBytes = await readFile(resolve(repositoryRoot, expectedPath));
+          assert.equal(createHash('sha256').update(pipelineBytes).digest('hex'), declaration.sha256.toLowerCase(),
+            `EHL provenance hash is stale for ${expectedPath}`);
+        }
+
+        const packageRoot = resolve(endpointToPublicPath(manifestEndpoint), '..');
+        const packageFiles = await walkFiles(packageRoot);
+        const noticePath = resolve(packageRoot, 'PUBLICATION-NOTICE.md');
+        const allowedPackageFiles = new Set([
+          endpointToPublicPath(manifestEndpoint),
+          endpointToPublicPath(manifest.assets.webModel.path),
+          noticePath,
+        ].map((pathname) => resolve(pathname).toLowerCase()));
+        assert.deepEqual(new Set(packageFiles.map((pathname) => resolve(pathname).toLowerCase())), allowedPackageFiles,
+          'EHL package must contain only the manifest, one reviewed derivative GLB and its publication notice');
+        const notice = await readFile(noticePath, 'utf8');
+        assert.match(notice, /project owner explicitly requested.*public/is);
+        assert.match(notice, /approximately 50% of the source triangle count/i);
+        assert.match(notice, /must not be used for manufacturing.*engineering analysis.*safety\s+decisions/is);
+        for (const sourceFilename of ['VV.glb', 'CenterPost.glb', 'Divertor.glb', 'bowenguan.glb', 'duwa.glb']) {
+          assert.ok(!packageFiles.some((pathname) => pathname.toLowerCase().endsWith(sourceFilename.toLowerCase())),
+            `EHL source file must not be published: ${sourceFilename}`);
+        }
+        for (const value of collectStrings(manifest)) {
+          assert.doesNotMatch(value, /(?:(?:^|[\s"'(])[a-z]:[\\/]|file:\/\/|\\\\[^\\])/i,
+            'EHL manifest must not expose a local or UNC filesystem path');
+          if (hasGeometryOrSourceExtension(value)) assert.ok(
+            value === manifest.assets.webModel.path || ['VV.glb', 'CenterPost.glb', 'Divertor.glb', 'bowenguan.glb', 'duwa.glb'].includes(value),
+            `EHL manifest exposes an undeclared geometry/source path: ${value}`,
+          );
+        }
       }
     } else {
       assert.equal(viewer.manifestEndpoint ?? device.manifestEndpoint ?? null, null, `${device.id} non-real viewer must not expose geometry`);
@@ -588,6 +728,12 @@ test('public device catalog is fail-closed and authorizes only bounded, verifiab
       assert.equal(viewer.manifestEndpoint, iterManifestEndpoint);
     }
 
+    if (identifiesEhlDevice(device.id)) {
+      assert.equal(viewer.mode, 'real-3d', `${device.id} must use the authorized preliminary interactive package`);
+      assert.equal(device.delivery, 'public-static', `${device.id} must explicitly declare the public simplified derivative`);
+      assert.equal(viewer.manifestEndpoint, ehlManifestEndpoint);
+    }
+
     for (const value of collectStrings(device)) {
       assert.doesNotMatch(value, localPathPattern, `${device.id} catalog entry leaks a local path`);
       if (identifiesIterDevice(device.id)) assert.ok(!hasGeometryOrSourceExtension(value),
@@ -596,7 +742,7 @@ test('public device catalog is fail-closed and authorizes only bounded, verifiab
   }
 });
 
-test('homepage prototype workspace exposes no direct EXL/ITER model download link or private filesystem path', async () => {
+test('homepage prototype workspace exposes no direct EXL/ITER/EHL model download link or private filesystem path', async () => {
   const response = await renderHomepageWorkspace();
   assert.equal(response.status, 200);
   const html = await response.text();
@@ -1142,15 +1288,16 @@ test('Paramak interaction controls remain public-only and expose consistent acce
     'EXL turntable viewer must remain raster-only and must not import geometry loaders');
 });
 
-test('EXL alone uses a lifecycle-safe industrial silver appearance without changing Paramak semantics', async () => {
+test('EXL, ITER and EHL use lifecycle-safe industrial silver appearance without changing Paramak semantics', async () => {
   const source = await readFile(resolve(repositoryRoot, 'app/components/TokamakCadViewer.tsx'), 'utf8');
   const workspace = await readFile(resolve(repositoryRoot, 'app/digital-prototype/MultiDeviceWorkspace.tsx'), 'utf8');
   const appearanceSource = await readFile(resolve(repositoryRoot, 'app/components/device-viewer/industrialAppearance.ts'), 'utf8');
   const messagesSource = await readFile(resolve(repositoryRoot, 'app/i18n/messages.ts'), 'utf8');
   const manifest = JSON.parse(await readFile(resolve(publicRoot, 'models/exl50u-interactive/model-manifest.json'), 'utf8'));
+  const ehlManifest = JSON.parse(await readFile(resolve(publicRoot, 'models/ehl2-preliminary-v1/model-manifest.json'), 'utf8'));
   const appearance = await import('../app/components/device-viewer/industrialAppearance.ts');
 
-  assert.match(workspace, /device\.id === ['"]exl-50u-2026-upgrade['"][\s\S]{0,100}['"]industrial-silver-v1['"][\s\S]{0,80}['"]semantic['"]/);
+  assert.match(workspace, /appearancePreset=\{device\.id === ['"]exl-50u-2026-upgrade['"][\s\S]{0,220}device\.id === ['"]iter-educational-model['"][\s\S]{0,220}device\.id === ['"]ehl-2-preliminary['"][\s\S]{0,120}\? ['"]industrial-silver-v1['"][\s\S]{0,80}: ['"]semantic['"]\}/);
   assert.match(source, /RoomEnvironment\.js/);
   assert.match(source, /new THREE\.PMREMGenerator\(renderer\)/);
   assert.match(source, /scene\.environment = localEnvironmentTarget\.texture/);
@@ -1170,16 +1317,20 @@ test('EXL alone uses a lifecycle-safe industrial silver appearance without chang
   const systemIds = manifest.systems.map((system) => system.id).sort();
   assert.deepEqual(Object.keys(appearance.EXL50U_INDUSTRIAL_SYSTEM_PRESETS).sort(), systemIds,
     'every reviewed EXL system must receive one explicit visual material preset');
+  const ehlSystemIds = ehlManifest.systems.map((system) => system.id).sort();
+  assert.deepEqual(Object.keys(appearance.EHL2_INDUSTRIAL_SYSTEM_PRESETS).sort(), ehlSystemIds,
+    'every reviewed EHL system must receive one explicit industrial-silver material preset');
+  assert.equal(ehlSystemIds.length, 5, 'the six EHL parts must remain grouped into five reviewed systems');
   assert.equal(appearance.resolveIndustrialMaterialPreset('unknown-system', 'structure'), 'brushed-steel');
   assert.ok(new Set(Object.values(appearance.EXL50U_INDUSTRIAL_SYSTEM_PRESETS)).size >= 5,
     'the silver scheme must retain enough finish contrast to distinguish structures');
 });
 
-test('EXL and ITER viewers open and reset to an active Z section through the device centre', async () => {
+test('EXL, ITER and EHL viewers open and reset to an active Z section through the device centre', async () => {
   const source = await readFile(resolve(repositoryRoot, 'app/components/TokamakCadViewer.tsx'), 'utf8');
   const workspace = await readFile(resolve(repositoryRoot, 'app/digital-prototype/MultiDeviceWorkspace.tsx'), 'utf8');
 
-  assert.match(workspace, /const defaultCoreSection\s*=\s*Boolean\(efitOverlay\)\s*\|\|\s*device\.id\s*===\s*['"]iter-educational-model['"]/);
+  assert.match(workspace, /const defaultCoreSection\s*=\s*Boolean\(efitOverlay\)\s*\|\|\s*device\.id\s*===\s*['"]iter-educational-model['"]\s*\|\|\s*device\.id\s*===\s*['"]ehl-2-preliminary['"]/);
   assert.match(workspace, /defaultClipping=\{defaultCoreSection\}/);
   assert.match(workspace, /defaultClipAxis=\{defaultCoreSection\s*\?\s*['"]z['"]\s*:\s*['"]x['"]\}/);
   assert.match(workspace, /defaultClipOffset=\{efitOverlay\s*\?\s*0\.08\s*:\s*0\}/);
@@ -1192,4 +1343,42 @@ test('EXL and ITER viewers open and reset to an active Z section through the dev
     'reset must restore the EXL section instead of turning clipping off');
   assert.match(source, /key=\{`\$\{sessionViewerId\}:\$\{sessionManifestUrl\}:\$\{sessionAppearancePreset\}`\}/,
     'switching devices must create a fresh viewer session with the correct device defaults');
+});
+
+test('EHL viewer fails closed on constrained clients, bounds wireframe memory and scopes its Meshopt worker', async () => {
+  const source = await readFile(resolve(repositoryRoot, 'app/components/TokamakCadViewer.tsx'), 'utf8');
+  const policySource = await readFile(resolve(repositoryRoot, 'app/components/device-viewer/ehl2RuntimePolicy.ts'), 'utf8');
+  const messagesSource = await readFile(resolve(repositoryRoot, 'app/i18n/messages.ts'), 'utf8');
+
+  assert.match(policySource, /EHL2_MIN_VIEWPORT_WIDTH\s*=\s*651/);
+  assert.match(policySource, /EHL2_MIN_DEVICE_MEMORY_GIB\s*=\s*4/);
+  assert.match(policySource, /userAgentDataMobile[\s\S]{0,500}Android\|webOS\|iPhone\|iPad[\s\S]{0,500}Macintosh/,
+    'mobile detection must cover UA Client Hints, conventional mobile UAs and iPad desktop-mode UAs');
+  assert.match(policySource, /hints\.saveData[\s\S]{0,220}deviceMemoryGiB[\s\S]{0,180}EHL2_MIN_DEVICE_MEMORY_GIB/);
+  assert.match(source, /const ehl2LoadBlocked\s*=\s*ehl2Session\s*&&\s*ehl2RuntimePolicy\?\.allowed\s*!==\s*true/,
+    'an unknown or rejected EHL policy must not expose the load action');
+
+  const activateBlock = source.slice(source.indexOf('const activate = useCallback'), source.indexOf("fetch(manifestUrl"));
+  assert.ok(activateBlock.indexOf('currentEhl2RuntimePolicy()') < activateBlock.indexOf("setStatus('loading')"),
+    'the EHL policy must be rechecked synchronously before explicit loading starts');
+  assert.match(activateBlock, /if \(!policy\.allowed\)[\s\S]{0,180}return/);
+
+  const blockedPanelLine = source.split(/\r?\n/).find((line) => line.includes("status === 'idle' && ehl2LoadBlocked")) ?? '';
+  assert.match(blockedPanelLine, /viewer\.ehlRequirements/);
+  assert.doesNotMatch(blockedPanelLine, /<button/,
+    'blocked EHL sessions must explain requirements without exposing a launch button');
+  assert.match(source, /\{wireframeAllowed\s*&&\s*<button[^>]*>[\s\S]{0,220}viewer\.wireframe/,
+    'the EHL toolbar must omit the wireframe control');
+  assert.match(source, /setWireframe:\s*\(enabled\)\s*=>\s*\{[\s\S]{0,220}if \(ehl2Session && enabled\) return/,
+    'the viewer API must also reject programmatic EHL wireframe activation');
+
+  const decodeBlock = source.slice(source.indexOf('globalModelDecodeGate.run(async'), source.indexOf('if (disposed)', source.indexOf('globalModelDecodeGate.run(async')));
+  assert.match(decodeBlock, /ehl2Session[\s\S]{0,500}useWorkers\(1\)/,
+    'only an EHL session may opt the shared decoder into one worker');
+  assert.match(decodeBlock, /finally\s*\{[\s\S]{0,120}ehl2MeshoptWorkerEnabled[\s\S]{0,80}useWorkers\(0\)/,
+    'the serialized decode lane must restore the shared decoder before another device can enter');
+
+  assert.match(messagesSource, /WebGL 2[^\n]{0,180}651 px[^\n]{0,180}4 GB/,
+    'the EHL load gate must state its desktop/WebGL, viewport and memory requirements');
+  assert.match(messagesSource, /wireframe is disabled to bound memory/i);
 });

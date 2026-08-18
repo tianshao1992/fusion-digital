@@ -125,7 +125,7 @@ test("tracked-only CLI performs complete byte and SHA-256 verification", async (
     { cwd: ROOT, encoding: "utf8", maxBuffer: 4 * 1024 * 1024 },
   );
   assert.equal(stderr, "");
-  assert.match(stdout, /Verified 409\/409 Git-managed runtime assets/);
+  assert.match(stdout, /Verified 412\/412 Git-managed runtime assets/);
 });
 
 test("unsafe byte sources and undeclared stage files fail closed", async () => {
