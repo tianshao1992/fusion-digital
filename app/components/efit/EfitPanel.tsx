@@ -34,7 +34,7 @@ export default function EfitPanel({
   className = '',
   title,
 }: EfitPanelProps) {
-  const { locale, t } = useI18n();
+  const { locale, t, content } = useI18n();
   const panelTitle = title ?? t('efit.title');
   const snapshot = useEfitStore(store);
   const initializedRef = useRef(false);
@@ -87,7 +87,7 @@ export default function EfitPanel({
     ? quality.state === 'good' ? t('efit.good') : quality.state === 'warning' ? t('efit.warning') : t('efit.invalid')
     : '';
   const qualityDetail = quality
-    ? [t('efit.quality'), qualityLabel, ...quality.messages].filter(Boolean).join(' · ')
+    ? [t('efit.quality'), qualityLabel, ...quality.messages.map(content)].filter(Boolean).join(' · ')
     : undefined;
   const topologyLabel = topology ? t(efitTopologyMessageKey(topology.kind)) : t('efit.topology.unknown');
   const topologyXCount = topology?.xPoints.length ?? graphBoundaryXPoints.length;
@@ -101,7 +101,7 @@ export default function EfitPanel({
         (topology || topologyGraph) && divertorRegion.state !== 'unavailable'
           ? `${t('efit.boundaryRegion')}: ${divertorRegion.state === 'filled'
             ? t(divertorRegion.code === 'closed-published-graph-boundary' ? 'efit.graphVerifiedClosed' : 'efit.reviewedClosed')
-            : t('efit.wireframeOnly')} · ${divertorRegion.message}`
+            : t('efit.wireframeOnly')} · ${content(divertorRegion.message)}`
           : null,
       ].filter(Boolean).join(' · ')
     : undefined;
@@ -158,13 +158,13 @@ export default function EfitPanel({
           </span>
         )}
         {snapshot.gapNotice && (
-          <span className="efitStatusPill isWarning" title={snapshot.gapNotice.reason}>
+          <span className="efitStatusPill isWarning" title={snapshot.gapNotice.reason ? content(snapshot.gapNotice.reason) : undefined}>
             {gapLabel}
           </span>
         )}
         {snapshot.error && (
           <span className="efitError" role="alert">
-            {snapshot.error}
+            {content(snapshot.error)}
             <button type="button" onClick={() => {
               store.actions.clearError();
               if (snapshot.manifest && snapshot.activeShot !== null) void store.actions.selectShot(snapshot.activeShot);

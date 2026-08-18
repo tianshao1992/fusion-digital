@@ -8,8 +8,8 @@
       "public/models/iter-high-detail-v1/"
     ],
     "fileCount": 412,
-    "totalBytes": 258326708,
-    "treeSha256": "eaf034715186b0b1f05c97875884efb73673396e0644794d9000109b4ee21842",
+    "totalBytes": 259463042,
+    "treeSha256": "e9237b51549c9326d5d5e865a28f26555514cd4679d93591ed732941d55795cc",
     "files": [
       {
         "path": "public/FusionDigital-technical-roadmap-2026-08-15.docx",
@@ -1178,8 +1178,8 @@
       },
       {
         "path": "public/data/fusion-knowledge-index.json",
-        "bytes": 2584048,
-        "sha256": "364838485a9d12690503275721c96fa388af126c0b65c1997d3ea7ee47be2325"
+        "bytes": 3720382,
+        "sha256": "df3852047a5d4ba332e294b28e97542e661c358f32c258c60e0e784e962f5d4e"
       },
       {
         "path": "public/data/literature-manifest.csv",

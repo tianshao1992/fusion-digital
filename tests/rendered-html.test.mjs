@@ -3,16 +3,49 @@ import { createHash } from 'node:crypto';
 import { readFile, readdir, stat } from 'node:fs/promises';
 import test from 'node:test';
 
-async function render(pathname = '/') {
+async function render(pathname = '/', headers = {}) {
   const workerUrl = new URL('../dist/server/index.js', import.meta.url);
   workerUrl.searchParams.set('test', `${process.pid}-${Date.now()}-${pathname}`);
   const { default: worker } = await import(workerUrl.href);
   return worker.fetch(
-    new Request(`http://localhost${pathname}`, { headers: { accept: 'text/html' } }),
+    new Request(`http://localhost${pathname}`, { headers: { accept: 'text/html', ...headers } }),
     { ASSETS: { fetch: async () => new Response('Not found', { status: 404 }) } },
     { waitUntil() {}, passThroughOnException() {} },
   );
 }
+
+function englishPresentationText(html) {
+  const attributes = Array.from(html.matchAll(/\b(?:alt|aria-label|title|placeholder|content)=(?:"([^"]*)"|'([^']*)')/gi))
+    .map((match) => match[1] ?? match[2] ?? '')
+    .join(' ');
+  const documentText = html
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<!--[^]*?-->/g, ' ')
+    .replace(/<[^>]+>/g, ' ');
+  return `${attributes} ${documentText}`
+    .replace(/&(?:nbsp|#160);/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&#(?:x([0-9a-f]+)|(\d+));/gi, (_, hex, decimal) => String.fromCodePoint(Number.parseInt(hex ?? decimal, hex ? 16 : 10)))
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+test('English presentation surfaces contain no source-language Han text', async () => {
+  const routes = [
+    '/', '/physics', '/engineering', '/control', '/diagnostics', '/ai', '/facilities',
+    '/platform', '/search', '/knowledge-graph', '/roadmap', '/account', '/research-review',
+  ];
+  for (const pathname of routes) {
+    const response = await render(pathname, { cookie: 'fusiondigital_locale=en' });
+    assert.equal(response.status, 200, `${pathname} should render in English`);
+    const presentation = englishPresentationText(await response.text());
+    assert.doesNotMatch(presentation, /\p{Script=Han}/u, `${pathname} leaked source-language presentation text`);
+    assert.doesNotMatch(presentation, /Technical annotation/i, `${pathname} exposed a generic chart placeholder`);
+  }
+});
 
 async function htmlFor(pathname) {
   const response = await render(pathname);
@@ -56,6 +89,31 @@ test('production build retains every catalog device and excludes only obsolete r
   assert.ok((await stat(
     new URL('../public/models/paramak-full-device/paramak-full-device.step', import.meta.url),
   )).isFile(), 'Paramak source STEP must remain available in source control');
+
+  await assert.rejects(
+    stat(new URL('../dist/client/data/fusion-knowledge-index.json', import.meta.url)),
+    { code: 'ENOENT' },
+  );
+  const sourceSearchIndex = JSON.parse(await readFile(
+    new URL('../public/data/fusion-knowledge-index.json', import.meta.url),
+    'utf8',
+  ));
+  assert.ok(sourceSearchIndex.entries.length > 0, 'tracked search index source must remain available');
+
+  const workerUrl = new URL('../dist/server/index.js', import.meta.url);
+  workerUrl.searchParams.set('search-test', `${process.pid}-${Date.now()}`);
+  const { default: worker } = await import(workerUrl.href);
+  const searchResponse = await worker.fetch(
+    new Request('http://localhost/api/search?q=EFIT&locale=en&limit=3', {
+      headers: { accept: 'application/json' },
+    }),
+    { ASSETS: { fetch: async () => new Response('Not found', { status: 404 }) } },
+    { waitUntil() {}, passThroughOnException() {} },
+  );
+  assert.equal(searchResponse.status, 200, 'server-embedded search index must remain queryable');
+  const searchPayload = await searchResponse.json();
+  assert.ok(searchPayload.count > 0, 'server-embedded search index should return EFIT results');
+  assert.equal(searchPayload.index.statistics.total, sourceSearchIndex.entries.length);
 
   const expandedBytes = (await Promise.all(
     (await listFiles(new URL('../dist/', import.meta.url))).map(async (file) => (await stat(file)).size),
@@ -339,8 +397,8 @@ test('server-renders the EXL-50U to EHL-2 program roadmap', async () => {
   assert.match(html, /PROFESSIONAL SUBROUTE MAP/);
   assert.match(html, /专业覆盖 → 工具链 → 技术子路线 → 阶段交付/);
   assert.match(html, /节点展示“研究覆盖什么、用什么工具、如何接成受控技术链、形成什么可验收结果”/);
-  assert.match(html, /aria-label="位形与等离子体物理路线阶段筛选"/);
-  assert.match(html, /aria-label="位形与等离子体物理技术子路线"/);
+  assert.match(html, /aria-label="位形与等离子体物理\s+路线阶段筛选"/);
+  assert.match(html, /aria-label="位形与等离子体物理\s+技术子路线"/);
   assert.match(html, /位形与等离子体物理专业覆盖、候选工具链、技术子路线与一期二期交付的四层关系图/);
   assert.match(html, /专业覆盖—工具—子路线—交付映射/);
   assert.match(html, /候选工具与输入 \/ 输出/);
@@ -793,7 +851,7 @@ test('ships and server-renders evidence-grounded knowledge search', async () => 
     new URL('../public/data/fusion-knowledge-index.json', import.meta.url),
     'utf8',
   ));
-  assert.equal(snapshot.schemaVersion, '1.0.0');
+  assert.equal(snapshot.schemaVersion, '1.1.0');
   assert.equal(snapshot.statistics.total, snapshot.entries.length);
   assert.ok(snapshot.entries.length >= 1300);
   assert.ok(snapshot.statistics.byType.paper >= 400);

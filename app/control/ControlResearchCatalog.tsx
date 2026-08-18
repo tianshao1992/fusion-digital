@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { useI18n } from '../i18n';
 import {
   controlDeviceProfiles,
   controlResearchItems,
@@ -25,6 +26,37 @@ const codeLabels: Record<ControlCodeStatus, string> = {
   'community-reproduction': '社区复现',
   'not-public': '未公开',
 };
+const evidenceLabelsEn: Record<ControlEvidenceLevel, string> = {
+  E0: 'Concept / requirement', E1: 'Numerical validation', E2: 'Offline facility evidence', E3: 'Real-time / HIL / shadow', E4: 'Facility closed loop',
+};
+const deploymentLabelsEn: Record<ControlDeploymentLevel, string> = {
+  D1: 'Research prototype', D2: 'Offline workflow', D3: 'Real-time / HIL pilot', D4: 'Operational online / closed loop', D5: 'Approved safety-critical use',
+};
+const codeLabelsEn: Record<ControlCodeStatus, string> = {
+  'official-direct': 'Official direct implementation',
+  'official-enabling': 'Official enabling framework',
+  'commercial-enabling': 'Commercial enabling software',
+  'community-reproduction': 'Community reproduction',
+  'not-public': 'Not publicly available',
+};
+
+const deviceLabelsEn: Record<string, string> = {
+  'CFETR设计': 'CFETR design study',
+  'DIII-D及PCS衍生装置': 'DIII-D and PCS-derived facilities',
+  'ITER PCSSP模型移植': 'ITER PCSSP model port',
+  'ITER设计研究': 'ITER design study',
+  '可复用装置模型': 'Reusable facility model',
+  '多个实验设施': 'Multiple experimental facilities',
+  '多家ITER成员测试设施': 'Multiple ITER-member test facilities',
+  '多装置': 'Multi-facility',
+  '多装置与模拟链': 'Multi-facility and simulation chain',
+  '通用tokamak': 'Generic tokamak',
+};
+
+function deviceLabelEn(value: string) {
+  const canonical = value.split(/[：:]/)[0].trim();
+  return deviceLabelsEn[canonical] ?? canonical;
+}
 
 const PAGE_SIZE = 12;
 
@@ -43,6 +75,8 @@ function corpus(item: ControlResearchItem) {
 }
 
 export default function ControlResearchCatalog() {
+  const { locale } = useI18n();
+  const en = locale === 'en';
   const [query, setQuery] = useState('');
   const [task, setTask] = useState<'all' | ControlTaskId>('all');
   const [device, setDevice] = useState('all');
@@ -107,6 +141,18 @@ export default function ControlResearchCatalog() {
   function reset() {
     setQuery(''); setTask('all'); setDevice('all'); setEvidence('all'); setDeployment('all'); setCode('all'); setSort('evidence-desc'); setPage(0);
   }
+
+  if(en)return <>
+    <div className="controlCatalog" id="catalog"><div className="controlCatalogToolbar">
+      <label className="controlSearch"><span>Full-text search</span><input type="search" value={query} onChange={event=>{setQuery(event.target.value);setPage(0);}} placeholder="Research record, facility, paper, code, sensor or actuator"/></label>
+      <fieldset className="controlTaskFilters"><legend>Control task</legend><button className={task==='all'?'active':''} onClick={()=>{setTask('all');setPage(0);}}>All <b>{controlResearchItems.length}</b></button>{(Object.keys(controlTaskMeta) as ControlTaskId[]).map(taskId=><button key={taskId} className={task===taskId?'active':''} title={controlTaskMeta[taskId].en} onClick={()=>{setTask(taskId);setPage(0);}}>{taskId} <b>{taskCounts[taskId]}</b></button>)}</fieldset>
+      <div className="controlSelects"><label><span>Facility</span><select value={device} onChange={event=>{setDevice(event.target.value);setPage(0);}}><option value="all">All facilities</option>{deviceOptions.map(name=><option value={name} key={name}>{deviceLabelEn(name)}</option>)}</select></label><label><span>Evidence level</span><select value={evidence} onChange={event=>{setEvidence(event.target.value as typeof evidence);setPage(0);}}><option value="all">All evidence</option>{(Object.keys(evidenceLabelsEn) as ControlEvidenceLevel[]).map(level=><option value={level} key={level}>{level} · {evidenceLabelsEn[level]}</option>)}</select></label><label><span>Deployment level</span><select value={deployment} onChange={event=>{setDeployment(event.target.value as typeof deployment);setPage(0);}}><option value="all">All deployment levels</option>{(Object.keys(deploymentLabelsEn) as ControlDeploymentLevel[]).map(level=><option value={level} key={level}>{level} · {deploymentLabelsEn[level]}</option>)}</select></label><label><span>Code relationship</span><select value={code} onChange={event=>{setCode(event.target.value as typeof code);setPage(0);}}><option value="all">All code relationships</option>{(Object.keys(codeLabelsEn) as ControlCodeStatus[]).map(status=><option value={status} key={status}>{codeLabelsEn[status]}</option>)}</select></label><label><span>Sort</span><select value={sort} onChange={event=>{setSort(event.target.value as typeof sort);setPage(0);}}><option value="evidence-desc">Evidence first</option><option value="year-desc">Newest first</option><option value="task">Task order</option></select></label><button className="controlReset" onClick={reset}>Reset</button></div>
+    </div><div className="controlResultBar"><p><strong>{filtered.length}</strong> records · page {safePage+1} / {pageCount}</p><span>Task filters match both primary and related tasks; every record retains one primary task.</span></div>
+    {visible.length?<div className="controlCards">{visible.map(item=><article className="controlResearchCard" key={item.id}><header><div><b>{item.primaryTask}</b><span>{controlTaskMeta[item.primaryTask].en}</span></div><div><i className={`evidence-${item.evidenceLevel.toLowerCase()}`}>{item.evidenceLevel}</i><i title={deploymentLabelsEn[item.deploymentLevel]}>{item.deploymentLevel}</i></div></header><div className="controlIdentity"><p>{item.year} · record {item.id}</p><h3>{item.titleEn?.trim()||`English editorial review pending for ${item.id}`}</h3><div>{item.devices.slice(0,4).map(name=><span key={name}>{deviceLabelEn(name)}</span>)}</div></div><dl className="controlCardCore"><div><dt>Research question</dt><dd>Detailed source-language synthesis awaits expert-reviewed English text.</dd></div><div><dt>Method / architecture</dt><dd>Consult the linked primary sources and code assets; deployment and evidence labels above remain authoritative.</dd></div><div><dt>Time scale</dt><dd>{/^[\x00-\x7Fμ–—·/.\s0-9a-zA-Z]+$/.test(item.timescale)?item.timescale:'Pending English editorial review'}</dd></div></dl><details><summary>Open papers and code evidence</summary><div className="controlDetailGrid"><section><h4>Evidence and boundary</h4><b>{item.evidenceLevel} · {evidenceLabelsEn[item.evidenceLevel]}</b><p>Qualification details and limitations require an expert-approved English translation before publication.</p></section><section><h4>Primary papers / sources</h4><ul>{item.papers.map((paper,index)=><li key={paper.url}><a href={paper.url} target="_blank" rel="noreferrer">Primary source {index+1} ↗</a>{paper.doi&&<small>DOI {paper.doi}</small>}</li>)}</ul></section><section><h4>Code / software relationships</h4><ul>{item.code.map((artifact,index)=><li key={`${artifact.name}-${index}`}>{artifact.url?<a href={artifact.url} target="_blank" rel="noreferrer">{artifact.name} ↗</a>:<b>{artifact.name}</b>}<span className={`code-${artifact.status}`}>{codeLabelsEn[artifact.status]}</span></li>)}</ul></section></div></details></article>)}</div>:<div className="controlEmpty"><h3>No matching records</h3><p>Clear one or more facility, evidence or code filters.</p><button onClick={reset}>Reset filters</button></div>}
+    {pageCount>1&&<nav className="controlPagination" aria-label="Control-research pages"><button disabled={safePage===0} onClick={()=>setPage(Math.max(0,safePage-1))}>Previous</button>{Array.from({length:pageCount},(_,index)=><button key={index} className={safePage===index?'active':''} onClick={()=>setPage(index)}>{index+1}</button>)}<button disabled={safePage===pageCount-1} onClick={()=>setPage(Math.min(pageCount-1,safePage+1))}>Next</button></nav>}
+    </div>
+    <section className="controlDeviceExplorer" id="devices"><div className="controlSectionHead"><p className="controlIndex">DEVICE / PCS VIEW</p><h2>Trace where a control capability runs and how papers and code relate to it</h2><p>Facility profiles locate evidence; using facility data does not by itself mean the capability was deployed on that facility.</p></div><div className="deviceToolbar"><label><span>Facility search</span><input type="search" value={deviceQuery} onChange={event=>setDeviceQuery(event.target.value)} placeholder="TCV, DIII-D, EAST, ITER, EXL-50U…"/></label><label><span>Task coverage</span><select value={deviceTask} onChange={event=>setDeviceTask(event.target.value as typeof deviceTask)}><option value="all">All tasks</option>{(Object.keys(controlTaskMeta) as ControlTaskId[]).map(taskId=><option value={taskId} key={taskId}>{taskId} · {controlTaskMeta[taskId].en}</option>)}</select></label><strong>{filteredDevices.length} profiles</strong></div><div className="controlDeviceGrid">{filteredDevices.map((profile,index)=><article key={profile.id}><header><span>{String(index+1).padStart(2,'0')}</span><b>Facility profile</b></header><h3>{profile.name}</h3><div className="deviceTaskChips">{profile.primaryTasks.map(taskId=><span key={taskId}>{taskId}</span>)}</div><dl><div><dt>Editorial status</dt><dd>Architecture, timing, sensor, actuator, maturity and gap fields await expert-reviewed English text.</dd></div></dl><details><summary>Primary papers and code</summary><h4>Sources</h4><ul>{profile.papers.map((paper,index)=><li key={paper.url}><a href={paper.url} target="_blank" rel="noreferrer">Primary source {index+1} ↗</a></li>)}</ul><h4>Code / software</h4><ul>{profile.code.map((artifact,index)=><li key={`${artifact.name}-${index}`}>{artifact.url?<a href={artifact.url} target="_blank" rel="noreferrer">{artifact.name} ↗</a>:<b>{artifact.name}</b>}<span>{codeLabelsEn[artifact.status]}</span></li>)}</ul></details></article>)}</div></section>
+  </>;
 
   return <>
     <div className="controlCatalog" id="catalog">

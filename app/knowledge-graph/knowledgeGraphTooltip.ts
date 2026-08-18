@@ -3,12 +3,17 @@ type TooltipParams = {
   data?: Record<string, unknown>;
 };
 
-const typeLabels: Record<string, string> = {
-  research: '研究工作', paper: '论文', code: '代码', device: '装置', tool: '工具', task: '任务', organization: '机构',
+const typeLabels: Record<string, { zh: string; en: string }> = {
+  research: { zh: '研究工作', en: 'Research activity' }, paper: { zh: '论文', en: 'Publication' },
+  code: { zh: '代码', en: 'Code asset' }, device: { zh: '装置', en: 'Fusion device' },
+  tool: { zh: '工具', en: 'Modelling tool' }, task: { zh: '任务', en: 'Technical task' },
+  organization: { zh: '机构', en: 'Organization' },
 };
 
-const domainLabels: Record<string, string> = {
-  physics: '物理模拟', engineering: '工程仿真', control: '集成控制', diagnostics: '诊断感知', ai: '智能原生', facility: '装置',
+const domainLabels: Record<string, { zh: string; en: string }> = {
+  physics: { zh: '物理模拟', en: 'Physics modelling' }, engineering: { zh: '工程仿真', en: 'Engineering simulation' },
+  control: { zh: '集成控制', en: 'Integrated control' }, diagnostics: { zh: '诊断感知', en: 'Diagnostics and sensing' },
+  ai: { zh: '智能原生', en: 'AI-native methods' }, facility: { zh: '装置', en: 'Fusion facilities' },
 };
 
 function text(value: unknown, fallback = '') {
@@ -24,17 +29,21 @@ function escapeTooltip(value: unknown) {
     .replaceAll("'", '&#39;');
 }
 
-export function formatKnowledgeGraphTooltip(params: unknown) {
+export function formatKnowledgeGraphTooltip(params: unknown, locale: 'zh-CN' | 'en' = 'zh-CN') {
   const item = (params ?? {}) as TooltipParams;
   const data = item.data ?? {};
   if (item.dataType === 'edge') {
-    return `<b>${escapeTooltip(text(data.relation, '关联'))}</b><br/>${escapeTooltip(text(data.evidenceLabel, '点击端点查看证据'))}`;
+    const relation = text(data.relationLabel, text(data.relation, locale === 'en' ? 'Relation' : '关联'));
+    return `<b>${escapeTooltip(relation)}</b><br/>${escapeTooltip(text(data.evidenceLabel, locale === 'en' ? 'Open an endpoint to inspect the evidence.' : '点击端点查看证据'))}`;
   }
 
-  const label = text(data.entityLabel, text(data.name, '未命名实体'));
+  const label = text(data.entityLabel, text(data.name, locale === 'en' ? 'Unnamed entity' : '未命名实体'));
   const type = text(data.entityType);
   const domain = text(data.entityDomain);
-  const description = text(data.entityDescription, '暂无详细说明。');
+  const description = text(data.entityDescription, locale === 'en' ? 'No detailed description is available.' : '暂无详细说明。');
   const degree = text(data.entityDegree, '0');
-  return `<div style="max-width:300px;white-space:normal;line-height:1.55"><b>${escapeTooltip(label)}</b><br/>${escapeTooltip(typeLabels[type] ?? type)} · ${escapeTooltip(domainLabels[domain] ?? domain)}<br/><span>${escapeTooltip(description)}</span><br/>关联 ${escapeTooltip(degree)} 条</div>`;
+  const typeLabel = typeLabels[type]?.[locale === 'en' ? 'en' : 'zh'] ?? type;
+  const domainLabel = domainLabels[domain]?.[locale === 'en' ? 'en' : 'zh'] ?? domain;
+  const relationCount = locale === 'en' ? `${escapeTooltip(degree)} recorded relations` : `关联 ${escapeTooltip(degree)} 条`;
+  return `<div style="max-width:300px;white-space:normal;line-height:1.55"><b>${escapeTooltip(label)}</b><br/>${escapeTooltip(typeLabel)} · ${escapeTooltip(domainLabel)}<br/><span>${escapeTooltip(description)}</span><br/>${relationCount}</div>`;
 }

@@ -440,7 +440,7 @@ function TokamakCadViewerSession({
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
         setStatus('error');
-        setErrorMessage(error instanceof Error ? error.message : i18nRef.current.t('viewer.errorManifest'));
+        setErrorMessage(error instanceof Error ? i18nRef.current.content(error.message) : i18nRef.current.t('viewer.errorManifest'));
       });
     return () => controller.abort();
   }, [attempt, manifestUrl]);
@@ -1244,7 +1244,7 @@ function TokamakCadViewerSession({
       releaseResources();
       const preview = availableModels.find((asset) => asset.quality === 'preview');
       if (selectedModel.quality === 'high' && preview && preview.id !== selectedModel.id) {
-        const reason = error instanceof Error ? error.message : i18nRef.current.t('viewer.errorUnknown');
+        const reason = error instanceof Error ? i18nRef.current.content(error.message) : i18nRef.current.t('viewer.errorUnknown');
         setLodNotice(i18nRef.current.t('viewer.highFallback', { reason }));
         setProgress(0);
         setStatus('loading');
@@ -1252,7 +1252,7 @@ function TokamakCadViewerSession({
         return;
       }
       setStatus('error');
-      setErrorMessage(error instanceof Error ? error.message : i18nRef.current.t('viewer.errorModel'));
+      setErrorMessage(error instanceof Error ? i18nRef.current.content(error.message) : i18nRef.current.t('viewer.errorModel'));
     });
 
     return () => { disposed = true; releaseResources(); viewerRef.current = null; };
@@ -1465,7 +1465,7 @@ function TokamakCadViewerSession({
                 title={`${content(asset.label)} · ${megabytes(asset.bytes)} MB${asset.decodedGpuBytes ? ` · ${t('viewer.decodedMemory', { size: megabytes(asset.decodedGpuBytes) })}` : ''}${asset.triangles ? ` · ${formatCount('sceneDrawTriangles' in asset ? asset.sceneDrawTriangles : asset.triangles, locale)} triangles` : ''}`}
               >{asset.quality === 'high' ? t('viewer.high') : t('viewer.standard')} <small>{megabytes(asset.bytes)} MB{asset.decodedGpuBytes ? ` · ${megabytes(asset.decodedGpuBytes)} MB RAM` : ''}</small></button>)}
             </fieldset>}
-            <div className="tokamakCadStatus" aria-live="polite"><span>{ready ? `${selectedModel?.label ?? 'STANDARD'} · MODEL ONLINE` : status === 'loading' ? `STREAMING ${progress}%` : status === 'error' ? 'FALLBACK MODE' : 'STANDBY'}</span><i aria-hidden="true" /></div>
+            <div className="tokamakCadStatus" aria-live="polite"><span>{ready ? `${content(selectedModel?.label ?? 'STANDARD')} · MODEL ONLINE` : status === 'loading' ? `STREAMING ${progress}%` : status === 'error' ? 'FALLBACK MODE' : 'STANDBY'}</span><i aria-hidden="true" /></div>
           </div>
         </div>
 

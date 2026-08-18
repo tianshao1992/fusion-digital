@@ -1,6 +1,7 @@
 'use client';
 
 import { type KeyboardEvent, useRef } from 'react';
+import { useI18n } from '@/app/i18n';
 import { THEME_PREFERENCES, type ThemePreference } from './theme-config';
 import { useTheme } from './ThemeProvider';
 
@@ -13,6 +14,13 @@ const defaultLabels: ThemeSwitcherLabels = {
   dark: '深色',
 };
 
+const defaultEnglishLabels: ThemeSwitcherLabels = {
+  group: 'Appearance theme',
+  system: 'Use system setting',
+  light: 'Light',
+  dark: 'Dark',
+};
+
 const icons: Record<ThemePreference, string> = {
   system: '◐',
   light: '☀',
@@ -20,7 +28,7 @@ const icons: Record<ThemePreference, string> = {
 };
 
 export function ThemeSwitcher({
-  labels = defaultLabels,
+  labels,
   compact = false,
   className = '',
 }: {
@@ -28,6 +36,8 @@ export function ThemeSwitcher({
   compact?: boolean;
   className?: string;
 }) {
+  const { locale } = useI18n();
+  const activeLabels = labels ?? (locale === 'en' ? defaultEnglishLabels : defaultLabels);
   const { preference, setPreference } = useTheme();
   const refs = useRef<Array<HTMLButtonElement | null>>([]);
 
@@ -60,7 +70,7 @@ export function ThemeSwitcher({
     <div
       className={`themeSwitcher${compact ? ' themeSwitcher--compact' : ''}${className ? ` ${className}` : ''}`}
       role="radiogroup"
-      aria-label={labels.group}
+      aria-label={activeLabels.group}
       onKeyDown={handleKeyDown}
     >
       {THEME_PREFERENCES.map((item, index) => (
@@ -70,13 +80,13 @@ export function ThemeSwitcher({
           type="button"
           role="radio"
           aria-checked={preference === item}
-          aria-label={labels[item]}
-          title={labels[item]}
+          aria-label={activeLabels[item]}
+          title={activeLabels[item]}
           tabIndex={preference === item ? 0 : -1}
           onClick={() => choose(item, index)}
         >
           <span className="themeSwitcherIcon" aria-hidden="true">{icons[item]}</span>
-          <span className="themeSwitcherLabel">{labels[item]}</span>
+          <span className="themeSwitcherLabel">{activeLabels[item]}</span>
         </button>
       ))}
     </div>

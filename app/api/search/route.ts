@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
-import { getIndexMetadata, normalizeFilters, normalizeQuery, searchKnowledge, SEARCH_LIMITS } from "@/app/search/search-core";
+import { getIndexMetadata, normalizeFilters, normalizeQuery, normalizeSearchLocale, searchKnowledge, SEARCH_LIMITS } from "@/app/search/search-core";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
+  const locale = normalizeSearchLocale(url.searchParams.get("locale") || request.headers.get("accept-language"));
   const query = normalizeQuery(url.searchParams.get("q"));
   const filters = normalizeFilters({
     domain: url.searchParams.get("domain"),
@@ -15,19 +16,21 @@ export async function GET(request: Request) {
     citedOnly: url.searchParams.get("citedOnly"),
   });
   const limit = Math.min(SEARCH_LIMITS.maxResults, Math.max(1, Number(url.searchParams.get("limit")) || SEARCH_LIMITS.defaultResults));
-  const results = searchKnowledge(query, filters, limit);
-  return NextResponse.json({ query, filters, count: results.length, results, index: getIndexMetadata() }, { headers: publicHeaders() });
+  const results = searchKnowledge(query, filters, limit, locale);
+  return NextResponse.json({ query, locale, filters, count: results.length, results, index: getIndexMetadata() }, { headers: publicHeaders() });
 }
 
 export async function POST(request: Request) {
-  if (!isJson(request)) return jsonError("content_type", "请求必须使用 application/json。", 415);
+  const headerLocale = normalizeSearchLocale(request.headers.get("x-fusiondigital-locale") || request.headers.get("accept-language"));
+  if (!isJson(request)) return jsonError("content_type", headerLocale === "en" ? "Requests must use application/json." : "请求必须使用 application/json。", 415);
   const body = await safeJson(request);
-  if (!body) return jsonError("invalid_json", "JSON 请求体无效。", 400);
+  if (!body) return jsonError("invalid_json", headerLocale === "en" ? "The JSON request body is invalid." : "JSON 请求体无效。", 400);
+  const locale = normalizeSearchLocale(body.locale || headerLocale);
   const query = normalizeQuery(body.q ?? body.query);
   const filters = normalizeFilters(body.filters);
   const limit = Math.min(SEARCH_LIMITS.maxResults, Math.max(1, Number(body.limit) || SEARCH_LIMITS.defaultResults));
-  const results = searchKnowledge(query, filters, limit);
-  return NextResponse.json({ query, filters, count: results.length, results, index: getIndexMetadata() }, { headers: publicHeaders() });
+  const results = searchKnowledge(query, filters, limit, locale);
+  return NextResponse.json({ query, locale, filters, count: results.length, results, index: getIndexMetadata() }, { headers: publicHeaders() });
 }
 
 function publicHeaders() {

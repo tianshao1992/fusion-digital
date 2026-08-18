@@ -23,6 +23,42 @@ const text = (...values) => values.flat(Infinity).filter(Boolean).map((value) =>
 }).filter(Boolean).join("\n");
 
 const unique = (...values) => [...new Set(values.flat(Infinity).filter(Boolean).map(String))];
+const hasHan = (value) => /[\u3400-\u9fff]/u.test(String(value || ""));
+const englishOnly = (value) => text(value)
+  .replace(/[\u3400-\u9fff]+/gu, " ")
+  .replace(/[，。；：！？、（）【】《》“”‘’·—–]/g, " ")
+  .replace(/\s+/g, " ")
+  .trim()
+  // Mixed-language organization and source fields often leave a dangling
+  // separator after the Han text is removed (for example, "CFS / ...").
+  // Do not expose that extraction artefact in the English projection.
+  .replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9.)+#_-]+$/g, "");
+const entityTypeEn = {
+  work: "research work",
+  paper: "paper",
+  code: "software record",
+  tool: "tool",
+  device: "fusion device",
+  framework: "integration framework",
+};
+const titleReviewPlaceholder = (entityType) => ({
+  work: "Research record awaiting expert English title review",
+  paper: "Paper record awaiting expert English title review",
+  code: "Software record awaiting expert English title review",
+  tool: "Tool record awaiting expert English title review",
+  device: "Fusion device awaiting expert English title review",
+  framework: "Integration framework awaiting expert English title review",
+}[entityType] || "Knowledge record awaiting expert English title review");
+const abstractReviewPlaceholder = (entityType, titleEn, hasSources) => [
+  `FusionDigital curated ${entityTypeEn[entityType] || "knowledge"} record for ${titleEn}.`,
+  hasSources ? "The linked sources document this record." : "No public source URL is attached to this record.",
+  "An expert-reviewed English abstract is pending.",
+].join(" ");
+const usefulEnglishTitle = (value) => {
+  const candidate = englishOnly(value).replace(/\s+/g, " ").trim().replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9.)+#/_-]+$/g, "");
+  const words = candidate.match(/[A-Za-z][A-Za-z0-9.+#/_-]*/g) || [];
+  return candidate && !hasHan(candidate) && words.some((word) => word.length >= 3 && !/^(?:record|source|official|paper|code)$/i.test(word)) ? candidate : "";
+};
 const safeUrl = (value) => typeof value === "string" && /^https?:\/\//i.test(value) ? value : null;
 const canonicalUrl = (value) => {
   const url = safeUrl(value);
@@ -38,7 +74,20 @@ const canonicalUrl = (value) => {
   }
 };
 const slug = (value) => String(value).normalize("NFKC").toLowerCase().replace(/https?:\/\//g, "").replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-|-$/g, "").slice(0, 96);
-const source = (label, url, kind = "source", detail) => ({ label: text(label).slice(0, 320), url: canonicalUrl(url), kind, ...(detail ? { detail: text(detail).slice(0, 500) } : {}) });
+const source = (label, url, kind = "source", detail) => {
+  const normalizedLabel = text(label).slice(0, 320);
+  const normalizedDetail = detail ? text(detail).slice(0, 500) : "";
+  const labelEn = !hasHan(normalizedLabel) ? normalizedLabel : usefulEnglishTitle(normalizedLabel) || ({ paper: "Research paper", code: "Software repository", tool: "Official tool source", facility: "Facility source" }[kind] || "Evidence source");
+  const detailEn = normalizedDetail && !hasHan(normalizedDetail) ? normalizedDetail : "";
+  return {
+    label: normalizedLabel,
+    labelEn,
+    url: canonicalUrl(url),
+    kind,
+    ...(normalizedDetail ? { detail: normalizedDetail } : {}),
+    ...(detailEn ? { detailEn } : {}),
+  };
+};
 const cleanSources = (sources) => {
   const seen = new Set();
   return sources.filter((item) => item?.url).filter((item) => {
@@ -49,12 +98,41 @@ const cleanSources = (sources) => {
 };
 
 function add(input) {
+  const normalizedSources = cleanSources(input.sources || []);
+  const title = text(input.title).replace(/\s+/g, " ").trim().slice(0, 500);
+  const explicitTitleEn = text(input.titleEn).replace(/\s+/g, " ").trim();
+  const titleEn = (
+    usefulEnglishTitle(explicitTitleEn)
+    || usefulEnglishTitle(title)
+    || titleReviewPlaceholder(input.entityType)
+  ).slice(0, 500);
+  const organizationEn = englishOnly(input.organization);
+  const devicesEn = unique(input.devices).map(englishOnly).filter(Boolean).slice(0, 80);
+  const sourcesEn = normalizedSources.map((item) => item.labelEn).filter(Boolean).slice(0, 3);
+  const evidenceLevelEn = englishOnly(input.evidenceLevel);
+  const deploymentLevelEn = englishOnly(input.deploymentLevel);
+  const explicitSummaryEn = text(input.summaryEn).replace(/\s+/g, " ").trim();
+  const reviewedSummaryEn = explicitSummaryEn && !hasHan(explicitSummaryEn) && explicitSummaryEn.length >= 32 ? explicitSummaryEn : "";
+  const summaryEn = englishOnly(
+    reviewedSummaryEn
+    || (titleEn.includes("awaiting expert English title review") ? abstractReviewPlaceholder(input.entityType, titleEn, normalizedSources.length > 0) : [
+      `FusionDigital curated ${entityTypeEn[input.entityType] || "knowledge"} record for ${titleEn}.`,
+      organizationEn ? `Organization: ${organizationEn}.` : "",
+      devicesEn.length ? `Associated devices: ${devicesEn.join(", ")}.` : "",
+      evidenceLevelEn ? `Evidence level: ${evidenceLevelEn}.` : "",
+      deploymentLevelEn ? `Deployment level: ${deploymentLevelEn}.` : "",
+      sourcesEn.length ? `Evidence sources: ${sourcesEn.join("; ")}.` : "No public source URL is attached to this record.",
+      "Use the cited source links to verify scope, validation status and limitations.",
+    ].filter(Boolean).join(" "))
+  ).slice(0, 5000) || abstractReviewPlaceholder(input.entityType, titleReviewPlaceholder(input.entityType), normalizedSources.length > 0);
   const item = {
     id: input.id,
     entityType: input.entityType,
     domains: unique(input.domains).sort(),
-    title: text(input.title).replace(/\s+/g, " ").trim().slice(0, 500),
+    title,
+    titleEn,
     summary: text(input.summary).replace(/\s+/g, " ").trim().slice(0, 5000),
+    summaryEn,
     year: Number.isFinite(Number(input.year)) ? Number(input.year) : null,
     organization: text(input.organization).replace(/\s+/g, " ").trim().slice(0, 500) || null,
     devices: unique(input.devices).slice(0, 80),
@@ -62,10 +140,10 @@ function add(input) {
     evidenceLevel: input.evidenceLevel || null,
     deploymentLevel: input.deploymentLevel || null,
     route: input.route || "/search",
-    sources: cleanSources(input.sources || []),
+    sources: normalizedSources,
   };
   if (!item.title || !item.summary) return;
-  item.searchText = text(item.title, item.summary, item.organization, item.devices, item.tags, item.sources.map((item) => item.label)).normalize("NFKC").toLowerCase();
+  item.searchText = text(item.title, item.titleEn, item.summary, item.summaryEn, item.organization, item.devices, item.tags, item.sources.flatMap((item) => [item.label, item.labelEn])).normalize("NFKC").toLowerCase();
   entries.set(item.id, item);
 }
 
@@ -80,8 +158,10 @@ function upsertDevice(name, patch) {
     id,
     entityType: "device",
     title: previous.title,
+    titleEn: previous.titleEn || patch.titleEn,
     domains: unique(previous.domains, patch.domains),
     summary: text(previous.summary, patch.summary),
+    summaryEn: text(previous.summaryEn, patch.summaryEn),
     devices: unique(previous.devices, patch.devices),
     tags: unique(previous.tags, patch.tags),
     sources: cleanSources([...(previous.sources || []), ...(patch.sources || [])]),
@@ -103,7 +183,9 @@ function addPaper(paper, domains, parentTitle, route, devices = []) {
     entityType: "paper",
     domains: unique(previous?.domains || [], domains),
     title: paper.title,
+    titleEn: paper.title,
     summary: text(paper.authors, paper.venue, paper.sourceType, `收录于 FusionDigital 工作：${parentTitle}`),
+    summaryEn: text(paper.authors, paper.venue, paper.sourceType, `Curated in FusionDigital under ${englishOnly(parentTitle) || "a related research record"}.`),
     year: paper.year,
     organization: paper.venue || null,
     devices: unique(previous?.devices || [], devices),
@@ -126,7 +208,9 @@ function addCode(code, domains, parentTitle, route, devices = []) {
     entityType: "code",
     domains: unique(previous?.domains || [], domains),
     title: code.name,
+    titleEn: code.name,
     summary: text(code.relationship, code.status, code.access, code.license, `关联工作：${parentTitle}`),
+    summaryEn: `FusionDigital software record for ${usefulEnglishTitle(code.name) || "this repository"}. The linked repository is the authoritative source for access, licensing, implementation status and scope. An expert-reviewed English abstract is pending.`,
     organization: null,
     devices: unique(previous?.devices || [], devices),
     tags: unique(previous?.tags || [], ["代码库", code.status, code.artifactType]),
@@ -171,6 +255,7 @@ for (const item of controlLandscape.entries) {
     entityType: "work",
     domains,
     title: item.titleZh || item.titleEn,
+    titleEn: item.titleEn,
     summary: text(item.titleEn, item.problem, item.method, item.controlArchitecture, item.timescale, item.validation, item.results, item.maturity, item.limitations, item.twinRelevance),
     year: item.year,
     organization: item.organization,
@@ -197,6 +282,7 @@ for (const item of diagnosticsLandscape.entries) {
     entityType: "work",
     domains,
     title: item.title || item.titleEn,
+    titleEn: item.titleEn,
     summary: text(item.titleEn, item.technique, item.problem, item.measurementPrinciple, item.quantities, item.region, item.calibration, item.inference, item.validation, item.limitations, item.twinRelevance),
     year: item.asOf ? Number(String(item.asOf).slice(0, 4)) : null,
     organization: item.organizations,
@@ -307,10 +393,18 @@ const sorted = [...entries.values()].sort((a, b) => a.entityType.localeCompare(b
 const byType = Object.fromEntries([...new Set(sorted.map((item) => item.entityType))].sort().map((type) => [type, sorted.filter((item) => item.entityType === type).length]));
 const byDomain = Object.fromEntries([...new Set(sorted.flatMap((item) => item.domains))].sort().map((domain) => [domain, sorted.filter((item) => item.domains.includes(domain)).length]));
 const payload = {
-  schemaVersion: "1.0.0",
+  schemaVersion: "1.1.0",
   generatedAt: new Date().toISOString(),
   sourcePolicy: "FusionDigital curated public research datasets; every public answer must cite one or more source URLs from the retrieved entries.",
-  statistics: { total: sorted.length, byType, byDomain },
+  statistics: {
+    total: sorted.length,
+    byType,
+    byDomain,
+    englishReviewPending: {
+      title: sorted.filter((item) => item.titleEn.includes("awaiting expert English title review")).length,
+      summary: sorted.filter((item) => item.summaryEn.includes("expert-reviewed English abstract is pending")).length,
+    },
+  },
   entries: sorted,
 };
 await writeFile(output, `${JSON.stringify(payload, null, 2)}\n`, "utf8");

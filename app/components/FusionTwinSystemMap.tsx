@@ -2,6 +2,8 @@
 
 import type { EChartsCoreOption, EChartsType } from 'echarts/core';
 import { type CSSProperties, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useI18n } from '../i18n';
+import { LocalizedChartRegion, localizeScientificOption } from './charts/ScientificChart';
 import { useChartTheme } from './charts/chart-theme';
 import './fusion-twin-system-map.css';
 
@@ -13,9 +15,12 @@ type Phase = {
   cn: string;
   en: string;
   scale: string;
+  scaleEn: string;
   baseline: string;
   focus: string;
+  focusEn: string;
   evidence: string;
+  evidenceEn: string;
 };
 
 type TwinModule = {
@@ -62,15 +67,16 @@ type ChartNode = {
 const FONT = '"Microsoft YaHei UI","Microsoft YaHei","Noto Sans SC",Arial,sans-serif';
 const PHASE_IDS: Exclude<PhaseId, 'overview'>[] = ['design', 'construction', 'commissioning', 'operation', 'maintenance', 'decommissioning'];
 const INTENSITY_LABELS = ['条件性', '支撑', '重要', '核心'];
+const INTENSITY_LABELS_EN = ['conditional', 'supporting', 'important', 'core'];
 
 const phases: Phase[] = [
-  { id: 'overview', cn: '全生命周期', en: 'LIFECYCLE', scale: 'μs—数十年', baseline: 'ONE CONFIGURATION-CONTROLLED DIGITAL THREAD', focus: '以同一装置身份、配置基线和证据链连接全周期决策，同时容纳实时闭环与长期工程演化。', evidence: '配置、时间、坐标、单位、不确定度、来源与 V&V 状态必须共同绑定。' },
-  { id: 'design', cn: '设计', en: 'DESIGN', scale: '约 5—15 年', baseline: 'AS-DESIGNED', focus: '需求追踪、设计空间探索、物理—工程闭合与不确定度传播。', evidence: '设计基线、模型适用域、裕量与验证计划。' },
-  { id: 'construction', cn: '建造', en: 'CONSTRUCTION', scale: '约 5—10+ 年', baseline: 'AS-BUILT', focus: '把制造实测、安装状态、材料批次和偏差回写数字主线。', evidence: '质量记录、as-built 几何、检验与接口符合性。' },
-  { id: 'commissioning', cn: '调试', en: 'COMMISSIONING', scale: '约 1—3+ 年', baseline: 'AS-COMMISSIONED', focus: '标定、系统辨识、虚拟调试、SIL/HIL 与保护逻辑验收。', evidence: '标定记录、验收基线、故障注入与回放证据。' },
-  { id: 'operation', cn: '运行', en: 'OPERATION', scale: 'μs—年；寿期约 20—40+ 年', baseline: 'AS-OPERATED', focus: '从快速保护、等离子体控制到脉冲规划、设备健康和电厂性能优化。', evidence: '在线质量标记、有效域、操作授权、联锁与每次决策回写。' },
-  { id: 'maintenance', cn: '维护 / 升级', en: 'MAINTENANCE', scale: '天—月；重大升级约 1—3 年', baseline: 'AS-MAINTAINED', focus: '健康评估、剩余寿命、变更影响、远程维护和再调试。', evidence: '维修记录、配置变更、复验与恢复运行批准。' },
-  { id: 'decommissioning', cn: '退役', en: 'DECOMMISSIONING', scale: '约 10—30+ 年', baseline: 'AS-DECOMMISSIONED', focus: '活化库存、拆解路径、材料流、废物管理与长期责任证据。', evidence: '剂量与库存模型、材料去向、许可和可追溯档案。' },
+  { id: 'overview', cn: '全生命周期', en: 'LIFECYCLE', scale: 'μs—数十年', scaleEn: 'μs to decades', baseline: 'ONE CONFIGURATION-CONTROLLED DIGITAL THREAD', focus: '以同一装置身份、配置基线和证据链连接全周期决策，同时容纳实时闭环与长期工程演化。', focusEn: 'Connect lifecycle decisions through one asset identity, controlled configuration baselines and an evidence chain, while accommodating real-time loops and long-term engineering evolution.', evidence: '配置、时间、坐标、单位、不确定度、来源与 V&V 状态必须共同绑定。', evidenceEn: 'Configuration, time, coordinates, units, uncertainty, provenance and V&V status must remain bound together.' },
+  { id: 'design', cn: '设计', en: 'DESIGN', scale: '约 5—15 年', scaleEn: 'approx. 5–15 years', baseline: 'AS-DESIGNED', focus: '需求追踪、设计空间探索、物理—工程闭合与不确定度传播。', focusEn: 'Requirements traceability, design-space exploration, physics–engineering closure and uncertainty propagation.', evidence: '设计基线、模型适用域、裕量与验证计划。', evidenceEn: 'Design baseline, model domain of applicability, margins and verification plan.' },
+  { id: 'construction', cn: '建造', en: 'CONSTRUCTION', scale: '约 5—10+ 年', scaleEn: 'approx. 5–10+ years', baseline: 'AS-BUILT', focus: '把制造实测、安装状态、材料批次和偏差回写数字主线。', focusEn: 'Write manufacturing measurements, installation state, material batches and nonconformances back to the digital thread.', evidence: '质量记录、as-built 几何、检验与接口符合性。', evidenceEn: 'Quality records, as-built geometry, inspection evidence and interface conformity.' },
+  { id: 'commissioning', cn: '调试', en: 'COMMISSIONING', scale: '约 1—3+ 年', scaleEn: 'approx. 1–3+ years', baseline: 'AS-COMMISSIONED', focus: '标定、系统辨识、虚拟调试、SIL/HIL 与保护逻辑验收。', focusEn: 'Calibration, system identification, virtual commissioning, SIL/HIL testing and acceptance of protection logic.', evidence: '标定记录、验收基线、故障注入与回放证据。', evidenceEn: 'Calibration records, acceptance baseline, fault-injection results and replay evidence.' },
+  { id: 'operation', cn: '运行', en: 'OPERATION', scale: 'μs—年；寿期约 20—40+ 年', scaleEn: 'μs to years; service life approx. 20–40+ years', baseline: 'AS-OPERATED', focus: '从快速保护、等离子体控制到脉冲规划、设备健康和电厂性能优化。', focusEn: 'Span fast protection and plasma control through pulse planning, asset health and plant-performance optimization.', evidence: '在线质量标记、有效域、操作授权、联锁与每次决策回写。', evidenceEn: 'Online quality flags, validity domain, operating authorization, interlocks and a record of every decision.' },
+  { id: 'maintenance', cn: '维护 / 升级', en: 'MAINTENANCE / UPGRADE', scale: '天—月；重大升级约 1—3 年', scaleEn: 'days to months; major upgrades approx. 1–3 years', baseline: 'AS-MAINTAINED', focus: '健康评估、剩余寿命、变更影响、远程维护和再调试。', focusEn: 'Condition assessment, remaining useful life, change impact, remote maintenance and recommissioning.', evidence: '维修记录、配置变更、复验与恢复运行批准。', evidenceEn: 'Maintenance records, configuration changes, requalification and authorization to return to operation.' },
+  { id: 'decommissioning', cn: '退役', en: 'DECOMMISSIONING', scale: '约 10—30+ 年', scaleEn: 'approx. 10–30+ years', baseline: 'AS-DECOMMISSIONED', focus: '活化库存、拆解路径、材料流、废物管理与长期责任证据。', focusEn: 'Activation inventory, dismantling sequence, material flows, waste management and evidence for long-term liabilities.', evidence: '剂量与库存模型、材料去向、许可和可追溯档案。', evidenceEn: 'Dose and inventory models, material disposition, licensing basis and traceable records.' },
 ];
 
 const modules: TwinModule[] = [
@@ -85,6 +91,79 @@ const modules: TwinModule[] = [
   { id: 'integration', no: '09', cn: '总体集成', en: 'WHOLE-PLANT', summary: '场景编排、协同仿真、接口契约、需求与 VVUQ。', input: '专业模型、数据服务、需求、配置与成熟度状态', output: '一致场景、工作流、证据链和电厂级决策视图', aiRole: '工作流规划与跨域协同；所有调用受权限和证据门约束。', trust: '接口测试、配置基线、VVUQ、变更与责任管理。', href: '/physics#integrated', color: '#e9fff6', position: [630, 315], size: [184, 94], intensities: [4, 4, 4, 4, 4, 4] },
   { id: 'ai', no: '10', cn: '智能原生', en: 'AI-NATIVE ENABLEMENT', summary: '代理模型、同化、异常识别、优化、基础模型与智能体。', input: '受治理的数据、物理先验、工具权限和使用场景', output: '带置信度的估计、预测、告警、候选方案与计划', aiRole: '跨域加速与知识协同，而不是凌驾于系统之上的“大脑”。', trust: '有效域、校准、独立验证、权限、安全门与人工授权。', href: '/ai', color: '#a98bff', position: [600, 152], size: [560, 56], intensities: [2, 2, 3, 3, 3, 2] },
 ];
+
+const moduleEnglish: Record<ModuleId, { summary: string; input: string; output: string; aiRole: string; trust: string }> = {
+  physics: {
+    summary: 'Equilibrium, transport, MHD stability, plasma–wall boundary and particle processes.',
+    input: 'Device configuration, diagnostic observations, actuators and boundary conditions',
+    output: 'Plasma state, stability limits and thermal, particle and neutron source terms',
+    aiRole: 'Accelerate inversion, transport surrogates and scenario search while preserving physics constraints and the stated domain of applicability.',
+    trust: 'High-fidelity reference calculations, experimental posterior checks, conservation tests and quantified uncertainty.',
+  },
+  engineering: {
+    summary: 'Electromagnetic, structural, thermal-fluid, neutronics and materials response.',
+    input: 'Geometry, materials, boundary conditions and plasma-derived loads',
+    output: 'Temperature, stress, electromagnetic forces, damage, activation and engineering margins',
+    aiRole: 'Use reduced-order models for rapid screening, damage identification and lifetime surrogates; never substitute them for qualified analysis.',
+    trust: 'Code benchmarks, component tests, mesh and time-step convergence, and compliance with the applicable design code.',
+  },
+  control: {
+    summary: 'State estimation, constrained control, plasma control system functions and multi-actuator coordination.',
+    input: 'Quality-qualified state estimates, scenario objectives, plant capability and safety constraints',
+    output: 'Control commands that have passed verification and authorization gates',
+    aiRole: 'Propose strategies, predictive-control candidates and anomaly avoidance; no default direct path to an actuator.',
+    trust: 'Real-time determinism, SIL/HIL evidence, independence of protection functions and authorization governance.',
+  },
+  diagnostics: {
+    summary: 'Calibration, inversion, observation fusion, signal quality and anomaly detection.',
+    input: 'Raw sensor signals, diagnostic geometry and calibration metadata',
+    output: 'Observations and state estimates carrying quality flags and uncertainty',
+    aiRole: 'Support denoising, gap filling, anomaly detection and multimodal state estimation.',
+    trust: 'Blind tests, drift monitoring, retained residuals and fail-degraded operation.',
+  },
+  energy: {
+    summary: 'Blanket heat extraction, power cycles, electricity generation and grid response.',
+    input: 'Thermal and neutron source terms, coolant boundary conditions and grid demand',
+    output: 'Thermal power, net electric power, efficiency and dynamic constraints',
+    aiRole: 'Support operational optimization and performance surrogates; this scope may not apply to a non-power-producing experimental device.',
+    trust: 'Conservation checks, component tests, cycle benchmarks and validation against grid constraints.',
+  },
+  auxiliary: {
+    summary: 'Vacuum, cryogenics, fuelling, power supplies, cooling and balance-of-plant services.',
+    input: 'Equipment state, set-points, demand profiles and fault events',
+    output: 'Service availability, house load, boundary conditions and fault response',
+    aiRole: 'Support equipment health assessment, load forecasting and fault localization.',
+    trust: 'Equipment characteristic curves, interlock tests, fault trees and operating-data replay.',
+  },
+  hmi: {
+    summary: 'Situation awareness, explanation, collaboration and human-in-the-loop authorization.',
+    input: 'State, risk, alternatives, evidence and uncertainty',
+    output: 'Operator intent, constraints, approvals and annotations',
+    aiRole: 'Explain evidence, retrieve knowledge and compare options while keeping accountable human authority explicit.',
+    trust: 'Explainable interfaces, alarm management, human-factors testing and audit records.',
+  },
+  data: {
+    summary: 'Configuration, time, coordinates, units, provenance and uncertainty.',
+    input: 'Cross-domain raw data, configuration records, models and experiment records',
+    output: 'Time-aligned, versioned, discoverable and traceable data products',
+    aiRole: 'Assist semantic mapping and data-quality assessment without overwriting original evidence.',
+    trust: 'Master data, access control, checksums, versioning and a provenance ledger.',
+  },
+  integration: {
+    summary: 'Scenario orchestration, co-simulation, interface contracts, requirements and verification, validation and uncertainty quantification.',
+    input: 'Domain models, data services, requirements, configurations and maturity status',
+    output: 'Consistent scenarios, workflows, evidence chains and whole-plant decision views',
+    aiRole: 'Plan workflows and coordinate across domains; every invocation remains subject to permission and evidence gates.',
+    trust: 'Interface tests, configuration baselines, VVUQ, change control and accountable ownership.',
+  },
+  ai: {
+    summary: 'Surrogate modelling, data assimilation, anomaly detection, optimization, foundation models and agents.',
+    input: 'Governed data, physics priors, tool permissions and a defined use case',
+    output: 'Confidence-qualified estimates, forecasts, alerts, candidate options and plans',
+    aiRole: 'Provide cross-domain acceleration and knowledge coordination, not an autonomous supervisory brain above the plant.',
+    trust: 'Domain of applicability, calibration, independent validation, permissions, safety gates and human authorization.',
+  },
+};
 
 const links: TwinLink[] = [
   { source: 'asset', target: 'diagnostics', type: 'data', relation: '实物观测', contract: '传感器标识、采样时钟、标定、质量与不确定度' },
@@ -118,12 +197,44 @@ const links: TwinLink[] = [
   { source: 'integration', target: 'data', type: 'governance', relation: '证据回写', contract: '决策、模型版本、残差、批准和执行结果回写不可篡改证据链', curve: -0.18 },
 ];
 
+const linkEnglish: ReadonlyArray<{ relation: string; contract: string }> = [
+  { relation: 'Physical observation', contract: 'Sensor identity, sampling clock, calibration, quality and uncertainty' },
+  { relation: 'Qualified state', contract: 'Time synchronization, coordinates, units, quality flags and retained residuals' },
+  { relation: 'Digital thread', contract: 'Asset ID, configuration version, scenario, provenance and access rights' },
+  { relation: 'Options and evidence', contract: 'Objectives, alternatives, uncertainty, V&V status and accountable owner' },
+  { relation: 'Intent and authorization', contract: 'Operating objective, constraints, approved scope and validity period' },
+  { relation: 'Scenario and constraints', contract: 'Scenario and model versions, equipment envelope and control domain of validity' },
+  { relation: 'Candidate control', contract: 'Deterministic protection, physics constraints, V&V and permission checks' },
+  { relation: 'Verified execution', contract: 'Only commands admitted by safety interlocks and authorization may be executed' },
+  { relation: 'Configuration and observations', contract: 'Geometry, actuators, boundaries, diagnostics and associated uncertainties' },
+  { relation: 'Asset and loads', contract: 'CAD, materials, operating condition, load history and measurement data' },
+  { relation: 'Heat source and operating point', contract: 'Thermal and neutron sources, fluid state, house load and grid signals' },
+  { relation: 'Equipment state', contract: 'Equipment configuration, set-points, interlocks and fault events' },
+  { relation: 'Multiphysics loads', contract: 'Common time base, mesh mapping, conserved quantities, error and domain of applicability' },
+  { relation: 'Thermal-hydraulic boundary', contract: 'Thermal power, temperature, flow, pressure and component margins' },
+  { relation: 'Equipment boundary', contract: 'Cooling, cryogenic, vacuum and power-supply capability, including fault state' },
+  { relation: 'Physics prediction', contract: 'Model version, inputs, outputs, uncertainty and validation status' },
+  { relation: 'Engineering margin', contract: 'Load case, code criterion, margin and evidence source' },
+  { relation: 'Whole-plant performance', contract: 'Power, efficiency, constraints, transients and applicable plant class' },
+  { relation: 'Actuator availability', contract: 'Capacity, slew rate, latency, faults and interlock state' },
+  { relation: 'Enhanced perception', contract: 'Training envelope, confidence, drift, blind tests and degradation strategy' },
+  { relation: 'Semantic and quality assistance', contract: 'AI may assist mapping and quality detection but must not overwrite source records, versions or provenance' },
+  { relation: 'Workflow and knowledge coordination', contract: 'Tool permissions, evidence status, responsibility boundary and end-to-end audit' },
+  { relation: 'Surrogates and assimilation', contract: 'Physics priors, domain of applicability, calibration and high-fidelity reference cases' },
+  { relation: 'ROM and asset health', contract: 'Design of experiments, error bounds, load envelope and independent validation' },
+  { relation: 'Performance optimization', contract: 'Constraints, robustness, extrapolation monitoring and human approval' },
+  { relation: 'Fault and load prediction', contract: 'Equipment lineage, drift, false-positive and false-negative rates, and fallback logic' },
+  { relation: 'Explanation and collaboration', contract: 'Source citation, permissions, advisory status and accountability boundary' },
+  { relation: 'Candidate policy', contract: 'AI has no direct actuator connection; candidates pass through the controller, verification and safety gate' },
+  { relation: 'Evidence write-back', contract: 'Decision, model version, residuals, approval and execution result are written to a tamper-evident evidence chain' },
+];
+
 const timeScales = [
-  ['μs—ms', '采集、联锁与快速保护'],
-  ['ms—s', '状态估计、位形与稳定性控制'],
-  ['s—h', '脉冲、排热、热工与辅机过程'],
-  ['h—月', '实验计划、运行周期与检修'],
-  ['年—数十年', '设计、老化、升级与退役'],
+  { scale: 'μs—ms', scaleEn: 'μs–ms', copy: '采集、联锁与快速保护', copyEn: 'Acquisition, interlocks and fast protection' },
+  { scale: 'ms—s', scaleEn: 'ms–s', copy: '状态估计、位形与稳定性控制', copyEn: 'State estimation, shape and stability control' },
+  { scale: 's—h', scaleEn: 's–h', copy: '脉冲、排热、热工与辅机过程', copyEn: 'Pulse evolution, exhaust, thermal-hydraulics and auxiliaries' },
+  { scale: 'h—月', scaleEn: 'hours–months', copy: '实验计划、运行周期与检修', copyEn: 'Experimental planning, campaigns and outages' },
+  { scale: '年—数十年', scaleEn: 'years–decades', copy: '设计、老化、升级与退役', copyEn: 'Design, ageing, upgrades and decommissioning' },
 ];
 
 const edgeStyle = {
@@ -138,7 +249,8 @@ function selectedPhaseIndex(id: PhaseId) {
   return id === 'overview' ? -1 : PHASE_IDS.indexOf(id);
 }
 
-function nodeLabel(module: TwinModule) {
+function nodeLabel(module: TwinModule, locale: 'zh-CN' | 'en') {
+  if (locale === 'en') return `{no|${module.no}}  {cn|${module.en}}`;
   if (module.id === 'ai') return `{no|${module.no}}  {cn|${module.cn}}  {en|${module.en}}`;
   return `{no|${module.no}}  {cn|${module.cn}}\n{en|${module.en}}`;
 }
@@ -161,6 +273,8 @@ function readChartDatum(params: unknown) {
 }
 
 export default function FusionTwinSystemMap() {
+  const { locale } = useI18n();
+  const isEnglish = locale === 'en';
   const chartTheme = useChartTheme();
   const mountRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<EChartsType | null>(null);
@@ -188,7 +302,7 @@ export default function FusionTwinSystemMap() {
       const isActive = selectedPhase === id;
       return {
         id: `phase-${id}`,
-        name: `${item.cn}\n${item.scale}`,
+        name: isEnglish ? `${item.en}\n${item.scaleEn}` : `${item.cn}\n${item.scale}`,
         kind: 'phase',
         phaseId: id,
         x: 120 + index * 190,
@@ -203,7 +317,9 @@ export default function FusionTwinSystemMap() {
           shadowColor: chartTheme.accent,
         },
         label: { color: isActive ? chartTheme.text : chartTheme.muted, fontSize: 11, lineHeight: 18, fontWeight: 700 },
-        tooltipText: `<b>${item.cn} / ${item.en}</b><br/>典型尺度：${item.scale}<br/>${item.focus}`,
+        tooltipText: isEnglish
+          ? `<b>${item.en}</b><br/>Representative timescale: ${item.scaleEn}<br/>${item.focusEn}`
+          : `<b>${item.cn} / ${item.en}</b><br/>典型尺度：${item.scale}<br/>${item.focus}`,
       };
     });
 
@@ -215,7 +331,7 @@ export default function FusionTwinSystemMap() {
       const accent = moduleAccent(item, chartTheme.mode);
       return {
         id: item.id,
-        name: nodeLabel(item),
+        name: nodeLabel(item, locale),
         kind: 'module',
         moduleId: item.id,
         x: item.position[0],
@@ -232,14 +348,16 @@ export default function FusionTwinSystemMap() {
           shadowColor: accent,
         },
         label: {
-          formatter: nodeLabel(item),
+          formatter: nodeLabel(item, locale),
           rich: {
             no: { color: accent, fontFamily: FONT, fontSize: 9, fontWeight: 800 },
             cn: { color: chartTheme.text, fontFamily: FONT, fontSize: item.id === 'ai' ? 16 : 14, fontWeight: 700 },
             en: { color: chartTheme.muted, fontFamily: FONT, fontSize: 8, lineHeight: 18, fontWeight: 700 },
           },
         },
-        tooltipText: `<b>${item.no} · ${item.cn}</b><br/>${item.summary}<br/>阶段参与：${phaseIndex < 0 ? '跨全生命周期' : INTENSITY_LABELS[intensity - 1]}`,
+        tooltipText: isEnglish
+          ? `<b>${item.no} · ${item.en}</b><br/>${moduleEnglish[item.id].summary}<br/>Lifecycle participation: ${phaseIndex < 0 ? 'across the full lifecycle' : INTENSITY_LABELS_EN[intensity - 1]}`
+          : `<b>${item.no} · ${item.cn}</b><br/>${item.summary}<br/>阶段参与：${phaseIndex < 0 ? '跨全生命周期' : INTENSITY_LABELS[intensity - 1]}`,
       };
     });
 
@@ -253,20 +371,24 @@ export default function FusionTwinSystemMap() {
         itemStyle: { opacity: 0 }, label: { show: false }, tooltipText: '',
       },
       {
-        id: 'asset', name: '实体聚变装置\nPHYSICAL ASSET', kind: 'boundary', x: 55, y: 365, symbol: 'circle', symbolSize: 116,
+        id: 'asset', name: isEnglish ? 'PHYSICAL\nFUSION ASSET' : '实体聚变装置\nPHYSICAL ASSET', kind: 'boundary', x: 55, y: 365, symbol: 'circle', symbolSize: 116,
         itemStyle: { color: chartTheme.accentSoft, borderColor: chartTheme.accent, borderWidth: 2.5, shadowBlur: 20, shadowColor: chartTheme.accent },
         label: { color: chartTheme.mode === 'dark' ? '#ffd8bd' : '#6c3322', fontSize: 11, lineHeight: 18, fontWeight: 700 },
-        tooltipText: '<b>实体聚变装置</b><br/>实验系统、聚变堆或电厂及其真实传感器、执行器与配置状态。',
+        tooltipText: isEnglish
+          ? '<b>Physical fusion asset</b><br/>The experiment, fusion reactor or power plant together with its physical sensors, actuators and controlled configuration state.'
+          : '<b>实体聚变装置</b><br/>实验系统、聚变堆或电厂及其真实传感器、执行器与配置状态。',
       },
       {
-        id: 'gate', name: '安全与授权门\nSAFETY GATE', kind: 'boundary', x: 1125, y: 365, symbol: 'diamond', symbolSize: 122,
+        id: 'gate', name: isEnglish ? 'SAFETY &\nAUTHORIZATION GATE' : '安全与授权门\nSAFETY GATE', kind: 'boundary', x: 1125, y: 365, symbol: 'diamond', symbolSize: 122,
         itemStyle: { color: chartTheme.accentSoft, borderColor: chartTheme.accent, borderWidth: 2.5, shadowBlur: 18, shadowColor: chartTheme.accent },
         label: { color: chartTheme.mode === 'dark' ? '#ffd8bd' : '#6c3322', fontSize: 11, lineHeight: 18, fontWeight: 700 },
-        tooltipText: '<b>安全与授权门</b><br/>物理约束、V&V、确定性保护、联锁和人员授权共同限制动作通道。',
+        tooltipText: isEnglish
+          ? '<b>Safety and authorization gate</b><br/>Physics constraints, V&V, deterministic protection, interlocks and human authorization jointly restrict the actuation path.'
+          : '<b>安全与授权门</b><br/>物理约束、V&V、确定性保护、联锁和人员授权共同限制动作通道。',
       },
     ];
 
-    const linkData = links.map((link) => {
+    const linkData = links.map((link, index) => {
       const style = edgeStyle[link.type];
       const lightEdgeColors: Record<TwinLink['type'], string> = {
         data: '#49766a', model: '#b85b37', governance: '#718579', command: '#a94e33', ai: '#75617e',
@@ -274,6 +396,8 @@ export default function FusionTwinSystemMap() {
       const relevant = !selectedModule || link.source === selectedModule || link.target === selectedModule;
       return {
         ...link,
+        relation: isEnglish ? linkEnglish[index].relation : link.relation,
+        contract: isEnglish ? linkEnglish[index].contract : link.contract,
         lineStyle: {
           color: chartTheme.mode === 'dark' ? style.color : lightEdgeColors[link.type],
           width: relevant ? style.width : 0.7,
@@ -289,7 +413,9 @@ export default function FusionTwinSystemMap() {
       textStyle: { color: chartTheme.text, fontFamily: FONT },
       aria: {
         enabled: true,
-        description: '聚变装置数字孪生全生命周期与十项能力的固定布局系统地图。智能原生跨域赋能，但所有控制动作必须通过安全与授权门。',
+        description: isEnglish
+          ? 'Fixed-layout system map of the fusion-asset lifecycle and ten digital-twin capabilities. AI enables cross-domain analysis, but every control action must pass the safety and authorization gate.'
+          : '聚变装置数字孪生全生命周期与十项能力的固定布局系统地图。智能原生跨域赋能，但所有控制动作必须通过安全与授权门。',
       },
       tooltip: {
         trigger: 'item',
@@ -303,7 +429,9 @@ export default function FusionTwinSystemMap() {
           const datum = readChartDatum(params);
           if (!datum) return '';
           if (typeof datum.tooltipText === 'string') return datum.tooltipText;
-          if (typeof datum.relation === 'string') return `<b>${datum.relation}</b><br/>接口契约：${String(datum.contract ?? '')}`;
+          if (typeof datum.relation === 'string') return isEnglish
+            ? `<b>${datum.relation}</b><br/>Interface contract: ${String(datum.contract ?? '')}`
+            : `<b>${datum.relation}</b><br/>接口契约：${String(datum.contract ?? '')}`;
           return '';
         },
       },
@@ -326,12 +454,13 @@ export default function FusionTwinSystemMap() {
         emphasis: { focus: 'adjacency', scale: 1.04, lineStyle: { opacity: 1, width: 2.6 } },
       }],
     };
-  }, [chartTheme, phaseIndex, selectedModule, selectedPhase]);
+  }, [chartTheme, isEnglish, locale, phaseIndex, selectedModule, selectedPhase]);
 
-  const latestOptionRef = useRef(option);
+  const localizedOption = useMemo(() => localizeScientificOption(locale, option), [locale, option]);
+  const latestOptionRef = useRef(localizedOption);
   useLayoutEffect(() => {
-    latestOptionRef.current = option;
-  }, [option]);
+    latestOptionRef.current = localizedOption;
+  }, [localizedOption]);
 
   useEffect(() => {
     if (!mountRef.current) return;
@@ -381,35 +510,41 @@ export default function FusionTwinSystemMap() {
   useEffect(() => {
     if (!chartRef.current) return;
     const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    chartRef.current.setOption({ ...option, animation: !reduceMotion }, true);
-  }, [option]);
+    chartRef.current.setOption({ ...localizedOption, animation: !reduceMotion }, true);
+  }, [localizedOption]);
 
   return (
-    <section className="fusionTwinMapSection" id="mainline" aria-labelledby="fusion-twin-map-title" data-echart="fusion-twin-system-map">
+    <LocalizedChartRegion><section className="fusionTwinMapSection" id="mainline" aria-labelledby="fusion-twin-map-title" data-echart="fusion-twin-system-map">
       <div className="fusionTwinMapIntro">
         <div>
           <p className="sectionIndex">00—01 / FUSION DIGITAL TWIN SYSTEM MAP</p>
-          <h2 id="fusion-twin-map-title">一个装置 · 一条数字主线 · 十项协同能力</h2>
-          <p>聚变数字孪生不是三维外观，也不是一个万能求解器；它是贯穿设计、建造、调试、运行、维护升级与退役，以配置受控的数据、经验证的多保真模型和可追溯证据支撑人机决策的持续系统。</p>
+          <h2 id="fusion-twin-map-title">{isEnglish ? 'One asset · one digital thread · ten coordinated capabilities' : '一个装置 · 一条数字主线 · 十项协同能力'}</h2>
+          <p>{isEnglish
+            ? 'A fusion digital twin is neither a three-dimensional façade nor a universal solver. It is a continuously governed system spanning design, construction, commissioning, operation, maintenance, upgrades and decommissioning, using configuration-controlled data, validated multi-fidelity models and traceable evidence to support human–machine decisions.'
+            : '聚变数字孪生不是三维外观，也不是一个万能求解器；它是贯穿设计、建造、调试、运行、维护升级与退役，以配置受控的数据、经验证的多保真模型和可追溯证据支撑人机决策的持续系统。'}</p>
           <small>ONE ASSET · ONE DIGITAL THREAD · TEN COORDINATED CAPABILITIES</small>
         </div>
         <aside>
           <b>AI-NATIVE / GOVERNED ENABLEMENT</b>
-          <p>AI 加速感知、代理建模、优化与知识协同，但不替代物理约束、验证证据、确定性保护和人的授权。</p>
+          <p>{isEnglish
+            ? 'AI accelerates perception, surrogate modelling, optimization and knowledge coordination; it does not replace physics constraints, verification evidence, deterministic protection or human authorization.'
+            : 'AI 加速感知、代理建模、优化与知识协同，但不替代物理约束、验证证据、确定性保护和人的授权。'}</p>
         </aside>
       </div>
 
       <div className="fusionTwinMapShell">
-        <div className="fusionTwinPhaseTabs" role="group" aria-label="选择聚变装置生命周期阶段">
+        <div className="fusionTwinPhaseTabs" role="group" aria-label={isEnglish ? 'Select a fusion-asset lifecycle phase' : '选择聚变装置生命周期阶段'}>
           {phases.map((item) => (
             <button key={item.id} type="button" className={selectedPhase === item.id ? 'isActive' : ''} aria-pressed={selectedPhase === item.id} onClick={() => setSelectedPhase(item.id)}>
-              <span>{item.cn}{item.id !== 'overview' && <i>{item.en}</i>}</span><small>{item.id === 'overview' ? item.scale : item.baseline}</small>
+              {isEnglish
+                ? <><span>{item.en}</span><small>{item.id === 'overview' ? item.scaleEn : item.baseline}</small></>
+                : <><span>{item.cn}{item.id !== 'overview' && <i>{item.en}</i>}</span><small>{item.id === 'overview' ? item.scale : item.baseline}</small></>}
             </button>
           ))}
         </div>
 
-        <div className="fusionTwinModuleDock" aria-label="十项数字孪生能力的键盘导航">
-          <p>CAPABILITY FOCUS / 能力聚焦</p>
+        <div className="fusionTwinModuleDock" aria-label={isEnglish ? 'Keyboard navigation for the ten digital-twin capabilities' : '十项数字孪生能力的键盘导航'}>
+          <p>{isEnglish ? 'CAPABILITY FOCUS' : 'CAPABILITY FOCUS / 能力聚焦'}</p>
           <div>
             {modules.map((item) => (
               <button
@@ -421,64 +556,71 @@ export default function FusionTwinSystemMap() {
                 style={{ '--module-color': moduleAccent(item, chartTheme.mode) } as CSSProperties}
                 onClick={() => setSelectedModule((current) => current === item.id ? null : item.id)}
               >
-                <b>{item.no}</b><span>{item.cn}</span><small>{item.en}</small>
+                <b>{item.no}</b><span>{isEnglish ? item.en : item.cn}</span>{!isEnglish && <small>{item.en}</small>}
               </button>
             ))}
           </div>
         </div>
 
-        <div className="fusionTwinMapViewport" aria-label="可横向滚动查看完整系统地图">
+        <div className="fusionTwinMapViewport" aria-label={isEnglish ? 'Scroll horizontally to inspect the complete system map' : '可横向滚动查看完整系统地图'}>
           <div className="fusionTwinMapCanvas">
             <div className={`fusionTwinMapFallback${ready ? ' isHidden' : ''}`} aria-hidden={ready || undefined}>
-              <div className="fallbackAi">10 · 智能原生 / AI-NATIVE — 受治理的跨域赋能轨道</div>
-              <div className="fallbackCore"><span>实体装置</span><i>→</i><span>诊断感知</span><i>→</i><span>数据基座</span><i>→</i><span>总体集成</span><i>→</i><span>人机交互</span><i>→</i><span>集成控制</span><i>→</i><span>安全与授权门</span></div>
-              <div className="fallbackModels">{modules.filter((item) => ['physics', 'engineering', 'energy', 'auxiliary'].includes(item.id)).map((item) => <button type="button" key={item.id} onClick={() => setSelectedModule(item.id)}>{item.no} · {item.cn}<small>{item.en}</small></button>)}</div>
+              <div className="fallbackAi">{isEnglish ? '10 · AI-NATIVE ENABLEMENT — governed cross-domain acceleration' : '10 · 智能原生 / AI-NATIVE — 受治理的跨域赋能轨道'}</div>
+              <div className="fallbackCore">{isEnglish
+                ? <><span>Physical asset</span><i>→</i><span>Diagnostics</span><i>→</i><span>Data foundation</span><i>→</i><span>Whole-plant integration</span><i>→</i><span>Human–machine interface</span><i>→</i><span>Integrated control</span><i>→</i><span>Safety and authorization gate</span></>
+                : <><span>实体装置</span><i>→</i><span>诊断感知</span><i>→</i><span>数据基座</span><i>→</i><span>总体集成</span><i>→</i><span>人机交互</span><i>→</i><span>集成控制</span><i>→</i><span>安全与授权门</span></>}
+              </div>
+              <div className="fallbackModels">{modules.filter((item) => ['physics', 'engineering', 'energy', 'auxiliary'].includes(item.id)).map((item) => <button type="button" key={item.id} onClick={() => setSelectedModule(item.id)}>{item.no} · {isEnglish ? item.en : item.cn}{!isEnglish && <small>{item.en}</small>}</button>)}</div>
             </div>
-            <div ref={mountRef} className={`fusionTwinMapMount${ready ? ' isReady' : ''}`} role="img" aria-label="聚变装置数字孪生全生命周期、十项能力、数据与控制闭环以及人工智能赋能关系图" aria-hidden={!ready || undefined} />
-            {!ready && !failed && <span className="fusionTwinMapStatus">交互系统地图加载中…</span>}
-            {failed && <span className="fusionTwinMapStatus">交互图未加载，当前显示可读结构图。</span>}
+            <div ref={mountRef} className={`fusionTwinMapMount${ready ? ' isReady' : ''}`} role="img" aria-label={isEnglish ? 'Fusion digital-twin lifecycle, ten capabilities, data and control loop, and governed AI enablement' : '聚变装置数字孪生全生命周期、十项能力、数据与控制闭环以及人工智能赋能关系图'} aria-hidden={!ready || undefined} />
+            {!ready && !failed && <span className="fusionTwinMapStatus">{isEnglish ? 'Loading the interactive system map…' : '交互系统地图加载中…'}</span>}
+            {failed && <span className="fusionTwinMapStatus">{isEnglish ? 'The interactive chart did not load; the accessible structural map remains available.' : '交互图未加载，当前显示可读结构图。'}</span>}
           </div>
         </div>
 
         <div className="fusionTwinMapDetails" aria-live="polite">
           <article className="phaseDetail">
             <p>{phase.baseline}</p>
-            <h3>{phase.cn} <small>{phase.en}</small></h3>
-            <b>{phase.scale}</b>
-            <div>{phase.focus}</div>
-            <span>证据门：{phase.evidence}</span>
+            <h3>{isEnglish ? phase.en : phase.cn} {!isEnglish && <small>{phase.en}</small>}</h3>
+            <b>{isEnglish ? phase.scaleEn : phase.scale}</b>
+            <div>{isEnglish ? phase.focusEn : phase.focus}</div>
+            <span>{isEnglish ? `Evidence gate: ${phase.evidenceEn}` : `证据门：${phase.evidence}`}</span>
           </article>
           <article className={`moduleDetail${activeModule ? ' hasModule' : ''}`}>
             {activeModule ? <>
               <p style={{ color: activeModule.color }}>{activeModule.no} / {activeModule.en}</p>
-              <h3>{activeModule.cn}</h3>
-              <div className="moduleIo"><span><b>输入</b>{activeModule.input}</span><span><b>输出</b>{activeModule.output}</span></div>
-              <p><b>AI 赋能：</b>{activeModule.aiRole}</p>
-              <p><b>可信门：</b>{activeModule.trust}</p>
-              <a href={activeModule.href}>进入相关知识域 ↗</a>
+              <h3>{isEnglish ? activeModule.en : activeModule.cn}</h3>
+              <div className="moduleIo"><span><b>{isEnglish ? 'Inputs' : '输入'}</b>{isEnglish ? moduleEnglish[activeModule.id].input : activeModule.input}</span><span><b>{isEnglish ? 'Outputs' : '输出'}</b>{isEnglish ? moduleEnglish[activeModule.id].output : activeModule.output}</span></div>
+              <p><b>{isEnglish ? 'AI enablement: ' : 'AI 赋能：'}</b>{isEnglish ? moduleEnglish[activeModule.id].aiRole : activeModule.aiRole}</p>
+              <p><b>{isEnglish ? 'Assurance gate: ' : '可信门：'}</b>{isEnglish ? moduleEnglish[activeModule.id].trust : activeModule.trust}</p>
+              <a href={activeModule.href}>{isEnglish ? 'Open the corresponding knowledge domain ↗' : '进入相关知识域 ↗'}</a>
             </> : <>
               <p>DIGITAL TWIN DECISION LOOP</p>
-              <h3>观测 → 同化 → 估计 → 预测 → 量化不确定度 → 人机决策 → 安全执行 → 证据回写</h3>
-              <div>点击任一模块查看输入、输出、AI 作用与可信边界；点击生命周期阶段查看能力权重如何随装置状态变化。</div>
-              <span>任何预测都必须绑定配置、时间、坐标、单位、不确定度、来源与 V&V 状态。</span>
+              <h3>{isEnglish ? 'Observe → assimilate → estimate → predict → quantify uncertainty → decide with human oversight → execute safely → write back evidence' : '观测 → 同化 → 估计 → 预测 → 量化不确定度 → 人机决策 → 安全执行 → 证据回写'}</h3>
+              <div>{isEnglish ? 'Select a capability to inspect its inputs, outputs, AI role and assurance boundary. Select a lifecycle phase to see how participation changes with asset state.' : '点击任一模块查看输入、输出、AI 作用与可信边界；点击生命周期阶段查看能力权重如何随装置状态变化。'}</div>
+              <span>{isEnglish ? 'Every prediction must remain bound to configuration, time, coordinates, units, uncertainty, provenance and V&V status.' : '任何预测都必须绑定配置、时间、坐标、单位、不确定度、来源与 V&V 状态。'}</span>
             </>}
           </article>
         </div>
 
-        <div className="fusionTwinTimeScale" aria-label="聚变数字孪生嵌套时间尺度">
-          <p>NESTED CLOCKS / 嵌套时间尺度</p>
-          <div>{timeScales.map(([scale, copy]) => <span key={scale}><b>{scale}</b><small>{copy}</small></span>)}</div>
+        <div className="fusionTwinTimeScale" aria-label={isEnglish ? 'Nested timescales in a fusion digital twin' : '聚变数字孪生嵌套时间尺度'}>
+          <p>{isEnglish ? 'NESTED CLOCKS' : 'NESTED CLOCKS / 嵌套时间尺度'}</p>
+          <div>{timeScales.map((item) => <span key={item.scale}><b>{isEnglish ? item.scaleEn : item.scale}</b><small>{isEnglish ? item.copyEn : item.copy}</small></span>)}</div>
         </div>
 
         <div className="fusionTwinMapLegend">
-          <span className="dataFlow">观测 / 数据流</span><span className="modelFlow">模型耦合</span><span className="evidenceFlow">配置 / 证据</span><span className="commandFlow">经验证控制</span><span className="aiFlow">AI 候选与加速</span>
-          <p>图中生命周期为示意性典型范围，不是项目工期承诺；模块强度表示相对参与程度，不表示技术成熟度或安全等级。维护升级与运行可重复交叠，能量转化对纯实验装置可能不适用。</p>
+          <span className="dataFlow">{isEnglish ? 'Observations / data flow' : '观测 / 数据流'}</span><span className="modelFlow">{isEnglish ? 'Model coupling' : '模型耦合'}</span><span className="evidenceFlow">{isEnglish ? 'Configuration / evidence' : '配置 / 证据'}</span><span className="commandFlow">{isEnglish ? 'Verified control' : '经验证控制'}</span><span className="aiFlow">{isEnglish ? 'AI candidates / acceleration' : 'AI 候选与加速'}</span>
+          <p>{isEnglish
+            ? 'Lifecycle durations are representative ranges, not commitments to a project schedule. Capability intensity denotes relative participation, not technology readiness or a safety classification. Maintenance and operation may overlap repeatedly, and energy conversion may not apply to a non-power-producing experimental device.'
+            : '图中生命周期为示意性典型范围，不是项目工期承诺；模块强度表示相对参与程度，不表示技术成熟度或安全等级。维护升级与运行可重复交叠，能量转化对纯实验装置可能不适用。'}</p>
         </div>
       </div>
 
       <div className="srOnly">
-        十个模块包括：{modules.map((item) => item.cn).join('、')}。人工智能不得直接连接装置执行器；安全相关动作仍由确定性保护、联锁、经验证控制逻辑和授权机制约束。
+        {isEnglish
+          ? `The ten capabilities are ${modules.map((item) => item.en).join(', ')}. AI must not connect directly to plant actuators; safety-significant actions remain constrained by deterministic protection, interlocks, verified control logic and authorization.`
+          : <>十个模块包括：{modules.map((item) => item.cn).join('、')}。人工智能不得直接连接装置执行器；安全相关动作仍由确定性保护、联锁、经验证控制逻辑和授权机制约束。</>}
       </div>
-    </section>
+    </section></LocalizedChartRegion>
   );
 }

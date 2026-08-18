@@ -17,6 +17,7 @@ export async function GET(request: Request) {
     focus: url.searchParams.get('focus') ?? '',
     depth: integer(url.searchParams.get('depth'), url.searchParams.has('focus') ? 1 : 0),
     limit: integer(url.searchParams.get('limit'), 350),
+    locale: url.searchParams.get('locale') ?? 'zh-CN',
   });
   return Response.json(result, {
     headers: {

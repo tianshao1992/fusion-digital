@@ -2,7 +2,8 @@
 
 import type { EChartsCoreOption } from 'echarts/core';
 import { useMemo, useState, type KeyboardEvent } from 'react';
-import ScientificChart from './charts/ScientificChart';
+import { useI18n } from '../i18n';
+import ScientificChart, { LocalizedChartRegion } from './charts/ScientificChart';
 import { useChartTheme } from './charts/chart-theme';
 import './phase-one-roadmap.css';
 
@@ -36,26 +37,85 @@ const modules: RoadmapModule[] = [
   { id: 'ai', no: '10', cn: '智能原生', en: 'AI-NATIVE', role: 'core', baselineGates: 2, phaseOneGates: 1, baseline: '已形成证据检索、知识图谱、受控问答、身份/额度设计和智能体候选审核边界。', phaseOne: '让模型只在受治理数据和工具权限内完成检索、分析、代理模型调用与候选建议，并保留人工审核。', gap: '仍缺生产模型服务、评测与漂移监控、私有数据隔离、可靠任务编排、回退机制和独立安全批准。', href: '/ai' },
 ];
 
+const moduleEnglish: Record<ModuleId, { baseline: string; phaseOne: string; gap: string }> = {
+  physics: {
+    baseline: 'A mapped evidence base now links physics codes, publications and device records, with frame-resolved EXL-50U EFIT equilibria integrated into the platform.',
+    phaseOne: 'For selected discharges, align equilibrium reconstruction, operating conditions, model versions and error statements on one time base to deliver a replayable, narrow-scope physics twin.',
+    gap: 'High-fidelity coupling of transport, MHD stability, plasma–wall boundary, particle and neutronics models remains outstanding, together with online assimilation, explicit domains of applicability and closed-loop uncertainty management.',
+  },
+  engineering: {
+    baseline: 'The engineering knowledge domain, CAD digital mock-up, multi-device catalog and component visibility, sectioning and transparency controls are in place.',
+    phaseOne: 'Freeze the EXL-50U geometry, materials, load cases and coordinate conventions; integrate the first auditable CAE model and version-controlled result fields.',
+    gap: 'Coupled electromagnetic–thermal–structural–fluid–neutronics analysis, conservative mesh transfer, experimental correlation, lifetime models and continuous VVUQ remain outstanding.',
+  },
+  control: {
+    baseline: 'The evidence graph maps T0–T9 control tasks, device plasma-control systems, publications, software and evidence maturity.',
+    phaseOne: 'Define state, objective, constraint, actuator and replay interfaces, then demonstrate offline scenario reproduction. Phase I does not permit AI or the web interface to command the plant directly.',
+    gap: 'Real-time state estimation, deterministic scheduling, SIL/HIL, fault injection, independence of protection functions and authorized closed-loop qualification remain outstanding.',
+  },
+  diagnostics: {
+    baseline: 'The DG0–DG11 diagnostic knowledge domain, device profiles, inversion evidence chains and coupled EFIT equilibrium/signal viewer are in place.',
+    phaseOne: 'Bind pulse number, sample time, diagnostic geometry, calibration, quality flags and inversion version into one traceable observation package.',
+    gap: 'Additional raw diagnostic chains, real-time quality control, multimodal fusion, synthetic diagnostics, drift surveillance and blind-test acceptance remain outstanding.',
+  },
+  energy: {
+    baseline: 'The system map defines the capability boundary for blanket heat extraction, thermodynamic cycles, plant auxiliary power and grid interaction.',
+    phaseOne: 'Retain only data-schema and interface placeholders, with an explicit future contract from fusion heat sources to net electric output.',
+    gap: 'Validated models for blankets and primary/secondary circuits, power cycles, dynamic efficiency, storage, house loads and grid coordination remain outstanding.',
+  },
+  auxiliary: {
+    baseline: 'The system map bounds vacuum, cryogenic, heating, fuelling, cooling and power-supply auxiliary systems.',
+    phaseOne: 'Reserve asset identity, state, set-point, interlock and load fields for auxiliary systems in the device package and interface model.',
+    gap: 'Equipment dynamics, fault propagation, interlock logic, maintenance state, house-load accounting and coupled whole-plant transients remain outstanding.',
+  },
+  hmi: {
+    baseline: 'Knowledge search, the 3D mock-up, component controls, pulse selection, time-sequence replay and evidence inspection are available.',
+    phaseOne: 'Organize models, data, the common time base, alarm explanations and human review into one researcher-facing workbench.',
+    gap: 'Operator task analysis, alarm rationalization, option comparison, immersive interaction, usability trials and human-in-the-loop authorization design remain outstanding.',
+  },
+  data: {
+    baseline: 'Model manifests, public-asset boundaries, derived-data indexes, knowledge snapshots, source links and foundational version contracts are available.',
+    phaseOne: 'Unify device, component, pulse, time, coordinate and unit identifiers; enforce provenance, checksums, permissions and model-to-result version relationships.',
+    gap: 'Production time-series and object storage, master-data governance, streaming ingestion, quality rules, long-term archive, disaster recovery and private workspaces remain outstanding.',
+  },
+  integration: {
+    baseline: 'A ten-capability architecture, multi-device digital-mock-up entry point and cross-domain navigation exist, but they do not yet constitute a whole-plant co-simulator.',
+    phaseOne: 'Use EXL-50U as the reference implementation: freeze the device package, scenario configuration, model APIs, result contracts and evidence gates, then execute one reproducible digital thread end to end.',
+    gap: 'Requirements and configuration management, coupled solvers, cross-domain time coordination, system-level uncertainty, change-impact analysis and plant-level VVUQ remain outstanding.',
+  },
+  ai: {
+    baseline: 'Evidence retrieval, the knowledge graph, governed question answering, identity/quota controls and review boundaries for agent-generated candidates are in place.',
+    phaseOne: 'Constrain models to governed data and authorized tools for retrieval, analysis, surrogate invocation and candidate recommendations, with retained human review.',
+    gap: 'Production model serving, evaluation and drift monitoring, private-data isolation, dependable task orchestration, fallback mechanisms and independent safety approval remain outstanding.',
+  },
+};
+
 const capabilityGates = [
-  { id: 'G0', label: '知识 / 资产\n基线' },
-  { id: 'G1', label: '数据 / 三维\n回放' },
-  { id: 'G2', label: '可验证窄域\n孪生' },
-  { id: 'G3', label: '在线影子 /\n持续 VVUQ' },
-  { id: 'G4', label: '整机跨域\n协同' },
-  { id: 'G5', label: '电厂全生命\n周期' },
+  { id: 'G0', label: '知识 / 资产\n基线', labelEn: 'Knowledge / asset\nbaseline' },
+  { id: 'G1', label: '数据 / 三维\n回放', labelEn: 'Data / 3D\nreplay' },
+  { id: 'G2', label: '可验证窄域\n孪生', labelEn: 'Verifiable\nnarrow-scope twin' },
+  { id: 'G3', label: '在线影子 /\n持续 VVUQ', labelEn: 'Online shadow /\ncontinuous VVUQ' },
+  { id: 'G4', label: '整机跨域\n协同', labelEn: 'Device-wide\nco-simulation' },
+  { id: 'G5', label: '电厂全生命\n周期', labelEn: 'Plant-wide\nlifecycle twin' },
 ];
 
 const stages = [
-  { no: '00', when: '当前基线', title: '知识与数字资产可见', copy: '证据图谱、专业知识域、数字样机、炮数据回放和治理骨架已经形成。' },
-  { no: '01', when: '一期建设 · R0 → R1', title: 'EXL‑50U 可验证窄域孪生', copy: '当前位于 R0 控制服务化到 R1 窄域数字影子之间：以单装置、单场景和可追溯数据链为边界，先闭合 CAD / CAE / EFIT / 模型 API / 结果分析。' },
-  { no: '02', when: '二期扩展', title: '多物理与运行协同', copy: '扩展更多炮、诊断、工程结果和模型，进入联合仿真、在线校准、SIL/HIL 与持续 VVUQ。' },
-  { no: '03', when: '远期目标', title: '聚变电厂全生命周期孪生', copy: '补齐能量转化、辅机、维护和整厂决策，贯通设计、建造、运行、升级与退役。' },
+  { no: '00', when: '当前基线', whenEn: 'CURRENT BASELINE', title: '知识与数字资产可见', titleEn: 'Knowledge and digital assets are visible', copy: '证据图谱、专业知识域、数字样机、炮数据回放和治理骨架已经形成。', copyEn: 'The evidence graph, domain knowledge, digital mock-up, pulse-data replay and governance framework are established.' },
+  { no: '01', when: '一期建设 · R0 → R1', whenEn: 'PHASE I · R0 → R1', title: 'EXL‑50U 可验证窄域孪生', titleEn: 'Verifiable, narrow-scope EXL-50U twin', copy: '当前位于 R0 控制服务化到 R1 窄域数字影子之间：以单装置、单场景和可追溯数据链为边界，先闭合 CAD / CAE / EFIT / 模型 API / 结果分析。', copyEn: 'Advance from R0 controlled services toward an R1 narrow-scope digital shadow. Bound the first closure to one device, defined scenarios and a traceable data chain spanning CAD, CAE, EFIT, model APIs and result analysis.' },
+  { no: '02', when: '二期扩展', whenEn: 'PHASE II EXPANSION', title: '多物理与运行协同', titleEn: 'Multiphysics and operational coordination', copy: '扩展更多炮、诊断、工程结果和模型，进入联合仿真、在线校准、SIL/HIL 与持续 VVUQ。', copyEn: 'Extend coverage to additional pulses, diagnostics, engineering results and models, then progress to co-simulation, online calibration, SIL/HIL and continuous VVUQ.' },
+  { no: '03', when: '远期目标', whenEn: 'LONG-TERM OBJECTIVE', title: '聚变电厂全生命周期孪生', titleEn: 'Fusion-power-plant lifecycle twin', copy: '补齐能量转化、辅机、维护和整厂决策，贯通设计、建造、运行、升级与退役。', copyEn: 'Complete energy conversion, auxiliary systems, maintenance and whole-plant decision support across design, construction, operation, upgrades and decommissioning.' },
 ];
 
 const roleLabels: Record<PhaseOneRole, string> = {
   core: '一期主线',
   support: '一期支撑',
   future: '后续为主',
+};
+
+const roleLabelsEn: Record<PhaseOneRole, string> = {
+  core: 'Phase I mainline',
+  support: 'Phase I enabling capability',
+  future: 'Primarily post-Phase I',
 };
 
 function readModuleId(params: unknown): ModuleId | null {
@@ -67,6 +127,8 @@ function readModuleId(params: unknown): ModuleId | null {
 }
 
 export default function PhaseOneRoadmap() {
+  const { locale } = useI18n();
+  const isEnglish = locale === 'en';
   const chartTheme = useChartTheme();
   const [selectedId, setSelectedId] = useState<ModuleId>('data');
   const selected = modules.find((item) => item.id === selectedId) ?? modules[0];
@@ -76,7 +138,9 @@ export default function PhaseOneRoadmap() {
     const colors = chartTheme.mode === 'dark'
       ? { baseline: '#65e6d2', phase: '#ff8738', gap: '#263a32' } as const
       : { baseline: '#a8c8b5', phase: '#df9b7e', gap: '#ded7cd' } as const;
-    const labels = { baseline: '已形成', phase: '一期', gap: '后续' } as const;
+    const labels = isEnglish
+      ? { baseline: 'Established', phase: 'Phase I', gap: 'Later' } as const
+      : { baseline: '已形成', phase: '一期', gap: '后续' } as const;
     const cells = chartModules.flatMap((item, row) => capabilityGates.map((gate, column) => {
       const status = column < item.baselineGates ? 'baseline' : column < item.baselineGates + item.phaseOneGates ? 'phase' : 'gap';
       return {
@@ -99,7 +163,9 @@ export default function PhaseOneRoadmap() {
       aria: {
         enabled: true,
         decal: { show: true },
-        description: 'FusionDigital 第一期路线图。十个模块依次通过六个离散能力门；青色表示已形成的基线，橙色表示一期要闭合的能力，灰绿色表示一期之后仍需建设的能力。',
+        description: isEnglish
+          ? 'FusionDigital Phase I roadmap. Ten capabilities progress through six discrete gates. Teal marks the established baseline, orange marks Phase I closure, and grey-green marks capabilities remaining after Phase I.'
+          : 'FusionDigital 第一期路线图。十个模块依次通过六个离散能力门；青色表示已形成的基线，橙色表示一期要闭合的能力，灰绿色表示一期之后仍需建设的能力。',
       },
       grid: { left: 142, right: 24, top: 55, bottom: 70, containLabel: false },
       tooltip: {
@@ -115,13 +181,17 @@ export default function PhaseOneRoadmap() {
           const datum = data as { moduleId?: string; gateId?: string; statusLabel?: string };
           const item = modules.find((candidate) => candidate.id === datum.moduleId);
           const gate = capabilityGates.find((candidate) => candidate.id === datum.gateId);
-          return item && gate ? `<b>${item.no} · ${item.cn}</b><br/>${gate.id} · ${gate.label.replace('\n', ' ')}<br/>状态：${datum.statusLabel}` : '';
+          return item && gate
+            ? isEnglish
+              ? `<b>${item.no} · ${item.en}</b><br/>${gate.id} · ${gate.labelEn.replace('\n', ' ')}<br/>Status: ${datum.statusLabel}`
+              : `<b>${item.no} · ${item.cn}</b><br/>${gate.id} · ${gate.label.replace('\n', ' ')}<br/>状态：${datum.statusLabel}`
+            : '';
         },
       },
       xAxis: {
         type: 'category',
-        data: capabilityGates.map((gate) => `${gate.id}\n${gate.label}`),
-        name: '能力逐级累积：没有通过前一门，就不进入后一门 →', nameLocation: 'middle', nameGap: 52,
+        data: capabilityGates.map((gate) => `${gate.id}\n${isEnglish ? gate.labelEn : gate.label}`),
+        name: isEnglish ? 'Capabilities accumulate by gate: do not enter a later gate before satisfying its predecessor →' : '能力逐级累积：没有通过前一门，就不进入后一门 →', nameLocation: 'middle', nameGap: 52,
         axisLine: { lineStyle: { color: chartTheme.line } },
         axisTick: { show: false },
         axisLabel: { color: chartTheme.muted, fontSize: 9, lineHeight: 14, interval: 0 },
@@ -130,13 +200,13 @@ export default function PhaseOneRoadmap() {
       },
       yAxis: {
         type: 'category',
-        data: chartModules.map((item) => `${item.no}  ${item.cn}`),
+        data: chartModules.map((item) => `${item.no}  ${isEnglish ? item.en : item.cn}`),
         axisLine: { show: false }, axisTick: { show: false },
         axisLabel: { color: chartTheme.text, fontSize: 11, fontWeight: 700, margin: 15 },
       },
       series: [
         {
-          name: '十模块能力门', type: 'heatmap', data: cells,
+          name: isEnglish ? 'Ten-capability gate matrix' : '十模块能力门', type: 'heatmap', data: cells,
           label: {
             show: true,
             color: chartTheme.text,
@@ -154,14 +224,14 @@ export default function PhaseOneRoadmap() {
             silent: true,
             label: { show: true, color: chartTheme.accent, fontSize: 9, fontWeight: 800 },
             data: [
-              [{ name: '第一期能力边界 G0—G2', xAxis: 0 }, { xAxis: 2 }],
-              [{ name: '一期后能力缺口 G3—G5', xAxis: 3, itemStyle: { color: chartTheme.infoSoft } }, { xAxis: 5 }],
+              [{ name: isEnglish ? 'Phase I capability boundary G0–G2' : '第一期能力边界 G0—G2', xAxis: 0 }, { xAxis: 2 }],
+              [{ name: isEnglish ? 'Post-Phase I capability gap G3–G5' : '一期后能力缺口 G3—G5', xAxis: 3, itemStyle: { color: chartTheme.infoSoft } }, { xAxis: 5 }],
             ],
           },
         },
       ],
     };
-  }, [chartTheme, selectedId]);
+  }, [chartTheme, isEnglish, selectedId]);
 
   function selectFromKeyboard(event: KeyboardEvent<HTMLButtonElement>, index: number) {
     const keys = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'];
@@ -177,44 +247,50 @@ export default function PhaseOneRoadmap() {
   }
 
   return (
-    <section className="phaseOneRoadmap" id="roadmap" aria-labelledby="phase-one-roadmap-title">
+    <LocalizedChartRegion><section className="phaseOneRoadmap" id="roadmap" aria-labelledby="phase-one-roadmap-title">
       <header className="phaseOneRoadmapIntro">
         <div>
           <p className="sectionIndex">05 / PHASE I IN THE FULL PROGRAM</p>
-          <h2 id="phase-one-roadmap-title">一期先闭合一条可信数字线程，<br/>不是一次建成完整的聚变电厂孪生。</h2>
-          <p>一期以 EXL‑50U 为首个装置载体，把知识、CAD、CAE 接口、EFIT 炮数据、模型调用、结果分析与证据治理连成可复现的窄域孪生。下图把这条路线严格映射到总览的十个模块，并把一期之后尚未建设的部分保留下来。</p>
+          <h2 id="phase-one-roadmap-title">{isEnglish
+            ? <>Close one trustworthy digital thread in Phase I,<br/>not an entire fusion-power-plant twin at once.</>
+            : <>一期先闭合一条可信数字线程，<br/>不是一次建成完整的聚变电厂孪生。</>}</h2>
+          <p>{isEnglish
+            ? 'Phase I uses EXL-50U as the first reference asset, joining domain knowledge, CAD, CAE interfaces, time-resolved EFIT discharge data, model invocation, result analysis and evidence governance into a reproducible narrow-scope twin. The matrix maps that route to all ten capabilities and explicitly preserves work that remains beyond Phase I.'
+            : '一期以 EXL‑50U 为首个装置载体，把知识、CAD、CAE 接口、EFIT 炮数据、模型调用、结果分析与证据治理连成可复现的窄域孪生。下图把这条路线严格映射到总览的十个模块，并把一期之后尚未建设的部分保留下来。'}</p>
         </div>
-        <aside aria-label="一期在总体规划中的范围摘要">
+        <aside aria-label={isEnglish ? 'Scope of Phase I within the full program' : '一期在总体规划中的范围摘要'}>
           <strong>PHASE I CUTLINE</strong>
-          <p>一期交付门：同一装置身份、同一版本基线、同一炮时间轴、可重放模型调用、可追溯结果和人工审核。</p>
-          <div><span><b>10</b>模块全量对位</span><span><b>05</b>一期主线</span><span><b>03</b>结构支撑</span><span><b>02</b>后续重点</span></div>
+          <p>{isEnglish ? 'Phase I acceptance gate: one asset identity, one controlled version baseline, one discharge time base, replayable model execution, traceable results and retained human review.' : '一期交付门：同一装置身份、同一版本基线、同一炮时间轴、可重放模型调用、可追溯结果和人工审核。'}</p>
+          <div><span><b>10</b>{isEnglish ? 'capabilities mapped' : '模块全量对位'}</span><span><b>05</b>{isEnglish ? 'mainline capabilities' : '一期主线'}</span><span><b>03</b>{isEnglish ? 'enabling capabilities' : '结构支撑'}</span><span><b>02</b>{isEnglish ? 'post-Phase I priorities' : '后续重点'}</span></div>
         </aside>
       </header>
 
-      <ol className="phaseOneStages" aria-label="从当前基线到整厂数字孪生的四阶段路线">
+      <ol className="phaseOneStages" aria-label={isEnglish ? 'Four-stage route from the current baseline to a whole-plant digital twin' : '从当前基线到整厂数字孪生的四阶段路线'}>
         {stages.map((stage, index) => <li key={stage.no} className={index === 1 ? 'isPhaseOne' : ''}>
-          <span>{stage.no}</span><small>{stage.when}</small><h3>{stage.title}</h3><p>{stage.copy}</p>
+          <span>{stage.no}</span><small>{isEnglish ? stage.whenEn : stage.when}</small><h3>{isEnglish ? stage.titleEn : stage.title}</h3><p>{isEnglish ? stage.copyEn : stage.copy}</p>
         </li>)}
       </ol>
 
-      <div className="phaseOneMainline" aria-label="第一期可验证窄域数字孪生主线">
-        <b>PHASE I MAINLINE · 一期能力边界 G0—G2</b>
-        <p><span>08 数据基座</span><i>→</i><span>01 物理 / 02 工程</span><i>→</i><span>04 诊断验证</span><i>→</i><span>10 受控代理</span><i>→</i><span>07 可视交互</span></p>
-        <small><strong>09 总体集成</strong>负责装置包、接口与证据门编排；<strong>03 集成控制</strong>一期只保留受控接口；<strong>05 / 06</strong>进入后续主体建设。</small>
+      <div className="phaseOneMainline" aria-label={isEnglish ? 'Phase I mainline for a verifiable narrow-scope digital twin' : '第一期可验证窄域数字孪生主线'}>
+        <b>{isEnglish ? 'PHASE I MAINLINE · CAPABILITY BOUNDARY G0–G2' : 'PHASE I MAINLINE · 一期能力边界 G0—G2'}</b>
+        <p><span>{isEnglish ? '08 Data foundation' : '08 数据基座'}</span><i>→</i><span>{isEnglish ? '01 Physics / 02 Engineering' : '01 物理 / 02 工程'}</span><i>→</i><span>{isEnglish ? '04 Diagnostic validation' : '04 诊断验证'}</span><i>→</i><span>{isEnglish ? '10 Governed agents' : '10 受控代理'}</span><i>→</i><span>{isEnglish ? '07 Visual interaction' : '07 可视交互'}</span></p>
+        <small>{isEnglish
+          ? <><strong>09 Whole-plant integration</strong> orchestrates the device package, interfaces and evidence gates; <strong>03 Integrated control</strong> is limited to a governed interface in Phase I; <strong>05 / 06</strong> become substantive work after Phase I.</>
+          : <><strong>09 总体集成</strong>负责装置包、接口与证据门编排；<strong>03 集成控制</strong>一期只保留受控接口；<strong>05 / 06</strong>进入后续主体建设。</>}</small>
       </div>
 
       <div className="phaseOneRoadmapWorkspace">
         <article className="phaseOneChartPanel">
           <header>
-            <div><p>TEN-MODULE SCOPE MAP</p><h3>一期切入点与后续缺口</h3></div>
-            <div className="phaseOneLegend" aria-label="图例"><span className="baseline">现有基线</span><span className="phase">一期建设</span><span className="gap">一期后缺口</span></div>
+            <div><p>TEN-CAPABILITY SCOPE MAP</p><h3>{isEnglish ? 'Phase I entry points and remaining gaps' : '一期切入点与后续缺口'}</h3></div>
+            <div className="phaseOneLegend" aria-label={isEnglish ? 'Legend' : '图例'}><span className="baseline">{isEnglish ? 'Established baseline' : '现有基线'}</span><span className="phase">{isEnglish ? 'Phase I closure' : '一期建设'}</span><span className="gap">{isEnglish ? 'Post-Phase I gap' : '一期后缺口'}</span></div>
           </header>
           <ScientificChart
             id="phase-one-roadmap"
             option={option}
-            ariaLabel="十个数字孪生模块从知识资产基线到电厂全生命周期的六能力门矩阵。点击单元格或使用下方模块按钮查看详情。"
+            ariaLabel={isEnglish ? 'Six-gate matrix showing how ten digital-twin capabilities progress from a knowledge and asset baseline toward a whole-plant lifecycle twin. Select a cell or use the capability buttons for details.' : '十个数字孪生模块从知识资产基线到电厂全生命周期的六能力门矩阵。点击单元格或使用下方模块按钮查看详情。'}
             fallbackSrc=""
-            fallbackAlt="十个模块的一期路线文字版"
+            fallbackAlt={isEnglish ? 'Text alternative for the ten-capability Phase I roadmap' : '十个模块的一期路线文字版'}
             className="phaseOneEchart"
             height={610}
             dark
@@ -222,10 +298,10 @@ export default function PhaseOneRoadmap() {
               const moduleId = readModuleId(params);
               if (moduleId) setSelectedId(moduleId);
             }}
-            fallback={<ol className="phaseOneChartFallback" aria-label="十模块路线文字版">{modules.map((item) => <li key={item.id}><b>{item.no} · {item.cn}</b><span>{roleLabels[item.role]}</span><p>{item.phaseOne}</p></li>)}</ol>}
+            fallback={<ol className="phaseOneChartFallback" aria-label={isEnglish ? 'Text version of the ten-capability roadmap' : '十模块路线文字版'}>{modules.map((item) => <li key={item.id}><b>{item.no} · {isEnglish ? item.en : item.cn}</b><span>{isEnglish ? roleLabelsEn[item.role] : roleLabels[item.role]}</span><p>{isEnglish ? moduleEnglish[item.id].phaseOne : item.phaseOne}</p></li>)}</ol>}
           />
-          <p className="phaseOneScaleNote">六个能力门表达依赖顺序与建设边界，不是项目完成率、TRL、预算比例或工期承诺；“页面已存在”也不等同于工程能力已验收。</p>
-          <nav className="phaseOneModuleNav" aria-label="选择一个模块查看一期工作和后续缺口">
+          <p className="phaseOneScaleNote">{isEnglish ? 'The six gates express dependency order and scope boundaries, not percentage complete, technology readiness level, budget allocation or a schedule commitment. The existence of a web page is not evidence that an engineering capability has passed acceptance.' : '六个能力门表达依赖顺序与建设边界，不是项目完成率、TRL、预算比例或工期承诺；“页面已存在”也不等同于工程能力已验收。'}</p>
+          <nav className="phaseOneModuleNav" aria-label={isEnglish ? 'Select a capability to inspect Phase I work and remaining gaps' : '选择一个模块查看一期工作和后续缺口'}>
             {modules.map((item, index) => <button
               type="button"
               key={item.id}
@@ -234,26 +310,26 @@ export default function PhaseOneRoadmap() {
               aria-pressed={item.id === selected.id}
               onClick={() => setSelectedId(item.id)}
               onKeyDown={(event) => selectFromKeyboard(event, index)}
-            ><b>{item.no}</b><span>{item.cn}</span></button>)}
+            ><b>{item.no}</b><span>{isEnglish ? item.en : item.cn}</span></button>)}
           </nav>
         </article>
 
-        <aside className="phaseOneModuleDetail" aria-live="polite" aria-label={`${selected.cn}路线详情`}>
-          <div className="phaseOneModuleHeading"><span>{selected.no}</span><div><small>{roleLabels[selected.role]}</small><h3>{selected.cn}</h3><p>{selected.en}</p></div></div>
-          <section className="isDelivered"><b>已形成的基线</b><p>{selected.baseline}</p></section>
-          <section className="isPhase"><b>一期要闭合</b><p>{selected.phaseOne}</p></section>
-          <section className="isGap"><b>一期后仍欠缺</b><p>{selected.gap}</p></section>
-          <a href={selected.href}>查看对应知识模块 →</a>
+        <aside className="phaseOneModuleDetail" aria-live="polite" aria-label={isEnglish ? `${selected.en} roadmap details` : `${selected.cn}路线详情`}>
+          <div className="phaseOneModuleHeading"><span>{selected.no}</span><div><small>{isEnglish ? roleLabelsEn[selected.role] : roleLabels[selected.role]}</small><h3>{isEnglish ? selected.en : selected.cn}</h3>{!isEnglish && <p>{selected.en}</p>}</div></div>
+          <section className="isDelivered"><b>{isEnglish ? 'Established baseline' : '已形成的基线'}</b><p>{isEnglish ? moduleEnglish[selected.id].baseline : selected.baseline}</p></section>
+          <section className="isPhase"><b>{isEnglish ? 'Closure required in Phase I' : '一期要闭合'}</b><p>{isEnglish ? moduleEnglish[selected.id].phaseOne : selected.phaseOne}</p></section>
+          <section className="isGap"><b>{isEnglish ? 'Remaining after Phase I' : '一期后仍欠缺'}</b><p>{isEnglish ? moduleEnglish[selected.id].gap : selected.gap}</p></section>
+          <a href={selected.href}>{isEnglish ? 'Open the corresponding knowledge domain →' : '查看对应知识模块 →'}</a>
         </aside>
       </div>
 
       <table className="srOnly">
-        <caption>第一期建设与十个总览模块对应关系</caption>
-        <thead><tr><th>编号</th><th>模块</th><th>一期角色</th><th>已形成</th><th>一期建设</th><th>后续缺口</th></tr></thead>
-        <tbody>{modules.map((item) => <tr key={item.id}><td>{item.no}</td><th>{item.cn}</th><td>{roleLabels[item.role]}</td><td>{item.baseline}</td><td>{item.phaseOne}</td><td>{item.gap}</td></tr>)}</tbody>
+        <caption>{isEnglish ? 'Mapping between Phase I work and the ten system capabilities' : '第一期建设与十个总览模块对应关系'}</caption>
+        <thead><tr><th>{isEnglish ? 'No.' : '编号'}</th><th>{isEnglish ? 'Capability' : '模块'}</th><th>{isEnglish ? 'Phase I role' : '一期角色'}</th><th>{isEnglish ? 'Established' : '已形成'}</th><th>{isEnglish ? 'Phase I closure' : '一期建设'}</th><th>{isEnglish ? 'Remaining gap' : '后续缺口'}</th></tr></thead>
+        <tbody>{modules.map((item) => <tr key={item.id}><td>{item.no}</td><th>{isEnglish ? item.en : item.cn}</th><td>{isEnglish ? roleLabelsEn[item.role] : roleLabels[item.role]}</td><td>{isEnglish ? moduleEnglish[item.id].baseline : item.baseline}</td><td>{isEnglish ? moduleEnglish[item.id].phaseOne : item.phaseOne}</td><td>{isEnglish ? moduleEnglish[item.id].gap : item.gap}</td></tr>)}</tbody>
       </table>
 
-      <footer className="phaseOneBoundary"><b>一期能力边界</b><p>当前路线以“可追溯、可重放、可校核”为交付标准。它不宣称已形成实时装置闭环、核安全结论或完整整厂数字孪生；AI 只生成受约束的分析与候选建议，控制和发布仍经过独立验证与人工授权。</p><a href="/roadmap">打开 EXL‑50U / EHL‑2 完整两期路线 →</a></footer>
-    </section>
+      <footer className="phaseOneBoundary"><b>{isEnglish ? 'PHASE I CAPABILITY BOUNDARY' : '一期能力边界'}</b><p>{isEnglish ? 'The delivery standard is traceable, replayable and independently auditable. This roadmap does not claim a real-time device closed loop, a nuclear-safety conclusion or a complete whole-plant twin. AI produces only constrained analysis and candidate recommendations; control actions and released results still require independent verification and human authorization.' : '当前路线以“可追溯、可重放、可校核”为交付标准。它不宣称已形成实时装置闭环、核安全结论或完整整厂数字孪生；AI 只生成受约束的分析与候选建议，控制和发布仍经过独立验证与人工授权。'}</p><a href="/roadmap">{isEnglish ? 'Open the complete EXL-50U / EHL-2 two-phase roadmap →' : '打开 EXL‑50U / EHL‑2 完整两期路线 →'}</a></footer>
+    </section></LocalizedChartRegion>
   );
 }

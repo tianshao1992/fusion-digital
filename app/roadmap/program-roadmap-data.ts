@@ -4,11 +4,11 @@ export type PhaseId = 'phase-1' | 'phase-2';
 
 export type ProgramPillarId = 'physics' | 'engineering' | 'control' | 'diagnostics' | 'data';
 
-export type WorkPackageCommitment = '关键路径' | '条件式交付' | '拓展研究';
+export type WorkPackageCommitment = '关键路径' | '条件式交付' | '拓展研究' | 'Critical path' | 'Conditional delivery' | 'Exploratory research';
 
 export type ProgramPillarRouteStep = {
   id: string;
-  status: '现有基线' | '关键路径' | '条件式交付' | '拓展研究';
+  status: '现有基线' | '关键路径' | '条件式交付' | '拓展研究' | 'Validated baseline' | 'Critical path' | 'Conditional delivery' | 'Exploratory research';
   phases: readonly PhaseId[];
   title: string;
   selection: string;
@@ -357,3 +357,235 @@ export const roadmapSources = [
   { label: 'EHL‑2 MHD / JOREK 预测研究', url: 'https://doi.org/10.1088/1741-4326/ae6790' },
   { label: 'EHL‑2 divertor configuration 研究', url: 'https://doi.org/10.1088/2058-6272/adadb8' },
 ] as const;
+
+export type ProgramRoadmapLocale = 'zh-CN' | 'en';
+
+type EnglishPillarText = Pick<ProgramPillar, 'title' | 'mission' | 'physicsQuestion' | 'phase1' | 'phase2' | 'inputs' | 'outputs' | 'verification' | 'boundary'> & {
+  route: Record<string, Pick<ProgramPillarRouteStep, 'title' | 'selection' | 'boundary' | 'status'>>;
+};
+
+const englishPillarText: Record<ProgramPillarId, EnglishPillarText> = {
+  physics: {
+    title: 'Configuration and Plasma Physics',
+    mission: 'Translate an experimental objective into a physically reachable, controllable and diagnosable discharge scenario, with an explicit domain of applicability and uncertainty statement.',
+    physicsQuestion: 'For the approved machine, power-supply and gas configuration, do the vacuum field, breakdown, current ramp-up, equilibrium boundary and stability margins satisfy the experimental objective?',
+    phase1: 'EXL‑50U: close the prediction–experiment–residual loop through free-boundary scenario rehearsal, coil-waveform synthesis, synthetic magnetics and independent EFIT / PTEFIT as-shot reconstruction.',
+    phase2: 'EHL‑2: progress from vacuum-field and eddy-current verification through breakdown and burn-through with the commissioned pre-ionisation source, then to post-formation free-boundary control; introduce MHD and heating only as question-specific offline evidence.',
+    inputs: ['As-built machine description, PF / CS circuits and vacuum-vessel circuits', 'Target Iₚ, plasma boundary / X-point and pulse schedule', 'Gas, vacuum, pre-ionisation source and diagnostic geometry', 'Approved equilibria, profiles and material / wall boundary conditions'],
+    outputs: ['Coil-current / voltage waveforms and reachable operating domain', 'ψ, LCFS, X-point, Iₚ / R / Z and quantified error budget', 'Synthetic magnetics and state-estimation inputs', 'Controlled equilibrium and profile snapshots for MHD / heating analysis'],
+    verification: ['Residuals for flux loops, magnetic probes and other admitted constraints; LCFS / X-point differences between pre-shot prediction and as-shot reconstruction; boundary cross-validation only when an independent diagnostic is available', 'Coil–vacuum-vessel circuit response checked against measurements', 'Cross-code benchmarks, parameter scans and uncertainty coverage', 'Separate statements of pre-formation / post-formation and linear / nonlinear applicability for every model'],
+    boundary: 'RZIP is a rigid-plasma control model, not an MHD-stability model. A static equilibrium does not predict disruption onset. GENRAY+CQL3D is restricted to wave absorption and current drive after plasma formation.',
+    route: {
+      'PHY-1': { title: 'Machine electromagnetic baseline', selection: 'Freeze the Machine Description, PF / CS circuits and vacuum-vessel eddy-current model; verify the vacuum field, null field and coil response first.', boundary: 'Scenario optimisation cannot start until geometry, circuit orientation, coordinates and power-supply limits are frozen.', status: 'Critical path' },
+      'PHY-2': { title: 'Equilibrium and configuration closure', selection: 'Use a validated free-boundary workflow for pre-shot configuration and coil-waveform rehearsal, and an independently frozen EFIT / PTEFIT branch for the as-shot inverse problem. Close the two only through common COCOS conventions, time bases, coil definitions, synthetic magnetic signals and residual comparison.', boundary: 'Pre-shot prediction, inverse reconstruction and experimental observation must remain distinct; visual similarity is not a residual test.', status: 'Critical path' },
+      'PHY-3': { title: 'First-plasma formation chain', selection: 'Vacuum field / eddy currents → commissioned pre-ionisation source → Townsend avalanche and burn-through → post-formation free-boundary control and RZIP / ROM.', boundary: 'Electron-cyclotron assistance enters the first-shot critical path only if it is part of the actual commissioning configuration.', status: 'Critical path' },
+      'PHY-4': { title: 'MHD, heating and transport', selection: 'Approved equilibrium / profiles → question-specific linear response; add selected nonlinear cases only where a local benchmark already exists. Apply GENRAY+CQL3D after formation, while NBI / high-power studies remain offline envelopes.', boundary: 'Offline high-fidelity results must not be presented as real-time predictions, and a complete nonlinear chain will not be developed from zero within six months.', status: 'Conditional delivery' },
+    },
+  },
+  engineering: {
+    title: 'Electromagnetic, Thermal and Structural Engineering',
+    mission: 'Convert normal-discharge histories and approved off-normal event envelopes into conservatively transferred, convergence-qualified component loads and responses.',
+    physicsQuestion: 'For the prescribed current, magnetic-field and energy-deposition histories, do component forces, moments, temperatures, stresses and engineering margins remain within the approved envelope?',
+    phase1: 'EXL‑50U: evaluate normal-pulse electromagnetic loads. In the off-normal electromagnetic branch, map prescribed CQ / VDE / halo / eddy-current histories into structural dynamics; in the thermal branch, map prescribed TQ / surface-energy deposition into temperature and thermal stress. Review combined loads only after geometry and event time bases are aligned.',
+    phase2: 'EHL‑2: establish a low-energy first-plasma engineering readiness check from the as-built geometry, power-supply limits and commissioning envelope, while preserving interfaces for later high-power offline design studies.',
+    inputs: ['Versioned CAD / component identifiers, materials and boundary conditions', 'Coil, plasma and vacuum-vessel current / magnetic-field histories', 'Prescribed CQ, VDE, halo-current, TQ and surface-energy-deposition envelopes', 'Cooling, support, contact and constraint definitions'],
+    outputs: ['Component-resolved Lorentz forces, moments and eddy currents', 'Transient temperature, heat flux and energy balance', 'Displacement, stress, strain and engineering margin', 'Mesh fields and review reports traceable to the 3-D workbench'],
+    verification: ['Force / moment conservation and conservative energy transfer', 'Mesh, time-step and load-mapping sensitivity', 'Cross-checks against analytical solutions, benchmarks or approved engineering calculations', 'Explicit uncertainty treatment for materials, contacts and off-normal envelopes'],
+    boundary: 'Phase I uses auditable one-way coupling and makes no claim of real-time fully coupled simulation. Off-normal loads are prescribed approved envelopes; they neither predict disruption onset nor constitute a safety certification.',
+    route: {
+      'ENG-1': { title: 'Geometry and mesh backbone', selection: 'As-built CAD → stable component identifiers → versioned analysis geometry / mesh; loads, sensors and results return to the same coordinate system and component identity.', boundary: 'A display mesh cannot replace engineering analysis geometry; every geometry change triggers an impact assessment.', status: 'Critical path' },
+      'ENG-2': { title: 'Electromagnetic loading', selection: 'Use axisymmetric circuit / eddy-current models for rapid screening and a validated three-dimensional magneto-quasistatic finite-element reference; model normal pulses separately from CQ / VDE / halo events.', boundary: 'Freeze the specific commercial or local solver at G0 against licence, owner and benchmark criteria while keeping the interface replaceable.', status: 'Critical path' },
+      'ENG-3A': { title: 'Off-normal transient heat transfer', selection: 'In Phase I, apply prescribed TQ / surface-energy deposition, steady losses and cooling boundaries to transient thermal analysis; include runaway-electron loading only when explicitly required.', boundary: 'Thermal and electromagnetic loads are parallel sources; thermal loading is not inferred directly from a static equilibrium.', status: 'Critical path' },
+      'ENG-3B': { title: 'First-plasma low-energy temperature check', selection: 'Use the commissioning current / power history to screen Joule losses, low-energy temperature rise and cooling boundaries for coils, power supplies, the vacuum vessel and critical components.', boundary: 'This is a rapid first-plasma readiness check, not a high-power PFC or disruption thermal-load assessment.', status: 'Critical path' },
+      'ENG-3C': { title: 'High-power surface heat flux', selection: 'Perform detailed high-power PFC, TQ / runaway-electron surface-flux and transient thermal finite-element studies only after realistic power sources, deposition models and material boundaries exist.', boundary: 'This is outside the mandatory six-month first-plasma readiness gate.', status: 'Exploratory research' },
+      'ENG-4': { title: 'Structural response and margin', selection: 'Conservative load mapping → structural / thermal-stress finite elements → critical-component margins, while retaining interfaces for comparison with measured strain and temperature.', boundary: 'Only independently reviewed, converged results with assessed material uncertainty may enter a programme gate.', status: 'Critical path' },
+    },
+  },
+  control: {
+    title: 'Integrated Control and Virtual Commissioning',
+    mission: 'Use fidelity-tiered plants, single-source control code and fault injection to demonstrate operation within actuator, real-time and independent-protection boundaries.',
+    physicsQuestion: 'Can the controller track stably and enter the prescribed degraded or terminated state under coil / power-supply dynamics, plasma response, sensor error and network latency?',
+    phase1: 'EXL‑50U: execute PCS replay, a calibrated RZIP / ROM plant and MIL→SIL; proceed to HIL only when the relevant physical control hardware exists. Cover Iₚ / R / Z / configuration control and the approved fault matrix.',
+    phase2: 'EHL‑2: treat the real-time plant emulator and SIL as critical-path deliverables. Deliver controller-HIL and power / plant-HIL separately and conditionally, followed by machine-disconnected dry-runs, operator rehearsal and a control-network-isolated read-only shadow.',
+    inputs: ['Pulse schedule, target Iₚ / R / Z and coil constraints', 'Power-supply, circuit, eddy-current and RZIP / ROM plant models', 'Sensor response, noise, calibration, packet loss and latency', 'Control code, configuration, cycle time and independent-protection interfaces'],
+    outputs: ['Auditable command waveforms and state transitions', 'Tracking error, stability margin and actuator utilisation', 'WCET / jitter, fault matrix and safe-termination evidence', 'SIL / HIL / dry-run / shadow execution packages'],
+    verification: ['Single-source control code and configuration across replay / SIL / HIL', 'Fixed-step real-time simulation with deadline / jitter statistics', 'Saturation, anti-windup, bias, dropout and fault-escalation tests', 'Independent interlocks do not depend on the web interface, cloud services, knowledge graph or LLM'],
+    boundary: 'The browser, knowledge graph and LLM never have a machine-control write path. HIL is claimed only after the corresponding controller, I/O, power and diagnostic-emulation hardware is available.',
+    route: {
+      'CTL-1': { title: 'PCS replay and scenario contract', selection: 'Freeze the pulse schedule, control code / configuration and signal contract. Feed historical shots and synthetic signals through the same replay interface; admit an existing capability only with an executable internal baseline, I/O contract, replay record and named owner.', boundary: 'Approved configuration records remain read-only and are never overwritten by the platform; incomplete baseline evidence cannot be described as an available capability.', status: 'Critical path' },
+      'CTL-2': { title: 'Fidelity-tiered plant', selection: 'Compose power supplies / circuits / vacuum-vessel eddy currents, a rigid-plasma RZIP / state-space / ROM response, and sensor / actuator dynamics.', boundary: 'A reduced-order plant supports real-time testing only inside its calibrated applicability domain and does not replace high-fidelity physics.', status: 'Critical path' },
+      'CTL-3': { title: 'MIL→SIL and fault matrix', selection: 'Move the same control algorithm from an offline model to production-code replay and fixed-step real-time simulation; inject saturation, bias, dropout, delay and abnormal termination.', boundary: 'Reaching a limit may be a test condition; acceptance concerns correct limiting, anti-windup and transition to a safe state.', status: 'Critical path' },
+      'CTL-4': { title: 'Conditional HIL and read-only shadow', selection: 'Perform controller-HIL in Phase I when hardware is available. In Phase II, assess power-HIL and plant-HIL separately, complete a machine-disconnected dry-run, then permit only an online read-only shadow evaluation.', boundary: 'Any future command path to the machine requires a separately engineered and approved PCS authorisation route.', status: 'Conditional delivery' },
+    },
+  },
+  diagnostics: {
+    title: 'Diagnostics, Sensing and State Reconstruction',
+    mission: 'Carry instrument response, calibration, timing and data-quality state through the model chain so observations validate predictions instead of merely decorating a display.',
+    physicsQuestion: 'Which quantities can the available diagnostics observe within specified temporal, spatial and uncertainty bounds, and how does the system degrade explicitly under missing data or drift?',
+    phase1: 'EXL‑50U: close the raw→calibrated→reconstructed chain for selected magnetics, coil / power signals and related diagnostics, producing EFIT / PTEFIT residuals and a curated IMAS subset.',
+    phase2: 'EHL‑2: classify diagnostics as control-critical, monitoring-only or later performance diagnostics; first establish synthetic and real-time quality chains for magnetics, visible imaging and whichever density diagnostic is actually available.',
+    inputs: ['Raw waveforms, sampling clocks and trigger events', 'Sensor geometry, instrument response and calibration version', 'Synthetic-diagnostic truth plus noise / saturation / missing-data models', 'Diagnostic availability, latency and control-cycle budgets'],
+    outputs: ['Calibrated signals with units, quality and uncertainty', 'Reconstructed flux, LCFS, X-point and Iₚ / R / Z', 'Control-critical state variables with explicit degradation flags', 'Prediction–observation–reconstruction residuals and diagnostic-health reports'],
+    verification: ['Calibration ledger, clock alignment and geometry-survey evidence', 'Synthetic→reconstruction closure and truth error', 'Held-out-shot replay, cross-diagnostic consistency and uncertainty coverage', 'Per-signal acceptance of latency / jitter / availability / fallback'],
+    boundary: 'Synthetic signals require a distinct namespace and retained truth lineage. A monitoring diagnostic does not become control-real-time merely because a web page refreshes quickly.',
+    route: {
+      'DIA-1': { title: 'Source of truth and calibration', selection: 'MDSplus / authoritative acquisition → immutable raw layer → versioned calibration, time base and geometry, with quality and missing-data state on every frame.', boundary: 'Calibrated products never overwrite raw data; a calibration update creates a new version.', status: 'Critical path' },
+      'DIA-2': { title: 'Reconstruction and residuals', selection: 'Magnetic diagnostics / coil signals → approved EFIT / PTEFIT → equilibrium, boundary and residuals, under the same coordinate and time-base contract used for pre-shot prediction.', boundary: 'A diagnostic reconstruction is a model-conditioned estimate, not a direct measurement.', status: 'Critical path' },
+      'DIA-3': { title: 'Synthetic diagnostics', selection: 'Phase I closes the magnetic geometry / response / noise loop. Phase II adds drift, saturation, latency and the first-shot instrument chain, converting physics truth into signals for PCS / inference-chain testing.', boundary: 'Synthetic data never enters the experimental namespace and cannot replace physical calibration.', status: 'Critical path' },
+      'DIA-4': { title: 'Minimum first-plasma real-time set', selection: 'Prioritise magnetics, coil / power signals, vacuum, wide-angle visible imaging and whichever density diagnostic is genuinely ready; freeze each signal as control-critical or monitoring-only.', boundary: 'A diagnostic is not promoted to a control input until latency, availability and fallback are measured.', status: 'Critical path' },
+    },
+  },
+  data: {
+    title: 'Data, Model and Evidence Infrastructure',
+    mission: 'Connect the four specialist chains through common identity, semantics, versioning and run manifests so every conclusion is replayable, comparable and auditable.',
+    physicsQuestion: 'Can one shot / run identity, machine configuration, coordinate convention, time base and model version persist through prediction, control testing, experiment, reconstruction and engineering analysis?',
+    phase1: 'EXL‑50U: freeze shot / run / geometry / calibration / model identity and establish MDSplus as the source of record, IMAS as the physics-semantic exchange layer, engineering asset contracts and immutable run manifests.',
+    phase2: 'EHL‑2: maintain as-designed / as-built / as-tested configuration differences and support virtual campaigns, real-time data quality, model applicability and read-only shadow-twin evidence.',
+    inputs: ['Raw shot data, engineering time series and approved configurations', 'IMAS IDSs, engineering assets and interface dictionaries', 'Model code, containers, configuration, meshes and solver logs', 'Publications, model cards, V&V records and gate approvals'],
+    outputs: ['Common shot / run / asset / geometry / time-base identifiers', 'Replayable run manifests and object checksums', 'Cross-model data contracts, version migration and lineage', 'Knowledge-graph evidence relationships and read-only APIs / visualisation'],
+    verification: ['Automated gates for schema, units, coordinates and checksums', 'Same-input / same-version replay plus migration regression tests', 'Input–run–output–approval provenance coverage', 'Access, audit, retention and controlled-compute-domain boundary checks'],
+    boundary: 'IMAS is a fusion-physics semantic exchange layer, not a replacement for raw archives, and unsuitable engineering signals are not forced into IDSs. The knowledge graph stores relationships and evidence indexes, not bulk field data.',
+    route: {
+      'DAT-1': { title: 'Identity and source-of-truth layer', selection: 'Keep MDSplus / authoritative archives immutable and unify shot, run, event, machine / geometry, coordinate, time and calibration identifiers.', boundary: 'No derived result may overwrite L0 raw evidence.', status: 'Critical path' },
+      'DAT-2': { title: 'Semantics and storage layer', selection: 'Use IMAS DD + IMAS‑Python for fusion semantics, separate contracts for engineering assets / time series and content-addressed storage for large objects.', boundary: 'Freeze both the DD and machine-mapping versions, with explicit migration tests.', status: 'Critical path' },
+      'DAT-3': { title: 'Model execution and V&V', selection: 'Containerised adapters + HPC scheduler + immutable run manifest + model card / applicability domain / validation state.', boundary: 'Solvers remain in the controlled compute domain; the browser reads only versioned results.', status: 'Critical path' },
+      'DAT-4': { title: 'Knowledge and decision interface', selection: 'Phase I delivers a shot / run workbench and evidence comparison; Phase II adds virtual campaign / shadow evidence. The knowledge graph manages entities / relations / evidence, while ECharts / 3-D views handle comparison and traceability.', boundary: 'Front-end coordination is not scientific model coupling, and an LLM does not generate physics or safety acceptance criteria.', status: 'Critical path' },
+    },
+  },
+};
+
+const englishSupportPayloads: Record<string, string> = {
+  'mission->physics': 'Machine and scenario constraints',
+  'mission->engineering': 'Machine and scenario constraints',
+  'mission->control': 'Machine and scenario constraints',
+  'mission->diagnostics': 'Machine and scenario constraints',
+  'mission->data': 'Machine and scenario constraints',
+  'data->physics': 'Common identity, coordinates, time base, versions and run manifests',
+  'data->engineering': 'Common identity, coordinates, time base, versions and run manifests',
+  'data->control': 'Common identity, coordinates, time base, versions and run manifests',
+  'data->diagnostics': 'Common identity, coordinates, time base, versions and run manifests',
+  'physics->control': 'Equilibria, response models and synthetic magnetics',
+  'physics->engineering': 'Geometry, current / field histories and prescribed event histories',
+  'diagnostics->physics': 'Calibrated observations, reconstruction constraints and residuals',
+  'diagnostics->control': 'State, quality, staleness and latency',
+  'physics->integration': 'Equilibria, scenarios, responses and applicability',
+  'engineering->integration': 'Loads, responses, convergence and margins',
+  'control->integration': 'Timing, real-time budgets and fault matrix',
+  'diagnostics->integration': 'Observations, quality, reconstruction and residuals',
+  'data->integration': 'Identity, versions, run manifests and approval evidence',
+  'integration->phase-1-goal': 'Evidence gates G0–G4',
+  'integration->phase-2-goal': 'Evidence gates G5–G9',
+  'phase-1-goal->long-term-goal': 'Closed-loop reuse and EXL‑50U data calibration',
+  'phase-2-goal->long-term-goal': 'Virtual commissioning and EHL‑2 experimental calibration',
+};
+
+type EnglishWorkPackageText = Pick<RoadmapWorkPackage, 'lane' | 'title' | 'owner' | 'deliverable' | 'evidence' | 'commitment'>;
+type EnglishGateText = Pick<RoadmapGate, 'title' | 'go'>;
+type EnglishPhaseText = Pick<RoadmapPhase, 'label' | 'duration' | 'axisLabel' | 'thesis' | 'promise' | 'exclusions'> & {
+  workPackages: Record<string, EnglishWorkPackageText>;
+  gates: Record<string, EnglishGateText>;
+};
+
+const englishPhaseText: Record<PhaseId, EnglishPhaseText> = {
+  'phase-1': {
+    label: 'PHASE I', duration: '12 weeks', axisLabel: 'PROJECT WEEK',
+    thesis: 'A reproducible offline / near-real-time minimum closed-loop demonstrator for one scenario family and one evidence chain.',
+    promise: 'Demonstrate that one experiment can be traced end to end from planning, physics rehearsal, control testing and engineering load review through execution, diagnostic post-analysis and model revision.',
+    exclusions: ['No claim of an all-operating-point, all-diagnostic or real-time fully coupled digital twin', 'No write path from the website, knowledge graph or LLM to PCS / interlocks', 'No inference of disruption onset or safety-certified loads directly from a static equilibrium'],
+    workPackages: {
+      'P1-0': { lane: 'Programme and V&V', title: 'Scenario family, coordinates, time base and acceptance baseline', owner: 'Programme integration / domain leads', deliverable: 'Machine Description, scenario register, model cards, interface-control documents and V&V matrix', evidence: 'Named owner for every critical input; signed freeze of coordinates, units, timing, versions and authorisation boundaries', commitment: 'Critical path' },
+      'P1-1': { lane: 'Data and diagnostics', title: 'Raw shot data, engineering sensors and curated IMAS subset', owner: 'Data / diagnostics', deliverable: 'Four-layer raw–calibrated–derived–reconstructed chain, curated IDS mapping and quality flags', evidence: 'Complete metadata, calibration, quality, lineage and checksums for critical channels; no silent unit conversion', commitment: 'Critical path' },
+      'P1-2': { lane: 'Configuration physics', title: 'Pre-shot equilibrium, coil waveforms and as-shot reconstruction', owner: 'Physics / diagnostics', deliverable: 'Validated free-boundary workflow for pre-shot configuration / coil-waveform rehearsal; independent EFIT / PTEFIT branch for as-shot inverse reconstruction, closed by synthetic magnetics and residual reporting', evidence: 'Automated held-out-shot replay; magnetic residuals and prediction–reconstruction LCFS / X-point differences reviewed against approved tolerances', commitment: 'Critical path' },
+      'P1-3': { lane: 'Control verification', title: 'PCS replay, RZIP / ROM and MIL→SIL (conditional HIL)', owner: 'Control', deliverable: 'Iₚ / R / Z and configuration-control test bench; saturation, bias, packet-loss, latency and abnormal-termination cases', evidence: 'Approved test matrix passed; limiting, anti-windup, fault escalation and safe termination conform; claim HIL only when hardware is present', commitment: 'Critical path' },
+      'P1-4': { lane: 'Engineering loads', title: 'Normal pulse and prescribed off-normal envelope: parallel EM / thermal branches and component response', owner: 'Engineering', deliverable: 'Normal-pulse electromagnetic forces; CQ / VDE / halo / eddy-current histories mapped to structural dynamics; TQ / surface-energy deposition mapped to temperature and thermal stress, with runaway electrons only when explicitly in scope; combined-load review after common geometry and event time base', evidence: 'Force / moment and energy transfer are conservative; mesh and time-step sensitivity meets thresholds frozen by the engineering owner; no fully coupled claim or disruption-onset interpretation', commitment: 'Critical path' },
+      'P1-5': { lane: 'Workbench', title: 'Model orchestration, 3-D fields and evidence comparison', owner: 'Platform / HMI', deliverable: 'Configuration, control, engineering and diagnostics aligned on one shot / run timeline with traceable result packages', evidence: 'Read-only browser; every result states source, fidelity, applicability, uncertainty and version', commitment: 'Critical path' },
+      'P1-6': { lane: 'Closed-loop acceptance', title: 'Historical replay, held-out blind test and model revision', owner: 'Physics / control / engineering / diagnostics / operations', deliverable: 'Representative historical-shot set, at least one held-out blind set, automated difference report and candidate new model version', evidence: 'Complete end-to-end provenance; joint sign-off by physics, control, engineering, diagnostics and operations; discrepancies create revisions without overwriting source evidence', commitment: 'Critical path' },
+    },
+    gates: {
+      G0: { title: 'Scope and contract freeze', go: 'Machine, scenarios, data, models, coordinates, time base, owners and safety boundaries are explicit' },
+      G1: { title: 'As-shot baseline', go: 'Raw data, calibration, reconstruction and reproducible replay are complete under one shot identity' },
+      G2: { title: 'Virtual control', go: 'Approved MIL / SIL test matrix passed; HIL is accepted only after connection to real hardware' },
+      G3: { title: 'Engineering load chain', go: 'Conservation, mapping and numerical-sensitivity evidence is complete for normal and prescribed off-normal envelopes' },
+      G4: { title: 'Blind-test release', go: 'Held-out data has not been contaminated by manual tuning; physics, control, engineering, diagnostics and operations review jointly' },
+    },
+  },
+  'phase-2': {
+    label: 'PHASE II', duration: '6 months', axisLabel: 'PROJECT MONTH',
+    thesis: 'Virtual first-plasma commissioning plus a control-network-isolated read-only shadow twin.',
+    promise: 'After the EHL‑2 as-built and commissioning configuration is controlled, complete low-energy first-plasma virtual experiments, integrated control / diagnostic testing, operator rehearsal and online read-only shadow operation.',
+    exclusions: ['First-plasma acceptance is not based on the 3 MA, 17 MW NBI, 6 MW ECRH or high-Tᵢ design endpoints', 'No claim of real-time three-dimensional nonlinear MHD; high-fidelity calculations enter only selected offline evidence cases', 'The shadow twin never replaces independent protection, interlocks or the operational authorisation chain', 'The six-month plan assumes named code owners, executable benchmarked chains, an EHL‑2 Machine Description / profile assumptions and compute capacity at M1; otherwise nonlinear MHD and high-power heating remain exploratory'],
+    workPackages: {
+      'P2-0': { lane: 'Machine and engineering baseline', title: 'Actual configuration, engineering checks and first-plasma mission freeze', owner: 'Programme integration / engineering / commissioning', deliverable: 'Machine Description; as-built coil / power-supply / vacuum-vessel and passive-structure circuit–eddy-current baseline; diagnostics / actuators / interlocks and pulse schedule; rapid force / temperature-rise check for the commissioning current envelope', evidence: 'Commissioning configuration separated from design endpoints; plasma-free dry-run and engineering sensors verify coil–vessel response; every change triggers revalidation', commitment: 'Critical path' },
+      'P2-1': { lane: 'Start-up and control', title: 'Vacuum field—breakdown / burn-through—formed-plasma control', owner: 'Start-up physics / control', deliverable: 'Vacuum-field / null, coil-circuit and vessel eddy-current models; breakdown / burn-through model bound to the commissioned pre-ionisation source; free-boundary, RZIP / ROM, synthetic sensors and PCS replay only after formation', evidence: 'Within the low-energy commissioning envelope: Iₚ establishment, R / Z control, sensor / actuator faults and safe termination; SIL is mandatory, HIL depends on hardware availability', commitment: 'Critical path' },
+      'P2-2': { lane: 'MHD', title: 'Question-led hierarchy: equilibrium / profiles—linear response—selected nonlinear cases', owner: 'MHD physics', deliverable: 'Approved equilibrium / profile baseline; CHEASE-class preprocessing and MARS‑F-class targeted linear response; selected JOREK / MHD@Dalian offline cases only where benchmarks already exist', evidence: 'Independent acceptance for each question, code and applicability domain; RZIP remains a rigid-plasma control model and nonlinear results are not presented as real-time predictions', commitment: 'Conditional delivery' },
+      'P2-3': { lane: 'Heating and current drive', title: 'Conditional post-formation EC / NBI assessment', owner: 'Heating / transport', deliverable: 'After plasma formation only, GENRAY+CQL3D assessment of EC absorption / current drive; NUBEAM+ASTRA as a high-power offline candidate. Pre-ionisation, breakdown and burn-through remain on the P2-1 critical path', evidence: 'Not part of G6 first-plasma start-up acceptance; EC is not a default assumption, and NBI / high-power scenarios provide offline design evidence only', commitment: 'Conditional delivery' },
+      'P2-4': { lane: 'Real-time diagnostics', title: 'Control-critical / monitoring classification and state estimation', owner: 'Diagnostics / data', deliverable: 'Minimum first-plasma set comprising magnetics, visible imaging and whichever density diagnostic is available; per-signal sampling, latency, synchronisation, quality and degradation budgets plus synthetic diagnostics', evidence: 'Explicit control-critical versus monitoring-only classification; missing data, drift, calibration and degradation are observable; raw data remains immutable', commitment: 'Critical path' },
+      'P2-5': { lane: 'Virtual commissioning', title: 'Real-time plant emulator, SIL and conditional HIL', owner: 'Control / engineering / operations', deliverable: 'PCS SIL, fault injection, sequence verification and operator rehearsal; controller-HIL and power / plant-HIL assessed separately and delivered only with corresponding hardware and I/O', evidence: 'Real-time system isolated from the display layer; independent protection chain; absent hardware does not block SIL / real-time-simulation baseline acceptance', commitment: 'Critical path' },
+      'P2-6': { lane: 'First-plasma campaign', title: 'Virtual first-plasma campaign and readiness review', owner: 'Joint commissioning team', deliverable: 'Nominal plus selected-fault campaigns, read-only shadow, operating procedure and evidence pack', evidence: 'Configuration, tests, known deviations, fallbacks and sign-offs complete; formal organisations retain Go / No-Go authority', commitment: 'Critical path' },
+    },
+    gates: {
+      G5: { title: 'Mobilisation and entry criteria', go: 'Model owners, executable baseline, EHL‑2 Machine Description / profile assumptions, compute capacity, first-plasma objective and configuration-difference register are complete' },
+      G6: { title: 'Configuration and model baseline', go: 'Actual configuration frozen; vacuum field, breakdown / burn-through, Iₚ / R / Z scenario and minimum diagnostics, actuators and protection interfaces are traceable' },
+      G7: { title: 'Virtual commissioning', go: 'SIL / real-time plant emulator, diagnostic latency and fault matrix passed; HIL accepted only for available hardware and shadow operation remains read-only' },
+      G8: { title: 'Integrated rehearsal', go: 'Nominal and selected-fault campaigns, operator rehearsal and fallback procedures completed' },
+      G9: { title: 'Readiness review', go: 'Open items, applicability domains and uncertainties are transparent; evidence is ready as an input to formal Go / No-Go review' },
+    },
+  },
+};
+
+const englishModuleRoles: Record<KnowledgeModuleId, { phase1: string; phase2: string }> = {
+  physics: { phase1: 'Equilibrium, configuration and prescribed off-normal event packages', phase2: 'Start-up, MHD, heating and transport' },
+  engineering: { phase1: 'Electromagnetic / thermal loads and structural response', phase2: 'As-built configuration, power supplies and commissioning envelope' },
+  control: { phase1: 'PCS replay and MIL / SIL; controller-HIL only when hardware is available', phase2: 'Real-time plant emulator and virtual first-plasma commissioning; conditional HIL' },
+  diagnostics: { phase1: 'Calibration, EFIT, quality and residuals', phase2: 'Minimum real-time and synthetic diagnostics' },
+  energy: { phase1: 'Reserved data and interface contracts', phase2: 'Power deposition and energy balance' },
+  auxiliary: { phase1: 'Engineering-sensor and state contracts', phase2: 'EC / NBI, power, vacuum and cooling' },
+  hmi: { phase1: 'Cross-domain shot / run workbench', phase2: 'Operator rehearsal and readiness dashboard' },
+  data: { phase1: 'IMAS, time series, objects and versions', phase2: 'As-built / as-tested configuration backbone' },
+  integration: { phase1: 'Interfaces, orchestration, V&V and evidence gates', phase2: 'Virtual campaign and read-only shadow twin' },
+  ai: { phase1: 'Evidence assistant and validated surrogate models', phase2: 'ROM / anomaly candidates with no direct machine control' },
+};
+
+export function localizeProgramPillars(locale: ProgramRoadmapLocale): ProgramPillar[] {
+  if (locale !== 'en') return programPillars;
+  return programPillars.map((pillar) => {
+    const text = englishPillarText[pillar.id];
+    return {
+      ...pillar,
+      ...text,
+      route: pillar.route.map((step) => ({ ...step, ...text.route[step.id] })),
+    };
+  });
+}
+
+export function localizeProgramSupportLinks(locale: ProgramRoadmapLocale): ProgramSupportLink[] {
+  if (locale !== 'en') return programSupportLinks;
+  return programSupportLinks.map((link) => ({
+    ...link,
+    payload: englishSupportPayloads[`${link.source}->${link.target}`] ?? link.payload,
+  }));
+}
+
+export function localizeRoadmapPhases(locale: ProgramRoadmapLocale): RoadmapPhase[] {
+  if (locale !== 'en') return roadmapPhases;
+  return roadmapPhases.map((phase) => {
+    const text = englishPhaseText[phase.id];
+    return {
+      ...phase,
+      ...text,
+      workPackages: phase.workPackages.map((item) => ({ ...item, ...text.workPackages[item.id] })),
+      gates: phase.gates.map((gate) => ({ ...gate, ...text.gates[gate.id] })),
+    };
+  });
+}
+
+export function localizeKnowledgeModuleRoutes(locale: ProgramRoadmapLocale) {
+  if (locale !== 'en') return knowledgeModuleRoutes;
+  return knowledgeModules.map((module) => ({
+    id: module.id,
+    no: module.no,
+    title: module.en,
+    route: module.href,
+    ...englishModuleRoles[module.id],
+  }));
+}

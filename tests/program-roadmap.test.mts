@@ -2,14 +2,20 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import { knowledgeModules } from '../app/data/knowledge-modules.ts';
-import { programPillarRouteMaps } from '../app/roadmap/program-pillar-route-maps.ts';
+import { localizeProgramPillarRouteMaps, programPillarRouteMaps } from '../app/roadmap/program-pillar-route-maps.ts';
 import {
   knowledgeModuleRoutes,
+  localizeKnowledgeModuleRoutes,
+  localizeProgramPillars,
+  localizeProgramSupportLinks,
+  localizeRoadmapPhases,
   programPillars,
   programSupportLinks,
   roadmapPhases,
   technologyDecisions,
 } from '../app/roadmap/program-roadmap-data.ts';
+
+const han = /[\u3400-\u9fff\uf900-\ufaff]/;
 
 test('two-phase roadmap is bounded, complete and linked to all ten modules', () => {
   assert.equal(roadmapPhases.length, 2);
@@ -325,6 +331,60 @@ test('phase scope preserves scientific and machine-control boundaries', () => {
   assert.match(mhdDecision?.rationale ?? '', /候选，须经许可与本地 V&V 冻结/);
 });
 
+test('authored English roadmap projection preserves every professional layer without Han or generic placeholders', () => {
+  const pillars = localizeProgramPillars('en');
+  const phases = localizeRoadmapPhases('en');
+  const links = localizeProgramSupportLinks('en');
+  const modules = localizeKnowledgeModuleRoutes('en');
+  const routeMaps = localizeProgramPillarRouteMaps('en');
+  const englishProjection = JSON.stringify({ pillars, phases, links, modules, routeMaps });
+
+  assert.doesNotMatch(englishProjection, han);
+  assert.doesNotMatch(englishProjection, /Technical annotation|English record pending|translation pending/i);
+  assert.deepEqual(pillars.map((pillar) => pillar.id), ['physics', 'engineering', 'control', 'diagnostics', 'data']);
+  assert.equal(phases.length, 2);
+  assert.equal(modules.length, 10);
+  assert.equal(links.length, programSupportLinks.length);
+
+  for (const pillar of pillars) {
+    assert.ok(pillar.mission.length > 60);
+    assert.ok(pillar.physicsQuestion.length > 60);
+    assert.ok(pillar.inputs.length >= 4);
+    assert.ok(pillar.outputs.length >= 4);
+    assert.ok(pillar.verification.length >= 4);
+    assert.ok(pillar.boundary.length > 60);
+    assert.equal(pillar.route.length, programPillars.find((candidate) => candidate.id === pillar.id)?.route.length);
+    const map = routeMaps[pillar.id];
+    assert.equal(map.coverage.length, programPillarRouteMaps[pillar.id].coverage.length);
+    assert.equal(map.tools.length, programPillarRouteMaps[pillar.id].tools.length);
+    assert.equal(map.routes.length, programPillarRouteMaps[pillar.id].routes.length);
+    for (const tool of map.tools) {
+      assert.ok(tool.inputs.length > 0 && tool.outputs.length > 0);
+      assert.ok(tool.evidence.length > 24);
+      assert.ok(tool.boundary.length > 24);
+    }
+    for (const route of map.routes) {
+      assert.ok(route.deliveries.every((delivery) => delivery.outcome.length > 12));
+      assert.ok(route.boundary.length > 12);
+    }
+  }
+
+  const physics = JSON.stringify({ pillar: pillars[0], map: routeMaps.physics });
+  const engineering = JSON.stringify({ pillar: pillars[1], map: routeMaps.engineering });
+  const control = JSON.stringify({ pillar: pillars[2], map: routeMaps.control });
+  const diagnostics = JSON.stringify({ pillar: pillars[3], map: routeMaps.diagnostics });
+  const data = JSON.stringify({ pillar: pillars[4], map: routeMaps.data });
+  assert.match(physics, /RZIP is a rigid-plasma control model, not (?:an )?MHD/i);
+  assert.match(physics, /GENRAY\+CQL3D.*after plasma formation|after formation.*GENRAY\+CQL3D/i);
+  assert.match(engineering, /parallel sources/i);
+  assert.match(engineering, /prescribed event history is not a disruption prediction/i);
+  assert.match(control, /no PCS write permission|no machine-control write path/i);
+  assert.match(diagnostics, /Synthetic and experimental data use distinct namespaces/i);
+  assert.match(data, /never have a machine-control write path/i);
+  assert.match(JSON.stringify(phases[1]), /HIL depends on hardware availability/i);
+  assert.match(JSON.stringify(phases[1]), /read-only shadow/i);
+});
+
 test('roadmap preserves complete non-JavaScript and accessible responsive fallbacks', () => {
   const component = readFileSync(new URL('../app/roadmap/ProgramRoadmapCharts.tsx', import.meta.url), 'utf8');
   const css = readFileSync(new URL('../app/roadmap/roadmap.css', import.meta.url), 'utf8');
@@ -332,11 +392,14 @@ test('roadmap preserves complete non-JavaScript and accessible responsive fallba
   assert.match(component, /program-pillar-subroute-\$\{pillar\.id\}/);
   assert.match(component, /专业覆盖 → 工具链 → 技术子路线 → 阶段交付/);
   assert.match(component, /programPillarSubrouteFallback/);
-  assert.match(component, /<th>专业覆盖<\/th><th>候选工具链<\/th><th>技术子路线<\/th><th>一期 \/ 二期交付<\/th>/);
+  assert.match(component, /'Professional coverage'/);
+  assert.match(component, /'Candidate toolchain'/);
+  assert.match(component, /'Technical subroute'/);
+  assert.match(component, /'Phase I \/ II delivery'/);
   assert.match(component, /<noscript><style>/);
   assert.match(component, /\.scientificChartStatus\{display:none!important\}/);
   assert.match(component, /programNoScriptPillars/);
-  assert.match(component, /programPillarRouteMaps\[pillar\.id\]/);
+  assert.match(component, /routeMaps\[pillar\.id\]/);
   assert.match(component, /routeCoverageLabels\(routeMap, route\)/);
   assert.match(component, /routeTools\(routeMap, route\)/);
   assert.match(css, /noscript \.programNoScriptPillars\{display:grid/);

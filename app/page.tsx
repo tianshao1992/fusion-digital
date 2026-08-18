@@ -3,6 +3,7 @@ import FusionTwinSystemMap from './components/FusionTwinSystemMap';
 import PhaseOneRoadmap from './components/PhaseOneRoadmap';
 import SiteFooter from './components/SiteFooter';
 import SiteNav from './components/SiteNav';
+import StaticLocaleContent from './components/StaticLocaleContent';
 import MultiDeviceWorkspace from './digital-prototype/MultiDeviceWorkspace';
 import { parseDeviceCatalog } from './digital-prototype/deviceCatalog';
 import deviceCatalogJson from '../public/models/device-catalog.json';
@@ -40,7 +41,30 @@ const plantValues = [
   {id:'04', cn:'安全可证', en:'EVIDENCE-BASED SAFETY', copy:'以可信模型、实体试验和 V&V 共同形成可追溯的安全证据；数字孪生增强安全论证，但不替代实体验证。'},
 ];
 
-export default function Home() {
+const englishDomains = [
+  { id: '01', status: 'Open', title: 'Physics Simulation', en: 'PHYSICS', copy: 'A multi-fidelity physics map spanning equilibrium reconstruction, transport, MHD, plasma boundary physics, neutronics and whole-plant systems.', meta: '14 physics domains · 140+ codes and platforms' },
+  { id: '02', status: 'Open', title: 'Engineering Simulation', en: 'ENGINEERING', copy: 'Connect plasma loads to electromagnetic, structural, magnet, thermal-fluid, neutronics, tritium, safety and maintainability margins.', meta: '8 engineering domains · 55 tool groups' },
+  { id: '03', status: 'Open', title: 'Integrated Control', en: 'INTEGRATED CONTROL', copy: 'Link state estimation, plasma current and shape, profile, stability, exhaust and protection tasks to multi-actuator coordination and verifiable real-time infrastructure.', meta: 'Control tasks · device PCS · SIL/HIL · papers and code' },
+  { id: '04', status: 'Open', title: 'Diagnostics & Sensing', en: 'DIAGNOSTICS & SENSING', copy: 'Build trustworthy state estimates from sensors, geometry, calibration, acquisition quality, inversion, tomography, synthetic diagnostics and data assimilation.', meta: '12 diagnostic task groups · 97 studies · 18 device profiles' },
+  { id: '05', status: 'Planned', title: 'Energy Conversion', en: 'ENERGY CONVERSION', copy: 'Trace blanket heat extraction, primary and secondary loops, power cycles, plant auxiliaries and the grid from fusion heat to stable net electricity.', meta: 'Blanket heat extraction · power cycles · auxiliaries · grid' },
+  { id: '06', status: 'Planned', title: 'Auxiliary Systems', en: 'AUXILIARY SYSTEMS', copy: 'Model vacuum, cryogenics, heating and current drive, fuel and tritium processing, cooling and power systems, including interlocks and fault propagation.', meta: 'Vacuum · cryogenics · fuel · cooling · power supplies' },
+  { id: '07', status: 'Planned', title: 'Human–Machine Interaction', en: 'HUMAN–MACHINE INTERACTION', copy: 'Support operators, physicists and engineers with situation awareness, explainable alarms, scenario comparison and human-in-the-loop approval.', meta: 'Situation awareness · explainability · human in the loop' },
+  { id: '08', status: 'Planned', title: 'Data Foundation', en: 'DATA FOUNDATION', copy: 'Connect device assets, shot timelines, model ontologies, provenance and an evidence ledger for shot-level traceability and cross-team work.', meta: 'Master data · ontology · provenance · access control' },
+  { id: '09', status: 'Priority', title: 'Whole-Plant Integration', en: 'WHOLE-PLANT INTEGRATION', copy: 'Orchestrate specialist twins through requirements, system architecture, interface contracts, configuration baselines and VVUQ evidence.', meta: 'System architecture · co-simulation · configuration · VVUQ' },
+  { id: '10', status: 'Initial release', title: 'AI-Native Systems', en: 'AI-NATIVE', copy: 'Embed machine learning, deep learning, foundation models and agents into observation, prediction, planning, execution and continual learning.', meta: 'Surrogates · foundation models · agents · AI safety' },
+].map((domain) => {
+  const base = domains.find((candidate) => candidate.id === domain.id)!;
+  return { ...base, ...domain };
+});
+
+const englishPlantValues = [
+  { id: '01', title: 'Cost controlled', en: 'COST-CONTROLLED', copy: 'Identify cost drivers across design, construction, commissioning, operation, maintenance and decommissioning to reduce lifecycle cost, physical trial-and-error and unplanned downtime.' },
+  { id: '02', title: 'Efficient operation', en: 'EFFICIENT OPERATION', copy: 'Coordinate plasma, power-cycle, auxiliary-system and grid constraints to improve net electric output, controllable operating space and resource use.' },
+  { id: '03', title: 'Reliable and available', en: 'RELIABLE & AVAILABLE', copy: 'Use state estimation, life prediction and predictive maintenance to improve mission success, equipment reliability and plant availability.' },
+  { id: '04', title: 'Evidence-based safety', en: 'EVIDENCE-BASED SAFETY', copy: 'Combine credible models, physical tests and V&V into traceable safety evidence. Digital twins strengthen, but never replace, physical validation.' },
+];
+
+function ChineseHome() {
   const publicAnonymousMode = isPublicAnonymousMode();
   return <main className="portalPage">
     <SiteNav active="home" />
@@ -109,4 +133,62 @@ export default function Home() {
     <section className="communityBand" id="community"><div><p className="sectionIndex">06 / BUILD WITH US</p><h2>让聚变模型、实验与工程经验真正互相理解。</h2></div><div><p><BrandWordmark className="brandWordmarkInline" /> 将逐步开放装置、控制、诊断、数据、AI、VVUQ 与社区协作模块。欢迎研究机构、装置团队、软件开发者和工业伙伴共同完善工具条目、验证证据与装置案例。</p><a href="mailto:tianshao1992@gmail.com">联系新奥聚变人工智能团队 →</a></div></section>
     <SiteFooter />
   </main>;
+}
+
+function EnglishHome() {
+  const publicAnonymousMode = isPublicAnonymousMode();
+  return <main className="portalPage">
+    <SiteNav active="home" />
+    <header className="portalHero" id="top">
+      <div className="heroText">
+        <p className="kicker"><BrandWordmark /> / FUSION DIGITAL TWIN COMMUNITY</p>
+        <h1>Fusion digital twins for future power plants<span className="heroTitleValues">Cost controlled · Efficient · Reliable and available · Safety with evidence</span></h1>
+        <p className="heroValueEnglish">FUSION DIGITAL TWIN FOR FUTURE POWER PLANTS<br/><b>LIFECYCLE COST CONTROL · EFFICIENT OPERATION · RELIABLE AVAILABILITY · EVIDENCE-BASED SAFETY</b></p>
+        <p className="heroLead">Verified multiphysics models, operational and experimental data, and intelligent decision support connect the full lifecycle from design and construction through commissioning, operation, maintenance and decommissioning. Every engineering conclusion remains traceable, versioned and explicit about uncertainty.</p>
+        <div className="heroActions"><a className="solid" href="#prototype-workspace">Open the digital prototype</a><a href="#domains">Explore knowledge domains</a><a href="/facilities">View global facilities</a></div>
+        <div className="heroMetrics"><span><b>05</b>open knowledge domains</span><span><b>195+</b>codes and tools</span><span><b>18+</b>priority devices and projects</span><span><b>2026-08</b>evidence cut-off</span></div>
+      </div>
+      <figure className="heroArchitectureFigure">
+        <a href="/figures/fusion-twin-ai-native-overview.png" target="_blank" rel="noreferrer" aria-label="Open the full fusion digital-twin and agent architecture figure">
+          <img src="/figures/fusion-twin-ai-native-overview.png" alt="Architecture linking fusion devices, digital twins, AI agents, permission and safety gates, and validated control" />
+        </a>
+        <figcaption className="srOnly">Measurements and simulations update a shared twin state. Agents may propose candidate actions, but only options that pass permission, safety and physics-constraint gates may inform control or experimental decisions. This is an information-flow model, not a real-time control topology for a specific device.</figcaption>
+      </figure>
+      <section className="plantValue" aria-labelledby="plant-value-title-en">
+        <p>FUSION POWER PLANT VALUE</p>
+        <div className="plantValueStatement"><h2 id="plant-value-title-en">Across design, construction, commissioning, operation, maintenance and decommissioning, make every critical decision<span>computable, verifiable and traceable.</span></h2></div>
+        <div className="plantValueGrid">{englishPlantValues.map((value) => <article key={value.id}><span>{value.id}</span><h3>{value.title}</h3><b>{value.en}</b><p>{value.copy}</p></article>)}</div>
+      </section>
+    </header>
+
+    <div className="prototypePage prototypePage--embedded"><MultiDeviceWorkspace catalog={deviceCatalog} /></div>
+    <FusionTwinSystemMap />
+
+    <section className="aiNativePortal" aria-labelledby="ai-native-portal-title-en">
+      <div className="aiNativePortalIntro"><p className="sectionIndex">AI-NATIVE KNOWLEDGE OPERATING SYSTEM</p><h2 id="ai-native-portal-title-en">Turn research, evidence, relationships and updates into sustainable knowledge infrastructure.</h2><p>Language models connect questions to verified material; structured sources, permissions, quotas, review and version records remain authoritative. If no model is available, the system returns deterministic retrieval rather than unsupported synthesis.</p></div>
+      <div className="aiNativePortalGrid">
+        <a href="/search"><span>01 / SEARCH & ASK</span><h3>Evidence search and dialogue</h3><p>Search papers, code, devices and research across domains, with model answers constrained by cited evidence.</p><b>Start searching →</b></a>
+        <a href="/knowledge-graph"><span>02 / KNOWLEDGE GRAPH</span><h3>Knowledge graph</h3><p>Expand one- or two-hop neighborhoods from a device or task and trace papers, code, organizations and validation links.</p><b>Explore the graph →</b></a>
+        {!publicAnonymousMode && <a href="/research-review"><span>03 / HUMAN REVIEW</span><h3>Agent candidate review</h3><p>Agent discoveries become candidates; responsibility-separated human review controls acceptance, and acceptance never publishes automatically.</p><b>Open the review workspace →</b></a>}
+        {!publicAnonymousMode && <a href="/account"><span>04 / IDENTITY & GOVERNANCE</span><h3>Accounts, roles and quotas</h3><p>Manage trusted identity, member roles, model quotas, usage records and audit boundaries.</p><b>View account →</b></a>}
+      </div>
+    </section>
+
+    <section className="domainSection" id="domains">
+      <div className="sectionIntro"><p className="sectionIndex">02 / KNOWLEDGE DOMAINS</p><h2>From specialist twins to whole-plant integration and AI-native operation</h2><p>Ten domains cover fusion-plant physics, engineering systems, operational awareness, energy conversion, auxiliaries, human interaction, data and intelligence. Whole-plant integration and AI-native systems organize them into a verifiable capability.</p></div>
+      <div className="domainCards">{englishDomains.map((domain) => <a id={`domain-${domain.moduleId}`} href={domain.href} key={domain.id} className={`domainCard${domain.featured ? ` featuredDomainCard ${domain.featured}Featured` : ''}`}><div className="domainFigure">{domain.figure ? <img src={domain.figure} alt={`${domain.title} scientific systems overview`} loading="lazy" decoding="async" /> : <div className="aiDomainVisual" aria-hidden="true"><span className="miniPlasma"/><span className="miniTwin">Δt</span><span className="miniAgent">A</span><i/><i/></div>}<span>{domain.status}</span></div><div className="domainBody"><p>{domain.id} / {domain.en}</p><h3>{domain.title}</h3><div>{domain.copy}</div><b>{domain.meta}</b><i>{domain.status === 'Open' ? 'Enter knowledge domain ↗' : 'View module definition ↗'}</i></div></a>)}</div>
+    </section>
+
+    <section className="facilityPreview"><div><p className="sectionIndex">03 / GLOBAL FACILITIES</p><h2>Construction and operating status provide the most realistic timeline for model requirements.</h2><p>Track representative devices in construction, operation, upgrade, design and decommissioning, with every time-sensitive statement linked to an official project page or primary publication.</p><a href="/facilities">Open the global facilities observatory →</a></div><div className="facilityTicker"><span><b>EXL-50U</b> operating: p–¹¹B research, non-inductive start-up and AI-supported real-time control</span><span><b>EHL-2</b> physics and engineering design under development</span><span><b>ITER</b> assembly and system commissioning preparation</span><span><b>SPARC</b> facility and machine assembly in progress</span><span><b>BEST</b> main-machine assembly in progress</span></div></section>
+
+    <section className="resourceSection" id="resources"><div className="sectionIntro"><p className="sectionIndex">04 / TOOLCHAINS</p><h2>Tools form chains from input and solution through validation to decision.</h2><p>Each chain must define data interfaces, scale transfer, validation evidence, applicability and responsibility for outputs. If one link is not traceable, the chain is not ready for digital-twin use.</p></div><div className="resourceGrid"><a href="/physics#catalog"><span>P</span><h3>Physics prediction chain</h3><p>Equilibrium → transport → MHD → boundary → neutronics and fuel cycle.</p><b>Browse physics tools ↗</b></a><a href="/engineering#tools"><span>E</span><h3>Engineering margin chain</h3><p>Loads → electromagnetics → structural/thermal response → damage → life and maintenance.</p><b>Browse engineering tools ↗</b></a><a href="/control"><span>C</span><h3>Integrated control chain</h3><p>State → plasma current, shape, profiles, MHD and exhaust → actuator coordination → PCS → SIL/HIL evidence.</p><b>Open integrated control ↗</b></a><a href="/diagnostics"><span>D</span><h3>Diagnostic evidence chain</h3><p>Sensor and calibration → acquisition quality → inversion and synthetic diagnostics → assimilation → real-time interfaces.</p><b>Open diagnostics and sensing ↗</b></a><a href="/ai"><span>A</span><h3>AI-native chain</h3><p>Data → representation → surrogate → agent → permission and safety gates.</p><b>Open AI-native systems ↗</b></a></div></section>
+
+    <PhaseOneRoadmap />
+    <section className="communityBand" id="community"><div><p className="sectionIndex">06 / BUILD WITH US</p><h2>Help fusion models, experiments and engineering experience understand one another.</h2></div><div><p><BrandWordmark className="brandWordmarkInline" /> is progressively opening device, control, diagnostics, data, AI, VVUQ and community workflows. Research organizations, device teams, software developers and industrial partners are welcome to improve tool records, validation evidence and device cases.</p><a href="mailto:tianshao1992@gmail.com">Contact the ENN Fusion AI Team →</a></div></section>
+    <SiteFooter />
+  </main>;
+}
+
+export default function Home() {
+  return <StaticLocaleContent zh={<ChineseHome />} en={<EnglishHome />} />;
 }

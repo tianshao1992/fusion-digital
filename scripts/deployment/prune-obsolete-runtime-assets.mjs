@@ -2,6 +2,17 @@ import { readdir, readFile, rm, stat } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
 const catalogPath = fileURLToPath(new URL('../../dist/client/models/device-catalog.json', import.meta.url));
+const searchIndexDistUrl = new URL(
+  '../../dist/client/data/fusion-knowledge-index.json',
+  import.meta.url,
+);
+const searchIndexSourceUrl = new URL(
+  '../../public/data/fusion-knowledge-index.json',
+  import.meta.url,
+);
+const searchCoreUrl = new URL('../../app/search/search-core.ts', import.meta.url);
+const appUrl = new URL('../../app/', import.meta.url);
+const serverEntryUrl = new URL('../../dist/server/index.js', import.meta.url);
 
 const SITES_EXPANDED_LIMIT_BYTES = 256 * 1024 * 1024;
 const REQUIRED_HEADROOM_BYTES = 3 * 1024 * 1024;
@@ -30,6 +41,47 @@ async function byteLength(directory) {
   const files = await filesUnder(directory);
   const sizes = await Promise.all(files.map(async (file) => (await stat(file)).size));
   return sizes.reduce((total, size) => total + size, 0);
+}
+
+async function assertSearchIndexIsServerEmbedded() {
+  const publicRuntimePath = '/data/fusion-knowledge-index.json';
+  const appFiles = (await filesUnder(appUrl)).filter((file) => /\.[cm]?[jt]sx?$/.test(file.pathname));
+  const appSources = await Promise.all(appFiles.map(async (file) => readFile(file, 'utf8')));
+  const publicPathLiterals = [
+    `"${publicRuntimePath}"`,
+    `'${publicRuntimePath}'`,
+    `\`${publicRuntimePath}\``,
+  ];
+  if (appSources.some((source) => publicPathLiterals.some((literal) => source.includes(literal)))) {
+    throw new Error(
+      `Refusing to prune ${publicRuntimePath}: application source still references its public URL.`,
+    );
+  }
+
+  const searchCoreSource = await readFile(searchCoreUrl, 'utf8');
+  if (!searchCoreSource.includes(
+    'import knowledgeIndex from "../../public/data/fusion-knowledge-index.json" with { type: "json" };',
+  )) {
+    throw new Error('Refusing to prune the public search index copy: its static server import changed.');
+  }
+
+  const indexSource = await readFile(searchIndexSourceUrl, 'utf8');
+  const index = JSON.parse(indexSource);
+  const entries = Array.isArray(index.entries) ? index.entries : [];
+  if (!index.schemaVersion || entries.length === 0 || index.statistics?.total !== entries.length) {
+    throw new Error('Refusing to prune the public search index copy: its source contract is invalid.');
+  }
+
+  const serverSource = await readFile(serverEntryUrl, 'utf8');
+  const markerEntries = [entries[0], entries[Math.floor(entries.length / 2)], entries.at(-1)];
+  const embeddedMarkers = [
+    `schemaVersion: ${JSON.stringify(index.schemaVersion)}`,
+    `"total": ${entries.length}`,
+    ...markerEntries.map((entry) => `"id": ${JSON.stringify(entry.id)}`),
+  ];
+  if (embeddedMarkers.some((marker) => !serverSource.includes(marker))) {
+    throw new Error('Refusing to prune the public search index copy: the server bundle is not self-contained.');
+  }
 }
 
 const catalogSource = await readFile(catalogPath, 'utf8');
@@ -82,6 +134,19 @@ try {
 }
 await rm(sourceOnlyStep, { force: true });
 removed.push({ id: 'paramak-full-device.step', bytes: sourceOnlyBytes });
+
+// The search API statically imports this index, so Vite embeds the complete dataset in the
+// Worker bundle. Keeping the public-directory copy in dist/client duplicates the same payload;
+// no browser route or download action addresses it. Preserve the tracked source for rebuilds.
+await assertSearchIndexIsServerEmbedded();
+let embeddedSearchIndexBytes = 0;
+try {
+  embeddedSearchIndexBytes = (await stat(searchIndexDistUrl)).size;
+} catch (error) {
+  if (error?.code !== 'ENOENT') throw error;
+}
+await rm(searchIndexDistUrl, { force: true });
+removed.push({ id: 'fusion-knowledge-index.client-copy', bytes: embeddedSearchIndexBytes });
 
 const expandedBytes = await byteLength(new URL('../../dist/', import.meta.url));
 const maximumBytes = SITES_EXPANDED_LIMIT_BYTES - REQUIRED_HEADROOM_BYTES;

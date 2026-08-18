@@ -4,6 +4,7 @@ import type { EChartsCoreOption } from 'echarts/core';
 import type { CustomSeriesRenderItem } from 'echarts/types/dist/option';
 import { useMemo } from 'react';
 import ScientificChart from '../components/charts/ScientificChart';
+import { useI18n } from '../i18n';
 
 const FONT_FAMILY = '"Microsoft YaHei UI","Microsoft YaHei","Noto Sans SC",Arial,sans-serif';
 const INK = '#17324d';
@@ -48,6 +49,13 @@ const DOMAIN_WINDOWS = [
   { name: '远程维护', values: [0, 0, 0, 2, 1], tools: 'DELMIA / ROS / VR' },
 ];
 
+const TIME_WINDOWS_EN = ['μs–ms', 'ms–s', 's–min', 'min–h', 'pulse–years'];
+const DOMAIN_NAMES_EN = [
+  'Transient electromagnetics', 'Structural dynamics', 'Magnet quench', 'PFC thermomechanics',
+  'Coolant CFD', 'Neutron transport', 'Activation / dose', 'Blanket MHD', 'Tritium transport',
+  'Vacuum / cryogenics', 'Safety transients', 'Remote maintenance',
+];
+
 const DOMAIN_HEATMAP_DATA = DOMAIN_WINDOWS.flatMap((domain, domainIndex) =>
   domain.values.map((value, windowIndex) => [windowIndex, domainIndex, value, domain.tools]),
 );
@@ -62,6 +70,10 @@ const TOOL_CATEGORIES = [
   '包层/氚',
   '安全系统',
   '维护/RAMI',
+];
+const TOOL_CATEGORIES_EN = [
+  'Control / equilibrium', 'Transient electromagnetics', 'Structures', 'Magnets / cryogenics',
+  'PFC / CFD', 'Neutronics / activation', 'Blanket / tritium', 'Safety systems', 'Maintenance / RAMI',
 ];
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -148,6 +160,14 @@ export const engineeringRoadmapStages = [
   },
 ];
 
+const engineeringRoadmapStagesEn = [
+  { ...engineeringRoadmapStages[0], title: 'Load-interface baseline', period: '0–12 months', detail: 'Replay DINA/MEQ histories; establish asset identifiers, CAD/coil/conductor revisions, scenario timebase, units and conservation checks.' },
+  { ...engineeringRoadmapStages[1], title: 'Disruption electromagnetic narrow-scope twin', period: '12–24 months', detail: 'Connect three-dimensional conductor models and structural reduced-order models; compare magnetic probes, wall voltage, strain, displacement and support reactions; validate in shadow mode before informing limits.' },
+  { ...engineeringRoadmapStages[2], title: 'Thermal and magnet state', period: '2–3 years', detail: 'Calibrate PFC thermal state using infrared thermography and calorimetry; calibrate CICC and cryogenic state estimation using voltage, flow, pressure and model-coil data.' },
+  { ...engineeringRoadmapStages[3], title: 'Nuclear–blanket–tritium chain', period: '3–5 years', detail: 'Connect nuclear heating, TBR, activation, coolant/MHD response, tritium permeation and inventory; maintain component-life, shutdown-dose and material-batch ledgers.' },
+  { ...engineeringRoadmapStages[4], title: 'Plant operation and RAMI', period: '4–8 years', detail: 'Integrate safety, maintenance, spares, availability, power conversion, grid constraints and licensing evidence into a lifecycle digital thread.' },
+];
+
 const renderEngineeringRoadmapRange: CustomSeriesRenderItem = (_params, api) => {
   const stageIndex = Number(api.value(0));
   const startMonth = Number(api.value(1));
@@ -194,21 +214,25 @@ function formatLogTick(value: number | string) {
   return `10${superscript}`;
 }
 
-function formatDuration(seconds: number) {
+function formatDuration(seconds: number, locale = 'zh-CN') {
   if (seconds < 1) return `${Math.round(seconds * 1_000)} ms`;
-  if (seconds < 60) return `${seconds.toLocaleString('zh-CN')} s`;
+  if (seconds < 60) return `${seconds.toLocaleString(locale)} s`;
   if (seconds < 3_600) return `${(seconds / 60).toFixed(1)} min`;
   if (seconds < 86_400) return `${(seconds / 3_600).toFixed(1)} h`;
   return `${(seconds / 86_400).toFixed(1)} d`;
 }
 
 export function EngineeringDomainMatrixChart() {
+  const { locale } = useI18n();
+  const en = locale === 'en';
+  const domainNames = en ? DOMAIN_NAMES_EN : DOMAIN_WINDOWS.map((domain) => domain.name);
+  const timeWindows = en ? TIME_WINDOWS_EN : TIME_WINDOWS;
   const option = useMemo<EChartsCoreOption>(() => ({
     backgroundColor: '#ffffff',
     textStyle: { fontFamily: FONT_FAMILY, color: INK },
     aria: {
       enabled: true,
-      description: '十二类工程仿真域在五个时间窗口中的相关尺度和主要决策尺度矩阵。',
+      description: en ? 'Matrix of primary and relevant decision timescales for twelve engineering-simulation domains across five time windows.' : '十二类工程仿真域在五个时间窗口中的相关尺度和主要决策尺度矩阵。',
     },
     grid: { left: 96, right: 18, top: 22, bottom: 78, containLabel: false },
     tooltip: {
@@ -223,14 +247,14 @@ export function EngineeringDomainMatrixChart() {
         const windowIndex = Number(item.value[0]);
         const domainIndex = Number(item.value[1]);
         const level = Number(item.value[2]);
-        const tools = String(item.value[3] ?? '');
-        const levelLabel = level === 2 ? '主要决策尺度' : level === 1 ? '相关尺度' : '非主要窗口';
-        return `<b>${DOMAIN_WINDOWS[domainIndex]?.name ?? ''}</b><br/>${TIME_WINDOWS[windowIndex] ?? ''} · ${levelLabel}<br/>典型工具：${tools}<br/><span style="color:${MUTED}">编辑性尺度分类，非性能承诺</span>`;
+        const tools = String(item.value[3] ?? '').replace('系统码', en ? 'systems code' : '系统码');
+        const levelLabel = en ? (level === 2 ? 'Primary decision timescale' : level === 1 ? 'Relevant timescale' : 'Not a primary window') : (level === 2 ? '主要决策尺度' : level === 1 ? '相关尺度' : '非主要窗口');
+        return `<b>${domainNames[domainIndex] ?? ''}</b><br/>${timeWindows[windowIndex] ?? ''} · ${levelLabel}<br/>${en ? 'Representative tools' : '典型工具'}: ${tools}<br/><span style="color:${MUTED}">${en ? 'Editorial timescale classification; not a performance claim' : '编辑性尺度分类，非性能承诺'}</span>`;
       },
     },
     xAxis: {
       type: 'category',
-      data: TIME_WINDOWS,
+      data: timeWindows,
       splitArea: { show: true, areaStyle: { color: ['#f8faf8', '#f8faf8'] } },
       axisLine: { lineStyle: { color: '#82938b' } },
       axisTick: { show: false },
@@ -239,7 +263,7 @@ export function EngineeringDomainMatrixChart() {
     yAxis: {
       type: 'category',
       inverse: true,
-      data: DOMAIN_WINDOWS.map((domain) => domain.name),
+      data: domainNames,
       axisLine: { lineStyle: { color: '#82938b' } },
       axisTick: { show: false },
       axisLabel: { color: '#273a32', fontSize: 10, margin: 10 },
@@ -254,29 +278,30 @@ export function EngineeringDomainMatrixChart() {
       itemHeight: 10,
       textStyle: { color: MUTED, fontFamily: FONT_FAMILY, fontSize: 10 },
       pieces: [
-        { value: 2, label: '主要尺度', color: '#17324d' },
-        { value: 1, label: '相关尺度', color: '#d9e8e8' },
-        { value: 0, label: '非主要窗口', color: '#f7f8f5' },
+        { value: 2, label: en ? 'Primary scale' : '主要尺度', color: '#17324d' },
+        { value: 1, label: en ? 'Relevant scale' : '相关尺度', color: '#d9e8e8' },
+        { value: 0, label: en ? 'Not primary' : '非主要窗口', color: '#f7f8f5' },
       ],
     },
     series: [{
-      name: '工程域时间尺度',
+      name: en ? 'Engineering-domain timescales' : '工程域时间尺度',
       type: 'heatmap',
-      data: DOMAIN_HEATMAP_DATA,
+      data: DOMAIN_HEATMAP_DATA.map((row) => en ? [row[0], row[1], row[2], String(row[3]).replace('系统码', 'systems code')] : row),
       itemStyle: { borderColor: '#ffffff', borderWidth: 2 },
       emphasis: {
         itemStyle: { borderColor: '#ff8738', borderWidth: 2, shadowBlur: 8, shadowColor: '#17324d30' },
       },
     }],
-  }), []);
+  }), [domainNames, en, timeWindows]);
 
   return (
     <ScientificChart
       id="engineering-domain-timescale"
       option={option}
-      ariaLabel="工程域与时间尺度交互热图；深色为主要决策尺度，浅色为相关尺度"
+      ariaLabel={en ? 'Interactive heatmap of engineering domains and timescales; dark cells mark primary decision scales and light cells mark relevant scales' : '工程域与时间尺度交互热图；深色为主要决策尺度，浅色为相关尺度'}
       fallbackSrc="/figures/engineering-domain-matrix-nature.png"
-      fallbackAlt="工程仿真时间尺度矩阵"
+      fallbackAlt={en ? 'Engineering-simulation timescale matrix' : '工程仿真时间尺度矩阵'}
+      fallback={en ? <table className="srOnly"><caption>Engineering-domain decision timescales</caption><thead><tr><th>Domain</th>{timeWindows.map((window) => <th key={window}>{window}</th>)}</tr></thead><tbody>{DOMAIN_WINDOWS.map((domain, index) => <tr key={domainNames[index]}><th>{domainNames[index]}</th>{domain.values.map((value, column) => <td key={timeWindows[column]}>{value === 2 ? 'Primary' : value === 1 ? 'Relevant' : 'Not primary'}</td>)}</tr>)}</tbody></table> : undefined}
       className="engineeringChart engineeringHeatmapChart"
       height={600}
     />
@@ -284,12 +309,14 @@ export function EngineeringDomainMatrixChart() {
 }
 
 export function EngineeringToolLandscapeChart() {
+  const { locale } = useI18n();
+  const en = locale === 'en';
   const option = useMemo<EChartsCoreOption>(() => ({
     backgroundColor: '#ffffff',
     textStyle: { fontFamily: FONT_FAMILY, color: INK },
     aria: {
       enabled: true,
-      description: '工程仿真工具按任务类别和典型单次任务耗时数量级排列的对数散点图。',
+      description: en ? 'Logarithmic scatter plot of engineering-simulation tools by task category and representative single-run turnaround time.' : '工程仿真工具按任务类别和典型单次任务耗时数量级排列的对数散点图。',
     },
     grid: { left: 82, right: 24, top: 26, bottom: 64 },
     tooltip: {
@@ -302,8 +329,10 @@ export function EngineeringToolLandscapeChart() {
         const item = readTooltipItem(params);
         if (!item) return '';
         const seconds = Number(item.value[0]);
-        const category = String(item.value[1] ?? '');
-        return `<b>${item.name}</b><br/>${category}<br/>典型量级：约 ${formatDuration(seconds)}（${seconds.toLocaleString('zh-CN')} s）<br/><span style="color:${MUTED}">编辑性数量级，非求解器性能承诺</span>`;
+        const rawCategory = String(item.value[1] ?? '');
+        const categoryIndex = Math.max(TOOL_CATEGORIES.indexOf(rawCategory), TOOL_CATEGORIES_EN.indexOf(rawCategory));
+        const category = en ? (TOOL_CATEGORIES_EN[categoryIndex] ?? 'Engineering simulation') : rawCategory;
+        return `<b>${item.name}</b><br/>${category}<br/>${en ? 'Representative order of magnitude' : '典型量级'}: ${en ? 'approximately ' : '约 '}${formatDuration(seconds, en ? 'en-US' : 'zh-CN')} (${seconds.toLocaleString(en ? 'en-US' : 'zh-CN')} s)<br/><span style="color:${MUTED}">${en ? 'Editorial estimate; not a solver-performance claim' : '编辑性数量级，非求解器性能承诺'}</span>`;
       },
     },
     xAxis: {
@@ -311,7 +340,7 @@ export function EngineeringToolLandscapeChart() {
       logBase: 10,
       min: 1e-4,
       max: 1e8,
-      name: '典型单次任务耗时 / s（对数轴）',
+      name: en ? 'Representative single-run turnaround / s (log scale)' : '典型单次任务耗时 / s（对数轴）',
       nameLocation: 'middle',
       nameGap: 38,
       nameTextStyle: { color: MUTED, fontSize: 10, fontFamily: FONT_FAMILY },
@@ -323,7 +352,7 @@ export function EngineeringToolLandscapeChart() {
     },
     yAxis: {
       type: 'category',
-      data: TOOL_CATEGORIES,
+      data: en ? TOOL_CATEGORIES_EN : TOOL_CATEGORIES,
       axisLine: { lineStyle: { color: '#82938b' } },
       axisTick: { show: false },
       axisLabel: { color: '#273a32', fontSize: 10, margin: 10 },
@@ -331,12 +360,12 @@ export function EngineeringToolLandscapeChart() {
     },
     dataZoom: [{ type: 'inside', xAxisIndex: 0, filterMode: 'none' }],
     series: [{
-      name: '典型任务耗时',
+      name: en ? 'Representative turnaround' : '典型任务耗时',
       type: 'scatter',
       symbolSize: 12,
       data: TOOL_POINTS.map((point) => ({
-        name: point.name,
-        value: [point.seconds, point.category],
+        name: en ? point.name.replace('RAMI / 离散事件', 'RAMI / discrete-event simulation') : point.name,
+        value: [point.seconds, en ? TOOL_CATEGORIES_EN[TOOL_CATEGORIES.indexOf(point.category)] : point.category],
         itemStyle: { color: CATEGORY_COLORS[point.category] },
       })),
       label: {
@@ -355,15 +384,16 @@ export function EngineeringToolLandscapeChart() {
         itemStyle: { borderColor: '#ffffff', borderWidth: 2, shadowBlur: 8, shadowColor: '#17324d40' },
       },
     }],
-  }), []);
+  }), [en]);
 
   return (
     <ScientificChart
       id="engineering-tool-runtime-landscape"
       option={option}
-      ariaLabel="工程仿真工具典型任务耗时对数散点图；位置是编辑性数量级，不是性能承诺"
+      ariaLabel={en ? 'Logarithmic scatter plot of representative engineering-simulation turnaround; positions are editorial orders of magnitude, not performance claims' : '工程仿真工具典型任务耗时对数散点图；位置是编辑性数量级，不是性能承诺'}
       fallbackSrc="/figures/engineering-tool-landscape-nature.png"
-      fallbackAlt="工程仿真工具版图"
+      fallbackAlt={en ? 'Engineering-simulation tool landscape' : '工程仿真工具版图'}
+      fallback={en ? <table className="srOnly"><caption>Representative engineering-tool turnaround</caption><thead><tr><th>Tool</th><th>Category</th><th>Seconds</th></tr></thead><tbody>{TOOL_POINTS.map((point) => <tr key={point.name}><th>{point.name.replace('RAMI / 离散事件', 'RAMI / discrete-event simulation')}</th><td>{TOOL_CATEGORIES_EN[TOOL_CATEGORIES.indexOf(point.category)]}</td><td>{point.seconds}</td></tr>)}</tbody></table> : undefined}
       className="engineeringChart engineeringLandscapeChart"
       height={600}
     />
@@ -371,12 +401,15 @@ export function EngineeringToolLandscapeChart() {
 }
 
 export function EngineeringRoadmapChart() {
+  const { locale } = useI18n();
+  const en = locale === 'en';
+  const stages = en ? engineeringRoadmapStagesEn : engineeringRoadmapStages;
   const option = useMemo<EChartsCoreOption>(() => ({
     backgroundColor: '#ffffff',
     textStyle: { fontFamily: FONT_FAMILY, color: INK },
     aria: {
       enabled: true,
-      description: '工程数字孪生 E0 到 E4 五阶段的零到九十六个月规划区间图；E3 与 E4 在第四到第五年并行。',
+      description: en ? 'Five-stage, zero-to-96-month engineering-digital-twin roadmap from E0 to E4; E3 and E4 overlap during years four and five.' : '工程数字孪生 E0 到 E4 五阶段的零到九十六个月规划区间图；E3 与 E4 在第四到第五年并行。',
     },
     grid: { left: 132, right: 24, top: 38, bottom: 58 },
     tooltip: {
@@ -394,7 +427,7 @@ export function EngineeringRoadmapChart() {
         const title = String(item.value[4] ?? '');
         const period = String(item.value[5] ?? '');
         const detail = String(item.value[6] ?? '');
-        return `<b>${id} · ${title}</b><br/>${period}（第 ${start}—${end} 个月）<br/>${detail}<br/><span style="color:${MUTED}">路线规划区间，非项目进度承诺</span>`;
+        return `<b>${id} · ${title}</b><br/>${period} ${en ? `(months ${start}–${end})` : `（第 ${start}—${end} 个月）`}<br/>${detail}<br/><span style="color:${MUTED}">${en ? 'Planning window; not a project-schedule commitment' : '路线规划区间，非项目进度承诺'}</span>`;
       },
     },
     xAxis: {
@@ -402,7 +435,7 @@ export function EngineeringRoadmapChart() {
       min: 0,
       max: 96,
       interval: 12,
-      name: '规划时间 / 月',
+      name: en ? 'Planning horizon / months' : '规划时间 / 月',
       nameLocation: 'middle',
       nameGap: 36,
       nameTextStyle: { color: MUTED, fontSize: 10, fontFamily: FONT_FAMILY },
@@ -411,44 +444,45 @@ export function EngineeringRoadmapChart() {
       axisLabel: {
         color: '#33463d',
         fontSize: 10,
-        formatter: (value: number) => value === 0 ? '当前' : `${value / 12} 年`,
+        formatter: (value: number) => value === 0 ? (en ? 'Now' : '当前') : `${value / 12} ${en ? 'years' : '年'}`,
       },
       splitLine: { show: true, lineStyle: { color: GRID } },
     },
     yAxis: {
       type: 'category',
       inverse: true,
-      data: engineeringRoadmapStages.map((stage) => `${stage.id}  ${stage.title}`),
+      data: stages.map((stage) => `${stage.id}  ${stage.title}`),
       axisLine: { show: false },
       axisTick: { show: false },
       axisLabel: { color: '#273a32', fontSize: 10, margin: 12 },
     },
     series: [{
-      name: '路线规划区间',
+      name: en ? 'Roadmap window' : '路线规划区间',
       type: 'custom',
       clip: true,
       encode: { x: [1, 2], y: 0 },
       renderItem: renderEngineeringRoadmapRange,
-      data: engineeringRoadmapStages.map((stage, index) => ({
+      data: stages.map((stage, index) => ({
         name: `${stage.id} · ${stage.title}`,
         value: [index, stage.startMonth, stage.endMonth, stage.id, stage.title, stage.period, stage.detail],
       })),
       markArea: {
         silent: true,
         itemStyle: { color: '#8a6bd514' },
-        label: { show: true, color: '#6554c0', fontFamily: FONT_FAMILY, fontSize: 9, formatter: 'E3 / E4 并行窗' },
+        label: { show: true, color: '#6554c0', fontFamily: FONT_FAMILY, fontSize: 9, formatter: en ? 'E3 / E4 parallel window' : 'E3 / E4 并行窗' },
         data: [[{ xAxis: 48 }, { xAxis: 60 }]],
       },
     }],
-  }), []);
+  }), [en, stages]);
 
   return (
     <ScientificChart
       id="engineering-digital-twin-roadmap"
       option={option}
-      ariaLabel="工程数字孪生 E0 到 E4 路线规划甘特图；E3 为三到五年，E4 为四到八年并行推进"
+      ariaLabel={en ? 'Engineering-digital-twin roadmap from E0 to E4; E3 spans years three to five and E4 spans years four to eight in parallel' : '工程数字孪生 E0 到 E4 路线规划甘特图；E3 为三到五年，E4 为四到八年并行推进'}
       fallbackSrc="/figures/engineering-roadmap-nature.png"
-      fallbackAlt="DINA MEQ 到工程数字孪生路线图"
+      fallbackAlt={en ? 'Roadmap from DINA/MEQ services to an engineering digital twin' : 'DINA MEQ 到工程数字孪生路线图'}
+      fallback={en ? <table className="srOnly"><caption>Engineering digital-twin roadmap</caption><thead><tr><th>Stage</th><th>Scope</th><th>Period</th><th>Technical route</th></tr></thead><tbody>{stages.map((stage) => <tr key={stage.id}><th>{stage.id}</th><td>{stage.title}</td><td>{stage.period}</td><td>{stage.detail}</td></tr>)}</tbody></table> : undefined}
       className="engineeringChart engineeringRoadmapChart"
       height={480}
     />

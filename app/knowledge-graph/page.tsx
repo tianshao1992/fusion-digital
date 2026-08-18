@@ -1,20 +1,27 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { cookies } from 'next/headers';
 import SiteFooter from '@/app/components/SiteFooter';
 import SiteNav from '@/app/components/SiteNav';
+import StaticLocaleContent from '@/app/components/StaticLocaleContent';
+import { DEFAULT_LOCALE, LOCALE_COOKIE_NAME, resolveLocale } from '@/app/i18n/config';
 import KnowledgeGraphExplorer from './KnowledgeGraphExplorer';
 import { graphDevices, knowledgeGraph, queryKnowledgeGraph } from './data';
 import './knowledge-graph.css';
 
-export const metadata: Metadata = {
-  title: '知识图谱｜论文、代码、装置与证据网络',
-  description: '交互检索 FusionDigital 调研中的论文、代码、工具、装置、任务、机构及其可追溯证据关系。',
-};
+export async function generateMetadata():Promise<Metadata> {
+  const store=await cookies();
+  const en=(resolveLocale(store.get(LOCALE_COOKIE_NAME)?.value)??DEFAULT_LOCALE)==='en';
+  return {
+    title: en?'Knowledge Graph | Papers, Code, Facilities and Evidence':'知识图谱｜论文、代码、装置与证据网络',
+    description: en?'Interactively explore papers, code, tools, facilities, tasks, organizations and traceable evidence relationships in the FusionDigital research atlas.':'交互检索 FusionDigital 调研中的论文、代码、工具、装置、任务、机构及其可追溯证据关系。',
+  };
+}
 
 export default function KnowledgeGraphPage() {
   const initial = queryKnowledgeGraph({ domain: 'facility', limit: 350 });
   const devices = graphDevices().map(({ id, label, degree }) => ({ id, label, degree }));
-  return <main className="kgPage">
+  const zh=<main className="kgPage">
     <SiteNav active="knowledge" />
     <header className="kgHero">
       <div>
@@ -36,4 +43,27 @@ export default function KnowledgeGraphPage() {
     <section className="platformInlineLink"><span>图谱保留来源与更新时间，并按需加载邻域。</span><Link href="/platform#contracts">查看数据合同与接入路线 →</Link></section>
     <SiteFooter />
   </main>;
+  const en=<main className="kgPage">
+    <SiteNav active="knowledge" />
+    <header className="kgHero">
+      <div>
+        <p className="kgEyebrow">FUSION KNOWLEDGE GRAPH · EVIDENCE FIRST</p>
+        <h1>Let every conclusion trace its relationships back to<br/><em>papers, code and facility evidence</em></h1>
+        <p>FusionDigital transforms research on physics, engineering, integrated control, diagnostics and AI-native systems into a unified entity–relationship–evidence network. Edges are not invented by a language model: published relationships come from structured research records and retain their source and update date.</p>
+      </div>
+      <dl>
+        <div><dt>{knowledgeGraph.statistics.nodes.toLocaleString('en-US')}</dt><dd>Entity nodes</dd></div>
+        <div><dt>{knowledgeGraph.statistics.edges.toLocaleString('en-US')}</dt><dd>Traceable relationships</dd></div>
+        <div><dt>{knowledgeGraph.statistics.byType.paper.toLocaleString('en-US')}</dt><dd>Papers</dd></div>
+        <div><dt>{knowledgeGraph.statistics.byType.code.toLocaleString('en-US')}</dt><dd>Code assets</dd></div>
+        <div><dt>{knowledgeGraph.statistics.byType.device.toLocaleString('en-US')}</dt><dd>Facilities and platforms</dd></div>
+        <div><dt>{knowledgeGraph.asOf}</dt><dd>Evidence cut-off</dd></div>
+      </dl>
+    </header>
+    <div className="kgPrincipleBand"><span>ENTITY</span><b>Entity</b><i>→</i><span>CLAIM</span><b>Relationship claim</b><i>→</i><span>EVIDENCE</span><b>Paper / code / official source</b><i>→</i><span>DECISION</span><b>Auditable conclusion</b></div>
+    <KnowledgeGraphExplorer initial={initial} devices={devices} />
+    <section className="platformInlineLink"><span>The graph retains sources and update dates and loads neighborhoods on demand.</span><Link href="/platform#contracts">View data contracts and the integration route →</Link></section>
+    <SiteFooter />
+  </main>;
+  return <StaticLocaleContent zh={zh} en={en}/>;
 }

@@ -5,6 +5,7 @@ import type { CustomSeriesRenderItem } from 'echarts/types/dist/option';
 import type { CSSProperties } from 'react';
 import ScientificChart from '../components/charts/ScientificChart';
 import { useChartTheme } from '../components/charts/chart-theme';
+import { useI18n } from '../i18n';
 import {
   diagnosticsDeviceProfiles,
   diagnosticsResearchItems,
@@ -34,6 +35,30 @@ const deploymentLabels: Record<DiagnosticsDeploymentLevel, string> = {
   D4: '常规装置工作流',
   D5: '经批准的安全关键用途',
 };
+const evidenceLabelsEn: Record<DiagnosticsEvidenceLevel, string> = {
+  E0: 'Requirements / concept', E1: 'Numerical / synthetic', E2: 'Laboratory / calibration', E3: 'Facility data / cross-validation', E4: 'Online / routine use',
+};
+const deploymentLabelsEn: Record<DiagnosticsDeploymentLevel, string> = {
+  D1: 'Concept / requirements', D2: 'Software / laboratory prototype', D3: 'Installation / integration / shadow / HIL', D4: 'Routine facility workflow', D5: 'Approved safety-critical use',
+};
+const diagnosticsTimescaleDataEn = [
+  { ...diagnosticsTimescaleData[0], label: 'High-frequency magnetics / Mirnov / fast events' },
+  { ...diagnosticsTimescaleData[1], label: 'Reflectometry / ECE / fluctuation imaging' },
+  { ...diagnosticsTimescaleData[2], label: 'Equilibrium / configuration / real-time state' },
+  { ...diagnosticsTimescaleData[3], label: 'Spectroscopy / radiation / heat loads' },
+  { ...diagnosticsTimescaleData[4], label: 'Thomson scattering / profile products' },
+  { ...diagnosticsTimescaleData[5], label: 'Fuel cycle / vacuum / cryogenics' },
+  { ...diagnosticsTimescaleData[6], label: 'Calibration drift / maintenance trends' },
+  { ...diagnosticsTimescaleData[7], label: 'Material damage / lifetime / decommissioning' },
+] as const;
+const diagnosticsRoadmapDataEn = [
+  { ...diagnosticsRoadmapData[0], title: 'Configuration and magnetic-diagnostic baseline', period: '0–12 months', gate: 'Geometry / calibration / clocks / MEQ–DINA replay' },
+  { ...diagnosticsRoadmapData[1], title: 'Synthetic diagnostics and independent observations', period: '12–24 months', gate: 'Interferometry / ECE / Thomson scattering / IR / bolometry observation loop' },
+  { ...diagnosticsRoadmapData[2], title: 'Multi-diagnostic state service', period: '18–36 months', gate: 'Integrated inversion · UQ · residuals · quality gate' },
+  { ...diagnosticsRoadmapData[3], title: 'Diagnostic-system SIL / HIL', period: '30–48 months', gate: 'Physical acquisition / network / PCS / fault injection' },
+  { ...diagnosticsRoadmapData[4], title: 'Governed online capability', period: '42–60 months', gate: 'Shadow → read-only → bounded closed loop · rollback' },
+  { ...diagnosticsRoadmapData[5], title: 'Whole-plant diagnostic twin', period: '48–96 months', gate: 'Equipment health · RAMI · lifetime · maintenance optimization' },
+] as const;
 
 function arrayData(params: unknown): unknown[] | null {
   if (!params || typeof params !== 'object' || !('data' in params)) return null;
@@ -81,6 +106,8 @@ const renderTimescaleRange: CustomSeriesRenderItem = (_params, api) => {
 };
 
 export function DiagnosticsClosedLoopGraph() {
+  const { locale } = useI18n();
+  const en = locale === 'en';
   const chartTheme = useChartTheme();
   const nodes = [
     { id: 'device', name: '真实装置', subtitle: 'PLASMA · PLANT', x: 70, y: 215, symbolSize: 84, category: 0 },
@@ -107,6 +134,21 @@ export function DiagnosticsClosedLoopGraph() {
     { source: 'residual', target: 'model', value: '模型校准' },
     { source: 'residual', target: 'instrument', value: '仪器 / 几何诊断' },
   ];
+  const nodeNamesEn: Record<string, string> = {
+    device: 'Physical facility', instrument: 'Diagnostic instruments', acquisition: 'Acquisition and calibration',
+    inference: 'Inversion and assimilation', model: 'Digital-twin model', synthetic: 'Synthetic diagnostics',
+    residual: 'Observation residuals', quality: 'Quality and evidence gate', decision: 'Real-time decision / engineering health',
+  };
+  const linkValuesEn: Record<string, string> = {
+    '真实响应': 'Physical response', '原始信号': 'Raw signals', '计量数据': 'Metrology data', '后验状态 + UQ': 'Posterior state + UQ',
+    '预测 + 适用域': 'Prediction + applicability domain', '已授权产品': 'Authorized product', '经验证动作': 'Validated action',
+    '模拟状态': 'Simulated state', '虚拟通道': 'Synthetic channels', '真实通道': 'Physical channels', '模型校准': 'Model calibration', '仪器 / 几何诊断': 'Instrument / geometry diagnosis',
+  };
+  const localizedNodes = nodes.map((node) => ({ ...node, name: en ? nodeNamesEn[node.id] : node.name }));
+  const localizedLinks = links.map((link) => ({ ...link, value: en ? linkValuesEn[link.value] : link.value }));
+  const categoryNames = en
+    ? ['Physical system', 'Measurement chain', 'State', 'Digital model', 'Evidence governance', 'Decision']
+    : ['物理实体', '测量链', '状态', '数字模型', '证据治理', '决策'];
 
   const option: EChartsCoreOption = {
     backgroundColor: chartTheme.background,
@@ -114,7 +156,7 @@ export function DiagnosticsClosedLoopGraph() {
     aria: {
       enabled: true,
       decal: { show: true },
-      description: '聚变装置诊断感知闭环。真实装置经诊断仪器、采集标定、反演同化形成状态；数字孪生经合成诊断返回仪器空间形成残差；状态与模型经过质量证据门后进入实时决策和工程健康。',
+      description: en ? 'Fusion diagnostics and sensing loop: the physical facility is observed through instruments, acquisition, calibration, inversion and data assimilation; synthetic diagnostics project the digital twin into instrument space to form residuals; state and model products pass quality and evidence gates before real-time decisions or engineering-health use.' : '聚变装置诊断感知闭环。真实装置经诊断仪器、采集标定、反演同化形成状态；数字孪生经合成诊断返回仪器空间形成残差；状态与模型经过质量证据门后进入实时决策和工程健康。',
     },
     tooltip: {
       trigger: 'item',
@@ -131,7 +173,7 @@ export function DiagnosticsClosedLoopGraph() {
     },
     legend: {
       bottom: 12,
-      data: ['物理实体', '测量链', '状态', '数字模型', '证据治理', '决策'],
+      data: categoryNames,
       textStyle: { color: chartTheme.muted, fontSize: 9 },
       itemWidth: 10,
       itemHeight: 10,
@@ -142,15 +184,15 @@ export function DiagnosticsClosedLoopGraph() {
       roam: true,
       zoom: 0.88,
       center: ['50%', '48%'],
-      data: nodes,
-      links,
+      data: localizedNodes,
+      links: localizedLinks,
       categories: [
-        { name: '物理实体', itemStyle: { color: '#ff7a21' } },
-        { name: '测量链', itemStyle: { color: '#33cdb5' } },
-        { name: '状态', itemStyle: { color: '#7de8d2' } },
-        { name: '数字模型', itemStyle: { color: '#816ddd' } },
-        { name: '证据治理', itemStyle: { color: '#f1c667' } },
-        { name: '决策', itemStyle: { color: '#f05b4f' } },
+        { name: categoryNames[0], itemStyle: { color: '#ff7a21' } },
+        { name: categoryNames[1], itemStyle: { color: '#33cdb5' } },
+        { name: categoryNames[2], itemStyle: { color: '#7de8d2' } },
+        { name: categoryNames[3], itemStyle: { color: '#816ddd' } },
+        { name: categoryNames[4], itemStyle: { color: '#f1c667' } },
+        { name: categoryNames[5], itemStyle: { color: '#f05b4f' } },
       ],
       edgeSymbol: ['none', 'arrow'],
       edgeSymbolSize: [0, 8],
@@ -188,29 +230,32 @@ export function DiagnosticsClosedLoopGraph() {
       <ScientificChart
         id="diagnostics-observation-model-decision-loop"
         option={option}
-        ariaLabel="聚变诊断真实观测、状态反演、合成诊断、证据门与实时决策交互闭环图。可拖动和缩放。"
+        ariaLabel={en ? 'Interactive loop linking physical observations, state inversion, synthetic diagnostics, evidence gates and real-time decisions; pan and zoom are available' : '聚变诊断真实观测、状态反演、合成诊断、证据门与实时决策交互闭环图。可拖动和缩放。'}
         fallbackSrc="/figures/diagnostics-measurement-chain-nature.png"
-        fallbackAlt="聚变诊断从传感器到可信状态和决策接口的测量链静态图"
+        fallbackAlt={en ? 'Static measurement chain from fusion sensors to trusted state and decision interfaces' : '聚变诊断从传感器到可信状态和决策接口的测量链静态图'}
+        fallback={en ? <ol className="srOnly"><li>The physical facility generates responses observed by diagnostic instruments.</li><li>Acquisition, timing and calibration produce traceable observations.</li><li>Inversion and data assimilation estimate state with uncertainty.</li><li>Synthetic diagnostics project the digital-twin state into virtual channels for residual comparison with physical channels.</li><li>State and model products pass quality, evidence and authorization gates before real-time decision or engineering-health use.</li></ol> : undefined}
         className="diagnosticsLoopChart"
         height={570}
         eager
         dark
       />
       <ol className="srOnly">
-        <li>真实装置状态经诊断仪器形成原始响应。</li>
-        <li>采集、计时与标定把原始信号转化为可追溯观测。</li>
-        <li>反演和数据同化输出带不确定度的状态。</li>
-        <li>数字孪生模型经合成诊断生成虚拟通道，并与真实通道形成残差。</li>
-        <li>状态与模型结果经过质量、证据和权限门后进入实时决策或工程健康。</li>
+        <li>{en ? 'The physical facility generates responses observed by diagnostic instruments.' : '真实装置状态经诊断仪器形成原始响应。'}</li>
+        <li>{en ? 'Acquisition, timing and calibration produce traceable observations.' : '采集、计时与标定把原始信号转化为可追溯观测。'}</li>
+        <li>{en ? 'Inversion and data assimilation estimate state with uncertainty.' : '反演和数据同化输出带不确定度的状态。'}</li>
+        <li>{en ? 'Synthetic diagnostics project the digital-twin state into virtual channels for residual comparison with physical channels.' : '数字孪生模型经合成诊断生成虚拟通道，并与真实通道形成残差。'}</li>
+        <li>{en ? 'State and model products pass quality, evidence and authorization gates before real-time decision or engineering-health use.' : '状态与模型结果经过质量、证据和权限门后进入实时决策或工程健康。'}</li>
       </ol>
     </>
   );
 }
 
 export function DiagnosticsTaskCoverageChart() {
+  const { locale } = useI18n();
+  const en = locale === 'en';
   const rows = taskIds.map((taskId) => ({
     taskId,
-    label: diagnosticsTaskMeta[taskId].label,
+    label: en ? diagnosticsTaskMeta[taskId].en : diagnosticsTaskMeta[taskId].label,
     role: diagnosticsTaskMeta[taskId].role,
     primary: diagnosticsResearchItems.filter((item) => item.primaryTask === taskId).length,
     associated: diagnosticsResearchItems.filter((item) => item.primaryTask === taskId || (item.relatedTasks as readonly DiagnosticsTaskId[]).includes(taskId)).length,
@@ -222,7 +267,7 @@ export function DiagnosticsTaskCoverageChart() {
     aria: {
       enabled: true,
       decal: { show: true },
-      description: 'DG0 到 DG11 诊断任务研究覆盖条形图。深色表示以该任务为主分类的唯一工作数，浅色表示主任务或关联任务的合计覆盖数。',
+      description: en ? 'Research coverage for diagnostic tasks DG0–DG11. Dark bars show uniquely classified primary-task records; light bars show coverage including associated tasks.' : 'DG0 到 DG11 诊断任务研究覆盖条形图。深色表示以该任务为主分类的唯一工作数，浅色表示主任务或关联任务的合计覆盖数。',
     },
     grid: { left: 218, right: 48, top: 38, bottom: 58 },
     tooltip: {
@@ -235,14 +280,14 @@ export function DiagnosticsTaskCoverageChart() {
         if (!Array.isArray(params) || params.length === 0) return '';
         const first = params[0] as { data?: Record<string, unknown> };
         const data = first.data ?? {};
-        return `<b>${String(data.taskId ?? '')} · ${String(data.label ?? '')}</b><br/>主任务：${String(data.primary ?? '')} 项<br/>含关联：${String(data.associated ?? '')} 项<br/><span style="color:#16745c">点击进入目录筛选 →</span>`;
+        return `<b>${String(data.taskId ?? '')} · ${String(data.label ?? '')}</b><br/>${en ? 'Primary task' : '主任务'}: ${String(data.primary ?? '')} ${en ? 'records' : '项'}<br/>${en ? 'Including associations' : '含关联'}: ${String(data.associated ?? '')} ${en ? 'records' : '项'}<br/><span style="color:#16745c">${en ? 'Select to filter the catalogue' : '点击进入目录筛选'} →</span>`;
       },
     },
-    legend: { top: 6, right: 28, data: ['主任务（唯一计数）', '含关联任务'], textStyle: { color: '#53665d', fontSize: 9 } },
+    legend: { top: 6, right: 28, data: en ? ['Primary task (unique count)', 'Including associated tasks'] : ['主任务（唯一计数）', '含关联任务'], textStyle: { color: '#53665d', fontSize: 9 } },
     xAxis: {
       type: 'value',
       max: Math.ceil(max / 5) * 5,
-      name: '收录工作数',
+      name: en ? 'Indexed records' : '收录工作数',
       nameLocation: 'middle',
       nameGap: 36,
       axisLine: { lineStyle: { color: '#abbab2' } },
@@ -260,7 +305,7 @@ export function DiagnosticsTaskCoverageChart() {
     },
     series: [
       {
-        name: '含关联任务',
+        name: en ? 'Including associated tasks' : '含关联任务',
         type: 'bar',
         barWidth: 18,
         data: rows.map((row) => ({ ...row, value: row.associated })),
@@ -268,7 +313,7 @@ export function DiagnosticsTaskCoverageChart() {
         emphasis: { itemStyle: { color: '#86dfcf' } },
       },
       {
-        name: '主任务（唯一计数）',
+        name: en ? 'Primary task (unique count)' : '主任务（唯一计数）',
         type: 'bar',
         barWidth: 10,
         barGap: '-78%',
@@ -292,9 +337,10 @@ export function DiagnosticsTaskCoverageChart() {
       <ScientificChart
         id="diagnostics-task-coverage"
         option={option}
-        ariaLabel="DG0 到 DG11 诊断任务主分类工作数和关联覆盖数交互条形图。点击条形可筛选目录。"
+        ariaLabel={en ? 'Interactive bar chart of primary-record count and associated coverage for diagnostic tasks DG0–DG11; select a bar to filter the catalogue' : 'DG0 到 DG11 诊断任务主分类工作数和关联覆盖数交互条形图。点击条形可筛选目录。'}
         fallbackSrc="/figures/diagnostics-taxonomy-nature.png"
-        fallbackAlt="聚变诊断任务分类静态图"
+        fallbackAlt={en ? 'Static taxonomy of fusion-diagnostic tasks' : '聚变诊断任务分类静态图'}
+        fallback={en ? <table className="srOnly"><caption>Diagnostic-task research coverage</caption><thead><tr><th>Task</th><th>Name</th><th>Primary records</th><th>Including associated records</th></tr></thead><tbody>{rows.map((row) => <tr key={row.taskId}><th>{row.taskId}</th><td>{row.label}</td><td>{row.primary}</td><td>{row.associated}</td></tr>)}</tbody></table> : undefined}
         className="diagnosticsCoverageChart"
         height={620}
         onChartClick={(params) => {
@@ -305,11 +351,11 @@ export function DiagnosticsTaskCoverageChart() {
         }}
       />
       <table className="srOnly">
-        <caption>诊断任务研究覆盖</caption>
-        <thead><tr><th>任务</th><th>名称</th><th>主任务工作数</th><th>含关联工作数</th></tr></thead>
+        <caption>{en ? 'Diagnostic-task research coverage' : '诊断任务研究覆盖'}</caption>
+        <thead><tr><th>{en ? 'Task' : '任务'}</th><th>{en ? 'Name' : '名称'}</th><th>{en ? 'Primary records' : '主任务工作数'}</th><th>{en ? 'Including associated records' : '含关联工作数'}</th></tr></thead>
         <tbody>{rows.map((row) => <tr key={row.taskId}><th>{row.taskId}</th><td>{row.label}</td><td>{row.primary}</td><td>{row.associated}</td></tr>)}</tbody>
       </table>
-      <nav className="diagnosticsChartLinks diagnosticsTaskChartLinks" aria-label="按 DG0 到 DG11 筛选诊断目录">
+      <nav className="diagnosticsChartLinks diagnosticsTaskChartLinks" aria-label={en ? 'Filter the diagnostics catalogue by DG0–DG11 task' : '按 DG0 到 DG11 筛选诊断目录'}>
         {rows.map((row) => <a key={row.taskId} href={`/diagnostics?task=${row.taskId}#catalog`}>{row.taskId}<span>{row.label}</span><b>{row.primary}</b></a>)}
       </nav>
     </>
@@ -317,6 +363,8 @@ export function DiagnosticsTaskCoverageChart() {
 }
 
 export function DiagnosticsEvidenceHeatmap() {
+  const { locale } = useI18n();
+  const en = locale === 'en';
   const cells = evidenceLevels.flatMap((evidence, evidenceIndex) => deploymentLevels.map((deployment, deploymentIndex) => {
     const count = diagnosticsResearchItems.filter((item) => item.evidenceLevel === evidence && item.deploymentLevel === deployment).length;
     return [deploymentIndex, evidenceIndex, count, evidence, deployment];
@@ -328,7 +376,7 @@ export function DiagnosticsEvidenceHeatmap() {
     aria: {
       enabled: true,
       decal: { show: true },
-      description: '聚变诊断工作按 E0 到 E4 科学运行证据和 D1 到 D5 工程部署责任交叉聚合的热图。',
+      description: en ? 'Heatmap of fusion-diagnostic records cross-aggregated by scientific/operational evidence E0–E4 and engineering deployment responsibility D1–D5.' : '聚变诊断工作按 E0 到 E4 科学运行证据和 D1 到 D5 工程部署责任交叉聚合的热图。',
     },
     grid: { left: 76, right: 30, top: 40, bottom: 96 },
     tooltip: {
@@ -341,13 +389,13 @@ export function DiagnosticsEvidenceHeatmap() {
         if (!cell) return '';
         const evidence = String(cell[3]) as DiagnosticsEvidenceLevel;
         const deployment = String(cell[4]) as DiagnosticsDeploymentLevel;
-        return `<b>${evidence} · ${evidenceLabels[evidence]}</b><br/>${deployment} · ${deploymentLabels[deployment]}<br/><strong style="font-size:19px;color:#a64a13">${Number(cell[2])}</strong> 项工作<br/><span style="color:#16745c">点击按 E / D 筛选 →</span>`;
+        return `<b>${evidence} · ${en ? evidenceLabelsEn[evidence] : evidenceLabels[evidence]}</b><br/>${deployment} · ${en ? deploymentLabelsEn[deployment] : deploymentLabels[deployment]}<br/><strong style="font-size:19px;color:#a64a13">${Number(cell[2])}</strong> ${en ? 'records' : '项工作'}<br/><span style="color:#16745c">${en ? 'Select to filter by E / D' : '点击按 E / D 筛选'} →</span>`;
       },
     },
     xAxis: {
       type: 'category',
       data: deploymentLevels,
-      name: '部署责任 D',
+      name: en ? 'Deployment responsibility D' : '部署责任 D',
       nameLocation: 'middle',
       nameGap: 38,
       axisLine: { lineStyle: { color: '#aebdb5' } },
@@ -359,7 +407,7 @@ export function DiagnosticsEvidenceHeatmap() {
       type: 'category',
       inverse: true,
       data: evidenceLevels,
-      name: '科学证据 E',
+      name: en ? 'Scientific evidence E' : '科学证据 E',
       nameLocation: 'middle',
       nameGap: 48,
       axisLine: { lineStyle: { color: '#aebdb5' } },
@@ -374,12 +422,12 @@ export function DiagnosticsEvidenceHeatmap() {
       orient: 'horizontal',
       left: 'center',
       bottom: 17,
-      text: ['多', '少'],
+      text: en ? ['More', 'Fewer'] : ['多', '少'],
       textStyle: { color: '#5c6e64', fontSize: 9 },
       inRange: { color: ['#eff2ef', '#c8ebe1', '#6fd8c4', '#257962', '#806bd4', '#ff7a21'] },
     },
     series: [{
-      name: '工作数量',
+      name: en ? 'Number of records' : '工作数量',
       type: 'heatmap',
       data: cells,
       label: {
@@ -414,13 +462,13 @@ export function DiagnosticsEvidenceHeatmap() {
       <ScientificChart
         id="diagnostics-evidence-deployment-matrix"
         option={option}
-        ariaLabel="聚变诊断工作 E0 到 E4 科学证据与 D1 到 D5 部署责任交互热图。点击格子可筛选研究目录。"
+        ariaLabel={en ? 'Interactive heatmap of fusion-diagnostic scientific evidence E0–E4 and deployment responsibility D1–D5; select a cell to filter the research catalogue' : '聚变诊断工作 E0 到 E4 科学证据与 D1 到 D5 部署责任交互热图。点击格子可筛选研究目录。'}
         fallbackSrc=""
-        fallbackAlt="聚变诊断科学证据与部署责任矩阵"
+        fallbackAlt={en ? 'Fusion-diagnostic scientific-evidence and deployment-responsibility matrix' : '聚变诊断科学证据与部署责任矩阵'}
         fallback={(
           <table className="diagnosticsEvidenceFallback">
-            <caption>诊断工作科学证据与部署责任矩阵</caption>
-            <thead><tr><th>证据 / 部署</th>{deploymentLevels.map((level) => <th key={level}>{level}</th>)}</tr></thead>
+            <caption>{en ? 'Diagnostic records by scientific evidence and deployment responsibility' : '诊断工作科学证据与部署责任矩阵'}</caption>
+            <thead><tr><th>{en ? 'Evidence / deployment' : '证据 / 部署'}</th>{deploymentLevels.map((level) => <th key={level}>{level}</th>)}</tr></thead>
             <tbody>{evidenceLevels.map((evidence) => <tr key={evidence}><th>{evidence}</th>{deploymentLevels.map((deployment) => {
               const count = diagnosticsResearchItems.filter((item) => item.evidenceLevel === evidence && item.deploymentLevel === deployment).length;
               return <td key={deployment} style={{ '--matrix-strength': count / maxCount } as CSSProperties}><span>{count}</span></td>;
@@ -439,11 +487,11 @@ export function DiagnosticsEvidenceHeatmap() {
         }}
       />
       <table className="srOnly">
-        <caption>诊断工作科学证据与部署责任矩阵</caption>
-        <thead><tr><th>科学证据</th>{deploymentLevels.map((level) => <th key={level}>{level} · {deploymentLabels[level]}</th>)}</tr></thead>
-        <tbody>{evidenceLevels.map((evidence) => <tr key={evidence}><th>{evidence} · {evidenceLabels[evidence]}</th>{deploymentLevels.map((deployment) => <td key={deployment}>{diagnosticsResearchItems.filter((item) => item.evidenceLevel === evidence && item.deploymentLevel === deployment).length}</td>)}</tr>)}</tbody>
+        <caption>{en ? 'Diagnostic records by scientific evidence and deployment responsibility' : '诊断工作科学证据与部署责任矩阵'}</caption>
+        <thead><tr><th>{en ? 'Scientific evidence' : '科学证据'}</th>{deploymentLevels.map((level) => <th key={level}>{level} · {en ? deploymentLabelsEn[level] : deploymentLabels[level]}</th>)}</tr></thead>
+        <tbody>{evidenceLevels.map((evidence) => <tr key={evidence}><th>{evidence} · {en ? evidenceLabelsEn[evidence] : evidenceLabels[evidence]}</th>{deploymentLevels.map((deployment) => <td key={deployment}>{diagnosticsResearchItems.filter((item) => item.evidenceLevel === evidence && item.deploymentLevel === deployment).length}</td>)}</tr>)}</tbody>
       </table>
-      <nav className="diagnosticsChartLinks diagnosticsEvidenceLinks" aria-label="按科学证据与部署责任筛选诊断目录">
+      <nav className="diagnosticsChartLinks diagnosticsEvidenceLinks" aria-label={en ? 'Filter the diagnostics catalogue by scientific evidence and deployment responsibility' : '按科学证据与部署责任筛选诊断目录'}>
         {evidenceLevels.flatMap((evidence) => deploymentLevels.map((deployment) => {
           const count = diagnosticsResearchItems.filter((item) => item.evidenceLevel === evidence && item.deploymentLevel === deployment).length;
           return count > 0 ? <a key={`${evidence}-${deployment}`} href={`/diagnostics?evidence=${evidence}&deployment=${deployment}#catalog`}>{evidence} / {deployment}<b>{count}</b></a> : null;
@@ -454,7 +502,10 @@ export function DiagnosticsEvidenceHeatmap() {
 }
 
 export function DiagnosticsTimescaleChart() {
-  const data = diagnosticsTimescaleData.map((row, index) => [index, row.minSeconds, row.maxSeconds, row.color, row.label]);
+  const { locale } = useI18n();
+  const en = locale === 'en';
+  const rows = en ? diagnosticsTimescaleDataEn : diagnosticsTimescaleData;
+  const data = rows.map((row, index) => [index, row.minSeconds, row.maxSeconds, row.color, row.label]);
   const option: EChartsCoreOption = {
     backgroundColor: '#ffffff',
     animationDuration: 520,
@@ -462,7 +513,7 @@ export function DiagnosticsTimescaleChart() {
     aria: {
       enabled: true,
       decal: { show: true },
-      description: '聚变诊断从微秒快事件到数十年材料寿命的典型时间尺度对数区间图。范围是架构综合示意，不是装置性能承诺。',
+      description: en ? 'Logarithmic range chart of representative fusion-diagnostic timescales from microsecond events to multi-decade material lifetimes. Ranges are architectural guidance, not facility-performance claims.' : '聚变诊断从微秒快事件到数十年材料寿命的典型时间尺度对数区间图。范围是架构综合示意，不是装置性能承诺。',
     },
     tooltip: {
       trigger: 'item',
@@ -472,24 +523,24 @@ export function DiagnosticsTimescaleChart() {
       formatter: (params: unknown) => {
         const row = arrayData(params);
         if (!row) return '';
-        return `<b>${String(row[4])}</b><br/>典型范围：${Number(row[1]).toExponential()}–${Number(row[2]).toExponential()} s<br/><span style="color:#66786f">综合数量级示意；实际范围取决于仪器、信噪比、算法与决策用途。</span>`;
+        return `<b>${String(row[4])}</b><br/>${en ? 'Representative range' : '典型范围'}: ${Number(row[1]).toExponential()}–${Number(row[2]).toExponential()} s<br/><span style="color:#66786f">${en ? 'Order-of-magnitude guidance; the actual range depends on instrument response, signal-to-noise ratio, algorithm and decision purpose.' : '综合数量级示意；实际范围取决于仪器、信噪比、算法与决策用途。'}</span>`;
       },
     },
     xAxis: {
       type: 'log', min: 1e-6, max: 1e9, logBase: 10,
-      name: '典型观测 / 状态 / 维护时间尺度（对数）', nameLocation: 'middle', nameGap: 42,
+      name: en ? 'Representative observation / state / maintenance timescale (log)' : '典型观测 / 状态 / 维护时间尺度（对数）', nameLocation: 'middle', nameGap: 42,
       nameTextStyle: { color: '#607269', fontSize: 10 },
       axisLine: { lineStyle: { color: '#aebdb5' } }, axisTick: { show: false },
       splitLine: { show: true, lineStyle: { color: '#e2e8e4', type: 'dashed' } }, minorSplitLine: { show: false },
       axisLabel: { color: '#5a6d63', fontSize: 9, formatter: formatTimescaleTick },
     },
     yAxis: {
-      type: 'category', inverse: true, data: diagnosticsTimescaleData.map((row) => row.label),
+      type: 'category', inverse: true, data: rows.map((row) => row.label),
       axisLine: { show: false }, axisTick: { show: false },
       axisLabel: { color: '#20352b', fontSize: 10, fontWeight: 700, width: 175, overflow: 'truncate', margin: 14 },
     },
     dataZoom: [{ type: 'inside', xAxisIndex: 0, filterMode: 'none', zoomOnMouseWheel: 'shift', moveOnMouseMove: true }],
-    series: [{ type: 'custom', name: '典型时间尺度', renderItem: renderTimescaleRange, encode: { x: [1, 2], y: 0 }, data, z: 4 }],
+    series: [{ type: 'custom', name: en ? 'Representative timescale' : '典型时间尺度', renderItem: renderTimescaleRange, encode: { x: [1, 2], y: 0 }, data, z: 4 }],
     media: [{ query: { maxWidth: 620 }, option: { grid: { left: 112, right: 20, top: 32, bottom: 62 }, yAxis: { axisLabel: { width: 92, fontSize: 8 } } } }],
   };
   return (
@@ -497,18 +548,21 @@ export function DiagnosticsTimescaleChart() {
       <ScientificChart
         id="diagnostics-nested-timescales"
         option={option}
-        ariaLabel="聚变诊断从微秒快事件到数十年全寿命的典型时间尺度交互对数区间图。"
+        ariaLabel={en ? 'Interactive logarithmic chart of representative fusion-diagnostic timescales from microsecond events to multi-decade lifecycle monitoring' : '聚变诊断从微秒快事件到数十年全寿命的典型时间尺度交互对数区间图。'}
         fallbackSrc="/figures/diagnostics-timescale-nature.png"
-        fallbackAlt="聚变诊断从微秒快事件到全生命周期的时间尺度静态图"
+        fallbackAlt={en ? 'Static fusion-diagnostic timescale chart from microsecond events to lifecycle monitoring' : '聚变诊断从微秒快事件到全生命周期的时间尺度静态图'}
+        fallback={en ? <table className="srOnly"><caption>Representative fusion-diagnostic timescales</caption><thead><tr><th>Category</th><th>Lower bound (s)</th><th>Upper bound (s)</th></tr></thead><tbody>{rows.map((row) => <tr key={row.label}><th>{row.label}</th><td>{row.minSeconds}</td><td>{row.maxSeconds}</td></tr>)}</tbody></table> : undefined}
         className="diagnosticsTimescaleChart"
         height={510}
       />
-      <table className="srOnly"><caption>聚变诊断典型时间尺度</caption><thead><tr><th>类别</th><th>下限（秒）</th><th>上限（秒）</th></tr></thead><tbody>{diagnosticsTimescaleData.map((row) => <tr key={row.label}><th>{row.label}</th><td>{row.minSeconds}</td><td>{row.maxSeconds}</td></tr>)}</tbody></table>
+      <table className="srOnly"><caption>{en ? 'Representative fusion-diagnostic timescales' : '聚变诊断典型时间尺度'}</caption><thead><tr><th>{en ? 'Category' : '类别'}</th><th>{en ? 'Lower bound (s)' : '下限（秒）'}</th><th>{en ? 'Upper bound (s)' : '上限（秒）'}</th></tr></thead><tbody>{rows.map((row) => <tr key={row.label}><th>{row.label}</th><td>{row.minSeconds}</td><td>{row.maxSeconds}</td></tr>)}</tbody></table>
     </>
   );
 }
 
 export function DiagnosticsDeviceCoverageChart() {
+  const { locale } = useI18n();
+  const en = locale === 'en';
   const cells = diagnosticsDeviceProfiles.flatMap((device, deviceIndex) => taskIds.map((taskId, taskIndex) => [taskIndex, deviceIndex, (device.primaryTasks as readonly DiagnosticsTaskId[]).includes(taskId) ? 1 : 0, taskId, device.name]));
   const option: EChartsCoreOption = {
     backgroundColor: '#ffffff',
@@ -517,7 +571,7 @@ export function DiagnosticsDeviceCoverageChart() {
     aria: {
       enabled: true,
       decal: { show: true },
-      description: '十八个聚变装置档案与 DG0 到 DG11 诊断任务的公开证据索引矩阵。着色只表示本版档案存在公开关联证据，不代表系统同时可用或成熟度相同。',
+      description: en ? 'Public-evidence index across eighteen fusion-facility profiles and diagnostic tasks DG0–DG11. Colour only indicates that this release records public associated evidence; it does not imply simultaneous availability or equal maturity.' : '十八个聚变装置档案与 DG0 到 DG11 诊断任务的公开证据索引矩阵。着色只表示本版档案存在公开关联证据，不代表系统同时可用或成熟度相同。',
     },
     tooltip: {
       trigger: 'item',
@@ -528,7 +582,7 @@ export function DiagnosticsDeviceCoverageChart() {
         if (!cell) return '';
         const taskId = String(cell[3]) as DiagnosticsTaskId;
         const covered = Number(cell[2]) === 1;
-        return `<b>${String(cell[4])}</b><br/>${taskId} · ${diagnosticsTaskMeta[taskId].label}<br/><span style="color:${covered ? '#16745c' : '#76847d'}">${covered ? '本版装置档案记录了公开关联证据' : '本版档案未确认公开关联证据'}</span><br/><span style="color:#7a8981">这是证据索引，不代表同步可用或成熟度等同。</span>`;
+        return `<b>${String(cell[4])}</b><br/>${taskId} · ${en ? diagnosticsTaskMeta[taskId].en : diagnosticsTaskMeta[taskId].label}<br/><span style="color:${covered ? '#16745c' : '#76847d'}">${en ? (covered ? 'This release records public associated evidence' : 'No public associated evidence is confirmed in this release') : (covered ? '本版装置档案记录了公开关联证据' : '本版档案未确认公开关联证据')}</span><br/><span style="color:#7a8981">${en ? 'This is an evidence index; it does not imply simultaneous availability or equal maturity.' : '这是证据索引，不代表同步可用或成熟度等同。'}</span>`;
       },
     },
     xAxis: { type: 'category', data: taskIds, position: 'top', axisLine: { lineStyle: { color: '#aebdb5' } }, axisTick: { show: false }, axisLabel: { color: '#274237', fontSize: 9, fontWeight: 800, interval: 0 } },
@@ -548,13 +602,14 @@ export function DiagnosticsDeviceCoverageChart() {
       <ScientificChart
         id="diagnostics-device-task-coverage"
         option={option}
-        ariaLabel="十八个聚变装置与 DG0 到 DG11 诊断任务的公开证据覆盖交互矩阵。"
+        ariaLabel={en ? 'Interactive public-evidence coverage matrix across eighteen fusion facilities and diagnostic tasks DG0–DG11' : '十八个聚变装置与 DG0 到 DG11 诊断任务的公开证据覆盖交互矩阵。'}
         fallbackSrc="/figures/diagnostics-device-coverage-nature.png"
-        fallbackAlt="主要聚变装置与诊断任务公开证据覆盖静态矩阵"
+        fallbackAlt={en ? 'Static public-evidence coverage matrix for major fusion facilities and diagnostic tasks' : '主要聚变装置与诊断任务公开证据覆盖静态矩阵'}
+        fallback={en ? <table className="srOnly"><caption>Public evidence linking facilities and diagnostic tasks</caption><thead><tr><th>Facility</th>{taskIds.map((taskId) => <th key={taskId}>{taskId}</th>)}</tr></thead><tbody>{diagnosticsDeviceProfiles.map((device) => <tr key={device.id}><th>{device.name}</th>{taskIds.map((taskId) => <td key={taskId}>{(device.primaryTasks as readonly DiagnosticsTaskId[]).includes(taskId) ? 'Evidence linked' : 'Not confirmed in this release'}</td>)}</tr>)}</tbody></table> : undefined}
         className="diagnosticsDeviceCoverageChart"
         height={660}
       />
-      <table className="srOnly"><caption>装置与诊断任务公开证据索引</caption><thead><tr><th>装置</th>{taskIds.map((taskId) => <th key={taskId}>{taskId}</th>)}</tr></thead><tbody>{diagnosticsDeviceProfiles.map((device) => <tr key={device.id}><th>{device.name}</th>{taskIds.map((taskId) => <td key={taskId}>{(device.primaryTasks as readonly DiagnosticsTaskId[]).includes(taskId) ? '有关联证据' : '本版未确认'}</td>)}</tr>)}</tbody></table>
+      <table className="srOnly"><caption>{en ? 'Public evidence linking facilities and diagnostic tasks' : '装置与诊断任务公开证据索引'}</caption><thead><tr><th>{en ? 'Facility' : '装置'}</th>{taskIds.map((taskId) => <th key={taskId}>{taskId}</th>)}</tr></thead><tbody>{diagnosticsDeviceProfiles.map((device) => <tr key={device.id}><th>{device.name}</th>{taskIds.map((taskId) => <td key={taskId}>{en ? ((device.primaryTasks as readonly DiagnosticsTaskId[]).includes(taskId) ? 'Evidence linked' : 'Not confirmed in this release') : ((device.primaryTasks as readonly DiagnosticsTaskId[]).includes(taskId) ? '有关联证据' : '本版未确认')}</td>)}</tr>)}</tbody></table>
     </>
   );
 }
@@ -573,20 +628,23 @@ const renderRoadmapRange: CustomSeriesRenderItem = (_params, api) => {
 };
 
 export function DiagnosticsRoadmapChart() {
-  const data = diagnosticsRoadmapData.map((row, index) => [index, row.startMonth, row.endMonth, row.color, row.id, row.title, row.period, row.gate]);
+  const { locale } = useI18n();
+  const en = locale === 'en';
+  const rows = en ? diagnosticsRoadmapDataEn : diagnosticsRoadmapData;
+  const data = rows.map((row, index) => [index, row.startMonth, row.endMonth, row.color, row.id, row.title, row.period, row.gate]);
   const option: EChartsCoreOption = {
     backgroundColor: '#ffffff', animationDuration: 520,
     grid: { left: 195, right: 46, top: 36, bottom: 58 },
-    aria: { enabled: true, decal: { show: true }, description: 'FusionDigital 聚变诊断数字孪生建议路线图。阶段允许并行，以证据门晋级，月份区间不是已批准项目进度承诺。' },
+    aria: { enabled: true, decal: { show: true }, description: en ? 'Recommended FusionDigital roadmap for a fusion-diagnostic digital twin. Stages may overlap and advance through evidence gates; month ranges are not an approved project schedule.' : 'FusionDigital 聚变诊断数字孪生建议路线图。阶段允许并行，以证据门晋级，月份区间不是已批准项目进度承诺。' },
     tooltip: {
       trigger: 'item', borderColor: '#aebeb5', backgroundColor: 'rgba(255,255,252,.98)',
       textStyle: { color: '#14251e', fontFamily: 'Microsoft YaHei UI, Microsoft YaHei, sans-serif', fontSize: 12 },
-      formatter: (params: unknown) => { const row = arrayData(params); return row ? `<b>${String(row[4])} · ${String(row[5])}</b><br/>建议区间：${String(row[6])}<br/>证据门：${String(row[7])}<br/><span style="color:#77867f">允许并行；不是已批准的进度或性能承诺。</span>` : ''; },
+      formatter: (params: unknown) => { const row = arrayData(params); return row ? `<b>${String(row[4])} · ${String(row[5])}</b><br/>${en ? 'Recommended window' : '建议区间'}: ${String(row[6])}<br/>${en ? 'Evidence gate' : '证据门'}: ${String(row[7])}<br/><span style="color:#77867f">${en ? 'Stages may overlap; this is not an approved schedule or performance commitment.' : '允许并行；不是已批准的进度或性能承诺。'}</span>` : ''; },
     },
-    xAxis: { type: 'value', min: 0, max: 96, interval: 12, name: '建议时间窗口（月）', nameLocation: 'middle', nameGap: 36, axisLine: { lineStyle: { color: '#aebdb5' } }, axisTick: { show: false }, axisLabel: { color: '#617168', fontSize: 9 }, splitLine: { lineStyle: { color: '#e2e8e4', type: 'dashed' } } },
-    yAxis: { type: 'category', inverse: true, data: diagnosticsRoadmapData.map((row) => `${row.id}  ${row.title}`), axisLine: { show: false }, axisTick: { show: false }, axisLabel: { color: '#20352b', fontSize: 10, fontWeight: 700, width: 165, overflow: 'truncate', margin: 14 } },
+    xAxis: { type: 'value', min: 0, max: 96, interval: 12, name: en ? 'Recommended time window (months)' : '建议时间窗口（月）', nameLocation: 'middle', nameGap: 36, axisLine: { lineStyle: { color: '#aebdb5' } }, axisTick: { show: false }, axisLabel: { color: '#617168', fontSize: 9 }, splitLine: { lineStyle: { color: '#e2e8e4', type: 'dashed' } } },
+    yAxis: { type: 'category', inverse: true, data: rows.map((row) => `${row.id}  ${row.title}`), axisLine: { show: false }, axisTick: { show: false }, axisLabel: { color: '#20352b', fontSize: 10, fontWeight: 700, width: 165, overflow: 'truncate', margin: 14 } },
     dataZoom: [{ type: 'inside', xAxisIndex: 0, filterMode: 'none', zoomOnMouseWheel: 'shift', moveOnMouseMove: true }],
-    series: [{ type: 'custom', name: '建议窗口', renderItem: renderRoadmapRange, encode: { x: [1, 2], y: 0 }, data, z: 4 }],
+    series: [{ type: 'custom', name: en ? 'Recommended window' : '建议窗口', renderItem: renderRoadmapRange, encode: { x: [1, 2], y: 0 }, data, z: 4 }],
     media: [{ query: { maxWidth: 620 }, option: { grid: { left: 105, right: 20, top: 32, bottom: 56 }, yAxis: { axisLabel: { width: 84, fontSize: 8 } } } }],
   };
   return (
@@ -594,13 +652,14 @@ export function DiagnosticsRoadmapChart() {
       <ScientificChart
         id="diagnostics-digital-twin-roadmap"
         option={option}
-        ariaLabel="FusionDigital 聚变诊断数字孪生从配置基线到整厂诊断孪生的交互甘特图。"
+        ariaLabel={en ? 'Interactive FusionDigital roadmap from a configuration baseline to a whole-plant diagnostic digital twin' : 'FusionDigital 聚变诊断数字孪生从配置基线到整厂诊断孪生的交互甘特图。'}
         fallbackSrc="/figures/diagnostics-roadmap-nature.png"
-        fallbackAlt="FusionDigital 聚变诊断数字孪生建议路线静态甘特图"
+        fallbackAlt={en ? 'Static recommended FusionDigital roadmap for a fusion-diagnostic digital twin' : 'FusionDigital 聚变诊断数字孪生建议路线静态甘特图'}
+        fallback={en ? <table className="srOnly"><caption>FusionDigital diagnostic digital-twin roadmap</caption><thead><tr><th>Stage</th><th>Name</th><th>Start month</th><th>End month</th><th>Evidence gate</th></tr></thead><tbody>{rows.map((row) => <tr key={row.id}><th>{row.id}</th><td>{row.title}</td><td>{row.startMonth}</td><td>{row.endMonth}</td><td>{row.gate}</td></tr>)}</tbody></table> : undefined}
         className="diagnosticsRoadmapChart"
         height={500}
       />
-      <table className="srOnly"><caption>FusionDigital 聚变诊断建议路线</caption><thead><tr><th>阶段</th><th>名称</th><th>开始月</th><th>结束月</th><th>证据门</th></tr></thead><tbody>{diagnosticsRoadmapData.map((row) => <tr key={row.id}><th>{row.id}</th><td>{row.title}</td><td>{row.startMonth}</td><td>{row.endMonth}</td><td>{row.gate}</td></tr>)}</tbody></table>
+      <table className="srOnly"><caption>{en ? 'FusionDigital diagnostic digital-twin roadmap' : 'FusionDigital 聚变诊断建议路线'}</caption><thead><tr><th>{en ? 'Stage' : '阶段'}</th><th>{en ? 'Name' : '名称'}</th><th>{en ? 'Start month' : '开始月'}</th><th>{en ? 'End month' : '结束月'}</th><th>{en ? 'Evidence gate' : '证据门'}</th></tr></thead><tbody>{rows.map((row) => <tr key={row.id}><th>{row.id}</th><td>{row.title}</td><td>{row.startMonth}</td><td>{row.endMonth}</td><td>{row.gate}</td></tr>)}</tbody></table>
     </>
   );
 }

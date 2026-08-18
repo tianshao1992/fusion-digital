@@ -46,7 +46,7 @@ export default function SiteNav({active = 'home'}: SiteNavProps) {
     aria-label={t('locale.switchTo')}
     title={t('locale.current')}
     onClick={() => setLocale(locale === 'zh-CN' ? 'en' : 'zh-CN')}
-  >{locale === 'zh-CN' ? 'EN' : '中'}</button>;
+  >{locale === 'zh-CN' ? 'EN' : 'ZH'}</button>;
 
   const visibleItems = useMemo(
     () => links.filter(({ key }) => visibleKeys.includes(key)),

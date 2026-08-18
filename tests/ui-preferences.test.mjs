@@ -159,9 +159,9 @@ test('knowledge graph explorer has distinct high-contrast light and dark surface
   assert.match(explorer, /fontWeight: 700/);
   assert.match(explorer, /chartTheme\.mode === 'dark' \? \.48 : \.6/);
   assert.match(explorer, /chartTheme\.mode === 'dark' \? \.42 : \.34/);
-  assert.match(explorer, /entityLabel: node\.label/);
-  assert.match(explorer, /entityDescription: nodeDescription\(node\)/);
-  assert.match(explorer, /formatter: formatKnowledgeGraphTooltip/);
+  assert.match(explorer, /entityLabel: label/);
+  assert.match(explorer, /entityDescription: nodeDescription\(node, locale\)/);
+  assert.match(explorer, /formatter: \(params: unknown\) => formatKnowledgeGraphTooltip\(params, locale\)/);
   assert.doesNotMatch(explorer, /node = p\.data as unknown as KnowledgeGraphNode/);
   assert.match(tooltip, /text\(data\.entityLabel/);
 });
@@ -248,9 +248,9 @@ test('scientific visualizations consume the resolved theme and redraw with seman
   assert.match(scientific, /chartRef\.current\.setOption\(\{ \.\.\.themedOption/);
   assert.match(scientific, /data-chart-theme=\{chartTheme\.mode\}/);
   assert.match(systemMap, /const chartTheme = useChartTheme\(\)/);
-  assert.match(systemMap, /\[chartTheme, phaseIndex, selectedModule, selectedPhase\]/);
+  assert.match(systemMap, /\[chartTheme, isEnglish, locale, phaseIndex, selectedModule, selectedPhase\]/);
   assert.match(roadmap, /chartTheme\.mode === 'dark'/);
-  assert.match(roadmap, /\[chartTheme, selectedId\]/);
+  assert.match(roadmap, /\[chartTheme, isEnglish, selectedId\]/);
   assert.match(efitCanvas, /applyScientificChartTheme\(option, chartTheme\)/);
   assert.match(efitSignals, /const signalColors = useMemo\([\s\S]*chartTheme\.mode === 'dark'[\s\S]*\[chartTheme\.mode\]/);
   assert.match(efitEquilibrium, /chartTheme\.mode === 'dark'/);

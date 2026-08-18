@@ -26,6 +26,10 @@ export type AskHistoryMessage = Pick<ChatTurn, 'role' | 'content'>;
 
 export const KNOWLEDGE_CHAT_STORAGE_KEY = 'fusiondigital.knowledge-chat.v1';
 
+export function knowledgeChatStorageKey(locale: 'zh-CN' | 'en') {
+  return `${KNOWLEDGE_CHAT_STORAGE_KEY}.${locale === 'en' ? 'en' : 'zh-CN'}`;
+}
+
 export const CHAT_LIMITS = Object.freeze({
   maxStoredTurns: 24,
   maxRequestTurns: 10,

@@ -1,7 +1,10 @@
+'use client';
+
 import KnowledgeBackLink from '../components/KnowledgeBackLink';
 import SiteFooter from '../components/SiteFooter';
 import SiteNav from '../components/SiteNav';
 import TwinAgentMotion from '../components/TwinAgentMotion';
+import { useI18n } from '../i18n';
 import AIResearchCatalog from './AIResearchCatalog';
 import { aiResearchItems, domainMeta, type AIDomain } from './aiResearch';
 import './ai.css';
@@ -118,6 +121,54 @@ const roadmap = [
   ['A5', '有限自治', '仅在经独立 V&V 的狭窄适用域闭环；安全保护始终独立于生成式 AI。'],
 ];
 
+const capabilityLayersEn = [
+  { index: '01', title: 'Machine learning', en: 'MACHINE LEARNING', role: 'Convert discharge, simulation and equipment data into calibrated classifiers, regressors, anomaly detectors, optimizers and lifetime models.', tasks: 'Disruption prediction · state estimation · parameter identification · equipment health · discharge clustering · engineering surrogates', gate: 'Partition tests by time, discharge, campaign and facility; report calibration, false alarms, misses and failure cases.' },
+  { index: '02', title: 'Deep learning', en: 'DEEP LEARNING', role: 'Learn nonlinear representations across multichannel time series, images, profiles, geometry and actuator demand, including low-latency surrogates.', tasks: 'Multimodal diagnostics · neural state space · fast surrogates · reinforcement-learning control · neural operators', gate: 'Test missing sensors, distribution shift, worst-case latency, adversarial disturbance and simulation-to-reality robustness.' },
+  { index: '03', title: 'Foundation models', en: 'FOUNDATION MODELS', role: 'Pre-train shared state representations across diagnostics, tasks and, where justified, facilities; adapt them to downstream work with limited labelled data.', tasks: 'Missing-diagnostic reconstruction · few-shot transfer · multimodal state representation · cross-task interfaces', gate: 'Scale is not credibility: publish lineage, applicability, probe tasks, ablations and independent-facility validation.' },
+  { index: '04', title: 'AI agents', en: 'AI AGENTS', role: 'Orchestrate auditable workflows by invoking retrieval, data, simulation, optimization and reporting tools.', tasks: 'Experiment retrieval · scenario search · simulation orchestration · data analysis · operator copilot · maintenance coordination', gate: 'Never bypass safety controllers; writes require authorization, plan pre-check, human approval, execution receipt and a complete audit trail.' },
+];
+
+const domainAnalysisEn: Record<AIDomain, { focus: string; frontier: string; gap: string }> = {
+  physics: { focus: 'Surrogates, differentiable simulation and parameter inference for transport, turbulence, equilibrium, edge physics and plasma–material interaction.', frontier: 'QLKNN and differentiable environments such as TORAX increasingly connect expensive physics models to optimization and control design.', gap: 'Parent-model bias, extrapolation beyond training domains, multiscale coupling and conservation constraints still limit reactor-grade prediction.' },
+  engineering: { focus: 'Model-order reduction, surrogates, inverse design and condition prognosis across electromagnetics, structures, thermal fluids, neutronics and materials.', frontier: 'Conceptual design and large parameter scans show the clearest benefits, with several reusable optimization environments emerging.', gap: 'Public fusion-engineering data are scarce; manufacturing tolerances, ageing and closed-loop validation against plant sensors remain weak.' },
+  control: { focus: 'Learning control, model-predictive control and policy search for shape, profiles, heating, stability and actuator allocation.', frontier: 'Real-facility closed-loop experiments on TCV, DIII-D and KSTAR provide the strongest evidence in fusion AI.', gap: 'Coupled objectives, shared actuators, worst-case latency, OOD detection and enforceable safety envelopes are not yet power-plant ready.' },
+  diagnostics: { focus: 'Disruption and instability prediction, virtual diagnostics, missing-signal reconstruction, tomography and anomaly detection.', frontier: 'Cross-facility prediction and multimodal pre-training efforts such as FusionMAE and TokaMind are reshaping diagnostic interfaces.', gap: 'True fault labels, cross-facility calibration, false-alarm cost and long-term drift under irradiation remain insufficiently validated.' },
+  energy: { focus: 'Fast optimization and prediction for blanket heat extraction, primary/secondary loops, power cycles, storage and grid coupling.', frontier: 'Most methods originate in fission or general energy systems; fusion-specific work remains concentrated in conceptual design and systems codes.', gap: 'Operational data coupling fusion heat-source transients, tritium constraints and grid requirements do not yet exist at useful scale.' },
+  auxiliary: { focus: 'Heating and current drive, cryogenics, vacuum, fuelling, tritium, cooling water, power supplies and remote handling.', frontier: 'RF/NBI surrogates, equipment anomaly detection and robotic perception are credible near-term entry points.', gap: 'Subsystem data silos, commercial interfaces, sparse fault examples and cross-system failure propagation remain unresolved.' },
+  data: { focus: 'Time alignment, configuration, units, ontology, quality, access, versioning, benchmarks and evidence lineage.', frontier: 'MDSplus, UDA, IMAS/OMAS, MAST open data and new benchmarks form a practical common foundation.', gap: 'Cross-facility semantics remain inconsistent; open diagnostic metadata and reproducible train/test partitions are inadequate.' },
+  hmi: { focus: 'Natural-language retrieval, explanation, experiment planning, numerical-data question answering, collaborative decisions and operator copilots.', frontier: 'Fusion-specific language models, retrieval-augmented generation and numerical-data agents exist, but mostly as research prototypes.', gap: 'Citation verification, authorization, operating-procedure constraints, expert accountability and human-factors validation lack mature evidence.' },
+  integration: { focus: 'Orchestrate physics, engineering, control, diagnostics, auxiliaries and economics into traceable multi-fidelity decision loops.', frontier: 'FUSE, PROCESS/FAROES, differentiable simulation and search agents are becoming a design-space exploration backbone.', gap: 'A common authoritative state, online calibration, whole-plant fault propagation, safety cases and sustained-operation evidence are still missing.' },
+};
+
+const deviceMatrixEn = [
+  ['TCV', 'Reinforcement-learning magnetic-configuration control, trajectory prediction and optimization', 'E4 · repeated facility closed-loop experiments', 'Control policies still depend on validated simulators and explicit constraints'],
+  ['DIII-D', 'Disruption/tearing-mode prediction, avoidance control and PACMAN integrated control', 'E4 · facility closed loop and real-time systems', 'Transfer to burning plasmas and sustained operation remains unverified'],
+  ['KSTAR', 'Tearing-mode avoidance and cross-facility ELM/instability prediction', 'E4 / E2', 'Robustness across operating regimes and interpretable boundaries remain priorities'],
+  ['HL-3 / SUNIST-2', 'FusionMAE, multitask diagnostics and missing-signal recovery', 'E2–E3 · experimental data and system deployment', 'Foundation models remain facility-specific; public weights and datasets are limited'],
+  ['MAST / MAST-U', 'Open data, TokaMark/TokaMind and event prediction', 'E2 · large offline datasets', 'Benchmark openness is improving; closed-loop evidence is not yet established'],
+  ['JET / EAST / C-Mod', 'Cross-facility disruption prediction, transport surrogates and data pipelines', 'E2–E4 · work dependent', 'Domain shift and inconsistent signal definitions materially affect transfer'],
+  ['SPARC', 'TORAX scenario search, heat-load control and AI-pilot research', 'E1 · simulation and official R&D plans', 'The facility is pre-operation; plans must not be represented as experimental validation'],
+  ['ITER / DEMO', 'Target adaptation, digital engineering and safety-critical scenario research', 'E0–E1 · predominantly design/simulation', 'No same-scale operating data exist; transfer requires demonstrable extrapolation and independent protection'],
+];
+
+const risksEn = [
+  ['Out-of-distribution failure', 'New wall conditions, heating combinations, diagnostic anomalies or facilities can invalidate the training distribution. Detect OOD state online and define deterministic degradation.'],
+  ['Miscalibrated uncertainty', 'Accurate point predictions do not establish credible risk. Calibrate intervals and propagate uncertainty into control and engineering decisions.'],
+  ['Correlation is not causation', 'A model may learn operating conventions or acquisition artefacts. Apply conservation, intervention and synthetic-diagnostic constraints.'],
+  ['Agent overreach', 'Generative models must not bypass deterministic safety layers. Tool allowlists, least privilege, dual approval and execution receipts are mandatory.'],
+  ['Continual-learning risk', 'Online updates can invalidate qualified behaviour. Freeze production models and require candidates to re-pass gates in shadow mode.'],
+  ['Untraceable evidence', 'Training data, code, weights, configuration, prompts, tool calls and outputs must resolve to one versioned timeline.'],
+];
+
+const roadmapEn = [
+  ['A0', 'Data and evidence', 'Establish discharge-level data quality, labels, ontology, facility configuration, model cards and reproducible evaluation.'],
+  ['A1', 'Assistive models', 'Begin with diagnostic reconstruction, anomaly detection and narrow single-physics surrogates without real-time control authority.'],
+  ['A2', 'Predictive twin', 'Combine surrogates with DINA/MEQ, transport and engineering constraints to produce an uncertainty-aware digital shadow.'],
+  ['A3', 'Operator copilot', 'Provide experiment retrieval, scenario comparison, simulation orchestration and citable explanations while preserving human decisions.'],
+  ['A4', 'Governed agent', 'Automate offline workflows within tool allowlists and authorization gates; every write remains auditable and reversible.'],
+  ['A5', 'Bounded autonomy', 'Close the loop only within a narrow, independently verified applicability domain; safety protection remains independent of generative AI.'],
+];
+
 const domainCounts = Object.fromEntries(
   (Object.keys(domainMeta) as AIDomain[]).map((domain) => [domain, aiResearchItems.filter((item) => item.domain === domain).length]),
 ) as Record<AIDomain, number>;
@@ -125,6 +176,45 @@ const directCodeCount = aiResearchItems.filter((item) => item.code.some((repo) =
 const deviceEvidenceCount = aiResearchItems.filter((item) => ['E2', 'E3', 'E4'].includes(item.evidenceLevel)).length;
 
 export default function AIPage() {
+  const { locale } = useI18n();
+  if (locale === 'en') {
+    return (
+      <main className="aiPage">
+        <SiteNav active="ai" />
+        <KnowledgeBackLink />
+
+        <header className="aiHero">
+          <div>
+            <p className="aiEyebrow">FUSION AI-NATIVE RESEARCH ATLAS · 2026</p>
+            <h1>AI-native is not another chat box.<br /><span>It rebuilds fusion cognition and collaboration as a closed loop.</span></h1>
+            <p>Anchor every model in physics and experimental evidence; use fast surrogates and multimodal state representations for real-time performance; let agents orchestrate data, simulation and optimization. Any action affecting a facility must pass deterministic safety boundaries, authorization and auditable approval.</p>
+            <div className="aiActions"><a href="#catalog">Search the research atlas</a><a href="/fusion-ai-native-research-report.docx" download>Download report (Chinese)</a></div>
+            <dl className="aiHeroStats"><div><dt>{aiResearchItems.length}</dt><dd>verified records</dd></div><div><dt>9</dt><dd>knowledge domains</dd></div><div><dt>{deviceEvidenceCount}</dt><dd>records using facility data or stronger evidence</dd></div><div><dt>{directCodeCount}</dt><dd>records with official direct code</dd></div></dl>
+          </div>
+          <TwinAgentMotion />
+        </header>
+
+        <section className="aiThesis"><p className="aiIndex">00 / OPERATING PRINCIPLE</p><h2><span>A digital twin supplies the world model, synchronized state and evidence.</span> AI supplies representation, search, optimization and orchestration. Their purpose is not to replace physics, but to form verifiable, explainable and reversible decisions faster within a declared applicability domain.</h2></section>
+
+        <section className="aiCapabilities" id="capabilities"><div className="aiSectionHead"><p className="aiIndex">01 / CAPABILITY STACK</p><h2>Capability grows from machine learning to agents; governance must advance at the same pace.</h2><p>These layers are complementary. Foundation models provide reusable representations, task-specific models perform deterministic work, and agents orchestrate tools. The twin contributes state, simulation environments, configuration and evidence boundaries.</p></div><div className="capabilityGrid">{capabilityLayersEn.map((item) => <article key={item.index}><header><span>{item.index}</span><b>{item.en}</b></header><h3>{item.title}</h3><p>{item.role}</p><dl><div><dt>Suitable tasks</dt><dd>{item.tasks}</dd></div><div><dt>Gate before twin integration</dt><dd>{item.gate}</dd></div></dl></article>)}</div></section>
+
+        <section className="aiLandscape" id="catalog"><div className="aiSectionHead aiLandscapeHead"><div><p className="aiIndex">02 / SEARCHABLE RESEARCH LANDSCAPE</p><h2>Search problem–facility–paper–code–evidence links across nine domains.</h2><p>Records prioritize primary papers, official facility or institution pages and author repositories. Missing implementations are marked “not publicly available”; enabling tools and community reproductions are not presented as the paper authors&apos; code.</p></div><div className="landscapeDownloads"><a href="/fusion-ai-native-research-report.docx" download><b>WORD</b><span>Technical report (Chinese)</span></a><a href="/data/fusion-ai-native-landscape.json" download><b>JSON</b><span>Maintainable research data</span></a><a href="/fusion-ai-native-paper-code-index.csv" download><b>CSV</b><span>Paper and code index</span></a></div></div><AIResearchCatalog /></section>
+
+        <section className="aiDomains" id="domains"><div className="aiSectionHead"><p className="aiIndex">03 / NINE-DOMAIN SYNTHESIS</p><h2>AI-native capability is not a tenth silo; it is a common layer across the other nine domains.</h2><p>Each domain requires its own data, physics constraints, validation metrics and responsibility boundaries. The same algorithm can have very different credibility requirements in different domains.</p></div><div className="domainSynthesisGrid">{(Object.keys(domainMeta) as AIDomain[]).map((key) => { const meta = domainMeta[key]; const analysis = domainAnalysisEn[key]; return <article key={key} style={{ '--domain-accent': meta.color } as React.CSSProperties}><header><span>{meta.index}</span><b>{meta.en}</b><i>{domainCounts[key]} records</i></header><h3>{meta.en}</h3><dl><div><dt>Focus</dt><dd>{analysis.focus}</dd></div><div><dt>Frontier</dt><dd>{analysis.frontier}</dd></div><div><dt>Gap</dt><dd>{analysis.gap}</dd></div></dl></article>; })}</div></section>
+
+        <section className="aiDevices" id="devices"><div className="aiSectionHead"><p className="aiIndex">04 / FACILITY ADOPTION</p><h2>Facility evidence determines adoption order: experimental closed loop is not the same as planned adaptation.</h2></div><div className="deviceEvidenceTable" role="table" aria-label="Evidence for AI-native applications on fusion facilities"><div className="deviceEvidenceHeader" role="row"><span>Facility</span><span>Representative work</span><span>Highest evidence</span><span>Interpretation boundary</span></div>{deviceMatrixEn.map((row) => <div role="row" key={row[0]}>{row.map((cell) => <span role="cell" key={cell}>{cell}</span>)}</div>)}</div></section>
+
+        <section className="aiArchitecture"><div><p className="aiIndex">05 / REFERENCE ARCHITECTURE</p><h2>Two speeds, separated authority, reversible releases</h2><p>The online loop accepts only frozen, time-bounded and reversible models. Offline agents retrieve, simulate, train, compare and report. A model progresses from the offline factory to shadow or bounded closed loop only after passing data, physics, real-time, robustness and authorization gates.</p></div><div className="archStack"><article><span>ONLINE · ms–s</span><b>Diagnostics → state estimation → fast prediction → deterministic safety controller</b><i>Worst-case latency · independent protection · OOD detection · degraded modes</i></article><article><span>EVIDENCE GATE</span><b>Data lineage · physical conservation · VVUQ · HIL · authorization · signed release</b><i>Approve / reject / roll back / re-validate</i></article><article><span>OFFLINE · min–week</span><b>High-fidelity simulation → training and evaluation → agent orchestration → expert review</b><i>Cross-facility validation · adversarial testing · fault injection · model cards</i></article></div></section>
+
+        <section className="aiRisks"><div className="aiSectionHead"><p className="aiIndex">06 / TRUST GAPS</p><h2>The principal gap to a digital twin is trustworthy operation—not parameter count.</h2></div><div className="riskGrid">{risksEn.map((item, index) => <article key={item[0]}><span>{String(index + 1).padStart(2, '0')}</span><h3>{item[0]}</h3><p>{item[1]}</p></article>)}</div></section>
+
+        <section className="aiRoute" id="route"><div className="aiSectionHead"><p className="aiIndex">07 / FUSIONDIGITAL ROADMAP</p><h2>Begin with DINA/MEQ and narrow tasks; earn bounded autonomy step by step.</h2><p>Establish reproducible evaluation and surrogate services first, then deploy AI in shadow mode. Closed-loop authority is granted only inside a narrow, verified applicability domain. The ability to generate an action and the authority to execute it are separate milestones.</p></div><div className="aiRouteGrid">{roadmapEn.map((item) => <article key={item[0]}><span>{item[0]}</span><h3>{item[1]}</h3><p>{item[2]}</p></article>)}</div></section>
+
+        <section className="platformInlineLink"><span>Every record retains evidence level, source, code relationship and limitations; any facility-affecting action still requires server-side authorization and human approval.</span><a href="/platform#architecture">View the agent-integration architecture →</a></section>
+        <SiteFooter />
+      </main>
+    );
+  }
   return (
     <main className="aiPage">
       <SiteNav active="ai" />

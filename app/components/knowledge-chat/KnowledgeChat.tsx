@@ -11,6 +11,7 @@ import {
   compactConversation,
   deserializeConversation,
   historyForRequest,
+  knowledgeChatStorageKey,
   newTurnId,
   serializeConversation,
   type ChatCitation,
@@ -82,24 +83,30 @@ export default function KnowledgeChat({
   const [providerPreferencesEnabled, setProviderPreferencesEnabled] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const logRef = useRef<HTMLDivElement | null>(null);
+  const storageReadyRef = useRef(false);
   const currentDraft = draft ?? localDraft;
   const setDraft = onDraftChange ?? setLocalDraft;
 
   useEffect(() => {
     let cancelled = false;
+    storageReadyRef.current = false;
     queueMicrotask(() => {
       if (cancelled) return;
+      setRestored(false);
       try {
-        setTurns(deserializeConversation(window.localStorage.getItem(KNOWLEDGE_CHAT_STORAGE_KEY)));
-        const storedId = window.localStorage.getItem(`${KNOWLEDGE_CHAT_STORAGE_KEY}.id`);
+        const storageKey = knowledgeChatStorageKey(locale);
+        const legacyKey = locale === 'zh-CN' ? KNOWLEDGE_CHAT_STORAGE_KEY : '';
+        setTurns(deserializeConversation(window.localStorage.getItem(storageKey) ?? (legacyKey ? window.localStorage.getItem(legacyKey) : null)));
+        const storedId = window.localStorage.getItem(`${storageKey}.id`) ?? (legacyKey ? window.localStorage.getItem(`${legacyKey}.id`) : null);
         setConversationId(storedId || newTurnId());
       } catch {
         setConversationId(newTurnId());
       }
+      storageReadyRef.current = true;
       setRestored(true);
     });
     return () => { cancelled = true; };
-  }, []);
+  }, [locale]);
 
   useEffect(() => {
     if (publicAnonymousMode) return;
@@ -129,14 +136,15 @@ export default function KnowledgeChat({
   }, [publicAnonymousMode]);
 
   useEffect(() => {
-    if (!restored) return;
+    if (!restored || !storageReadyRef.current) return;
     try {
-      window.localStorage.setItem(KNOWLEDGE_CHAT_STORAGE_KEY, serializeConversation(turns));
-      if (conversationId) window.localStorage.setItem(`${KNOWLEDGE_CHAT_STORAGE_KEY}.id`, conversationId);
+      const storageKey = knowledgeChatStorageKey(locale);
+      window.localStorage.setItem(storageKey, serializeConversation(turns));
+      if (conversationId) window.localStorage.setItem(`${storageKey}.id`, conversationId);
     } catch {
       // Conversation remains available for this page session when storage is blocked.
     }
-  }, [conversationId, restored, turns]);
+  }, [conversationId, locale, restored, turns]);
 
   useEffect(() => {
     logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: 'smooth' });
@@ -148,7 +156,9 @@ export default function KnowledgeChat({
     () => `/signin-with-chatgpt?return_to=${encodeURIComponent(context.path || '/knowledge-graph')}`,
     [context.path],
   );
-  const activePrompts = prompts ?? [t('chat.promptEvidence'), t('chat.promptCompare'), t('chat.promptGaps')];
+  const activePrompts = prompts && (locale === 'zh-CN' || prompts.every((prompt) => !/[\u3400-\u9fff]/u.test(prompt)))
+    ? prompts
+    : [t('chat.promptEvidence'), t('chat.promptCompare'), t('chat.promptGaps')];
   const activeTitle = locale === 'en' ? (titleEn || t('chat.defaultTitle')) : (title || t('chat.defaultTitle'));
   const activeProvider = providers.find((provider) => provider.id === selectedProvider);
 
@@ -178,12 +188,12 @@ export default function KnowledgeChat({
     try {
       const response = await fetch('/api/ask', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({ question, history, context, filters: { ...filters, citedOnly: true }, conversationId, provider: selectedProvider }),
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-FusionDigital-Locale': locale },
+        body: JSON.stringify({ question, locale, history, context, filters: { ...filters, citedOnly: true }, conversationId, provider: selectedProvider }),
         signal: controller.signal,
       });
       const payload = await response.json() as AskResponse;
-      if (!response.ok && !payload.answer) throw new Error(payload.error?.message || '问答服务暂时不可用。');
+      if (!response.ok && !payload.answer) throw new Error(payload.error?.message || (locale === 'en' ? 'The Q&A service is temporarily unavailable.' : '问答服务暂时不可用。'));
       const assistantTurn: ChatTurn = {
         id: newTurnId(), role: 'assistant', content: payload.answer, createdAt: new Date().toISOString(),
         mode: payload.mode, citations: payload.citations, caveats: payload.caveats, notice: payload.notice,
@@ -193,7 +203,7 @@ export default function KnowledgeChat({
       if (payload.conversationId) setConversationId(payload.conversationId);
       if (payload.results?.length) onEvidenceResults?.(payload.results);
     } catch (reason) {
-      if ((reason as Error).name !== 'AbortError') setError(reason instanceof Error ? reason.message : '问答服务暂时不可用。');
+      if ((reason as Error).name !== 'AbortError') setError(reason instanceof Error ? reason.message : (locale === 'en' ? 'The Q&A service is temporarily unavailable.' : '问答服务暂时不可用。'));
     } finally {
       if (!controller.signal.aborted) setPending(false);
     }
@@ -219,8 +229,8 @@ export default function KnowledgeChat({
       </div>
     </header>
     <div className="knowledgeChatContext" aria-live="polite">
-      <span>{t('chat.context')}</span><b>{context.focusLabel || context.title}</b>
-      {context.focusDescription && <p>{context.focusDescription}</p>}
+      <span>{t('chat.context')}</span><b>{localizedContextText(context.focusLabel || context.title, locale, locale === 'en' ? 'Current knowledge record' : context.title)}</b>
+      {context.focusDescription && (locale === 'zh-CN' || !/[\u3400-\u9fff]/u.test(context.focusDescription)) && <p>{context.focusDescription}</p>}
     </div>
     <div className="knowledgeChatLog" ref={logRef} role="log" aria-live="polite" aria-label={t('chat.logAria')}>
       {!turns.length && <div className="knowledgeChatEmpty"><b>{t('chat.emptyTitle')}</b><p>{t('chat.emptyCopy')}</p><div>{activePrompts.map((prompt) => <button type="button" key={prompt} onClick={() => void submit(undefined, prompt)}>{prompt}</button>)}</div></div>}
@@ -239,4 +249,8 @@ export default function KnowledgeChat({
       <div><small>{currentDraft.length} / {CHAT_LIMITS.maxUserChars}</small><span>{t('chat.inputHint')}</span><button type="submit" disabled={pending || currentDraft.trim().length < 2}>{pending ? t('chat.composing') : t('chat.send')}</button></div>
     </form>
   </section>;
+}
+
+function localizedContextText(value: string, locale: 'zh-CN' | 'en', fallback: string) {
+  return locale === 'en' && /[\u3400-\u9fff]/u.test(value) ? fallback : value;
 }

@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { chatGPTSignInPath, chatGPTSignOutPath, getChatGPTUser } from "@/app/chatgpt-auth";
 import SiteFooter from "@/app/components/SiteFooter";
 import SiteNav from "@/app/components/SiteNav";
+import StaticLocaleContent from "@/app/components/StaticLocaleContent";
+import { DEFAULT_LOCALE, LOCALE_COOKIE_NAME, resolveLocale } from "@/app/i18n/config";
 import AccountDashboard from "./AccountDashboard";
 import LlmCredentialManager from "./LlmCredentialManager";
 import { isPublicAnonymousMode } from "@/app/deployment-mode";
@@ -10,14 +13,15 @@ import "./account.css";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "账户中心 · FusionDigital",
-  description: "管理 FusionDigital 身份、访问角色与 AI 服务使用配额。",
-};
+export async function generateMetadata():Promise<Metadata> {
+  const store=await cookies();
+  const en=(resolveLocale(store.get(LOCALE_COOKIE_NAME)?.value)??DEFAULT_LOCALE)==='en';
+  return {title:en?'Account Center · FusionDigital':'账户中心 · FusionDigital',description:en?'Manage your FusionDigital identity, access roles, usage quotas and per-user model connections.':'管理 FusionDigital 身份、访问角色与 AI 服务使用配额。'};
+}
 
 export default async function AccountPage() {
   if (isPublicAnonymousMode()) {
-    return <main className="accountPage">
+    const zh=<main className="accountPage">
       <SiteNav active="account" />
       <header className="accountHero">
         <div className="accountHeroCopy">
@@ -33,9 +37,16 @@ export default async function AccountPage() {
       </section>
       <SiteFooter />
     </main>;
+    const en=<main className="accountPage">
+      <SiteNav active="account" />
+      <header className="accountHero"><div className="accountHeroCopy"><p>FUSIONDIGITAL / PUBLIC ANONYMOUS EDITION</p><h1>This deployment is the public anonymous edition;<br/><em>account and credential management are disabled.</em></h1><div className="accountSignals" aria-label="Public anonymous deployment boundaries"><span>No sign-in required</span><span>No user identity processed</span><span>No personal credentials stored</span><span>Public content only</span></div></div><aside className="accountIdentityCard"><span>IDENTITY STATUS</span><strong>Anonymous access</strong><p>Account functions are disabled</p><small>Continue to the public knowledge and digital-prototype pages</small></aside></header>
+      <section className="accountRegistration"><div><p>01 / PUBLIC ACCESS BOUNDARY</p><h2>Sign-in, roles, quotas and personal model connections are unavailable in this deployment.</h2><p>This temporary public mirror does not trust identity request headers and does not expose sign-in or model-credential controls. Knowledge Q&amp;A is restricted to verifiable on-site material.</p><Link className="accountPrimaryAction" href="/search">Open public knowledge search <b>↗</b></Link></div><ol><li><b>01</b><span><strong>Public browsing</strong> Access knowledge domains, facilities and digital prototypes.</span></li><li><b>02</b><span><strong>Anonymous retrieval</strong> Q&amp;A uses deterministic on-site retrieval only.</span></li><li><b>03</b><span><strong>Writes disabled</strong> Accounts, credentials and review operations are not exposed publicly.</span></li></ol></section>
+      <SiteFooter />
+    </main>;
+    return <StaticLocaleContent zh={zh} en={en}/>;
   }
   const user = await getChatGPTUser();
-  return <main className="accountPage">
+  const zh=<main className="accountPage">
     <SiteNav active="account" />
     <header className="accountHero">
       <div className="accountHeroCopy">
@@ -60,4 +71,14 @@ export default async function AccountPage() {
     <section className="platformInlineLink"><span>角色、额度与写操作由服务端校验。</span><Link href="/platform#architecture">查看平台边界与技术路线 →</Link></section>
     <SiteFooter />
   </main>;
+  const en=<main className="accountPage">
+    <SiteNav active="account" />
+    <header className="accountHero">
+      <div className="accountHeroCopy"><p>FUSIONDIGITAL / ACCOUNT &amp; ACCESS</p><h1>Give every search, answer and review<br/><em>an identity, quota and audit boundary.</em></h1><div className="accountSignals" aria-label="Account-system principles"><span>ChatGPT identity</span><span>Server-side role authorization</span><span>Daily usage controls</span><span>Complete audit trail</span></div></div>
+      <aside className="accountIdentityCard"><span>IDENTITY STATUS</span>{user?<><strong className="identityOnline">Connected</strong><p>{user.displayName}</p><small>{user.email}</small></>:<><strong>Guest mode</strong><p>Public knowledge remains available</p><small>Sign in to enable personal quotas and governed AI services</small></>}</aside>
+    </header>
+    {user?<section className="accountWorkspace"><div className="accountWorkspaceIntro"><p>01 / ACCOUNT CONSOLE</p><div><h2>Your account is provisioned from a trusted identity.</h2><p>FusionDigital stores no separate password. Your current ChatGPT identity is the sole sign-in route; the database stores site roles, quotas, usage, audit records and encrypted model connections isolated per user.</p></div></div><AccountDashboard fallbackIdentity={{displayName:user.displayName,email:user.email}}/><LlmCredentialManager/><div className="accountActions"><Link href="/search">Open knowledge search <b>↗</b></Link><Link href="/knowledge-graph">Open knowledge graph <b>↗</b></Link><a className="accountSignOut" href={chatGPTSignOutPath("/")}>Sign out</a></div></section>:<section className="accountRegistration"><div><p>01 / REGISTER &amp; SIGN IN</p><h2>No new password is required—register and sign in with ChatGPT.</h2><p>At first sign-in, FusionDigital creates a site account and assigns a baseline access role and daily quota. Model credentials remain on the server and are never returned to the browser.</p><a className="accountPrimaryAction" href={chatGPTSignInPath("/account")}>Register / sign in with ChatGPT <b>↗</b></a></div><ol><li><b>01</b><span><strong>Verify identity</strong> The platform completes secure sign-in; this site never receives your password.</span></li><li><b>02</b><span><strong>Provision account</strong> A site profile is created automatically on first access.</span></li><li><b>03</b><span><strong>Governed use</strong> Q&amp;A and review capabilities are enforced by role and quota.</span></li></ol></section>}
+    <section className="platformInlineLink"><span>Roles, quotas and write operations are enforced server-side.</span><Link href="/platform#architecture">View platform boundaries and technical route →</Link></section><SiteFooter />
+  </main>;
+  return <StaticLocaleContent zh={zh} en={en}/>;
 }

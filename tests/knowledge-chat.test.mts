@@ -5,6 +5,7 @@ import {
   compactConversation,
   deserializeConversation,
   historyForRequest,
+  knowledgeChatStorageKey,
   serializeConversation,
   type ChatTurn,
 } from '../app/components/knowledge-chat/conversation.ts';
@@ -45,6 +46,31 @@ test('only the latest bounded user and assistant turns are sent as dialogue cont
   assert.equal(history[0].content, 'user message 8');
   assert.equal(history.at(-1)?.content, 'assistant message 17');
   assert.ok(history.every(({ role }) => role === 'user' || role === 'assistant'));
+});
+
+test('English and Chinese conversations use isolated persistence keys', () => {
+  assert.equal(knowledgeChatStorageKey('en'), 'fusiondigital.knowledge-chat.v1.en');
+  assert.equal(knowledgeChatStorageKey('zh-CN'), 'fusiondigital.knowledge-chat.v1.zh-CN');
+  assert.notEqual(knowledgeChatStorageKey('en'), knowledgeChatStorageKey('zh-CN'));
+});
+
+test('English assistant-direct and retrieval-only responses remain English without upstream calls', async () => {
+  const { POST } = await import('../app/api/ask/route.ts');
+  const headers = { 'content-type': 'application/json', origin: 'http://localhost', 'sec-fetch-site': 'same-origin', 'x-fusiondigital-locale': 'en' };
+  const direct = await POST(new Request('http://localhost/api/ask', {
+    method: 'POST', headers, body: JSON.stringify({ question: 'Who are you?', locale: 'en', provider: 'retrieval' }),
+  }));
+  const directPayload = await direct.json() as Record<string, unknown>;
+  assert.equal(directPayload.mode, 'assistant-direct');
+  assert.doesNotMatch(JSON.stringify(directPayload), /[\u3400-\u9fff]/u);
+
+  const retrieval = await POST(new Request('http://localhost/api/ask', {
+    method: 'POST', headers, body: JSON.stringify({ question: 'What are the limitations of DINA?', locale: 'en', provider: 'retrieval' }),
+  }));
+  const retrievalPayload = await retrieval.json() as Record<string, unknown>;
+  assert.equal(retrievalPayload.mode, 'retrieval-only');
+  assert.match(String(retrievalPayload.answer), /DINA/i);
+  assert.doesNotMatch(JSON.stringify(retrievalPayload), /[\u3400-\u9fff]/u);
 });
 
 test('provider status endpoint returns only public configuration metadata', async () => {

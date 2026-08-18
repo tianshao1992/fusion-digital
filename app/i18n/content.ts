@@ -4,7 +4,7 @@ import type { AppLocale } from './config';
 // translates published labels without mutating their IDs, paths or provenance.
 const englishContent: Record<string, string> = {
   'Paramak 通用 Tokamak': 'Paramak Generic Tokamak',
-  '实时三维可交互': 'Interactive real-time 3D',
+  '实时三维可交互': 'Interactive 3D derivative',
   'MIT 公开许可': 'MIT open licence',
   '17 个稳定部件': '17 stable components',
   '2.2 MB 浏览器模型': '2.2 MB browser model',
@@ -14,12 +14,18 @@ const englishContent: Record<string, string> = {
   '12 个主要系统组件': '12 principal system components',
   '10 炮 / 5,804 帧 EFIT · 18303 + 6 炮偏滤器拓扑': '10 shots / 5,804 EFIT frames · divertor topology for 18303 + 6 shots',
   'ITER 教育简化模型': 'ITER Educational Simplified Model',
+  'ITER 教育高精度模型': 'ITER Educational High-Detail Model',
+  '高精度分片三维': 'High-detail sharded 3D',
+  '项目方授权公开展示': 'Project-owner-authorized public display',
+  '18 个稳定部件': '18 stable components',
+  '约 100 MB 分片高精度': 'Approximately 100 MB of high-detail component shards',
+  'ITER 名义设计参数等离子体代理': 'ITER nominal-design plasma proxy',
   '仅展示装置信息': 'Device information only',
   '18 个部件身份': '18 component identities',
   '17 个本地派生件': '17 local derivatives',
   '官方条款限制再分发': 'Redistribution restricted by official terms',
   '标准': 'Standard',
-  '高清': 'High',
+  '高清': 'High detail',
   '等离子体体积': 'Plasma volume',
   '等离子体边界': 'Plasma boundary',
   '环向场磁体': 'Toroidal-field magnets',
@@ -73,8 +79,212 @@ const englishContent: Record<string, string> = {
   '裁剪后中心区域镜头预设；不是独立部件或工程剖面。': 'Camera preset for the clipped center region; not a separate component or engineering section.',
   '裁剪后上部区域镜头预设；不是独立部件或工程剖面。': 'Camera preset for the clipped upper region; not a separate component or engineering section.',
   '裁剪后下部区域镜头预设；不是独立部件或工程剖面。': 'Camera preset for the clipped lower region; not a separate component or engineering section.',
+  '参数化 360° 主体示意，用于验证装配树、剖切、显隐和后续多装置比较。它不代表任何真实装置的工程权威模型。': 'Generic 360-degree parametric demonstrator for validating assembly-tree, clipping, visibility and multi-device comparison workflows. It is not an engineering-authoritative model of any physical device.',
+  '公开加载经授权、脱敏和轻量化的简化派生几何；标准与高清两档均采用细化曲面离散、锐边法线与 Meshopt 传输压缩。原装配合并为 12 个主要系统组件，支持组件选择、显隐、隔离、透明度与 X/Y/Z 剖切；十炮 EFIT 可联动播放轴对称磁面、LCFS、磁轴和放电时序。18303 显示经离线校验的 v1 主/次 X 点、开放分离支及 limiter 交点代理；新增六炮按帧显示经有界校验的 topology graph v2，包括边界/近边界 X 点、已解析分离支及 canonical limiter 交点。未解析臂与未经审查的开放区域只显示线框，不生成 SOL 或偏滤器体积。原始 CAD、STEP、完整磁通网格和工程权威模型不会由网站下发。': 'Loads an authorized, sanitized and reduced visualization derivative. Both standard- and high-detail assets use refined surface tessellation, sharp-feature normals and Meshopt transport compression. The source assembly is consolidated into 12 principal systems supporting selection, visibility, isolation, opacity and X/Y/Z clipping. Ten EFIT shots can animate axisymmetric flux surfaces, the LCFS, magnetic axis and shot timebase. Shot 18303 includes offline-reviewed v1 primary/secondary X-points, open separatrix legs and limiter-intersection proxies; six additional shots expose frame-wise, bounded topology-graph v2 evidence including boundary and near-boundary X-point candidates, resolved separatrix branches and canonical-limiter intersections. Unresolved arms and unreviewed open regions remain wireframe-only; the viewer does not synthesize SOL or divertor volumes. Source CAD, STEP, full flux grids and engineering-authoritative models are not delivered to the browser.',
+  '加载由 2026-08-12 EHL‑2 初步 CAD 基线生成的浏览器可视化派生模型。六个部件保持共同装配原点，几何面数约为源 GLB 的 50%，只采用一次受控 QEM 简化；位置保留 Float32，法线使用 Int8，并通过 Meshopt 降低传输体积，不再进行激进减面。该模型用于方案沟通、装配浏览、显隐、隔离、透明度和剖切，不代表 as-built 构型、尺寸计量、制造依据或工程 CAE 权威模型。源 GLB 不由网站下发。': 'Loads a browser visualization derivative of the 2026-08-12 preliminary EHL-2 CAD baseline. Six components retain their common assembly origin and approximately 50% of the source-GLB triangle count through one controlled QEM simplification pass. Positions remain Float32, normals use Int8, and Meshopt reduces transport size without further aggressive decimation. The model supports concept communication, assembly browsing, visibility, isolation, opacity and clipping; it is not an as-built configuration, dimensional metrology source, manufacturing basis or engineering-authoritative CAE model. Source GLBs are not delivered to the browser.',
+  '加载经项目方授权、脱敏和细节审查的 18 部件高精度可视化派生模型，支持选择、显隐、隔离、透明度与剖切。标准压缩预览已移除，工作台仅加载约 100 MB 的 18 文件高精度分片。默认 Z 剖切内的等离子体和同心磁通带采用公开名义设计参数生成的 Miller 风格解析几何，仅用于教育展示，不是 EFIT、真实 ψ、LCFS 或工程平衡。源 STEP、B-Rep、工程尺寸与工程权威模型不公开。': 'Loads a project-owner-authorized, sanitized and detail-reviewed high-detail visualization derivative comprising 18 selectable components with visibility, isolation, opacity and clipping controls. The compact preview has been removed; the workbench loads only the approximately 100 MB, 18-file high-detail shard set. The plasma and nested flux-coordinate bands within the default Z clip are Miller-style analytic geometry generated from public nominal design parameters for education only; they are not EFIT, physical psi, a reconstructed LCFS or an engineering equilibrium. Source STEP, B-Rep, engineering dimensions and engineering-authoritative models are not published.',
+  '网站仅交付获授权的公开简化派生几何或预览帧，不交付原始 CAD、STEP 或工程权威模型。页面不提供下载入口，并请求浏览器不缓存、不发送来源页；但任何发送到浏览器的几何或图像仍可被浏览器缓存、网络调试或用户设备保存，不能承诺绝对不可复制。': 'The site delivers only authorized public simplified geometry derivatives or preview frames, never source CAD, STEP or engineering-authoritative models. The interface exposes no download action and requests no-store and no-referrer handling; nevertheless, any geometry or image delivered to a browser may still be retained through browser caches, network inspection or the user device, so absolute non-copyability cannot be promised.',
+
+  // Paramak public demonstrator assembly labels.
+  'PF 线圈 02': 'PF coil 02',
+  'PF 线圈 04': 'PF coil 04',
+  'PF 线圈 06': 'PF coil 06',
+  'PF 线圈 08': 'PF coil 08',
+  'PF 壳体 03': 'PF coil case 03',
+  'PF 壳体 05': 'PF coil case 05',
+  'PF 壳体 07': 'PF coil case 07',
+  'PF 壳体 09': 'PF coil case 09',
+  'PF 02 配套壳体。': 'Companion case for PF coil 02.',
+  'PF 04 配套壳体。': 'Companion case for PF coil 04.',
+  'PF 06 配套壳体。': 'Companion case for PF coil 06.',
+  'PF 08 配套壳体。': 'Companion case for PF coil 08.',
+  'PF 线圈壳体的参数化结构占位。': 'Parametric structural placeholder for the PF coil cases.',
+  '上部内侧 PF 线圈。': 'Upper inboard PF coil.',
+  '上部外侧 PF 线圈。': 'Upper outboard PF coil.',
+  '下部内侧 PF 线圈。': 'Lower inboard PF coil.',
+  '下部外侧 PF 线圈。': 'Lower outboard PF coil.',
+  '径向构造层 01': 'Radial-build layer 01',
+  '径向构造层 02': 'Radial-build layer 02',
+  '径向构造层 03': 'Radial-build layer 03',
+  '径向构造层 04': 'Radial-build layer 04',
+  '径向构造层 05': 'Radial-build layer 05',
+  '径向构造层 06': 'Radial-build layer 06',
+  '通用径向层 01。': 'Generic radial-build layer 01.',
+  '通用径向层 02。': 'Generic radial-build layer 02.',
+  '通用径向层 03。': 'Generic radial-build layer 03.',
+  '通用径向层 04。': 'Generic radial-build layer 04.',
+  '通用径向层 05。': 'Generic radial-build layer 05.',
+  '通用径向层 06。': 'Generic radial-build layer 06.',
+  '六层通用径向构造，仅表达拓扑与浏览交互，不映射特定装置材料。': 'Six-layer generic radial build expressing topology and browser interaction only; it does not represent materials from a specific device.',
+  '参数化几何相交后形成的下部偏滤器区域占位。': 'Lower-divertor-region placeholder formed by intersecting parametric geometry.',
+  '参数化环向场线圈阵列的网页派生网格。': 'Browser derivative mesh of the parametric toroidal-field coil array.',
+  '参数化等离子体体积。': 'Parametric plasma volume.',
+  '四组参数化极向场线圈。': 'Four parametric poloidal-field coil groups.',
+  '环向场线圈阵列合并节点。': 'Merged node for the toroidal-field coil array.',
+  '用于空间关系表达的参数化等离子体边界，不代表平衡重建或实验测量。': 'Parametric plasma boundary for spatial-context visualization; it is neither an equilibrium reconstruction nor an experimental measurement.',
+  '通用下部偏滤器区域。': 'Generic lower divertor region.',
+
+  // ITER educational derivative assembly labels.
+  'ITER 高清教育可视化': 'ITER High-Detail Educational Visualization',
+  'ITER 名义设计参数等离子体与解析磁通坐标': 'ITER Nominal-Design Plasma and Analytic Flux Coordinates',
+  '中央螺线管': 'Central solenoid',
+  '极向场线圈': 'Poloidal-field coils',
+  '环向场线圈': 'Toroidal-field coils',
+  '低温恒温器': 'Cryostat',
+  '真空室扇区': 'Vacuum-vessel sectors',
+  '偏滤器三联盒': 'Divertor triple-cassette assembly',
+  'PF1 线圈': 'PF1 coil',
+  'PF2 线圈': 'PF2 coil',
+  'PF3 线圈': 'PF3 coil',
+  'PF4 线圈与支架': 'PF4 coil and support',
+  'PF5 线圈': 'PF5 coil',
+  'PF6 线圈': 'PF6 coil',
+  'PF1 简化可选择节点。': 'Simplified selectable PF1 node.',
+  'PF2 简化可选择节点。': 'Simplified selectable PF2 node.',
+  'PF3 简化可选择节点。': 'Simplified selectable PF3 node.',
+  'PF4 与支架的简化可选择节点。': 'Simplified selectable PF4-and-support node.',
+  'PF5 简化可选择节点。': 'Simplified selectable PF5 node.',
+  'PF6 简化可选择节点。': 'Simplified selectable PF6 node.',
+  'PF1–PF6 极向场线圈的浏览器可视化节点。': 'Browser visualization nodes for the PF1-PF6 poloidal-field coils.',
+  'TF 线圈 A': 'TF coil assembly A',
+  'TF 线圈 B': 'TF coil assembly B',
+  'TF A 简化可选择节点。': 'Simplified selectable TF assembly A node.',
+  'TF B 简化可选择节点。': 'Simplified selectable TF assembly B node.',
+  '两组环向场线圈装配的浏览器可视化节点。': 'Browser visualization nodes for two toroidal-field coil assemblies.',
+  '低温恒温器底座': 'Cryostat base',
+  '低温恒温器下筒体': 'Cryostat lower cylinder',
+  '低温恒温器上筒体': 'Cryostat upper cylinder',
+  '低温恒温器顶盖': 'Cryostat top cover',
+  '底座简化可选择节点。': 'Simplified selectable base node.',
+  '下筒体简化可选择节点。': 'Simplified selectable lower-cylinder node.',
+  '上筒体简化可选择节点。': 'Simplified selectable upper-cylinder node.',
+  '顶盖简化可选择节点。': 'Simplified selectable top-cover node.',
+  '低温恒温器四个主要分段的浏览器可视化节点。': 'Browser visualization nodes for the four principal cryostat segments.',
+  '真空室扇区 1': 'Vacuum-vessel sector 1',
+  '真空室扇区 2': 'Vacuum-vessel sector 2',
+  '真空室扇区 3': 'Vacuum-vessel sector 3',
+  '真空室扇区 4': 'Vacuum-vessel sector 4',
+  '扇区 1 简化可选择节点。': 'Simplified selectable sector 1 node.',
+  '扇区 2 简化可选择节点。': 'Simplified selectable sector 2 node.',
+  '扇区 3 简化可选择节点。': 'Simplified selectable sector 3 node.',
+  '扇区 4 简化可选择节点。': 'Simplified selectable sector 4 node.',
+  '四个真空室扇区的浏览器可视化节点。': 'Browser visualization nodes for four vacuum-vessel sectors.',
+  '偏滤器三联盒（01–03）': 'Divertor triple-cassette assembly (01-03)',
+  '官方库存中的 Divertor triple cassette 条目，仅对应 cassette 01–03，不表示完整 54 盒偏滤器环。': 'The published inventory item covers divertor cassettes 01-03 only; it does not represent the complete 54-cassette divertor ring.',
+  '经装配坐标复核的三联盒轻量化节点；未做角向复制。': 'Reduced triple-cassette node reviewed in assembly coordinates; no toroidal replication is applied.',
+  '用于浏览器选择和性能测试的中央螺线管简化网格。': 'Simplified central-solenoid mesh for browser selection and performance testing.',
+  '轻量化可选择节点；不提供工程尺寸权威性。': 'Reduced selectable node with no engineering-dimensional authority.',
+
+  // Device-manifest validation failures surfaced by the browser workbench.
+  '装置清单的 componentBundles 必须是非空数组。': 'The device manifest componentBundles field must be a non-empty array.',
+  '装置清单包含无效的分片高清资产。': 'The device manifest contains an invalid high-detail component shard.',
+  '解析等离子体位形合同无效。': 'The analytic-plasma geometry contract is invalid.',
+  '解析等离子体位形缺少科学参数或 fail-closed 声明。': 'The analytic-plasma geometry contract lacks scientific parameters or a fail-closed declaration.',
+  '装置清单的 webModels 必须是非空数组。': 'The device manifest webModels field must be a non-empty array.',
+  '装置清单包含无效的 LOD 资产。': 'The device manifest contains an invalid LOD asset.',
+  '装置清单最多只能指定一个默认 LOD。': 'The device manifest may declare at most one default LOD.',
+  '双 LOD 装置清单必须且只能包含一个 preview 资产。': 'A dual-LOD device manifest must contain exactly one preview asset.',
+  '兼容 webModel 必须与 preview LOD 完全一致。': 'The compatibility webModel must match the preview LOD exactly.',
+  '装置清单 URL 必须是规范的公开 model-manifest.json 路径。': 'The device-manifest URL must be a canonical public model-manifest.json path.',
+  '装置清单不是有效的 JSON 对象。': 'The device manifest is not a valid JSON object.',
+  '装置清单缺少 id、title 或 schemaVersion。': 'The device manifest is missing id, title or schemaVersion.',
+  '装置清单 1.1 不支持分片资产或解析可视化扩展。': 'Device-manifest schema 1.1 does not support component shards or analytic-visualization extensions.',
+  '装置清单缺少有效的装置包身份与替换合同。': 'The device manifest lacks a valid package identity and replacement contract.',
+  '装置清单缺少有效的数据分级。': 'The device manifest lacks a valid data classification.',
+  '装置清单缺少完整的授权与工程用途声明。': 'The device manifest lacks complete authorization and engineering-use declarations.',
+  '装置清单缺少有效的单位或坐标系。': 'The device manifest lacks valid units or a coordinate system.',
+  '装置清单缺少可加载的浏览器资产。': 'The device manifest contains no loadable browser asset.',
+  '装置清单至少需要 webModel 或 componentBundles。': 'The device manifest requires at least webModel or componentBundles.',
+  '仅分片的高精度装置清单必须使用 1.3 版本。': 'A shard-only high-detail device manifest must use schema version 1.3.',
+  'webModels 需要兼容 webModel 资产。': 'webModels requires a compatibility webModel asset.',
+  '装置清单包含无效的 sourceCad 资产。': 'The device manifest contains an invalid sourceCad asset.',
+  '装置清单包含无效的 poster 资产。': 'The device manifest contains an invalid poster asset.',
+  '装置清单没有系统/部件映射。': 'The device manifest contains no system-to-component mapping.',
+  '装置系统定义不完整。': 'A device-system definition is incomplete.',
+  '分片高清资产必须提供高于兼容预览的几何细节。': 'High-detail component shards must provide more geometric detail than the compatibility preview.',
+  '装置清单缺少生成器与许可来源。': 'The device manifest lacks generator and licence provenance.',
+  '装置清单的生成脚本血缘无效。': 'The device manifest has invalid build-script lineage.',
+  '高清 LOD 缺少离散化精度或锐边法线声明。': 'The high-detail LOD lacks tessellation-precision or sharp-feature-normal declarations.',
+  '分片高清 LOD 缺少可复现的转换流水线声明。': 'The sharded high-detail LOD lacks a reproducible conversion-pipeline declaration.',
+  '装置清单缺少适用性边界声明。': 'The device manifest lacks an applicability-boundary statement.',
+
+  // EFIT quality and topology evidence messages are generated by the
+  // numerical data layer. Keep those contracts locale-neutral at rest and
+  // translate only at the presentation boundary.
+  '前一帧存在真实时间间隙。': 'A physical time gap precedes this frame.',
+  '等离子体电流绝对值低于 50 kA。': 'The absolute plasma current is below 50 kA.',
+  '等离子体电流为负值。': 'The plasma current is negative.',
+  '重建结果含负压力区域。': 'The reconstruction contains a negative-pressure region.',
+  '安全因子超出常用显示范围。': 'The safety factor is outside the customary display range.',
+  '本帧缺少 LCFS。': 'This frame has no LCFS.',
+  '本帧归一化磁面不完整。': 'Normalized flux surfaces are incomplete in this frame.',
+  '本帧缺少 q95。': 'This frame has no q95 value.',
+  'EFIT 未报告收敛。': 'EFIT did not report convergence.',
+  'EFIT 元数据不完整。': 'EFIT metadata are incomplete.',
+  '源 G-EQDSK 帧未通过有效性检查。': 'The source G-EQDSK frame did not pass validity checks.',
+  '本帧没有可用磁面或 LCFS。': 'This frame has no usable flux surfaces or LCFS.',
+  '本帧未提供有效 LCFS。': 'This frame does not provide a valid LCFS.',
+  'EFIT v2 帧级质量门通过。': 'The EFIT v2 frame-level quality gate passed.',
+  '磁面重建 v1': 'Magnetic-surface reconstruction v1',
+  'EFIT 数据加载失败。': 'EFIT data loading failed.',
+  '当前帧没有可闭合的偏滤器拓扑边界。': 'This frame has no divertor-topology boundary that can be closed.',
+  '拓扑标记为不完整或待确认，区域填充已关闭，仅显示已发布线框。': 'The topology is incomplete or pending confirmation; region fill is disabled and only the published wireframe is shown.',
+  '无法唯一确认主 X 点，区域填充已关闭，仅显示已发布线框。': 'The primary X-point cannot be identified uniquely; region fill is disabled and only the published wireframe is shown.',
+  '主 X 点坐标无效，区域填充已关闭，仅显示已发布线框。': 'The primary X-point coordinates are invalid; region fill is disabled and only the published wireframe is shown.',
+  '主 X 点未关联恰好两条已审查开放分离支，区域填充已关闭，仅显示线框。': 'The primary X-point is not connected to exactly two reviewed open separatrix legs; region fill is disabled and only the wireframe is shown.',
+  '分离支或 limiter 交点关联不完整，区域填充已关闭，仅显示线框。': 'Separatrix-leg or limiter-intersection associations are incomplete; region fill is disabled and only the wireframe is shown.',
+  '分离支端点与主 X 点或 limiter 交点不一致，区域填充已关闭，仅显示线框。': 'Separatrix-leg endpoints disagree with the primary X-point or limiter intersections; region fill is disabled and only the wireframe is shown.',
+  '缺少可核验的发布 limiter 轮廓，区域填充已关闭，仅显示线框。': 'No verifiable published limiter contour is available; region fill is disabled and only the wireframe is shown.',
+  'limiter 交点缺少有效 wallSegment，区域填充已关闭，仅显示线框。': 'A limiter intersection has no valid wallSegment reference; region fill is disabled and only the wireframe is shown.',
+  '交点不位于其声明的发布 limiter 线段上，区域填充已关闭，仅显示线框。': 'An intersection does not lie on its declared published limiter segment; region fill is disabled and only the wireframe is shown.',
+  '两条 limiter 弧均可闭合，无法唯一判定边界；区域填充已关闭，仅显示线框。': 'Both limiter arcs form admissible closures, so the boundary is ambiguous; region fill is disabled and only the wireframe is shown.',
+  '两条分离支与发布 limiter 弧无法形成简单、有限且不包围磁轴的闭合区域；仅显示线框。': 'The two separatrix legs and published limiter arc do not form a simple bounded region excluding the magnetic axis; only the wireframe is shown.',
+  '橙色区域由主 X 点、两条已审查分离支及其间发布 limiter 弧闭合构成。': 'The orange region is closed by the primary X-point, two reviewed separatrix legs and the published limiter arc between them.',
+  '当前帧没有可核验的拓扑图边界。': 'This frame has no verifiable topology-graph boundary.',
+  '拓扑图无法唯一确认活动主 X 点，区域填充已关闭，仅显示线框。': 'The topology graph cannot identify a unique active primary X-point; region fill is disabled and only the wireframe is shown.',
+  '拓扑图主 X 点坐标无效，区域填充已关闭，仅显示线框。': 'The topology-graph primary X-point coordinates are invalid; region fill is disabled and only the wireframe is shown.',
+  '活动主 X 点仍有未解析或外推分离臂，区域填充已关闭，仅显示线框。': 'The active primary X-point retains unresolved or extrapolated separatrix arms; region fill is disabled and only the wireframe is shown.',
+  '活动主 X 点未关联恰好两条到不同壁面交点的开放分离支，区域填充已关闭，仅显示线框。': 'The active primary X-point is not connected to exactly two open separatrix legs ending at distinct wall intersections; region fill is disabled and only the wireframe is shown.',
+  '拓扑图未发布唯一且与开放分离支一致的非虚构区域证据，区域填充已关闭，仅显示线框。': 'The topology graph publishes no unique, non-fabricated region evidence consistent with the open separatrix legs; region fill is disabled and only the wireframe is shown.',
+  '缺少磁轴坐标，无法唯一排除包围等离子体的壁面弧；区域填充已关闭，仅显示线框。': 'Magnetic-axis coordinates are unavailable, so a wall arc enclosing the plasma cannot be excluded uniquely; region fill is disabled and only the wireframe is shown.',
+  '多条发布壁面弧均可闭合，无法唯一判定显示边界；区域填充已关闭，仅显示线框。': 'Multiple published wall arcs form admissible closures, so the display boundary is ambiguous; region fill is disabled and only the wireframe is shown.',
+  '发布的开放分离支与壁面弧无法形成简单、有限且不包围磁轴的闭合显示边界；仅显示线框。': 'The published open separatrix legs and wall arc do not form a simple bounded display boundary excluding the magnetic axis; only the wireframe is shown.',
+  '橙色区域由 v2 活动主 X 点、两条已发布开放分离支和唯一壁面弧通过显示闭合核验构成；不代表 SOL 场量。': 'The orange region passes display-closure verification using the v2 active primary X-point, two published open separatrix legs and the unique wall arc; it does not represent SOL field quantities.',
 };
 
+function localizeDynamicContent(source: string): string | null {
+  let match = /^索引中没有 EXL-50U #(\d+)。$/.exec(source);
+  if (match) return `EXL-50U shot #${match[1]} is not present in the index.`;
+  match = /^EXL-50U #(\d+) 没有可播放的 EFIT 帧。$/.exec(source);
+  if (match) return `EXL-50U shot #${match[1]} has no playable EFIT frames.`;
+  match = /^拓扑图 v2 · (.+)$/.exec(source);
+  if (match) return `Topology graph v2 · ${match[1]}`;
+  match = /^质量 (可用|部分|含不可用帧)$/.exec(source);
+  if (match) {
+    const state = match[1] === '可用' ? 'usable' : match[1] === '部分' ? 'partial' : 'contains unavailable frames';
+    return `Quality: ${state}`;
+  }
+  match = /^装置清单包含无效或重复的分片高清资产：(.+)。$/.exec(source);
+  if (match) return `The device manifest contains an invalid or duplicate high-detail component shard: ${match[1]}.`;
+  match = /^分片高清资产 (.+) 包含无效部件。$/.exec(source);
+  if (match) return `High-detail component shard ${match[1]} contains an invalid component.`;
+  match = /^分片高清资产 (.+) 的部件身份、路径或几何预算无效。$/.exec(source);
+  if (match) return `High-detail component shard ${match[1]} has an invalid component identity, path or geometry budget.`;
+  match = /^分片高清资产 (.+) 的部件覆盖或汇总预算不一致。$/.exec(source);
+  if (match) return `High-detail component shard ${match[1]} has inconsistent component coverage or aggregate budgets.`;
+  match = /^装置清单包含无效或重复的 LOD 资产：(.+)。$/.exec(source);
+  if (match) return `The device manifest contains an invalid or duplicate LOD asset: ${match[1]}.`;
+  match = /^装置资产必须与清单位于同一精确包目录：(.+)$/.exec(source);
+  if (match) return `A device asset must remain in the manifest's exact package directory: ${match[1]}`;
+  match = /^不支持的装置清单版本：(.+)。$/.exec(source);
+  if (match) return `Unsupported device-manifest version: ${match[1]}.`;
+  match = /^部件标识无效或重复：(.+)$/.exec(source);
+  if (match) return `Invalid or duplicate component identifier: ${match[1]}`;
+  match = /^GLB 节点映射重复：(.+)$/.exec(source);
+  if (match) return `Duplicate GLB node mapping: ${match[1]}`;
+  return null;
+}
+
 export function localizeContent(locale: AppLocale, source: string): string {
-  return locale === 'en' ? englishContent[source] ?? source : source;
+  return locale === 'en' ? englishContent[source] ?? localizeDynamicContent(source) ?? source : source;
 }

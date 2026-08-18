@@ -16,15 +16,20 @@ export type KnowledgeGraphNode = {
   type: GraphNodeType;
   domain: GraphDomain;
   label: string;
+  labelEn?: string;
   subtitle?: string;
+  subtitleEn?: string;
   description?: string;
+  descriptionEn?: string;
   url?: string;
   year?: number;
   evidenceLevel?: string;
   deploymentLevel?: string;
   tags?: string[];
+  tagsEn?: string[];
   sourceDomains?: GraphDomain[];
   degree: number;
+  localizationStatus?: 'source' | 'derived' | 'placeholder';
 };
 
 export type KnowledgeGraphEdge = {
@@ -32,10 +37,12 @@ export type KnowledgeGraphEdge = {
   source: string;
   target: string;
   relation: string;
+  relationLabel?: string;
   domain: GraphDomain;
   evidenceNodeId?: string;
   evidenceUrl?: string;
   evidenceLabel?: string;
+  evidenceLabelEn?: string;
 };
 
 export type KnowledgeGraphSnapshot = {
@@ -68,6 +75,7 @@ export type GraphQueryResponse = {
     focus: string;
     depth: 0 | 1 | 2;
     limit: number;
+    locale: 'zh-CN' | 'en';
   };
   truncated: boolean;
   truncatedNodes: boolean;

@@ -4,6 +4,7 @@ import type { EChartsCoreOption } from 'echarts/core';
 import type { CustomSeriesRenderItem } from 'echarts/types/dist/option';
 import ScientificChart from '../components/charts/ScientificChart';
 import { useChartTheme } from '../components/charts/chart-theme';
+import { useI18n } from '../i18n';
 import {
   controlResearchItems,
   type ControlDeploymentLevel,
@@ -48,6 +49,18 @@ const deploymentLabels: Record<ControlDeploymentLevel, string> = {
   D3: '实时 / HIL 试点',
   D4: '正式在线 / 闭环',
   D5: '安全关键批准',
+};
+const evidenceLabelsEn: Record<ControlEvidenceLevel, string> = {
+  E0: 'Concept / requirements', E1: 'Numerical closed loop', E2: 'Offline facility evidence', E3: 'Real-time / HIL / shadow', E4: 'Facility closed loop',
+};
+const deploymentLabelsEn: Record<ControlDeploymentLevel, string> = {
+  D1: 'Research prototype', D2: 'Offline workflow', D3: 'Real-time / HIL pilot', D4: 'Operational online / closed loop', D5: 'Approved safety-critical use',
+};
+const taskLabelsEn: Record<ControlTaskId, string> = {
+  T0: 'State estimation and real-time diagnostics', T1: 'Start-up, current and flux control', T2: 'Position, shape and boundary control',
+  T3: 'Profile and scenario control', T4: 'Stability and confinement control', T5: 'Exhaust, particle and plasma–wall control',
+  T6: 'Performance, power and burn control', T7: 'Disruption avoidance, termination and protection',
+  T8: 'Multi-actuator and integrated control', T9: 'PCS, pulse orchestration and V&V',
 };
 
 function eventData(params: unknown): unknown[] | null {
@@ -131,6 +144,8 @@ const renderTimescaleRange: CustomSeriesRenderItem = (_params, api) => {
 };
 
 export function ControlTimescaleChart({ tasks }: { tasks: ControlTimescaleDatum[] }) {
+  const { locale } = useI18n();
+  const en = locale === 'en';
   const chartTheme = useChartTheme();
   const lightTaskColors: Record<ControlTaskId, string> = {
     T0: '#287b6f', T1: '#b85b37', T2: '#b85b37', T3: '#6c5a9f', T4: '#a14c3c',
@@ -143,7 +158,7 @@ export function ControlTimescaleChart({ tasks }: { tasks: ControlTimescaleDatum[
     chartTheme.mode === 'dark' ? taskColors[task.id] : lightTaskColors[task.id],
     task.openEnded ? 1 : 0,
     task.id,
-    task.label,
+    en ? taskLabelsEn[task.id] : task.label,
     task.timeLabel,
   ]);
 
@@ -154,7 +169,7 @@ export function ControlTimescaleChart({ tasks }: { tasks: ControlTimescaleDatum[
     aria: {
       enabled: true,
       decal: { show: true },
-      description: 'T0 到 T9 控制任务的典型时间尺度对数区间图。箭头表示开放端或数量级示意，点击任一任务进入对应研究目录。',
+      description: en ? 'Logarithmic range chart of representative timescales for control tasks T0–T9. An arrow denotes an open upper bound or order-of-magnitude range; selecting a task opens its research catalogue.' : 'T0 到 T9 控制任务的典型时间尺度对数区间图。箭头表示开放端或数量级示意，点击任一任务进入对应研究目录。',
     },
     tooltip: {
       trigger: 'item',
@@ -166,7 +181,7 @@ export function ControlTimescaleChart({ tasks }: { tasks: ControlTimescaleDatum[
         const row = eventData(params);
         if (!row) return '';
         const open = Number(row[4]) === 1;
-        return `<b>${String(row[5])} · ${String(row[6])}</b><br/>典型时间：${String(row[7])}<br/><span style="color:${chartTheme.muted}">${open ? '箭头表示上限开放至脉冲生命周期；区间仅作架构数量级示意。' : '区间表示常见数量级，不是统一控制周期。'}</span><br/><span style="color:${chartTheme.info}">点击检索该任务工作 →</span>`;
+        return `<b>${String(row[5])} · ${String(row[6])}</b><br/>${en ? 'Representative timescale' : '典型时间'}: ${String(row[7])}<br/><span style="color:${chartTheme.muted}">${en ? (open ? 'The arrow extends the upper bound to the pulse lifecycle; the range is architectural order-of-magnitude guidance.' : 'The interval is a representative order of magnitude, not a common controller cycle.') : (open ? '箭头表示上限开放至脉冲生命周期；区间仅作架构数量级示意。' : '区间表示常见数量级，不是统一控制周期。')}</span><br/><span style="color:${chartTheme.info}">${en ? 'Select to filter this task' : '点击检索该任务工作'} →</span>`;
       },
     },
     xAxis: {
@@ -174,7 +189,7 @@ export function ControlTimescaleChart({ tasks }: { tasks: ControlTimescaleDatum[
       min: 1e-6,
       max: 100,
       logBase: 10,
-      name: '典型响应 / 决策 / 执行时间尺度（对数）',
+      name: en ? 'Representative response / decision / execution timescale (log)' : '典型响应 / 决策 / 执行时间尺度（对数）',
       nameLocation: 'middle',
       nameGap: 38,
       nameTextStyle: { color: chartTheme.muted, fontSize: 10 },
@@ -187,7 +202,7 @@ export function ControlTimescaleChart({ tasks }: { tasks: ControlTimescaleDatum[
     yAxis: {
       type: 'category',
       inverse: true,
-      data: tasks.map((task) => `${task.id}  ${task.label}`),
+      data: tasks.map((task) => `${task.id}  ${en ? taskLabelsEn[task.id] : task.label}`),
       axisLine: { show: false },
       axisTick: { show: false },
       axisLabel: { color: chartTheme.text, fontSize: 11, fontWeight: 700, margin: 16 },
@@ -196,7 +211,7 @@ export function ControlTimescaleChart({ tasks }: { tasks: ControlTimescaleDatum[
     series: [
       {
         type: 'custom',
-        name: '任务时间尺度',
+        name: en ? 'Task timescale' : '任务时间尺度',
         renderItem: renderTimescaleRange,
         encode: { x: [1, 2], y: 0, tooltip: [5, 6, 7] },
         data,
@@ -221,9 +236,10 @@ export function ControlTimescaleChart({ tasks }: { tasks: ControlTimescaleDatum[
       <ScientificChart
         id="control-task-timescale"
         option={option}
-        ariaLabel="T0 到 T9 控制任务典型时间尺度交互对数区间图。点击条带可筛选对应任务。"
+        ariaLabel={en ? 'Interactive logarithmic range chart of representative timescales for control tasks T0–T9; select a range to filter the corresponding task' : 'T0 到 T9 控制任务典型时间尺度交互对数区间图。点击条带可筛选对应任务。'}
         fallbackSrc="/figures/control-task-timescale-nature.png"
-        fallbackAlt="T0 到 T9 控制任务在微秒到脉冲生命周期的典型时间尺度静态图"
+        fallbackAlt={en ? 'Static timescale chart for control tasks T0–T9 from microseconds to the pulse lifecycle' : 'T0 到 T9 控制任务在微秒到脉冲生命周期的典型时间尺度静态图'}
+        fallback={en ? <table className="srOnly"><caption>Representative control-task timescales</caption><thead><tr><th>Task</th><th>Name</th><th>Representative time</th><th>Interpretation</th></tr></thead><tbody>{tasks.map((task) => <tr key={task.id}><th>{task.id}</th><td>{taskLabelsEn[task.id]}</td><td>{task.timeLabel}</td><td>{task.openEnded ? 'Open upper bound to the pulse lifecycle; order-of-magnitude guidance' : 'Representative order of magnitude; not a common controller cycle'}</td></tr>)}</tbody></table> : undefined}
         className="controlTimescaleEChart"
         height={610}
         dark
@@ -236,15 +252,17 @@ export function ControlTimescaleChart({ tasks }: { tasks: ControlTimescaleDatum[
         }}
       />
       <table className="srOnly">
-        <caption>控制任务典型时间尺度</caption>
-        <thead><tr><th>任务</th><th>名称</th><th>典型时间</th><th>说明</th></tr></thead>
-        <tbody>{tasks.map((task) => <tr key={task.id}><th>{task.id}</th><td>{task.label}</td><td>{task.timeLabel}</td><td>{task.openEnded ? '上限开放至脉冲生命周期，数量级示意' : '常见数量级，非统一周期'}</td></tr>)}</tbody>
+        <caption>{en ? 'Representative control-task timescales' : '控制任务典型时间尺度'}</caption>
+        <thead><tr><th>{en ? 'Task' : '任务'}</th><th>{en ? 'Name' : '名称'}</th><th>{en ? 'Representative time' : '典型时间'}</th><th>{en ? 'Interpretation' : '说明'}</th></tr></thead>
+        <tbody>{tasks.map((task) => <tr key={task.id}><th>{task.id}</th><td>{en ? taskLabelsEn[task.id] : task.label}</td><td>{task.timeLabel}</td><td>{en ? (task.openEnded ? 'Open upper bound to the pulse lifecycle; order-of-magnitude guidance' : 'Representative order of magnitude; not a common controller cycle') : (task.openEnded ? '上限开放至脉冲生命周期，数量级示意' : '常见数量级，非统一周期')}</td></tr>)}</tbody>
       </table>
     </>
   );
 }
 
 export function ControlEvidenceHeatmap() {
+  const { locale } = useI18n();
+  const en = locale === 'en';
   const cells = evidenceLevels.flatMap((evidence, evidenceIndex) => deploymentLevels.map((deployment, deploymentIndex) => {
     const count = controlResearchItems.filter((item) => item.evidenceLevel === evidence && item.deploymentLevel === deployment).length;
     return [deploymentIndex, evidenceIndex, count, evidence, deployment];
@@ -258,7 +276,7 @@ export function ControlEvidenceHeatmap() {
     aria: {
       enabled: true,
       decal: { show: true },
-      description: '聚变控制研究工作按证据等级 E0 到 E4 与部署等级 D1 到 D5 聚合的五乘五热图。数字为工作数量，点击格子筛选目录。',
+      description: en ? 'Five-by-five matrix of fusion-control research records aggregated by evidence level E0–E4 and deployment responsibility D1–D5. Cell values are record counts; selecting a cell filters the catalogue.' : '聚变控制研究工作按证据等级 E0 到 E4 与部署等级 D1 到 D5 聚合的五乘五热图。数字为工作数量，点击格子筛选目录。',
     },
     tooltip: {
       trigger: 'item',
@@ -271,13 +289,13 @@ export function ControlEvidenceHeatmap() {
         const evidence = String(cell[3]) as ControlEvidenceLevel;
         const deployment = String(cell[4]) as ControlDeploymentLevel;
         const count = Number(cell[2]);
-        return `<b>${evidence} · ${evidenceLabels[evidence]}</b><br/>${deployment} · ${deploymentLabels[deployment]}<br/><strong style="font-size:18px;color:#b84e0e">${count}</strong> 项工作<br/><span style="color:#187358">点击按证据与部署筛选 →</span>`;
+        return `<b>${evidence} · ${en ? evidenceLabelsEn[evidence] : evidenceLabels[evidence]}</b><br/>${deployment} · ${en ? deploymentLabelsEn[deployment] : deploymentLabels[deployment]}<br/><strong style="font-size:18px;color:#b84e0e">${count}</strong> ${en ? 'records' : '项工作'}<br/><span style="color:#187358">${en ? 'Select to filter by evidence and deployment' : '点击按证据与部署筛选'} →</span>`;
       },
     },
     xAxis: {
       type: 'category',
       data: deploymentLevels,
-      name: '部署等级',
+      name: en ? 'Deployment responsibility' : '部署等级',
       nameLocation: 'middle',
       nameGap: 38,
       axisLine: { lineStyle: { color: '#aebdb5' } },
@@ -289,7 +307,7 @@ export function ControlEvidenceHeatmap() {
       type: 'category',
       inverse: true,
       data: evidenceLevels,
-      name: '证据等级',
+      name: en ? 'Evidence level' : '证据等级',
       nameLocation: 'middle',
       nameGap: 50,
       axisLine: { lineStyle: { color: '#aebdb5' } },
@@ -304,13 +322,13 @@ export function ControlEvidenceHeatmap() {
       orient: 'horizontal',
       left: 'center',
       bottom: 16,
-      text: ['多', '少'],
+      text: en ? ['More', 'Fewer'] : ['多', '少'],
       textStyle: { color: '#5c6e64', fontSize: 9 },
       inRange: { color: ['#eef2ee', '#bde7d8', '#65e6d2', '#187358', '#ff8738'] },
     },
     series: [
       {
-        name: '工作数量',
+        name: en ? 'Number of records' : '工作数量',
         type: 'heatmap',
         data: cells,
         label: {
@@ -348,9 +366,10 @@ export function ControlEvidenceHeatmap() {
       <ScientificChart
         id="control-evidence-deployment-matrix"
         option={option}
-        ariaLabel="控制研究工作 E0 到 E4 证据等级与 D1 到 D5 部署等级交互热图。点击格子可筛选目录。"
+        ariaLabel={en ? 'Interactive matrix of fusion-control evidence levels E0–E4 and deployment responsibility D1–D5; select a cell to filter the catalogue' : '控制研究工作 E0 到 E4 证据等级与 D1 到 D5 部署等级交互热图。点击格子可筛选目录。'}
         fallbackSrc="/figures/control-verification-ladder-nature.png"
-        fallbackAlt="聚变控制功能从数值验证到持续运行的验证阶梯静态图"
+        fallbackAlt={en ? 'Static qualification ladder from numerical validation to sustained operation for fusion-control capabilities' : '聚变控制功能从数值验证到持续运行的验证阶梯静态图'}
+        fallback={en ? <table className="srOnly"><caption>Control research by evidence and deployment responsibility</caption><thead><tr><th>Evidence level</th>{deploymentLevels.map((level) => <th key={level}>{level} · {deploymentLabelsEn[level]}</th>)}</tr></thead><tbody>{evidenceLevels.map((evidence) => <tr key={evidence}><th>{evidence} · {evidenceLabelsEn[evidence]}</th>{deploymentLevels.map((deployment) => <td key={deployment}>{controlResearchItems.filter((item) => item.evidenceLevel === evidence && item.deploymentLevel === deployment).length}</td>)}</tr>)}</tbody></table> : undefined}
         className="controlEvidenceEChart"
         height={520}
         onChartClick={(params) => {
@@ -363,9 +382,9 @@ export function ControlEvidenceHeatmap() {
         }}
       />
       <table className="srOnly">
-        <caption>控制研究工作证据等级与部署等级矩阵</caption>
-        <thead><tr><th>证据等级</th>{deploymentLevels.map((level) => <th key={level}>{level} · {deploymentLabels[level]}</th>)}</tr></thead>
-        <tbody>{evidenceLevels.map((evidence) => <tr key={evidence}><th>{evidence} · {evidenceLabels[evidence]}</th>{deploymentLevels.map((deployment) => <td key={deployment}>{controlResearchItems.filter((item) => item.evidenceLevel === evidence && item.deploymentLevel === deployment).length}</td>)}</tr>)}</tbody>
+        <caption>{en ? 'Control research by evidence and deployment responsibility' : '控制研究工作证据等级与部署等级矩阵'}</caption>
+        <thead><tr><th>{en ? 'Evidence level' : '证据等级'}</th>{deploymentLevels.map((level) => <th key={level}>{level} · {en ? deploymentLabelsEn[level] : deploymentLabels[level]}</th>)}</tr></thead>
+        <tbody>{evidenceLevels.map((evidence) => <tr key={evidence}><th>{evidence} · {en ? evidenceLabelsEn[evidence] : evidenceLabels[evidence]}</th>{deploymentLevels.map((deployment) => <td key={deployment}>{controlResearchItems.filter((item) => item.evidenceLevel === evidence && item.deploymentLevel === deployment).length}</td>)}</tr>)}</tbody>
       </table>
     </>
   );
