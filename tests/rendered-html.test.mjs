@@ -35,7 +35,7 @@ function englishPresentationText(html) {
 
 test('English presentation surfaces contain no source-language Han text', async () => {
   const routes = [
-    '/', '/physics', '/engineering', '/control', '/diagnostics', '/ai', '/facilities',
+    '/', '/physics', '/engineering', '/control', '/diagnostics', '/data-foundation', '/ai', '/facilities',
     '/platform', '/search', '/knowledge-graph', '/roadmap', '/account', '/research-review',
   ];
   for (const pathname of routes) {
@@ -363,7 +363,7 @@ test('server-renders the FusionDigital community portal', async () => {
   assert.match(html, /人机交互/);
   assert.match(html, /总体集成/);
   assert.match(html, /WHOLE-PLANT INTEGRATION/);
-  assert.match(html, /<b>05<\/b>已开放知识域/);
+  assert.match(html, /<b>06<\/b>已开放知识域/);
   assert.match(html, /DIAGNOSTICS &amp; SENSING/);
   assert.match(html, /诊断证据链/);
   assert.doesNotMatch(html, /智能诊断|INTELLIGENT DIAGNOSTICS/);
@@ -427,7 +427,7 @@ test('server-renders the EXL-50U to EHL-2 program roadmap', async () => {
   assert.match(html, /href="\/#domain-energy"/);
   assert.match(html, /href="\/#domain-auxiliary"/);
   assert.match(html, /href="\/#domain-hmi"/);
-  assert.match(html, /href="\/#domain-data"/);
+  assert.match(html, /href="\/data-foundation"/);
   assert.match(html, /href="\/#domain-integration"/);
   assert.match(html, /href="\/knowledge-graph"/);
   assert.match(html, /href="\/physics"/);
@@ -439,7 +439,7 @@ test('server-renders the EXL-50U to EHL-2 program roadmap', async () => {
 });
 
 test('standalone knowledge-module pages return to the Knowledge graph', async () => {
-  for (const route of ['/physics', '/engineering', '/control', '/diagnostics', '/ai']) {
+  for (const route of ['/physics', '/engineering', '/control', '/diagnostics', '/data-foundation', '/ai']) {
     const html = await htmlFor(route);
     assert.match(html, /class="knowledgeBackLink"[^>]*href="\/knowledge-graph"|href="\/knowledge-graph"[^>]*class="knowledgeBackLink"/, `${route} must expose the Knowledge return link`);
   }
@@ -717,6 +717,43 @@ test('server-renders the diagnostics and sensing research atlas', async () => {
   assert.match(html, /href="\/diagnostics"[^>]*data-knowledge-module="diagnostics"[^>]*class="active"[^>]*>[\s\S]*?<span>诊断感知<\/span><\/a>/);
   assert.match(html, /target="_blank"/);
   assert.doesNotMatch(html, /METHOD &amp; LIMITS|如何严谨地使用本知识域/);
+});
+
+test('server-renders the fusion data-foundation evidence atlas with accessible chart fallbacks', async () => {
+  const html = await htmlFor('/data-foundation');
+  assert.match(html, /08 \/ [^<]*聚变数据基座/);
+  assert.match(html, /聚变数据基座不是一个数据库/);
+  const verifiedCount = html.match(/>(\d+)<\/dt><dd>核验条目<\/dd>/);
+  assert.ok(verifiedCount, 'the hero must publish the verified-record count');
+  assert.match(html, /物理含义与时间、几何、配置和不确定度不可分离/);
+  assert.match(html, /data-echart="fusion-data-foundation-architecture"/);
+  assert.match(html, /data-echart="fusion-data-platform-landscape"/);
+
+  // Both chart datasets remain readable in server-rendered HTML before ECharts hydrates.
+  assert.match(html, /<caption>聚变数据架构与交付物<\/caption>/);
+  assert.match(html, /<caption>聚变数据证据版图<\/caption>/);
+  assert.match(html, /L0[\s\S]*?事实源与采集[\s\S]*?L7[\s\S]*?版本快照与证据发布/);
+
+  for (const professionalBoundary of [
+    'HDF5',
+    'IMAS Data Dictionary',
+    'MDSplus',
+    'UDA / pyUDA',
+    'fusionprov / W3C PROV',
+    'ASME VVUQ',
+    'JCGM GUM / VIM',
+    'IAEA Fusion Data Lake',
+  ]) assert.ok(html.includes(professionalBoundary), `data-foundation page must server-render ${professionalBoundary}`);
+
+  assert.match(html, /id="catalog"/);
+  assert.match(html, /role="search"/);
+  const renderedRecords = (html.match(/class="dataRecord"/g) ?? []).length;
+  assert.equal(Number(verifiedCount[1]), renderedRecords, 'the hero count and no-JS evidence catalogue must stay synchronized');
+  assert.match(html, /适用边界与一手证据/);
+  assert.match(html, /target="_blank"/);
+  assert.match(html, /证据核验截止：(<!-- -->)?2026-08-19/);
+  assert.match(html, /href="\/platform"/);
+  assert.doesNotMatch(html, /Technical annotation|通用图表占位/);
 });
 
 test('server-renders and validates diagnostics catalog URL filters', async () => {

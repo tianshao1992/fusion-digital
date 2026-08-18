@@ -31,6 +31,7 @@ type ScientificChartProps = {
   dark?: boolean;
   onChartClick?: ChartClickHandler;
   fallback?: ReactNode;
+  keepFallbackAccessible?: boolean;
 };
 
 /*
@@ -558,6 +559,7 @@ export default function ScientificChart({
   eager = false,
   onChartClick,
   fallback,
+  keepFallbackAccessible = false,
 }: ScientificChartProps) {
   const { locale } = useI18n();
   const chartTheme = useChartTheme();
@@ -664,7 +666,7 @@ export default function ScientificChart({
       data-echart={id}
     >
       {fallback ? (
-        <div className="scientificChartFallback scientificChartFallbackContent" style={{ overflow: 'auto', objectFit: 'initial' }} aria-hidden={ready || undefined}>{localizeReactNode(fallback, locale)}</div>
+        <div className="scientificChartFallback scientificChartFallbackContent" style={{ overflow: 'auto', objectFit: 'initial' }} aria-hidden={(ready && !keepFallbackAccessible) || undefined}>{localizeReactNode(fallback, locale)}</div>
       ) : (
         <img className="scientificChartFallback" src={fallbackSrc} alt={localizedFallbackAlt} aria-hidden={ready || undefined} loading={eager ? 'eager' : 'lazy'} decoding="async" />
       )}

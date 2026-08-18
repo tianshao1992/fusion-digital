@@ -10,7 +10,7 @@ import { selectVisibleNavigationKeys } from './site-nav-layout';
 import { ThemeSwitcher, type ThemeSwitcherLabels } from './theme';
 
 type SiteNavProps = {
-  active?: 'home' | 'physics' | 'engineering' | 'control' | 'diagnostics' | 'ai' | 'facilities' | 'prototype' | 'knowledge' | 'roadmap' | 'account' | 'platform';
+  active?: 'home' | 'physics' | 'engineering' | 'control' | 'diagnostics' | 'data' | 'ai' | 'facilities' | 'prototype' | 'knowledge' | 'roadmap' | 'account' | 'platform';
 };
 
 const links = [
