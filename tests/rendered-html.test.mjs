@@ -29,6 +29,40 @@ async function listFiles(root) {
   }))).flat();
 }
 
+test('production build retains every catalog device and excludes only obsolete runtime packages', async () => {
+  const distModels = new URL('../dist/client/models/', import.meta.url);
+  const requiredPackages = [
+    'paramak-full-device',
+    'exl50u-interactive',
+    'iter-public-simplified',
+    'ehl2-preliminary-v1',
+  ];
+  for (const packageName of requiredPackages) {
+    assert.ok((await stat(new URL(`${packageName}/`, distModels))).isDirectory(), `${packageName} missing from dist`);
+  }
+
+  for (const packageName of ['paramak-tokamak-demo', 'exl50u-secure-preview']) {
+    await assert.rejects(stat(new URL(`${packageName}/`, distModels)), { code: 'ENOENT' });
+    assert.ok(
+      (await stat(new URL(`../public/models/${packageName}/`, import.meta.url))).isDirectory(),
+      `${packageName} must remain available in source control`,
+    );
+  }
+
+  await assert.rejects(
+    stat(new URL('../dist/client/models/paramak-full-device/paramak-full-device.step', import.meta.url)),
+    { code: 'ENOENT' },
+  );
+  assert.ok((await stat(
+    new URL('../public/models/paramak-full-device/paramak-full-device.step', import.meta.url),
+  )).isFile(), 'Paramak source STEP must remain available in source control');
+
+  const expandedBytes = (await Promise.all(
+    (await listFiles(new URL('../dist/', import.meta.url))).map(async (file) => (await stat(file)).size),
+  )).reduce((total, size) => total + size, 0);
+  assert.ok(expandedBytes <= (256 * 1024 * 1024) - (3 * 1024 * 1024), `dist too large: ${expandedBytes}`);
+});
+
 test('deployment surface contains no controlled CAD or engineering mesh', async () => {
   const publicFiles = await listFiles(new URL('../public/', import.meta.url));
   const protectedGeometry = publicFiles.filter((file) => /(?:exl|iter)[^/]*\.(?:glb|gltf|step|stp|iges|igs|stl|obj|fbx)$/i.test(decodeURIComponent(file.pathname)));
