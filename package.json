@@ -11,7 +11,7 @@
     "build": "vinext build",
     "postbuild": "node scripts/deployment/prune-obsolete-runtime-assets.mjs",
     "start": "vinext start",
-    "test": "npm run build && node --test --test-concurrency=1 tests/rendered-html.test.mjs tests/runtime-assets.test.mjs tests/device-publication-policy.test.mjs tests/efit-data.test.mjs tests/efit-delivery.test.mjs tests/efit-store.test.mjs tests/efit-ui.test.mjs tests/ui-preferences.test.mjs tests/search-core.test.mjs && tsx --test --test-concurrency=1 tests/efit-v2.test.mts tests/cad-theme.test.mts tests/site-nav-layout.test.mts tests/analytic-plasma.test.mts tests/iter-device-contract.test.mts tests/iter-component-loader.test.mts tests/knowledge-chat.test.mts tests/llm-providers.test.mts tests/user-llm-credential-crypto.test.mts tests/user-llm-credentials.test.mts tests/knowledge-graph-ui.test.mts tests/program-roadmap.test.mts",
+    "test": "npm run build && node --test --test-concurrency=1 tests/rendered-html.test.mjs tests/runtime-assets.test.mjs tests/device-publication-policy.test.mjs tests/efit-data.test.mjs tests/efit-delivery.test.mjs tests/efit-store.test.mjs tests/efit-ui.test.mjs tests/ui-preferences.test.mjs tests/search-core.test.mjs tests/sync-remotes.test.mjs && tsx --test --test-concurrency=1 tests/efit-v2.test.mts tests/cad-theme.test.mts tests/site-nav-layout.test.mts tests/analytic-plasma.test.mts tests/iter-device-contract.test.mts tests/iter-component-loader.test.mts tests/knowledge-chat.test.mts tests/llm-providers.test.mts tests/user-llm-credential-crypto.test.mts tests/user-llm-credentials.test.mts tests/knowledge-graph-ui.test.mts tests/program-roadmap.test.mts",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next --ignore-pattern .vinext --ignore-pattern public --ignore-pattern research",
     "check": "npm run lint && npm test",
     "research:ai": "node scripts/research/ai-native.mjs rebuild",
@@ -35,7 +35,9 @@
     "db:local:migrate": "wrangler d1 migrations apply DB --local --config wrangler.local.jsonc --persist-to .wrangler/state",
     "db:local:verify": "wrangler d1 execute DB --local --config wrangler.local.jsonc --command \"SELECT name FROM sqlite_schema WHERE type = 'table' AND name NOT LIKE '_cf_%' ORDER BY name; PRAGMA foreign_key_check;\" --persist-to .wrangler/state --json",
     "research:agent:dry-run": "node scripts/research/agent/discover.mjs --dry-run --scope all",
-    "test:research-agent": "node --test tests/research-agent.test.mjs"
+    "test:research-agent": "node --test tests/research-agent.test.mjs",
+    "test:release-sync": "node --test tests/sync-remotes.test.mjs",
+    "release:sync-remotes": "node scripts/deployment/sync-remotes.mjs"
   },
   "dependencies": {
     "drizzle-orm": "0.45.2",
