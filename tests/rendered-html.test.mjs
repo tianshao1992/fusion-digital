@@ -239,6 +239,7 @@ test('server-renders the FusionDigital community portal', async () => {
   assert.equal((html.match(/class="siteKnowledgeHome[^\"]*"[^>]*href="\/knowledge-graph"|href="\/knowledge-graph"[^>]*class="siteKnowledgeHome[^\"]*"/g) ?? []).length, 2, 'desktop and mobile Knowledge menus must link to the graph home');
   assert.equal((html.match(/data-knowledge-module=/g) ?? []).length, 20, 'desktop and mobile Knowledge menus must expose all ten modules');
   assert.equal((html.match(/data-primary-nav="roadmap"/g) ?? []).length, 2, 'desktop and mobile primary navigation must expose the program roadmap');
+  assert.ok((html.match(/>实时路线<\/a>/g) ?? []).length >= 2, 'desktop and mobile primary navigation must label the destination 实时路线');
   assert.doesNotMatch(html, /class="siteKnowledgeRoadmap/, 'Knowledge menus must not duplicate the promoted program roadmap');
   const primaryNavigation = [...html.matchAll(/data-primary-nav="([^"]+)"/g)].map((match) => match[1]);
   assert.deepEqual(primaryNavigation, [
@@ -426,6 +427,16 @@ test('homepage owns the public full-device digital-prototype workspace', async (
     'utf8',
   ));
   assert.equal(catalog.devices.length, 4);
+  assert.deepEqual(
+    catalog.devices.map((device) => device.id),
+    ['paramak-full-device', 'exl-50u-2026-upgrade', 'ehl-2-preliminary', 'iter-educational-model'],
+  );
+  assert.deepEqual(catalog.devices.map((device) => device.index), ['01', '02', '03', '04']);
+  assert.ok(
+    html.indexOf('aria-controls="device-panel-ehl-2-preliminary"')
+      < html.indexOf('aria-controls="device-panel-iter-educational-model"'),
+    'EHL-2 must appear before ITER in the digital-prototype selector',
+  );
   assert.equal(catalog.schemaVersion, '2.0');
   assert.equal(catalog.securityPolicy.showDownloadActions, false);
   assert.equal(catalog.securityPolicy.sourceCadDelivered, false);

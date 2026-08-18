@@ -9,7 +9,7 @@
     ],
     "fileCount": 412,
     "totalBytes": 258326708,
-    "treeSha256": "ede7354d14a32ef8f4c9c6e89937f26c015c74e0804271d0ad13ab895d383c7b",
+    "treeSha256": "eaf034715186b0b1f05c97875884efb73673396e0644794d9000109b4ee21842",
     "files": [
       {
         "path": "public/FusionDigital-technical-roadmap-2026-08-15.docx",
@@ -1574,7 +1574,7 @@
       {
         "path": "public/models/device-catalog.json",
         "bytes": 7585,
-        "sha256": "768cb0123c21122a49a5dcdd888d75a798d93ee0b3ab8ff9e069bb1b12b86372"
+        "sha256": "b042f0cd74cbc1b43ddd24387c09f3d78a718d1ed51399f05d5551bdfa7806e1"
       },
       {
         "path": "public/models/device-manifest.schema.json",
