@@ -179,11 +179,13 @@ test('knowledge graph explorer has distinct high-contrast light and dark surface
 });
 
 test('Morandi light mode covers every digital-prototype workspace shell while preserving dark tokens', async () => {
-  const [theme, prototype, turntable] = await Promise.all([
+  const [theme, prototype, workspaceLayout, turntable] = await Promise.all([
     source('app/theme.css'),
     source('app/digital-prototype/prototype.css'),
+    source('app/digital-prototype/workspace-layout.css'),
     source('app/digital-prototype/turntable.css'),
   ]);
+  const prototypeStyles = `${prototype}\n${workspaceLayout}`;
 
   assert.match(theme, /:root,\s*:root\[data-theme='light'\][\s\S]*?--color-workbench: #eee8de/);
   assert.match(theme, /:root\[data-theme='dark'\][\s\S]*?--color-workbench: #070d0b/);
@@ -193,21 +195,21 @@ test('Morandi light mode covers every digital-prototype workspace shell while pr
     '.multiDeviceSection',
     '.deviceSelector',
     '.deviceStage',
-    '.deviceAuthority',
     '.deviceViewport',
     '.devicePaneSeparator',
     '.devicePhysicsPanel',
     '.controlledDevicePlaceholder',
   ]) {
     assert.ok(
-      prototype.includes(`:root[data-theme='light'] .prototypePage ${selector}`)
-        || prototype.includes(`:root[data-theme='light'] :where(.prototypePage,.portalPage) ${selector}`),
+      prototypeStyles.includes(`:root[data-theme='light'] .prototypePage ${selector}`)
+        || prototypeStyles.includes(`:root[data-theme='light'] :where(.prototypePage,.portalPage) ${selector}`),
       `${selector} must expose an explicit light workbench surface`,
     );
   }
 
-  assert.match(prototype, /@media\(max-width:1180px\)[\s\S]*?\.devicePaneSeparator\{display:none\}/);
-  assert.match(prototype, /@media\(max-width:900px\)[\s\S]*?\.deviceSelector\{grid-template-columns:1fr!important\}/);
+  assert.match(prototypeStyles, /@media\(max-width:1180px\)[\s\S]*?\.devicePaneSeparator\{display:none\}/);
+  assert.match(workspaceLayout, /@media\(max-width:1100px\)[\s\S]*?grid-template-columns:repeat\(2,minmax\(0,1fr\)\)!important/);
+  assert.match(workspaceLayout, /@media\(max-width:650px\)[\s\S]*?grid-template-columns:1fr!important/);
   assert.match(turntable, /:root\[data-theme='light'\] \.prototypePage \.turntableCanvas:before/);
   assert.doesNotMatch(turntable, /:root\[data-theme='dark'\]/);
 });

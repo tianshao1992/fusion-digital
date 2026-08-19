@@ -12,6 +12,7 @@ import { dataFoundationRecords } from './data-foundation/dataFoundation';
 import { isPublicAnonymousMode } from './deployment-mode';
 import './portal.css';
 import './digital-prototype/prototype.css';
+import './digital-prototype/workspace-layout.css';
 import './digital-prototype/turntable.css';
 
 const deviceCatalog = parseDeviceCatalog(deviceCatalogJson);

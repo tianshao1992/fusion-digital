@@ -468,6 +468,12 @@ test('homepage owns the public full-device digital-prototype workspace', async (
   assert.match(html, /简化派生实时三维/);
   assert.match(html, /高精度分片三维/);
   assert.match(html, /约半面数浏览器派生/);
+  assert.match(html, /通用参数化 Tokamak 演示装配/);
+  assert.match(html, /标准 \/ 高清 Meshopt GLB 5\.6 \/ 13\.4 MB/);
+  assert.match(html, /2\.2 MB GLB[\s\S]*17 个稳定部件/);
+  assert.match(html, /14\.2 MB Meshopt GLB[\s\S]*5 个 DiagView2 平面方案/);
+  assert.match(html, /18 个 Meshopt GLB 分片[\s\S]*98\.5 MB/);
+  assert.doesNotMatch(html, /class="deviceAuthority/);
   assert.match(html, /360°/);
   for (const removedWorkbenchCopy of [
     /MODEL COVERAGE/,
@@ -504,7 +510,35 @@ test('homepage owns the public full-device digital-prototype workspace', async (
       < html.indexOf('aria-controls="device-panel-iter-educational-model"'),
     'EHL-2 must appear before ITER in the digital-prototype selector',
   );
-  assert.equal(catalog.schemaVersion, '2.1');
+  assert.equal(catalog.schemaVersion, '2.2');
+  assert.equal((html.match(/role="tabpanel"/g) ?? []).length, catalog.devices.length,
+    'SSR must preserve one tabpanel shell for every device summary tab');
+  for (const [index, device] of catalog.devices.entries()) {
+    const tabId = `device-tab-${device.id}`;
+    const panelId = `device-panel-${device.id}`;
+    const tabIdOffset = html.indexOf(`id="${tabId}"`);
+    const tabStart = html.lastIndexOf('<button', tabIdOffset);
+    const tabEnd = html.indexOf('</button>', tabIdOffset);
+    assert.ok(tabIdOffset >= 0 && tabStart >= 0 && tabEnd > tabIdOffset,
+      `${device.id} must render a local summary-card button`);
+    const tabFragment = html.slice(tabStart, tabEnd);
+    assert.ok(tabFragment.includes(device.deviceOverview), `${device.id} card must contain its own device overview`);
+    assert.ok(tabFragment.includes(device.fileSummary), `${device.id} card must contain its own model/data-file summary`);
+    assert.doesNotMatch(tabFragment, /授权|许可|PUBLIC|AUTHORIZED/i,
+      `${device.id} summary card must not expose authorization or licensing copy`);
+    assert.match(tabFragment, new RegExp(`aria-controls="${panelId}"`));
+
+    const panelIdOffset = html.indexOf(`id="${panelId}"`);
+    const panelStart = html.lastIndexOf('<div', panelIdOffset);
+    const panelEnd = html.indexOf('>', panelIdOffset);
+    assert.ok(panelIdOffset >= 0 && panelStart >= 0 && panelEnd > panelIdOffset,
+      `${device.id} must render a tabpanel shell`);
+    const panelTag = html.slice(panelStart, panelEnd + 1);
+    assert.match(panelTag, /role="tabpanel"/);
+    assert.match(panelTag, new RegExp(`aria-labelledby="${tabId}"`));
+    if (index === 0) assert.doesNotMatch(panelTag, /\bhidden=/, 'the selected device panel must be visible');
+    else assert.match(panelTag, /\bhidden=""/, `${device.id} panel must be hidden until its tab is selected`);
+  }
   assert.equal(catalog.securityPolicy.showDownloadActions, false);
   assert.equal(catalog.securityPolicy.sourceCadDelivered, false);
   assert.equal(catalog.devices.filter((device) => device.viewer.manifestEndpoint !== null).length, 4);

@@ -1478,7 +1478,7 @@ function TokamakCadViewerSession({
 
       <div className={`tokamakCadShell status-${status}`} ref={fullscreenRef}>
         <div className="tokamakCadTopbar">
-          <div className="tokamakCadIdentity"><span className="tokamakCadPulse" aria-hidden="true" /><div><b>{manifest?.title.toUpperCase() ?? 'MANIFEST-DRIVEN TOKAMAK PACKAGE'}</b><small>DEVICE-AGNOSTIC / LICENCE-AWARE PACKAGE CONTRACT</small></div></div>
+          <div className="tokamakCadIdentity"><span className="tokamakCadPulse" aria-hidden="true" /><div><b>{manifest?.title.toUpperCase() ?? 'MANIFEST-DRIVEN TOKAMAK PACKAGE'}</b><small>{t('viewer.packageSummary')}</small></div></div>
           <div className="tokamakCadTopbarActions">
             {availableModels.length > 1 && <fieldset className="tokamakCadLodSelector" aria-label={t('viewer.modelPrecision')}>
               <legend className="srOnly">{t('viewer.modelPrecision')}</legend>

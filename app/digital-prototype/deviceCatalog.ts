@@ -32,6 +32,8 @@ export type DeviceCatalogEntry = {
   state: string;
   tone: DeviceTone;
   facts: string[];
+  deviceOverview: string;
+  fileSummary: string;
   copy: string;
   availability: string;
   delivery: string;
@@ -209,6 +211,8 @@ export function parseDeviceCatalog(input: unknown): DeviceCatalog {
       state: stringValue(item.state, `${id}.state`),
       tone: tone as DeviceTone,
       facts: [...item.facts] as string[],
+      deviceOverview: stringValue(item.deviceOverview, `${id}.deviceOverview`),
+      fileSummary: stringValue(item.fileSummary, `${id}.fileSummary`),
       copy: stringValue(item.copy, `${id}.copy`),
       availability: stringValue(item.availability, `${id}.availability`),
       delivery: stringValue(item.delivery, `${id}.delivery`),
@@ -228,7 +232,7 @@ export function parseDeviceCatalog(input: unknown): DeviceCatalog {
   return {
     schemaVersion: (() => {
       const schemaVersion = stringValue(root.schemaVersion, 'deviceCatalog.schemaVersion');
-      if (schemaVersion !== '2.1') throw new Error(`Unsupported device catalog schemaVersion: ${schemaVersion}`);
+      if (schemaVersion !== '2.2') throw new Error(`Unsupported device catalog schemaVersion: ${schemaVersion}`);
       return schemaVersion;
     })(),
     asOf: stringValue(root.asOf, 'deviceCatalog.asOf'),

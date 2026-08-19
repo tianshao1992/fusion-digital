@@ -1,0 +1,146 @@
+/* Device-workspace information architecture: the four tabs are the device
+   summary cards, while the stage is reserved for 3D and scientific plots. */
+.deviceSelector{
+  grid-template-columns:repeat(4,minmax(0,1fr));
+}
+
+.deviceSelector button{
+  display:flex;
+  min-width:0;
+  min-height:250px;
+  flex-direction:column;
+  align-items:stretch;
+  padding:17px 18px 18px;
+  overflow:hidden;
+}
+
+.deviceSelector button:hover,
+.deviceSelector button:focus-visible{
+  z-index:1;
+  outline:2px solid var(--pt-cyan);
+  outline-offset:-3px;
+  background:#0d201a;
+}
+
+.deviceSelector button>.deviceCardHead,
+.deviceSelector button>.deviceCardIntro,
+.deviceSelector button>.deviceCardAssets{
+  float:none;
+  color:inherit;
+  font:inherit;
+}
+
+.deviceCardHead{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+
+.deviceCardHead small{
+  margin:0;
+}
+
+.deviceCardIndex{
+  color:#557469;
+  font:900 10px/1 ui-monospace,Consolas,monospace;
+}
+
+.deviceSelector strong{
+  margin:17px 0 5px;
+  font-size:clamp(17px,1.15vw,21px);
+  line-height:1.25;
+}
+
+.deviceSelector em{
+  display:block;
+  min-height:14px;
+}
+
+.deviceCardIntro{
+  display:-webkit-box;
+  min-height:47px;
+  margin-top:12px;
+  overflow:hidden;
+  color:#9cb5ab;
+  font-size:10px;
+  line-height:1.58;
+  overflow-wrap:anywhere;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:3;
+}
+
+.deviceCardAssets{
+  display:grid;
+  gap:7px;
+  margin-top:auto;
+  padding-top:13px;
+  border-top:1px solid #79cab624;
+}
+
+.deviceCardAssets b{
+  color:var(--pt-orange);
+  font:900 8px/1 ui-monospace,Consolas,monospace;
+  letter-spacing:.11em;
+}
+
+.deviceCardAssets>span{
+  color:#c3d8d0;
+  font-size:9px;
+  line-height:1.55;
+  overflow-wrap:anywhere;
+}
+
+.deviceStage{
+  display:block;
+}
+
+.deviceStage[hidden]{
+  display:none;
+}
+
+.deviceExperienceLayout{
+  --device-workbench-height:clamp(720px,calc(100svh - 72px),900px);
+}
+
+:root[data-theme='light'] .prototypePage .deviceSelector button:hover,
+:root[data-theme='light'] .prototypePage .deviceSelector button:focus-visible{
+  outline-color:var(--color-info);
+  background:var(--color-surface-raised);
+}
+
+:root[data-theme='light'] .prototypePage .deviceCardIntro{
+  color:var(--color-ink-muted);
+}
+
+:root[data-theme='light'] .prototypePage .deviceCardAssets{
+  border-color:var(--color-border);
+}
+
+:root[data-theme='light'] .prototypePage .deviceCardAssets b{
+  color:var(--color-accent-strong);
+}
+
+:root[data-theme='light'] .prototypePage .deviceCardAssets>span{
+  color:var(--color-ink);
+}
+
+@media(max-width:1100px){
+  .deviceSelector{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+}
+
+@media(max-width:650px){
+  .deviceSelector{
+    grid-template-columns:1fr!important;
+  }
+
+  .deviceSelector button{
+    min-height:218px;
+  }
+
+  .deviceCardIntro{
+    min-height:0;
+  }
+}

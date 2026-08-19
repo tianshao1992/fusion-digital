@@ -268,6 +268,19 @@ export default function MultiDeviceWorkspace({ catalog }: { catalog: DeviceCatal
   const [selectedId, setSelectedId] = useState(catalog.devices[0].id);
   const current = catalog.devices.find((device) => device.id === selectedId) ?? catalog.devices[0];
 
+  const handleDeviceTabKeyDown = (event: ReactKeyboardEvent<HTMLButtonElement>, index: number) => {
+    let nextIndex: number | null = null;
+    if (event.key === 'ArrowRight' || event.key === 'ArrowDown') nextIndex = (index + 1) % catalog.devices.length;
+    else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') nextIndex = (index - 1 + catalog.devices.length) % catalog.devices.length;
+    else if (event.key === 'Home') nextIndex = 0;
+    else if (event.key === 'End') nextIndex = catalog.devices.length - 1;
+    if (nextIndex === null) return;
+    event.preventDefault();
+    const next = catalog.devices[nextIndex];
+    setSelectedId(next.id);
+    document.getElementById(`device-tab-${next.id}`)?.focus();
+  };
+
   return <section className="multiDeviceSection" id="prototype-workspace" aria-labelledby="multi-device-title">
     <div className="multiDeviceIntro">
       <p>WORKSPACE</p>
@@ -277,31 +290,46 @@ export default function MultiDeviceWorkspace({ catalog }: { catalog: DeviceCatal
       </div>
     </div>
 
-    <div className="deviceSelector" role="tablist" aria-label={t('workspace.deviceTabs')} style={{ gridTemplateColumns: `repeat(${Math.min(catalog.devices.length, 4)}, minmax(0, 1fr))` }}>
-      {catalog.devices.map((device) => <button
-        key={device.id}
-        type="button"
-        role="tab"
-        aria-selected={current.id === device.id}
-        aria-controls={`device-panel-${device.id}`}
-        className={`${current.id === device.id ? 'active ' : ''}${device.tone}`}
-        onClick={() => setSelectedId(device.id)}
-      >
-        <span>{device.index}</span>
-        <small>{device.eyebrow}</small>
-        <strong>{content(device.title)}</strong>
-        <em>{content(device.state)}</em>
-      </button>)}
+    <div className="deviceSelector" role="tablist" aria-label={t('workspace.deviceTabs')}>
+      {catalog.devices.map((device, index) => {
+        const selected = current.id === device.id;
+        const accessibleSummary = `${content(device.title)} · ${content(device.state)} · ${content(device.deviceOverview)} · ${t('workspace.fileSummary')}: ${content(device.fileSummary)}`;
+        return <button
+          key={device.id}
+          id={`device-tab-${device.id}`}
+          type="button"
+          role="tab"
+          tabIndex={selected ? 0 : -1}
+          aria-label={accessibleSummary}
+          aria-selected={selected}
+          aria-controls={`device-panel-${device.id}`}
+          className={`${selected ? 'active ' : ''}${device.tone}`}
+          onClick={() => setSelectedId(device.id)}
+          onKeyDown={(event) => handleDeviceTabKeyDown(event, index)}
+        >
+          <span className="deviceCardHead"><small>{t('workspace.deviceOverview')}</small><span className="deviceCardIndex">{device.index}</span></span>
+          <strong>{content(device.title)}</strong>
+          <em>{content(device.state)}</em>
+          <span className="deviceCardIntro">{content(device.deviceOverview)}</span>
+          <span className="deviceCardAssets"><b>{t('workspace.fileSummary')}</b><span>{content(device.fileSummary)}</span></span>
+        </button>;
+      })}
     </div>
 
-    <div className="deviceStage" id={`device-panel-${current.id}`} role="tabpanel">
-      <aside className={`deviceAuthority ${current.tone}`}>
-        <small>{current.viewer.mode.toUpperCase()}</small>
-        <h3>{content(current.title)}</h3>
-        <ul>{current.facts.slice(0, 3).map((fact) => <li key={fact}>{content(fact)}</li>)}</ul>
-      </aside>
-      <DeviceExperience key={current.id} device={current} />
-    </div>
+    {catalog.devices.map((device) => {
+      const selected = current.id === device.id;
+      return <div
+        key={device.id}
+        className="deviceStage"
+        id={`device-panel-${device.id}`}
+        role="tabpanel"
+        aria-labelledby={`device-tab-${device.id}`}
+        tabIndex={0}
+        hidden={!selected}
+      >
+        {selected && <DeviceExperience key={device.id} device={device} />}
+      </div>;
+    })}
     <noscript><Ehl2DiagnosticNoScriptSummary /></noscript>
 
   </section>;

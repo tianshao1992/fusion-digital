@@ -118,10 +118,12 @@ test('digital-prototype split layout exposes an accessible and persistent resize
   assert.match(workspace, /event\.preventDefault\(\)/);
 });
 
-test('digital-prototype workspace is full-width, aligned and safely stacks below 1180px', async () => {
+test('digital-prototype workspace gives device summaries to the top cards and safely stacks scientific panes', async () => {
   const workspace = await source('app/digital-prototype/MultiDeviceWorkspace.tsx');
   const viewer = await source('app/components/TokamakCadViewer.tsx');
-  const css = await source('app/digital-prototype/prototype.css');
+  const legacyCss = await source('app/digital-prototype/prototype.css');
+  const workspaceCss = await source('app/digital-prototype/workspace-layout.css');
+  const css = `${legacyCss}\n${workspaceCss}`;
 
   assert.match(cssRule(css, '.multiDeviceSection'), /padding:56px clamp\(14px,1\.5vw,30px\) 72px/);
   for (const selector of ['.multiDeviceIntro', '.deviceSelector', '.deviceStage']) {
@@ -129,8 +131,23 @@ test('digital-prototype workspace is full-width, aligned and safely stacks below
     assert.match(declarations, /width:100%/, `${selector} must fill the available page width`);
     assert.doesNotMatch(declarations, /max-width:/, `${selector} must not retain the former 1600px ceiling`);
   }
-  assert.match(cssRule(css, '.deviceStage'), /grid-template-columns:clamp\(170px,11vw,215px\) minmax\(0,1fr\)/);
-  assert.match(cssRule(css, '.deviceAuthority'), /padding:22px 16px/);
+  assert.match(workspaceCss, /\.deviceSelector\s*\{[^}]*grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/);
+  assert.match(cssRule(workspaceCss, '.deviceStage'), /display:block/);
+  assert.match(cssRule(workspaceCss, '.deviceStage[hidden]'), /display:none/);
+  assert.doesNotMatch(workspace, /deviceAuthority/, 'the former left information rail must not remain in the rendered workspace');
+  assert.match(workspace, /device\.deviceOverview/);
+  assert.match(workspace, /device\.fileSummary/);
+  const selectorStart = workspace.indexOf('<div className="deviceSelector"');
+  const panelMapStart = workspace.indexOf('{catalog.devices.map((device) => {', selectorStart + 1);
+  assert.ok(selectorStart >= 0 && panelMapStart > selectorStart, 'missing device summary-card source boundary');
+  const selectorSource = workspace.slice(selectorStart, panelMapStart);
+  assert.match(selectorSource, /content\(device\.deviceOverview\)/);
+  assert.match(selectorSource, /content\(device\.fileSummary\)/);
+  assert.doesNotMatch(selectorSource, /device\.(?:copy|facts)/,
+    'top summary cards must consume dedicated presentation fields, not governance copy or raw facts');
+  assert.match(workspace, /tabIndex=\{selected \? 0 : -1\}/);
+  assert.match(workspace, /event\.key === 'ArrowRight'/);
+  assert.match(workspace, /aria-labelledby=\{`device-tab-\$\{device\.id\}`\}/);
 
   const layout = cssRule(css, '.deviceExperienceLayout');
   assert.match(layout, /--device-physics-width:36%/);
@@ -157,6 +174,21 @@ test('digital-prototype workspace is full-width, aligned and safely stacks below
   assert.match(workspace, /showFootnotes=\{false\}/);
   assert.doesNotMatch(workspace, /DeviceGovernanceNote|deviceGovernanceNote|devicePreviewPolicy|devicePhysicsBoundary/);
   assert.doesNotMatch(workspace, /PREVIEW SECURITY POLICY|AXISYMMETRIC FLUX SURFACE/);
+});
+
+test('all four device cards publish technical overview and model/data summaries without authorization copy', async () => {
+  const catalog = JSON.parse(await source('public/models/device-catalog.json'));
+  assert.equal(catalog.schemaVersion, '2.2');
+  assert.equal(catalog.devices.length, 4);
+  for (const device of catalog.devices) {
+    assert.ok(device.deviceOverview.length > 30, `${device.id} needs a substantive device overview`);
+    assert.ok(device.fileSummary.length > 15, `${device.id} needs a model/data file summary`);
+    assert.doesNotMatch(`${device.deviceOverview} ${device.fileSummary}`, /授权|许可|PUBLIC|AUTHORIZED|LICEN[CS]E|GOVERNANCE/i);
+  }
+  assert.match(catalog.devices.find(({ id }) => id === 'exl-50u-2026-upgrade').fileSummary, /Meshopt GLB 5\.6 \/ 13\.4 MB[\s\S]*5,804[\s\S]*7 炮偏滤器拓扑/);
+  assert.equal(catalog.devices.find(({ id }) => id === 'paramak-full-device').fileSummary, '2.2 MB GLB · 17 个稳定部件');
+  assert.match(catalog.devices.find(({ id }) => id === 'ehl-2-preliminary').fileSummary, /14\.2 MB Meshopt GLB[\s\S]*247 万[\s\S]*5 个 DiagView2 平面方案/);
+  assert.match(catalog.devices.find(({ id }) => id === 'iter-educational-model').fileSummary, /18 个 Meshopt GLB 分片[\s\S]*98\.5 MB/);
 });
 
 test('EFIT panel exposes shot selection, real time scrubbing, playback and quality boundaries', async () => {

@@ -67,7 +67,9 @@ test('research catalogues never publish unreviewed Chinese prose in English mode
 test('expert terminology uses physical and reconstruction semantics', async () => {
   const messages = await read('app/i18n/messages.ts');
   for (const term of [
-    'interactive 3D derivative',
+    '3D assembly',
+    'diagnostic coverage',
+    'physics traces',
     'Physical shot time',
     'EFIT reconstruction timebase',
     'LCFS major-radius bounds (Rmin / Rmax)',
