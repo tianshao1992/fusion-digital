@@ -6,6 +6,7 @@ import {
   LegendComponent,
   MarkAreaComponent,
   MarkLineComponent,
+  PolarComponent,
   TooltipComponent,
   VisualMapComponent,
 } from 'echarts/components';
@@ -25,6 +26,7 @@ registerEChartsModules([
   LegendComponent,
   MarkAreaComponent,
   MarkLineComponent,
+  PolarComponent,
   TooltipComponent,
   VisualMapComponent,
   LabelLayout,

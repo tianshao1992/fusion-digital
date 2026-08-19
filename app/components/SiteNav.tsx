@@ -14,6 +14,7 @@ type SiteNavProps = {
 };
 
 const links = [
+  { key: 'home', href: '/', label: 'nav.home', priority: 0 },
   { key: 'facilities', href: '/facilities', label: 'nav.facilities', priority: 1 },
   { key: 'prototype', href: '/#prototype-workspace', label: 'nav.prototype', priority: 1 },
   { key: 'roadmap', href: '/roadmap', label: 'nav.roadmap', priority: 1 },

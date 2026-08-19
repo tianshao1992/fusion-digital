@@ -24,6 +24,8 @@ test('typed locale registry supports Chinese and English with durable fallback',
   assert.match(messages, /const en: Record<MessageKey, string>/);
   assert.match(messages, /'nav\.prototype': 'Prototype'/);
   assert.match(messages, /'nav\.control': 'Control'/);
+  assert.match(messages, /'nav\.home': '\u4e3b\u9875\u6982\u89c8'/);
+  assert.match(messages, /'nav\.home': 'Home'/);
   assert.match(messages, /'nav\.knowledge': 'Knowledge'/);
   assert.match(messages, /'nav\.roadmap': '路线规划'/);
   assert.match(messages, /'nav\.roadmap': 'Roadmap'/);
@@ -58,6 +60,11 @@ test('root shell and navigation wire locale and theme preferences without changi
   assert.match(nav, /event\.key === 'Escape'/);
   assert.match(nav, /aria-current=\{active === item\.key \? 'page' : undefined\}/);
   assert.match(nav, /data-nav-active=\{active === item\.key \? 'true' : undefined\}/);
+  assert.match(nav, /const visibleItems = useMemo\([\s\S]*?links\.filter\(\(\{ key \}\) => visibleKeys\.includes\(key\)\)/);
+  assert.match(nav, /const overflowItems = useMemo\([\s\S]*?links\.filter\(\(\{ key \}\) => !visibleKeys\.includes\(key\)\)/);
+  assert.match(nav, /\{visibleItems\.map\(\(item\) => renderLink\(item\)\)\}/);
+  assert.match(nav, /\{overflowItems\.map\(\(item\) => renderLink\(item, true\)\)\}/);
+  assert.match(nav, /<div>\{links\.map\(\(item\) => renderLink\(item\)\)\}\{renderKnowledgeMenu\(true\)\}/);
   assert.match(nav, /import \{ knowledgeModules \} from '\.\.\/data\/knowledge-modules'/);
   assert.equal((modules.match(/no: '0[1-9]'|no: '10'/g) ?? []).length, 10);
   assert.match(nav, /data-knowledge-module=\{item\.id\}/);
@@ -66,10 +73,11 @@ test('root shell and navigation wire locale and theme preferences without changi
   assert.match(backLink, /className="knowledgeBackLink"/);
   assert.match(backLink, /href="\/knowledge-graph"/);
   const primaryLinks = nav.match(/const links = \[([\s\S]*?)\] as const;/)?.[1] ?? '';
+  assert.match(primaryLinks, /key: 'home', href: '\/', label: 'nav\.home', priority: 0/);
   assert.match(primaryLinks, /key: 'facilities'/);
   assert.match(primaryLinks, /key: 'prototype'/);
   assert.match(primaryLinks, /key: 'roadmap'/);
-  assert.doesNotMatch(primaryLinks, /key: '(?:home|physics|engineering|control|diagnostics|ai|resources)'/);
+  assert.doesNotMatch(primaryLinks, /key: '(?:physics|engineering|control|diagnostics|ai|resources)'/);
 });
 
 test('navigation selected state remains bold orange across page and theme overrides', async () => {

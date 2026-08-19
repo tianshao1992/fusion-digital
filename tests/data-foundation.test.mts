@@ -18,6 +18,7 @@ const HAN = /\p{Script=Han}/u;
 const chartSource = readFileSync(new URL('../app/data-foundation/DataFoundationCharts.tsx', import.meta.url), 'utf8');
 const scientificChartSource = readFileSync(new URL('../app/components/charts/ScientificChart.tsx', import.meta.url), 'utf8');
 const echartsRuntimeSource = readFileSync(new URL('../app/components/charts/echartsRuntime.ts', import.meta.url), 'utf8');
+const architectureChartSource = chartSource.slice(chartSource.indexOf('export function DataArchitectureChart'), chartSource.indexOf('export function DataLandscapeChart'));
 const landscapeChartSource = chartSource.slice(chartSource.indexOf('export function DataLandscapeChart'));
 
 const byId = (id: string): DataFoundationRecord => {
@@ -109,6 +110,23 @@ test('data-foundation charts retain mobile and assistive-technology fallbacks', 
   assert.match(scientificChartSource, /ready && !keepFallbackAccessible/, 'the shared chart host must not aria-hide an opted-in semantic fallback');
 });
 
+test('architecture nodes render bilingual labels inside unclipped desktop and mobile bounds', () => {
+  assert.ok(architectureChartSource.length > 0, 'the architecture chart source must be discoverable');
+  assert.match(chartSource, /const ROUTE_NODE_LABELS = \{[\s\S]*?L0:[\s\S]*?L7:/, 'all lifecycle nodes need authored compact labels');
+  assert.match(architectureChartSource, /label:\s*\{\s*show:\s*true,\s*position:\s*'inside'/, 'graph-node labels must be explicitly visible');
+  assert.match(architectureChartSource, /top:\s*66,[\s\S]*?bottom:\s*62,/, 'desktop graph extrema need symbol-safe vertical gutters');
+  assert.match(architectureChartSource, /query:\s*\{\s*maxWidth:\s*700\s*\}[\s\S]*?top:\s*40,[\s\S]*?bottom:\s*40,/, 'compact graph extrema need mobile-safe vertical gutters');
+  assert.match(architectureChartSource, /x:\s*280,/, 'compact graph columns must use a canvas-proportional x span so ECharts does not collapse symbol height');
+  assert.match(architectureChartSource, /confine:\s*true/, 'tooltips must stay inside the chart boundary');
+});
+
+test('architecture SSR fallback includes the governed control branch as well as L0-L7', () => {
+  assert.match(architectureChartSource, /ARCHITECTURE_BRANCH_ROWS\.map/, 'the semantic fallback must include hot path, shadow service and release gate rows');
+  assert.match(chartSource, /en:\s*'Deterministic control hot path'/);
+  assert.match(chartSource, /en:\s*'Read-only shadow services'/);
+  assert.match(chartSource, /en:\s*'Evidence and release gate'/);
+});
+
 test('evidence-landscape nodes keep their names visible and project the active language', () => {
   assert.ok(landscapeChartSource.length > 0, 'the evidence-landscape chart source must be discoverable');
   assert.match(landscapeChartSource, /name:\s*record\.name/, 'every evidence point must retain its catalogue name');
@@ -134,6 +152,7 @@ test('evidence-landscape keeps a complete SSR fallback, no generic placeholder a
   assert.match(landscapeChartSource, /keepFallbackAccessible/, 'the fallback table must remain available after chart hydration');
   assert.doesNotMatch(landscapeChartSource, /Technical annotation|通用图表占位|generic placeholder/i);
   assert.match(echartsRuntimeSource, /LegendComponent/, 'the category legend must be registered in the tree-shaken ECharts runtime');
+  assert.match(echartsRuntimeSource, /PolarComponent/, 'polar axes must be registered for charts that use radiusAxis or angleAxis');
   assert.match(
     landscapeChartSource,
     /media:\s*\[[\s\S]*?query:\s*\{\s*maxWidth:\s*700\s*\}/,

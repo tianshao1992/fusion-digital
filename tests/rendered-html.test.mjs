@@ -296,14 +296,23 @@ test('server-renders the FusionDigital community portal', async () => {
   assert.match(html, /href="\/#prototype-workspace"/);
   assert.equal((html.match(/class="siteKnowledgeHome[^\"]*"[^>]*href="\/knowledge-graph"|href="\/knowledge-graph"[^>]*class="siteKnowledgeHome[^\"]*"/g) ?? []).length, 2, 'desktop and mobile Knowledge menus must link to the graph home');
   assert.equal((html.match(/data-knowledge-module=/g) ?? []).length, 20, 'desktop and mobile Knowledge menus must expose all ten modules');
+  assert.equal((html.match(/data-primary-nav="home"/g) ?? []).length, 2, 'desktop and mobile primary navigation must expose the home overview');
+  assert.equal((html.match(/>\u4e3b\u9875\u6982\u89c8<\/a>/g) ?? []).length, 2, 'both primary navigation renderings must label the root destination \u4e3b\u9875\u6982\u89c8');
+  const activeHomeLinks = html.match(/<a(?=[^>]*href="\/")(?=[^>]*class="active")(?=[^>]*aria-current="page")(?=[^>]*data-primary-nav="home")[^>]*>\u4e3b\u9875\u6982\u89c8<\/a>/g) ?? [];
+  assert.equal(activeHomeLinks.length, 2, 'desktop and mobile root navigation entries must both be active on the home page');
+  const englishHomeResponse = await render('/', { cookie: 'fusiondigital_locale=en' });
+  assert.equal(englishHomeResponse.status, 200);
+  const englishHomeHtml = await englishHomeResponse.text();
+  const activeEnglishHomeLinks = englishHomeHtml.match(/<a(?=[^>]*href="\/")(?=[^>]*class="active")(?=[^>]*aria-current="page")(?=[^>]*data-primary-nav="home")[^>]*>Home<\/a>/g) ?? [];
+  assert.equal(activeEnglishHomeLinks.length, 2, 'desktop and mobile root navigation entries must both render active Home links in English');
   assert.equal((html.match(/data-primary-nav="roadmap"/g) ?? []).length, 2, 'desktop and mobile primary navigation must expose the program roadmap');
   assert.ok((html.match(/>路线规划<\/a>/g) ?? []).length >= 2, 'desktop and mobile primary navigation must label the destination 路线规划');
   assert.doesNotMatch(html, /class="siteKnowledgeRoadmap/, 'Knowledge menus must not duplicate the promoted program roadmap');
   const primaryNavigation = [...html.matchAll(/data-primary-nav="([^"]+)"/g)].map((match) => match[1]);
   assert.deepEqual(primaryNavigation, [
-    'facilities', 'prototype', 'roadmap', 'knowledge',
-    'facilities', 'prototype', 'roadmap', 'knowledge',
-  ], 'desktop and mobile navigation must expose the same four destinations with Knowledge last');
+    'home', 'facilities', 'prototype', 'roadmap', 'knowledge',
+    'home', 'facilities', 'prototype', 'roadmap', 'knowledge',
+  ], 'desktop and mobile navigation must expose the same five destinations with Home first and Knowledge last');
   assert.doesNotMatch(html, /知识智能/);
   assert.match(html, /fusiondigital-mark\.png/);
   assert.match(html, /class="brandWordmark"/);
@@ -851,7 +860,11 @@ test('server-renders the AI-native fusion digital twin research page', async () 
   const html = await htmlFor('/ai');
   assert.match(html, /FusionMAE/);
   assert.match(html, /TokaMind/);
-  assert.match(html, /AI AGENTS/);
+  assert.match(html, /fusion-twin-agent-governed-loop-image2-v1\.webp/);
+  assert.match(html, /智能原生聚变数字孪生/);
+  assert.match(html, /确定性安全包络 · 权限门 · 人工批准/);
+  assert.match(html, /aria-labelledby=/);
+  assert.match(html, /aria-describedby=/);
   assert.match(html, /href="\/fusion-ai-native-research-report\.docx"/);
   assert.match(html, /href="\/data\/fusion-ai-native-landscape\.json"/);
   assert.match(html, /href="\/fusion-ai-native-paper-code-index\.csv"/);
@@ -873,6 +886,13 @@ test('server-renders the AI-native fusion digital twin research page', async () 
   assert.match(html, /target="_blank"/);
   assert.match(html, /href="\/platform#architecture"/);
   assert.doesNotMatch(html, /METHOD &amp; LIMITS|如何使用这份图谱/);
+
+  const englishResponse = await render('/ai', { cookie: 'fusiondigital_locale=en' });
+  assert.equal(englishResponse.status, 200);
+  const englishHtml = await englishResponse.text();
+  assert.match(englishHtml, /AI-NATIVE FUSION DIGITAL TWIN/);
+  assert.match(englishHtml, /Deterministic safety envelope · authorization gate · human approval/);
+  assert.doesNotMatch(englishHtml, /智能原生聚变数字孪生|确定性安全包络/);
 });
 
 test('ships and server-renders the evidence-first knowledge graph', async () => {

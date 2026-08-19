@@ -11,6 +11,16 @@ export const graphNodeTypes = [
 export type GraphNodeType = (typeof graphNodeTypes)[number];
 export type GraphDomain = 'physics' | 'engineering' | 'control' | 'diagnostics' | 'ai' | 'facility';
 
+export type KnowledgeEvidenceSourceKind = 'paper' | 'code' | 'official';
+
+export type KnowledgeEvidenceSource = {
+  url: string;
+  label: string;
+  kind: KnowledgeEvidenceSourceKind;
+  host: string;
+  relation?: string;
+};
+
 export type KnowledgeGraphNode = {
   id: string;
   type: GraphNodeType;
@@ -28,6 +38,7 @@ export type KnowledgeGraphNode = {
   tags?: string[];
   tagsEn?: string[];
   sourceDomains?: GraphDomain[];
+  evidenceSources?: KnowledgeEvidenceSource[];
   degree: number;
   localizationStatus?: 'source' | 'derived' | 'placeholder';
 };

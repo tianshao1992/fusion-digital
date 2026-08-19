@@ -6,6 +6,7 @@ import ScientificChart from '@/app/components/charts/ScientificChart';
 import { useChartTheme, type ChartThemePalette } from '@/app/components/charts/chart-theme';
 import KnowledgeChat from '@/app/components/knowledge-chat/KnowledgeChat';
 import { useI18n, type AppLocale } from '@/app/i18n';
+import { collectKnowledgeEvidenceSources, normalizeKnowledgeSourceUrl, type KnowledgeEvidenceSourceKind } from './evidenceSources';
 import { formatKnowledgeGraphTooltip } from './knowledgeGraphTooltip';
 import type { GraphQueryResponse, KnowledgeGraphNode } from './types';
 
@@ -73,6 +74,11 @@ const copy = {
     evidence: '证据', deployment: '部署', depth: '展开深度', oneHop: '1 跳 · 直接关系', twoHops: '2 跳 · 关系链',
     expand: '以此为中心展开', source: '打开实体来源 ↗', currentRelations: '当前子图中的关系', evidenceLink: '证据 ↗',
     sourceAria: (label: string) => `查看 ${label} 的来源`, emptyRelations: '当前子图未包含其相邻节点，可点击“以此为中心展开”。',
+    sourcesTitle: '相关文章与代码来源', sourcesIntro: '链接直接来自图谱的结构化一手来源字段，不为未公开代码补造仓库。',
+    sourceKinds: { paper: '原始论文', code: '代码库 / 代码资产', official: '官方 / 一手来源' },
+    sourceLinkAria: (kind: string, label: string) => `在新标签页打开${kind}：${label}`,
+    noSources: '当前子图没有可直接访问的一手来源；可展开邻域或下载完整快照继续核对。',
+    noScript: '未启用 JavaScript 时仍可打开当前实体的一手来源；切换节点请下载完整快照。',
     select: '选择一个节点查看实体详情、关系和原始证据。', chatContext: 'FusionDigital 知识图谱',
   },
   en: {
@@ -88,6 +94,11 @@ const copy = {
     evidence: 'evidence', deployment: 'deployment', depth: 'Expansion depth', oneHop: '1 hop · direct relations', twoHops: '2 hops · relation chains',
     expand: 'Expand around this entity', source: 'Open primary entity source ↗', currentRelations: 'Relations in the current subgraph', evidenceLink: 'Evidence ↗',
     sourceAria: (label: string) => `Open the source for ${label}`, emptyRelations: 'Adjacent nodes are not present in this subgraph. Expand around this entity to retrieve them.',
+    sourcesTitle: 'Related papers and code sources', sourcesIntro: 'Links come directly from structured primary-source fields; no repository is inferred for unpublished code.',
+    sourceKinds: { paper: 'Primary paper', code: 'Repository / code asset', official: 'Official / primary source' },
+    sourceLinkAria: (kind: string, label: string) => `Open ${kind} for ${label} in a new tab`,
+    noSources: 'No directly accessible primary source is recorded in this subgraph. Expand the neighbourhood or inspect the full snapshot.',
+    noScript: 'With JavaScript disabled, the current entity sources remain available. Download the full snapshot to inspect other nodes.',
     select: 'Select a node to inspect entity details, relations and primary evidence.', chatContext: 'FusionDigital Knowledge Graph',
   },
 } as const;
@@ -256,6 +267,7 @@ export default function KnowledgeGraphExplorer({ initial, devices }: ExplorerPro
   const selectedAppearance = selected ? graphDomainAppearance(selected.domain, chartTheme.mode) : null;
   const selectedRelations = useMemo(() => data.edges.filter((edge) => edge.source === selectedId || edge.target === selectedId).slice(0, 60), [data.edges, selectedId]);
   const nodeIndex = useMemo(() => new Map(data.nodes.map((node) => [node.id, node])), [data.nodes]);
+  const evidenceSources = useMemo(() => selected ? collectKnowledgeEvidenceSources(selected, selectedRelations, nodeIndex) : [], [nodeIndex, selected, selectedRelations]);
   const option = useMemo(() => graphOption(data, selectedId, chartTheme, locale), [chartTheme, data, locale, selectedId]);
 
   async function load(params: { focus?: string; requestedDepth?: 0 | 1 | 2; requestedLimit?: number } = {}) {
@@ -334,6 +346,7 @@ export default function KnowledgeGraphExplorer({ initial, devices }: ExplorerPro
         <label>{ui.nodeLimit} <select value={limit} onChange={(event) => setLimit(Number(event.target.value))}><option value="200">200</option><option value="350">350</option><option value="500">500</option><option value="800">800</option></select></label>
         {data.truncated && limit < 800 && <button type="button" onClick={() => { const next = Math.min(800, limit + 150); setLimit(next); void load({ requestedLimit: next, focus: data.query.focus || undefined }); }}>{ui.more}</button>}
       </div>
+      <noscript><p className="kgNoScriptNotice">{ui.noScript} <a href="/data/fusion-knowledge-graph.json">{ui.snapshot}</a></p></noscript>
       <details className="kgAccessibleList">
         <summary>{ui.browse(data.nodes.length)}</summary>
         <div>{data.nodes.map((node) => <button type="button" key={node.id} onClick={() => setSelectedId(node.id)} aria-pressed={node.id === selectedId}><b>{typeMeta[node.type][key]}</b><span>{nodeLabel(node, locale)}</span><small>{domainMeta[node.domain][key]} · {ui.recorded(node.degree)}</small></button>)}</div>
@@ -356,11 +369,19 @@ export default function KnowledgeGraphExplorer({ initial, devices }: ExplorerPro
           <label>{ui.depth} <select value={depth} onChange={(event) => setDepth(Number(event.target.value) as 1 | 2)}><option value="1">{ui.oneHop}</option><option value="2">{ui.twoHops}</option></select></label>
           <button type="button" disabled={pending} onClick={() => void load({ focus: selected.id })}>{ui.expand}</button>
         </div>
-        {selected.url && <a className="kgPrimarySource" href={selected.url} target="_blank" rel="noreferrer">{ui.source}</a>}
+        <section className="kgEvidenceSources" aria-labelledby="kg-evidence-sources-title">
+          <h3 id="kg-evidence-sources-title">{ui.sourcesTitle}</h3>
+          <p>{ui.sourcesIntro}</p>
+          {evidenceSources.length ? <ul>{evidenceSources.map((source) => {
+            const kind = ui.sourceKinds[source.kind as KnowledgeEvidenceSourceKind];
+            return <li key={source.url}><a href={source.url} target="_blank" rel="noopener noreferrer external" aria-label={ui.sourceLinkAria(kind, source.label)}><b>{kind}</b><span>{source.label}</span><small>{source.host}<i aria-hidden="true"> ↗</i></small></a></li>;
+          })}</ul> : <p className="kgNoEvidence">{ui.noSources}</p>}
+        </section>
         <section className="kgRelationList"><h3>{ui.currentRelations}</h3>{selectedRelations.length ? <ul>{selectedRelations.map((edge) => {
           const neighborId = edge.source === selected.id ? edge.target : edge.source;
           const neighbor = nodeIndex.get(neighborId);
-          return neighbor ? <li key={edge.id}><button type="button" onClick={() => setSelectedId(neighborId)}><b>{edgeRelationLabel(edge.relation, edge.relationLabel, locale)}</b><span>{nodeLabel(neighbor, locale)}</span></button>{edge.evidenceUrl && <a href={edge.evidenceUrl} target="_blank" rel="noreferrer" aria-label={ui.sourceAria(edge.evidenceLabel && !(locale === 'en' && HAN.test(edge.evidenceLabel)) ? edge.evidenceLabel : nodeLabel(neighbor, locale))}>{ui.evidenceLink}</a>}</li> : null;
+          const relationSourceUrl = normalizeKnowledgeSourceUrl(edge.evidenceUrl);
+          return neighbor ? <li key={edge.id}><button type="button" onClick={() => setSelectedId(neighborId)}><b>{edgeRelationLabel(edge.relation, edge.relationLabel, locale)}</b><span>{nodeLabel(neighbor, locale)}</span></button>{relationSourceUrl && <a href={relationSourceUrl} target="_blank" rel="noopener noreferrer external" aria-label={ui.sourceAria(edge.evidenceLabel && !(locale === 'en' && HAN.test(edge.evidenceLabel)) ? edge.evidenceLabel : nodeLabel(neighbor, locale))}>{ui.evidenceLink}</a>}</li> : null;
         })}</ul> : <p>{ui.emptyRelations}</p>}</section>
         {selected.tags && selected.tags.length > 0 && <div className="kgTags">{selected.tags.filter((tag) => locale !== 'en' || !HAN.test(tag)).slice(0, 9).map((tag) => <span key={tag}>#{tag}</span>)}</div>}
       </> : <p className="kgDescription">{ui.select}</p>}

@@ -12,7 +12,47 @@ import {
   type DataCategory,
 } from './dataFoundation';
 
-const FONT = '"Microsoft YaHei UI","Microsoft YaHei","Noto Sans SC",Arial,sans-serif';
+const FONT = 'system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans SC","PingFang SC","Microsoft YaHei UI","Microsoft YaHei",Arial,sans-serif';
+
+type RouteId = (typeof dataFoundationRoute)[number]['id'];
+
+const ROUTE_NODE_LABELS = {
+  L0: { zh: 'L0\n事实源与采集', en: 'L0\nSource systems\n& acquisition' },
+  L1: { zh: 'L1\n权威源档案\n与锁定快照', en: 'L1\nAuthoritative\narchive & locked\nsnapshot' },
+  L2: { zh: 'L2\n统一访问与对时', en: 'L2\nUnified access\n& time alignment' },
+  L3: { zh: 'L3\n语义交换与映射', en: 'L3\nSemantic exchange\n& mapping' },
+  L4: { zh: 'L4\n策展科学产品', en: 'L4\nCurated scientific\nproducts' },
+  L5: { zh: 'L5\n目录、血缘与权限', en: 'L5\nCatalogue, lineage\n& authorization' },
+  L6: { zh: 'L6\n工作流与\n近数据计算', en: 'L6\nWorkflow &\ncompute-to-data' },
+  L7: { zh: 'L7\n版本快照与\n证据发布', en: 'L7\nVersioned evidence\npublication' },
+} satisfies Record<RouteId, { zh: string; en: string }>;
+
+const ARCHITECTURE_BRANCH_ROWS = [
+  {
+    id: 'H0',
+    zh: '确定性控制热路径',
+    en: 'Deterministic control hot path',
+    tools: 'Native PCS · machine protection · hard real-time interlocks',
+    deliverable: '有界时延且独立于网页和数据平台的控制与保护闭环',
+    deliverableEn: 'Bounded-latency control and protection loop independent of the web and data platform',
+  },
+  {
+    id: 'H1',
+    zh: '只读影子服务',
+    en: 'Read-only shadow services',
+    tools: 'Read-only adapters · between-shot analysis · monitoring',
+    deliverable: '无机器控制写权限的受治理分析与证据视图',
+    deliverableEn: 'Governed analysis and evidence views with no machine-control write authority',
+  },
+  {
+    id: 'H2',
+    zh: '证据与发布门',
+    en: 'Evidence and release gate',
+    tools: 'Context of use · validation domain · UQ · ownership · access policy',
+    deliverable: '通过用途、验证域、不确定度、责任人与访问策略审查的发布包',
+    deliverableEn: 'Release package reviewed for context of use, validation domain, uncertainty, ownership and access policy',
+  },
+] as const;
 
 type RouteNode = {
   id: string;
@@ -22,7 +62,19 @@ type RouteNode = {
   symbol: 'roundRect' | 'diamond';
   symbolSize: [number, number];
   itemStyle: { color: string; borderColor: string; borderWidth: number };
-  label: { color: string; fontFamily: string; fontSize: number; fontWeight: number; lineHeight: number };
+  label: {
+    show: true;
+    position: 'inside';
+    align: 'center';
+    verticalAlign: 'middle';
+    width: number;
+    overflow: 'break';
+    color: string;
+    fontFamily: string;
+    fontSize: number;
+    fontWeight: number;
+    lineHeight: number;
+  };
   tooltipText: string;
 };
 
@@ -82,16 +134,16 @@ export function DataArchitectureChart() {
   const en = locale === 'en';
   const palette = useChartTheme();
   const option = useMemo<EChartsCoreOption>(() => {
-    const routeColors = ['#52685b', '#607b70', '#427f78', '#4c8c86', '#c86545', '#7d7085', '#617d9b', '#9a6b46'];
+    const routeColors = ['#52685b', '#526d62', '#2f706a', '#397670', '#a94f34', '#6b5e73', '#4e6c8b', '#7f5436'];
     const nodes: RouteNode[] = dataFoundationRoute.map((step, index) => ({
       id: step.id,
-      name: `${step.id}\n${en ? step.en : step.zh}`,
+      name: en ? ROUTE_NODE_LABELS[step.id].en : ROUTE_NODE_LABELS[step.id].zh,
       x: 110 + index * 130,
       y: 230,
       symbol: 'roundRect',
       symbolSize: [116, 66],
       itemStyle: { color: routeColors[index], borderColor: palette.background, borderWidth: 2 },
-      label: { color: '#fffdf8', fontFamily: FONT, fontSize: 10, fontWeight: 700, lineHeight: 16 },
+      label: { show: true, position: 'inside', align: 'center', verticalAlign: 'middle', width: 100, overflow: 'break', color: '#fffdf8', fontFamily: FONT, fontSize: 10, fontWeight: 700, lineHeight: 14 },
       tooltipText: `<b>${step.id} · ${en ? step.en : step.zh}</b><br/>${step.tools}<br/>${en ? step.deliverableEn : step.deliverable}`,
     }));
     nodes.push(
@@ -103,7 +155,7 @@ export function DataArchitectureChart() {
         symbol: 'diamond',
         symbolSize: [128, 72],
         itemStyle: { color: '#a4472e', borderColor: palette.background, borderWidth: 2 },
-        label: { color: '#fffdf8', fontFamily: FONT, fontSize: 10, fontWeight: 800, lineHeight: 16 },
+        label: { show: true, position: 'inside', align: 'center', verticalAlign: 'middle', width: 82, overflow: 'break', color: '#fffdf8', fontFamily: FONT, fontSize: 10, fontWeight: 800, lineHeight: 15 },
         tooltipText: en
           ? '<b>Deterministic control hot path</b><br/>Native PCS / protection interfaces; bounded latency; independent interlocks.'
           : '<b>确定性控制热路径</b><br/>原生 PCS / 保护接口、确定时延、独立联锁。',
@@ -116,7 +168,7 @@ export function DataArchitectureChart() {
         symbol: 'roundRect',
         symbolSize: [128, 62],
         itemStyle: { color: '#355f70', borderColor: palette.background, borderWidth: 2 },
-        label: { color: '#fffdf8', fontFamily: FONT, fontSize: 10, fontWeight: 800, lineHeight: 16 },
+        label: { show: true, position: 'inside', align: 'center', verticalAlign: 'middle', width: 108, overflow: 'break', color: '#fffdf8', fontFamily: FONT, fontSize: 10, fontWeight: 800, lineHeight: 15 },
         tooltipText: en
           ? '<b>Read-only shadow services</b><br/>Between-shot analysis, monitoring and evidence views; no machine-control write authority.'
           : '<b>只读影子服务</b><br/>炮间分析、监测与证据视图；无机器控制写权限。',
@@ -129,7 +181,7 @@ export function DataArchitectureChart() {
         symbol: 'diamond',
         symbolSize: [122, 72],
         itemStyle: { color: '#705f75', borderColor: palette.background, borderWidth: 2 },
-        label: { color: '#fffdf8', fontFamily: FONT, fontSize: 10, fontWeight: 800, lineHeight: 16 },
+        label: { show: true, position: 'inside', align: 'center', verticalAlign: 'middle', width: 78, overflow: 'break', color: '#fffdf8', fontFamily: FONT, fontSize: 10, fontWeight: 800, lineHeight: 15 },
         tooltipText: en
           ? '<b>Evidence and release gate</b><br/>Context of use, validation domain, uncertainty, owner and access policy are mandatory.'
           : '<b>证据与发布门</b><br/>用途、验证域、不确定度、责任人与访问策略缺一不可。',
@@ -138,10 +190,22 @@ export function DataArchitectureChart() {
     const compactNodes = nodes.map((node) => {
       const routeIndex = dataFoundationRoute.findIndex((step) => step.id === node.id);
       if (routeIndex >= 0) {
-        return { ...node, x: 0, y: routeIndex * 80, symbolSize: [104, 50] as [number, number] };
+        return {
+          ...node,
+          x: 0,
+          y: routeIndex * 80,
+          symbolSize: [104, 52] as [number, number],
+          label: { ...node.label, width: 88, fontSize: 8, lineHeight: 11 },
+        };
       }
       const positions: Record<string, number> = { 'hot-path': 72, 'read-only': 264, 'evidence-gate': 520 };
-      return { ...node, x: 1, y: positions[node.id], symbolSize: [106, 56] as [number, number] };
+      return {
+        ...node,
+        x: 280,
+        y: positions[node.id],
+        symbolSize: [106, 56] as [number, number],
+        label: { ...node.label, width: node.symbol === 'diamond' ? 72 : 92, fontSize: 8, lineHeight: 11 },
+      };
     });
     const links: Array<{ source: string; target: string; lineStyle: Record<string, unknown> }> = dataFoundationRoute.slice(0, -1).map((step, index) => ({
       source: step.id,
@@ -156,21 +220,27 @@ export function DataArchitectureChart() {
       { source: 'L7', target: 'evidence-gate', lineStyle: { color: '#705f75', width: 2.4, opacity: .9 } },
     );
     return {
-      tooltip: { trigger: 'item', formatter: (params: { data?: { tooltipText?: string; source?: string; target?: string } }) => params.data?.tooltipText ?? `${params.data?.source ?? ''} → ${params.data?.target ?? ''}` },
+      tooltip: {
+        trigger: 'item',
+        confine: true,
+        extraCssText: 'max-width:min(360px,calc(100vw - 32px));white-space:normal;line-height:1.55;overflow-wrap:anywhere;',
+        formatter: (params: { data?: { tooltipText?: string; source?: string; target?: string } }) => params.data?.tooltipText ?? `${params.data?.source ?? ''} → ${params.data?.target ?? ''}`,
+      },
       aria: { enabled: true, decal: { show: true } },
       series: [{
         type: 'graph',
         layout: 'none',
         left: 82,
         right: 82,
-        top: 38,
-        bottom: 44,
+        top: 66,
+        bottom: 62,
         data: nodes,
         links,
+        label: { show: true, position: 'inside' },
         edgeSymbol: ['none', 'arrow'],
-        edgeSymbolSize: [0, 8],
+        edgeSymbolSize: [0, 9],
         lineStyle: { curveness: 0, width: 2 },
-        emphasis: { focus: 'adjacency', lineStyle: { width: 4 } },
+        emphasis: { focus: 'adjacency', scale: 1.04, label: { show: true }, lineStyle: { width: 4 } },
         roam: false,
       }],
       media: [{
@@ -179,8 +249,8 @@ export function DataArchitectureChart() {
           series: [{
             left: 64,
             right: 64,
-            top: 24,
-            bottom: 24,
+            top: 40,
+            bottom: 40,
             data: compactNodes,
             lineStyle: { curveness: .08, width: 2 },
           }],
@@ -195,7 +265,7 @@ export function DataArchitectureChart() {
     ariaLabel={en ? 'Layered fusion-data architecture from source acquisition through authoritative archives and policy-locked snapshots, IMAS semantics, provenance and evidence publication, with a separate deterministic control hot path' : '从事实源采集、权威源档案和策略锁定快照、IMAS 语义、血缘到证据发布的分层聚变数据架构，并单独显示确定性控制热路径'}
     fallbackSrc=""
     fallbackAlt=""
-    fallback={<table className="dataChartTable"><caption>{en ? 'Fusion-data architecture and deliverables' : '聚变数据架构与交付物'}</caption><thead><tr><th>{en ? 'Layer' : '层级'}</th><th>{en ? 'Purpose' : '目的'}</th><th>{en ? 'Candidate technologies' : '候选技术'}</th><th>{en ? 'Evidence deliverable' : '证据交付'}</th></tr></thead><tbody>{dataFoundationRoute.map((step) => <tr key={step.id}><th>{step.id}</th><td>{en ? step.en : step.zh}</td><td>{step.tools}</td><td>{en ? step.deliverableEn : step.deliverable}</td></tr>)}</tbody></table>}
+    fallback={<table className="dataChartTable"><caption>{en ? 'Fusion-data architecture and deliverables' : '聚变数据架构与交付物'}</caption><thead><tr><th>{en ? 'Layer' : '层级'}</th><th>{en ? 'Purpose' : '目的'}</th><th>{en ? 'Candidate technologies' : '候选技术'}</th><th>{en ? 'Evidence deliverable' : '证据交付'}</th></tr></thead><tbody>{dataFoundationRoute.map((step) => <tr key={step.id}><th>{step.id}</th><td>{en ? step.en : step.zh}</td><td>{step.tools}</td><td>{en ? step.deliverableEn : step.deliverable}</td></tr>)}{ARCHITECTURE_BRANCH_ROWS.map((step) => <tr key={step.id}><th>{step.id}</th><td>{en ? step.en : step.zh}</td><td>{step.tools}</td><td>{en ? step.deliverableEn : step.deliverable}</td></tr>)}</tbody></table>}
     className="dataArchitectureChart"
     height={500}
     eager

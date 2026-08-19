@@ -222,13 +222,14 @@ test("postbuild refuses to prune ITER cache while app source exposes its interna
 });
 
 test("tracked-only CLI performs complete byte and SHA-256 verification", async () => {
+  const lock = await readJson(LOCK_PATH);
   const { stdout, stderr } = await execFileAsync(
     process.execPath,
     [SCRIPT_PATH, "verify", "--tracked-only"],
     { cwd: ROOT, encoding: "utf8", maxBuffer: 4 * 1024 * 1024 },
   );
   assert.equal(stderr, "");
-  assert.match(stdout, /Verified 412\/412 Git-managed runtime assets/);
+  assert.match(stdout, new RegExp(`Verified ${lock.gitAssets.fileCount}/${lock.gitAssets.fileCount} Git-managed runtime assets`));
 });
 
 test("unsafe byte sources and undeclared stage files fail closed", async () => {

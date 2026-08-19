@@ -8,6 +8,7 @@ import {
   type KnowledgeGraphNode,
   type KnowledgeGraphSnapshot,
 } from './types';
+import { collectKnowledgeEvidenceSources, normalizeKnowledgeSourceUrl } from './evidenceSources';
 
 export const knowledgeGraph = snapshot as KnowledgeGraphSnapshot;
 
@@ -72,7 +73,8 @@ function recordReference(node: KnowledgeGraphNode) {
 }
 
 export function localizeKnowledgeGraphNode(node: KnowledgeGraphNode, locale: 'zh-CN' | 'en'): KnowledgeGraphNode {
-  if (locale !== 'en') return node;
+  const safeNode = { ...node, url: normalizeKnowledgeSourceUrl(node.url) };
+  if (locale !== 'en') return safeNode;
   let localizationStatus: KnowledgeGraphNode['localizationStatus'] = 'source';
   let label = node.labelEn?.trim();
   if (label && HAN.test(label)) label = undefined;
@@ -99,18 +101,19 @@ export function localizeKnowledgeGraphNode(node: KnowledgeGraphNode, locale: 'zh
   }
 
   const tags = (node.tagsEn ?? node.tags ?? []).filter((tag) => !HAN.test(tag));
-  return { ...node, label, subtitle, description, tags, localizationStatus };
+  return { ...safeNode, label, subtitle, description, tags, localizationStatus };
 }
 
 export function localizeKnowledgeGraphEdge(edge: KnowledgeGraphEdge, locale: 'zh-CN' | 'en'): KnowledgeGraphEdge {
+  const safeEdge = { ...edge, evidenceUrl: normalizeKnowledgeSourceUrl(edge.evidenceUrl) };
   const rawRelationLabel = graphRelationLabels[edge.relation]?.[locale === 'en' ? 'en' : 'zh'] ?? edge.relation.replaceAll('_', ' ').toLocaleLowerCase(locale);
   const relationLabel = locale === 'en' && HAN.test(rawRelationLabel) ? 'Unclassified relation' : rawRelationLabel;
-  if (locale !== 'en') return { ...edge, relationLabel };
+  if (locale !== 'en') return { ...safeEdge, relationLabel };
   const sourceEvidence = edge.evidenceLabelEn?.trim() && !HAN.test(edge.evidenceLabelEn)
     ? edge.evidenceLabelEn.trim()
     : edge.evidenceLabel && !HAN.test(edge.evidenceLabel) ? edge.evidenceLabel : undefined;
   return {
-    ...edge,
+    ...safeEdge,
     relationLabel,
     evidenceLabel: sourceEvidence ?? 'Open the connected entity to inspect its curated source and provenance.',
   };
@@ -190,6 +193,27 @@ export function queryKnowledgeGraph(raw: GraphQuery): GraphQueryResponse {
   const limitedIds = new Set(limited.map((node) => node.id));
   const matchingEdges = knowledgeGraph.edges.filter((edge) => limitedIds.has(edge.source) && limitedIds.has(edge.target));
   const edges = matchingEdges.slice(0, MAX_EDGES);
+  const presentationNodeIds = new Set(limitedIds);
+  for (const node of limited) {
+    for (const edge of adjacency.get(node.id) ?? []) presentationNodeIds.add(edge.source === node.id ? edge.target : edge.source);
+  }
+  const presentationNodeIndex = new Map(
+    [...presentationNodeIds].flatMap((id) => {
+      const node = nodeById.get(id);
+      return node ? [[id, localizeKnowledgeGraphNode(node, locale)] as const] : [];
+    }),
+  );
+  const projectedNodes = limited.map((node) => {
+    const localized = presentationNodeIndex.get(node.id) ?? localizeKnowledgeGraphNode(node, locale);
+    const directEdges = (adjacency.get(node.id) ?? []).map((edge) => localizeKnowledgeGraphEdge(edge, locale));
+    const allSources = collectKnowledgeEvidenceSources(localized, directEdges, presentationNodeIndex);
+    const evidenceSources = [
+      ...allSources.filter((source) => source.kind === 'paper').slice(0, 12),
+      ...allSources.filter((source) => source.kind === 'code').slice(0, 8),
+      ...allSources.filter((source) => source.kind === 'official').slice(0, 6),
+    ];
+    return { ...localized, evidenceSources };
+  });
 
   return {
     schemaVersion: knowledgeGraph.schemaVersion,
@@ -199,7 +223,7 @@ export function queryKnowledgeGraph(raw: GraphQuery): GraphQueryResponse {
     truncatedNodes: ranked.length > limited.length,
     truncatedEdges: matchingEdges.length > edges.length,
     totalMatches: focus ? ranked.length : baseMatches.length,
-    nodes: limited.map((node) => localizeKnowledgeGraphNode(node, locale)),
+    nodes: projectedNodes,
     edges: edges.map((edge) => localizeKnowledgeGraphEdge(edge, locale)),
   };
 }

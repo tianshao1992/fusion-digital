@@ -7,9 +7,9 @@
     "excludes": [
       "public/models/iter-high-detail-v1/"
     ],
-    "fileCount": 412,
-    "totalBytes": 259463754,
-    "treeSha256": "c7aedc324cc2a1754f47632ff537dbc3ce49242b6d3d859bc1317a719030c15b",
+    "fileCount": 413,
+    "totalBytes": 259779732,
+    "treeSha256": "f481ec015c225974e4b9a1d617dcedfe538d9da4999e70f46a18cb9fbdec86ec",
     "files": [
       {
         "path": "public/FusionDigital-technical-roadmap-2026-08-15.docx",
@@ -1420,6 +1420,11 @@
         "path": "public/figures/fusion-plant-cutaway-image2.png",
         "bytes": 1337371,
         "sha256": "ada8c6b9118253ca3ea8af85c9127090957c7415aaa3431cd679a44bfcf03b5d"
+      },
+      {
+        "path": "public/figures/fusion-twin-agent-governed-loop-image2-v1.webp",
+        "bytes": 315978,
+        "sha256": "6739f0a6739b888b28163bb91a9d748964e71e642d72e0c138c3bab83c3f3a5b"
       },
       {
         "path": "public/figures/fusion-twin-ai-native-overview.png",

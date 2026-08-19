@@ -33,3 +33,12 @@ test('English graph queries expose localized relation labels and locale metadata
   assert.ok(result.edges.length > 0);
   assert.ok(result.edges.every((edge) => edge.relationLabel && !han.test(edge.relationLabel)));
 });
+
+test('knowledge-graph API projection omits unsafe node and edge source URLs in either locale', () => {
+  const unsafeNode = { ...knowledgeGraph.nodes[0], url: 'javascript:alert(1)' };
+  const unsafeEdge = { ...knowledgeGraph.edges[0], evidenceUrl: 'https://user:secret@example.org/source' };
+  assert.equal(localizeKnowledgeGraphNode(unsafeNode, 'zh-CN').url, undefined);
+  assert.equal(localizeKnowledgeGraphNode(unsafeNode, 'en').url, undefined);
+  assert.equal(localizeKnowledgeGraphEdge(unsafeEdge, 'zh-CN').evidenceUrl, undefined);
+  assert.equal(localizeKnowledgeGraphEdge(unsafeEdge, 'en').evidenceUrl, undefined);
+});
