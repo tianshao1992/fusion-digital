@@ -241,7 +241,7 @@ test("mainland service and Nginx retain the anonymous same-origin security bound
   assert.match(service, /deploy\/aliyun-mainland\/server\.mjs/u);
   assert.match(service, /NEXT_PUBLIC_FUSIONDIGITAL_MODE=public-anonymous/u);
   assert.match(nginx, /listen 80 default_server/u);
-  assert.match(nginx, /server_name _;[\s\S]*?return 404;/u);
+  assert.match(nginx, /server_name "";[\s\S]*?return 404;/u);
   assert.match(nginx, /server_name fusiondigital\.club www\.fusiondigital\.club/u);
   assert.match(nginx, /location = \/api\/account \{ return 404; \}/u);
   assert.match(nginx, /Accept-Ranges "bytes"/u);
