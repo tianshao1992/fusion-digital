@@ -126,7 +126,7 @@ npm run db:local:migrate
 npm run db:local:verify
 ```
 
-`assets:hydrate` 会让默认 Sites 构建超过平台归档上限；hydrate 后不要在同一工作树执行默认 `npm run check`。需要复核 Sites 时，请从目标提交创建未 hydrate 的干净 detached worktree；阿里云香港生产构建则按发布手册显式设置 `FUSIONDIGITAL_BUILD_TARGET=aliyun-hk`。
+`assets:hydrate` 会让默认 Sites 构建超过平台归档上限；hydrate 后不要在同一工作树执行默认 `npm run check`。需要复核 Sites 时，请从目标提交创建未 hydrate 的干净 detached worktree；自包含阿里云构建必须显式选择 `aliyun-hk`、`aliyun-mainland` 或通用别名 `aliyun-vm`，且同时设置 `NEXT_PUBLIC_FUSIONDIGITAL_MODE=public-anonymous`。生产仍只允许 `aliyun-hk`，内地目标当前只用于备案前 staging。
 
 完整复现流程见[运行时资产获取与校验](./docs/ASSET_BOOTSTRAP.md)和[本地部署手册](./docs/LOCAL_DEPLOYMENT.md)。
 
@@ -215,6 +215,17 @@ docs/                         架构、复现、平台路线和协作手册
 | 协作仓库 | [Codeup `master`](https://codeup.aliyun.com/fiatlux/DT/FusionDigital)，唯一事实源 |
 | 公开镜像 | [GitHub `main`](https://github.com/tianshao1992/fusion-digital)，与 Codeup 保持相同 SHA |
 | Sites | 仅使用平台分配的 `*.chatgpt.site` 预览/人工备用地址，不承载生产域名 |
+
+### 阿里云内地备案前预部署
+
+内地实例 `39.96.61.9` 目前仅用于 **pre-ICP staging**，不属于上表生产拓扑。测试只
+通过 IP + `Host` 头访问，禁止把 apex、`www` 或任何 AliDNS 分线路切向该地址。当前
+生产合同仍固定香港 `47.82.66.79`。
+
+只有 ICP 备案获批、页脚加入真实备案号，并通过一个同时更新生产合同、DNS 测试、
+发布文档和回滚方案的独立评审提交后，才允许迁移生产 DNS。Alibaba Cloud Linux 3
+初始化、不可变发布包、SSH 安装和启动重试见
+[内地备案前部署手册](./deploy/aliyun-mainland/README.md)。
 
 > **生产域名不可绑定 Sites。** 不得为 apex 或 `www` 创建/恢复
 > `custom-domains.chatgpt.site` CNAME、Cloudflare A/AAAA 或任何其他托管平台记录。

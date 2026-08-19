@@ -1,6 +1,10 @@
 import { open, readdir, readFile, rm, stat } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import {
+  PUBLIC_ANONYMOUS_MODE,
+  validateDeploymentBuildTarget,
+} from './build-target.mjs';
 
 const distUrl = new URL('../../dist/', import.meta.url);
 const distClientUrl = new URL('client/', distUrl);
@@ -21,7 +25,6 @@ const runtimeAssetLockUrl = new URL('../../assets/runtime-assets.lock.json', imp
 const SITES_EXPANDED_LIMIT_BYTES = 256 * 1024 * 1024;
 const REQUIRED_HEADROOM_BYTES = 3 * 1024 * 1024;
 const BUILD_TARGET = process.env.FUSIONDIGITAL_BUILD_TARGET || 'sites';
-const PUBLIC_ANONYMOUS_MODE = 'public-anonymous';
 const ITER_HIGH_DETAIL_ID = 'iter-high-detail-v1';
 const ITER_HIGH_DETAIL_DESTINATION = `public/models/${ITER_HIGH_DETAIL_ID}`;
 const ITER_HIGH_DETAIL_PUBLIC_TOKEN = `/models/${ITER_HIGH_DETAIL_ID}/`;
@@ -53,10 +56,10 @@ async function byteLength(directory) {
 }
 
 export function shouldEnforceSitesExpandedLimit(buildTarget = 'sites') {
-  if (buildTarget !== 'sites' && buildTarget !== 'aliyun-hk') {
-    throw new Error(`Unsupported FUSIONDIGITAL_BUILD_TARGET: ${buildTarget}.`);
-  }
-  return buildTarget === 'sites';
+  return validateDeploymentBuildTarget(
+    buildTarget,
+    buildTarget === 'sites' ? undefined : PUBLIC_ANONYMOUS_MODE,
+  ).isSites;
 }
 
 export async function assertAppHasNoPublicIterCacheReference(applicationUrl = appUrl) {
@@ -237,12 +240,8 @@ export async function runPostbuildPrune({
   mode = process.env.NEXT_PUBLIC_FUSIONDIGITAL_MODE,
   buildTarget = BUILD_TARGET,
 } = {}) {
-  const enforceSitesLimit = shouldEnforceSitesExpandedLimit(buildTarget);
-  if (buildTarget === 'aliyun-hk' && mode !== PUBLIC_ANONYMOUS_MODE) {
-    throw new Error(
-      'Aliyun Hong Kong builds require NEXT_PUBLIC_FUSIONDIGITAL_MODE=public-anonymous.',
-    );
-  }
+  const buildContract = validateDeploymentBuildTarget(buildTarget, mode);
+  const enforceSitesLimit = buildContract.isSites;
   const catalogSource = await readFile(catalogPath, 'utf8');
   const catalog = JSON.parse(catalogSource);
   const catalogManifests = new Set(
@@ -329,7 +328,7 @@ export async function runPostbuildPrune({
     );
   } else {
     console.log(
-      `[postbuild] Aliyun Hong Kong public-anonymous runtime preserved ${iterCache.fileCount} locked ITER files `
+      `[postbuild] Aliyun VM (${buildTarget}) public-anonymous runtime preserved ${iterCache.fileCount} locked ITER files `
       + `(${iterCache.totalBytes} bytes); pruned ${removedBytes} other obsolete bytes; `
       + `dist=${expandedBytes} bytes; Sites package limit not applicable.`,
     );

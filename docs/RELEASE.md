@@ -151,6 +151,24 @@ git ls-remote https://github.com/tianshao1992/fusion-digital.git refs/heads/main
 部署过程中可创建 Sites 预览，但它是独立、非阻塞的预览步骤，不得插入任何生产
 DNS 操作，也不能代替第 4–8 步。
 
+### 3.1 内地 pre-ICP staging 不属于生产发布
+
+阿里云内地 `39.96.61.9` 只用于备案前部署验证。它不得替换本手册事实表中的香港
+生产主机，也不得进入 `deploy/production-contract.json` 的期望 A 记录。staging
+验收必须使用 IP + `Host: fusiondigital.club`，不得为测试修改 apex、`www` 或任何
+运营商/地域分线路 DNS。
+
+内地生产切换是独立的基础设施变更，至少需要同时满足：
+
+1. ICP 备案获批；
+2. 网站页脚展示真实备案号并链接 `https://beian.miit.gov.cn/`；
+3. 同一提交更新 `AGENTS.md`、生产合同、DNS 单测、发布手册和回滚方案；
+4. Codeup `master`、GitHub `main`、本地 HEAD 与内地服务器 release 完整 SHA 一致；
+5. 双域名证书、匿名安全边界、Range 请求及国内三网均通过验证。
+
+在该变更提交完成前，生产仍是 `47.82.66.79`，现有 DNS 硬门禁不得放宽。具体 staging
+流程见[阿里云内地备案前预部署](../deploy/aliyun-mainland/README.md)。
+
 ## 4. DNS 硬门禁
 
 ### 4.1 阿里云控制台必须满足

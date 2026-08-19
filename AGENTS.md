@@ -22,6 +22,20 @@
   生产解析中。阿里云 DNS 的默认、电信、联通、移动、境内、境外等分线路记录必须
   删除或全部指向 `47.82.66.79`；不能只修正其中一条线路。
 
+### 1.1 阿里云内地备案前 staging
+
+- `39.96.61.9` 仅是 Alibaba Cloud Linux 3 的 **pre-ICP staging** 地址，不是生产
+  地址，不得写入 `deploy/production-contract.json` 的生产 A 记录，不得为它切换
+  `fusiondigital.club`、`www` 或任何分线路 DNS。
+- staging 只能按 [`deploy/aliyun-mainland/README.md`](deploy/aliyun-mainland/README.md)
+  通过 IP + `Host` 头验收；不得把它描述为已经上线或国内生产可用。
+- 只有 ICP 备案获批、网站页脚展示真实备案号、生产合同/DNS 测试/发布文档与回滚
+  方案在同一提交中更新并通过审核后，才能另行执行生产 DNS 迁移。在该提交生效前，
+  本文件中的香港生产不变量与 `47.82.66.79` DNS 硬门禁继续完整有效。
+- `aliyun-mainland` 与 `aliyun-vm` 是自包含公开匿名构建目标；`aliyun-hk` 必须保留为
+  当前生产和回滚兼容目标。三者都必须使用 `public-anonymous`，不得借 staging 开启
+  身份、审核、写 API、D1 或任意客户端指定的资产上游。
+
 ## 2. Git 事实源
 
 - Codeup `master` 是唯一协作事实源；GitHub `main` 是同一提交的公开镜像。
