@@ -16,6 +16,7 @@ const serverEntryUrl = new URL('../../dist/server/index.js', import.meta.url);
 
 const SITES_EXPANDED_LIMIT_BYTES = 256 * 1024 * 1024;
 const REQUIRED_HEADROOM_BYTES = 3 * 1024 * 1024;
+const BUILD_TARGET = process.env.FUSIONDIGITAL_BUILD_TARGET || 'sites';
 const OBSOLETE_RUNTIME_PACKAGES = Object.freeze([
   {
     id: 'paramak-tokamak-demo',
@@ -150,15 +151,33 @@ removed.push({ id: 'fusion-knowledge-index.client-copy', bytes: embeddedSearchIn
 
 const expandedBytes = await byteLength(new URL('../../dist/', import.meta.url));
 const maximumBytes = SITES_EXPANDED_LIMIT_BYTES - REQUIRED_HEADROOM_BYTES;
-if (expandedBytes > maximumBytes) {
+if (BUILD_TARGET !== 'sites' && BUILD_TARGET !== 'aliyun-hk') {
+  throw new Error(`Unsupported FUSIONDIGITAL_BUILD_TARGET: ${BUILD_TARGET}.`);
+}
+if (
+  BUILD_TARGET === 'aliyun-hk'
+  && process.env.NEXT_PUBLIC_FUSIONDIGITAL_MODE !== 'public-anonymous'
+) {
+  throw new Error(
+    'Aliyun Hong Kong builds require NEXT_PUBLIC_FUSIONDIGITAL_MODE=public-anonymous.',
+  );
+}
+if (BUILD_TARGET === 'sites' && expandedBytes > maximumBytes) {
   throw new Error(
     `Sites package is still too large: ${expandedBytes} bytes; maximum with reserved headroom is ${maximumBytes}.`,
   );
 }
 
 const removedBytes = removed.reduce((total, item) => total + item.bytes, 0);
-const headroomBytes = SITES_EXPANDED_LIMIT_BYTES - expandedBytes;
-console.log(
-  `[postbuild] Production runtime pruned ${removedBytes} obsolete bytes; `
-  + `dist=${expandedBytes} bytes; Sites headroom=${headroomBytes} bytes.`,
-);
+if (BUILD_TARGET === 'sites') {
+  const headroomBytes = SITES_EXPANDED_LIMIT_BYTES - expandedBytes;
+  console.log(
+    `[postbuild] Sites runtime pruned ${removedBytes} obsolete bytes; `
+    + `dist=${expandedBytes} bytes; Sites headroom=${headroomBytes} bytes.`,
+  );
+} else {
+  console.log(
+    `[postbuild] Aliyun Hong Kong runtime pruned ${removedBytes} obsolete bytes; `
+    + `dist=${expandedBytes} bytes; Sites size limit intentionally not applied.`,
+  );
+}

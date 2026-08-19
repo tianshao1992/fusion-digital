@@ -1,7 +1,8 @@
 # FusionDigital 阿里云香港公开匿名版部署
 
 本目录用于把 FusionDigital 以**公开匿名、只读镜像**部署到 Ubuntu 24.04
-阿里云香港轻量应用服务器。正式入口支持：
+阿里云香港轻量应用服务器 `47.82.66.79`。这是 `fusiondigital.club` 的**唯一生产
+部署方式**，正式入口支持：
 
 - `https://fusiondigital.club/`
 - `https://www.fusiondigital.club/`
@@ -10,6 +11,24 @@
 研究候选写入/审核 API、ChatGPT 登录与回调入口在 Nginx 层直接返回 404；所有
 进入 Node 的请求都会清除四个 `oai-authenticated-user-*` 身份头。公开问答固定
 使用站内确定性检索，不调用外部模型。
+
+OpenAI Sites 仅保留平台分配的 `*.chatgpt.site` 预览/人工备用地址，不得绑定上述
+两个生产名称。`.openai/hosting.json` 不是生产托管声明。所有机器和 Codex 在操作前
+还必须遵守根目录 [`AGENTS.md`](../../AGENTS.md) 与
+[`docs/RELEASE.md`](../../docs/RELEASE.md)。
+
+## 0. 生产不变量
+
+- Codeup `master`、GitHub `main`、构建提交和服务器 release 必须是同一个完整
+  SHA；先同步和校验 Git，再构建、上传。
+- 发布包必须在干净的 detached worktree 中以 `public-anonymous` 模式构建，通过
+  SSH/SCP 安装到新的不可变 release 目录。
+- `fusiondigital.club` 与 `www.fusiondigital.club` 的阿里云 DNS 所有线路只能返回
+  `47.82.66.79`。
+- 严禁 apex/`www` 指向 `custom-domains.chatgpt.site`、Cloudflare 或其他平台；旧
+  Cloudflare 地址 `162.159.143.30`、`172.66.3.26` 必须从所有分线路记录中删除。
+- 发布/回滚应用不得隐式修改 DNS。应用回滚只切换
+  `/srv/fusiondigital/current`；主机故障时只单独分享 Sites 平台 URL。
 
 ## 1. 运行结构与安全边界
 
@@ -68,7 +87,20 @@ npm run assets:hydrate -- --source-dir "$Repo\public\models\iter-high-detail-v1"
 npm run assets:verify
 
 $env:NEXT_PUBLIC_FUSIONDIGITAL_MODE = "public-anonymous"
+$env:FUSIONDIGITAL_BUILD_TARGET = "aliyun-hk"
 npm run build
+
+$ReleaseManifest = [ordered]@{
+  schemaVersion = 1
+  commitSha = $Sha
+  mode = "public-anonymous"
+}
+$ReleaseManifestJson = $ReleaseManifest | ConvertTo-Json -Compress
+[System.IO.File]::WriteAllText(
+  (Join-Path $PWD ".fusiondigital-release.json"),
+  $ReleaseManifestJson,
+  [System.Text.UTF8Encoding]::new($false)
+)
 
 $IterFiles = Get-ChildItem "dist\client\models\iter-high-detail-v1" -File
 if ($IterFiles.Count -ne 18) {
@@ -78,8 +110,10 @@ if (($IterFiles | Measure-Object Length -Sum).Sum -ne 98507692) {
   throw "ITER high-detail bundle has the wrong byte length"
 }
 
-tar.exe -czf $Bundle dist package.json node_modules/vinext deploy/aliyun-hk
+tar.exe -czf $Bundle dist package.json node_modules/vinext deploy/aliyun-hk .fusiondigital-release.json
+$BundleSha256 = (Get-FileHash -LiteralPath $Bundle -Algorithm SHA256).Hash.ToLowerInvariant()
 Write-Host "Bundle: $Bundle"
+Write-Host "Bundle SHA-256: $BundleSha256"
 Write-Host "Commit: $Sha"
 ```
 
@@ -151,13 +185,21 @@ sudo install -d -m 0750 -o root -g fusiondigital \
 
 ## 4. 安装首个 release
 
-`RELEASE` 使用包名中的 12 位提交 SHA。release 目录不可复用或覆盖：
+`RELEASE` 使用完整提交 SHA；压缩包文件名可以保留 12 位短 SHA，但 release 目录和
+包内 manifest 必须保留完整 SHA。release 目录不可复用或覆盖：
 
 ```bash
-RELEASE="<12_CHAR_COMMIT_SHA>"
-BUNDLE="/tmp/fusiondigital-${RELEASE}.tgz"
+RELEASE="<FULL_COMMIT_SHA>"
+[[ "$RELEASE" =~ ^[0-9a-f]{40}([0-9a-f]{24})?$ ]] \
+  || { echo "RELEASE must be a full lowercase Git SHA" >&2; exit 2; }
+SHORT_RELEASE="${RELEASE:0:12}"
+BUNDLE="/tmp/fusiondigital-${SHORT_RELEASE}.tgz"
+EXPECTED_BUNDLE_SHA256="<64_CHAR_LOWERCASE_SHA256>"
+[[ "$EXPECTED_BUNDLE_SHA256" =~ ^[0-9a-f]{64}$ ]] \
+  || { echo "invalid bundle SHA-256" >&2; exit 2; }
 TARGET="/srv/fusiondigital/releases/${RELEASE}"
 
+printf '%s  %s\n' "$EXPECTED_BUNDLE_SHA256" "$BUNDLE" | sha256sum --check --strict -
 sudo test ! -e "$TARGET"
 sudo install -d -m 0750 -o root -g fusiondigital "$TARGET"
 sudo tar -xzf "$BUNDLE" -C "$TARGET"
@@ -165,6 +207,12 @@ sudo tar -xzf "$BUNDLE" -C "$TARGET"
 sudo test -f "$TARGET/dist/server/index.js"
 sudo test -f "$TARGET/dist/server/ssr/index.js"
 sudo test -f "$TARGET/node_modules/vinext/dist/server/prod-server.js"
+sudo test -f "$TARGET/.fusiondigital-release.json"
+sudo node -e '
+  const fs = require("node:fs");
+  const manifest = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+  if (manifest.schemaVersion !== 1 || manifest.commitSha !== process.argv[2] || manifest.mode !== "public-anonymous") process.exit(1);
+' "$TARGET/.fusiondigital-release.json" "$RELEASE"
 test "$(sudo find "$TARGET/dist/client/models/iter-high-detail-v1" -maxdepth 1 -type f | wc -l)" -eq 18
 
 sudo chown -R root:fusiondigital "$TARGET"
@@ -219,12 +267,43 @@ curl -fsSI -H 'Host: fusiondigital.club' http://<SERVER_IP>/
 
 ## 6. DNS 与 HTTPS
 
-先记录阿里云 DNS 中原 A 记录，确认它可以用于快速回滚。验证服务器后再切换：
+先导出或截图阿里云 DNS 当前记录用于审计；旧记录只能作为调查证据，不能被默认
+视为可用回滚目标。配置必须满足：
 
-1. `@` 的 A 记录指向香港服务器公网 IPv4；
-2. `www` 使用同一 A 记录，或 CNAME 到 `fusiondigital.club`；
-3. 保留现有域名所有权验证 TXT；
-4. 等待 TTL 生效后确认 apex 和 `www` 都解析到新服务器。
+1. `@` 只保留指向 `47.82.66.79` 的 A 记录；
+2. `www` 只保留指向 `47.82.66.79` 的 A 记录；
+3. 推荐两个名称各保留一条“默认”线路记录。若确需保留电信、联通、移动、境内、
+   境外等分线路，则**每一条**都必须指向 `47.82.66.79`；
+4. 删除 `custom-domains.chatgpt.site` 或其他 Sites/Cloudflare 主机名的 CNAME，删除
+   `162.159.143.30`、`172.66.3.26` 等旧 Cloudflare A 记录，删除把流量导向其他
+   平台的 AAAA/ALIAS/ANAME；
+5. 保留现有域名所有权验证 TXT；建议 TTL 设为 600 秒；
+6. 至少等待一个旧 TTL，再确认 apex 和 `www` 在多个解析器及国内三网节点都只
+   返回 `47.82.66.79`。
+
+不要只检查阿里云控制台第一行记录。默认与运营商/地域分线路并存会造成部分国内
+节点命中香港源站、另一部分节点命中 Cloudflare 并返回 403。完整 PowerShell DNS
+断言见[生产发布手册](../../docs/RELEASE.md#4-dns-硬门禁)。
+
+仓库内的 [`deploy/production-contract.json`](../production-contract.json) 是生产
+DNS 的机器可读事实源。本机首先运行版本化硬门禁：
+
+```powershell
+npm run release:verify-dns
+```
+
+AliDNS no-ECS、全球兜底、通用境内及国内三网 ECS 结果是阻塞性硬门禁。本机
+`system-default` 仅作 advisory；若 VPN/代理返回 `198.18.0.0/15` fake-IP，应关闭
+VPN 后人工复核，不能用 fake-IP 结果覆盖或忽略可信 DoH 的失败。
+
+然后至少执行以下独立只读检查；任一可信结果出现其他地址都应停止上线：
+
+```powershell
+Resolve-DnsName fusiondigital.club -Type A -Server 223.5.5.5 -DnsOnly
+Resolve-DnsName www.fusiondigital.club -Type A -Server 223.5.5.5 -DnsOnly
+Resolve-DnsName fusiondigital.club -Type A -Server 119.29.29.29 -DnsOnly
+Resolve-DnsName www.fusiondigital.club -Type A -Server 119.29.29.29 -DnsOnly
+```
 
 DNS 生效后申请同时覆盖两个名称的证书：
 
@@ -293,7 +372,7 @@ curl -sS -o /dev/null -w '%{http_code}\n' \
 
 ```bash
 PREVIOUS="$(readlink -f /srv/fusiondigital/current)"
-NEW_RELEASE="/srv/fusiondigital/releases/<NEW_12_CHAR_COMMIT_SHA>"
+NEW_RELEASE="/srv/fusiondigital/releases/<NEW_FULL_COMMIT_SHA>"
 
 sudo test -f "$NEW_RELEASE/dist/server/index.js"
 sudo ln -sfn "$NEW_RELEASE" /srv/fusiondigital/current
@@ -310,8 +389,11 @@ sudo systemctl restart fusiondigital
 curl -fsS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:3000/
 ```
 
-若服务器整体不可用，在阿里云 DNS 恢复切换前记录的原 A 记录即可回到原托管
-入口。不要删除旧 release，直到新版本经过国内多网络验收。
+若服务器整体不可用，优先修复主机或切换到服务器上的已知正常 release。可以把
+Sites 平台分配的 `*.chatgpt.site` URL 单独发给使用者作为人工备用，但不得把
+`fusiondigital.club` 或 `www` 的 DNS 改回 Sites/Cloudflare。生产 IP 迁移属于独立
+基础设施变更，必须另行完成审批、证书、DNS 和回滚设计。不要删除旧 release，直到
+新版本经过国内多网络验收。
 
 ## 9. 预期不可用能力
 

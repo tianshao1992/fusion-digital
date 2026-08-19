@@ -2,9 +2,28 @@
 
 import { spawnSync } from "node:child_process";
 
-const TARGETS = Object.freeze([
-  Object.freeze({ remote: "codeup", branch: "master" }),
-  Object.freeze({ remote: "github", branch: "main" }),
+const TARGET_SPECS = Object.freeze([
+  Object.freeze({
+    provider: "codeup",
+    branch: "master",
+    envName: "FUSIONDIGITAL_CODEUP_REMOTE",
+    urlPatterns: Object.freeze([
+      /^https:\/\/codeup\.aliyun\.com\/fiatlux\/DT\/FusionDigital(?:\.git)?\/?$/iu,
+      /^ssh:\/\/git@codeup\.aliyun\.com(?::\d+)?\/fiatlux\/DT\/FusionDigital(?:\.git)?\/?$/iu,
+      /^git@codeup\.aliyun\.com:fiatlux\/DT\/FusionDigital(?:\.git)?$/iu,
+    ]),
+  }),
+  Object.freeze({
+    provider: "github",
+    branch: "main",
+    envName: "FUSIONDIGITAL_GITHUB_REMOTE",
+    urlPatterns: Object.freeze([
+      /^https:\/\/github\.com\/tianshao1992\/fusion-digital(?:\.git)?\/?$/iu,
+      /^ssh:\/\/git@github\.com(?::\d+)?\/tianshao1992\/fusion-digital(?:\.git)?\/?$/iu,
+      /^ssh:\/\/git@ssh\.github\.com:443\/tianshao1992\/fusion-digital(?:\.git)?\/?$/iu,
+      /^git@github\.com:tianshao1992\/fusion-digital(?:\.git)?$/iu,
+    ]),
+  }),
 ]);
 
 const GIT_ENV = Object.freeze({
@@ -48,7 +67,80 @@ function readRemoteSha(remote, branch) {
   return sha;
 }
 
-function assertRepositoryReady() {
+function listRemoteNames() {
+  const { stdout } = runGit(["remote"]);
+  return stdout ? stdout.split(/\r?\n/u).filter(Boolean) : [];
+}
+
+function readConfiguredUrls(remote, key) {
+  const { stdout } = runGit(
+    ["config", "--get-all", `remote.${remote}.${key}`],
+    { acceptedStatuses: [0, 1] },
+  );
+  return stdout ? stdout.split(/\r?\n/u).filter(Boolean) : [];
+}
+
+function readRemoteUrls(remote) {
+  const fetchUrls = readConfiguredUrls(remote, "url");
+  if (fetchUrls.length === 0) {
+    throw new Error(`Git remote ${remote} has no configured URL.`);
+  }
+  const explicitPushUrls = readConfiguredUrls(remote, "pushurl");
+  return {
+    fetchUrls,
+    pushUrls: explicitPushUrls.length > 0 ? explicitPushUrls : fetchUrls,
+  };
+}
+
+function urlMatchesSpec(url, spec) {
+  return spec.urlPatterns.some((pattern) => pattern.test(url));
+}
+
+function remoteMatchesSpec(remote, spec) {
+  const { fetchUrls, pushUrls } = readRemoteUrls(remote);
+  return [...fetchUrls, ...pushUrls].every((url) => urlMatchesSpec(url, spec));
+}
+
+function resolveRemote(spec, remoteNames) {
+  const explicit = process.env[spec.envName]?.trim();
+  if (explicit) {
+    if (!remoteNames.includes(explicit)) {
+      throw new Error(`${spec.envName} names an unknown Git remote.`);
+    }
+    if (!remoteMatchesSpec(explicit, spec)) {
+      throw new Error(`${spec.envName} does not point to the approved ${spec.provider} repository.`);
+    }
+    return explicit;
+  }
+
+  const matching = remoteNames.filter((remote) => remoteMatchesSpec(remote, spec));
+  if (matching.length === 1) {
+    return matching[0];
+  }
+  if (matching.length > 1) {
+    throw new Error(
+      `Multiple ${spec.provider} remotes found; set ${spec.envName} explicitly.`,
+    );
+  }
+  throw new Error(
+    `No ${spec.provider} remote found; configure one or set ${spec.envName}.`,
+  );
+}
+
+function resolveTargets() {
+  const remoteNames = listRemoteNames();
+  const targets = TARGET_SPECS.map((spec) => ({
+    provider: spec.provider,
+    remote: resolveRemote(spec, remoteNames),
+    branch: spec.branch,
+  }));
+  if (new Set(targets.map(({ remote }) => remote)).size !== targets.length) {
+    throw new Error("Codeup and GitHub must use different Git remotes.");
+  }
+  return targets;
+}
+
+function assertRepositoryReady(targets) {
   const { stdout: insideWorkTree } = runGit(["rev-parse", "--is-inside-work-tree"]);
   if (insideWorkTree !== "true") {
     throw new Error("Current directory is not a Git working tree.");
@@ -61,11 +153,11 @@ function assertRepositoryReady() {
   ]);
   if (changes) {
     throw new Error(
-      "Working tree is not clean; commit or stash every tracked and untracked change first.",
+      "Working tree is not clean; run synchronization from a dedicated clean detached worktree. Do not stash, move, or delete unrelated user changes.",
     );
   }
 
-  for (const { remote } of TARGETS) {
+  for (const { remote } of targets) {
     // Validate the configured push remote without ever printing its URL.
     runGit(["remote", "get-url", "--push", remote]);
   }
@@ -102,11 +194,12 @@ function assertHeadUnchanged(expectedHead) {
 }
 
 function synchronize() {
-  assertRepositoryReady();
+  const targets = resolveTargets();
+  assertRepositoryReady(targets);
   const { stdout: head } = runGit(["rev-parse", "--verify", "HEAD"]);
 
   // Complete every divergence check before mutating either remote.
-  for (const target of TARGETS) {
+  for (const target of targets) {
     assertRemoteIsContained(target, head);
   }
   assertHeadUnchanged(head);
@@ -114,21 +207,22 @@ function synchronize() {
   // Check both write paths before the first real push. This cannot make two
   // independent Git servers transactional, but it avoids mutating Codeup when
   // GitHub is already known to reject the same normal update (or vice versa).
-  for (const { remote, branch } of TARGETS) {
+  for (const { remote, branch } of targets) {
     runGit(["push", "--dry-run", remote, `HEAD:${branch}`]);
   }
   assertHeadUnchanged(head);
   console.log(`Preflight passed for Codeup and GitHub at ${head}.`);
 
-  for (const { remote, branch } of TARGETS) {
+  for (const { provider, remote, branch } of targets) {
     assertHeadUnchanged(head);
     // Intentionally use a normal, explicit refspec. Never add --force or a '+' refspec.
     runGit(["push", remote, `HEAD:${branch}`]);
-    console.log(`Pushed ${remote} HEAD:${branch}.`);
+    console.log(`Pushed ${provider} HEAD:${branch}.`);
   }
 
   assertHeadUnchanged(head);
-  const published = TARGETS.map(({ remote, branch }) => ({
+  const published = targets.map(({ provider, remote, branch }) => ({
+    provider,
     remote,
     branch,
     sha: readRemoteSha(remote, branch),
@@ -136,7 +230,7 @@ function synchronize() {
   for (const target of published) {
     if (target.sha !== head) {
       throw new Error(
-        `Post-push verification failed: ${target.remote}/${target.branch} is not local HEAD.`,
+        `Post-push verification failed: ${target.provider}/${target.branch} is not local HEAD.`,
       );
     }
   }

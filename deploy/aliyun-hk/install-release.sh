@@ -3,23 +3,19 @@
 set -euo pipefail
 
 usage() {
-  echo "usage: $0 <bundle.tgz> <release-id> <sha256> <config-dir>" >&2
+  echo "usage: $0 <bundle.tgz> <full-release-sha> <sha256>" >&2
   exit 2
 }
 
-[[ $# -eq 4 ]] || usage
+[[ $# -eq 3 ]] || usage
 
 BUNDLE=$1
 RELEASE=$2
 EXPECTED_SHA256=$3
-CONFIG_DIR=$4
 
-[[ $RELEASE =~ ^[0-9a-f]{7,40}$ ]] || usage
+[[ $RELEASE =~ ^[0-9a-f]{40}([0-9a-f]{24})?$ ]] || usage
 [[ $EXPECTED_SHA256 =~ ^[0-9a-fA-F]{64}$ ]] || usage
 [[ -f $BUNDLE ]] || { echo "bundle not found: $BUNDLE" >&2; exit 1; }
-[[ -f $CONFIG_DIR/server.mjs ]] || { echo "server.mjs not found" >&2; exit 1; }
-[[ -f $CONFIG_DIR/fusiondigital.service ]] || { echo "systemd unit not found" >&2; exit 1; }
-[[ -f $CONFIG_DIR/nginx.conf ]] || { echo "nginx config not found" >&2; exit 1; }
 
 printf '%s  %s\n' "${EXPECTED_SHA256,,}" "$BUNDLE" | sha256sum --check --strict -
 
@@ -58,15 +54,19 @@ TARGET="/srv/fusiondigital/releases/$RELEASE"
 [[ ! -e $TARGET ]] || { echo "release already exists: $TARGET" >&2; exit 1; }
 install -d -m 0750 -o root -g fusiondigital "$TARGET"
 tar -xzf "$BUNDLE" -C "$TARGET"
-install -d -m 0750 "$TARGET/deploy/aliyun-hk"
-install -m 0640 "$CONFIG_DIR/server.mjs" "$TARGET/deploy/aliyun-hk/server.mjs"
-install -m 0640 "$CONFIG_DIR/README.md" "$TARGET/deploy/aliyun-hk/README.md"
-install -m 0640 "$CONFIG_DIR/fusiondigital.service" "$TARGET/deploy/aliyun-hk/fusiondigital.service"
-install -m 0640 "$CONFIG_DIR/nginx.conf" "$TARGET/deploy/aliyun-hk/nginx.conf"
 
 test -f "$TARGET/dist/server/index.js"
 test -f "$TARGET/dist/server/ssr/index.js"
 test -f "$TARGET/node_modules/vinext/dist/server/prod-server.js"
+test -f "$TARGET/deploy/aliyun-hk/server.mjs"
+test -f "$TARGET/deploy/aliyun-hk/fusiondigital.service"
+test -f "$TARGET/deploy/aliyun-hk/nginx.conf"
+test -f "$TARGET/.fusiondigital-release.json"
+node -e '
+  const fs = require("node:fs");
+  const manifest = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+  if (manifest.schemaVersion !== 1 || manifest.commitSha !== process.argv[2] || manifest.mode !== "public-anonymous") process.exit(1);
+' "$TARGET/.fusiondigital-release.json" "$RELEASE"
 ITER_DIR="$TARGET/dist/client/models/iter-high-detail-v1"
 test "$(find "$ITER_DIR" -maxdepth 1 -type f | wc -l)" -eq 18
 test "$(find "$ITER_DIR" -maxdepth 1 -type f -printf '%s\n' | awk '{ total += $1 } END { print total + 0 }')" -eq 98507692

@@ -7,7 +7,8 @@
 - 领域维护者：核对物理、工程、控制、诊断或装置结论及适用边界。
 - 数据维护者：维护条目结构、来源、代码关系、证据等级和去重标识。
 - 软件维护者：负责页面、组件、可访问性、性能、构建与测试。
-- 发布维护者：确认目标提交、生产构建和 Sites 版本完全一致。
+- 发布维护者：确认 Codeup `master`、GitHub `main`、阿里云香港生产构建和服务器
+  release 的提交完全一致，并通过 DNS/国内三网门禁。Sites 只作为平台预览。
 
 一个人可以承担多个角色，但涉及安全、装置状态或实验效果的重大结论应至少有一位相应领域专家复核。
 
@@ -135,9 +136,16 @@ npm run research:diagnostics:report
 
 镜像应能通过“根地址 + 锁定文件名”直接 `GET`，不能依赖个人 Cookie 或短期签名链接。下载失败或校验不一致时修复镜像/重新下载，不能关闭校验或随意刷新锁文件。
 
-Sites 发布必须使用没有 `public/models/iter-high-detail-v1/` hydration 目录的干净工作区，默认由 Worker 外部取回，避免静态包超过约 256 MiB。内网自包含构建则先 hydration，并保留该目录让 local-first 路径命中。
+Sites 预览必须使用没有 `public/models/iter-high-detail-v1/` hydration 目录的干净
+工作区，默认由 Worker 外部取回，避免静态包超过约 256 MiB。阿里云香港
+`public-anonymous` 生产构建必须按部署手册先 hydration、校验并把 18 个锁定分片
+纳入 `dist`，避免国内用户运行时回源 GitHub。Sites 预览不得绑定
+`fusiondigital.club` 或修改生产 DNS。
 
-Codeup SSH 地址为 `git@codeup.aliyun.com:fiatlux/DT/FusionDigital.git`。增加远端时先运行 `git ls-remote --heads codeup` 和 `git fetch codeup` 审计历史，确认兼容后再推送；禁止为“同步”直接强制覆盖。Git LFS 迁移会重写历史，未经团队迁移评审不得执行。
+Codeup SSH 地址为 `git@codeup.aliyun.com:fiatlux/DT/FusionDigital.git`。增加远端时先
+用 `git remote -v` 核对实际别名，再对该远端运行 `git ls-remote --heads` 和
+`git fetch` 审计历史，确认兼容后再推送；禁止为“同步”直接强制覆盖。Git LFS
+迁移会重写历史，未经团队迁移评审不得执行。
 
 ## Pull Request 检查清单
 

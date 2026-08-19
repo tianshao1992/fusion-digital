@@ -2,10 +2,13 @@
 
 ## 推荐模型
 
-不要让所有人和所有自动化任务直接修改同一个工作目录。推荐以 GitHub `main` 为共同基线，每个开发者、脚本任务或 Codex 任务使用独立分支；真正并行时使用 Git worktree。
+不要让所有人和所有自动化任务直接修改同一个工作目录。推荐以 Codeup `master` 为
+唯一协作基线，每个开发者、脚本任务或 Codex 任务使用独立分支；GitHub `main` 仅
+镜像同一个发布提交。真正并行时使用 Git worktree，并遵守根目录
+[`AGENTS.md`](../AGENTS.md)。
 
 ```text
-main
+master
 ├─ content/facilities-update       专家 A + Codex
 ├─ feature/community-search        开发者 B
 └─ research/engineering-surrogate  脚本批处理 + 专家 C
@@ -24,14 +27,18 @@ main
 - Codex 与脚本同时写 `app/ai/aiResearch.ts`。
 - 两个任务同时运行 `npm run research:ai`。
 - 在未提交的同一文件上同时进行人工大改和自动格式化。
-- 开发任务直接向生产 Sites 远端推送临时分支。
+- 开发任务直接向阿里云香港生产环境部署临时分支，或把生产域名绑定到 Sites。
 
 ## 使用 worktree
 
-```bash
-git fetch origin
-git worktree add ../fusiondigital-facilities -b content/facilities-update origin/main
-git worktree add ../fusiondigital-ai -b feature/ai-catalog origin/main
+先用 `git remote -v` 识别 Codeup 的实际远端别名（例如 `origin` 或 `codeup`），再从
+它的 `master` 建立 worktree：
+
+```powershell
+$CodeupRemote = "origin" # 按 git remote -v 的事实修改
+git fetch $CodeupRemote
+git worktree add ../fusiondigital-facilities -b content/facilities-update "$CodeupRemote/master"
+git worktree add ../fusiondigital-ai -b feature/ai-catalog "$CodeupRemote/master"
 ```
 
 分别在两个目录中打开终端或 Codex。完成并合并后：
@@ -69,6 +76,7 @@ git worktree prune
 - Codex：数据结构检查、链接清单、重复项、页面实现、测试和变更摘要。
 - 领域专家：物理含义、装置适用性、证据等级和关键限制。
 - 软件审核人：类型、交互、可访问性、性能和回归风险。
-- 发布维护者：合并提交、Sites 版本和生产 URL。
+- 发布维护者：合并提交、Codeup/GitHub SHA、阿里云香港 release、DNS/TLS 与国内
+  三网生产验收。Sites 只管理独立平台预览 URL。
 
 AI 生成的科学文字、图注和证据分级必须由人类专家承担最终审核责任。

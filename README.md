@@ -8,7 +8,7 @@
 <p align="center">Fusion Digital Twin Research Atlas &amp; Collaboration Portal</p>
 
 <p align="center">
-  <a href="https://fusiondigital.club/"><img alt="Website" src="https://img.shields.io/badge/Website-fusiondigital.club-20BFA9?logo=googlechrome&amp;logoColor=white" /></a>
+  <a href="https://www.fusiondigital.club/"><img alt="Website" src="https://img.shields.io/badge/Website-fusiondigital.club-20BFA9?logo=googlechrome&amp;logoColor=white" /></a>
   <a href="https://codeup.aliyun.com/fiatlux/DT/FusionDigital"><img alt="Codeup" src="https://img.shields.io/badge/Codeup-Aliyun-FF6A00?logo=alibabacloud&amp;logoColor=white" /></a>
   <a href="https://github.com/tianshao1992/fusion-digital"><img alt="GitHub" src="https://img.shields.io/badge/GitHub-Mirror-181717?logo=github&amp;logoColor=white" /></a>
   <img alt="Status" src="https://img.shields.io/badge/Status-Research_Preview-3758F9" />
@@ -19,11 +19,11 @@
   <a href="https://www.typescriptlang.org/"><img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&amp;logoColor=white" /></a>
   <a href="https://react.dev/"><img alt="React" src="https://img.shields.io/badge/React-19.2-61DAFB?logo=react&amp;logoColor=0B1020" /></a>
   <a href="https://vite.dev/"><img alt="Vite" src="https://img.shields.io/badge/Vite-8.0-646CFF?logo=vite&amp;logoColor=white" /></a>
-  <a href="https://workers.cloudflare.com/"><img alt="Cloudflare Workers" src="https://img.shields.io/badge/Runtime-Cloudflare_Workers-F38020?logo=cloudflare&amp;logoColor=white" /></a>
+  <a href="./deploy/aliyun-hk/README.md"><img alt="Production" src="https://img.shields.io/badge/Production-Aliyun_Hong_Kong-FF6A00?logo=alibabacloud&amp;logoColor=white" /></a>
 </p>
 
 <p align="center">
-  <a href="https://fusiondigital.club/">在线站点</a> ·
+  <a href="https://www.fusiondigital.club/">在线站点</a> ·
   <a href="https://codeup.aliyun.com/fiatlux/DT/FusionDigital">Codeup 仓库</a> ·
   <a href="https://github.com/tianshao1992/fusion-digital">GitHub 镜像</a> ·
   <a href="./docs/PLATFORM_TECHNICAL_ROADMAP.md">平台技术路线</a> ·
@@ -56,11 +56,12 @@ FusionDigital 由新奥聚变人工智能团队维护。项目将聚变物理、
 
 <p align="center"><sub>设备现实 → 诊断观测 → 数字孪生 → 模型与智能体 → 安全门 → 经验证的候选动作</sub></p>
 
-### 🧭 三平面边界
+### 🧭 运行与信任边界
 
 | 平面 | 当前定位 | 主要技术 | 权限边界 |
 | --- | --- | --- | --- |
-| **公开投影面** | 本仓库已实现 | React 19、vinext、Vite、Cloudflare Worker、D1、Three.js、ECharts | 公开知识、检索、图谱、三维派生物、EFIT 回放、账户与审核控制面 |
+| **公开投影面** | 阿里云香港生产环境已实现 | React 19、vinext、Vite、Node.js、Nginx、Three.js、ECharts | 公开知识、检索、图谱、三维派生物与 EFIT 回放；以 `public-anonymous` 只读运行 |
+| **协作预览面** | Sites 平台预览 | Cloudflare Worker 兼容运行时、D1 | 身份与审核控制面只在获授权预览/开发环境验证，不绑定生产域名 |
 | **内网科学平台面** | 目标架构，分阶段接入 | FastAPI、PostgreSQL、S3、MDSplus Gateway、Kubernetes/Slurm、MLflow | 原始实验数据、CAD/CAE、仿真容器、模型训练、结果与 VVUQ |
 | **实验实时面** | 独立安全域 | DAQ、PCS、Interlock、RT Linux | 确定性控制、联锁和保护；公网、浏览器与通用智能体不直连 |
 
@@ -73,7 +74,7 @@ FusionDigital 由新奥聚变人工智能团队维护。项目将聚变物理、
 - **数字样机工作台**：在浏览器中查看 Paramak、EXL-50U 与 ITER 的获准公开派生模型，支持结构树、剖切、爆炸、测量和清单追溯。
 - **实验诊断复现**：展示经审核的 EFIT 标量、轮廓、拓扑和时间序列派生物，同时保持原始 G-file、psi 网格和实验档案的受控边界。
 - **控制与诊断图谱**：按任务、装置、代码、论文、证据等级和部署阶段双向索引控制与诊断工作。
-- **身份与人工治理**：D1 承载账户、角色、配额、审计、研究候选和职责分离审核；接受候选不等于自动发布。
+- **身份与人工治理**：Sites 预览/开发环境可由 D1 承载账户、角色、配额、审计、研究候选和职责分离审核；阿里云香港公开生产版有意关闭这些写能力。
 - **可复现研究流水线**：源数据经归一化、去重和审计后生成网页 JSON、CSV、BIB、TypeScript 与 Word 报告。
 - **中英双语与主题适配**：关键页面支持中英文切换、明暗主题、响应式布局和键盘访问。
 
@@ -86,7 +87,7 @@ FusionDigital 由新奥聚变人工智能团队维护。项目将聚变物理、
 | 控制与诊断 | [`/control`](https://fusiondigital.club/control) · [`/diagnostics`](https://fusiondigital.club/diagnostics) | T0–T9 控制任务、DG0–DG11 诊断任务、装置/PCS、证据与孪生接口 |
 | 智能与证据 | [`/ai`](https://fusiondigital.club/ai) · [`/search`](https://fusiondigital.club/search) · [`/knowledge-graph`](https://fusiondigital.club/knowledge-graph) | AI 工作目录、确定性检索、引用问答与一至两跳证据关系 |
 | 装置与样机 | [`/facilities`](https://fusiondigital.club/facilities) · [`/#prototype-workspace`](https://fusiondigital.club/#prototype-workspace) | 全球装置状态、Paramak / EXL-50U / EHL-2 / ITER 目录、三维模型与 EFIT 工作台 |
-| 账户与治理 | [`/account`](https://fusiondigital.club/account) · [`/research-review`](https://fusiondigital.club/research-review) | 身份、模型偏好、角色、配额、审计、研究候选与人工审核 |
+| 账户与治理 | `/account` · `/research-review` | 代码与预览环境能力；阿里云香港 `public-anonymous` 生产版不开放账户、审核和写 API |
 
 ## 🔥 快速上手
 
@@ -102,6 +103,7 @@ FusionDigital 由新奥聚变人工智能团队维护。项目将聚变物理、
 ```bash
 git clone --branch master --single-branch git@codeup.aliyun.com:fiatlux/DT/FusionDigital.git
 cd FusionDigital
+git remote add github https://github.com/tianshao1992/fusion-digital.git
 npm ci
 npm run assets:verify:tracked
 npm run dev
@@ -112,6 +114,9 @@ npm run dev
 ### 3. 按需补齐能力
 
 ```bash
+# 提交前质量门：必须在未 hydrate 的工作树中执行（lint + Sites build + 串行测试）
+npm run check
+
 # 完整恢复 ITER 18 个高清运行时分片，并校验字节数与 SHA-256
 npm run assets:hydrate
 npm run assets:verify
@@ -119,10 +124,9 @@ npm run assets:verify
 # 初始化并核验本地 D1（账户/审核等能力的本地开发）
 npm run db:local:migrate
 npm run db:local:verify
-
-# 提交前质量门：lint + build + 串行测试
-npm run check
 ```
+
+`assets:hydrate` 会让默认 Sites 构建超过平台归档上限；hydrate 后不要在同一工作树执行默认 `npm run check`。需要复核 Sites 时，请从目标提交创建未 hydrate 的干净 detached worktree；阿里云香港生产构建则按发布手册显式设置 `FUSIONDIGITAL_BUILD_TARGET=aliyun-hk`。
 
 完整复现流程见[运行时资产获取与校验](./docs/ASSET_BOOTSTRAP.md)和[本地部署手册](./docs/LOCAL_DEPLOYMENT.md)。
 
@@ -167,7 +171,7 @@ scripts/
   assets/                     外置资产获取、校验与镜像暂存工具
 tests/                        SSR、数据合同、资产、安全边界与 UI 测试
 docs/                         架构、复现、平台路线和协作手册
-.openai/hosting.json          Sites 项目标识与逻辑资源声明
+.openai/hosting.json          Sites 预览项目标识与逻辑资源声明（非生产域名配置）
 ```
 
 架构入口：[项目架构](./docs/ARCHITECTURE.md) · [平台技术路线](./docs/PLATFORM_TECHNICAL_ROADMAP.md) · [知识对话](./docs/KNOWLEDGE_CONVERSATION.md) · [LLM 配置](./docs/LLM_PROVIDER_CONFIGURATION.md)
@@ -200,27 +204,59 @@ docs/                         架构、复现、平台路线和协作手册
 
 ## 🚢 托管与发布
 
-- 正式站点：[https://fusiondigital.club/](https://fusiondigital.club/)
-- 团队协作仓库：[Codeup / fiatlux/DT/FusionDigital](https://codeup.aliyun.com/fiatlux/DT/FusionDigital)
-- 公开镜像仓库：[GitHub / tianshao1992/fusion-digital](https://github.com/tianshao1992/fusion-digital)
-- 生产托管：OpenAI Sites（Cloudflare Worker 兼容运行时 + D1）
+### 生产事实表
 
-### 双远端同步基线
+| 项目 | 固定约定 |
+| --- | --- |
+| 正式入口 | [https://www.fusiondigital.club/](https://www.fusiondigital.club/)；裸域名同样可用 |
+| 生产源站 | 阿里云香港轻量服务器 `47.82.66.79` |
+| 生产模式 | `public-anonymous`，公开只读；账户、审核和写 API 关闭 |
+| DNS | 阿里云 DNS；`@` 与 `www` 的所有线路只允许解析到 `47.82.66.79` |
+| 协作仓库 | [Codeup `master`](https://codeup.aliyun.com/fiatlux/DT/FusionDigital)，唯一事实源 |
+| 公开镜像 | [GitHub `main`](https://github.com/tianshao1992/fusion-digital)，与 Codeup 保持相同 SHA |
+| Sites | 仅使用平台分配的 `*.chatgpt.site` 预览/人工备用地址，不承载生产域名 |
 
-- Codeup `master` 是团队协作与集成基线；Codeup 原 `main` 仅作迁移兼容，不再作为新工作的起点。
-- GitHub `main` 是公开镜像基线，不维护独立于 Codeup 的产品提交。
-- 每次完成开发与审核后，先更新 Codeup `master`，再把**同一个提交**推送到 GitHub `main`；只有两个远端分支的完整 SHA 一致，才算同步完成。
-- 同步只允许普通 fast-forward 或经审核的合并提交，禁止为追求一致而强制覆盖任一远端历史。
-- Sites 只能发布已经同步到上述两个分支、完成资产校验并通过质量门的同一提交；Sites 短期凭证不写入远端地址、脚本或文档。
+> **生产域名不可绑定 Sites。** 不得为 apex 或 `www` 创建/恢复
+> `custom-domains.chatgpt.site` CNAME、Cloudflare A/AAAA 或任何其他托管平台记录。
+> 已知旧地址 `162.159.143.30`、`172.66.3.26` 必须从阿里云 DNS 的默认、境内、
+> 境外及运营商分线路中清除。`.openai/hosting.json` 只服务于 Sites 预览，不是生产
+> 托管声明。
 
-维护者可用以下只读命令核对同步结果：
+### 两台机器 / Codex 的统一流程
+
+1. 先执行 `git remote -v`，不要假定 `origin` 指向 Codeup。同步工具会枚举远端并
+   按准确仓库 URL 自动识别；存在歧义时通过
+   `FUSIONDIGITAL_CODEUP_REMOTE`、`FUSIONDIGITAL_GITHUB_REMOTE` 显式指定。
+2. 获取 Codeup `master` 与 GitHub `main`，优先处理另一台机器已经写入 Codeup 的
+   提交。存在分叉时停止发布并进行可审核的常规合并，禁止强推或覆盖远端历史。
+3. 在精确提交上完成资产校验和 `npm run check`，提交所有本次发布文件；保留并避开
+   使用者已有的无关修改和未跟踪文件。
+4. 从干净工作树运行 `npm run release:sync-remotes`。若主工作区有无关的用户文件，
+   从目标 SHA 建专用 clean detached worktree 执行，不得 stash/移动/删除这些文件。
+   本地 `HEAD`、Codeup `master`、GitHub `main` 的完整 SHA 必须完全相同。
+5. 从该 SHA 建立 detached worktree，构建 `public-anonymous` 不可变发布包，通过
+   `FUSIONDIGITAL_BUILD_TARGET=aliyun-hk` 明确选择自包含香港包，通过 SSH/SCP
+   部署到 `47.82.66.79`，运行
+   `npm run release:verify-dns`，再执行 TLS、HTTP 和国内三网
+   门禁。
+6. 应用回滚只切换香港服务器的旧 release；不得把生产 DNS “回滚”到 Sites 或
+   Cloudflare。主机故障时可以单独分享 Sites 平台预览 URL。
+
+只读核对远端 SHA：
 
 ```bash
-git ls-remote codeup refs/heads/master
-git ls-remote github refs/heads/main
+git rev-parse HEAD
+git ls-remote git@codeup.aliyun.com:fiatlux/DT/FusionDigital.git refs/heads/master
+git ls-remote https://github.com/tianshao1992/fusion-digital.git refs/heads/main
 ```
 
-两行输出的提交 SHA 必须完全相同。公网构建不打包本机 hydration 目录，避免突破静态归档上限；内网自包含部署则先补齐并校验运行时资产。
+完整操作、DNS 断言、验收和回滚步骤见[生产发布手册](./docs/RELEASE.md)；香港服务器
+打包、SSH 安装与匿名安全边界见[阿里云香港部署手册](./deploy/aliyun-hk/README.md)。
+根目录 [`AGENTS.md`](./AGENTS.md) 是所有 Codex 在本仓库内必须遵守的机器级约束。
+生产域名/IP/禁用目标以及本机 advisory、AliDNS no-ECS、全球回退、通用境内与国内
+三网硬探针的机器可读事实源是
+[`deploy/production-contract.json`](./deploy/production-contract.json)，普通代码发布不得
+临时改写该合同。
 
 ## 🤵 维护者
 

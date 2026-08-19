@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "service": "FusionDigital",
+  "environment": "production",
+  "deployment": {
+    "provider": "aliyun-light-application-server",
+    "region": "cn-hongkong",
+    "publicIpv4": "47.82.66.79"
+  },
+  "dns": {
+    "hostnames": [
+      "fusiondigital.club",
+      "www.fusiondigital.club"
+    ],
+    "expectedFinalAddresses": {
+      "A": [
+        "47.82.66.79"
+      ],
+      "AAAA": []
+    },
+    "forbiddenTargets": {
+      "hostnames": [
+        "custom-domains.chatgpt.site"
+      ],
+      "hostnameSuffixes": [
+        "chatgpt.site"
+      ],
+      "addresses": [
+        "162.159.143.30",
+        "172.66.3.26"
+      ]
+    },
+    "maxCnameDepth": 8,
+    "timeoutMs": 8000,
+    "probes": [
+      {
+        "id": "system-default",
+        "purpose": "default",
+        "transport": "system",
+        "blocking": false
+      },
+      {
+        "id": "alidns-no-ecs",
+        "purpose": "no-ecs",
+        "transport": "dns-json",
+        "resolver": "https://dns.alidns.com/resolve"
+      },
+      {
+        "id": "global-fallback",
+        "purpose": "global-fallback",
+        "transport": "dns-json",
+        "resolver": "https://dns.alidns.com/resolve",
+        "ednsClientSubnet": "8.8.8.0/24"
+      },
+      {
+        "id": "china-generic",
+        "purpose": "china-generic",
+        "transport": "dns-json",
+        "resolver": "https://dns.alidns.com/resolve",
+        "ednsClientSubnet": "202.112.0.1/24"
+      },
+      {
+        "id": "china-telecom",
+        "purpose": "china-telecom",
+        "transport": "dns-json",
+        "resolver": "https://dns.alidns.com/resolve",
+        "ednsClientSubnet": "1.80.0.1/24"
+      },
+      {
+        "id": "china-unicom",
+        "purpose": "china-unicom",
+        "transport": "dns-json",
+        "resolver": "https://dns.alidns.com/resolve",
+        "ednsClientSubnet": "111.161.0.1/24"
+      },
+      {
+        "id": "china-mobile",
+        "purpose": "china-mobile",
+        "transport": "dns-json",
+        "resolver": "https://dns.alidns.com/resolve",
+        "ednsClientSubnet": "120.192.0.1/24"
+      }
+    ]
+  }
+}
