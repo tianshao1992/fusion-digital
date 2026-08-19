@@ -107,7 +107,7 @@ export default async function DataFoundationPage() {
     </section>
 
     <section className="dataLandscape" aria-labelledby="data-landscape-title">
-      <div className="dataSectionHead"><p className="dataEyebrow">05 / {en ? 'EVIDENCE LANDSCAPE' : '证据版图'}</p><h2 id="data-landscape-title">{en ? 'Platforms differ in lifecycle reach and semantic interoperability' : '平台在生命周期覆盖与语义互操作上各有侧重'}</h2><p>{en ? 'Point positions and sizes are editorial planning assessments from public evidence, not official rankings or measured performance benchmarks.' : '点位与大小是基于公开证据的编辑性规划判断，不是官方评级或实测性能排名。'}</p></div>
+      <div className="dataSectionHead"><p className="dataEyebrow">05 / {en ? 'EVIDENCE LANDSCAPE' : '证据版图'}</p><h2 id="data-landscape-title">{en ? 'Platforms differ in lifecycle reach and semantic interoperability' : '平台在生命周期覆盖与语义互操作上各有侧重'}</h2><p>{en ? 'Point positions and sizes are editorial planning assessments from public evidence, not official rankings or measured performance benchmarks. Records with the same integer score are separated only by a small screen-space offset for legibility; the tooltip retains the original score.' : '点位与大小是基于公开证据的编辑性规划判断，不是官方评级或实测性能排名。同一整数评分的条目仅做屏幕像素级错位以便辨读，提示框仍显示原始评分。'}</p></div>
       <DataLandscapeChart />
     </section>
 

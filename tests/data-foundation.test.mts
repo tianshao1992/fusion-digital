@@ -17,6 +17,8 @@ import {
 const HAN = /\p{Script=Han}/u;
 const chartSource = readFileSync(new URL('../app/data-foundation/DataFoundationCharts.tsx', import.meta.url), 'utf8');
 const scientificChartSource = readFileSync(new URL('../app/components/charts/ScientificChart.tsx', import.meta.url), 'utf8');
+const echartsRuntimeSource = readFileSync(new URL('../app/components/charts/echartsRuntime.ts', import.meta.url), 'utf8');
+const landscapeChartSource = chartSource.slice(chartSource.indexOf('export function DataLandscapeChart'));
 
 const byId = (id: string): DataFoundationRecord => {
   const record = dataFoundationRecords.find((candidate) => candidate.id === id);
@@ -105,6 +107,38 @@ test('data-foundation charts retain mobile and assistive-technology fallbacks', 
   assert.match(chartSource, /const compactNodes = nodes\.map/, 'mobile graph nodes must be explicitly rearranged');
   assert.equal((chartSource.match(/keepFallbackAccessible/g) ?? []).length, 2, 'both data charts must keep their semantic tables available to assistive technology');
   assert.match(scientificChartSource, /ready && !keepFallbackAccessible/, 'the shared chart host must not aria-hide an opted-in semantic fallback');
+});
+
+test('evidence-landscape nodes keep their names visible and project the active language', () => {
+  assert.ok(landscapeChartSource.length > 0, 'the evidence-landscape chart source must be discoverable');
+  assert.match(landscapeChartSource, /name:\s*record\.name/, 'every evidence point must retain its catalogue name');
+  assert.match(
+    landscapeChartSource,
+    /label:\s*\{[\s\S]*?show:\s*true/,
+    'scatter-point names must remain visible without requiring hover',
+  );
+  assert.match(landscapeChartSource, /formatter:\s*['"]\{b\}['"]/, 'the visible label must project each point name');
+  assert.match(landscapeChartSource, /organization:\s*en\s*\?\s*record\.organizationEn\s*:\s*record\.organization/);
+  assert.match(landscapeChartSource, /scope:\s*en\s*\?\s*record\.scopeEn\s*:\s*record\.scope/);
+  assert.match(landscapeChartSource, /name:\s*en\s*\?\s*'Lifecycle reach →'\s*:\s*'生命周期覆盖 →'/);
+  assert.match(landscapeChartSource, /name:\s*en\s*\?\s*'Semantic interoperability →'\s*:\s*'语义互操作 →'/);
+  assert.match(landscapeChartSource, /\},\s*\[en,\s*palette\]\);/, 'changing locale must rebuild the ECharts option');
+});
+
+test('evidence-landscape keeps a complete SSR fallback, no generic placeholder and a mobile chart layout', () => {
+  assert.match(
+    landscapeChartSource,
+    /fallback=\{<table[\s\S]*?<caption>\{en\s*\?\s*'Fusion-data evidence landscape'\s*:\s*'聚变数据证据版图'\}[\s\S]*?dataFoundationRecords\.map/,
+    'the server-rendered fallback must expose the complete bilingual evidence catalogue',
+  );
+  assert.match(landscapeChartSource, /keepFallbackAccessible/, 'the fallback table must remain available after chart hydration');
+  assert.doesNotMatch(landscapeChartSource, /Technical annotation|通用图表占位|generic placeholder/i);
+  assert.match(echartsRuntimeSource, /LegendComponent/, 'the category legend must be registered in the tree-shaken ECharts runtime');
+  assert.match(
+    landscapeChartSource,
+    /media:\s*\[[\s\S]*?query:\s*\{\s*maxWidth:\s*700\s*\}/,
+    'the dense evidence landscape needs an explicit compact-screen ECharts option',
+  );
 });
 
 test('catalogue preserves the professional boundary between storage, semantics, access, lineage and assurance', () => {

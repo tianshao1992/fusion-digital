@@ -26,6 +26,57 @@ type RouteNode = {
   tooltipText: string;
 };
 
+type LandscapeLabelPosition = 'left' | 'right' | 'top' | 'bottom';
+
+type LandscapePointLayout = {
+  symbolOffset: [number, number];
+  labelPosition: LandscapeLabelPosition;
+};
+
+const LANDSCAPE_CLUSTER_OFFSETS: Record<number, Array<[number, number]>> = {
+  1: [[0, 0]],
+  2: [[-28, -18], [28, 18]],
+  3: [[0, -34], [-32, 22], [32, 22]],
+  4: [[-32, -28], [32, -28], [-32, 28], [32, 28]],
+  5: [[0, -40], [-38, -12], [38, -12], [-24, 34], [24, 34]],
+  6: [[-40, -32], [0, -42], [40, -32], [-40, 32], [0, 42], [40, 32]],
+};
+
+/**
+ * Several catalogues share the same editorial score. Keep the real integer
+ * values intact and separate only their rendered symbols, so labels and
+ * pointer targets remain discoverable without implying false score precision.
+ */
+function buildLandscapePointLayout(): Map<string, LandscapePointLayout> {
+  const clusters = new Map<string, typeof dataFoundationRecords>();
+  for (const record of dataFoundationRecords) {
+    const key = `${record.lifecycleReach}:${record.interoperability}`;
+    clusters.set(key, [...(clusters.get(key) ?? []), record]);
+  }
+
+  const layout = new Map<string, LandscapePointLayout>();
+  for (const records of clusters.values()) {
+    const sorted = [...records].sort((left, right) => left.id.localeCompare(right.id));
+    const offsets = LANDSCAPE_CLUSTER_OFFSETS[sorted.length] ?? LANDSCAPE_CLUSTER_OFFSETS[6];
+    sorted.forEach((record, index) => {
+      const symbolOffset = offsets[index] ?? [0, 0];
+      const labelPosition: LandscapeLabelPosition = record.lifecycleReach >= 4
+        ? 'left'
+        : record.lifecycleReach <= 2
+          ? 'right'
+          : symbolOffset[0] < 0
+            ? 'left'
+            : symbolOffset[0] > 0
+              ? 'right'
+              : symbolOffset[1] < 0 ? 'top' : 'bottom';
+      layout.set(record.id, { symbolOffset, labelPosition });
+    });
+  }
+  return layout;
+}
+
+const LANDSCAPE_POINT_LAYOUT = buildLandscapePointLayout();
+
 export function DataArchitectureChart() {
   const { locale } = useI18n();
   const en = locale === 'en';
@@ -161,9 +212,11 @@ export function DataLandscapeChart() {
     return {
       tooltip: {
         trigger: 'item',
+        confine: true,
+        extraCssText: 'max-width:min(360px,calc(100vw - 32px));white-space:normal;line-height:1.55;overflow-wrap:anywhere;',
         formatter: (params: { data?: { name?: string; value?: number[]; organization?: string; scope?: string; access?: string } }) => {
           const item = params.data;
-          return item ? `<b>${item.name}</b><br/>${item.organization}<br/>${item.scope}<br/>${en ? 'Access' : '访问'}: ${item.access}` : '';
+          return item ? `<b>${item.name}</b><br/>${item.organization}<br/>${item.scope}<br/>${en ? 'Lifecycle / interoperability' : '生命周期 / 语义互操作'}: ${item.value?.[0]}/5 · ${item.value?.[1]}/5<br/>${en ? 'Access' : '访问'}: ${item.access}` : '';
         },
       },
       legend: { top: 12, type: 'scroll', data: categories.map((category) => en ? dataCategoryMeta[category].en : dataCategoryMeta[category].zh) },
@@ -191,16 +244,57 @@ export function DataLandscapeChart() {
         name: en ? dataCategoryMeta[category].en : dataCategoryMeta[category].zh,
         type: 'scatter',
         symbolSize: (value: number[]) => 10 + Math.min(16, value[2] * 3),
-        itemStyle: { color: dataCategoryMeta[category].color, opacity: .88, borderColor: palette.background, borderWidth: 1.5 },
-        emphasis: { focus: 'series', scale: 1.3 },
-        data: dataFoundationRecords.filter((record) => record.category === category).map((record) => ({
-          name: record.name,
-          value: [record.lifecycleReach, record.interoperability, record.sources.length],
-          organization: en ? record.organizationEn : record.organization,
-          scope: en ? record.scopeEn : record.scope,
-          access: en ? ({ open: 'Open', 'open-conditional': 'Open with scientific-use conditions', licensed: 'Licensed / purchased', registered: 'Registered', controlled: 'Controlled', consortium: 'Consortium', 'facility-internal': 'Facility-internal' } as const)[record.access] : ({ open: '公开', 'open-conditional': '公开但有科学使用条款', licensed: '许可/购买访问', registered: '注册访问', controlled: '受控访问', consortium: '成员/联盟访问', 'facility-internal': '装置内部' } as const)[record.access],
-        })),
+        itemStyle: { color: dataCategoryMeta[category].color, opacity: .9, borderColor: palette.mode === 'light' ? palette.muted : palette.background, borderWidth: 1.8 },
+        label: {
+          show: true,
+          formatter: '{b}',
+          distance: 5,
+          color: palette.text,
+          fontFamily: FONT,
+          fontSize: 9,
+          fontWeight: 700,
+          width: 112,
+          overflow: 'truncate',
+          padding: [3, 5],
+          borderWidth: .6,
+          borderColor: palette.tooltipBorder,
+          borderRadius: 3,
+          backgroundColor: palette.tooltipBackground,
+        },
+        labelLayout: { hideOverlap: false, moveOverlap: 'shiftY' },
+        emphasis: {
+          focus: 'series',
+          scale: 1.3,
+          label: { show: true, fontSize: 10, fontWeight: 800, width: 190, overflow: 'break' },
+        },
+        data: dataFoundationRecords.filter((record) => record.category === category).map((record) => {
+          const pointLayout = LANDSCAPE_POINT_LAYOUT.get(record.id) ?? { symbolOffset: [0, 0] as [number, number], labelPosition: 'top' as const };
+          return {
+            name: record.name,
+            value: [record.lifecycleReach, record.interoperability, record.sources.length],
+            symbolOffset: pointLayout.symbolOffset,
+            label: { position: pointLayout.labelPosition },
+            organization: en ? record.organizationEn : record.organization,
+            scope: en ? record.scopeEn : record.scope,
+            access: en ? ({ open: 'Open', 'open-conditional': 'Open with scientific-use conditions', licensed: 'Licensed / purchased', registered: 'Registered', controlled: 'Controlled', consortium: 'Consortium', 'facility-internal': 'Facility-internal' } as const)[record.access] : ({ open: '公开', 'open-conditional': '公开但有科学使用条款', licensed: '许可/购买访问', registered: '注册访问', controlled: '受控访问', consortium: '成员/联盟访问', 'facility-internal': '装置内部' } as const)[record.access],
+          };
+        }),
       })),
+      media: [{
+        query: { maxWidth: 700 },
+        option: {
+          legend: { top: 8, textStyle: { fontSize: 8 } },
+          grid: { left: 52, right: 18, top: 118, bottom: 66 },
+          xAxis: { axisLabel: { fontSize: 7 }, nameTextStyle: { fontSize: 9 }, nameGap: 34 },
+          yAxis: { axisLabel: { fontSize: 7 }, nameTextStyle: { fontSize: 9 }, nameGap: 39 },
+          series: categories.map(() => ({
+            symbolSize: (value: number[]) => 8 + Math.min(12, value[2] * 2),
+            label: { fontSize: 7, width: 72, padding: [2, 3], distance: 3 },
+            labelLayout: { hideOverlap: true, moveOverlap: 'shiftY' },
+            emphasis: { label: { show: true, fontSize: 9, width: 126, overflow: 'break' } },
+          })),
+        },
+      }],
     };
   }, [en, palette]);
 
@@ -212,7 +306,7 @@ export function DataLandscapeChart() {
     fallbackAlt=""
     fallback={<table className="dataChartTable"><caption>{en ? 'Fusion-data evidence landscape' : '聚变数据证据版图'}</caption><thead><tr><th>{en ? 'Record' : '条目'}</th><th>{en ? 'Class' : '类别'}</th><th>{en ? 'Lifecycle' : '生命周期'}</th><th>{en ? 'Interoperability' : '互操作'}</th></tr></thead><tbody>{dataFoundationRecords.map((record) => <tr key={record.id}><th>{record.name}</th><td>{en ? dataCategoryMeta[record.category].en : dataCategoryMeta[record.category].zh}</td><td>{record.lifecycleReach}/5</td><td>{record.interoperability}/5</td></tr>)}</tbody></table>}
     className="dataLandscapeChart"
-    height={650}
+    height={760}
     keepFallbackAccessible
   />;
 }
