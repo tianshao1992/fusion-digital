@@ -19,6 +19,10 @@ import type {
   EfitThreeOverlay,
   EfitThreeOverlayOptions,
 } from './device-viewer/EfitThreeOverlay';
+import type {
+  Ehl2DiagnosticOverlayOptions,
+  Ehl2DiagnosticThreeOverlay,
+} from './device-viewer/Ehl2DiagnosticThreeOverlay';
 import {
   INDUSTRIAL_STUDIO,
   resolveIndustrialMaterialPreset,
@@ -78,6 +82,7 @@ export type TokamakCadViewerProps = {
   efitStore?: EfitStore | EfitStoreLike | null;
   efitAlignment?: EfitAlignmentContract;
   efitOptions?: EfitThreeOverlayOptions;
+  diagnosticOverlayOptions?: Ehl2DiagnosticOverlayOptions;
   efitControls?: {
     mode: 'physical' | 'xray';
     showSection: boolean;
@@ -133,6 +138,7 @@ type ViewerApi = {
   applyView: (snapshot: ViewSnapshot) => void;
   resize: (refit?: boolean) => void;
   efitOverlay: EfitThreeOverlay | null;
+  diagnosticOverlay: Ehl2DiagnosticThreeOverlay | null;
 };
 
 function formatCount(value: number, locale = 'zh-CN') {
@@ -275,6 +281,7 @@ function TokamakCadViewerSession({
   efitStore = null,
   efitAlignment,
   efitOptions,
+  diagnosticOverlayOptions,
   efitControls,
 }: TokamakCadViewerProps = {}) {
   const { content, locale, t } = useI18n();
@@ -300,6 +307,7 @@ function TokamakCadViewerSession({
     alignment: efitAlignment,
     options: efitOptions,
   });
+  const diagnosticOverlayOptionsRef = useRef(diagnosticOverlayOptions);
   const pointerDownRef = useRef<{ x: number; y: number } | null>(null);
   const selectedPartIdsRef = useRef<Set<string>>(new Set());
   const hiddenPartIdsRef = useRef<Set<string>>(new Set());
@@ -377,6 +385,11 @@ function TokamakCadViewerSession({
     overlay.setOptions(nextState.options);
     overlay.setFrame(nextState.frame ?? currentEfitFrame(nextState.store));
   }, [efitAlignment, efitFrame, efitOptions, efitStore]);
+
+  useEffect(() => {
+    diagnosticOverlayOptionsRef.current = diagnosticOverlayOptions;
+    viewerRef.current?.diagnosticOverlay?.setOptions(diagnosticOverlayOptions);
+  }, [diagnosticOverlayOptions]);
 
   const availableModels = useMemo(() => webModelVariants(manifest), [manifest]);
   const selectedModel = availableModels.find((asset) => asset.id === selectedModelId)
@@ -463,6 +476,7 @@ function TokamakCadViewerSession({
     let localScene: Scene | null = null;
     let localModel: Object3D | null = null;
     let localEfitOverlay: EfitThreeOverlay | null = null;
+    let localDiagnosticOverlay: Ehl2DiagnosticThreeOverlay | null = null;
     let localDisposableMaterials: Set<Material> | null = null;
     let localEnvironmentTarget: WebGLRenderTarget | null = null;
     const modelLoadController = new AbortController();
@@ -480,6 +494,8 @@ function TokamakCadViewerSession({
       if (pointerDownHandler) localRenderer?.domElement.removeEventListener('pointerdown', pointerDownHandler);
       if (pointerUpHandler) localRenderer?.domElement.removeEventListener('pointerup', pointerUpHandler);
       localControls?.dispose();
+      localDiagnosticOverlay?.dispose();
+      localDiagnosticOverlay = null;
       localEfitOverlay?.dispose();
       localEfitOverlay = null;
       if (localScene) localScene.environment = null;
@@ -511,12 +527,16 @@ function TokamakCadViewerSession({
       const environmentModulePromise = appearancePreset === 'industrial-silver-v1'
         ? import('three/examples/jsm/environments/RoomEnvironment.js')
         : Promise.resolve(null);
-      const [THREE, controlsModule, loaderModule, meshoptModule, efitOverlayModule, environmentModule] = await Promise.all([
+      const diagnosticOverlayModulePromise = ehl2Session
+        ? import('./device-viewer/Ehl2DiagnosticThreeOverlay')
+        : Promise.resolve(null);
+      const [THREE, controlsModule, loaderModule, meshoptModule, efitOverlayModule, diagnosticOverlayModule, environmentModule] = await Promise.all([
         import('three'),
         import('three/examples/jsm/controls/OrbitControls.js'),
         import('three/examples/jsm/loaders/GLTFLoader.js'),
         import('three/examples/jsm/libs/meshopt_decoder.module.js'),
         import('./device-viewer/EfitThreeOverlay'),
+        diagnosticOverlayModulePromise,
         environmentModulePromise,
       ]);
       if (disposed || !mountRef.current) return;
@@ -1008,6 +1028,12 @@ function TokamakCadViewerSession({
         initialEfitState.options,
       );
       localEfitOverlay.setFrame(initialEfitState.frame ?? currentEfitFrame(initialEfitState.store));
+      if (diagnosticOverlayModule) {
+        localDiagnosticOverlay = diagnosticOverlayModule.createEhl2DiagnosticThreeOverlay(
+          { physicalWebMetresRoot: model },
+          diagnosticOverlayOptionsRef.current,
+        );
+      }
       const semanticHighlightMaterial = industrialAppearance ? null : new THREE.MeshPhysicalMaterial({ color: 0xffd06b, emissive: 0xff6a1e, emissiveIntensity: 1.8, roughness: 0.22, metalness: 0.56, transparent: false, opacity: 1, side: THREE.DoubleSide });
       if (semanticHighlightMaterial) disposableMaterials.add(semanticHighlightMaterial);
       const selectionMaterials = new Set<Material>();
@@ -1220,6 +1246,7 @@ function TokamakCadViewerSession({
         },
         resize,
         efitOverlay: localEfitOverlay,
+        diagnosticOverlay: localDiagnosticOverlay,
       };
       setVisualTheme(visualThemeRef.current);
       selectParts(selectedPartIdsRef.current);

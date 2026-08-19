@@ -13,6 +13,7 @@ import TokamakCadViewer from '../components/TokamakCadViewer';
 import { createEfitHybridDataSource, createEfitStore, EfitPanel, type EfitStore } from '../components/efit';
 import { useI18n } from '../i18n';
 import type { DeviceCatalog, DeviceCatalogEntry, DevicePhysicsOverlay } from './deviceCatalog';
+import Ehl2DiagnosticExperience, { Ehl2DiagnosticNoScriptSummary } from './Ehl2DiagnosticExperience';
 import TurntableDeviceViewer from './TurntableDeviceViewer';
 
 function MetadataViewer({ device }: { device: DeviceCatalogEntry }) {
@@ -234,6 +235,13 @@ function ResizableDeviceExperience({
 }
 
 function DeviceExperience({ device }: { device: DeviceCatalogEntry }) {
+  if (device.diagnosticWorkspace?.kind === 'ehl2-diagview2') {
+    return <Ehl2DiagnosticExperience device={device} />;
+  }
+  return <StandardDeviceExperience device={device} />;
+}
+
+function StandardDeviceExperience({ device }: { device: DeviceCatalogEntry }) {
   const efitOverlay = device.physicsOverlays.find((overlay) => overlay.kind === 'axisymmetric-equilibrium');
   const endpoint = efitOverlay?.manifestEndpoint ?? null;
   const efitStore = useMemo(() => endpoint
@@ -292,8 +300,9 @@ export default function MultiDeviceWorkspace({ catalog }: { catalog: DeviceCatal
         <h3>{content(current.title)}</h3>
         <ul>{current.facts.slice(0, 3).map((fact) => <li key={fact}>{content(fact)}</li>)}</ul>
       </aside>
-      <DeviceExperience device={current} />
+      <DeviceExperience key={current.id} device={current} />
     </div>
+    <noscript><Ehl2DiagnosticNoScriptSummary /></noscript>
 
   </section>;
 }

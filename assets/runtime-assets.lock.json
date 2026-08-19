@@ -8,8 +8,8 @@
       "public/models/iter-high-detail-v1/"
     ],
     "fileCount": 412,
-    "totalBytes": 259463042,
-    "treeSha256": "e9237b51549c9326d5d5e865a28f26555514cd4679d93591ed732941d55795cc",
+    "totalBytes": 259463754,
+    "treeSha256": "c7aedc324cc2a1754f47632ff537dbc3ce49242b6d3d859bc1317a719030c15b",
     "files": [
       {
         "path": "public/FusionDigital-technical-roadmap-2026-08-15.docx",
@@ -1573,8 +1573,8 @@
       },
       {
         "path": "public/models/device-catalog.json",
-        "bytes": 7585,
-        "sha256": "b042f0cd74cbc1b43ddd24387c09f3d78a718d1ed51399f05d5551bdfa7806e1"
+        "bytes": 8297,
+        "sha256": "347649db16295b065abb00f745871299b6f92911e29951869196b3c3fb21d931"
       },
       {
         "path": "public/models/device-manifest.schema.json",

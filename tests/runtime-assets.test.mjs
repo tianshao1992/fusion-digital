@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
 import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join, resolve, sep } from "node:path";
 import { Readable, Writable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { test } from "node:test";
 import { tmpdir } from "node:os";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { promisify } from "node:util";
 import {
   codepointCompare,
@@ -14,6 +14,10 @@ import {
   validateStageOutput,
   verifyOfflineSource,
 } from "../scripts/assets/runtime-assets.mjs";
+import {
+  handleIterHighDetailCache,
+  shouldEnforceSitesExpandedLimit,
+} from "../scripts/deployment/prune-obsolete-runtime-assets.mjs";
 
 const execFileAsync = promisify(execFile);
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -24,6 +28,10 @@ const SCRIPT_PATH = join(ROOT, "scripts", "assets", "runtime-assets.mjs");
 
 async function readJson(pathname) {
   return JSON.parse(await readFile(pathname, "utf8"));
+}
+
+function directoryUrl(pathname) {
+  return pathToFileURL(`${resolve(pathname)}${sep}`);
 }
 
 test("runtime asset lock covers the complete Git-managed public tree", async () => {
@@ -116,6 +124,101 @@ test("external ITER derivatives are ignored by Git and use credential-free HTTPS
     encoding: "utf8",
   });
   assert.match(ignored, /public\/models\/iter-high-detail-v1/);
+});
+
+test("postbuild prunes only the Sites ITER cache and preserves the public-anonymous bundle", async () => {
+  const scratch = await mkdtemp(join(tmpdir(), "fusion-postbuild-iter-"));
+  const app = join(scratch, "app");
+  const client = join(scratch, "dist", "client");
+  const cache = join(client, "models", "iter-high-detail-v1");
+  const manifest = join(client, "models", "iter-public-simplified", "model-manifest.json");
+  const route = join(client, "device-assets-route.txt");
+  const sourceAsset = join(scratch, "public", "models", "iter-high-detail-v1", "source.glb");
+  const lockPath = join(scratch, "runtime-assets.lock.json");
+  const files = [
+    { filename: "alpha.high.meshopt.glb", bytes: 3 },
+    { filename: "beta.high.meshopt.glb", bytes: 5 },
+  ];
+
+  try {
+    await mkdir(app, { recursive: true });
+    await mkdir(cache, { recursive: true });
+    await mkdir(dirname(manifest), { recursive: true });
+    await mkdir(dirname(sourceAsset), { recursive: true });
+    await writeFile(join(app, "page.tsx"), "export default function Page() { return null; }");
+    await writeFile(join(cache, files[0].filename), "abc");
+    await writeFile(join(cache, files[1].filename), "12345");
+    await writeFile(manifest, "manifest stays");
+    await writeFile(route, "route stays");
+    await writeFile(sourceAsset, "source stays");
+    await writeFile(lockPath, JSON.stringify({
+      externalBundles: [{
+        id: "iter-high-detail-v1",
+        destinationRoot: "public/models/iter-high-detail-v1",
+        fileCount: files.length,
+        totalBytes: files.reduce((sum, file) => sum + file.bytes, 0),
+        files,
+      }],
+    }));
+
+    const sharedOptions = {
+      clientUrl: directoryUrl(client),
+      applicationUrl: directoryUrl(app),
+      lockUrl: pathToFileURL(lockPath),
+    };
+    const preserved = await handleIterHighDetailCache({
+      ...sharedOptions,
+      mode: "public-anonymous",
+    });
+    assert.deepEqual(preserved, {
+      action: "preserved",
+      bytes: 0,
+      fileCount: 2,
+      totalBytes: 8,
+    });
+    assert.equal(await readFile(join(cache, files[1].filename), "utf8"), "12345");
+    assert.equal(shouldEnforceSitesExpandedLimit("aliyun-hk"), false);
+    assert.equal(shouldEnforceSitesExpandedLimit("sites"), true);
+    assert.throws(() => shouldEnforceSitesExpandedLimit("other"), /Unsupported FUSIONDIGITAL_BUILD_TARGET/);
+
+    const removed = await handleIterHighDetailCache({ ...sharedOptions, mode: undefined });
+    assert.deepEqual(removed, { action: "removed", bytes: 8, fileCount: 0, totalBytes: 0 });
+    await assert.rejects(readFile(join(cache, files[0].filename)), /ENOENT/);
+    assert.equal(await readFile(manifest, "utf8"), "manifest stays");
+    assert.equal(await readFile(route, "utf8"), "route stays");
+    assert.equal(await readFile(lockPath, "utf8").then((value) => JSON.parse(value).externalBundles[0].id), "iter-high-detail-v1");
+    assert.equal(await readFile(sourceAsset, "utf8"), "source stays");
+  } finally {
+    await rm(scratch, { recursive: true, force: true });
+  }
+});
+
+test("postbuild refuses to prune ITER cache while app source exposes its internal URL", async () => {
+  const scratch = await mkdtemp(join(tmpdir(), "fusion-postbuild-iter-reference-"));
+  const app = join(scratch, "app");
+  const client = join(scratch, "dist", "client");
+  const cachedAsset = join(client, "models", "iter-high-detail-v1", "asset.glb");
+
+  try {
+    await mkdir(app, { recursive: true });
+    await mkdir(dirname(cachedAsset), { recursive: true });
+    await writeFile(
+      join(app, "page.ts"),
+      'export const leaked = "/models/iter-high-detail-v1/asset.glb";',
+    );
+    await writeFile(cachedAsset, "must stay");
+
+    await assert.rejects(
+      handleIterHighDetailCache({
+        clientUrl: directoryUrl(client),
+        applicationUrl: directoryUrl(app),
+      }),
+      /still references the internal cache URL/,
+    );
+    assert.equal(await readFile(cachedAsset, "utf8"), "must stay");
+  } finally {
+    await rm(scratch, { recursive: true, force: true });
+  }
 });
 
 test("tracked-only CLI performs complete byte and SHA-256 verification", async () => {

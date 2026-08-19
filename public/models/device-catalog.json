@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "2.0",
+  "schemaVersion": "2.1",
   "asOf": "2026-08-18",
   "securityPolicy": {
     "previewOnly": true,
@@ -30,7 +30,8 @@
         "turntableManifestEndpoint": null,
         "overlayEligible": true
       },
-      "physicsOverlays": []
+      "physicsOverlays": [],
+      "diagnosticWorkspace": null
     },
     {
       "id": "exl-50u-2026-upgrade",
@@ -62,7 +63,8 @@
           "authority": "visualization-derived",
           "statement": "Visualization-derived axisymmetric EFIT flux surfaces for ten reviewed shots (5,804 source frames). Shot 18303 exposes reviewed v1 saddle-point, open-separatrix and limiter-intersection derivatives. Six additional shots expose bounded topology-graph v2 evidence with per-shot canonical limiter geometry, boundary and near-boundary X points, resolved constant-flux separatrix branches, wall intersections and explicit unresolved records. Near-boundary candidates are not active X points; unresolved or unreviewed open regions are not filled, extrapolated or presented as SOL. The CAD registration is provisional; limiter intersections are not verified divertor-target strike points, engineering metrology or a real-time control result."
         }
-      ]
+      ],
+      "diagnosticWorkspace": null
     },
     {
       "id": "ehl-2-preliminary",
@@ -83,7 +85,16 @@
         "turntableManifestEndpoint": null,
         "overlayEligible": false
       },
-      "physicsOverlays": []
+      "physicsOverlays": [],
+      "diagnosticWorkspace": {
+        "kind": "ehl2-diagview2",
+        "authority": "design-reference",
+        "coordinateFrame": "EHL2_WEB_METRES_PROVISIONAL_DIAGVIEW2_V1",
+        "asOf": "2026-08-17",
+        "sourceLabel": "DiagView2 PPT design reference",
+        "sourceRevision": "868d74d5e0e6c9abaec0eb623bcdd13ead771c79",
+        "statement": "DiagView2 PPT-derived planar design reference for five EHL-2 visible and infrared viewing scenarios. It is not an as-installed survey, calibrated optical model, three-dimensional field-of-view validation, or engineering occlusion authority."
+      }
     },
     {
       "id": "iter-educational-model",
@@ -104,7 +115,8 @@
         "turntableManifestEndpoint": null,
         "overlayEligible": false
       },
-      "physicsOverlays": []
+      "physicsOverlays": [],
+      "diagnosticWorkspace": null
     }
   ]
 }

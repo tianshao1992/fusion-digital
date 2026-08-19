@@ -1,3 +1,5 @@
+import { EHL2_DIAGVIEW2_SOURCE } from '../components/device-viewer/ehl2DiagView2';
+
 export type DeviceTone = 'online' | 'controlled' | 'restricted';
 export type DeviceViewerMode = 'real-3d' | 'turntable-3d' | 'metadata-only';
 
@@ -9,6 +11,16 @@ export type DevicePhysicsOverlay = {
   defaultTimeMs?: number;
   coordinateFrame: string;
   authority: 'visualization-derived';
+  statement: string;
+};
+
+export type DeviceDiagnosticWorkspace = {
+  kind: 'ehl2-diagview2';
+  authority: 'design-reference';
+  coordinateFrame: 'EHL2_WEB_METRES_PROVISIONAL_DIAGVIEW2_V1';
+  asOf: '2026-08-17';
+  sourceLabel: 'DiagView2 PPT design reference';
+  sourceRevision: typeof EHL2_DIAGVIEW2_SOURCE.branchCommit;
   statement: string;
 };
 
@@ -32,6 +44,7 @@ export type DeviceCatalogEntry = {
     overlayEligible: boolean;
   };
   physicsOverlays: DevicePhysicsOverlay[];
+  diagnosticWorkspace: DeviceDiagnosticWorkspace | null;
 };
 
 export type DeviceCatalog = {
@@ -150,6 +163,44 @@ export function parseDeviceCatalog(input: unknown): DeviceCatalog {
       throw new Error(`${id} physics overlays require a real-3d viewer`);
     }
 
+    const diagnosticWorkspace = item.diagnosticWorkspace === null
+      ? null
+      : (() => {
+        const workspace = record(item.diagnosticWorkspace, `${id}.diagnosticWorkspace`);
+        const kind = stringValue(workspace.kind, `${id}.diagnosticWorkspace.kind`);
+        const authority = stringValue(workspace.authority, `${id}.diagnosticWorkspace.authority`);
+        const coordinateFrame = stringValue(workspace.coordinateFrame, `${id}.diagnosticWorkspace.coordinateFrame`);
+        const asOf = stringValue(workspace.asOf, `${id}.diagnosticWorkspace.asOf`);
+        const sourceLabel = stringValue(workspace.sourceLabel, `${id}.diagnosticWorkspace.sourceLabel`);
+        const sourceRevision = stringValue(workspace.sourceRevision, `${id}.diagnosticWorkspace.sourceRevision`);
+        if (id !== 'ehl-2-preliminary' || mode !== 'real-3d') {
+          throw new Error(`${id} cannot expose the EHL-2 diagnostic workspace`);
+        }
+        if (kind !== 'ehl2-diagview2'
+          || authority !== 'design-reference'
+          || coordinateFrame !== 'EHL2_WEB_METRES_PROVISIONAL_DIAGVIEW2_V1'
+          || asOf !== '2026-08-17'
+          || sourceLabel !== 'DiagView2 PPT design reference'
+          || sourceRevision !== EHL2_DIAGVIEW2_SOURCE.branchCommit) {
+          throw new Error(`${id}.diagnosticWorkspace is not a reviewed DiagView2 contract`);
+        }
+        return {
+          kind,
+          authority,
+          coordinateFrame,
+          asOf,
+          sourceLabel,
+          sourceRevision,
+          statement: stringValue(workspace.statement, `${id}.diagnosticWorkspace.statement`),
+        } as DeviceDiagnosticWorkspace;
+      })();
+    if (id === 'ehl-2-preliminary' && diagnosticWorkspace === null) {
+      throw new Error('ehl-2-preliminary requires its reviewed diagnostic workspace contract');
+    }
+    if (id !== 'ehl-2-preliminary' && diagnosticWorkspace !== null) {
+      throw new Error(`${id} diagnosticWorkspace must be null`);
+    }
+
     return {
       id,
       index: stringValue(item.index, `${id}.index`),
@@ -170,11 +221,16 @@ export function parseDeviceCatalog(input: unknown): DeviceCatalog {
         overlayEligible: booleanValue(viewer.overlayEligible, `${id}.viewer.overlayEligible`),
       },
       physicsOverlays,
+      diagnosticWorkspace,
     };
   });
 
   return {
-    schemaVersion: stringValue(root.schemaVersion, 'deviceCatalog.schemaVersion'),
+    schemaVersion: (() => {
+      const schemaVersion = stringValue(root.schemaVersion, 'deviceCatalog.schemaVersion');
+      if (schemaVersion !== '2.1') throw new Error(`Unsupported device catalog schemaVersion: ${schemaVersion}`);
+      return schemaVersion;
+    })(),
     asOf: stringValue(root.asOf, 'deviceCatalog.asOf'),
     securityPolicy: {
       previewOnly: booleanValue(policy.previewOnly, 'securityPolicy.previewOnly'),

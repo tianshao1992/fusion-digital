@@ -1,7 +1,10 @@
-import { readdir, readFile, rm, stat } from 'node:fs/promises';
+import { open, readdir, readFile, rm, stat } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const catalogPath = fileURLToPath(new URL('../../dist/client/models/device-catalog.json', import.meta.url));
+const distUrl = new URL('../../dist/', import.meta.url);
+const distClientUrl = new URL('client/', distUrl);
+const catalogPath = fileURLToPath(new URL('models/device-catalog.json', distClientUrl));
 const searchIndexDistUrl = new URL(
   '../../dist/client/data/fusion-knowledge-index.json',
   import.meta.url,
@@ -13,10 +16,15 @@ const searchIndexSourceUrl = new URL(
 const searchCoreUrl = new URL('../../app/search/search-core.ts', import.meta.url);
 const appUrl = new URL('../../app/', import.meta.url);
 const serverEntryUrl = new URL('../../dist/server/index.js', import.meta.url);
+const runtimeAssetLockUrl = new URL('../../assets/runtime-assets.lock.json', import.meta.url);
 
 const SITES_EXPANDED_LIMIT_BYTES = 256 * 1024 * 1024;
 const REQUIRED_HEADROOM_BYTES = 3 * 1024 * 1024;
 const BUILD_TARGET = process.env.FUSIONDIGITAL_BUILD_TARGET || 'sites';
+const PUBLIC_ANONYMOUS_MODE = 'public-anonymous';
+const ITER_HIGH_DETAIL_ID = 'iter-high-detail-v1';
+const ITER_HIGH_DETAIL_DESTINATION = `public/models/${ITER_HIGH_DETAIL_ID}`;
+const ITER_HIGH_DETAIL_PUBLIC_TOKEN = `/models/${ITER_HIGH_DETAIL_ID}/`;
 const OBSOLETE_RUNTIME_PACKAGES = Object.freeze([
   {
     id: 'paramak-tokamak-demo',
@@ -42,6 +50,146 @@ async function byteLength(directory) {
   const files = await filesUnder(directory);
   const sizes = await Promise.all(files.map(async (file) => (await stat(file)).size));
   return sizes.reduce((total, size) => total + size, 0);
+}
+
+export function shouldEnforceSitesExpandedLimit(buildTarget = 'sites') {
+  if (buildTarget !== 'sites' && buildTarget !== 'aliyun-hk') {
+    throw new Error(`Unsupported FUSIONDIGITAL_BUILD_TARGET: ${buildTarget}.`);
+  }
+  return buildTarget === 'sites';
+}
+
+export async function assertAppHasNoPublicIterCacheReference(applicationUrl = appUrl) {
+  const appFiles = (await filesUnder(applicationUrl))
+    .filter((file) => /\.[cm]?[jt]sx?$/.test(file.pathname));
+  const sources = await Promise.all(appFiles.map(async (file) => ({
+    file,
+    source: await readFile(file, 'utf8'),
+  })));
+  const publicReference = sources.find(({ source }) => source.includes(ITER_HIGH_DETAIL_PUBLIC_TOKEN));
+  if (publicReference) {
+    throw new Error(
+      `Refusing to prune ${ITER_HIGH_DETAIL_ID}: application source ${fileURLToPath(publicReference.file)} `
+      + `still references the internal cache URL ${ITER_HIGH_DETAIL_PUBLIC_TOKEN}`,
+    );
+  }
+}
+
+async function assertReadableFile(fileUrl, expectedBytes) {
+  const fileStat = await stat(fileUrl);
+  if (!fileStat.isFile() || fileStat.size !== expectedBytes) {
+    throw new Error(
+      `Refusing public-anonymous build: ${fileURLToPath(fileUrl)} has ${fileStat.size} bytes; `
+      + `runtime lock requires ${expectedBytes}.`,
+    );
+  }
+
+  const handle = await open(fileUrl, 'r');
+  try {
+    if (expectedBytes > 0) {
+      const probe = Buffer.allocUnsafe(1);
+      const { bytesRead } = await handle.read(probe, 0, 1, expectedBytes - 1);
+      if (bytesRead !== 1) {
+        throw new Error(`could not read the final locked byte of ${fileURLToPath(fileUrl)}`);
+      }
+    }
+  } finally {
+    await handle.close();
+  }
+}
+
+export async function verifyPublicAnonymousIterCache({
+  cacheUrl,
+  lockUrl = runtimeAssetLockUrl,
+}) {
+  const lock = JSON.parse(await readFile(lockUrl, 'utf8'));
+  const bundle = (lock.externalBundles ?? []).find(({ id }) => id === ITER_HIGH_DETAIL_ID);
+  if (!bundle) {
+    throw new Error(`Refusing public-anonymous build: runtime lock is missing ${ITER_HIGH_DETAIL_ID}.`);
+  }
+  if (
+    bundle.destinationRoot !== ITER_HIGH_DETAIL_DESTINATION
+    || bundle.fileCount !== bundle.files?.length
+    || bundle.totalBytes !== bundle.files.reduce((sum, file) => sum + file.bytes, 0)
+  ) {
+    throw new Error(`Refusing public-anonymous build: ${ITER_HIGH_DETAIL_ID} lock contract is invalid.`);
+  }
+
+  const expectedFiles = new Map();
+  for (const file of bundle.files) {
+    if (
+      typeof file.filename !== 'string'
+      || file.filename.length === 0
+      || file.filename.includes('/')
+      || file.filename.includes('\\')
+      || !Number.isSafeInteger(file.bytes)
+      || file.bytes < 0
+      || expectedFiles.has(file.filename)
+    ) {
+      throw new Error(`Refusing public-anonymous build: ${ITER_HIGH_DETAIL_ID} contains an unsafe lock entry.`);
+    }
+    expectedFiles.set(file.filename, file.bytes);
+  }
+
+  let entries;
+  try {
+    entries = await readdir(cacheUrl, { withFileTypes: true });
+  } catch (error) {
+    if (error?.code === 'ENOENT') {
+      throw new Error(
+        `Refusing public-anonymous build: hydrated ${ITER_HIGH_DETAIL_ID} cache is missing from dist/client.`,
+      );
+    }
+    throw error;
+  }
+  if (
+    entries.length !== bundle.fileCount
+    || entries.some((entry) => !entry.isFile() || !expectedFiles.has(entry.name))
+  ) {
+    throw new Error(
+      `Refusing public-anonymous build: ${ITER_HIGH_DETAIL_ID} must contain exactly `
+      + `${bundle.fileCount} locked files.`,
+    );
+  }
+
+  await Promise.all(entries.map((entry) => (
+    assertReadableFile(new URL(entry.name, cacheUrl), expectedFiles.get(entry.name))
+  )));
+
+  return { fileCount: bundle.fileCount, totalBytes: bundle.totalBytes };
+}
+
+export async function handleIterHighDetailCache({
+  mode,
+  clientUrl = distClientUrl,
+  applicationUrl = appUrl,
+  lockUrl = runtimeAssetLockUrl,
+}) {
+  const cacheUrl = new URL(`models/${ITER_HIGH_DETAIL_ID}/`, clientUrl);
+  const expectedCachePath = resolve(
+    fileURLToPath(clientUrl),
+    'models',
+    ITER_HIGH_DETAIL_ID,
+  );
+  if (resolve(fileURLToPath(cacheUrl)) !== expectedCachePath) {
+    throw new Error(`Refusing to process an unexpected ${ITER_HIGH_DETAIL_ID} cache target.`);
+  }
+
+  await assertAppHasNoPublicIterCacheReference(applicationUrl);
+
+  if (mode === PUBLIC_ANONYMOUS_MODE) {
+    const verified = await verifyPublicAnonymousIterCache({ cacheUrl, lockUrl });
+    return { action: 'preserved', bytes: 0, ...verified };
+  }
+
+  let bytes = 0;
+  try {
+    bytes = await byteLength(cacheUrl);
+  } catch (error) {
+    if (error?.code !== 'ENOENT') throw error;
+  }
+  await rm(cacheUrl, { recursive: true, force: true });
+  return { action: 'removed', bytes, fileCount: 0, totalBytes: 0 };
 }
 
 async function assertSearchIndexIsServerEmbedded() {
@@ -85,99 +233,109 @@ async function assertSearchIndexIsServerEmbedded() {
   }
 }
 
-const catalogSource = await readFile(catalogPath, 'utf8');
-const catalog = JSON.parse(catalogSource);
-const catalogManifests = new Set(
-  (catalog.devices ?? []).flatMap((device) => [
-    device.viewer?.manifestEndpoint,
-    device.viewer?.turntableManifestEndpoint,
-  ]).filter(Boolean),
-);
-
-if (catalog.securityPolicy?.showDownloadActions !== false) {
-  throw new Error('Refusing to prune source-only files while catalog download actions are enabled.');
-}
-
-for (const assetPackage of OBSOLETE_RUNTIME_PACKAGES) {
-  if (
-    catalogSource.includes(assetPackage.forbiddenCatalogToken)
-    || [...catalogManifests].some((endpoint) => endpoint.includes(assetPackage.id))
-  ) {
+export async function runPostbuildPrune({
+  mode = process.env.NEXT_PUBLIC_FUSIONDIGITAL_MODE,
+  buildTarget = BUILD_TARGET,
+} = {}) {
+  const enforceSitesLimit = shouldEnforceSitesExpandedLimit(buildTarget);
+  if (buildTarget === 'aliyun-hk' && mode !== PUBLIC_ANONYMOUS_MODE) {
     throw new Error(
-      `Refusing to prune ${assetPackage.id}: the production device catalog still references it.`,
+      'Aliyun Hong Kong builds require NEXT_PUBLIC_FUSIONDIGITAL_MODE=public-anonymous.',
+    );
+  }
+  const catalogSource = await readFile(catalogPath, 'utf8');
+  const catalog = JSON.parse(catalogSource);
+  const catalogManifests = new Set(
+    (catalog.devices ?? []).flatMap((device) => [
+      device.viewer?.manifestEndpoint,
+      device.viewer?.turntableManifestEndpoint,
+    ]).filter(Boolean),
+  );
+
+  if (catalog.securityPolicy?.showDownloadActions !== false) {
+    throw new Error('Refusing to prune source-only files while catalog download actions are enabled.');
+  }
+
+  for (const assetPackage of OBSOLETE_RUNTIME_PACKAGES) {
+    if (
+      catalogSource.includes(assetPackage.forbiddenCatalogToken)
+      || [...catalogManifests].some((endpoint) => endpoint.includes(assetPackage.id))
+    ) {
+      throw new Error(
+        `Refusing to prune ${assetPackage.id}: the production device catalog still references it.`,
+      );
+    }
+  }
+
+  const removed = [];
+  for (const assetPackage of OBSOLETE_RUNTIME_PACKAGES) {
+    let bytes = 0;
+    try {
+      bytes = await byteLength(assetPackage.distUrl);
+    } catch (error) {
+      if (error?.code !== 'ENOENT') throw error;
+    }
+    await rm(assetPackage.distUrl, { recursive: true, force: true });
+    removed.push({ id: assetPackage.id, bytes });
+  }
+
+  const iterCache = await handleIterHighDetailCache({ mode });
+  if (iterCache.action === 'removed') {
+    removed.push({ id: `${ITER_HIGH_DETAIL_ID}.client-cache`, bytes: iterCache.bytes });
+  }
+
+  // The Paramak STEP remains tracked for collaborators and reproducible builds. The production
+  // viewer loads only the GLB, and the catalog explicitly disables all download actions.
+  const sourceOnlyStep = new URL(
+    '../../dist/client/models/paramak-full-device/paramak-full-device.step',
+    import.meta.url,
+  );
+  let sourceOnlyBytes = 0;
+  try {
+    sourceOnlyBytes = (await stat(sourceOnlyStep)).size;
+  } catch (error) {
+    if (error?.code !== 'ENOENT') throw error;
+  }
+  await rm(sourceOnlyStep, { force: true });
+  removed.push({ id: 'paramak-full-device.step', bytes: sourceOnlyBytes });
+
+  // The search API statically imports this index, so Vite embeds the complete dataset in the
+  // Worker bundle. Keeping the public-directory copy in dist/client duplicates the same payload;
+  // no browser route or download action addresses it. Preserve the tracked source for rebuilds.
+  await assertSearchIndexIsServerEmbedded();
+  let embeddedSearchIndexBytes = 0;
+  try {
+    embeddedSearchIndexBytes = (await stat(searchIndexDistUrl)).size;
+  } catch (error) {
+    if (error?.code !== 'ENOENT') throw error;
+  }
+  await rm(searchIndexDistUrl, { force: true });
+  removed.push({ id: 'fusion-knowledge-index.client-copy', bytes: embeddedSearchIndexBytes });
+
+  const expandedBytes = await byteLength(distUrl);
+  const removedBytes = removed.reduce((total, item) => total + item.bytes, 0);
+
+  if (enforceSitesLimit) {
+    const maximumBytes = SITES_EXPANDED_LIMIT_BYTES - REQUIRED_HEADROOM_BYTES;
+    if (expandedBytes > maximumBytes) {
+      throw new Error(
+        `Sites package is still too large: ${expandedBytes} bytes; maximum with reserved headroom is ${maximumBytes}.`,
+      );
+    }
+    const headroomBytes = SITES_EXPANDED_LIMIT_BYTES - expandedBytes;
+    console.log(
+      `[postbuild] Sites runtime pruned ${removedBytes} obsolete or externally served bytes; `
+      + `dist=${expandedBytes} bytes; Sites headroom=${headroomBytes} bytes.`,
+    );
+  } else {
+    console.log(
+      `[postbuild] Aliyun Hong Kong public-anonymous runtime preserved ${iterCache.fileCount} locked ITER files `
+      + `(${iterCache.totalBytes} bytes); pruned ${removedBytes} other obsolete bytes; `
+      + `dist=${expandedBytes} bytes; Sites package limit not applicable.`,
     );
   }
 }
 
-const removed = [];
-for (const assetPackage of OBSOLETE_RUNTIME_PACKAGES) {
-  let bytes = 0;
-  try {
-    bytes = await byteLength(assetPackage.distUrl);
-  } catch (error) {
-    if (error?.code !== 'ENOENT') throw error;
-  }
-  await rm(assetPackage.distUrl, { recursive: true, force: true });
-  removed.push({ id: assetPackage.id, bytes });
-}
-
-// The Paramak STEP remains tracked for collaborators and reproducible builds. The production
-// viewer loads only the GLB, and the catalog explicitly disables all download actions.
-const sourceOnlyStep = new URL(
-  '../../dist/client/models/paramak-full-device/paramak-full-device.step',
-  import.meta.url,
-);
-let sourceOnlyBytes = 0;
-try {
-  sourceOnlyBytes = (await stat(sourceOnlyStep)).size;
-} catch (error) {
-  if (error?.code !== 'ENOENT') throw error;
-}
-await rm(sourceOnlyStep, { force: true });
-removed.push({ id: 'paramak-full-device.step', bytes: sourceOnlyBytes });
-
-// The search API statically imports this index, so Vite embeds the complete dataset in the
-// Worker bundle. Keeping the public-directory copy in dist/client duplicates the same payload;
-// no browser route or download action addresses it. Preserve the tracked source for rebuilds.
-await assertSearchIndexIsServerEmbedded();
-let embeddedSearchIndexBytes = 0;
-try {
-  embeddedSearchIndexBytes = (await stat(searchIndexDistUrl)).size;
-} catch (error) {
-  if (error?.code !== 'ENOENT') throw error;
-}
-await rm(searchIndexDistUrl, { force: true });
-removed.push({ id: 'fusion-knowledge-index.client-copy', bytes: embeddedSearchIndexBytes });
-
-const expandedBytes = await byteLength(new URL('../../dist/', import.meta.url));
-const maximumBytes = SITES_EXPANDED_LIMIT_BYTES - REQUIRED_HEADROOM_BYTES;
-if (BUILD_TARGET !== 'sites' && BUILD_TARGET !== 'aliyun-hk') {
-  throw new Error(`Unsupported FUSIONDIGITAL_BUILD_TARGET: ${BUILD_TARGET}.`);
-}
-if (
-  BUILD_TARGET === 'aliyun-hk'
-  && process.env.NEXT_PUBLIC_FUSIONDIGITAL_MODE !== 'public-anonymous'
-) {
-  throw new Error(
-    'Aliyun Hong Kong builds require NEXT_PUBLIC_FUSIONDIGITAL_MODE=public-anonymous.',
-  );
-}
-if (BUILD_TARGET === 'sites' && expandedBytes > maximumBytes) {
-  throw new Error(
-    `Sites package is still too large: ${expandedBytes} bytes; maximum with reserved headroom is ${maximumBytes}.`,
-  );
-}
-
-const removedBytes = removed.reduce((total, item) => total + item.bytes, 0);
-if (BUILD_TARGET === 'sites') {
-  const headroomBytes = SITES_EXPANDED_LIMIT_BYTES - expandedBytes;
-  console.log(
-    `[postbuild] Sites runtime pruned ${removedBytes} obsolete bytes; `
-    + `dist=${expandedBytes} bytes; Sites headroom=${headroomBytes} bytes.`,
-  );
-} else {
-  console.log(
-    `[postbuild] Aliyun Hong Kong runtime pruned ${removedBytes} obsolete bytes; `
-    + `dist=${expandedBytes} bytes; Sites size limit intentionally not applied.`,
-  );
+if (process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url))) {
+  await runPostbuildPrune();
 }
