@@ -51,6 +51,9 @@ test('fusion data-foundation catalogue is broad, unique and evidence-backed', ()
     assert.ok(record.interoperability >= 1 && record.interoperability <= 5, `${record.id} interoperability must use the 1-5 scale`);
     assert.ok(record.lifecycleReach >= 1 && record.lifecycleReach <= 5, `${record.id} lifecycle reach must use the 1-5 scale`);
     assert.ok(record.boundary.length > 20 && record.boundaryEn.length > 20, `${record.id} must document a substantive usage boundary`);
+    assert.match(record.scope, HAN, `${record.id} must provide an authored Chinese scope`);
+    assert.match(record.objects, HAN, `${record.id} must provide authored Chinese data objects`);
+    assert.match(record.boundary, HAN, `${record.id} must provide an authored Chinese applicability boundary`);
 
     for (const source of record.sources) {
       assert.match(source.url, /^https:\/\//, `${record.id} source must use HTTPS: ${source.url}`);
@@ -59,6 +62,8 @@ test('fusion data-foundation catalogue is broad, unique and evidence-backed', ()
   }
 
   assert.equal(dataFoundationCutoff, '2026-08-19');
+  assert.ok(fusionDataCharacteristics.every(({ zh, detail, implication }) => HAN.test(`${zh}${detail}${implication}`)));
+  assert.ok(dataFoundationRoute.every(({ zh, deliverable }) => HAN.test(`${zh}${deliverable}`)));
 });
 
 test('English catalogue and taxonomy are authored English rather than leaked Chinese fallbacks', () => {

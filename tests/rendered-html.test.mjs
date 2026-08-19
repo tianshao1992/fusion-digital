@@ -720,12 +720,17 @@ test('server-renders the diagnostics and sensing research atlas', async () => {
 });
 
 test('server-renders the fusion data-foundation evidence atlas with accessible chart fallbacks', async () => {
-  const html = await htmlFor('/data-foundation');
+  const response = await render('/data-foundation', { cookie: 'fusiondigital_locale=zh-CN' });
+  assert.equal(response.status, 200);
+  const html = await response.text();
   assert.match(html, /08 \/ [^<]*聚变数据基座/);
+  assert.match(html, /从“存下数据”，走向/);
   assert.match(html, /聚变数据基座不是一个数据库/);
   const verifiedCount = html.match(/>(\d+)<\/dt><dd>核验条目<\/dd>/);
   assert.ok(verifiedCount, 'the hero must publish the verified-record count');
   assert.match(html, /物理含义与时间、几何、配置和不确定度不可分离/);
+  assert.match(html, /面向实验最小闭环的可实施技术路线/);
+  assert.match(html, /数据集成不能抹平科学与运行权威边界/);
   assert.match(html, /data-echart="fusion-data-foundation-architecture"/);
   assert.match(html, /data-echart="fusion-data-platform-landscape"/);
 

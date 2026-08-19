@@ -19,6 +19,8 @@ test('typed locale registry supports Chinese and English with durable fallback',
   assert.match(provider, /messages\[locale\]\?\.\[key\] \?\? messages\[DEFAULT_LOCALE\]\?\.\[key\] \?\? key/);
   assert.match(provider, /window\.localStorage\.setItem\(LOCALE_STORAGE_KEY, locale\)/);
   assert.match(provider, /document\.documentElement\.lang = definition\.htmlLang/);
+  assert.match(provider, /const router = useRouter\(\)/);
+  assert.match(provider, /persistClientPreference\(resolved\);[\s\S]*?router\.refresh\(\)/);
   assert.match(messages, /const en: Record<MessageKey, string>/);
   assert.match(messages, /'nav\.prototype': 'Prototype'/);
   assert.match(messages, /'nav\.control': 'Control'/);

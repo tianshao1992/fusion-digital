@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   DEFAULT_LOCALE,
@@ -72,6 +73,7 @@ function persistClientPreference(locale: AppLocale) {
 }
 
 export default function I18nProvider({ children, initialLocale = DEFAULT_LOCALE }: { children: ReactNode; initialLocale?: AppLocale }) {
+  const router = useRouter();
   const [locale, setLocaleState] = useState<AppLocale>(initialLocale);
 
   useEffect(() => {
@@ -90,7 +92,11 @@ export default function I18nProvider({ children, initialLocale = DEFAULT_LOCALE 
     setLocaleState(resolved);
     applyDocumentLocale(resolved);
     persistClientPreference(resolved);
-  }, []);
+    // Several routes localize Server Components from the locale cookie. Refresh
+    // the current route after persisting it so server and client content switch
+    // as one coherent document instead of leaving a mixed-language page.
+    router.refresh();
+  }, [router]);
 
   const value = useMemo<I18nContextValue>(() => ({
     locale,
