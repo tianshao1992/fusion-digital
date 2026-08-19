@@ -297,7 +297,7 @@ test('server-renders the FusionDigital community portal', async () => {
   assert.equal((html.match(/class="siteKnowledgeHome[^\"]*"[^>]*href="\/knowledge-graph"|href="\/knowledge-graph"[^>]*class="siteKnowledgeHome[^\"]*"/g) ?? []).length, 2, 'desktop and mobile Knowledge menus must link to the graph home');
   assert.equal((html.match(/data-knowledge-module=/g) ?? []).length, 20, 'desktop and mobile Knowledge menus must expose all ten modules');
   assert.equal((html.match(/data-primary-nav="roadmap"/g) ?? []).length, 2, 'desktop and mobile primary navigation must expose the program roadmap');
-  assert.ok((html.match(/>实时路线<\/a>/g) ?? []).length >= 2, 'desktop and mobile primary navigation must label the destination 实时路线');
+  assert.ok((html.match(/>路线规划<\/a>/g) ?? []).length >= 2, 'desktop and mobile primary navigation must label the destination 路线规划');
   assert.doesNotMatch(html, /class="siteKnowledgeRoadmap/, 'Knowledge menus must not duplicate the promoted program roadmap');
   const primaryNavigation = [...html.matchAll(/data-primary-nav="([^"]+)"/g)].map((match) => match[1]);
   assert.deepEqual(primaryNavigation, [

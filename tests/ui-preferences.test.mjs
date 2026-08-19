@@ -25,6 +25,8 @@ test('typed locale registry supports Chinese and English with durable fallback',
   assert.match(messages, /'nav\.prototype': 'Prototype'/);
   assert.match(messages, /'nav\.control': 'Control'/);
   assert.match(messages, /'nav\.knowledge': 'Knowledge'/);
+  assert.match(messages, /'nav\.roadmap': '路线规划'/);
+  assert.match(messages, /'nav\.roadmap': 'Roadmap'/);
   assert.match(messages, /'nav\.more': 'More'/);
   assert.match(messages, /'efit\.play': 'Play'/);
   assert.match(messages, /'viewer\.fullscreen': 'Fullscreen'/);
