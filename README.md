@@ -89,7 +89,7 @@ FusionDigital 由新奥聚变人工智能团队维护。项目将聚变物理、
 | 控制与诊断 | [`/control`](https://fusiondigital.club/control) · [`/diagnostics`](https://fusiondigital.club/diagnostics) | T0–T9 控制任务、DG0–DG11 诊断任务、装置/PCS、证据与孪生接口 |
 | 智能与证据 | [`/ai`](https://fusiondigital.club/ai) · [`/search`](https://fusiondigital.club/search) · [`/knowledge-graph`](https://fusiondigital.club/knowledge-graph) | AI 工作目录、确定性检索、引用问答与一至两跳证据关系 |
 | 装置与样机 | [`/facilities`](https://fusiondigital.club/facilities) · [`/#prototype-workspace`](https://fusiondigital.club/#prototype-workspace) | 全球装置状态、Paramak / EXL-50U / EHL-2 / ITER 目录、三维模型与 EFIT 工作台 |
-| 账户与治理 | `/account` · `/research-review` | 代码与 Sites 平台环境能力；阿里云香港 `public-anonymous` 生产版不开放账户、审核和写 API |
+| 账户与治理 | `/account` · `/research-review` | 代码与预览环境能力；阿里云香港 `public-anonymous` 生产版不开放账户、审核和写 API |
 
 ## 🔥 快速上手
 
@@ -218,6 +218,11 @@ docs/                         架构、复现、平台路线和协作手册
 | 公开镜像 | [GitHub `main`](https://github.com/tianshao1992/fusion-digital)，与 Codeup 保持相同 SHA |
 | Sites | [平台分配地址](https://fusion-physics-atlas-2026.tianyuanliu1992.chatgpt.site/)是同步公开镜像/人工备用入口；正式发布必须与香港站部署同一完整 SHA，但不承载生产域名 |
 
+香港生产入口使用 HTTP/2，并为 JS/CSS 提供无损 gzip 传输副本；高清图片、GLB 与
+实验派生数据仍按原始字节发布，不以降低视觉质量换取速度。ITER 与 EFIT 只通过受控
+同源路径开放，发布安装器会验证 Range、gzip 字节一致性以及直达路径的 fail-closed
+边界。
+
 ### 阿里云内地备案前预部署
 
 内地实例 `39.96.61.9` 目前仅用于 **pre-ICP staging**，不属于上表生产拓扑。测试只
@@ -247,11 +252,10 @@ docs/                         架构、复现、平台路线和协作手册
 4. 从干净工作树运行 `npm run release:sync-remotes`。若主工作区有无关的用户文件，
    从目标 SHA 建专用 clean detached worktree 执行，不得 stash/移动/删除这些文件。
    本地 `HEAD`、Codeup `master`、GitHub `main` 的完整 SHA 必须完全相同。
-5. 从该 SHA 建立隔离的 detached worktree，分别构建两个不可混用的产物：香港包
-   使用 `NEXT_PUBLIC_FUSIONDIGITAL_MODE=public-anonymous` 与
+5. 从同一 SHA 建立两个 detached worktree：香港包使用
+   `NEXT_PUBLIC_FUSIONDIGITAL_MODE=public-anonymous` 与
    `FUSIONDIGITAL_BUILD_TARGET=aliyun-hk`，Sites 包使用
-   `FUSIONDIGITAL_BUILD_TARGET=sites` 并通过平台归档门禁。两个产物必须来自同一
-   个完整 SHA。
+   `FUSIONDIGITAL_BUILD_TARGET=sites` 并通过平台归档门禁。两个产物不得互换。
 6. 将香港包通过 SSH/SCP 部署到 `47.82.66.79`；将 Sites 包保存并发布到现有平台
    地址，确认 Sites source `commit_sha`、香港 release、本地 `HEAD`、Codeup
    `master` 与 GitHub `main` 完全一致。随后运行 `npm run release:verify-dns`，再执行

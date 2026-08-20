@@ -87,17 +87,15 @@ app/components/                导航、页脚、品牌与动效
 
 Word 报告由 `build_ai_native_report.py` 从同一公开 JSON 生成，因此报告和网页共享规范化数据，但 Word 中的综合分析、章节正文和图版仍需要人工审核。
 
-## 6. 双远端与双端发布
+## 6. 双远端与生产发布
 
 协作事实与公开发布采用以下固定拓扑：
 
 ```text
 Codeup master（唯一协作事实源）
   └─ 同一完整 SHA → GitHub main（公开代码镜像）
-                     ├─ 阿里云香港不可变 release
-                     │    └─ fusiondigital.club / www → 47.82.66.79
-                     └─ OpenAI Sites 已保存并部署版本
-                          └─ 平台分配的 *.chatgpt.site 地址
+                     └─ 阿里云香港不可变 release
+                          └─ fusiondigital.club / www → 47.82.66.79
 ```
 
 Codeup `master` 是人和 Codex 的唯一协作事实源，GitHub `main` 是同一提交的公开代码镜像。正式发布必须把同一个完整提交 SHA 同时部署到阿里云香港和 OpenAI Sites；任一端失败都不算发布完成，已经更新的一端必须回滚到两端共同的上一正常 SHA。Sites 的短期源仓库凭证不得长期保存或共享。

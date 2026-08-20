@@ -21,8 +21,8 @@
 
 > 正式发布必须把同一个完整提交 SHA 同时部署到阿里云香港与 OpenAI Sites；任一端未成功都不得宣布发布完成。
 
-Sites 保存或发布新版本不得触发 `fusiondigital.club` 的自定义域名绑定、验证或 DNS
-修改。所谓“人工备用”仅指故障时单独分享平台 URL，不代表自动或手工把生产 DNS 切到
+Sites 保存或发布新版本不得触发 `fusiondigital.club` 的自定义域名绑定、验证或 DNS 修改。
+所谓“人工备用”仅指故障时单独分享平台 URL，不代表自动或手工把生产 DNS 切到
 Sites。
 
 ## 2. 多机器 Git 一致性
@@ -140,9 +140,11 @@ git ls-remote https://github.com/tianshao1992/fusion-digital.git refs/heads/main
    `FUSIONDIGITAL_BUILD_TARGET=aliyun-hk` 后生成不可变发布包；Sites 构建设置
    `FUSIONDIGITAL_BUILD_TARGET=sites`、通过 256 MiB 包体门禁，再用官方
    `package-site.sh` 生成 Sites 归档。两个归档不得互换。
-5. **香港 SSH 部署**：把香港发布包上传到 `47.82.66.79`，安装到全新的 SHA release 目录，
+5. **SSH 部署**：把香港发布包上传到 `47.82.66.79`，安装到全新的 SHA release 目录，
    原子切换 `/srv/fusiondigital/current` 并重启服务。生产机不从 GitHub 拉资源，也不
-   在 1 GiB 主机上执行源码构建。
+   在 1 GiB 主机上执行源码构建。必须调用版本化的 `deploy/aliyun-hk/install-release.sh`；
+   安装器会校验 JS/CSS 无损 gzip sidecar、ITER/EFIT 受控路径，并在证书存在时恢复
+   HTTPS/HTTP2，禁止直接复制 Nginx 配置绕过这些门禁。
 6. **Sites 同步发布**：用 Sites 归档保存版本，传入的 `commit_sha` 必须等于本次
    `ReleaseSha`，并与 Codeup `master`、GitHub `main`、香港 release SHA 完全一致；
    发布到现有平台地址并等待部署状态为 `succeeded`。禁止新增或恢复自定义域名绑定。
@@ -258,6 +260,8 @@ curl.exe -fsS "https://fusiondigital.club/api/search?q=tokamak&limit=5" | Out-Nu
 
 - 首页、搜索、公开模型/数据清单返回成功；
 - ITER Range 请求返回 `206` 和 `Content-Range`；
+- TLS 协商支持 HTTP/2，JS/CSS 在客户端声明 `Accept-Encoding: gzip` 时返回无损
+  `Content-Encoding: gzip`；EFIT `.jsonl.gz` 保持 identity 编码并支持 Range；
 - `/api/account`、`/api/research/runs`、`/signin-with-chatgpt`、`/callback` 返回
   `404`；伪造 `oai-authenticated-user-*` 请求头不能改变结果；
 - 服务器 `readlink -f /srv/fusiondigital/current` 的 release ID 对应本次完整 SHA；
@@ -270,8 +274,8 @@ curl.exe -fsS "https://fusiondigital.club/api/search?q=tokamak&limit=5" | Out-Nu
 - Sites 只能发布到平台分配的 `*.chatgpt.site` 地址。
 - 正式发布时，Sites 保存版本的 `commit_sha` 必须等于本次 `ReleaseSha`，与 Codeup
   `master`、GitHub `main` 和香港 release 完全一致；部署状态必须为 `succeeded`。
-- Sites 平台地址可以用于视觉验收或香港服务器故障时的人工备用访问，但不是中国大陆
-  稳定访问承诺，也不是生产 DNS 的回源。
+- Sites 平台地址可以用于视觉验收或香港服务器故障时的人工备用访问，但不是中国大陆稳定
+  访问承诺，也不是生产 DNS 的回源。
 - 禁止在 Sites 控制面添加 `fusiondigital.club` 或 `www.fusiondigital.club`；若已
   存在绑定，应先解除绑定，再确认阿里云 DNS 仍满足第 4 节。
 - 禁止根据 Sites 的自定义域名引导创建 CNAME 或 Cloudflare A 记录。

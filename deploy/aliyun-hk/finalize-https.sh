@@ -30,10 +30,12 @@ if ss -H -ltn '( sport = :443 )' | grep -q .; then
 fi
 
 CERTBOT_ARGS=(
+  certonly
   --nginx
   --non-interactive
   --agree-tos
-  --redirect
+  --keep-until-expiring
+  --cert-name fusiondigital.club
   -d fusiondigital.club
   -d www.fusiondigital.club
 )
@@ -45,13 +47,23 @@ else
 fi
 
 certbot "${CERTBOT_ARGS[@]}"
+node /srv/fusiondigital/current/deploy/aliyun-hk/render-nginx-config.mjs \
+  --require-tls \
+  /srv/fusiondigital/current/deploy/aliyun-hk/nginx.conf \
+  /etc/nginx/sites-available/fusiondigital
 nginx -t
 systemctl reload nginx
 systemctl enable --now certbot.timer
 
-curl -fsS --resolve fusiondigital.club:443:127.0.0.1 \
+curl -fsS --noproxy '*' --connect-timeout 2 --max-time 10 \
+  --resolve fusiondigital.club:443:127.0.0.1 \
   -o /dev/null https://fusiondigital.club/
-curl -fsS --resolve www.fusiondigital.club:443:127.0.0.1 \
+curl -fsS --noproxy '*' --connect-timeout 2 --max-time 10 \
+  --resolve www.fusiondigital.club:443:127.0.0.1 \
   -o /dev/null https://www.fusiondigital.club/
+HTTP_VERSION=$(curl -fsS --noproxy '*' --connect-timeout 2 --max-time 10 \
+  --http2 --resolve fusiondigital.club:443:127.0.0.1 \
+  -o /dev/null -w '%{http_version}' https://fusiondigital.club/)
+test "$HTTP_VERSION" = 2
 
 echo "HTTPS is active for fusiondigital.club and www.fusiondigital.club."
