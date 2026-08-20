@@ -86,6 +86,8 @@ test("Hong Kong installer verifies sidecars, EFIT, ITER, and preserves managed T
   assert.match(installer, /--connect-timeout 2/u);
   assert.match(installer, /--max-time 10/u);
   assert.match(installer, /ORIGIN_URL=https:\/\/fusiondigital\.club/u);
+  assert.doesNotMatch(installer, /sort \| head/u);
+  assert.match(installer, /LC_ALL=C sort \| sed -n '1p'/u);
   assert.match(installer, /rollback_proven/u);
   assert.match(installer, /rollback could not be proven; retaining failed release/u);
   assert.match(installer, /current still references failed release; retaining/u);

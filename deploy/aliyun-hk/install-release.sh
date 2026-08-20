@@ -220,7 +220,7 @@ flock -n 9 || {
 }
 
 for command in node nginx systemctl curl tar sha256sum find awk realpath readlink \
-  getent id cp mv install chown chmod ln rm mktemp wc sleep stat flock gzip cmp grep sort head; do
+  getent id cp mv install chown chmod ln rm mktemp wc sleep stat flock gzip cmp grep sort sed; do
   command -v "$command" >/dev/null || {
     echo "missing prerequisite: $command" >&2
     exit 1
@@ -427,7 +427,7 @@ fi
 curl -fsS -o /dev/null "${ORIGIN_CURL_ARGS[@]}" \
   "$ORIGIN_URL/device-data/exl50u-efit/index.json"
 
-EFIT_GZIP_FILE=$(find "$TARGET/dist/client/data/exl50u-efit-v2" -maxdepth 1 -type f -name '*.jsonl.gz' -printf '%f\n' | sort | head -n 1)
+EFIT_GZIP_FILE=$(find "$TARGET/dist/client/data/exl50u-efit-v2" -maxdepth 1 -type f -name '*.jsonl.gz' -printf '%f\n' | LC_ALL=C sort | sed -n '1p')
 test -n "$EFIT_GZIP_FILE"
 EFIT_HEADERS=$(mktemp)
 EFIT_BODY=$(mktemp)
@@ -443,7 +443,7 @@ node -e '
   if (body.length < 2 || body[0] !== 0x1f || body[1] !== 0x8b) process.exit(1);
 ' "$EFIT_BODY"
 
-ITER_FILE=$(find "$ITER_DIR" -maxdepth 1 -type f -name '*.high.meshopt.glb' -printf '%f\n' | sort | head -n 1)
+ITER_FILE=$(find "$ITER_DIR" -maxdepth 1 -type f -name '*.high.meshopt.glb' -printf '%f\n' | LC_ALL=C sort | sed -n '1p')
 test -n "$ITER_FILE"
 ITER_HEADERS=$(mktemp)
 curl -fsS -D "$ITER_HEADERS" -o /dev/null "${ORIGIN_CURL_ARGS[@]}" \
@@ -456,7 +456,7 @@ DIRECT_DATA_STATUS=$(curl -sS -o /dev/null -w '%{http_code}' "${ORIGIN_CURL_ARGS
   "$ORIGIN_URL/data/exl50u-efit/index.json")
 test "$DIRECT_DATA_STATUS" = 404
 
-ASSET_FILE=$(find "$TARGET/dist/client/assets" -type f -name '*.js' -size +1023c -printf '%P\n' | sort | head -n 1)
+ASSET_FILE=$(find "$TARGET/dist/client/assets" -type f -name '*.js' -size +1023c -printf '%P\n' | LC_ALL=C sort | sed -n '1p')
 test -n "$ASSET_FILE"
 ASSET_HEADERS=$(mktemp)
 curl -fsS -D "$ASSET_HEADERS" -o /dev/null "${ORIGIN_CURL_ARGS[@]}" \
