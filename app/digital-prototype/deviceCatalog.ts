@@ -18,9 +18,21 @@ export type DeviceDiagnosticWorkspace = {
   kind: 'ehl2-diagview2';
   authority: 'design-reference';
   coordinateFrame: 'EHL2_WEB_METRES_PROVISIONAL_DIAGVIEW2_V1';
-  asOf: '2026-08-17';
-  sourceLabel: 'DiagView2 PPT design reference';
+  asOf: '2026-08-21';
+  sourceLabel: 'DiagView2 geometry-analysis engine and reviewed EHL-2 flange dataset';
   sourceRevision: typeof EHL2_DIAGVIEW2_SOURCE.branchCommit;
+  portDatasetEndpoint: '/models/ehl2-preliminary-v1/diagview2-ports.json';
+  capabilities: readonly [
+    'camera',
+    'array',
+    'laser',
+    'cad-first-hit',
+    'render-slicing',
+    'geometry-io',
+    'design-report',
+    'optical-view-capture',
+    'virtual-forward-model',
+  ];
   statement: string;
 };
 
@@ -175,15 +187,35 @@ export function parseDeviceCatalog(input: unknown): DeviceCatalog {
         const asOf = stringValue(workspace.asOf, `${id}.diagnosticWorkspace.asOf`);
         const sourceLabel = stringValue(workspace.sourceLabel, `${id}.diagnosticWorkspace.sourceLabel`);
         const sourceRevision = stringValue(workspace.sourceRevision, `${id}.diagnosticWorkspace.sourceRevision`);
+        const portDatasetEndpoint = stringValue(workspace.portDatasetEndpoint, `${id}.diagnosticWorkspace.portDatasetEndpoint`);
+        if (!Array.isArray(workspace.capabilities)
+          || !workspace.capabilities.every((capability) => typeof capability === 'string')) {
+          throw new Error(`${id}.diagnosticWorkspace.capabilities must be a string array`);
+        }
+        const capabilities = [...workspace.capabilities];
+        const reviewedCapabilities = [
+          'camera',
+          'array',
+          'laser',
+          'cad-first-hit',
+          'render-slicing',
+          'geometry-io',
+          'design-report',
+          'optical-view-capture',
+          'virtual-forward-model',
+        ] as const;
         if (id !== 'ehl-2-preliminary' || mode !== 'real-3d') {
           throw new Error(`${id} cannot expose the EHL-2 diagnostic workspace`);
         }
         if (kind !== 'ehl2-diagview2'
           || authority !== 'design-reference'
           || coordinateFrame !== 'EHL2_WEB_METRES_PROVISIONAL_DIAGVIEW2_V1'
-          || asOf !== '2026-08-17'
-          || sourceLabel !== 'DiagView2 PPT design reference'
-          || sourceRevision !== EHL2_DIAGVIEW2_SOURCE.branchCommit) {
+          || asOf !== '2026-08-21'
+          || sourceLabel !== 'DiagView2 geometry-analysis engine and reviewed EHL-2 flange dataset'
+          || sourceRevision !== EHL2_DIAGVIEW2_SOURCE.branchCommit
+          || portDatasetEndpoint !== '/models/ehl2-preliminary-v1/diagview2-ports.json'
+          || capabilities.length !== reviewedCapabilities.length
+          || capabilities.some((capability, capabilityIndex) => capability !== reviewedCapabilities[capabilityIndex])) {
           throw new Error(`${id}.diagnosticWorkspace is not a reviewed DiagView2 contract`);
         }
         return {
@@ -193,6 +225,8 @@ export function parseDeviceCatalog(input: unknown): DeviceCatalog {
           asOf,
           sourceLabel,
           sourceRevision,
+          portDatasetEndpoint,
+          capabilities: capabilities as unknown as DeviceDiagnosticWorkspace['capabilities'],
           statement: stringValue(workspace.statement, `${id}.diagnosticWorkspace.statement`),
         } as DeviceDiagnosticWorkspace;
       })();
@@ -232,7 +266,7 @@ export function parseDeviceCatalog(input: unknown): DeviceCatalog {
   return {
     schemaVersion: (() => {
       const schemaVersion = stringValue(root.schemaVersion, 'deviceCatalog.schemaVersion');
-      if (schemaVersion !== '2.2') throw new Error(`Unsupported device catalog schemaVersion: ${schemaVersion}`);
+      if (schemaVersion !== '2.3') throw new Error(`Unsupported device catalog schemaVersion: ${schemaVersion}`);
       return schemaVersion;
     })(),
     asOf: stringValue(root.asOf, 'deviceCatalog.asOf'),

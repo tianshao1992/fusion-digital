@@ -185,7 +185,7 @@ test('digital-prototype workspace gives device summaries to the top cards and sa
 
 test('all four device cards publish technical overview and model/data summaries without authorization copy', async () => {
   const catalog = JSON.parse(await source('public/models/device-catalog.json'));
-  assert.equal(catalog.schemaVersion, '2.2');
+  assert.equal(catalog.schemaVersion, '2.3');
   assert.equal(catalog.devices.length, 4);
   for (const device of catalog.devices) {
     assert.ok(device.deviceOverview.length > 30, `${device.id} needs a substantive device overview`);
@@ -194,7 +194,7 @@ test('all four device cards publish technical overview and model/data summaries 
   }
   assert.match(catalog.devices.find(({ id }) => id === 'exl-50u-2026-upgrade').fileSummary, /Meshopt GLB 5\.6 \/ 13\.4 MB[\s\S]*5,804[\s\S]*7 炮偏滤器拓扑/);
   assert.equal(catalog.devices.find(({ id }) => id === 'paramak-full-device').fileSummary, '2.2 MB GLB · 17 个稳定部件');
-  assert.match(catalog.devices.find(({ id }) => id === 'ehl-2-preliminary').fileSummary, /14\.2 MB Meshopt GLB[\s\S]*247 万[\s\S]*5 个 DiagView2 平面方案/);
+  assert.match(catalog.devices.find(({ id }) => id === 'ehl-2-preliminary').fileSummary, /14\.2 MB Meshopt GLB[\s\S]*247 万[\s\S]*41 个法兰位姿[\s\S]*3 类诊断/);
   assert.match(catalog.devices.find(({ id }) => id === 'iter-educational-model').fileSummary, /18 个 Meshopt GLB 分片[\s\S]*98\.5 MB/);
 });
 

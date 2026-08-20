@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type {
   Material,
   Mesh,
@@ -23,6 +23,7 @@ import type {
   Ehl2DiagnosticOverlayOptions,
   Ehl2DiagnosticThreeOverlay,
 } from './device-viewer/Ehl2DiagnosticThreeOverlay';
+import type { Ehl2DiagnosticRuntime } from './device-viewer/ehl2DiagnosticRuntime';
 import {
   INDUSTRIAL_STUDIO,
   resolveIndustrialMaterialPreset,
@@ -83,6 +84,24 @@ export type TokamakCadViewerProps = {
   efitAlignment?: EfitAlignmentContract;
   efitOptions?: EfitThreeOverlayOptions;
   diagnosticOverlayOptions?: Ehl2DiagnosticOverlayOptions;
+  onDiagnosticRuntimeReady?: (runtime: Ehl2DiagnosticRuntime | null) => void;
+  /**
+   * EHL-2 diagnostic-view appearance overrides. These are deliberately a
+   * small, portable subset of the desktop Viser controls: this viewer uses a
+   * generated Three.js RoomEnvironment rather than shipping desktop HDRIs.
+   * Omitted fields preserve the current theme-derived value.
+   */
+  diagnosticViewerSettings?: Ehl2DiagnosticViewerSettings;
+  /**
+   * Optional controlled restore of the safe, serialisable EHL-2 viewer state.
+   * This is applied incrementally and never participates in the CAD loading
+   * effect, so restoring a workspace does not decode the model again.
+   */
+  diagnosticViewerState?: Ehl2DiagnosticViewerState;
+  /** Safe, serialisable viewer state for an explicit parent-side save. */
+  onDiagnosticViewerStateChange?: (state: Ehl2DiagnosticViewerState) => void;
+  /** Content rendered inside the actual Three viewport, including fullscreen. */
+  viewportOverlay?: ReactNode;
   efitControls?: {
     mode: 'physical' | 'xray';
     showSection: boolean;
@@ -94,6 +113,36 @@ export type TokamakCadViewerProps = {
     onShowMagneticAxisChange: (visible: boolean) => void;
   };
 };
+
+export type Ehl2DiagnosticViewerSettings = Readonly<{
+  environmentPreset?: 'room-platform-substitute' | 'none';
+  environmentIntensity?: number;
+  backgroundEnabled?: boolean;
+  backgroundIntensity?: number;
+  backgroundBlurriness?: number;
+  defaultLightsEnabled?: boolean;
+  castShadow?: boolean;
+  /** Per published CAD part opacity, independent of the global/selection controls. */
+  partOpacities?: Readonly<Record<string, number>>;
+}>;
+
+export type Ehl2DiagnosticViewerState = Readonly<{
+  activeView: 'iso' | 'front' | 'top';
+  autoRotate: boolean;
+  wireframe: boolean;
+  clipping: boolean;
+  clipAxis: 'x' | 'y' | 'z';
+  clipOffset: number;
+  globalOpacity: number;
+  selectedOpacity: number;
+  analyticPlasmaVisible: boolean;
+  selectedPartIds: readonly string[];
+  hiddenPartIds: readonly string[];
+  isolatedPartIds: readonly string[];
+  partOpacities: Readonly<Record<string, number>>;
+  /** Null means the named preset; otherwise this is a user-orbited camera pose. */
+  cameraView: Ehl2DiagnosticCameraView | null;
+}>;
 
 type ViewerStatus = 'idle' | 'loading' | 'ready' | 'error';
 type ViewPreset = 'iso' | 'front' | 'top';
@@ -109,11 +158,12 @@ type ViewerInteraction = {
 type ViewerStats = { meshes: number; triangles: number; renderer: string; parts: number };
 type MonolithicViewerModel = DeviceWebModelVariant & { delivery: 'monolithic' };
 type ViewerModelChoice = MonolithicViewerModel | DeviceComponentBundle;
-type ViewSnapshot = {
+export type Ehl2DiagnosticCameraView = {
   position: [number, number, number];
   target: [number, number, number];
   up: [number, number, number];
 };
+type ViewSnapshot = Ehl2DiagnosticCameraView;
 type ViewerApi = {
   controls: OrbitControls;
   renderer: WebGLRenderer;
@@ -129,6 +179,8 @@ type ViewerApi = {
   setWireframe: (enabled: boolean) => void;
   setClipping: (enabled: boolean, axis: ClipAxis, offset: number) => void;
   setOpacity: (globalOpacity: number, selectedOpacity: number) => void;
+  setPartOpacities: (partOpacities: Readonly<Record<string, number>>) => Readonly<Record<string, number>>;
+  setDiagnosticViewerSettings: (settings: Ehl2DiagnosticViewerSettings) => void;
   setVisualTheme: (theme: ResolvedTheme) => void;
   setAnalyticPlasmaVisible: (visible: boolean) => void;
   applyVisibility: (hidden: Set<string>, isolated: Set<string>) => void;
@@ -139,6 +191,7 @@ type ViewerApi = {
   resize: (refit?: boolean) => void;
   efitOverlay: EfitThreeOverlay | null;
   diagnosticOverlay: Ehl2DiagnosticThreeOverlay | null;
+  diagnosticRuntime: Ehl2DiagnosticRuntime | null;
 };
 
 function formatCount(value: number, locale = 'zh-CN') {
@@ -255,6 +308,122 @@ function defaultInteractionFor(clipping: boolean, clipAxis: ClipAxis, clipOffset
   };
 }
 
+function finiteClamped(value: unknown, minimum: number, maximum: number): number | undefined {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return undefined;
+  return Math.min(maximum, Math.max(minimum, value));
+}
+
+function safePartOpacityMap(value: unknown): Readonly<Record<string, number>> | undefined {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
+  const next: Record<string, number> = {};
+  for (const [partId, opacity] of Object.entries(value as Record<string, unknown>)) {
+    // Part identifiers are public manifest ids, never arbitrary display text.
+    if (!/^[A-Za-z0-9][A-Za-z0-9._:-]{0,159}$/.test(partId)) continue;
+    const bounded = finiteClamped(opacity, 0, 1);
+    if (bounded !== undefined) next[partId] = bounded;
+  }
+  return next;
+}
+
+/**
+ * Accept only finite, bounded appearance values. Invalid input is omitted
+ * rather than coercing a renderer into an unknown state.
+ */
+export function normalizeEhl2DiagnosticViewerSettings(value: unknown): Ehl2DiagnosticViewerSettings {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+  const input = value as Record<string, unknown>;
+  const environmentIntensity = finiteClamped(input.environmentIntensity, 0, 5);
+  const backgroundIntensity = finiteClamped(input.backgroundIntensity, 0, 5);
+  const backgroundBlurriness = finiteClamped(input.backgroundBlurriness, 0, 1);
+  const partOpacities = safePartOpacityMap(input.partOpacities);
+  return {
+    ...(input.environmentPreset !== 'room-platform-substitute' && input.environmentPreset !== 'none' ? {} : { environmentPreset: input.environmentPreset }),
+    ...(environmentIntensity === undefined ? {} : { environmentIntensity }),
+    ...(typeof input.backgroundEnabled !== 'boolean' ? {} : { backgroundEnabled: input.backgroundEnabled }),
+    ...(backgroundIntensity === undefined ? {} : { backgroundIntensity }),
+    ...(backgroundBlurriness === undefined ? {} : { backgroundBlurriness }),
+    ...(typeof input.defaultLightsEnabled !== 'boolean' ? {} : { defaultLightsEnabled: input.defaultLightsEnabled }),
+    ...(typeof input.castShadow !== 'boolean' ? {} : { castShadow: input.castShadow }),
+    ...(partOpacities === undefined ? {} : { partOpacities }),
+  };
+}
+
+function safePartIdList(value: unknown): readonly string[] | null {
+  if (!Array.isArray(value) || value.length > 512) return null;
+  const seen = new Set<string>();
+  for (const item of value) {
+    if (typeof item !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9._:-]{0,159}$/.test(item) || seen.has(item)) return null;
+    seen.add(item);
+  }
+  return [...seen].sort((left, right) => left.localeCompare(right));
+}
+
+function safeViewTuple(value: unknown): [number, number, number] | null {
+  if (!Array.isArray(value) || value.length !== 3) return null;
+  const tuple = value.map((item) => finiteClamped(item, -1_000, 1_000));
+  return tuple.some((item) => item === undefined) ? null : tuple as [number, number, number];
+}
+
+function safeViewSnapshot(value: unknown): ViewSnapshot | null | undefined {
+  if (value === null) return null;
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
+  const item = value as Record<string, unknown>;
+  if (Object.keys(item).sort().join('|') !== ['position', 'target', 'up'].sort().join('|')) return undefined;
+  const position = safeViewTuple(item.position);
+  const target = safeViewTuple(item.target);
+  const up = safeViewTuple(item.up);
+  if (!position || !target || !up || Math.hypot(position[0] - target[0], position[1] - target[1], position[2] - target[2]) < 1e-6 || Math.hypot(...up) < 1e-6) return undefined;
+  return { position, target, up };
+}
+
+/** Strict parser used by workspace restore; malformed state fails closed. */
+export function parseEhl2DiagnosticViewerState(value: unknown): Ehl2DiagnosticViewerState | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const input = value as Record<string, unknown>;
+  const legacyKeys = [
+    'activeView', 'analyticPlasmaVisible', 'autoRotate', 'clipAxis', 'clipOffset',
+    'clipping', 'globalOpacity', 'hiddenPartIds', 'isolatedPartIds', 'partOpacities',
+    'selectedOpacity', 'selectedPartIds', 'wireframe',
+  ].sort().join('|');
+  const currentKeys = [...legacyKeys.split('|'), 'cameraView'].sort().join('|');
+  const inputKeys = Object.keys(input).sort().join('|');
+  if (inputKeys !== legacyKeys && inputKeys !== currentKeys) return null;
+  if (input.activeView !== 'iso' && input.activeView !== 'front' && input.activeView !== 'top') return null;
+  if (input.clipAxis !== 'x' && input.clipAxis !== 'y' && input.clipAxis !== 'z') return null;
+  if (typeof input.autoRotate !== 'boolean' || typeof input.wireframe !== 'boolean'
+    || typeof input.clipping !== 'boolean' || typeof input.analyticPlasmaVisible !== 'boolean') return null;
+  const clipOffset = finiteClamped(input.clipOffset, -0.9, 0.9);
+  const globalOpacity = finiteClamped(input.globalOpacity, 0.15, 1);
+  const selectedOpacity = finiteClamped(input.selectedOpacity, 0.15, 1);
+  const selectedPartIds = safePartIdList(input.selectedPartIds);
+  const hiddenPartIds = safePartIdList(input.hiddenPartIds);
+  const isolatedPartIds = safePartIdList(input.isolatedPartIds);
+  const partOpacities = safePartOpacityMap(input.partOpacities);
+  const cameraView = inputKeys === legacyKeys ? null : safeViewSnapshot(input.cameraView);
+  if (clipOffset === undefined || globalOpacity === undefined || selectedOpacity === undefined
+    || !selectedPartIds || !hiddenPartIds || !isolatedPartIds || !partOpacities || cameraView === undefined) return null;
+  return {
+    activeView: input.activeView,
+    autoRotate: input.autoRotate,
+    wireframe: input.wireframe,
+    clipping: input.clipping,
+    clipAxis: input.clipAxis,
+    clipOffset,
+    globalOpacity,
+    selectedOpacity,
+    analyticPlasmaVisible: input.analyticPlasmaVisible,
+    selectedPartIds,
+    hiddenPartIds,
+    isolatedPartIds,
+    partOpacities,
+    cameraView,
+  };
+}
+
+function stablePartIds(ids: Iterable<string>) {
+  return [...ids].sort((left, right) => left.localeCompare(right));
+}
+
 export default function TokamakCadViewer(props: TokamakCadViewerProps = {}) {
   const sessionViewerId = props.viewerId ?? 'paramak-tokamak-demo';
   const sessionManifestUrl = props.manifestUrl ?? DEFAULT_MANIFEST_URL;
@@ -282,6 +451,11 @@ function TokamakCadViewerSession({
   efitAlignment,
   efitOptions,
   diagnosticOverlayOptions,
+  onDiagnosticRuntimeReady,
+  diagnosticViewerSettings,
+  diagnosticViewerState,
+  onDiagnosticViewerStateChange,
+  viewportOverlay,
   efitControls,
 }: TokamakCadViewerProps = {}) {
   const { content, locale, t } = useI18n();
@@ -308,14 +482,34 @@ function TokamakCadViewerSession({
     options: efitOptions,
   });
   const diagnosticOverlayOptionsRef = useRef(diagnosticOverlayOptions);
+  const diagnosticRuntimeReadyRef = useRef(onDiagnosticRuntimeReady);
+  const diagnosticRuntimeRef = useRef<Ehl2DiagnosticRuntime | null>(null);
+  const initialDiagnosticViewerSettings = normalizeEhl2DiagnosticViewerSettings(diagnosticViewerSettings);
+  const diagnosticViewerSettingsRef = useRef<Ehl2DiagnosticViewerSettings>(initialDiagnosticViewerSettings);
+  const initialDiagnosticViewerState = parseEhl2DiagnosticViewerState(diagnosticViewerState);
+  const diagnosticViewerStateCallbackRef = useRef(onDiagnosticViewerStateChange);
+  const lastDiagnosticViewerStateRef = useRef('');
+  const lastAppliedDiagnosticViewerStateRef = useRef('');
+  const pendingControlledViewerStateRef = useRef('');
   const pointerDownRef = useRef<{ x: number; y: number } | null>(null);
-  const selectedPartIdsRef = useRef<Set<string>>(new Set());
-  const hiddenPartIdsRef = useRef<Set<string>>(new Set());
-  const isolatedPartIdsRef = useRef<Set<string>>(new Set());
-  const opacityRef = useRef({ global: 1, selected: 1 });
-  const analyticPlasmaVisibleRef = useRef(ANALYTIC_PLASMA_VISIBLE_BY_DEFAULT);
+  const selectedPartIdsRef = useRef<Set<string>>(new Set(initialDiagnosticViewerState?.selectedPartIds));
+  const hiddenPartIdsRef = useRef<Set<string>>(new Set(initialDiagnosticViewerState?.hiddenPartIds));
+  const isolatedPartIdsRef = useRef<Set<string>>(new Set(initialDiagnosticViewerState?.isolatedPartIds));
+  const opacityRef = useRef({
+    global: initialDiagnosticViewerState?.globalOpacity ?? 1,
+    selected: initialDiagnosticViewerState?.selectedOpacity ?? 1,
+  });
+  const analyticPlasmaVisibleRef = useRef(initialDiagnosticViewerState?.analyticPlasmaVisible ?? ANALYTIC_PLASMA_VISIBLE_BY_DEFAULT);
   const viewSnapshotRef = useRef<ViewSnapshot | null>(null);
-  const interactionRef = useRef<ViewerInteraction>({ ...defaultInteraction });
+  const cameraViewRef = useRef<ViewSnapshot | null>(initialDiagnosticViewerState?.cameraView ?? null);
+  const interactionRef = useRef<ViewerInteraction>({
+    activeView: initialDiagnosticViewerState?.activeView ?? defaultInteraction.activeView,
+    autoRotate: initialDiagnosticViewerState?.autoRotate ?? defaultInteraction.autoRotate,
+    wireframe: initialDiagnosticViewerState?.wireframe ?? defaultInteraction.wireframe,
+    clipping: initialDiagnosticViewerState?.clipping ?? defaultInteraction.clipping,
+    clipAxis: initialDiagnosticViewerState?.clipAxis ?? defaultInteraction.clipAxis,
+    clipOffset: initialDiagnosticViewerState?.clipOffset ?? defaultInteraction.clipOffset,
+  });
   const [activated, setActivated] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [status, setStatus] = useState<ViewerStatus>('idle');
@@ -324,26 +518,137 @@ function TokamakCadViewerSession({
   const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
   const [lodNotice, setLodNotice] = useState('');
   const [ehl2RuntimePolicy, setEhl2RuntimePolicy] = useState<Ehl2RuntimePolicy | null>(null);
-  const [autoRotate, setAutoRotate] = useState(false);
-  const [wireframe, setWireframe] = useState(false);
-  const [clipping, setClipping] = useState(defaultInteraction.clipping);
-  const [clipAxis, setClipAxis] = useState<ClipAxis>(defaultInteraction.clipAxis);
-  const [clipOffset, setClipOffset] = useState(defaultInteraction.clipOffset);
-  const [globalOpacity, setGlobalOpacity] = useState(1);
-  const [selectedOpacity, setSelectedOpacity] = useState(1);
+  const [autoRotate, setAutoRotate] = useState(initialDiagnosticViewerState?.autoRotate ?? false);
+  const [wireframe, setWireframe] = useState(initialDiagnosticViewerState?.wireframe ?? false);
+  const [clipping, setClipping] = useState(initialDiagnosticViewerState?.clipping ?? defaultInteraction.clipping);
+  const [clipAxis, setClipAxis] = useState<ClipAxis>(initialDiagnosticViewerState?.clipAxis ?? defaultInteraction.clipAxis);
+  const [clipOffset, setClipOffset] = useState(initialDiagnosticViewerState?.clipOffset ?? defaultInteraction.clipOffset);
+  const [globalOpacity, setGlobalOpacity] = useState(initialDiagnosticViewerState?.globalOpacity ?? 1);
+  const [selectedOpacity, setSelectedOpacity] = useState(initialDiagnosticViewerState?.selectedOpacity ?? 1);
+  const [partOpacities, setPartOpacityMap] = useState<Readonly<Record<string, number>>>(() => initialDiagnosticViewerState?.partOpacities ?? initialDiagnosticViewerSettings.partOpacities ?? {});
   const [analyticPlasmaVisible, setAnalyticPlasmaVisible] = useState(
-    ANALYTIC_PLASMA_VISIBLE_BY_DEFAULT,
+    initialDiagnosticViewerState?.analyticPlasmaVisible ?? ANALYTIC_PLASMA_VISIBLE_BY_DEFAULT,
   );
   const [fullscreen, setFullscreen] = useState(false);
-  const [activeView, setActiveView] = useState<ViewPreset>('iso');
+  const [activeView, setActiveView] = useState<ViewPreset>(initialDiagnosticViewerState?.activeView ?? 'iso');
+  const [cameraView, setCameraView] = useState<ViewSnapshot | null>(initialDiagnosticViewerState?.cameraView ?? null);
   const [stats, setStats] = useState<ViewerStats>({ meshes: 0, triangles: 0, renderer: 'WEBGL 2', parts: 0 });
   const [errorMessage, setErrorMessage] = useState('');
   const [query, setQuery] = useState('');
   const [selectedPartId, setSelectedPartId] = useState<string | null>(null);
-  const [selectedPartIds, setSelectedPartIds] = useState<Set<string>>(() => new Set());
-  const [hiddenPartIds, setHiddenPartIds] = useState<Set<string>>(() => new Set());
-  const [isolatedPartIds, setIsolatedPartIds] = useState<Set<string>>(() => new Set());
+  const [selectedPartIds, setSelectedPartIds] = useState<Set<string>>(() => new Set(initialDiagnosticViewerState?.selectedPartIds));
+  const [hiddenPartIds, setHiddenPartIds] = useState<Set<string>>(() => new Set(initialDiagnosticViewerState?.hiddenPartIds));
+  const [isolatedPartIds, setIsolatedPartIds] = useState<Set<string>>(() => new Set(initialDiagnosticViewerState?.isolatedPartIds));
   const [openSystems, setOpenSystems] = useState<Set<string>>(() => new Set());
+
+  useEffect(() => {
+    diagnosticViewerStateCallbackRef.current = onDiagnosticViewerStateChange;
+  }, [onDiagnosticViewerStateChange]);
+
+  useEffect(() => {
+    const incoming = normalizeEhl2DiagnosticViewerSettings(diagnosticViewerSettings);
+    const current = diagnosticViewerSettingsRef.current;
+    // A partial prop is intentionally incremental. Passing partOpacities: {}
+    // explicitly clears that map; omitting it leaves the existing map intact.
+    const next: Ehl2DiagnosticViewerSettings = {
+      ...current,
+      ...incoming,
+      ...(incoming.partOpacities === undefined ? {} : { partOpacities: incoming.partOpacities }),
+    };
+    diagnosticViewerSettingsRef.current = next;
+    viewerRef.current?.setDiagnosticViewerSettings(next);
+    const accepted = viewerRef.current?.setPartOpacities(next.partOpacities ?? {});
+    if (accepted) setPartOpacityMap(accepted);
+    else if (incoming.partOpacities !== undefined) setPartOpacityMap(incoming.partOpacities);
+  }, [diagnosticViewerSettings]);
+
+  useEffect(() => {
+    const parsed = parseEhl2DiagnosticViewerState(diagnosticViewerState);
+    if (!parsed) return;
+    const next = { ...parsed, wireframe: wireframeAllowed && parsed.wireframe };
+    const key = JSON.stringify(next);
+    if (key === lastAppliedDiagnosticViewerStateRef.current) return;
+    lastAppliedDiagnosticViewerStateRef.current = key;
+    pendingControlledViewerStateRef.current = key;
+
+    const selected = new Set(next.selectedPartIds);
+    const hidden = new Set(next.hiddenPartIds);
+    const isolated = new Set(next.isolatedPartIds);
+    selectedPartIdsRef.current = selected;
+    hiddenPartIdsRef.current = hidden;
+    isolatedPartIdsRef.current = isolated;
+    opacityRef.current = { global: next.globalOpacity, selected: next.selectedOpacity };
+    analyticPlasmaVisibleRef.current = next.analyticPlasmaVisible;
+    interactionRef.current = {
+      activeView: next.activeView,
+      autoRotate: next.autoRotate,
+      wireframe: next.wireframe,
+      clipping: next.clipping,
+      clipAxis: next.clipAxis,
+      clipOffset: next.clipOffset,
+    };
+
+    setActiveView(next.activeView);
+    setAutoRotate(next.autoRotate);
+    setWireframe(next.wireframe);
+    setClipping(next.clipping);
+    setClipAxis(next.clipAxis);
+    setClipOffset(next.clipOffset);
+    setGlobalOpacity(next.globalOpacity);
+    setSelectedOpacity(next.selectedOpacity);
+    setAnalyticPlasmaVisible(next.analyticPlasmaVisible);
+    setSelectedPartIds(selected);
+    setSelectedPartId(next.selectedPartIds[0] ?? null);
+    setHiddenPartIds(hidden);
+    setIsolatedPartIds(isolated);
+    setPartOpacityMap(next.partOpacities);
+    cameraViewRef.current = next.cameraView;
+    setCameraView(next.cameraView);
+
+    const viewer = viewerRef.current;
+    if (!viewer) return;
+    if (next.cameraView) viewer.applyView(next.cameraView);
+    else viewer.setView(next.activeView);
+    viewer.controls.autoRotate = next.autoRotate;
+    viewer.setWireframe(next.wireframe);
+    viewer.setClipping(next.clipping, next.clipAxis, next.clipOffset);
+    viewer.setOpacity(next.globalOpacity, next.selectedOpacity);
+    viewer.setAnalyticPlasmaVisible(next.analyticPlasmaVisible);
+    viewer.selectParts(selected);
+    viewer.applyVisibility(hidden, isolated);
+    const accepted = viewer.setPartOpacities(next.partOpacities);
+    setPartOpacityMap(accepted);
+  }, [diagnosticViewerState, wireframeAllowed]);
+
+  useEffect(() => {
+    const snapshot: Ehl2DiagnosticViewerState = {
+      activeView,
+      autoRotate,
+      wireframe,
+      clipping,
+      clipAxis,
+      clipOffset,
+      globalOpacity,
+      selectedOpacity,
+      analyticPlasmaVisible,
+      selectedPartIds: stablePartIds(selectedPartIds),
+      hiddenPartIds: stablePartIds(hiddenPartIds),
+      isolatedPartIds: stablePartIds(isolatedPartIds),
+      partOpacities: Object.fromEntries(Object.entries(partOpacities).sort(([left], [right]) => left.localeCompare(right))),
+      cameraView,
+    };
+    const key = JSON.stringify(snapshot);
+    if (pendingControlledViewerStateRef.current) {
+      if (key === pendingControlledViewerStateRef.current) {
+        lastDiagnosticViewerStateRef.current = key;
+        pendingControlledViewerStateRef.current = '';
+      }
+      return;
+    }
+    if (key === lastDiagnosticViewerStateRef.current) return;
+    lastDiagnosticViewerStateRef.current = key;
+    diagnosticViewerStateCallbackRef.current?.(snapshot);
+  }, [activeView, analyticPlasmaVisible, autoRotate, cameraView, clipAxis, clipOffset, clipping, globalOpacity, hiddenPartIds, isolatedPartIds, partOpacities, selectedOpacity, selectedPartIds, wireframe]);
 
   useEffect(() => {
     if (!ehl2Session) return;
@@ -390,6 +695,13 @@ function TokamakCadViewerSession({
     diagnosticOverlayOptionsRef.current = diagnosticOverlayOptions;
     viewerRef.current?.diagnosticOverlay?.setOptions(diagnosticOverlayOptions);
   }, [diagnosticOverlayOptions]);
+
+  useEffect(() => {
+    const previous = diagnosticRuntimeReadyRef.current;
+    if (previous && previous !== onDiagnosticRuntimeReady) previous(null);
+    diagnosticRuntimeReadyRef.current = onDiagnosticRuntimeReady;
+    onDiagnosticRuntimeReady?.(diagnosticRuntimeRef.current);
+  }, [onDiagnosticRuntimeReady]);
 
   const availableModels = useMemo(() => webModelVariants(manifest), [manifest]);
   const selectedModel = availableModels.find((asset) => asset.id === selectedModelId)
@@ -477,6 +789,7 @@ function TokamakCadViewerSession({
     let localModel: Object3D | null = null;
     let localEfitOverlay: EfitThreeOverlay | null = null;
     let localDiagnosticOverlay: Ehl2DiagnosticThreeOverlay | null = null;
+    let localDiagnosticRuntime: Ehl2DiagnosticRuntime | null = null;
     let localDisposableMaterials: Set<Material> | null = null;
     let localEnvironmentTarget: WebGLRenderTarget | null = null;
     const modelLoadController = new AbortController();
@@ -493,6 +806,14 @@ function TokamakCadViewerSession({
       if (visibilityHandler) document.removeEventListener('visibilitychange', visibilityHandler);
       if (pointerDownHandler) localRenderer?.domElement.removeEventListener('pointerdown', pointerDownHandler);
       if (pointerUpHandler) localRenderer?.domElement.removeEventListener('pointerup', pointerUpHandler);
+      if (localDiagnosticRuntime) {
+        localDiagnosticRuntime.dispose();
+        if (diagnosticRuntimeRef.current === localDiagnosticRuntime) {
+          diagnosticRuntimeRef.current = null;
+          diagnosticRuntimeReadyRef.current?.(null);
+        }
+        localDiagnosticRuntime = null;
+      }
       localControls?.dispose();
       localDiagnosticOverlay?.dispose();
       localDiagnosticOverlay = null;
@@ -522,6 +843,10 @@ function TokamakCadViewerSession({
     };
 
     async function initialise() {
+      // React effects never run during SSR. Keep the browser-only Three.js loader graph out of
+      // the server bundle as well, otherwise vinext emits a second, unreachable copy of every
+      // viewer/runtime chunk into dist/server/ssr.
+      if ((import.meta as ImportMeta & { env: { SSR: boolean } }).env.SSR) return;
       if (!supportsWebGL2()) throw new Error(i18nRef.current.t('viewer.errorWebgl2'));
 
       const environmentModulePromise = appearancePreset === 'industrial-silver-v1'
@@ -530,13 +855,17 @@ function TokamakCadViewerSession({
       const diagnosticOverlayModulePromise = ehl2Session
         ? import('./device-viewer/Ehl2DiagnosticThreeOverlay')
         : Promise.resolve(null);
-      const [THREE, controlsModule, loaderModule, meshoptModule, efitOverlayModule, diagnosticOverlayModule, environmentModule] = await Promise.all([
+      const diagnosticRuntimeModulePromise = ehl2Session
+        ? import('./device-viewer/ehl2DiagnosticRuntime')
+        : Promise.resolve(null);
+      const [THREE, controlsModule, loaderModule, meshoptModule, efitOverlayModule, diagnosticOverlayModule, diagnosticRuntimeModule, environmentModule] = await Promise.all([
         import('three'),
         import('three/examples/jsm/controls/OrbitControls.js'),
         import('three/examples/jsm/loaders/GLTFLoader.js'),
         import('three/examples/jsm/libs/meshopt_decoder.module.js'),
         import('./device-viewer/EfitThreeOverlay'),
         diagnosticOverlayModulePromise,
+        diagnosticRuntimeModulePromise,
         environmentModulePromise,
       ]);
       if (disposed || !mountRef.current) return;
@@ -580,8 +909,19 @@ function TokamakCadViewerSession({
       controls.minDistance = 4.2;
       controls.maxDistance = 15;
       controls.autoRotateSpeed = 0.72;
+      controls.addEventListener('end', () => {
+        if (disposed) return;
+        const snapshot = {
+          position: camera.position.toArray() as [number, number, number],
+          target: controls.target.toArray() as [number, number, number],
+          up: camera.up.toArray() as [number, number, number],
+        };
+        cameraViewRef.current = snapshot;
+        setCameraView(snapshot);
+      });
 
       let applyLightTheme: (theme: ResolvedTheme) => void;
+      let defaultSceneLights: Object3D[] = [];
       if (industrialAppearance) {
         if (!environmentModule) throw new Error(i18nRef.current.t('viewer.errorEnvironment'));
         const roomEnvironment = new environmentModule.RoomEnvironment();
@@ -605,6 +945,7 @@ function TokamakCadViewerSession({
         const rim = new THREE.DirectionalLight(rig.rim.color, rig.rim.intensity);
         rim.position.set(...rig.rim.position);
         scene.add(hemisphere, key, fill, rim);
+        defaultSceneLights = [hemisphere, key, fill, rim];
         applyLightTheme = (theme) => {
           const next = resolveCadSceneTheme(theme, appearancePreset).lights;
           if (next.kind !== 'industrial') return;
@@ -626,6 +967,7 @@ function TokamakCadViewerSession({
         const violet = new THREE.PointLight(rig.violet.color, rig.violet.intensity, 16, 1.8);
         violet.position.set(...rig.violet.position);
         scene.add(hemisphere, key, warm, violet);
+        defaultSceneLights = [hemisphere, key, warm, violet];
         applyLightTheme = (theme) => {
           const next = resolveCadSceneTheme(theme, appearancePreset).lights;
           if (next.kind !== 'semantic') return;
@@ -831,6 +1173,40 @@ function TokamakCadViewerSession({
       orbit.position.y = floorY + 0.03;
       scene.add(orbit);
 
+      const applyDiagnosticViewerSettings = (settings: Ehl2DiagnosticViewerSettings) => {
+        const normalized = normalizeEhl2DiagnosticViewerSettings(settings);
+        // An omitted preset preserves the viewer's industrial RoomEnvironment
+        // default. The explicit `none` state is authoritative for both image-
+        // based lighting and the optional scene background. Settings are
+        // applied to the live scene, so switching/restoring never reloads CAD.
+        const roomEnvironmentTexture = normalized.environmentPreset !== 'none'
+          ? localEnvironmentTarget?.texture ?? null
+          : null;
+        scene.environment = roomEnvironmentTexture;
+        if (normalized.environmentIntensity !== undefined) scene.environmentIntensity = normalized.environmentIntensity;
+        // The generated RoomEnvironment is a portable Three.js substitute,
+        // not an assertion of source-HDRI parity. A requested background fails
+        // closed when the preset is `none` or the industrial target is absent.
+        scene.background = normalized.backgroundEnabled === true ? roomEnvironmentTexture : null;
+        if (normalized.backgroundIntensity !== undefined) scene.backgroundIntensity = normalized.backgroundIntensity;
+        if (normalized.backgroundBlurriness !== undefined) scene.backgroundBlurriness = normalized.backgroundBlurriness;
+        if (normalized.defaultLightsEnabled !== undefined) {
+          const visible = normalized.defaultLightsEnabled;
+          defaultSceneLights.forEach((light) => { light.visible = visible; });
+        }
+        if (normalized.castShadow !== undefined) {
+          renderer.shadowMap.enabled = normalized.castShadow;
+          defaultSceneLights.forEach((light) => {
+            if ('castShadow' in light) (light as Object3D & { castShadow: boolean }).castShadow = normalized.castShadow ?? false;
+          });
+          model.traverse((node) => {
+            if (!(node instanceof THREE.Mesh)) return;
+            node.castShadow = normalized.castShadow ?? false;
+            node.receiveShadow = normalized.castShadow ?? false;
+          });
+        }
+      };
+
       const setVisualTheme = (theme: ResolvedTheme) => {
         const next = resolveCadSceneTheme(theme, appearancePreset);
         if (scene.fog instanceof THREE.FogExp2) {
@@ -839,7 +1215,7 @@ function TokamakCadViewerSession({
         }
         renderer.toneMappingExposure = next.exposure;
         renderer.setClearColor(next.clearColor, next.clearAlpha);
-        scene.environmentIntensity = next.environmentIntensity;
+        scene.environmentIntensity = diagnosticViewerSettingsRef.current.environmentIntensity ?? next.environmentIntensity;
         applyLightTheme(theme);
 
         const positions = grid.geometry.getAttribute('position');
@@ -863,6 +1239,7 @@ function TokamakCadViewerSession({
         orbitMaterial.opacity = next.orbit.opacity;
         orbitMaterial.needsUpdate = true;
         applyAnalyticPlasmaTheme(theme);
+        applyDiagnosticViewerSettings(diagnosticViewerSettingsRef.current);
       };
 
       const target = fittedSphere.center.clone();
@@ -1040,14 +1417,24 @@ function TokamakCadViewerSession({
       const selectionMaterialByBase = new Map<Material, Material>();
       const baseOpacity = new Map<Material, number>();
       viewerMaterials.forEach((material) => baseOpacity.set(material, material.opacity));
+      const baseMaterialByMesh = new Map<Mesh, Material | Material[]>(originalMaterials);
+      const partOpacityMaterials = new Set<Material>();
+      let currentPartOpacities: Readonly<Record<string, number>> = {};
       const applyVisibility = (hidden: Set<string>, isolated: Set<string>) => {
         nodeByPartId.forEach((node, partId) => { node.visible = isolated.size > 0 ? isolated.has(partId) : !hidden.has(partId); });
       };
       const applyMaterialOpacity = (material: Material, opacity: number) => {
-        material.opacity = Math.max(0.04, Math.min(1, opacity));
+        material.opacity = Math.max(0, Math.min(1, opacity));
         material.transparent = material.opacity < 0.999;
         material.depthWrite = material.opacity >= 0.999;
         material.needsUpdate = true;
+      };
+      const disposeMaterialSet = (materials: Set<Material>) => {
+        materials.forEach((material) => {
+          material.dispose();
+          disposableMaterials.delete(material);
+        });
+        materials.clear();
       };
       let currentSelectedOpacity = opacityRef.current.selected;
       const industrialSelectionMaterial = (baseMaterial: Material) => {
@@ -1076,27 +1463,113 @@ function TokamakCadViewerSession({
       };
       const interactiveMaterials = () => new Set<Material>([
         ...viewerMaterials,
+        ...partOpacityMaterials,
         ...selectionMaterials,
         ...(semanticHighlightMaterial ? [semanticHighlightMaterial] : []),
       ]);
+      let cadClippingEnabled = false;
+      let diagnosticClippingPlanes: Plane[] = [];
+      const activeCadClippingPlanes = () => [
+        ...(cadClippingEnabled ? [clippingPlane] : []),
+        ...diagnosticClippingPlanes,
+      ];
+      const applyCadClippingPlanes = () => {
+        const planes = activeCadClippingPlanes();
+        interactiveMaterials().forEach((material) => {
+          material.clippingPlanes = planes.length > 0 ? [...planes] : null;
+          material.clipIntersection = false;
+          material.needsUpdate = true;
+        });
+      };
+      if (diagnosticRuntimeModule) {
+        if (selectedModel.delivery !== 'monolithic') throw new Error('The EHL-2 diagnostic runtime requires one manifest-pinned monolithic analysis asset.');
+        localDiagnosticRuntime = diagnosticRuntimeModule.createEhl2DiagnosticRuntime({
+          provenance: {
+            schema: 'fusiondigital.ehl2-public-cad-v1',
+            deviceId: viewerId,
+            assetId: selectedModel.id,
+            modelPath: selectedModel.path,
+            modelSha256: selectedModel.sha256.toUpperCase(),
+            coordinateFrame: 'EHL2_WEB_METRES_PROVISIONAL_DIAGVIEW2_V1',
+            engine: 'three-mesh-bvh-v1',
+          },
+          physicalWebMetresRoot: model,
+          meshes: [...originalMaterials.keys()].map((mesh) => {
+            const partId = partIdByNode.get(mesh);
+            if (!partId) throw new Error(i18nRef.current.t('viewer.errorUnmappedMeshes', { count: 1 }));
+            return { mesh, partId, model: nodeByPartId.get(partId)?.name || mesh.name || partId };
+          }),
+          renderer,
+          scene,
+          camera,
+          getActiveClippingPlanes: activeCadClippingPlanes,
+          setDiagnosticClippingPlanes: (planes) => {
+            diagnosticClippingPlanes = [...planes];
+            applyCadClippingPlanes();
+          },
+        });
+        diagnosticRuntimeRef.current = localDiagnosticRuntime;
+        diagnosticRuntimeReadyRef.current?.(localDiagnosticRuntime);
+      }
       let highlightedPartIds = new Set<string>();
       const selectParts = (partIds: Set<string>) => {
         highlightedPartIds = new Set(partIds);
-        originalMaterials.forEach((material, mesh) => { mesh.material = material; });
+        originalMaterials.forEach((material, mesh) => { mesh.material = baseMaterialByMesh.get(mesh) ?? material; });
         partIds.forEach((partId) => {
           const node = nodeByPartId.get(partId);
           if (node) allMeshes(node).forEach((mesh) => {
-            const baseMaterial = originalMaterials.get(mesh);
+            const baseMaterial = baseMaterialByMesh.get(mesh) ?? originalMaterials.get(mesh);
             if (baseMaterial) mesh.material = selectedMaterialFor(baseMaterial);
           });
         });
       };
       const setOpacity = (overall: number, selected: number) => {
         currentSelectedOpacity = selected;
-        viewerMaterials.forEach((material) => applyMaterialOpacity(material, (baseOpacity.get(material) ?? 1) * overall));
+        originalMaterials.forEach((sourceMaterial, mesh) => {
+          const partId = partIdByNode.get(mesh);
+          const partOpacity = partId ? currentPartOpacities[partId] ?? 1 : 1;
+          const currentMaterial = baseMaterialByMesh.get(mesh) ?? sourceMaterial;
+          const sourceList = materialList(sourceMaterial);
+          materialList(currentMaterial).forEach((material, index) => {
+            applyMaterialOpacity(material, (baseOpacity.get(sourceList[index]) ?? 1) * overall * partOpacity);
+          });
+        });
         selectionMaterials.forEach((material) => applyMaterialOpacity(material, selected));
         if (semanticHighlightMaterial) applyMaterialOpacity(semanticHighlightMaterial, selected);
         selectParts(highlightedPartIds);
+      };
+      const setPartOpacities = (next: Readonly<Record<string, number>>) => {
+        const checked = safePartOpacityMap(next) ?? {};
+        const accepted: Record<string, number> = {};
+        Object.entries(checked).forEach(([partId, opacity]) => {
+          if (nodeByPartId.has(partId)) accepted[partId] = opacity;
+        });
+        // A material may be shared by multiple CAD nodes. Clone only affected
+        // mesh materials so a per-part setting cannot bleed into neighbours.
+        disposeMaterialSet(selectionMaterials);
+        selectionMaterialByBase.clear();
+        disposeMaterialSet(partOpacityMaterials);
+        baseMaterialByMesh.clear();
+        originalMaterials.forEach((sourceMaterial, mesh) => {
+          const partId = partIdByNode.get(mesh);
+          const opacity = partId ? accepted[partId] : undefined;
+          if (opacity === undefined || opacity === 1) {
+            baseMaterialByMesh.set(mesh, sourceMaterial);
+            return;
+          }
+          const cloned = Array.isArray(sourceMaterial)
+            ? sourceMaterial.map((material) => material.clone())
+            : sourceMaterial.clone();
+          materialList(cloned).forEach((material) => {
+            material.name = `${material.name}:part-opacity:${partId}`;
+            partOpacityMaterials.add(material);
+            disposableMaterials.add(material);
+          });
+          baseMaterialByMesh.set(mesh, cloned);
+        });
+        currentPartOpacities = accepted;
+        setOpacity(opacityRef.current.global, currentSelectedOpacity);
+        return accepted;
       };
       const raycaster = new THREE.Raycaster();
       const pointer = new THREE.Vector2();
@@ -1138,10 +1611,11 @@ function TokamakCadViewerSession({
         }
       };
       resize();
-      if (viewSnapshotRef.current) {
-        camera.position.fromArray(viewSnapshotRef.current.position);
-        controls.target.fromArray(viewSnapshotRef.current.target);
-        camera.up.fromArray(viewSnapshotRef.current.up);
+      const restoredView = cameraViewRef.current ?? viewSnapshotRef.current;
+      if (restoredView) {
+        camera.position.fromArray(restoredView.position);
+        controls.target.fromArray(restoredView.target);
+        camera.up.fromArray(restoredView.up);
         camera.lookAt(controls.target);
         camera.updateProjectionMatrix();
         controls.update();
@@ -1215,14 +1689,16 @@ function TokamakCadViewerSession({
         setClipping: (enabled, axis, offset) => {
           clippingPlane.normal.set(axis === 'x' ? -1 : 0, axis === 'y' ? -1 : 0, axis === 'z' ? -1 : 0);
           clippingPlane.constant = offset * modelRadius;
-          interactiveMaterials().forEach((material) => {
-            material.clippingPlanes = enabled ? [clippingPlane] : null;
-            material.needsUpdate = true;
-          });
+          cadClippingEnabled = enabled;
+          applyCadClippingPlanes();
           localEfitOverlay?.setClippingEnabled(enabled);
           if (analyticFluxBandRoot) analyticFluxBandRoot.visible = enabled && axis === 'z';
         },
         setOpacity,
+        setPartOpacities,
+        setDiagnosticViewerSettings: (settings) => {
+          applyDiagnosticViewerSettings(settings);
+        },
         setVisualTheme,
         setAnalyticPlasmaVisible: (visible) => {
           if (analyticPlasmaRoot) analyticPlasmaRoot.visible = visible;
@@ -1247,10 +1723,13 @@ function TokamakCadViewerSession({
         resize,
         efitOverlay: localEfitOverlay,
         diagnosticOverlay: localDiagnosticOverlay,
+        diagnosticRuntime: localDiagnosticRuntime,
       };
       setVisualTheme(visualThemeRef.current);
       selectParts(selectedPartIdsRef.current);
       applyVisibility(hiddenPartIdsRef.current, isolatedPartIdsRef.current);
+      const acceptedPartOpacities = setPartOpacities(diagnosticViewerSettingsRef.current.partOpacities ?? {});
+      setPartOpacityMap(acceptedPartOpacities);
       setOpacity(opacityRef.current.global, opacityRef.current.selected);
       viewerRef.current.setWireframe(wireframeAllowed && interactionRef.current.wireframe);
       viewerRef.current.setClipping(
@@ -1283,7 +1762,7 @@ function TokamakCadViewerSession({
     });
 
     return () => { disposed = true; releaseResources(); viewerRef.current = null; };
-  }, [activated, appearancePreset, attempt, availableModels, ehl2Session, manifest, selectedModel, wireframeAllowed]);
+  }, [activated, appearancePreset, attempt, availableModels, ehl2Session, manifest, selectedModel, viewerId, wireframeAllowed]);
 
   useEffect(() => {
     const overlay = viewerRef.current?.efitOverlay;
@@ -1318,9 +1797,11 @@ function TokamakCadViewerSession({
 
   const selectView = (preset: ViewPreset) => {
     viewSnapshotRef.current = null;
+    cameraViewRef.current = null;
     interactionRef.current.activeView = preset;
     viewerRef.current?.setView(preset);
     setActiveView(preset);
+    setCameraView(null);
   };
   const toggleAutoRotate = () => {
     const next = !autoRotate;
@@ -1374,6 +1855,8 @@ function TokamakCadViewerSession({
     hiddenPartIdsRef.current = new Set();
     isolatedPartIdsRef.current = new Set();
     viewSnapshotRef.current = null;
+    cameraViewRef.current = null;
+    setCameraView(null);
     interactionRef.current = { ...defaultInteraction };
     setActiveView('iso'); setAutoRotate(false); setWireframe(false); setSelectedPartId(null); setSelectedPartIds(new Set()); setIsolatedPartIds(new Set()); setHiddenPartIds(new Set());
     opacityRef.current = { global: 1, selected: 1 };
@@ -1531,6 +2014,7 @@ function TokamakCadViewerSession({
               <img className="tokamakCadPoster" src={posterPath} alt={t('viewer.posterAlt', { title: content(manifest?.title ?? 'Tokamak') })} loading="lazy" decoding="async" />
             </>}
             <div className="tokamakCadViewport" ref={mountRef} />
+            {viewportOverlay}
             <div className="tokamakCadScan" aria-hidden="true" /><div className="tokamakCadReticle" aria-hidden="true"><i /><i /></div>
             {status === 'idle' && ehl2LoadBlocked && <div className="tokamakCadLaunch tokamakCadLaunch--blocked" role="status"><div className="tokamakCadLaunchGlyph" aria-hidden="true"><span /><i /><b /></div><p>EHL-2 DESKTOP LOAD GATE</p><h3>{t('viewer.ehlBlockedTitle')}</h3><span>{t('viewer.ehlRequirements')}</span><em className="tokamakCadLodNotice">{ehl2ConstraintMessage}</em></div>}
             {status === 'idle' && !ehl2LoadBlocked && <div className="tokamakCadLaunch"><div className="tokamakCadLaunchGlyph" aria-hidden="true"><span /><i /><b /></div><p>MANIFEST-DRIVEN DIGITAL ASSET / 01</p><h3>{t('viewer.launchTitle')}</h3><span>{ehl2Session ? t('viewer.ehlLaunchCopy', { size: estimatedMegabytes }) : t('viewer.launchCopy', { model: content(selectedModel?.label ?? t('viewer.standard')), size: estimatedMegabytes })}</span>{lodNotice && <em className="tokamakCadLodNotice">{lodNotice}</em>}<button type="button" onClick={activate} disabled={!manifest || !selectedModel}>{t('viewer.launch')} <i>→</i></button></div>}

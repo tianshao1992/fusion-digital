@@ -597,13 +597,18 @@ test('public device catalog is fail-closed and authorizes only bounded, verifiab
         const packageRoot = resolve(endpointToPublicPath(manifestEndpoint), '..');
         const packageFiles = await walkFiles(packageRoot);
         const noticePath = resolve(packageRoot, 'PUBLICATION-NOTICE.md');
+        assert.equal(manifest.diagnosticData?.ports?.path, '/models/ehl2-preliminary-v1/diagview2-ports.json');
+        assert.equal(manifest.diagnosticData?.ports?.recordCount, 41);
+        assert.match(manifest.diagnosticData?.ports?.sha256 ?? '', /^[a-f0-9]{64}$/i);
+        const portsPath = endpointToPublicPath(manifest.diagnosticData.ports.path);
         const allowedPackageFiles = new Set([
           endpointToPublicPath(manifestEndpoint),
           endpointToPublicPath(manifest.assets.webModel.path),
+          portsPath,
           noticePath,
         ].map((pathname) => resolve(pathname).toLowerCase()));
         assert.deepEqual(new Set(packageFiles.map((pathname) => resolve(pathname).toLowerCase())), allowedPackageFiles,
-          'EHL package must contain only the manifest, one reviewed derivative GLB and its publication notice');
+          'EHL package must contain only the manifest, one reviewed derivative GLB, the reviewed 41-port table and its publication notice');
         const notice = await readFile(noticePath, 'utf8');
         assert.match(notice, /project owner explicitly requested.*public/is);
         assert.match(notice, /approximately 50% of the source triangle count/i);
@@ -1306,7 +1311,7 @@ test('EXL, ITER and EHL use lifecycle-safe industrial silver appearance without 
   assert.match(source, /interactiveMaterials\(\)\.forEach\(\(material\) => \{[\s\S]{0,180}wireframe/s);
   assert.match(source, /interactiveMaterials\(\)\.forEach\(\(material\) => \{[\s\S]{0,180}clippingPlanes/s);
   assert.match(source, /const selectedMaterial = baseMaterial\.clone\(\)/);
-  assert.match(source, /originalMaterials\.forEach\(\(material, mesh\) => \{ mesh\.material = material; \}\)/);
+  assert.match(source, /originalMaterials\.forEach\(\(material, mesh\) => \{ mesh\.material = baseMaterialByMesh\.get\(mesh\) \?\? material; \}\)/);
   assert.match(appearanceSource, /presentation-only appearance codes/);
   assert.match(source, /t\(['"]viewer\.appearanceDisclaimer['"]\)/);
   assert.match(messagesSource, /不代表真实材料、涂层、表面状态或温度场/);
@@ -1334,9 +1339,9 @@ test('EXL, ITER and EHL viewers open and reset to an active Z section through th
   assert.match(workspace, /defaultClipping=\{defaultCoreSection\}/);
   assert.match(workspace, /defaultClipAxis=\{defaultCoreSection\s*\?\s*['"]z['"]\s*:\s*['"]x['"]\}/);
   assert.match(workspace, /defaultClipOffset=\{efitOverlay\s*\?\s*0\.08\s*:\s*0\}/);
-  assert.match(source, /useState\(defaultInteraction\.clipping\)/);
-  assert.match(source, /useState<ClipAxis>\(defaultInteraction\.clipAxis\)/);
-  assert.match(source, /useState\(defaultInteraction\.clipOffset\)/);
+  assert.match(source, /useState\(initialDiagnosticViewerState\?\.clipping \?\? defaultInteraction\.clipping\)/);
+  assert.match(source, /useState<ClipAxis>\(initialDiagnosticViewerState\?\.clipAxis \?\? defaultInteraction\.clipAxis\)/);
+  assert.match(source, /useState\(initialDiagnosticViewerState\?\.clipOffset \?\? defaultInteraction\.clipOffset\)/);
   assert.match(source, /clippingPlane\.constant\s*=\s*offset\s*\*\s*modelRadius/,
     'the non-zero default offset must be converted into a real model-space clipping plane');
   assert.match(source, /setClipping\(defaultInteraction\.clipping,\s*defaultInteraction\.clipAxis,\s*defaultInteraction\.clipOffset\)/,

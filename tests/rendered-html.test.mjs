@@ -473,7 +473,7 @@ test('homepage owns the public full-device digital-prototype workspace', async (
   assert.match(html, /通用参数化 Tokamak 演示装配/);
   assert.match(html, /标准 \/ 高清 Meshopt GLB 5\.6 \/ 13\.4 MB/);
   assert.match(html, /2\.2 MB GLB[\s\S]*17 个稳定部件/);
-  assert.match(html, /14\.2 MB Meshopt GLB[\s\S]*5 个 DiagView2 平面方案/);
+  assert.match(html, /14\.2 MB Meshopt GLB[\s\S]*41 个法兰位姿[\s\S]*3 类诊断/);
   assert.match(html, /18 个 Meshopt GLB 分片[\s\S]*98\.5 MB/);
   assert.doesNotMatch(html, /class="deviceAuthority/);
   assert.match(html, /360°/);
@@ -512,7 +512,7 @@ test('homepage owns the public full-device digital-prototype workspace', async (
       < html.indexOf('aria-controls="device-panel-iter-educational-model"'),
     'EHL-2 must appear before ITER in the digital-prototype selector',
   );
-  assert.equal(catalog.schemaVersion, '2.2');
+  assert.equal(catalog.schemaVersion, '2.3');
   assert.equal((html.match(/role="tabpanel"/g) ?? []).length, catalog.devices.length,
     'SSR must preserve one tabpanel shell for every device summary tab');
   for (const [index, device] of catalog.devices.entries()) {
@@ -680,10 +680,10 @@ test('homepage owns the public full-device digital-prototype workspace', async (
 test('homepage SSR keeps the EHL-2 DiagView2 evidence fallback readable in both locales', async () => {
   const chineseHtml = await htmlFor('/');
   const chineseNoScript = chineseHtml.match(/<noscript>([\s\S]*?EHL(?:‑|-)?2[\s\S]*?)<\/noscript>/)?.[1] ?? '';
-  assert.match(chineseNoScript, /EHL(?:‑|-)?2 诊断视线方案参考/);
-  assert.match(chineseNoScript, /交互式三维叠加保持关闭/);
-  assert.match(chineseNoScript, /五方案静态来源表（SSR \/ 无 JavaScript 仍可读取）/);
-  assert.match(chineseNoScript, /仅平面，立面缺失/);
+  assert.match(chineseNoScript, /EHL(?:‑|-)?2 DiagView2 诊断分析合同/);
+  assert.match(chineseNoScript, /交互几何、CAD BVH 与虚拟正向模型保持关闭/);
+  assert.match(chineseNoScript, /PPT 五方案来源参考（不替代完整工作台）/);
+  assert.match(chineseNoScript, /第 5 页：仅平面/);
   assert.equal((chineseNoScript.match(/<tr>/g) ?? []).length, 6,
     'the no-script table must retain one header plus all five PPT scenarios');
   assert.match(chineseNoScript, /role="region"[^>]*aria-label="诊断方案来源表"|aria-label="诊断方案来源表"[^>]*role="region"/);
@@ -693,10 +693,10 @@ test('homepage SSR keeps the EHL-2 DiagView2 evidence fallback readable in both 
   assert.equal(englishResponse.status, 200);
   const englishHtml = await englishResponse.text();
   const englishNoScript = englishHtml.match(/<noscript>([\s\S]*?EHL-2[\s\S]*?)<\/noscript>/)?.[1] ?? '';
-  assert.match(englishNoScript, /EHL-2 diagnostic viewing-scheme reference/);
-  assert.match(englishNoScript, /The interactive 3D overlay remains off/);
-  assert.match(englishNoScript, /Static five-scenario source table \(readable with SSR \/ no JavaScript\)/);
-  assert.match(englishNoScript, /plan only; elevation missing/);
+  assert.match(englishNoScript, /EHL-2 DiagView2 diagnostic-analysis contract/);
+  assert.match(englishNoScript, /Interactive geometry, CAD BVH and the virtual forward model remain off/);
+  assert.match(englishNoScript, /Five PPT source references \(not a replacement for the full workbench\)/);
+  assert.match(englishNoScript, /Slide 5: plan only/);
   assert.match(englishNoScript, /Diagnostic-scenario source table/);
   assert.doesNotMatch(englishPresentationText(englishNoScript), /\p{Script=Han}/u);
   assert.equal((englishNoScript.match(/<tr>/g) ?? []).length, 6);

@@ -267,8 +267,13 @@ test('viewer and bilingual copy preserve the geometry-only interaction boundary'
   assert.match(viewer, /analyticFluxBandRoot\.visible\s*=\s*enabled\s*&&\s*axis\s*===\s*['"]z['"]/);
   assert.match(viewer, /viewerMaterials\.add\(surfaceMaterial\)/);
   assert.match(viewer, /viewerMaterials\.add\(contourMaterial\)/);
-  assert.match(viewer, /material\.clippingPlanes\s*=\s*enabled\s*\?\s*\[clippingPlane\]\s*:\s*null/);
-  assert.match(viewer, /viewerMaterials\.forEach\(\(material\)\s*=>\s*applyMaterialOpacity/);
+  assert.match(viewer, /const activeCadClippingPlanes\s*=\s*\(\)\s*=>\s*\[/);
+  assert.match(viewer, /\.\.\.\(cadClippingEnabled\s*\?\s*\[clippingPlane\]\s*:\s*\[\]\)/);
+  assert.match(viewer, /\.\.\.diagnosticClippingPlanes/);
+  assert.match(viewer, /material\.clippingPlanes\s*=\s*planes\.length\s*>\s*0\s*\?\s*\[\.\.\.planes\]\s*:\s*null/);
+  assert.match(viewer, /cadClippingEnabled\s*=\s*enabled;\s*applyCadClippingPlanes\(\)/);
+  assert.match(viewer, /originalMaterials\.forEach\(\(sourceMaterial,\s*mesh\)\s*=>/);
+  assert.match(viewer, /applyMaterialOpacity\(material,\s*\(baseOpacity\.get\(sourceList\[index\]\)\s*\?\?\s*1\)\s*\*\s*overall\s*\*\s*partOpacity\)/);
   assert.match(viewer, /localScene\?\.traverse[\s\S]*?renderable\.geometry\?\.dispose\(\)/);
   assert.match(viewer, /localDisposableMaterials\?\.forEach\(\(material\)\s*=>\s*material\.dispose\(\)\)/);
   assert.match(viewer, /setAnalyticPlasmaVisible:\s*\(visible\)/);

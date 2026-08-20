@@ -1,6 +1,6 @@
 {
-  "schemaVersion": "2.2",
-  "asOf": "2026-08-18",
+  "schemaVersion": "2.3",
+  "asOf": "2026-08-21",
   "securityPolicy": {
     "previewOnly": true,
     "showDownloadActions": false,
@@ -78,8 +78,8 @@
       "state": "约半面数浏览器派生",
       "tone": "controlled",
       "facts": ["用户授权公开简化展示", "6 个稳定部件", "约 247 万三角面 · 14.2 MB Meshopt", "保留源模型约 50% 面数"],
-      "deviceOverview": "来自 2026-08-12 初步 CAD 基线的 EHL‑2 装配样机，并复现 DiagView2 诊断视线查看方法。",
-      "fileSummary": "14.2 MB Meshopt GLB · 6 个部件 · 约 247 万三角面 · 5 个 DiagView2 平面方案",
+      "deviceOverview": "来自 2026-08-12 初步 CAD 基线的 EHL‑2 装配样机，并复现 DiagView2 的端口、相机、阵列、激光与 CAD 视线分析工作流。",
+      "fileSummary": "14.2 MB Meshopt GLB · 6 个部件 · 约 247 万三角面 · 41 个法兰位姿 · 3 类诊断",
       "copy": "加载由 2026-08-12 EHL‑2 初步 CAD 基线生成的浏览器可视化派生模型。六个部件保持共同装配原点，几何面数约为源 GLB 的 50%，只采用一次受控 QEM 简化；位置保留 Float32，法线使用 Int8，并通过 Meshopt 降低传输体积，不再进行激进减面。该模型用于方案沟通、装配浏览、显隐、隔离、透明度和剖切，不代表 as-built 构型、尺寸计量、制造依据或工程 CAE 权威模型。源 GLB 不由网站下发。",
       "availability": "online-public-simplified",
       "delivery": "public-static",
@@ -96,10 +96,12 @@
         "kind": "ehl2-diagview2",
         "authority": "design-reference",
         "coordinateFrame": "EHL2_WEB_METRES_PROVISIONAL_DIAGVIEW2_V1",
-        "asOf": "2026-08-17",
-        "sourceLabel": "DiagView2 PPT design reference",
+        "asOf": "2026-08-21",
+        "sourceLabel": "DiagView2 geometry-analysis engine and reviewed EHL-2 flange dataset",
         "sourceRevision": "868d74d5e0e6c9abaec0eb623bcdd13ead771c79",
-        "statement": "DiagView2 PPT-derived planar design reference for five EHL-2 visible and infrared viewing scenarios. It is not an as-installed survey, calibrated optical model, three-dimensional field-of-view validation, or engineering occlusion authority."
+        "portDatasetEndpoint": "/models/ehl2-preliminary-v1/diagview2-ports.json",
+        "capabilities": ["camera", "array", "laser", "cad-first-hit", "render-slicing", "geometry-io", "design-report", "optical-view-capture", "virtual-forward-model"],
+        "statement": "Browser reproduction of the DiagView2 geometry-analysis workflow using a reviewed 41-flange EHL-2 design dataset and the authorized simplified CAD derivative. It supports straight-line camera, array and laser design geometry, browser-mesh first-hit analysis, render-only slicing, versioned geometry files and reports. It is not an as-installed survey, calibrated optical model, validated engineering clear-aperture analysis, manufacturing authority, or experimental diagnostic result."
       }
     },
     {

@@ -16,6 +16,8 @@ import {
 } from "../scripts/assets/runtime-assets.mjs";
 import {
   handleIterHighDetailCache,
+  pruneUnreferencedMirroredSsrWorkers,
+  pruneUnreferencedVinextFonts,
   shouldEnforceSitesExpandedLimit,
 } from "../scripts/deployment/prune-obsolete-runtime-assets.mjs";
 
@@ -218,6 +220,185 @@ test("postbuild refuses to prune ITER cache while app source exposes its interna
     assert.equal(await readFile(cachedAsset, "utf8"), "must stay");
   } finally {
     await rm(scratch, { recursive: true, force: true });
+  }
+});
+
+test("postbuild removes unreferenced vinext fonts and preserves unrelated dist assets", async () => {
+  const scratch = await mkdtemp(join(tmpdir(), "fusion-postbuild-vinext-fonts-"));
+  const dist = join(scratch, "dist");
+  const fonts = join(dist, "client", "assets", "_vinext_fonts");
+  const font = join(fonts, "inter-latin.woff2");
+  const clientBundle = join(dist, "client", "assets", "app.js");
+  const serverBundle = join(dist, "server", "index.js");
+
+  try {
+    await mkdir(fonts, { recursive: true });
+    await mkdir(dirname(serverBundle), { recursive: true });
+    await writeFile(font, Buffer.alloc(17, 1));
+    await writeFile(clientBundle, "export const fontFamily = 'system-ui';");
+    await writeFile(serverBundle, "export default function handler() {}");
+
+    assert.deepEqual(
+      await pruneUnreferencedVinextFonts({
+        distributionUrl: directoryUrl(dist),
+        fontsUrl: directoryUrl(fonts),
+      }),
+      { bytes: 17 },
+    );
+    await assert.rejects(readFile(font), /ENOENT/);
+    assert.equal(await readFile(clientBundle, "utf8"), "export const fontFamily = 'system-ui';");
+    assert.equal(await readFile(serverBundle, "utf8"), "export default function handler() {}");
+  } finally {
+    await rm(scratch, { recursive: true, force: true });
+  }
+});
+
+test("postbuild keeps vinext fonts when any external text asset still references them", async () => {
+  const scratch = await mkdtemp(join(tmpdir(), "fusion-postbuild-vinext-font-reference-"));
+  const dist = join(scratch, "dist");
+  const fonts = join(dist, "client", "assets", "_vinext_fonts");
+  const font = join(fonts, "inter-latin.woff2");
+  const stylesheet = join(dist, "client", "assets", "app.css");
+
+  try {
+    await mkdir(fonts, { recursive: true });
+    await writeFile(font, "must stay");
+    await writeFile(
+      stylesheet,
+      "@font-face{src:url('./_vinext_fonts/inter-latin.woff2') format('woff2')}",
+    );
+
+    await assert.rejects(
+      pruneUnreferencedVinextFonts({
+        distributionUrl: directoryUrl(dist),
+        fontsUrl: directoryUrl(fonts),
+      }),
+      /Refusing to prune _vinext_fonts: generated asset .*app\.css still references _vinext_fonts/,
+    );
+    assert.equal(await readFile(font, "utf8"), "must stay");
+    assert.match(await readFile(stylesheet, "utf8"), /_vinext_fonts/);
+  } finally {
+    await rm(scratch, { recursive: true, force: true });
+  }
+});
+
+test("postbuild removes only byte-identical, client-referenced, server-unreferenced SSR Workers", async () => {
+  const scratch = await mkdtemp(join(tmpdir(), "fusion-postbuild-ssr-workers-"));
+  const dist = join(scratch, "dist");
+  const clientAssets = join(dist, "client", "assets");
+  const serverAssets = join(dist, "server", "ssr", "assets");
+  const workerNames = [
+    "generateMeshBVH.worker-Abc_123.js",
+    "ehl2DiagView2Forward.worker-Xyz-789.js",
+  ];
+
+  try {
+    await mkdir(clientAssets, { recursive: true });
+    await mkdir(serverAssets, { recursive: true });
+    await writeFile(join(dist, "server", "index.js"), "export default function handler() {}");
+    for (const [index, workerName] of workerNames.entries()) {
+      const bytes = Buffer.alloc(80 + index, index + 1);
+      await writeFile(join(clientAssets, workerName), bytes);
+      await writeFile(join(serverAssets, workerName), bytes);
+      await writeFile(
+        join(clientAssets, `loader-${index}.js`),
+        `new Worker(new URL('/assets/${workerName}', import.meta.url));`,
+      );
+    }
+    const unrelatedSsrAsset = join(serverAssets, "route-runtime.js");
+    await writeFile(unrelatedSsrAsset, "export const route = '/digital-prototype';");
+
+    assert.deepEqual(
+      await pruneUnreferencedMirroredSsrWorkers({ distributionUrl: directoryUrl(dist) }),
+      { bytes: 161, fileCount: 2 },
+    );
+    for (const workerName of workerNames) {
+      await assert.rejects(readFile(join(serverAssets, workerName)), /ENOENT/);
+      assert.ok((await readFile(join(clientAssets, workerName))).byteLength > 0);
+    }
+    assert.equal(await readFile(unrelatedSsrAsset, "utf8"), "export const route = '/digital-prototype';");
+  } finally {
+    await rm(scratch, { recursive: true, force: true });
+  }
+});
+
+test("postbuild keeps mirrored SSR Workers when identity or reference proofs fail", async () => {
+  async function arrange(caseName, {
+    serverBytes = "same",
+    clientBytes = "same",
+    clientReference = true,
+    serverReference = false,
+    manifestReference = false,
+  } = {}) {
+    const scratch = await mkdtemp(join(tmpdir(), `fusion-postbuild-ssr-worker-${caseName}-`));
+    const dist = join(scratch, "dist");
+    const clientAssets = join(dist, "client", "assets");
+    const serverAssets = join(dist, "server", "ssr", "assets");
+    const workerName = "generateMeshBVH.worker-Proof123.js";
+    await mkdir(clientAssets, { recursive: true });
+    await mkdir(serverAssets, { recursive: true });
+    await writeFile(join(clientAssets, workerName), clientBytes);
+    await writeFile(join(serverAssets, workerName), serverBytes);
+    await writeFile(
+      join(clientAssets, "loader.js"),
+      clientReference ? `new Worker('/assets/${workerName}')` : "export default {};",
+    );
+    await writeFile(
+      join(dist, "server", "index.js"),
+      serverReference ? `export const worker = '${workerName}';` : "export default {};",
+    );
+    if (manifestReference) {
+      await mkdir(join(dist, ".openai"), { recursive: true });
+      await writeFile(
+        join(dist, ".openai", "manifest.json"),
+        JSON.stringify({ entry: `server/ssr/assets/${workerName}` }),
+      );
+    }
+    return { scratch, dist, serverWorker: join(serverAssets, workerName) };
+  }
+
+  const differing = await arrange("different", { serverBytes: "server", clientBytes: "client" });
+  try {
+    await assert.rejects(
+      pruneUnreferencedMirroredSsrWorkers({ distributionUrl: directoryUrl(differing.dist) }),
+      /client and SSR Worker copies differ/,
+    );
+    assert.equal(await readFile(differing.serverWorker, "utf8"), "server");
+  } finally {
+    await rm(differing.scratch, { recursive: true, force: true });
+  }
+
+  const referenced = await arrange("referenced", { serverReference: true });
+  try {
+    await assert.rejects(
+      pruneUnreferencedMirroredSsrWorkers({ distributionUrl: directoryUrl(referenced.dist) }),
+      /server asset .*index\.js still references it/,
+    );
+    assert.equal(await readFile(referenced.serverWorker, "utf8"), "same");
+  } finally {
+    await rm(referenced.scratch, { recursive: true, force: true });
+  }
+
+  const unreferenced = await arrange("unreferenced", { clientReference: false });
+  try {
+    await assert.rejects(
+      pruneUnreferencedMirroredSsrWorkers({ distributionUrl: directoryUrl(unreferenced.dist) }),
+      /no generated client asset references its mirror/,
+    );
+    assert.equal(await readFile(unreferenced.serverWorker, "utf8"), "same");
+  } finally {
+    await rm(unreferenced.scratch, { recursive: true, force: true });
+  }
+
+  const manifested = await arrange("manifested", { manifestReference: true });
+  try {
+    await assert.rejects(
+      pruneUnreferencedMirroredSsrWorkers({ distributionUrl: directoryUrl(manifested.dist) }),
+      /manifest\.json still addresses the SSR copy/,
+    );
+    assert.equal(await readFile(manifested.serverWorker, "utf8"), "same");
+  } finally {
+    await rm(manifested.scratch, { recursive: true, force: true });
   }
 });
 

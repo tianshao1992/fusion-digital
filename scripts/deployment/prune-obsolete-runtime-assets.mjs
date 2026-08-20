@@ -1,5 +1,5 @@
 import { open, readdir, readFile, rm, stat } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { extname, isAbsolute, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   PUBLIC_ANONYMOUS_MODE,
@@ -40,6 +40,30 @@ const OBSOLETE_RUNTIME_PACKAGES = Object.freeze([
     forbiddenCatalogToken: '/models/exl50u-secure-preview/',
   },
 ]);
+const READABLE_DIST_TEXT_EXTENSIONS = new Set([
+  '.cjs',
+  '.css',
+  '.csv',
+  '.htm',
+  '.html',
+  '.js',
+  '.json',
+  '.jsx',
+  '.map',
+  '.md',
+  '.mjs',
+  '.svg',
+  '.ts',
+  '.tsx',
+  '.txt',
+  '.webmanifest',
+  '.xml',
+]);
+const VINEXT_FONTS_REFERENCE_TOKEN = '_vinext_fonts';
+const MIRRORED_SSR_WORKER_PATTERNS = Object.freeze([
+  /^generateMeshBVH\.worker-[A-Za-z0-9_-]+\.js$/,
+  /^ehl2DiagView2Forward\.worker-[A-Za-z0-9_-]+\.js$/,
+]);
 
 async function filesUnder(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
@@ -53,6 +77,185 @@ async function byteLength(directory) {
   const files = await filesUnder(directory);
   const sizes = await Promise.all(files.map(async (file) => (await stat(file)).size));
   return sizes.reduce((total, size) => total + size, 0);
+}
+
+function pathIsWithin(pathname, directory) {
+  const pathRelativeToDirectory = relative(directory, pathname);
+  return pathRelativeToDirectory === '' || (
+    pathRelativeToDirectory !== '..'
+    && !pathRelativeToDirectory.startsWith(`..${sep}`)
+    && !isAbsolute(pathRelativeToDirectory)
+  );
+}
+
+/**
+ * vinext can emit locally bundled font files even when no generated client or server asset uses
+ * them. Removing those files is safe only after proving that the rest of dist has no reference to
+ * the generated directory. Text read failures intentionally propagate so this cleanup fails closed.
+ */
+export async function pruneUnreferencedVinextFonts({
+  distributionUrl = distUrl,
+  fontsUrl,
+} = {}) {
+  const resolvedFontsUrl = fontsUrl ?? new URL('client/assets/_vinext_fonts/', distributionUrl);
+  const distributionPath = resolve(fileURLToPath(distributionUrl));
+  const fontsPath = resolve(fileURLToPath(resolvedFontsUrl));
+  if (!pathIsWithin(fontsPath, distributionPath) || fontsPath === distributionPath) {
+    throw new Error('Refusing to prune an unexpected _vinext_fonts target outside dist.');
+  }
+
+  let fontsStat;
+  try {
+    fontsStat = await stat(resolvedFontsUrl);
+  } catch (error) {
+    if (error?.code === 'ENOENT') return { bytes: 0 };
+    throw error;
+  }
+  if (!fontsStat.isDirectory()) {
+    throw new Error('Refusing to prune _vinext_fonts because the expected target is not a directory.');
+  }
+
+  const fontsBytes = await byteLength(resolvedFontsUrl);
+  const distFiles = await filesUnder(distributionUrl);
+  for (const file of distFiles) {
+    const pathname = resolve(fileURLToPath(file));
+    if (
+      pathIsWithin(pathname, fontsPath)
+      || !READABLE_DIST_TEXT_EXTENSIONS.has(extname(pathname).toLowerCase())
+    ) {
+      continue;
+    }
+    const source = await readFile(file, 'utf8');
+    if (source.includes(VINEXT_FONTS_REFERENCE_TOKEN)) {
+      throw new Error(
+        `Refusing to prune _vinext_fonts: generated asset ${fileURLToPath(file)} still references `
+        + `${VINEXT_FONTS_REFERENCE_TOKEN}.`,
+      );
+    }
+  }
+
+  await rm(resolvedFontsUrl, { recursive: true });
+  return { bytes: fontsBytes };
+}
+
+/**
+ * Vite currently writes browser Worker entry chunks to both the client asset directory and the
+ * SSR asset directory. Only the client mirror is URL-addressable by the browser. Delete the SSR
+ * copy only after proving that it is byte-identical to an actively referenced client asset and
+ * that neither the server graph nor a generated manifest names the SSR copy.
+ */
+export async function pruneUnreferencedMirroredSsrWorkers({
+  distributionUrl = distUrl,
+  clientAssetsUrl,
+  serverAssetsUrl,
+} = {}) {
+  const resolvedClientAssetsUrl = clientAssetsUrl ?? new URL('client/assets/', distributionUrl);
+  const resolvedServerAssetsUrl = serverAssetsUrl ?? new URL('server/ssr/assets/', distributionUrl);
+  const distributionPath = resolve(fileURLToPath(distributionUrl));
+  const clientAssetsPath = resolve(fileURLToPath(resolvedClientAssetsUrl));
+  const serverAssetsPath = resolve(fileURLToPath(resolvedServerAssetsUrl));
+  if (
+    clientAssetsPath !== resolve(distributionPath, 'client', 'assets')
+    || serverAssetsPath !== resolve(distributionPath, 'server', 'ssr', 'assets')
+  ) {
+    throw new Error('Refusing to prune mirrored Workers outside the expected dist asset directories.');
+  }
+
+  let entries;
+  try {
+    entries = await readdir(resolvedServerAssetsUrl, { withFileTypes: true });
+  } catch (error) {
+    if (error?.code === 'ENOENT') return { bytes: 0, fileCount: 0 };
+    throw error;
+  }
+
+  const matchingEntries = entries.filter((entry) => (
+    MIRRORED_SSR_WORKER_PATTERNS.some((pattern) => pattern.test(entry.name))
+  ));
+  if (matchingEntries.some((entry) => !entry.isFile())) {
+    throw new Error('Refusing to prune mirrored Workers because a matching SSR entry is not a file.');
+  }
+  if (matchingEntries.length === 0) return { bytes: 0, fileCount: 0 };
+
+  const candidatePaths = new Set(matchingEntries.map((entry) => (
+    resolve(fileURLToPath(new URL(entry.name, resolvedServerAssetsUrl)))
+  )));
+  const [serverFiles, clientFiles, distFiles] = await Promise.all([
+    filesUnder(new URL('server/', distributionUrl)),
+    filesUnder(new URL('client/', distributionUrl)),
+    filesUnder(distributionUrl),
+  ]);
+  const readableServerFiles = serverFiles.filter((file) => {
+    const pathname = resolve(fileURLToPath(file));
+    return !candidatePaths.has(pathname)
+      && READABLE_DIST_TEXT_EXTENSIONS.has(extname(pathname).toLowerCase());
+  });
+  const readableClientFiles = clientFiles.filter((file) => {
+    const pathname = resolve(fileURLToPath(file));
+    return READABLE_DIST_TEXT_EXTENSIONS.has(extname(pathname).toLowerCase());
+  });
+  const readableDistFiles = distFiles.filter((file) => {
+    const pathname = resolve(fileURLToPath(file));
+    return !candidatePaths.has(pathname)
+      && READABLE_DIST_TEXT_EXTENSIONS.has(extname(pathname).toLowerCase());
+  });
+  const [serverSources, clientSources, distSources] = await Promise.all([
+    Promise.all(readableServerFiles.map(async (file) => ({ file, source: await readFile(file, 'utf8') }))),
+    Promise.all(readableClientFiles.map(async (file) => ({ file, source: await readFile(file, 'utf8') }))),
+    Promise.all(readableDistFiles.map(async (file) => ({ file, source: await readFile(file, 'utf8') }))),
+  ]);
+
+  const verified = [];
+  for (const entry of matchingEntries) {
+    const serverFile = new URL(entry.name, resolvedServerAssetsUrl);
+    const clientFile = new URL(entry.name, resolvedClientAssetsUrl);
+    let serverBytes;
+    let clientBytes;
+    try {
+      [serverBytes, clientBytes] = await Promise.all([readFile(serverFile), readFile(clientFile)]);
+    } catch (error) {
+      if (error?.code === 'ENOENT') {
+        throw new Error(`Refusing to prune ${entry.name}: its byte-identical client mirror is missing.`);
+      }
+      throw error;
+    }
+    if (!serverBytes.equals(clientBytes)) {
+      throw new Error(`Refusing to prune ${entry.name}: client and SSR Worker copies differ.`);
+    }
+
+    const serverReference = serverSources.find(({ source }) => source.includes(entry.name));
+    if (serverReference) {
+      throw new Error(
+        `Refusing to prune ${entry.name}: server asset ${fileURLToPath(serverReference.file)} still references it.`,
+      );
+    }
+    const clientReference = clientSources.find(({ source }) => source.includes(entry.name));
+    if (!clientReference) {
+      throw new Error(`Refusing to prune ${entry.name}: no generated client asset references its mirror.`);
+    }
+    const explicitSsrTokens = [
+      `server/ssr/assets/${entry.name}`,
+      `server\\ssr\\assets\\${entry.name}`,
+      `ssr/assets/${entry.name}`,
+      `ssr\\assets\\${entry.name}`,
+    ];
+    const explicitSsrReference = distSources.find(({ source }) => (
+      explicitSsrTokens.some((token) => source.includes(token))
+    ));
+    if (explicitSsrReference) {
+      throw new Error(
+        `Refusing to prune ${entry.name}: generated asset ${fileURLToPath(explicitSsrReference.file)} `
+        + 'still addresses the SSR copy.',
+      );
+    }
+    verified.push({ file: serverFile, bytes: serverBytes.byteLength });
+  }
+
+  await Promise.all(verified.map(({ file }) => rm(file)));
+  return {
+    bytes: verified.reduce((total, item) => total + item.bytes, 0),
+    fileCount: verified.length,
+  };
 }
 
 export function shouldEnforceSitesExpandedLimit(buildTarget = 'sites') {
@@ -310,6 +513,12 @@ export async function runPostbuildPrune({
   }
   await rm(searchIndexDistUrl, { force: true });
   removed.push({ id: 'fusion-knowledge-index.client-copy', bytes: embeddedSearchIndexBytes });
+
+  const vinextFonts = await pruneUnreferencedVinextFonts();
+  removed.push({ id: '_vinext_fonts.client-assets', bytes: vinextFonts.bytes });
+
+  const ssrWorkerMirrors = await pruneUnreferencedMirroredSsrWorkers();
+  removed.push({ id: 'mirrored-ssr-workers', bytes: ssrWorkerMirrors.bytes });
 
   const expandedBytes = await byteLength(distUrl);
   const removedBytes = removed.reduce((total, item) => total + item.bytes, 0);

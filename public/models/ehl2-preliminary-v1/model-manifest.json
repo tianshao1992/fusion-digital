@@ -43,6 +43,35 @@
       }
     }
   },
+  "diagnosticData": {
+    "ports": {
+      "path": "/models/ehl2-preliminary-v1/diagview2-ports.json",
+      "format": "application/json",
+      "schemaVersion": "fusiondigital.ehl2.diagview2-ports.v1",
+      "bytes": 27749,
+      "sha256": "051B6D8FD3A4E37BAAF4CC9E15E434074C167B88A283EB879C89E88D7944AC39",
+      "recordCount": 41,
+      "sectionCounts": { "S1": 16, "S2": 13, "S3": 12 },
+      "authority": "historical-design-reference",
+      "source": {
+        "repository": "DiagView",
+        "branch": "origin/digView2",
+        "branchRevision": "868d74d5e0e6c9abaec0eb623bcdd13ead771c79",
+        "sourceDataCommit": "94c1a21285b5a832beea24d94066f8cdb4873eee",
+        "introducedCommit": "42973f14913f80fb9fd35c51f971005ee46aa1aa",
+        "path": "data/EHL2_position.xlsx",
+        "gitBlobSha1": "a2dd0fb815612b2c4735a39ff6d1e0a51c9dbdb5",
+        "byteLength": 1364538,
+        "sha256": "159DC5D5E2718A84C76AAF479D6AD14B8A2D3E1FDA8B77BF5EBA389D3AFC5ABC"
+      },
+      "publication": {
+        "publicNumericTableOnly": true,
+        "sourceWorkbookIncluded": false,
+        "embeddedWorkbookImageIncluded": false,
+        "engineeringUseAllowed": false
+      }
+    }
+  },
   "systems": [
     {
       "id": "ehl2-vessel-assembly",
