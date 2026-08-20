@@ -16,8 +16,14 @@ Git 克隆已经包含 Paramak、EXL-50U 浏览器模型、公开 EFIT 派生数
 以下能力只在 OpenAI Sites 托管环境中成立，普通本地启动不会自动复现：
 
 - Sign in with ChatGPT（SIWC）登录入口和平台注入的可信身份头；
-- Sites 生产 D1、生产密钥及其访问策略；
-- Sites 版本保存、公开发布和生产域名。
+- Sites 项目 D1、运行时密钥及其访问策略；
+- Sites 版本保存、公开发布和平台分配的 `*.chatgpt.site` 地址。
+
+正式发布不等同于任一端单独部署成功：同一个完整提交 SHA 必须同时发布到阿里云香港
+`47.82.66.79` 和现有 OpenAI Sites 平台地址，任一端失败都不算完成。生产域名
+`fusiondigital.club` / `www.fusiondigital.club` 的所有 DNS 线路仍只指向香港
+`47.82.66.79`，严禁绑定或切换到 Sites。完整发布与协同回滚流程见
+[生产发布手册](./RELEASE.md)。
 
 因此，未登录的本地环境仍能使用 `/search` 和 `/api/search`；`/api/ask` 会安全回退为带来源的确定性检索。即便本机配置了任一供应商密钥，当前实现也不会在缺少可信 SIWC 身份和配额账本时进行不计费的模型调用，这是预期的安全行为。
 
@@ -195,7 +201,7 @@ npm run start
 PORT=4173 npm run start
 ```
 
-`npm run start` 服务的是最近一次 `npm run build` 生成的 `dist/`；修改源码后必须重新构建。该路径适合复现 SSR、路由、静态资源和 API，但不等同于 Sites 生产身份层。
+`npm run start` 服务的是最近一次 `npm run build` 生成的 `dist/`；修改源码后必须重新构建。该路径适合复现 SSR、路由、静态资源和 API，但不等同于 Sites 平台身份层。
 
 ### 5.3 本地 D1 初始化
 
@@ -206,11 +212,11 @@ npm run db:local:migrate
 npm run db:local:verify
 ```
 
-迁移命令使用已提交的 `wrangler.local.jsonc` 和 `drizzle/`，只操作本机 `.wrangler/state/`，不会连接生产数据库。它会建立 migration ledger，因而可重复运行。
+迁移命令使用已提交的 `wrangler.local.jsonc` 和 `drizzle/`，只操作本机 `.wrangler/state/`，不会连接 Sites 项目 D1。它会建立 migration ledger，因而可重复运行。
 
 如果本地 schema 需要完全重置，请先停止开发服务器，再删除项目内的 `.wrangler/state/`，然后重新执行上述两个命令。不要把 `.wrangler/` 提交到 Git；不要把本地命令改成 `--remote`。
 
-> `npm run build` 会把 `.openai/hosting.json` 和 `drizzle/` 打入 `dist/.openai/`，供 Sites 发布流程使用。本地 D1 初始化与生产迁移是两个不同边界。
+> `npm run build` 会把 `.openai/hosting.json` 和 `drizzle/` 打入 `dist/.openai/`，供 Sites 发布流程使用。本地 D1 初始化与 Sites 项目 D1 迁移是两个不同边界。
 
 ## 6. 完整验证流程
 
@@ -266,7 +272,7 @@ curl -fsS "http://localhost:5173/api/search?q=EXL-50U&limit=3"
 
 - `db/schema.ts` 是 Drizzle schema 源。
 - `drizzle/*.sql` 是应随源码提交的迁移。
-- `.openai/hosting.json` 声明 Sites 逻辑 D1 binding 名 `DB`，不包含真实生产数据库 ID 或凭证。
+- `.openai/hosting.json` 声明 Sites 逻辑 D1 binding 名 `DB`，不包含真实 Sites 项目数据库 ID 或凭证。
 - `wrangler.local.jsonc` 只为本地迁移提供同名 binding 和占位 UUID，不得用于生产发布。
 
 修改 schema 的标准流程：
@@ -281,7 +287,7 @@ npm run db:local:verify
 npm run check
 ```
 
-不要手工修改已经发布过的 migration；追加新 migration。生产 D1 的迁移由 Sites 保存/部署版本时按项目资源声明处理，本地复现者不需要也不应持有生产数据库凭证。
+不要手工修改已经发布过的 migration；追加新 migration。Sites 项目 D1 的迁移由 Sites 保存/部署版本时按项目资源声明处理，本地复现者不需要也不应持有项目数据库凭证。
 
 ## 8. Python 调研工具（可选）
 
@@ -354,7 +360,7 @@ SIWC 是 Sites 平台能力，不是本仓库自建的本地用户名密码系�
 
 ### Sites 构建包超过约 256 MiB
 
-不要在已经 hydration 的工作区发布 Sites。把本机 `public/models/iter-high-detail-v1/` 移出仓库，或从干净克隆执行 `npm run assets:verify:tracked` 与构建；Sites 生产默认由 Worker 从外部镜像按需取得 ITER 18 片。不要通过删除 Git 已跟踪页面内容或进一步压缩模型来规避上限。
+不要在已经 hydration 的工作区发布 Sites。把本机 `public/models/iter-high-detail-v1/` 移出仓库，或从干净克隆执行 `npm run assets:verify:tracked` 与构建；Sites 同步镜像默认由 Worker 从外部镜像按需取得 ITER 18 片。不要通过删除 Git 已跟踪页面内容或进一步压缩模型来规避上限。
 
 ### Codeup SSH 连接失败
 

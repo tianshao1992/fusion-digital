@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "environment": "formal-release",
+  "commitShaPattern": "^[0-9a-f]{40}$",
+  "git": {
+    "local": {
+      "ref": "HEAD"
+    },
+    "codeup": {
+      "branch": "master"
+    },
+    "github": {
+      "branch": "main"
+    }
+  },
+  "hongKong": {
+    "releaseRoot": "/srv/fusiondigital/releases",
+    "requiredStatus": "active",
+    "build": {
+      "target": "aliyun-hk",
+      "mode": "public-anonymous"
+    }
+  },
+  "sites": {
+    "projectId": "appgprj_6a78141f72588191a3b12afd0ad56022",
+    "platformUrl": "https://fusion-physics-atlas-2026.tianyuanliu1992.chatgpt.site",
+    "requiredStatus": "succeeded",
+    "build": {
+      "target": "sites"
+    }
+  },
+  "forbiddenSitesCustomDomains": [
+    "fusiondigital.club",
+    "www.fusiondigital.club"
+  ]
+}

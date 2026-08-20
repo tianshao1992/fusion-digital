@@ -11,6 +11,7 @@
   <a href="https://www.fusiondigital.club/"><img alt="Website" src="https://img.shields.io/badge/Website-fusiondigital.club-20BFA9?logo=googlechrome&amp;logoColor=white" /></a>
   <a href="https://codeup.aliyun.com/fiatlux/DT/FusionDigital"><img alt="Codeup" src="https://img.shields.io/badge/Codeup-Aliyun-FF6A00?logo=alibabacloud&amp;logoColor=white" /></a>
   <a href="https://github.com/tianshao1992/fusion-digital"><img alt="GitHub" src="https://img.shields.io/badge/GitHub-Mirror-181717?logo=github&amp;logoColor=white" /></a>
+  <a href="https://fusion-physics-atlas-2026.tianyuanliu1992.chatgpt.site/"><img alt="OpenAI Sites" src="https://img.shields.io/badge/OpenAI_Sites-Synchronized_Mirror-412991?logo=openai&amp;logoColor=white" /></a>
   <img alt="Status" src="https://img.shields.io/badge/Status-Research_Preview-3758F9" />
 </p>
 
@@ -24,6 +25,7 @@
 
 <p align="center">
   <a href="https://www.fusiondigital.club/">在线站点</a> ·
+  <a href="https://fusion-physics-atlas-2026.tianyuanliu1992.chatgpt.site/">Sites 同步平台地址</a> ·
   <a href="https://codeup.aliyun.com/fiatlux/DT/FusionDigital">Codeup 仓库</a> ·
   <a href="https://github.com/tianshao1992/fusion-digital">GitHub 镜像</a> ·
   <a href="./docs/PLATFORM_TECHNICAL_ROADMAP.md">平台技术路线</a> ·
@@ -61,7 +63,7 @@ FusionDigital 由新奥聚变人工智能团队维护。项目将聚变物理、
 | 平面 | 当前定位 | 主要技术 | 权限边界 |
 | --- | --- | --- | --- |
 | **公开投影面** | 阿里云香港生产环境已实现 | React 19、vinext、Vite、Node.js、Nginx、Three.js、ECharts | 公开知识、检索、图谱、三维派生物与 EFIT 回放；以 `public-anonymous` 只读运行 |
-| **协作预览面** | Sites 平台预览 | Cloudflare Worker 兼容运行时、D1 | 身份与审核控制面只在获授权预览/开发环境验证，不绑定生产域名 |
+| **Sites 协作镜像面** | OpenAI Sites 同步公开平台地址 | Cloudflare Worker 兼容运行时、D1 | 身份与审核控制面由 Sites 平台环境承载；与香港站同步同一提交，但不绑定生产域名 |
 | **内网科学平台面** | 目标架构，分阶段接入 | FastAPI、PostgreSQL、S3、MDSplus Gateway、Kubernetes/Slurm、MLflow | 原始实验数据、CAD/CAE、仿真容器、模型训练、结果与 VVUQ |
 | **实验实时面** | 独立安全域 | DAQ、PCS、Interlock、RT Linux | 确定性控制、联锁和保护；公网、浏览器与通用智能体不直连 |
 
@@ -74,7 +76,7 @@ FusionDigital 由新奥聚变人工智能团队维护。项目将聚变物理、
 - **数字样机工作台**：在浏览器中查看 Paramak、EXL-50U 与 ITER 的获准公开派生模型，支持结构树、剖切、爆炸、测量和清单追溯。
 - **实验诊断复现**：展示经审核的 EFIT 标量、轮廓、拓扑和时间序列派生物，同时保持原始 G-file、psi 网格和实验档案的受控边界。
 - **控制与诊断图谱**：按任务、装置、代码、论文、证据等级和部署阶段双向索引控制与诊断工作。
-- **身份与人工治理**：Sites 预览/开发环境可由 D1 承载账户、角色、配额、审计、研究候选和职责分离审核；阿里云香港公开生产版有意关闭这些写能力。
+- **身份与人工治理**：Sites 平台环境可由 D1 承载账户、角色、配额、审计、研究候选和职责分离审核；阿里云香港公开生产版有意关闭这些写能力。
 - **可复现研究流水线**：源数据经归一化、去重和审计后生成网页 JSON、CSV、BIB、TypeScript 与 Word 报告。
 - **中英双语与主题适配**：关键页面支持中英文切换、明暗主题、响应式布局和键盘访问。
 
@@ -87,7 +89,7 @@ FusionDigital 由新奥聚变人工智能团队维护。项目将聚变物理、
 | 控制与诊断 | [`/control`](https://fusiondigital.club/control) · [`/diagnostics`](https://fusiondigital.club/diagnostics) | T0–T9 控制任务、DG0–DG11 诊断任务、装置/PCS、证据与孪生接口 |
 | 智能与证据 | [`/ai`](https://fusiondigital.club/ai) · [`/search`](https://fusiondigital.club/search) · [`/knowledge-graph`](https://fusiondigital.club/knowledge-graph) | AI 工作目录、确定性检索、引用问答与一至两跳证据关系 |
 | 装置与样机 | [`/facilities`](https://fusiondigital.club/facilities) · [`/#prototype-workspace`](https://fusiondigital.club/#prototype-workspace) | 全球装置状态、Paramak / EXL-50U / EHL-2 / ITER 目录、三维模型与 EFIT 工作台 |
-| 账户与治理 | `/account` · `/research-review` | 代码与预览环境能力；阿里云香港 `public-anonymous` 生产版不开放账户、审核和写 API |
+| 账户与治理 | `/account` · `/research-review` | 代码与 Sites 平台环境能力；阿里云香港 `public-anonymous` 生产版不开放账户、审核和写 API |
 
 ## 🔥 快速上手
 
@@ -171,7 +173,7 @@ scripts/
   assets/                     外置资产获取、校验与镜像暂存工具
 tests/                        SSR、数据合同、资产、安全边界与 UI 测试
 docs/                         架构、复现、平台路线和协作手册
-.openai/hosting.json          Sites 预览项目标识与逻辑资源声明（非生产域名配置）
+.openai/hosting.json          Sites 同步镜像项目标识与逻辑资源声明（非生产域名配置）
 ```
 
 架构入口：[项目架构](./docs/ARCHITECTURE.md) · [平台技术路线](./docs/PLATFORM_TECHNICAL_ROADMAP.md) · [知识对话](./docs/KNOWLEDGE_CONVERSATION.md) · [LLM 配置](./docs/LLM_PROVIDER_CONFIGURATION.md)
@@ -214,7 +216,7 @@ docs/                         架构、复现、平台路线和协作手册
 | DNS | 阿里云 DNS；`@` 与 `www` 的所有线路只允许解析到 `47.82.66.79` |
 | 协作仓库 | [Codeup `master`](https://codeup.aliyun.com/fiatlux/DT/FusionDigital)，唯一事实源 |
 | 公开镜像 | [GitHub `main`](https://github.com/tianshao1992/fusion-digital)，与 Codeup 保持相同 SHA |
-| Sites | 仅使用平台分配的 `*.chatgpt.site` 预览/人工备用地址，不承载生产域名 |
+| Sites | [平台分配地址](https://fusion-physics-atlas-2026.tianyuanliu1992.chatgpt.site/)是同步公开镜像/人工备用入口；正式发布必须与香港站部署同一完整 SHA，但不承载生产域名 |
 
 ### 阿里云内地备案前预部署
 
@@ -230,8 +232,8 @@ docs/                         架构、复现、平台路线和协作手册
 > **生产域名不可绑定 Sites。** 不得为 apex 或 `www` 创建/恢复
 > `custom-domains.chatgpt.site` CNAME、Cloudflare A/AAAA 或任何其他托管平台记录。
 > 已知旧地址 `162.159.143.30`、`172.66.3.26` 必须从阿里云 DNS 的默认、境内、
-> 境外及运营商分线路中清除。`.openai/hosting.json` 只服务于 Sites 预览，不是生产
-> 托管声明。
+> 境外及运营商分线路中清除。`.openai/hosting.json` 只服务于 Sites 同步镜像项目，
+> 不是 `fusiondigital.club` 的生产域名托管声明。
 
 ### 两台机器 / Codex 的统一流程
 
@@ -245,13 +247,18 @@ docs/                         架构、复现、平台路线和协作手册
 4. 从干净工作树运行 `npm run release:sync-remotes`。若主工作区有无关的用户文件，
    从目标 SHA 建专用 clean detached worktree 执行，不得 stash/移动/删除这些文件。
    本地 `HEAD`、Codeup `master`、GitHub `main` 的完整 SHA 必须完全相同。
-5. 从该 SHA 建立 detached worktree，构建 `public-anonymous` 不可变发布包，通过
-   `FUSIONDIGITAL_BUILD_TARGET=aliyun-hk` 明确选择自包含香港包，通过 SSH/SCP
-   部署到 `47.82.66.79`，运行
-   `npm run release:verify-dns`，再执行 TLS、HTTP 和国内三网
-   门禁。
-6. 应用回滚只切换香港服务器的旧 release；不得把生产 DNS “回滚”到 Sites 或
-   Cloudflare。主机故障时可以单独分享 Sites 平台预览 URL。
+5. 从该 SHA 建立隔离的 detached worktree，分别构建两个不可混用的产物：香港包
+   使用 `NEXT_PUBLIC_FUSIONDIGITAL_MODE=public-anonymous` 与
+   `FUSIONDIGITAL_BUILD_TARGET=aliyun-hk`，Sites 包使用
+   `FUSIONDIGITAL_BUILD_TARGET=sites` 并通过平台归档门禁。两个产物必须来自同一
+   个完整 SHA。
+6. 将香港包通过 SSH/SCP 部署到 `47.82.66.79`；将 Sites 包保存并发布到现有平台
+   地址，确认 Sites source `commit_sha`、香港 release、本地 `HEAD`、Codeup
+   `master` 与 GitHub `main` 完全一致。随后运行 `npm run release:verify-dns`，再执行
+   双端 TLS/HTTP、匿名安全边界与国内三网门禁。任一端未成功都不得宣布正式发布完成。
+7. 应用回滚必须把香港 release 与 Sites 已部署版本同步恢复到两端共同的上一正常
+   SHA；DNS 始终只指向香港 `47.82.66.79`，不得“回滚”到 Sites 或 Cloudflare。主机
+   故障时可以单独分享 Sites 平台地址，但不得自动改动生产 DNS。
 
 只读核对远端 SHA：
 

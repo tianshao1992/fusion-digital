@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
@@ -13,6 +14,10 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const CONTRACT_PATH = join(ROOT, "deploy", "production-contract.json");
 const PRODUCTION_IP = "47.82.66.79";
 const CLOUDFLARE_IP = "172.66.3.26";
+
+function normalizeWhitespace(value) {
+  return value.replace(/\s+/gu, " ").trim();
+}
 
 function clone(value) {
   return structuredClone(value);
@@ -94,6 +99,34 @@ test("checked-in contract pins both production names to the Aliyun Hong Kong IPv
       "no-ecs",
     ],
   );
+});
+
+test("formal releases require the same Git SHA on Hong Kong and OpenAI Sites without changing production DNS", async () => {
+  const [agentsRaw, releaseRaw, hostingRaw] = await Promise.all([
+    readFile(join(ROOT, "AGENTS.md"), "utf8"),
+    readFile(join(ROOT, "docs", "RELEASE.md"), "utf8"),
+    readFile(join(ROOT, ".openai", "hosting.json"), "utf8"),
+  ]);
+  const agents = normalizeWhitespace(agentsRaw);
+  const release = normalizeWhitespace(releaseRaw);
+  const rule = normalizeWhitespace(
+    "正式发布必须把同一个完整提交 SHA 同时部署到阿里云香港与 OpenAI Sites；任一端未成功都不得宣布发布完成。",
+  );
+
+  assert.ok(agents.includes(rule));
+  assert.ok(release.includes(rule));
+  assert.doesNotMatch(agentsRaw, /只有用户明确要求生成预览时/u);
+  assert.doesNotMatch(releaseRaw, /独立、非阻塞/u);
+  assert.match(release, /Sites 保存版本的 `commit_sha` 必须等于本次 `ReleaseSha`/u);
+  assert.match(release, /部署状态必须为 `succeeded`/u);
+  assert.match(release, /OpenAI Sites commit_sha：/u);
+  assert.match(release, /OpenAI Sites 版本\/部署 ID：/u);
+  assert.match(release, /OpenAI Sites URL\/状态：/u);
+
+  const hosting = JSON.parse(hostingRaw);
+  assert.deepEqual(Object.keys(hosting).sort(), ["d1", "project_id", "r2"]);
+  assert.equal(hosting.project_id, "appgprj_6a78141f72588191a3b12afd0ad56022");
+  assert.doesNotMatch(hostingRaw, /fusiondigital\.club|custom-domains\.chatgpt\.site/u);
 });
 
 test("verification passes every hostname through default, no-ECS, global, and carrier probes", async () => {

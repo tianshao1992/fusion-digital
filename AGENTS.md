@@ -11,10 +11,11 @@
   `https://www.fusiondigital.club/`。
 - 两个名称必须由阿里云 DNS 解析到阿里云香港轻量服务器
   `47.82.66.79`，运行模式必须是 `public-anonymous`。
-- OpenAI Sites 只用于其平台分配的 `*.chatgpt.site` 预览/人工备用地址，
-  不是 `fusiondigital.club` 的生产源站或 DNS 备用源站。
-- `.openai/hosting.json` 只声明 Sites 预览项目资源，不授予修改生产域名或 DNS 的
-  权限。
+- OpenAI Sites 的平台分配 `*.chatgpt.site` 地址是与香港站同步发布的公开镜像/人工
+  备用入口，不是 `fusiondigital.club` 的生产源站或 DNS 备用源站。
+- 正式发布必须把同一个完整提交 SHA 同时部署到阿里云香港与 OpenAI Sites；任一端未成功都不得宣布发布完成。
+- `.openai/hosting.json` 只声明 Sites 同步镜像项目资源，不授予修改生产域名或 DNS
+  的权限。
 - 严禁把 `fusiondigital.club` 或 `www.fusiondigital.club` 绑定到 Sites，严禁创建或
   恢复指向 `custom-domains.chatgpt.site`、Cloudflare 或其他托管平台的 A、AAAA、
   CNAME、ALIAS/ANAME 记录。
@@ -39,8 +40,9 @@
 ## 2. Git 事实源
 
 - Codeup `master` 是唯一协作事实源；GitHub `main` 是同一提交的公开镜像。
-- 正式发布时 Codeup `master`、GitHub `main`、本地 `HEAD` 和服务器 release 必须
-  是同一个完整提交 SHA。Git 远端别名可因机器不同而变化，操作前必须先用
+- 正式发布时 Codeup `master`、GitHub `main`、本地 `HEAD`、香港服务器 release 和
+  OpenAI Sites 已部署版本的 source `commit_sha` 必须是同一个完整提交 SHA。Git 远端
+  别名可因机器不同而变化，操作前必须先用
   `git remote -v` 核对 URL。同步脚本会枚举远端并按准确仓库 URL 自动识别；有
   歧义时使用 `FUSIONDIGITAL_CODEUP_REMOTE` 与 `FUSIONDIGITAL_GITHUB_REMOTE`
   显式指定，不得凭别名猜测。
@@ -58,33 +60,41 @@
 3. 仅在干净工作树中运行 `npm run release:sync-remotes`，确认 Codeup `master` 与
    GitHub `main` 都等于该提交。若主工作区含无关的用户修改/未跟踪文件，应从目标
    SHA 创建专用 clean detached worktree 执行；不得为发布而 stash、移动或删除它们。
-4. 从该提交创建 detached worktree，按香港部署手册构建
-   `NEXT_PUBLIC_FUSIONDIGITAL_MODE=public-anonymous` 且
-   `FUSIONDIGITAL_BUILD_TARGET=aliyun-hk` 的不可变发布包。后者仅免除 Sites 包体
-   上限，不得放宽匿名安全边界或资产完整性检查。
-5. 通过 SSH/SCP 上传到 `47.82.66.79`，安装到新的 release 目录，原子切换
+4. 从该提交创建隔离 worktree，分别构建两个不可混用的产物：香港包必须设置
+   `NEXT_PUBLIC_FUSIONDIGITAL_MODE=public-anonymous` 和
+   `FUSIONDIGITAL_BUILD_TARGET=aliyun-hk` 并补齐锁定的 ITER 分片；Sites 包必须使用
+   `FUSIONDIGITAL_BUILD_TARGET=sites`、通过 256 MiB 门禁并由官方打包脚本生成。
+   两个产物必须来自同一完整提交 SHA，且都不得放宽匿名安全边界或资产完整性检查。
+5. 通过 SSH/SCP 上传香港包到 `47.82.66.79`，安装到新的 release 目录，原子切换
    `/srv/fusiondigital/current`；不得在 1 GiB 生产机上构建源码。
-6. 先用 IP + Host/SNI 验证服务，再运行
+6. 用同一提交的 Sites 包保存新版本，确认其 source `commit_sha` 精确等于香港 release
+   SHA，再发布到现有平台地址并等待部署状态为 `succeeded`。不得新增或恢复生产域名
+   绑定。
+7. 核对香港 release 与 Sites 已部署版本的 SHA。若任一端失败，必须把已经更新的另
+   一端回滚到两端共同的上一正常 SHA；不得保留不一致状态并宣布发布完成。
+8. 先用 IP + Host/SNI 验证香港服务，再运行
    `npm run release:verify-dns` 执行版本化 DNS 合同硬门禁；
    AliDNS no-ECS、全球兜底、通用境内与国内三网硬探针不合格时不得宣布上线。本机
    `system-default` 仅作 advisory，关闭 VPN/代理后用于人工复核；Clash 等产生的
    `198.18.0.0/15` fake-IP 不能掩盖可信 DoH 硬探针的失败。
-7. 验证双域名 TLS、HTTP、公开检索/资产、匿名安全边界，并使用境内电信、联通、
-   移动节点复核后才完成发布。
+9. 验证香港双域名与 Sites 平台地址的 TLS/HTTP、公开检索/资产、匿名安全边界，并
+   使用境内电信、联通、移动节点复核香港入口后才完成发布。
 
-应用回滚只切换香港服务器上的旧 release。禁止把生产域名“回滚”到 Sites 或
-Cloudflare；服务器故障期间可单独分享 Sites 平台预览地址，但不得自动改动生产
-DNS。
+应用发布若需要回滚，香港服务器和 Sites 必须回到两端共同的上一正常 SHA。DNS 回滚
+仍只指香港服务器，禁止把生产域名“回滚”到 Sites 或 Cloudflare；服务器故障期间可
+单独分享 Sites 平台地址，但不得自动改动生产 DNS。
 
 ## 4. Codex 操作门禁
 
-- 当用户要求“发布/部署 `fusiondigital.club`”时，默认且唯一流程是阿里云香港 SSH
-  部署；不得调用 Sites 自定义域名绑定流程。
-- 只有用户明确要求生成预览时，才能发布 Sites 平台地址；预览操作不得创建、验证、
-  绑定、恢复或建议修改 apex/`www` 的 DNS。
+- 当用户要求“发布/部署 `fusiondigital.club`”或正式发布代码时，默认流程必须同时
+  更新阿里云香港和现有 OpenAI Sites 平台地址到同一 SHA；不得调用 Sites 自定义域名
+  绑定流程。仅生成未发布的本地预览不属于正式发布。
+- Sites 同步发布不得创建、验证、绑定、恢复或建议修改 apex/`www` 的 DNS，也不得把
+  平台地址描述为中国大陆稳定访问入口。
 - 以下任一条件成立时必须停止生产发布并说明原因：两个远端 SHA 不一致、工作树不
-  干净、构建/测试失败、服务器 release SHA 无法核对、任一可信 DNS 硬探针不是
-  `47.82.66.79`、境内节点出现系统性 403/5xx、证书验证失败。本机系统解析若受
-  fake-IP 影响应明确标注 advisory，不得误报为真实公网地址。
+  干净、构建/测试失败、服务器 release SHA 或 Sites source `commit_sha` 无法核对、
+  Sites 部署未成功、两端 SHA 不一致、任一可信 DNS 硬探针不是 `47.82.66.79`、境内
+  节点出现系统性 403/5xx、证书验证失败。本机系统解析若受 fake-IP 影响应明确标注
+  advisory，不得误报为真实公网地址。
 - 不在命令、文档、Git URL、日志或提交中保存密码、私钥、Cookie、临时令牌和阿里云
   凭证。涉及验证码、付款、实名、删除或域名所有权变更时由用户本人确认。
