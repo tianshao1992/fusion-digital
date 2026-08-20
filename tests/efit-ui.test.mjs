@@ -132,12 +132,19 @@ test('digital-prototype workspace gives device summaries to the top cards and sa
     assert.doesNotMatch(declarations, /max-width:/, `${selector} must not retain the former 1600px ceiling`);
   }
   assert.match(workspaceCss, /\.deviceSelector\s*\{[^}]*grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/);
+  assert.match(workspaceCss, /\.multiDeviceIntro\s*\{[^}]*display:block/);
   assert.match(cssRule(workspaceCss, '.deviceStage'), /display:block/);
   assert.match(cssRule(workspaceCss, '.deviceStage[hidden]'), /display:none/);
+  const introStart = workspace.indexOf('<div className="multiDeviceIntro"');
+  const selectorStart = workspace.indexOf('<div className="deviceSelector"');
+  assert.ok(introStart >= 0 && selectorStart > introStart, 'missing compact workspace heading boundary');
+  const introSource = workspace.slice(introStart, selectorStart);
+  assert.match(introSource, /<h2 id="multi-device-title">\{t\('workspace\.title'\)\}<\/h2>/);
+  assert.doesNotMatch(introSource, /WORKSPACE|workspace\.lead|<span>/,
+    'workspace heading must render as one concise line without an eyebrow or explanatory lead');
   assert.doesNotMatch(workspace, /deviceAuthority/, 'the former left information rail must not remain in the rendered workspace');
   assert.match(workspace, /device\.deviceOverview/);
   assert.match(workspace, /device\.fileSummary/);
-  const selectorStart = workspace.indexOf('<div className="deviceSelector"');
   const panelMapStart = workspace.indexOf('{catalog.devices.map((device) => {', selectorStart + 1);
   assert.ok(selectorStart >= 0 && panelMapStart > selectorStart, 'missing device summary-card source boundary');
   const selectorSource = workspace.slice(selectorStart, panelMapStart);

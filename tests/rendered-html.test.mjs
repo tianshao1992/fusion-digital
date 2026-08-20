@@ -323,7 +323,8 @@ test('server-renders the FusionDigital community portal', async () => {
   assert.match(html, /class="prototypePage prototypePage--embedded"/);
   assert.doesNotMatch(html, />三维与 EFIT 联动<\/a>/);
   assert.match(html, /data-three-viewer="paramak-full-device"/);
-  assert.match(html, /装置、三维与 EFIT 联动/);
+  assert.match(html, /装置三维可视化/);
+  assert.doesNotMatch(html, /装置、三维与 EFIT 联动|从顶部装置卡选择样机/);
   assert.match(html, /EXL(?:‑|-)?50U 2026 升级版/);
   assert.match(html, /ITER 教育高精度模型/);
   assert.match(html, /搜索名称、ID 或工程标签/);
@@ -459,7 +460,8 @@ test('homepage owns the public full-device digital-prototype workspace', async (
   assert.equal((html.match(/id="prototype-workspace"/g) ?? []).length, 1);
   assert.ok(html.indexOf('id="prototype-workspace"') < html.indexOf('data-echart="fusion-twin-system-map"'),
     'the working interface must replace the former preview before the system map');
-  assert.match(html, /装置、三维与 EFIT 联动/);
+  assert.match(html, /装置三维可视化/);
+  assert.doesNotMatch(html, /装置、三维与 EFIT 联动|从顶部装置卡选择样机/);
   assert.match(html, /data-three-viewer="paramak-full-device"/);
   assert.match(html, /Paramak/);
   assert.match(html, /EXL(?:‑|-)?50U 2026 升级版/);

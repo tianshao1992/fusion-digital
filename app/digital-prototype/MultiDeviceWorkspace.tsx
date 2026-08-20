@@ -283,11 +283,7 @@ export default function MultiDeviceWorkspace({ catalog }: { catalog: DeviceCatal
 
   return <section className="multiDeviceSection" id="prototype-workspace" aria-labelledby="multi-device-title">
     <div className="multiDeviceIntro">
-      <p>WORKSPACE</p>
-      <div>
-        <h2 id="multi-device-title">{t('workspace.title')}</h2>
-        <span>{t('workspace.lead')}</span>
-      </div>
+      <h2 id="multi-device-title">{t('workspace.title')}</h2>
     </div>
 
     <div className="deviceSelector" role="tablist" aria-label={t('workspace.deviceTabs')}>

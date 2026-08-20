@@ -1,5 +1,9 @@
 /* Device-workspace information architecture: the four tabs are the device
    summary cards, while the stage is reserved for 3D and scientific plots. */
+.multiDeviceIntro{
+  display:block;
+}
+
 .deviceSelector{
   grid-template-columns:repeat(4,minmax(0,1fr));
 }
