@@ -5,6 +5,7 @@ import {
   PUBLIC_ANONYMOUS_MODE,
   validateDeploymentBuildTarget,
 } from './build-target.mjs';
+import { precompressStaticAssets } from './precompress-static-assets.mjs';
 
 const distUrl = new URL('../../dist/', import.meta.url);
 const distClientUrl = new URL('client/', distUrl);
@@ -311,6 +312,10 @@ export async function runPostbuildPrune({
   await rm(searchIndexDistUrl, { force: true });
   removed.push({ id: 'fusion-knowledge-index.client-copy', bytes: embeddedSearchIndexBytes });
 
+  const precompressed = buildContract.isAliyunVm
+    ? await precompressStaticAssets({ assetsUrl: new URL('assets/', distClientUrl) })
+    : { fileCount: 0, sourceBytes: 0, compressedBytes: 0 };
+
   const expandedBytes = await byteLength(distUrl);
   const removedBytes = removed.reduce((total, item) => total + item.bytes, 0);
 
@@ -330,6 +335,8 @@ export async function runPostbuildPrune({
     console.log(
       `[postbuild] Aliyun VM (${buildTarget}) public-anonymous runtime preserved ${iterCache.fileCount} locked ITER files `
       + `(${iterCache.totalBytes} bytes); pruned ${removedBytes} other obsolete bytes; `
+      + `precompressed ${precompressed.fileCount} JS/CSS assets `
+      + `(${precompressed.sourceBytes} -> ${precompressed.compressedBytes} bytes); `
       + `dist=${expandedBytes} bytes; Sites package limit not applicable.`,
     );
   }

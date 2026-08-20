@@ -46,6 +46,11 @@ vinext 127.0.0.1:3000 (public-anonymous)
 `127.0.0.1`，并在 `NEXT_PUBLIC_FUSIONDIGITAL_MODE` 不是
 `public-anonymous` 时拒绝启动。
 
+生产入口在证书存在时固定启用 HTTP/2。构建会为 1 KiB 以上的 JS/CSS 生成无损
+gzip sidecar，Nginx 优先发送这些逐字节可逆的传输副本；PNG、WebP、GLB、EFIT
+及其他展示资产保持原始文件，不做有损处理。原始 `.jsonl.gz` 数据显式禁用 HTTP
+Content-Encoding，确保 Range 和压缩字节 SHA-256 契约不变。
+
 服务器只需要以下运行文件，不需要源码树或完整 `node_modules`：
 
 ```text
@@ -90,10 +95,17 @@ $env:NEXT_PUBLIC_FUSIONDIGITAL_MODE = "public-anonymous"
 $env:FUSIONDIGITAL_BUILD_TARGET = "aliyun-hk"
 npm run build
 
+# postbuild 必须生成 JS/CSS 的无损 gzip sidecar；至少应存在一个文件。
+if (-not (Get-ChildItem "dist\client\assets" -Recurse -File -Filter "*.gz" | Select-Object -First 1)) {
+  throw "Aliyun build did not generate static gzip sidecars"
+}
+
 $ReleaseManifest = [ordered]@{
-  schemaVersion = 1
+  schemaVersion = 2
   commitSha = $Sha
   mode = "public-anonymous"
+  buildTarget = "aliyun-hk"
+  deploymentProfile = "aliyun-hk-production"
 }
 $ReleaseManifestJson = $ReleaseManifest | ConvertTo-Json -Compress
 [System.IO.File]::WriteAllText(
@@ -131,6 +143,18 @@ npm run assets:verify
 
 ```powershell
 scp $Bundle "root@<SERVER_IP>:/tmp/fusiondigital-$ShortSha.tgz"
+scp "deploy/aliyun-hk/install-release.sh" "root@<SERVER_IP>:/tmp/install-fusiondigital-release.sh"
+```
+
+必须始终调用仓库内的安装器，而不是手工覆盖 current、systemd 和 Nginx。安装器会
+核对完整提交 SHA、包 SHA-256、ITER 字节数、EFIT 入口、每个 gzip sidecar 的解压
+字节一致性，并在已有证书时从版本化模板恢复 HTTPS/HTTP2 配置：
+
+```bash
+sudo bash /tmp/install-fusiondigital-release.sh \
+  "/tmp/fusiondigital-<SHORT_SHA>.tgz" \
+  "<FULL_COMMIT_SHA>" \
+  "<64_CHAR_LOWERCASE_SHA256>"
 ```
 
 ## 3. Ubuntu 24.04 初始化
@@ -183,72 +207,20 @@ sudo install -d -m 0750 -o root -g fusiondigital \
   /srv/fusiondigital /srv/fusiondigital/releases
 ```
 
-## 4. 安装首个 release
+## 4. 安装 release 与 Nginx 边界
 
-`RELEASE` 使用完整提交 SHA；压缩包文件名可以保留 12 位短 SHA，但 release 目录和
-包内 manifest 必须保留完整 SHA。release 目录不可复用或覆盖：
+唯一允许的安装入口是第 2 节上传的版本化 `install-release.sh`。不得手工解包、直接
+修改 `/srv/fusiondigital/current`、复制 `nginx.conf` 或覆盖 systemd unit；这些旁路
+会跳过归档安全检查、并发锁、gzip/ITER/EFIT 门禁、TLS renderer 与事务回滚。
 
-```bash
-RELEASE="<FULL_COMMIT_SHA>"
-[[ "$RELEASE" =~ ^[0-9a-f]{40}([0-9a-f]{24})?$ ]] \
-  || { echo "RELEASE must be a full lowercase Git SHA" >&2; exit 2; }
-SHORT_RELEASE="${RELEASE:0:12}"
-BUNDLE="/tmp/fusiondigital-${SHORT_RELEASE}.tgz"
-EXPECTED_BUNDLE_SHA256="<64_CHAR_LOWERCASE_SHA256>"
-[[ "$EXPECTED_BUNDLE_SHA256" =~ ^[0-9a-f]{64}$ ]] \
-  || { echo "invalid bundle SHA-256" >&2; exit 2; }
-TARGET="/srv/fusiondigital/releases/${RELEASE}"
-
-printf '%s  %s\n' "$EXPECTED_BUNDLE_SHA256" "$BUNDLE" | sha256sum --check --strict -
-sudo test ! -e "$TARGET"
-sudo install -d -m 0750 -o root -g fusiondigital "$TARGET"
-sudo tar -xzf "$BUNDLE" -C "$TARGET"
-
-sudo test -f "$TARGET/dist/server/index.js"
-sudo test -f "$TARGET/dist/server/ssr/index.js"
-sudo test -f "$TARGET/node_modules/vinext/dist/server/prod-server.js"
-sudo test -f "$TARGET/.fusiondigital-release.json"
-sudo node -e '
-  const fs = require("node:fs");
-  const manifest = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
-  if (manifest.schemaVersion !== 1 || manifest.commitSha !== process.argv[2] || manifest.mode !== "public-anonymous") process.exit(1);
-' "$TARGET/.fusiondigital-release.json" "$RELEASE"
-test "$(sudo find "$TARGET/dist/client/models/iter-high-detail-v1" -maxdepth 1 -type f | wc -l)" -eq 18
-
-sudo chown -R root:fusiondigital "$TARGET"
-sudo find "$TARGET" -type d -exec chmod 750 {} \;
-sudo find "$TARGET" -type f -exec chmod 640 {} \;
-sudo ln -sfn "$TARGET" /srv/fusiondigital/current
-```
-
-安装服务定义并启动：
-
-```bash
-sudo install -m 0644 \
-  /srv/fusiondigital/current/deploy/aliyun-hk/fusiondigital.service \
-  /etc/systemd/system/fusiondigital.service
-sudo systemctl daemon-reload
-sudo systemctl enable --now fusiondigital
-sudo systemctl status fusiondigital --no-pager
-curl -fsS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:3000/
-```
+第 3 节初始化与包管理只执行一次；日常 release 安装器不会运行 `apt`、改 NodeSource、
+swap 或用户组。安装器使用完整 SHA 建立不可变 release，在写入任何 Nginx/systemd 配置前备份当前
+状态；若配置校验、服务启动或资源 smoke test 任一失败，会恢复旧 current、配置与
+服务状态，并删除失败 release 以允许同一 SHA 重试。
 
 服务把 V8 heap 限制为 384 MiB，并设置 systemd `MemoryHigh=550M`、
 `MemoryMax=700M`。vinext 只在启动时缓存小于 64 KiB 的静态文件；大型报告、
 模型和 EFIT 数据由 Nginx 直接流式发送。
-
-## 5. 安装 Nginx 边界
-
-```bash
-sudo install -m 0644 \
-  /srv/fusiondigital/current/deploy/aliyun-hk/nginx.conf \
-  /etc/nginx/sites-available/fusiondigital
-sudo ln -sfn /etc/nginx/sites-available/fusiondigital \
-  /etc/nginx/sites-enabled/fusiondigital
-sudo rm -f /etc/nginx/sites-enabled/default
-sudo nginx -t
-sudo systemctl restart nginx
-```
 
 Nginx 配置同时支持 apex 和 `www`。在切换 DNS 前，先用公网 IP 和 Host 头验证；
 此时不需要修改本机 hosts：
@@ -265,7 +237,7 @@ curl -fsS -H 'Host: fusiondigital.club' \
 curl -fsSI -H 'Host: fusiondigital.club' http://<SERVER_IP>/
 ```
 
-## 6. DNS 与 HTTPS
+## 5. DNS 与 HTTPS
 
 先导出或截图阿里云 DNS 当前记录用于审计；旧记录只能作为调查证据，不能被默认
 视为可用回滚目标。配置必须满足：
@@ -313,12 +285,15 @@ sudo /srv/fusiondigital/current/deploy/aliyun-hk/finalize-https.sh \
 ```
 
 部署时若曾临时让 SSH 监听 443，脚本会先将 SSH 恢复为仅监听 22，再通过 Certbot
-签发双域名证书、启用 HTTPS 重定向并开启自动续期 timer。省略邮箱参数时脚本使用
-Certbot 的无邮箱注册方式，适合短期临时环境，但不会收到证书到期通知。
+签发双域名证书、从版本化模板启用 HTTPS 重定向与 HTTP/2，并开启自动续期 timer。
+后续 release 的安装器会检测现有证书并保留这套 TLS 配置，不再依赖 Certbot 修改过的
+临时文件。省略邮箱参数时脚本使用 Certbot 的无邮箱注册方式，适合短期临时环境，
+但不会收到证书到期通知。
 
-如果暂时没有 `www` DNS，首轮只为 apex 申请证书；创建 `www` 解析后再扩展证书。
+执行脚本前，apex 与 `www` 都必须已解析到香港源站并能通过 HTTP 验证；任一名称未就绪
+时停止签发，不使用单域名证书绕过固定双域名拓扑。
 
-## 7. 上线验收
+## 6. 上线验收
 
 基础状态：
 
@@ -328,6 +303,7 @@ journalctl -u fusiondigital -n 100 --no-pager
 free -h
 curl -fsSI https://fusiondigital.club/
 curl -fsSI https://www.fusiondigital.club/
+curl -fsSI --http2 https://fusiondigital.club/
 ```
 
 公开能力：
@@ -336,7 +312,11 @@ curl -fsSI https://www.fusiondigital.club/
 curl -fsS 'https://fusiondigital.club/api/search?q=tokamak&limit=5' >/dev/null
 curl -fsSI https://fusiondigital.club/device-assets/exl50u-interactive/model-manifest.json
 curl -fsSI https://fusiondigital.club/device-data/exl50u-efit/index.json
+curl -fsSI -H 'Accept-Encoding: gzip' https://fusiondigital.club/assets/<HASHED_ASSET>.js
 ```
+
+JS/CSS 响应应包含 `Content-Encoding: gzip`，而
+`/device-data/exl50u-efit-v2/*.jsonl.gz` 响应不得包含该头。
 
 ITER Range 请求应返回 206 和 `Content-Range`：
 
@@ -366,28 +346,12 @@ curl -sS -o /dev/null -w '%{http_code}\n' \
 清单和 Range 请求。用户浏览器控制台不应再出现对 GitHub Releases、OpenAI Sites
 或 Cloudflare D1 的运行时依赖。
 
-## 8. 发布新版本与回滚
+## 7. 发布新版本与回滚
 
-每次发布使用全新不可变 release 目录。切换前记录当前目标：
-
-```bash
-PREVIOUS="$(readlink -f /srv/fusiondigital/current)"
-NEW_RELEASE="/srv/fusiondigital/releases/<NEW_FULL_COMMIT_SHA>"
-
-sudo test -f "$NEW_RELEASE/dist/server/index.js"
-sudo ln -sfn "$NEW_RELEASE" /srv/fusiondigital/current
-sudo systemctl restart fusiondigital
-curl -fsS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:3000/
-```
-
-应用验收失败时原子回滚：
-
-```bash
-sudo test -f "$PREVIOUS/dist/server/index.js"
-sudo ln -sfn "$PREVIOUS" /srv/fusiondigital/current
-sudo systemctl restart fusiondigital
-curl -fsS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:3000/
-```
+每次发布都重新调用第 2、4 节的安装器。它只接受全新的完整 SHA release，并在安装
+失败时自动恢复旧版本。已成功发布后的人工回滚也应由维护者明确记录目标 SHA，先
+验证该 release 的 manifest 与文件完整性，再在维护窗口原子切换；不得用手工回滚
+作为日常发布旁路。
 
 若服务器整体不可用，优先修复主机或切换到服务器上的已知正常 release。可以把
 Sites 平台分配的 `*.chatgpt.site` URL 单独发给使用者作为人工备用，但不得把
@@ -395,7 +359,7 @@ Sites 平台分配的 `*.chatgpt.site` URL 单独发给使用者作为人工备�
 基础设施变更，必须另行完成审批、证书、DNS 和回滚设计。不要删除旧 release，直到
 新版本经过国内多网络验收。
 
-## 9. 预期不可用能力
+## 8. 预期不可用能力
 
 公开匿名镜像有意关闭：
 

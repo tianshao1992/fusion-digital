@@ -101,31 +101,24 @@ test("checked-in contract pins both production names to the Aliyun Hong Kong IPv
   );
 });
 
-test("formal releases require the same Git SHA on Hong Kong and OpenAI Sites without changing production DNS", async () => {
-  const [agentsRaw, releaseRaw, hostingRaw] = await Promise.all([
+test("production releases use Hong Kong only and Sites stays an explicit preview", async () => {
+  const [agentsRaw, releaseRaw, hostingRaw, packageRaw] = await Promise.all([
     readFile(join(ROOT, "AGENTS.md"), "utf8"),
     readFile(join(ROOT, "docs", "RELEASE.md"), "utf8"),
     readFile(join(ROOT, ".openai", "hosting.json"), "utf8"),
+    readFile(join(ROOT, "package.json"), "utf8"),
   ]);
   const agents = normalizeWhitespace(agentsRaw);
   const release = normalizeWhitespace(releaseRaw);
-  const rule = normalizeWhitespace(
-    "正式发布必须把同一个完整提交 SHA 同时部署到阿里云香港与 OpenAI Sites；任一端未成功都不得宣布发布完成。",
-  );
 
-  assert.ok(agents.includes(rule));
-  assert.ok(release.includes(rule));
-  assert.doesNotMatch(agentsRaw, /只有用户明确要求生成预览时/u);
-  assert.doesNotMatch(releaseRaw, /独立、非阻塞/u);
-  assert.match(release, /Sites 保存版本的 `commit_sha` 必须等于本次 `ReleaseSha`/u);
-  assert.match(release, /部署状态必须为 `succeeded`/u);
-  assert.match(release, /OpenAI Sites commit_sha：/u);
-  assert.match(release, /OpenAI Sites 版本\/部署 ID：/u);
-  assert.match(release, /OpenAI Sites URL\/状态：/u);
+  assert.match(agents, /只有用户明确要求生成预览时，才能发布 Sites 平台地址/u);
+  assert.match(release, /只有用户明确要求时才能发布/u);
+  assert.doesNotMatch(agents, /正式发布必须.*同时部署到阿里云香港与 OpenAI Sites/u);
+  assert.doesNotMatch(release, /Sites 同步发布是正式发布的必需步骤/u);
+  assert.doesNotMatch(packageRaw, /release:verify-pair|test:formal-release/u);
 
   const hosting = JSON.parse(hostingRaw);
   assert.deepEqual(Object.keys(hosting).sort(), ["d1", "project_id", "r2"]);
-  assert.equal(hosting.project_id, "appgprj_6a78141f72588191a3b12afd0ad56022");
   assert.doesNotMatch(hostingRaw, /fusiondigital\.club|custom-domains\.chatgpt\.site/u);
 });
 
