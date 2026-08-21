@@ -326,6 +326,36 @@ test('hybrid v2 source exposes legacy and graph shots, finite signal summaries, 
   assert.equal(network.chunkRequests(), 1, 'the verified chunk should be served from the bounded LRU');
 });
 
+test('hybrid source explicitly prepares one reviewed legacy shot and evicts its raw predecessor atomically', async () => {
+  const local = publicAssetFetch();
+  const fullBinaryRequests = new Map<string, number>();
+  let rangeRequests = 0;
+  const fetch = async (input: RequestInfo | URL, init: RequestInit = {}) => {
+    const pathname = new URL(String(input), 'http://localhost').pathname;
+    const filename = pathname.split('/').at(-1) ?? '';
+    const range = new Headers(init.headers).get('range');
+    if (range) rangeRequests += 1;
+    else if (filename.endsWith('.bin')) fullBinaryRequests.set(filename, (fullBinaryRequests.get(filename) ?? 0) + 1);
+    return local.fetch(input, init);
+  };
+  const source = createEfitHybridDataSource({ fetch });
+
+  await source.prepareShot?.(18303);
+  await source.loadFrame(18303, 0);
+  await source.loadFrame(18303, 400);
+  assert.equal(fullBinaryRequests.get('shot-18303.bin'), 1);
+  assert.equal(fullBinaryRequests.get('shot-18303-topology.bin'), 1);
+  assert.equal(rangeRequests, 0, 'prepared legacy frames must not depend on origin Range behavior');
+
+  await source.prepareShot?.(18301);
+  await source.loadFrame(18301, 0);
+  assert.equal(fullBinaryRequests.get('shot-18301.bin'), 1);
+  assert.equal(rangeRequests, 0);
+
+  await source.loadFrame(18303, 1);
+  assert.ok(rangeRequests >= 2, 'after a different shot is admitted, the old raw URLs must no longer hit the single-shot cache');
+});
+
 test('hybrid v2 source shares one in-flight chunk across concurrent consumers', async () => {
   const fixtureValue = fixture();
   const network = mockFetch(fixtureValue.catalog, fixtureValue.compressed, { delayChunk: true });

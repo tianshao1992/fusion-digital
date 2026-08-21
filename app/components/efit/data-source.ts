@@ -35,6 +35,7 @@ const TOPOLOGY_MAX_X_POINTS = 2;
 const TOPOLOGY_MAX_STRIKE_POINTS = 4;
 const TOPOLOGY_KNOWN_FLAGS_MASK = (1 << 11) - 1;
 const TOPOLOGY_KNOWN_STRIKE_FLAGS_MASK = (1 << 2) - 1;
+const DEFAULT_MAX_PREPARED_SHOT_BYTES = 16 * 1024 * 1024;
 const PSI_N_LEVELS = Object.freeze([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]);
 const SOURCE_VALID_FLAG = 1 << 0;
 const TOPOLOGY_KINDS: Readonly<Record<number, EfitTopologyKind>> = Object.freeze({
@@ -76,6 +77,8 @@ export type EfitBinaryDataSourceOptions = {
   indexUrl?: string;
   fetch?: FetchLike;
   maxCachedFrames?: number;
+  /** Maximum reviewed raw bytes retained for one explicitly prepared shot. */
+  maxPreparedShotBytes?: number;
 };
 
 export type EfitBinaryContractSummary = {
@@ -682,6 +685,49 @@ function raceWithAbort<T>(promise: Promise<T>, signal?: AbortSignal): Promise<T>
   });
 }
 
+async function digestHex(bytes: ArrayBuffer): Promise<string> {
+  if (!globalThis.crypto?.subtle) throw new Error('This browser cannot verify EFIT SHA-256 assets.');
+  const digest = await globalThis.crypto.subtle.digest('SHA-256', bytes);
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+async function fetchCompleteBinary(
+  fetcher: FetchLike,
+  url: string,
+  expectedBytes: number,
+  expectedSha256: string,
+  signal?: AbortSignal,
+): Promise<ArrayBuffer> {
+  checkAborted(signal);
+  // Deliberately omit Range. Both range-capable origins and static hosts must
+  // enter the same one-request whole-object path for prepared playback.
+  const response = await fetcher(url, { signal });
+  if (response.status !== 200 && response.status !== 206) {
+    throw new Error(`EFIT complete binary request failed (${response.status}).`);
+  }
+  const bytes = await response.arrayBuffer();
+  checkAborted(signal);
+
+  if (response.status === 206) {
+    const contentRange = response.headers.get('content-range');
+    const expectedRange = `bytes 0-${expectedBytes - 1}/${expectedBytes}`;
+    if (contentRange?.toLowerCase() !== expectedRange) {
+      throw new Error('EFIT complete binary response does not cover the full reviewed object.');
+    }
+  }
+  const contentLength = response.headers.get('content-length');
+  const contentEncoding = response.headers.get('content-encoding');
+  if (!contentEncoding && contentLength !== null && Number(contentLength) !== expectedBytes) {
+    throw new Error('EFIT complete binary Content-Length mismatch.');
+  }
+  if (bytes.byteLength !== expectedBytes) throw new Error('EFIT complete binary byte length mismatch.');
+  if (await digestHex(bytes) !== expectedSha256.toLowerCase()) {
+    throw new Error('EFIT complete binary SHA-256 mismatch.');
+  }
+  checkAborted(signal);
+  return bytes;
+}
+
 function readMagic(buffer: ArrayBuffer): string {
   return new TextDecoder('ascii').decode(new Uint8Array(buffer, 0, 8));
 }
@@ -919,6 +965,53 @@ function parseTopologyFrame(
   return { kind, flags, xPoints, strikePoints, separatrixLegs };
 }
 
+function validateFileHeader(shot: LegacyShotManifest, header: ArrayBuffer): void {
+  if (header.byteLength < shot.binary.fileHeaderBytes) throw new Error(`Shot ${shot.shot} binary header is incomplete.`);
+  const view = new DataView(header);
+  if (readMagic(header) !== EXPECTED_MAGIC) throw new Error(`Shot ${shot.shot} has an unknown EFIT binary format.`);
+  const version = view.getUint32(8, true);
+  const fileShot = view.getUint32(12, true);
+  const frameCount = view.getUint32(16, true);
+  const stride = view.getUint32(20, true);
+  const frameHeader = view.getUint32(24, true);
+  const surfaceCount = view.getUint32(28, true);
+  const points = view.getUint32(32, true);
+  const fileHeader = view.getUint32(36, true);
+  const levels = Array.from(new Uint8Array(header, 40, DEFAULT_SURFACE_COUNT));
+  if (version !== 1 || fileShot !== shot.shot || frameCount !== shot.frameCount
+    || stride !== shot.binary.frameStrideBytes || frameHeader !== shot.binary.frameHeaderBytes
+    || surfaceCount !== shot.binary.surfaceCount || points !== shot.binary.pointsPerContour) {
+    throw new Error(`Shot ${shot.shot} binary header does not match its index metadata.`);
+  }
+  if (fileHeader !== shot.binary.fileHeaderBytes
+    || levels.some((value, index) => value !== (index + 1) * 10)) {
+    throw new Error(`Shot ${shot.shot} binary header has an invalid file header or psiN levels.`);
+  }
+}
+
+function validateTopologyFileHeader(shot: LegacyShotManifest, header: ArrayBuffer): void {
+  const binary = shot.topologyBinary;
+  if (!binary) return;
+  if (header.byteLength < binary.fileHeaderBytes) throw new Error(`Shot ${shot.shot} topology header is incomplete.`);
+  const view = new DataView(header);
+  const hashPrefix = Array.from(new Uint8Array(header, 48, 16))
+    .map((value) => value.toString(16).padStart(2, '0'))
+    .join('');
+  if (readMagic(header) !== TOPOLOGY_MAGIC
+    || view.getUint32(8, true) !== 1
+    || view.getUint32(12, true) !== shot.shot
+    || view.getUint32(16, true) !== shot.frameCount
+    || view.getUint32(20, true) !== binary.frameStrideBytes
+    || view.getUint32(24, true) !== binary.frameHeaderBytes
+    || view.getUint32(28, true) !== binary.maxSeparatrixLegs
+    || view.getUint32(32, true) !== binary.pointsPerLeg
+    || view.getUint32(36, true) !== binary.maxXPoints
+    || view.getUint32(40, true) !== binary.maxStrikePoints
+    || hashPrefix !== binary.baseSha256PrefixHex.toLowerCase()) {
+    throw new Error(`Shot ${shot.shot} topology header does not match its index or base binary binding.`);
+  }
+}
+
 export function createEfitBinaryDataSource(options: EfitBinaryDataSourceOptions = {}): EfitDataSource {
   const indexUrl = canonicalIndexUrl(options.indexUrl ?? DEFAULT_INDEX_URL);
   const fetcher = options.fetch ?? globalThis.fetch.bind(globalThis);
@@ -926,7 +1019,13 @@ export function createEfitBinaryDataSource(options: EfitBinaryDataSourceOptions 
   const maxCachedFrames = Number.isFinite(configuredCacheSize) && Number.isInteger(configuredCacheSize)
     ? Math.min(512, Math.max(4, configuredCacheSize as number))
     : 48;
+  const configuredPreparedShotBytes = options.maxPreparedShotBytes;
+  const maxPreparedShotBytes = Number.isSafeInteger(configuredPreparedShotBytes)
+    ? Math.min(DEFAULT_MAX_PREPARED_SHOT_BYTES, Math.max(0, configuredPreparedShotBytes as number))
+    : DEFAULT_MAX_PREPARED_SHOT_BYTES;
   let manifestPromise: Promise<EfitManifest> | null = null;
+  let preparedShotId: EfitShotId | null = null;
+  let prepareGeneration = 0;
   const verifiedFiles = new Map<EfitShotId, Promise<void>>();
   const verifiedTopologyFiles = new Map<EfitShotId, Promise<void>>();
   const wholeFileCache = new Map<string, ArrayBuffer>();
@@ -971,28 +1070,7 @@ export function createEfitBinaryDataSource(options: EfitBinaryDataSourceOptions 
         wholeFileCache,
         shot.binary.byteLength,
       )
-        .then((header) => {
-          const view = new DataView(header);
-          if (readMagic(header) !== EXPECTED_MAGIC) throw new Error(`Shot ${shot.shot} has an unknown EFIT binary format.`);
-          const version = view.getUint32(8, true);
-          const fileShot = view.getUint32(12, true);
-          const frameCount = view.getUint32(16, true);
-          const stride = view.getUint32(20, true);
-          const frameHeader = view.getUint32(24, true);
-          const surfaceCount = view.getUint32(28, true);
-          const points = view.getUint32(32, true);
-          const fileHeader = view.getUint32(36, true);
-          const levels = Array.from(new Uint8Array(header, 40, DEFAULT_SURFACE_COUNT));
-          if (version !== 1 || fileShot !== shot.shot || frameCount !== shot.frameCount
-            || stride !== shot.binary.frameStrideBytes || frameHeader !== shot.binary.frameHeaderBytes
-            || surfaceCount !== shot.binary.surfaceCount || points !== shot.binary.pointsPerContour) {
-            throw new Error(`Shot ${shot.shot} binary header does not match its index metadata.`);
-          }
-          if (fileHeader !== shot.binary.fileHeaderBytes
-            || levels.some((value, index) => value !== (index + 1) * 10)) {
-            throw new Error(`Shot ${shot.shot} binary header has an invalid file header or psiN levels.`);
-          }
-        })
+        .then((header) => validateFileHeader(shot, header))
         .catch((error) => {
           verifiedFiles.delete(shot.shot);
           throw error;
@@ -1016,25 +1094,7 @@ export function createEfitBinaryDataSource(options: EfitBinaryDataSourceOptions 
         wholeFileCache,
         binary.byteLength,
       )
-        .then((header) => {
-          const view = new DataView(header);
-          const hashPrefix = Array.from(new Uint8Array(header, 48, 16))
-            .map((value) => value.toString(16).padStart(2, '0'))
-            .join('');
-          if (readMagic(header) !== TOPOLOGY_MAGIC
-            || view.getUint32(8, true) !== 1
-            || view.getUint32(12, true) !== shot.shot
-            || view.getUint32(16, true) !== shot.frameCount
-            || view.getUint32(20, true) !== binary.frameStrideBytes
-            || view.getUint32(24, true) !== binary.frameHeaderBytes
-            || view.getUint32(28, true) !== binary.maxSeparatrixLegs
-            || view.getUint32(32, true) !== binary.pointsPerLeg
-            || view.getUint32(36, true) !== binary.maxXPoints
-            || view.getUint32(40, true) !== binary.maxStrikePoints
-            || hashPrefix !== binary.baseSha256PrefixHex.toLowerCase()) {
-            throw new Error(`Shot ${shot.shot} topology header does not match its index or base binary binding.`);
-          }
-        })
+        .then((header) => validateTopologyFileHeader(shot, header))
         .catch((error) => {
           verifiedTopologyFiles.delete(shot.shot);
           throw error;
@@ -1042,6 +1102,47 @@ export function createEfitBinaryDataSource(options: EfitBinaryDataSourceOptions 
       verifiedTopologyFiles.set(shot.shot, pending);
     }
     await raceWithAbort(pending, signal);
+  }
+
+  async function prepareShot(shotId: EfitShotId, request: EfitDataRequest = {}): Promise<void> {
+    const generation = ++prepareGeneration;
+    checkAborted(request.signal);
+    if (preparedShotId === shotId) return;
+    // Keep each explicit selection bound to its own AbortSignal. Reusing an
+    // in-flight promise from an aborted A -> B -> A switch can otherwise make
+    // the final A selection inherit the first A request's inevitable abort.
+    const shot = await findShot(shotId, request);
+    const baseBytes = shot.binary.byteLength;
+    const baseSha256 = shot.binary.sha256;
+    const topology = shot.topologyBinary;
+    const totalBytes = (baseBytes ?? 0) + (topology?.byteLength ?? 0);
+    // Whole-shot preparation is an integrity-bearing fast path, so it is
+    // entered only when every retained object has a reviewed size and hash.
+    // Oversized/future packages keep the existing bounded Range delivery.
+    if (!Number.isSafeInteger(baseBytes) || !baseSha256
+      || totalBytes <= 0 || totalBytes > maxPreparedShotBytes) return;
+
+    const [baseBuffer, topologyBuffer] = await Promise.all([
+      fetchCompleteBinary(fetcher, shot.binary.url, baseBytes as number, baseSha256, request.signal),
+      topology
+        ? fetchCompleteBinary(fetcher, topology.url, topology.byteLength, topology.sha256, request.signal)
+        : Promise.resolve<ArrayBuffer | undefined>(undefined),
+    ]);
+    checkAborted(request.signal);
+    validateFileHeader(shot, baseBuffer);
+    if (topologyBuffer) validateTopologyFileHeader(shot, topologyBuffer);
+    checkAborted(request.signal);
+    if (generation !== prepareGeneration) return;
+
+    // Admit the package atomically only after all objects pass full SHA-256
+    // and header/binding verification. Keep exactly one raw shot in memory.
+    const preparedFiles = new Map<string, ArrayBuffer>([[shot.binary.url, baseBuffer]]);
+    if (topology && topologyBuffer) preparedFiles.set(topology.url, topologyBuffer);
+    wholeFileCache.clear();
+    preparedFiles.forEach((bytes, url) => wholeFileCache.set(url, bytes));
+    preparedShotId = shotId;
+    verifiedFiles.set(shotId, Promise.resolve());
+    if (topology) verifiedTopologyFiles.set(shotId, Promise.resolve());
   }
 
   function remember(key: string, frame: EfitFrame): void {
@@ -1125,6 +1226,7 @@ export function createEfitBinaryDataSource(options: EfitBinaryDataSourceOptions 
     async loadTimeline(shot, request = {}) {
       return (await findShot(shot, request)).frames;
     },
+    prepareShot,
     loadFrame,
     prefetchFrame(shot, frameIndex) {
       void loadFrame(shot, frameIndex).catch(() => undefined);

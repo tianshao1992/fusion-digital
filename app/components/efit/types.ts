@@ -440,6 +440,12 @@ export type EfitDataRequest = {
 export interface EfitDataSource {
   loadManifest(request?: EfitDataRequest): Promise<EfitManifest>;
   loadTimeline(shot: EfitShotId, request?: EfitDataRequest): Promise<readonly EfitFrameSummary[]>;
+  /**
+   * Prepare the selected shot for deterministic, network-independent playback.
+   * Implementations may resolve without preloading when the reviewed payload is
+   * larger than their bounded in-memory transport budget.
+   */
+  prepareShot?(shot: EfitShotId, request?: EfitDataRequest): Promise<void>;
   loadFrame(shot: EfitShotId, frameIndex: number, request?: EfitDataRequest): Promise<EfitFrame>;
   prefetchFrame?(shot: EfitShotId, frameIndex: number): void;
 }

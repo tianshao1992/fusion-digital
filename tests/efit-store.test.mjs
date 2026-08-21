@@ -372,3 +372,196 @@ test('EFIT loader retains a full 200 response when a static host ignores byte ra
   assert.equal(requestCounts.get('shot-18303.bin'), 1, 'the complete contour binary should be downloaded once');
   assert.equal(requestCounts.get('shot-18303-topology.bin'), 1, 'the complete topology binary should be downloaded once');
 });
+
+test('EFIT explicit shot preparation makes a Range-capable origin network-independent during playback', async () => {
+  const requestCounts = new Map();
+  let rangeRequests = 0;
+  const countingFetch = async (input, init = {}) => {
+    const pathname = new URL(String(input), 'http://localhost').pathname;
+    const filename = pathname.replace('/device-data/exl50u-efit/', '');
+    requestCounts.set(filename, (requestCounts.get(filename) ?? 0) + 1);
+    if (new Headers(init.headers).has('range')) rangeRequests += 1;
+    return localEfitFetch(input, init);
+  };
+  const source = createEfitBinaryDataSource({ fetch: countingFetch });
+  assert.equal(typeof source.prepareShot, 'function');
+  await source.prepareShot(18303);
+  const manifest = await source.loadManifest();
+  const shot = manifest.shots.find((candidate) => candidate.shot === 18303);
+  assert.ok(shot);
+
+  await source.loadFrame(18303, 0);
+  await source.loadFrame(18303, Math.floor(shot.frameCount / 2));
+  await source.loadFrame(18303, shot.frameCount - 1);
+  source.prefetchFrame(18303, 1);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+
+  assert.equal(requestCounts.get('shot-18303.bin'), 1, 'the reviewed contour object must be fetched once without Range');
+  assert.equal(requestCounts.get('shot-18303-topology.bin'), 1, 'the reviewed topology object must be fetched once without Range');
+  assert.equal(rangeRequests, 0, 'prepared playback must slice verified in-memory objects without per-frame Range traffic');
+});
+
+test('a stale whole-shot completion cannot overwrite the latest atomically prepared shot', async () => {
+  let releaseOldShot;
+  const oldShotGate = new Promise((resolve) => { releaseOldShot = resolve; });
+  let oldShotRequests = 0;
+  let rangeRequests = 0;
+  const outOfOrderFetch = async (input, init = {}) => {
+    const pathname = new URL(String(input), 'http://localhost').pathname;
+    const range = new Headers(init.headers).get('range');
+    if (range) rangeRequests += 1;
+    if (!range && /shot-18303(?:-topology)?\.bin$/.test(pathname)) {
+      oldShotRequests += 1;
+      // Intentionally ignore AbortSignal to model an injected FetchLike whose
+      // older response can arrive after a newer selection has completed.
+      await oldShotGate;
+    }
+    return localEfitFetch(input, init);
+  };
+  const source = createEfitBinaryDataSource({ fetch: outOfOrderFetch });
+  const oldPreparation = source.prepareShot(18303);
+  while (oldShotRequests < 2) await new Promise((resolve) => setTimeout(resolve, 0));
+  await source.prepareShot(18301);
+  releaseOldShot();
+  await oldPreparation;
+
+  await source.loadFrame(18301, 1);
+  assert.equal(rangeRequests, 0, 'the stale completion must not replace the latest shot raw cache');
+});
+
+test('EFIT whole-shot preparation is bounded and rejects corrupt objects before atomic cache admission', async () => {
+  let fullBinaryRequests = 0;
+  let rangeRequests = 0;
+  const corruptFullFetch = async (input, init = {}) => {
+    const pathname = new URL(String(input), 'http://localhost').pathname;
+    const range = new Headers(init.headers).get('range');
+    if (range) rangeRequests += 1;
+    const response = await localEfitFetch(input, init);
+    if (!range && pathname.endsWith('/shot-18303.bin')) {
+      fullBinaryRequests += 1;
+      const bytes = new Uint8Array(await response.arrayBuffer());
+      bytes[bytes.length - 1] ^= 0xff;
+      return new Response(bytes, { status: 200, headers: { 'Content-Length': String(bytes.byteLength) } });
+    }
+    return response;
+  };
+  const corruptSource = createEfitBinaryDataSource({ fetch: corruptFullFetch });
+  await assert.rejects(corruptSource.prepareShot(18303), /SHA-256 mismatch/);
+  assert.equal(fullBinaryRequests, 1);
+  await corruptSource.loadFrame(18303, 0);
+  assert.ok(rangeRequests >= 2, 'a rejected package must not leave either full object admitted to the cache');
+
+  let truncatedRangeRequests = 0;
+  const truncatedFullFetch = async (input, init = {}) => {
+    const pathname = new URL(String(input), 'http://localhost').pathname;
+    const range = new Headers(init.headers).get('range');
+    if (range) truncatedRangeRequests += 1;
+    const response = await localEfitFetch(input, init);
+    if (!range && pathname.endsWith('/shot-18303.bin')) {
+      const bytes = new Uint8Array(await response.arrayBuffer()).slice(0, -1);
+      return new Response(bytes, { status: 200, headers: { 'Content-Length': String(bytes.byteLength) } });
+    }
+    return response;
+  };
+  const truncatedSource = createEfitBinaryDataSource({ fetch: truncatedFullFetch });
+  await assert.rejects(truncatedSource.prepareShot(18303), /Content-Length mismatch|byte length mismatch/);
+  await truncatedSource.loadFrame(18303, 0);
+  assert.ok(truncatedRangeRequests >= 2, 'a length failure must leave the single-shot cache unchanged');
+
+  let boundedFullRequests = 0;
+  let boundedRangeRequests = 0;
+  const boundedFetch = async (input, init = {}) => {
+    const filename = new URL(String(input), 'http://localhost').pathname.split('/').at(-1);
+    const range = new Headers(init.headers).get('range');
+    if (range) boundedRangeRequests += 1;
+    else if (filename?.endsWith('.bin')) boundedFullRequests += 1;
+    return localEfitFetch(input, init);
+  };
+  const boundedSource = createEfitBinaryDataSource({ fetch: boundedFetch, maxPreparedShotBytes: 1 });
+  await boundedSource.prepareShot(18303);
+  assert.equal(boundedFullRequests, 0, 'an over-budget shot must retain the reviewed Range fallback');
+  await boundedSource.loadFrame(18303, 0);
+  assert.ok(boundedRangeRequests >= 2);
+});
+
+test('EFIT store awaits shot preparation before publishing its first frame', async () => {
+  const shot = shotManifest(404, [100, 101]);
+  const manifest = {
+    schema: 'test',
+    device: 'EXL-50U',
+    psiNLevels: [0.1],
+    geometry: { limiterRzM: { rM: [], zM: [], validPoints: 0 } },
+    shots: [shot],
+  };
+  const memory = createInMemoryEfitDataSource(manifest, shot.frames);
+  const events = [];
+  let releasePreparation;
+  const preparation = new Promise((resolve) => { releasePreparation = resolve; });
+  const source = {
+    ...memory,
+    async prepareShot() {
+      events.push('prepare-start');
+      await preparation;
+      events.push('prepare-end');
+    },
+    async loadFrame(...args) {
+      events.push('load-frame');
+      return memory.loadFrame(...args);
+    },
+  };
+  const store = createEfitStore(source);
+  const initializing = store.actions.initialize(404);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.deepEqual(events, ['prepare-start']);
+  assert.equal(store.getSnapshot().timeline.length, 0, 'timeline controls must remain disabled during preparation');
+  assert.equal(store.getSnapshot().status, 'loading-shot');
+  assert.equal(store.getSnapshot().currentFrame, null);
+  await store.actions.seekTimeMs(101);
+  await store.actions.step(1);
+  store.actions.play();
+  assert.deepEqual(events, ['prepare-start'], 'timeline actions must not interrupt or bypass preparation');
+  releasePreparation();
+  await initializing;
+  assert.deepEqual(events, ['prepare-start', 'prepare-end', 'load-frame']);
+  assert.equal(store.getSnapshot().currentFrameIndex, 0);
+  store.destroy();
+});
+
+test('EFIT store completes the final selection after a rapid A to B to A preparation sequence', async () => {
+  const shotA = shotManifest(501, [100, 101]);
+  const shotB = shotManifest(502, [200, 201]);
+  const manifest = {
+    schema: 'test',
+    device: 'EXL-50U',
+    psiNLevels: [0.1],
+    geometry: { limiterRzM: { rM: [], zM: [], validPoints: 0 } },
+    shots: [shotA, shotB],
+  };
+  const memory = createInMemoryEfitDataSource(manifest, [...shotA.frames, ...shotB.frames]);
+  const prepareCalls = [];
+  const source = {
+    ...memory,
+    async prepareShot(shot, request = {}) {
+      prepareCalls.push(shot);
+      if (prepareCalls.length >= 3) return;
+      await new Promise((_, reject) => {
+        const abort = () => reject(new DOMException('aborted', 'AbortError'));
+        if (request.signal?.aborted) return abort();
+        request.signal?.addEventListener('abort', abort, { once: true });
+      });
+    },
+  };
+  const store = createEfitStore(source);
+  const firstA = store.actions.initialize(501);
+  while (prepareCalls.length < 1) await new Promise((resolve) => setTimeout(resolve, 0));
+  const selectB = store.actions.selectShot(502);
+  while (prepareCalls.length < 2) await new Promise((resolve) => setTimeout(resolve, 0));
+  const finalA = store.actions.selectShot(501);
+  await Promise.all([firstA, selectB, finalA]);
+
+  assert.deepEqual(prepareCalls, [501, 502, 501]);
+  assert.equal(store.getSnapshot().activeShot, 501);
+  assert.equal(store.getSnapshot().currentFrame?.shot, 501);
+  assert.equal(store.getSnapshot().status, 'ready');
+  store.destroy();
+});

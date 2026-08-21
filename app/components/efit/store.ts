@@ -311,6 +311,14 @@ export function createEfitStore(
       const timeline = await dataSource.loadTimeline(shot, { signal: requestController.signal });
       if (destroyed || sequence !== requestSequence || snapshot.activeShot !== shot) return;
       if (timeline.length === 0) throw new Error(`EXL-50U #${shot} 没有可播放的 EFIT 帧。`);
+      // Make playback transport-independent before publishing the first frame.
+      // The legacy source retains one reviewed whole shot in memory when it is
+      // within budget, while alternative sources may resolve without preloading.
+      await dataSource.prepareShot?.(shot, { signal: requestController.signal });
+      if (destroyed || sequence !== requestSequence || snapshot.activeShot !== shot) return;
+      // Keep timeline controls disabled while preparation is pending. Publishing
+      // the timeline earlier would let a seek abort the same request controller
+      // and silently push playback back onto per-frame network requests.
       emit({
         timeline,
         currentTimeMs: timeline[0].timeMs,

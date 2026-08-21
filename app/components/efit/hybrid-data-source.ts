@@ -36,6 +36,7 @@ export type EfitHybridDataSourceOptions = {
   fetch?: FetchLike;
   maxCachedChunks?: number;
   maxCachedLegacyFrames?: number;
+  maxPreparedLegacyShotBytes?: number;
 };
 
 type NormalizedGraphCatalog = {
@@ -681,6 +682,7 @@ export function createEfitHybridDataSource(options: EfitHybridDataSourceOptions 
     indexUrl: legacyIndexUrl,
     fetch: fetcher,
     maxCachedFrames: options.maxCachedLegacyFrames,
+    maxPreparedShotBytes: options.maxPreparedLegacyShotBytes,
   });
   const configuredCacheSize = options.maxCachedChunks;
   const maxCachedChunks = Number.isInteger(configuredCacheSize)
@@ -833,6 +835,14 @@ export function createEfitHybridDataSource(options: EfitHybridDataSourceOptions 
       return legacyFallback || shot.sourceKind !== 'topology-graph-v2'
         ? legacySource.loadTimeline(shotId, request)
         : shot.frames;
+    },
+    async prepareShot(shotId, request = {}) {
+      const catalog = await loadCatalog(request);
+      const shot = catalog.sourceByShot.get(shotId);
+      if (!shot) throw new Error(`EFIT shot ${shotId} is not present in the v2 catalog.`);
+      if (legacyFallback || shot.sourceKind !== 'topology-graph-v2') {
+        await legacySource.prepareShot?.(shotId, request);
+      }
     },
     loadFrame,
     prefetchFrame(shotId, frameIndex) {
