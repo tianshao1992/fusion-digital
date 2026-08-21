@@ -15,9 +15,9 @@ import {
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
 
-const SCRIPT_PATH = fileURLToPath(import.meta.url);
+import { isDirectExecution } from "./direct-execution.mjs";
+
 const DEFAULT_LETSENCRYPT_ROOT = "/etc/letsencrypt";
 const CERTIFICATE_BASENAMES = ["fullchain.pem", "privkey.pem"];
 
@@ -307,7 +307,6 @@ export async function ensureCertbotNginxSupport({
 }
 
 async function main(args = process.argv.slice(2)) {
-  if (process.getuid?.() !== 0) throw new Error("run as root");
   if (args.length === 1 && args[0] === "--inspect-only") {
     const state = await inspectCertbotNginxStateBeforeIssuance();
     console.log(`Certbot Nginx support preflight: ${state.status}.`);
@@ -316,6 +315,7 @@ async function main(args = process.argv.slice(2)) {
   if (args.length !== 0) {
     throw new Error("Usage: certbot-nginx-support.mjs [--inspect-only]");
   }
+  if (process.getuid?.() !== 0) throw new Error("run as root");
   const result = await ensureCertbotNginxSupport();
   if (!result.certificateReady) {
     console.log("No complete certificate pair; leaving Nginx in HTTP-only mode.");
@@ -326,7 +326,7 @@ async function main(args = process.argv.slice(2)) {
   }
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === resolve(SCRIPT_PATH)) {
+if (isDirectExecution(import.meta.url)) {
   main().catch((error) => {
     console.error(error.message);
     process.exitCode = 1;

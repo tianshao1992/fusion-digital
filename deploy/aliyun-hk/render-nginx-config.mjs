@@ -2,14 +2,13 @@
 
 import { chmod, mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
 
 import {
   classifyCertbotNginxState,
   hasCompleteCertificatePair,
 } from "./certbot-nginx-support.mjs";
+import { isDirectExecution } from "./direct-execution.mjs";
 
-const SCRIPT_PATH = fileURLToPath(import.meta.url);
 const TLS_BEGIN = "    # FUSIONDIGITAL_TLS_BEGIN";
 const TLS_END = "    # FUSIONDIGITAL_TLS_END";
 const CERTIFICATE_ROOT = "/etc/letsencrypt/live/fusiondigital.club";
@@ -90,7 +89,7 @@ async function main() {
   console.log(`Rendered FusionDigital Nginx config (TLS/HTTP2=${result.tlsEnabled}).`);
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === resolve(SCRIPT_PATH)) {
+if (isDirectExecution(import.meta.url)) {
   main().catch((error) => {
     console.error(error.message);
     process.exitCode = 1;

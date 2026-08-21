@@ -296,6 +296,7 @@ test -f "$PENDING/deploy/aliyun-hk/fusiondigital.service"
 test -f "$PENDING/deploy/aliyun-hk/nginx.conf"
 test -f "$PENDING/deploy/aliyun-hk/render-nginx-config.mjs"
 test -f "$PENDING/deploy/aliyun-hk/certbot-nginx-support.mjs"
+test -f "$PENDING/deploy/aliyun-hk/direct-execution.mjs"
 test -f "$PENDING/.fusiondigital-release.json"
 node -e '
   const fs = require("node:fs");

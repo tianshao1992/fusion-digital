@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
+import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { mkdir, mkdtemp, readFile, rm, stat, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { test } from "node:test";
 
 import {
@@ -22,6 +23,65 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 async function read(relativePath) {
   return readFile(join(ROOT, relativePath), "utf8");
 }
+
+function runNode(args, options = {}) {
+  return new Promise((resolveRun, rejectRun) => {
+    const child = spawn(process.execPath, args, {
+      cwd: ROOT,
+      env: process.env,
+      windowsHide: true,
+      ...options,
+    });
+    let stdout = "";
+    let stderr = "";
+    child.stdout.setEncoding("utf8");
+    child.stderr.setEncoding("utf8");
+    child.stdout.on("data", (chunk) => { stdout += chunk; });
+    child.stderr.on("data", (chunk) => { stderr += chunk; });
+    child.on("error", rejectRun);
+    child.on("close", (code, signal) => resolveRun({ code, signal, stdout, stderr }));
+  });
+}
+
+test("Hong Kong Node CLIs execute through the current release directory symlink", async () => {
+  const temporaryRoot = await mkdtemp(join(tmpdir(), "fusiondigital-cli-symlink-"));
+  const current = join(temporaryRoot, "current");
+  const linkType = process.platform === "win32" ? "junction" : "dir";
+  await symlink(ROOT, current, linkType);
+
+  try {
+    const renderer = join(current, "deploy", "aliyun-hk", "render-nginx-config.mjs");
+    const support = join(current, "deploy", "aliyun-hk", "certbot-nginx-support.mjs");
+    const template = join(current, "deploy", "aliyun-hk", "nginx.conf");
+    const rendered = join(temporaryRoot, "rendered-nginx.conf");
+
+    const renderResult = await runNode([renderer, template, rendered]);
+    assert.equal(renderResult.code, 0, renderResult.stderr);
+    assert.match(renderResult.stdout, /Rendered FusionDigital Nginx config/u);
+    assert.match(await readFile(rendered, "utf8"), /server_name fusiondigital\.club/u);
+
+    const inspectResult = await runNode([support, "--inspect-only"]);
+    if (inspectResult.code === 0) {
+      assert.match(inspectResult.stdout, /support preflight: (?:ABSENT|READY)/u);
+    } else {
+      assert.match(inspectResult.stderr, /Certbot Nginx/u);
+    }
+
+    const invalidResult = await runNode([support, "--bogus"]);
+    assert.notEqual(invalidResult.code, 0);
+    assert.match(invalidResult.stderr, /Usage: certbot-nginx-support\.mjs/u);
+
+    const imported = await runNode([
+      "--input-type=module",
+      "--eval",
+      `await import(${JSON.stringify(pathToFileURL(renderer).href)}); await import(${JSON.stringify(pathToFileURL(support).href)}); console.log("imports-ok");`,
+    ]);
+    assert.equal(imported.code, 0, imported.stderr);
+    assert.equal(imported.stdout.trim(), "imports-ok");
+  } finally {
+    await rm(temporaryRoot, { recursive: true, force: true });
+  }
+});
 
 test("Hong Kong Nginx uses safe named aliases and lossless static compression", async () => {
   const nginx = await read("deploy/aliyun-hk/nginx.conf");
@@ -318,6 +378,7 @@ test("Hong Kong installer verifies sidecars, EFIT, ITER, and preserves managed T
   assert.match(installer, /DIRECT_DATA_STATUS[\s\S]*?= 404/u);
   assert.match(installer, /render-nginx-config\.mjs/u);
   assert.match(installer, /certbot-nginx-support\.mjs/u);
+  assert.match(installer, /test -f "\$PENDING\/deploy\/aliyun-hk\/direct-execution\.mjs"/u);
   assert.doesNotMatch(installer, /node[^\n]*certbot-nginx-support\.mjs/u);
   assert.match(installer, /TLS_WAS_CONFIGURED/u);
   assert.match(installer, /listen\[\[:space:\]\]\+\[\^;\]\*443\[\^;\]\*ssl/u);
