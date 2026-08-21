@@ -14,13 +14,13 @@
 | 生产主机 | 阿里云香港 ECS `i-j6c5xpt6lvn9fdpujlt7` + 100 Mbps `BGP_PRO` 精品 EIP `47.75.119.239` |
 | 生产模式 | `public-anonymous`，公开只读；身份、审核和写 API 关闭 |
 | 生产部署 | 本地/CI 构建不可变包，经 SSH/SCP 安装到香港服务器 |
-| Sites 定位 | 按需生成、独立且非阻塞的 `*.chatgpt.site` 预览/人工备用地址 |
+| Sites 定位 | 与香港正式 release 同 SHA 的 `*.chatgpt.site` 同步协作地址；不承载生产域名 |
 | DNS 权威 | 阿里云 DNS；apex 与 `www` 的所有线路只能到 `47.75.119.239` |
 
 `.openai/hosting.json` 是 Sites **预览项目**的资源声明，不是生产域名托管声明。
 
-> 正式发布必须让 Codeup `master`、GitHub `main`、本地 `HEAD` 与香港 ECS release
-> 使用同一个完整提交 SHA。Sites 预览不参与生产发布门禁。
+> 正式发布必须让 Codeup `master`、GitHub `main`、本地 `HEAD`、香港 ECS release
+> 与 OpenAI Sites source 使用同一个完整提交 SHA；任一端未成功都不得宣布发布完成。
 
 Sites 保存或发布新版本不得触发 `fusiondigital.club` 的自定义域名绑定、验证或 DNS 修改。
 所谓“人工备用”仅指故障时单独分享平台 URL，不代表自动或手工把生产 DNS 切到
@@ -136,9 +136,10 @@ git ls-remote https://github.com/tianshao1992/fusion-digital.git refs/heads/main
    `npm run check`；敏感信息和第三方许可复核完成。
 3. **镜像**：运行 `npm run release:sync-remotes`，确认 Codeup `master`、GitHub
    `main` 与本地 `HEAD` 为同一 SHA。
-4. **隔离构建**：从目标 SHA 建立 detached worktree，补齐并校验 ITER 运行时资产，
-   设置 `NEXT_PUBLIC_FUSIONDIGITAL_MODE=public-anonymous` 和
-   `FUSIONDIGITAL_BUILD_TARGET=aliyun-hk` 后生成不可变香港发布包。
+4. **隔离构建**：从目标 SHA 建立两个 detached worktree。香港 worktree 补齐并校验
+   ITER 运行时资产，设置 `NEXT_PUBLIC_FUSIONDIGITAL_MODE=public-anonymous` 和
+   `FUSIONDIGITAL_BUILD_TARGET=aliyun-hk` 后生成不可变发布包；未 hydration 的 Sites
+   worktree 设置 `FUSIONDIGITAL_BUILD_TARGET=sites`，使用官方 `package-site.sh` 归档。
 5. **SSH 部署**：把香港发布包上传到 `47.75.119.239`，安装到全新的 SHA release 目录，
    原子切换 `/srv/fusiondigital/current` 并重启服务。生产机不从 GitHub 拉资源，也不
    执行源码构建。必须调用版本化的 `deploy/aliyun-hk/install-release.sh`；
@@ -155,11 +156,26 @@ git ls-remote https://github.com/tianshao1992/fusion-digital.git refs/heads/main
    确保两个名称只返回 `47.75.119.239`。
 10. **公网验收**：验证香港双域名 TLS/HTTP、关键页面、搜索、模型清单、Range 请求和
    禁用接口，再用境内电信、联通、移动多节点拨测香港入口。
-11. **留痕**：记录日期、完整 SHA、服务器 release 目录、包 SHA-256、生产 URL、验证
-   结果和已知限制。
+11. **Sites 同步部署**：香港公网验收通过后，保存并公开部署同一 SHA 的 Sites 官方
+    归档；记录 Sites version/deployment ID、source SHA、平台 URL 和 succeeded 状态。
+    不得添加或恢复生产域名 custom domain。
+12. **成对门禁**：先按合同固定路径逐项下载两端共享资产，记录 HTTP 200、字节数和
+    SHA-256，并完成 DNS、TLS/HTTP2、匿名边界和国内三网检查。把这些结果连同 Git、香港
+    与 Sites 平台原始标识写入仓库外的不含凭据 evidence JSON；最后在干净工作树运行
+    `npm run release:verify-pair -- --evidence <path>`。若 Sites 部署失败，香港 release
+    必须回切到上一对已验证版本，或明确把本次发布标记为未完成，不能把两端漂移描述为
+    发布成功。
+13. **留痕**：记录日期、完整 SHA、服务器 release 目录、两个包的 SHA-256、Sites
+    version/deployment ID、两个公开 URL、共享内容校验结果和已知限制。
 
-Sites 预览是独立、非阻塞步骤。只有用户明确要求时才生成，并且不得插入任何生产
-DNS 操作，也不能代替香港构建、部署、DNS 与公网验收步骤。
+Sites 同步部署不插入任何生产 DNS 操作，也不能代替香港构建、部署、DNS 与公网验收。
+单独临时预览仍需用户明确要求，且不能冒充正式发布。
+
+`release:verify-pair` 会拒绝含未提交或未跟踪文件的工作树，实读当前仓库 `HEAD`，校验
+香港 current 路径/清单摘要、Sites version/deployment/source、两个归档摘要，并从合同
+固定路径的逐项字节数/SHA-256 重新计算两端共享内容聚合摘要；证据文件必须位于仓库外。
+它是 provenance 与同步门禁，不替代第 4、5 节的实时 DNS、TLS、HTTP/2、证书续期和
+运营商拨测；这些实时检查必须先完成并写入证据，再执行本门禁。
 
 ### 3.1 TLS 切换与事务回滚
 
@@ -310,16 +326,20 @@ curl.exe -fsS "https://fusiondigital.club/api/search?q=tokamak&limit=5" | Out-Nu
 
 任一硬门禁失败时，保留上一正常 release，停止宣布上线并记录失败证据。
 
-## 6. Sites 预览规则
+## 6. Sites 同步发布规则
 
 - Sites 只能发布到平台分配的 `*.chatgpt.site` 地址。
-- Sites 预览只在用户明确要求时生成；其成功或失败不改变香港生产发布结论。
+- 每次正式发布都必须部署与香港 active release 相同的完整 source SHA；Sites 状态必须
+  为 `succeeded`，否则本次成对发布未完成。
 - Sites 平台地址可以用于视觉验收或香港服务器故障时的人工备用访问，但不是中国大陆稳定
   访问承诺，也不是生产 DNS 的回源。
 - 禁止在 Sites 控制面添加 `fusiondigital.club` 或 `www.fusiondigital.club`；若已
   存在绑定，应先解除绑定，再确认阿里云 DNS 仍满足第 4 节。
 - 禁止根据 Sites 的自定义域名引导创建 CNAME 或 Cloudflare A 记录。
-- Sites 预览不得触发生产回滚、修改 DNS 或改变香港 release。
+- Sites 部署不得修改 DNS；若其正式同步部署失败，应按第 3 节处理香港 release，不能
+  通过生产域名切换来掩盖失败。
+- 发布记录必须包含 Sites source `commit_sha`、version 或 deployment ID、平台 URL、
+  succeeded 状态，以及香港 active release 的同一完整 SHA。
 
 ## 7. 回滚与故障恢复
 
@@ -327,7 +347,8 @@ curl.exe -fsS "https://fusiondigital.club/api/search?q=tokamak&limit=5" | Out-Nu
 
 在香港 ECS 上把 `/srv/fusiondigital/current` 原子切换到上一正常 release；重启
 `fusiondigital`，重复源站与公网验收。不得删除故障 release，直到复盘和证据保留
-完成。Sites 预览保持独立，不参与生产应用回滚。
+完成。正式回滚后应把 Sites 同步部署到同一回滚 SHA；在同步完成前必须明确标记为
+“回滚中/未完成”，但生产 DNS 始终保持指向香港精品 EIP。
 
 ### 7.2 DNS 漂移恢复
 
@@ -353,7 +374,13 @@ curl.exe -fsS "https://fusiondigital.club/api/search?q=tokamak&limit=5" | Out-Nu
 Codeup master SHA：
 GitHub main SHA：
 服务器 release：
-发布包 SHA-256：
+香港发布包 SHA-256：
+香港 release manifest SHA-256：
+Sites source SHA：
+Sites version / deployment ID：
+Sites 平台 URL / succeeded 状态：
+Sites 归档 SHA-256：
+共享内容固定路径逐项 bytes / SHA-256 与两端聚合 SHA-256：
 DNS 检查（apex/www；解析器/节点）：
 TLS/HTTP/公开能力/匿名边界：
 国内电信/联通/移动拨测：

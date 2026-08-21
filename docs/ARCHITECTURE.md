@@ -18,7 +18,7 @@ FusionDigital 的软件目标不是提供一个万能聚变求解器，而是提
 - Python 标准库进行调研数据归一化和审计
 - `python-docx` 生成 Word 技术报告
 - 阿里云香港 ECS `i-j6c5xpt6lvn9fdpujlt7` 通过精品 EIP `47.75.119.239` 承载 `fusiondigital.club` / `www.fusiondigital.club` 生产域名入口
-- OpenAI Sites 仅承载按需预览，以及 SIWC / D1 协作能力
+- OpenAI Sites 承载与香港正式 release 同 SHA 的平台协作版本，以及 SIWC / D1 能力
 - D1 保存账户、角色、配额、审计、知识实体以及研究候选/审核控制面
 
 站点当前已经启用 D1 和 Sign in with ChatGPT，并实现账户、角色、配额、审计、研究运行、候选提交与人工审核。R2 仍未启用；公开检索和图谱仍主要读取 Git 中生成的静态快照，尚未以 D1 知识表为统一读取源。大型 PDF、CAD、CAE、EFIT、诊断和仿真资产不应继续由 D1 或 Worker 请求路径承载。
@@ -94,11 +94,12 @@ Word 报告由 `build_ai_native_report.py` 从同一公开 JSON 生成，因此�
 ```text
 Codeup master（唯一协作事实源）
   └─ 同一完整 SHA → GitHub main（公开代码镜像）
-                     └─ 阿里云香港不可变 release
-                          └─ fusiondigital.club / www → 47.75.119.239
+                     ├─ 阿里云香港不可变 release
+                     │    └─ fusiondigital.club / www → 47.75.119.239
+                     └─ OpenAI Sites 平台 deployment（无生产域名绑定）
 ```
 
-Codeup `master` 是人和 Codex 的唯一协作事实源，GitHub `main` 是同一提交的公开代码镜像。正式发布只部署经过门禁的同一完整提交 SHA 到阿里云香港 ECS；Sites 是按需生成、独立且非阻塞的预览。Sites 的短期源仓库凭证不得长期保存或共享。
+Codeup `master` 是人和 Codex 的唯一协作事实源，GitHub `main` 是同一提交的公开代码镜像。正式发布把经过门禁的同一完整提交 SHA 同时部署到阿里云香港 ECS 和固定 OpenAI Sites 项目；任一端未成功都不能宣布发布完成。Sites 的短期源仓库凭证不得长期保存或共享。
 
 生产域名 `fusiondigital.club` 和 `www.fusiondigital.club` 的所有 DNS 线路只允许指向香港精品 EIP `47.75.119.239`。Sites 只使用平台分配地址，严禁把 apex 或 `www` 绑定、切换或“回滚”到 Sites；这不影响 Sites 平台环境继续提供 SIWC、D1 账户、配额、审计和人工审核能力。
 
@@ -122,8 +123,8 @@ Codeup `master` 是人和 Codex 的唯一协作事实源，GitHub `main` 是同�
 ### 发布质量
 
 - 发布包与已推送提交完全一致
-- 香港站只切换到不可变 release，Sites 预览不参与生产发布门禁
-- Codeup、GitHub 与香港 release 使用同一完整 SHA
+- 香港站只切换到不可变 release，Sites 只部署官方平台归档且不绑定生产域名
+- Codeup、GitHub、香港 release 与 Sites source 使用同一完整 SHA
 - 应用回滚只切换香港 ECS 上经过验证的旧 release
 - 公开文件不含敏感参数或凭证
 - 报告下载与结构化数据均可访问

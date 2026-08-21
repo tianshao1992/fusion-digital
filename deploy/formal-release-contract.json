@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 2,
+  "environment": "formal-paired-release",
+  "commitShaPattern": "^[0-9a-f]{40}$",
+  "git": {
+    "local": { "ref": "HEAD" },
+    "codeup": { "branch": "master" },
+    "github": { "branch": "main" }
+  },
+  "hongKong": {
+    "releaseRoot": "/srv/fusiondigital/releases",
+    "publicIpv4": "47.75.119.239",
+    "requiredStatus": "active",
+    "build": {
+      "target": "aliyun-hk",
+      "mode": "public-anonymous"
+    }
+  },
+  "sites": {
+    "projectId": "appgprj_6a78141f72588191a3b12afd0ad56022",
+    "platformUrl": "https://fusion-physics-atlas-2026.tianyuanliu1992.chatgpt.site",
+    "requiredStatus": "succeeded",
+    "build": { "target": "sites" }
+  },
+  "sharedContent": {
+    "schema": "fusiondigital.shared-content-v1",
+    "paths": [
+      "/models/device-catalog.json",
+      "/models/ehl2-preliminary-v1/model-manifest.json",
+      "/models/ehl2-preliminary-v1/diagview2-ports.json",
+      "/models/ehl2-preliminary-v1/ehl2-preliminary.meshopt.glb",
+      "/device-data/exl50u-efit/index.json",
+      "/device-data/exl50u-efit/shot-18303.bin",
+      "/device-data/exl50u-efit-v2/index.json",
+      "/device-data/exl50u-efit-v2/shot-20213-part-000.jsonl.gz",
+      "/models/iter-public-simplified/model-manifest.json",
+      "/device-assets/iter-high-detail/v1/cryostat-base.f4daa0cabe2cdc3fb44057d57c5b5863c295015b2d692ea34f86cc7a96a9a34e.high.meshopt.glb"
+    ]
+  },
+  "forbiddenSitesCustomDomains": [
+    "fusiondigital.club",
+    "www.fusiondigital.club"
+  ]
+}

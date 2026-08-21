@@ -63,7 +63,7 @@ FusionDigital 由新奥聚变人工智能团队维护。项目将聚变物理、
 | 平面 | 当前定位 | 主要技术 | 权限边界 |
 | --- | --- | --- | --- |
 | **公开投影面** | 阿里云香港生产环境已实现 | React 19、vinext、Vite、Node.js、Nginx、Three.js、ECharts | 公开知识、检索、图谱、三维派生物与 EFIT 回放；以 `public-anonymous` 只读运行 |
-| **Sites 预览协作面** | OpenAI Sites 平台预览地址 | Cloudflare Worker 兼容运行时、D1 | 身份与审核控制面仅用于按需预览；不参与生产发布门禁且不绑定生产域名 |
+| **Sites 同步协作面** | OpenAI Sites 平台地址 | Cloudflare Worker 兼容运行时、D1 | 与香港正式 release 保持同一源码 SHA；不承载或绑定生产域名 |
 | **内网科学平台面** | 目标架构，分阶段接入 | FastAPI、PostgreSQL、S3、MDSplus Gateway、Kubernetes/Slurm、MLflow | 原始实验数据、CAD/CAE、仿真容器、模型训练、结果与 VVUQ |
 | **实验实时面** | 独立安全域 | DAQ、PCS、Interlock、RT Linux | 确定性控制、联锁和保护；公网、浏览器与通用智能体不直连 |
 
@@ -216,7 +216,7 @@ docs/                         架构、复现、平台路线和协作手册
 | DNS | 阿里云 DNS；`@` 与 `www` 的所有线路只允许解析到 `47.75.119.239` |
 | 协作仓库 | [Codeup `master`](https://codeup.aliyun.com/fiatlux/DT/FusionDigital)，唯一事实源 |
 | 公开镜像 | [GitHub `main`](https://github.com/tianshao1992/fusion-digital)，与 Codeup 保持相同 SHA |
-| Sites | [平台分配地址](https://fusion-physics-atlas-2026.tianyuanliu1992.chatgpt.site/)仅用于按需预览/人工备用；不是生产发布门禁且不承载生产域名 |
+| Sites | [平台分配地址](https://fusion-physics-atlas-2026.tianyuanliu1992.chatgpt.site/)与香港正式 release 同 SHA 发布；不承载生产域名 |
 
 香港生产入口使用 HTTP/2，并为 JS/CSS 提供无损 gzip 传输副本；高清图片、GLB 与
 实验派生数据仍按原始字节发布，不以降低视觉质量换取速度。ITER 与 EFIT 只通过受控
@@ -256,10 +256,14 @@ docs/                         架构、复现、平台路线和协作手册
 5. 从目标 SHA 建立 detached worktree；香港包使用
    `NEXT_PUBLIC_FUSIONDIGITAL_MODE=public-anonymous` 与
    `FUSIONDIGITAL_BUILD_TARGET=aliyun-hk`，不得放宽匿名安全或资产完整性门禁。
-6. 将香港包通过 SSH/SCP 部署到 `47.75.119.239`，确认香港 release、本地 `HEAD`、
-   Codeup `master` 与 GitHub `main` 完全一致。随后运行
-   `npm run release:verify-dns`，再执行双域名 TLS/HTTP、匿名安全边界与国内三网门禁。
-7. 应用回滚只在香港 ECS 上切换到上一正常 release；DNS 始终只指向
+6. 将香港包通过 SSH/SCP 部署到 `47.75.119.239` 并完成源站验收；随后把同一完整 SHA
+   的 Sites 官方归档部署到固定平台项目。确认香港 release、Sites source、本地
+   `HEAD`、Codeup `master` 与 GitHub `main` 完全一致。
+7. 先运行 `npm run release:verify-dns`，并完成合同固定共享资产的逐路径字节/SHA-256、
+   双域名 TLS/HTTP、匿名安全边界与国内三网检查；将结果写入仓库外的 evidence JSON，
+   最后在干净工作树运行 `npm run release:verify-pair -- --evidence <path>`。任一端失败
+   不得宣布发布完成。
+8. 应用回滚只在香港 ECS 上切换到上一正常 release；DNS 始终只指向
    `47.75.119.239`，不得“回滚”到旧轻量服务器、Sites 或 Cloudflare。主机故障时
    可以单独分享 Sites 平台预览地址，但不得自动改动生产 DNS。
 

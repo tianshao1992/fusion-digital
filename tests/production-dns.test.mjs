@@ -112,7 +112,7 @@ test("checked-in contract pins both production names to the Aliyun Hong Kong IPv
   );
 });
 
-test("production releases keep Sites as an independent preview without changing production DNS", async () => {
+test("formal releases pair Hong Kong and Sites without changing production DNS", async () => {
   const [agentsRaw, releaseRaw, hostingRaw] = await Promise.all([
     readFile(join(ROOT, "AGENTS.md"), "utf8"),
     readFile(join(ROOT, "docs", "RELEASE.md"), "utf8"),
@@ -121,14 +121,23 @@ test("production releases keep Sites as an independent preview without changing 
   const agents = normalizeWhitespace(agentsRaw);
   const release = normalizeWhitespace(releaseRaw);
 
-  assert.match(agents, /只有用户明确要求生成预览时，才能发布 Sites 平台地址/u);
-  assert.match(release, /Sites 预览是独立、非阻塞步骤/u);
+  assert.match(agents, /正式发布时 Codeup `master`、GitHub `main`、本地 `HEAD`、香港 ECS release 和 OpenAI Sites source 必须是同一个完整提交 SHA/u);
+  assert.match(agents, /正式发布必须同步更新 Sites 平台地址/u);
+  assert.match(release, /任一端未成功都不得宣布发布完成/u);
+  assert.match(release, /release:verify-pair/u);
+  assert.match(release, /Sites source `commit_sha`、version 或 deployment ID/u);
+  assert.doesNotMatch(agents, /Sites 预览不参与生产发布门禁/u);
+  assert.doesNotMatch(release, /Sites 预览是独立、非阻塞步骤/u);
   assert.match(release, /DNS-01 预签与安装/u);
   assert.match(release, /维护窗口[^。]{0,160}HTTP-01/u);
   assert.match(release, /一次性人工 DNS-01[\s\S]*?certbot reconfigure/u);
   assert.match(release, /certbot renew --dry-run/u);
   assert.match(release, /不能宣布发布完成/u);
   assert.ok(releaseRaw.indexOf("DNS-01 预签与安装") < releaseRaw.indexOf("DNS 切换与硬门禁"));
+  assert.ok(
+    releaseRaw.indexOf("先按合同固定路径逐项下载两端共享资产")
+      < releaseRaw.indexOf("npm run release:verify-pair -- --evidence <path>"),
+  );
 
   const hosting = JSON.parse(hostingRaw);
   assert.deepEqual(Object.keys(hosting).sort(), ["d1", "project_id", "r2"]);

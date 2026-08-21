@@ -12,15 +12,16 @@
 进入 Node 的请求都会清除四个 `oai-authenticated-user-*` 身份头。公开问答固定
 使用站内确定性检索，不调用外部模型。
 
-OpenAI Sites 仅保留平台分配的 `*.chatgpt.site` 预览/人工备用地址，不得绑定上述
-两个生产名称。`.openai/hosting.json` 不是生产托管声明。所有机器和 Codex 在操作前
+OpenAI Sites 只使用平台分配的 `*.chatgpt.site` 同步协作地址，不得绑定上述两个生产
+名称；正式发布时其 source SHA 必须与香港 active release 一致。`.openai/hosting.json`
+不是生产托管声明。所有机器和 Codex 在操作前
 还必须遵守根目录 [`AGENTS.md`](../../AGENTS.md) 与
 [`docs/RELEASE.md`](../../docs/RELEASE.md)。
 
 ## 0. 生产不变量
 
-- Codeup `master`、GitHub `main`、构建提交和服务器 release 必须是同一个完整
-  SHA；先同步和校验 Git，再构建、上传。
+- Codeup `master`、GitHub `main`、构建提交、服务器 release 与 Sites source 必须是
+  同一个完整 SHA；先同步和校验 Git，再构建、上传。
 - 发布包必须在干净的 detached worktree 中以 `public-anonymous` 模式构建，通过
   SSH/SCP 安装到新的不可变 release 目录。
 - `fusiondigital.club` 与 `www.fusiondigital.club` 的阿里云 DNS 所有线路只能返回
