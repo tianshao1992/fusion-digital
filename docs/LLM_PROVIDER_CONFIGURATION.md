@@ -15,9 +15,16 @@ notepad .env.local
 
 `.env.local` 已被 Git 忽略。不要把真实密钥写入 `.env.example`、源码、浏览器 `localStorage`、截图、Issue 或聊天消息。
 
-### 线上 Sites
+### Sites 预览环境
 
-在当前 Sites 项目的 **Runtime environment variables** 中设置同名变量，并把所有 `*_API_KEY` 标记为 Secret。变量保存在 Sites，不写入 `.openai/hosting.json`。环境变量更新后必须重新部署一个已保存版本，新的 environment revision 才会进入生产运行时。
+在当前 Sites 项目的 **Runtime environment variables** 中设置同名变量，并把所有
+`*_API_KEY` 标记为 Secret。变量保存在 Sites，不写入 `.openai/hosting.json`。
+环境变量更新后必须重新部署一个已保存版本，新的 environment revision 才会进入
+Sites 预览运行时。
+
+`fusiondigital.club` 的阿里云香港生产环境固定为 `public-anonymous`，不配置这些模型
+密钥，也不开放账户、个人密钥、研究写入或审核 API。不得把 Sites 的 Secret、D1 或
+身份配置复制到香港 ECS。
 
 用户级密钥库还要求设置 `LLM_CREDENTIAL_KEK_V1`：它必须是 32 个随机字节的无填充 base64url 值，并标记为 Secret。该值只用于服务端 AES-256-GCM 加解密，不是任何模型供应商的 API Key。缺失或格式错误时，个人密钥保存与调用会关闭，系统不会降级为明文存储。
 

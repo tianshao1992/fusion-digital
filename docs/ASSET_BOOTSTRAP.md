@@ -98,9 +98,9 @@ npm run assets:verify
 
 ## 5. 两种部署模式
 
-### Sites / 公网默认模式
+### Sites 预览模式（非生产）
 
-OpenAI Sites 的静态发布包有约 256 MiB 上限。ITER 18 片不进入默认 Git/Sites 静态归档；生产 Worker 只接受清单中的精确同源路径，并从受控外部镜像取回不可变文件。发布 Sites 时使用干净克隆，保持 `public/models/iter-high-detail-v1/` 不存在，只运行：
+OpenAI Sites 的静态发布包有约 256 MiB 上限。ITER 18 片不进入默认 Git/Sites 静态归档；Sites 预览 Worker 只接受清单中的精确同源路径，并从受控外部镜像取回不可变文件。发布 Sites 预览时使用干净克隆，保持 `public/models/iter-high-detail-v1/` 不存在，只运行：
 
 ```bash
 npm ci
@@ -110,14 +110,23 @@ npm run check
 
 运行时镜像可通过部署环境变量 `ITER_HIGH_DETAIL_ASSET_BASE_URL` 指向团队内可访问的稳定 HTTPS 根地址。未设置时使用代码中审核过的默认发布源。变量只配置根地址，客户端不能传入任意上游 URL。
 
-### 内网 / 自包含模式
+### 阿里云香港生产 / 其他自包含模式
 
-需要断开公网仍能展示 ITER 高清模型时，先在部署工作区运行 `assets:hydrate` 和 `assets:verify`，再构建。Worker 对 18 个精确路径采用 local-first：本地校验通过的分片优先；本地不存在时才回退到外部镜像。
+阿里云香港生产或需要断开公网仍能展示 ITER 高清模型时，先在部署工作区运行
+`assets:hydrate` 和 `assets:verify`，再构建。香港生产必须本地包含并校验全部 18 个
+分片；安装器在缺失或哈希不符时硬失败，运行时不得回源 GitHub 或其他外部镜像。
+只有其他明确允许联网的 Worker 目标才能采用 local-first，并在本地不存在时回退到
+受控外部镜像。下面示例是香港 `public-anonymous` 生产目标；实际打包、manifest 和
+安装必须继续遵守
+[香港部署手册](../deploy/aliyun-hk/README.md)，不能把普通 `npm run build` 产物直接
+当作发布包。
 
 ```bash
 npm ci
 npm run assets:hydrate -- --source-dir "/path/to/extracted/iter-high-detail-v1"
 npm run assets:verify
+export NEXT_PUBLIC_FUSIONDIGITAL_MODE=public-anonymous
+export FUSIONDIGITAL_BUILD_TARGET=aliyun-hk
 npm run build
 npm run start
 ```

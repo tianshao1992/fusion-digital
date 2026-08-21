@@ -21,6 +21,15 @@
 # misc
 .DS_Store
 *.pem
+*.key
+*.p12
+*.pfx
+*.ppk
+/.ssh/
+/secrets/
+/id_ed25519
+/id_rsa
+/fusiondigital_aliyun_hk
 __pycache__/
 *.py[cod]
 

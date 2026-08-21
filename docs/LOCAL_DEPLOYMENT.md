@@ -158,12 +158,19 @@ ${EDITOR:-vi} .env.local
 | `DEEPSEEK_API_KEY` / `DEEPSEEK_MODEL` | 否 | DeepSeek 服务端密钥及模型 |
 | `MOONSHOT_API_KEY` / `MOONSHOT_MODEL` | 否 | Kimi/Moonshot 服务端密钥及模型 |
 | `MOONSHOT_REGION` | 否 | `cn` 或 `international`；默认 `cn` |
-| `ITER_HIGH_DETAIL_ASSET_BASE_URL` | 否 | ITER 18 片运行时镜像根地址；生产建议稳定 HTTPS，未设时使用审核过的默认源 |
+| `ITER_HIGH_DETAIL_ASSET_BASE_URL` | 否 | Sites 预览/联网 Worker 的 ITER 18 片运行时镜像根地址；未设时使用审核过的默认源 |
 | `PORT` | 否 | `npm run start` 的端口，默认 `3000` |
 
-线上供应商密钥应在 Sites 的 Runtime environment variables 中设置为 Secret；不要写入 `.openai/hosting.json`。完整说明见 [大模型供应商配置](./LLM_PROVIDER_CONFIGURATION.md)。
+Sites 预览环境的供应商密钥应在 Runtime environment variables 中设置为 Secret；
+不要写入 `.openai/hosting.json`。阿里云香港 `public-anonymous` 生产环境不配置这些
+模型密钥，也不开放账户或写 API。完整说明见
+[大模型供应商配置](./LLM_PROVIDER_CONFIGURATION.md)。
 
-`FUSION_ASSET_BASE_URL` 与 `FUSION_ASSET_SOURCE_DIR` 是运行 `assets:hydrate` 时的本机进程变量，不是网站运行时密钥；应按 3.1 节只在当前终端设置。`ITER_HIGH_DETAIL_ASSET_BASE_URL` 才是 Worker 运行时镜像配置，且不能包含账号、口令、query 或 hash。
+`FUSION_ASSET_BASE_URL` 与 `FUSION_ASSET_SOURCE_DIR` 是运行 `assets:hydrate` 时的本机
+进程变量，不是网站运行时密钥；应按 3.1 节只在当前终端设置。
+`ITER_HIGH_DETAIL_ASSET_BASE_URL` 只用于 Sites 预览或其他明确允许联网的 Worker，
+且不能包含账号、口令、query 或 hash。阿里云香港生产必须把全部锁定资产打入发布包，
+不得配置运行时镜像回源。
 
 安全规则：
 

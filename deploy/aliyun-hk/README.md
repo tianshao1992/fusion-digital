@@ -140,13 +140,48 @@ npm run assets:verify
 `dist` 上传。不要让国内用户浏览时回源 GitHub。
 
 上传时使用已经验证的服务器 SSH 访问方式，不要把私钥、密码或临时凭证放入仓库或
-命令记录。首次初始化若仅有阿里云 Workbench/云助手免密通道，可先用其文件上传功能
-放入发布包和安装器；在普通 SSH 公钥尚未独立验证前，不得关闭现有登录方式：
+命令记录。每台开发机必须使用自己的 SSH 密钥，不能从另一台机器、聊天或网盘复制
+私钥。新机器首次接入按以下顺序完成：
+
+1. 在新机器生成独立 ED25519 密钥；私钥只保存在该机器的安全存储中。
+2. 通过已验证的阿里云 Workbench/云助手读取服务器
+   `/etc/ssh/ssh_host_ed25519_key.pub` 的 SHA-256 指纹，并与新机器首次连接显示的
+   指纹逐字核对。禁止使用 `StrictHostKeyChecking=no`，也不能仅凭 `ssh-keyscan`
+   的结果建立信任。只有指纹完全一致后，才接受该主机公钥并写入本机
+   `known_hosts`。
+3. 只把新机器的**公钥**通过受控通道追加到服务器授权列表；不得覆盖已有公钥。
+4. 用 `BatchMode=yes`、`IdentitiesOnly=yes` 和 `StrictHostKeyChecking=yes` 完成一次
+   无交互验证后，才能让该机器上的 Codex 执行上传或发布。
+
+首次初始化若仅有阿里云 Workbench/云助手免密通道，可先用其文件上传功能放入发布包
+和安装器；在普通 SSH 公钥尚未独立验证前，不得关闭现有登录方式：
 
 ```powershell
-scp $Bundle "root@<SERVER_IP>:/tmp/fusiondigital-$ShortSha.tgz"
-scp "deploy/aliyun-hk/install-release.sh" "root@<SERVER_IP>:/tmp/install-fusiondigital-release.sh"
+$Server = "47.75.119.239"
+$IdentityFile = "$env:USERPROFILE\.ssh\fusiondigital_aliyun_hk"
+if (-not (Test-Path -LiteralPath $IdentityFile -PathType Leaf)) {
+  throw "Missing this machine's FusionDigital SSH private key."
+}
+$SshOptions = @(
+  "-i", $IdentityFile,
+  "-o", "BatchMode=yes",
+  "-o", "IdentitiesOnly=yes",
+  "-o", "StrictHostKeyChecking=yes"
+)
+
+& ssh @SshOptions "root@${Server}" "true"
+if ($LASTEXITCODE -ne 0) {
+  throw "Strict SSH preflight failed; do not upload."
+}
+& scp @SshOptions $Bundle "root@${Server}:/tmp/fusiondigital-$ShortSha.tgz"
+& scp @SshOptions "deploy/aliyun-hk/install-release.sh" `
+  "root@${Server}:/tmp/install-fusiondigital-release.sh"
 ```
+
+仓库保存的是现有 ECS/EIP 的应用发布合同，不是可从零创建云资源的 IaC。实例规格、
+系统盘、计费方式、安全组和账号权限必须在阿里云控制台按实时资源核对；不得仅凭本文
+重建、替换或购买服务器。若以后需要灾备重建，应另行审核不含凭据的 Terraform/ROS
+合同，并与应用发布变更分开提交。
 
 必须始终调用仓库内的安装器，而不是手工覆盖 current、systemd 和 Nginx。安装器会
 核对完整提交 SHA、包 SHA-256、ITER 字节数、EFIT 入口、每个 gzip sidecar 的解压
