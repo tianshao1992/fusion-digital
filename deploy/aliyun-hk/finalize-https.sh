@@ -9,6 +9,7 @@ fi
 
 ADMIN_EMAIL=
 ALLOW_HTTP01=false
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 for ARGUMENT in "$@"; do
   case "$ARGUMENT" in
     --http-01)
@@ -34,8 +35,6 @@ RENEWAL_CONFIG=/etc/letsencrypt/renewal/fusiondigital.club.conf
 CERTIFICATE_FILES=(
   "$CERTIFICATE_ROOT/fullchain.pem"
   "$CERTIFICATE_ROOT/privkey.pem"
-  /etc/letsencrypt/options-ssl-nginx.conf
-  /etc/letsencrypt/ssl-dhparams.pem
 )
 
 validate_managed_certificate() {
@@ -92,14 +91,19 @@ if [[ -n $PORT_443_LISTENERS && $PORT_443_LISTENERS != *nginx* ]]; then
 fi
 
 PRESENT_CERTIFICATE_FILES=0
+PRESENT_CERTIFICATE_PATHS=0
 for CERTIFICATE_FILE in "${CERTIFICATE_FILES[@]}"; do
+  if [[ -e $CERTIFICATE_FILE || -L $CERTIFICATE_FILE ]]; then
+    ((PRESENT_CERTIFICATE_PATHS += 1))
+  fi
   if [[ -s $CERTIFICATE_FILE ]]; then
     ((PRESENT_CERTIFICATE_FILES += 1))
   fi
 done
 
-if [[ $PRESENT_CERTIFICATE_FILES -ne 0 && $PRESENT_CERTIFICATE_FILES -ne ${#CERTIFICATE_FILES[@]} ]]; then
-  echo "managed certificate configuration is incomplete; refusing to overwrite it" >&2
+if [[ $PRESENT_CERTIFICATE_PATHS -ne 0 \
+  && $PRESENT_CERTIFICATE_FILES -ne ${#CERTIFICATE_FILES[@]} ]]; then
+  echo "managed certificate pair is incomplete or invalid; refusing to overwrite it" >&2
   exit 1
 fi
 
@@ -192,6 +196,7 @@ if ! validate_managed_certificate; then
   echo "managed certificate failed hostname, lifetime, or private-key validation" >&2
   exit 1
 fi
+node "$SCRIPT_DIR/certbot-nginx-support.mjs"
 warn_if_manual_renewal
 
 node /srv/fusiondigital/current/deploy/aliyun-hk/render-nginx-config.mjs \

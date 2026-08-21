@@ -1,8 +1,13 @@
 #!/usr/bin/env node
 
-import { chmod, mkdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
+import { chmod, mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+
+import {
+  classifyCertbotNginxState,
+  hasCompleteCertificatePair,
+} from "./certbot-nginx-support.mjs";
 
 const SCRIPT_PATH = fileURLToPath(import.meta.url);
 const TLS_BEGIN = "    # FUSIONDIGITAL_TLS_BEGIN";
@@ -37,25 +42,16 @@ export function renderNginxConfig(source, { tlsEnabled }) {
   return `${source.slice(0, start)}${replacement}${source.slice(endOffset)}`;
 }
 
-async function isRegularFile(path) {
-  try {
-    return (await stat(path)).isFile();
-  } catch (error) {
-    if (error?.code === "ENOENT") return false;
-    throw error;
-  }
-}
-
-export async function hasManagedCertificate(root = CERTIFICATE_ROOT) {
-  const [certificate, privateKey, options, dhParameters] = await Promise.all([
-    isRegularFile(resolve(root, "fullchain.pem")),
-    isRegularFile(resolve(root, "privkey.pem")),
-    isRegularFile("/etc/letsencrypt/options-ssl-nginx.conf"),
-    isRegularFile("/etc/letsencrypt/ssl-dhparams.pem"),
-  ]);
-  if (!certificate && !privateKey) return false;
-  if (!certificate || !privateKey || !options || !dhParameters) {
-    throw new Error("Managed fusiondigital.club certificate configuration is incomplete.");
+export async function hasManagedCertificate(
+  root = CERTIFICATE_ROOT,
+  letsencryptRoot = "/etc/letsencrypt",
+  stateSecurity = {},
+) {
+  const supportState = await classifyCertbotNginxState({ ...stateSecurity, letsencryptRoot });
+  if (supportState.status === "INVALID") throw supportState.error;
+  if (!(await hasCompleteCertificatePair(root))) return false;
+  if (supportState.status !== "READY") {
+    throw new Error("Certbot Nginx support state is incomplete; run the shared prepare helper.");
   }
   return true;
 }

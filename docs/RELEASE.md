@@ -175,6 +175,14 @@ Nginx 站点配置；render、`nginx -t`、
 reload、双域名健康检查或 HTTP/2 检查失败时自动恢复并 reload 旧配置。脚本绝不修改
 SSH。只有 `curl --resolve` 的双域名 SNI 验收全部通过后才能执行 DNS 切换。
 
+Certbot manual 只生成 `fullchain.pem`/`privkey.pem` 证书对；显式 HTTPS 收尾流程中的
+共享 helper 会先确认唯一 installer 是 nginx，再幂等执行
+`certbot plugins --prepare --installers`，逐一核验 Nginx options、DH params、两个
+版本摘要及摘要内容匹配，并在 `nginx -t` 通过后才允许 render TLS。普通 release
+安装器与 renderer 只读，不写 `/etc/letsencrypt`。证书对半缺失或证书完整但 support
+state 不完整都必须 fail closed。support 只有 0/4 `ABSENT` 和校验通过的 4/4 `READY`
+是合法状态，其他状态一律 `INVALID`；没有证书但 support 为 `READY` 时仍不能启用 TLS。
+
 没有 AliDNS 最小权限 API 凭据时，一次性人工 DNS-01 只可作为切换前预签与 SNI
 验收的桥接措施。脚本发现 renewal `authenticator = manual` 会告警但不阻断预切验收；
 DNS 已全部切到新 EIP 后，正式完成前必须执行：

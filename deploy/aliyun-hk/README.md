@@ -254,7 +254,18 @@ curl -fsSI -H 'Host: fusiondigital.club' http://<SERVER_IP>/
 若切换当日确实没有 AliDNS 最小权限 API 凭据，允许把一次性人工 DNS-01 作为仅用于
 切换前预签与 SNI 验收的桥接措施。`finalize-https.sh` 检测到 Certbot renewal
 `authenticator = manual` 时会醒目告警，但不会阻断预切 SNI 验收。DNS 全部切到新 EIP
-后，必须在正式完成前把续期认证迁移为 Nginx/受控 HTTP-01 并验证实际续期路径：
+前，桥接签发的完整命令是：
+
+```bash
+sudo certbot certonly --manual --preferred-challenges=dns \
+  --cert-name fusiondigital.club \
+  --agree-tos --email '<ADMIN_EMAIL>' \
+  -d fusiondigital.club -d www.fusiondigital.club
+```
+
+按 Certbot 提示依次添加并验证 `_acme-challenge` TXT；不要加入 `-i nginx`，也不要使用
+`certbot run -a manual -i nginx` 绕过仓库的 Nginx 事务。DNS 全部切到新 EIP 后，必须
+在正式完成前把续期认证迁移为 Nginx/受控 HTTP-01 并验证实际续期路径：
 
 ```bash
 sudo certbot reconfigure --cert-name fusiondigital.club --nginx
@@ -265,14 +276,37 @@ sudo certbot renew --dry-run
 `manual`。迁移或 dry-run 任一步失败都不能宣布正式发布完成；不得把人工 TXT 作为
 长期续期方案。
 
-启用 TLS 前确认下列四个文件均存在且非空：
+人工 `certonly --manual` 只生成证书对；启用 TLS 前只要求这两个文件同时存在且非空，
+缺任意一个都会 fail closed：
 
 ```bash
 sudo test -s /etc/letsencrypt/live/fusiondigital.club/fullchain.pem
 sudo test -s /etc/letsencrypt/live/fusiondigital.club/privkey.pem
-sudo test -s /etc/letsencrypt/options-ssl-nginx.conf
-sudo test -s /etc/letsencrypt/ssl-dhparams.pem
 ```
+
+共享 helper 会在证书对完整但 Nginx support state 不完整时幂等执行 Certbot 2.9 的
+受控 plugin prepare；该命令只初始化 installer/plugin，不签发证书，也不把证书安装进
+站点配置：
+
+```bash
+sudo certbot plugins --prepare --installers
+```
+
+它逐一校验并固定为 `root:root 0644` 的四个状态文件是：
+
+- `/etc/letsencrypt/options-ssl-nginx.conf`（Certbot 2.9 实测 774 B）；
+- `/etc/letsencrypt/ssl-dhparams.pem`（实测 424 B）；
+- `/etc/letsencrypt/.updated-options-ssl-nginx-conf-digest.txt`（64 位十六进制，64 B）；
+- `/etc/letsencrypt/.updated-ssl-dhparams-pem-digest.txt`（64 位十六进制，64 B）。
+
+任一已有状态路径为符号链接、特殊文件、空文件、非 `root:root 0644`，或 prepare 后
+仍缺文件、摘要格式/内容不匹配或 prepare 后 `nginx -t` 失败时都会 fail closed。只有
+显式执行 `finalize-https.sh` 才允许 helper 写入 `/etc/letsencrypt`；普通
+`install-release.sh` 与 renderer 只读检查状态，不会借发布应用修改 Certbot。因而全新
+ECS 的“证书 2 个 + support state 0 个”必须经 finalize 安全初始化后才能 render TLS；
+普通 release 遇到该状态会 fail closed。support 状态机只接受 0/4 `ABSENT` 或完整、
+权限与摘要均验证通过的 4/4 `READY`；1–3/4、空文件、符号链接或摘要不匹配都是
+`INVALID`，即使没有证书也硬失败。没有证书但 support 为 `READY` 时仍保持 HTTP-only。
 
 然后运行 HTTPS 收尾脚本。已有完整证书时，它会先核对至少 7 天有效期、双域名覆盖及
 证书/私钥公钥一致性，再跳过签发并启用 TLS：

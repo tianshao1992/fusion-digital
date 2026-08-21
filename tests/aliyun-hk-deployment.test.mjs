@@ -1,10 +1,20 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { mkdir, mkdtemp, readFile, rm, stat, symlink, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 
-import { renderNginxConfig } from "../deploy/aliyun-hk/render-nginx-config.mjs";
+import {
+  assertOnlyNginxInstaller,
+  CERTBOT_NGINX_STATE_FILES,
+  ensureCertbotNginxSupport,
+} from "../deploy/aliyun-hk/certbot-nginx-support.mjs";
+import {
+  hasManagedCertificate,
+  renderNginxConfig,
+} from "../deploy/aliyun-hk/render-nginx-config.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -46,10 +56,242 @@ test("Hong Kong TLS rendering is deterministic and enables HTTP2", async () => {
   );
 });
 
+test("managed TLS material groups certificate pairs separately from Certbot Nginx state", async () => {
+  const letsencryptRoot = await mkdtemp(join(tmpdir(), "fusiondigital-certbot-state-"));
+  const certificateRoot = join(letsencryptRoot, "live", "fusiondigital.club");
+  const testSecurityOptions = {
+    enforceMode: process.platform !== "win32",
+    enforceOwnership: false,
+  };
+  await mkdir(certificateRoot, { recursive: true });
+  let prepareCalls = 0;
+  const writeReadySupportState = async () => {
+    const options = "safe options-ssl-nginx.conf\n";
+    const dhParameters = "safe ssl-dhparams.pem\n";
+    await Promise.all([
+      writeFile(join(letsencryptRoot, "options-ssl-nginx.conf"), options, { mode: 0o644 }),
+      writeFile(join(letsencryptRoot, "ssl-dhparams.pem"), dhParameters, { mode: 0o644 }),
+      writeFile(
+        join(letsencryptRoot, ".updated-options-ssl-nginx-conf-digest.txt"),
+        createHash("sha256").update(options).digest("hex"),
+        { mode: 0o644 },
+      ),
+      writeFile(
+        join(letsencryptRoot, ".updated-ssl-dhparams-pem-digest.txt"),
+        createHash("sha256").update(dhParameters).digest("hex"),
+        { mode: 0o644 },
+      ),
+    ]);
+  };
+  const prepare = async () => {
+    prepareCalls += 1;
+    await writeReadySupportState();
+  };
+
+  try {
+    // 0 certificate + 0 support is a valid HTTP-only state.
+    assert.equal(await hasManagedCertificate(certificateRoot, letsencryptRoot), false);
+    assert.deepEqual(
+      await ensureCertbotNginxSupport({
+        certificateRoot,
+        letsencryptRoot,
+        inspectInstaller: async () => {},
+        prepare,
+        validateNginx: async () => {},
+        ...testSecurityOptions,
+      }),
+      { certificateReady: false, supportReady: false, prepared: false },
+    );
+
+    // Any partial, empty, or symlinked support state is INVALID even without a certificate.
+    await writeFile(join(letsencryptRoot, "options-ssl-nginx.conf"), "safe options\n");
+    await assert.rejects(
+      hasManagedCertificate(certificateRoot, letsencryptRoot, testSecurityOptions),
+      /support state is partial \(1\/4\)/u,
+    );
+    await assert.rejects(
+      ensureCertbotNginxSupport({
+        certificateRoot,
+        letsencryptRoot,
+        inspectInstaller: async () => {},
+        prepare,
+        validateNginx: async () => {},
+        ...testSecurityOptions,
+      }),
+      /support state is partial \(1\/4\)/u,
+    );
+    await rm(join(letsencryptRoot, "options-ssl-nginx.conf"));
+
+    await writeFile(join(letsencryptRoot, "options-ssl-nginx.conf"), "");
+    await assert.rejects(
+      hasManagedCertificate(certificateRoot, letsencryptRoot, testSecurityOptions),
+      /Unsafe Certbot Nginx state file/u,
+    );
+    await rm(join(letsencryptRoot, "options-ssl-nginx.conf"));
+
+    const symlinkTarget = join(letsencryptRoot, "support-target.conf");
+    if (process.platform === "win32") {
+      await mkdir(symlinkTarget);
+    } else {
+      await writeFile(symlinkTarget, "safe target\n");
+    }
+    await symlink(
+      symlinkTarget,
+      join(letsencryptRoot, "options-ssl-nginx.conf"),
+      process.platform === "win32" ? "junction" : "file",
+    );
+    await assert.rejects(
+      hasManagedCertificate(certificateRoot, letsencryptRoot, testSecurityOptions),
+      /symbolic link/u,
+    );
+    await rm(join(letsencryptRoot, "options-ssl-nginx.conf"));
+    await rm(symlinkTarget, { recursive: process.platform === "win32" });
+
+    // A complete READY support state remains HTTP-only without a certificate.
+    await writeReadySupportState();
+    assert.equal(
+      await hasManagedCertificate(certificateRoot, letsencryptRoot, testSecurityOptions),
+      false,
+    );
+    assert.deepEqual(
+      await ensureCertbotNginxSupport({
+        certificateRoot,
+        letsencryptRoot,
+        inspectInstaller: async () => {},
+        prepare,
+        validateNginx: async () => {},
+        ...testSecurityOptions,
+      }),
+      { certificateReady: false, supportReady: true, prepared: false },
+    );
+    assert.equal(prepareCalls, 0);
+
+    await writeFile(
+      join(letsencryptRoot, ".updated-options-ssl-nginx-conf-digest.txt"),
+      "b".repeat(64),
+      { mode: 0o644 },
+    );
+    await assert.rejects(
+      hasManagedCertificate(certificateRoot, letsencryptRoot, testSecurityOptions),
+      /state digest does not match/u,
+    );
+    await assert.rejects(
+      ensureCertbotNginxSupport({
+        certificateRoot,
+        letsencryptRoot,
+        inspectInstaller: async () => {},
+        prepare,
+        validateNginx: async () => {},
+        ...testSecurityOptions,
+      }),
+      /state digest does not match/u,
+    );
+    await Promise.all(CERTBOT_NGINX_STATE_FILES.map(({ basename }) =>
+      rm(join(letsencryptRoot, basename))));
+
+    // A half certificate pair always fails closed.
+    await writeFile(join(certificateRoot, "fullchain.pem"), "certificate\n");
+    await assert.rejects(
+      hasManagedCertificate(certificateRoot, letsencryptRoot),
+      /certificate pair is incomplete or invalid/u,
+    );
+    await assert.rejects(
+      ensureCertbotNginxSupport({
+        certificateRoot,
+        letsencryptRoot,
+        inspectInstaller: async () => {},
+        prepare,
+        validateNginx: async () => {},
+        ...testSecurityOptions,
+      }),
+      /certificate pair is incomplete or invalid/u,
+    );
+
+    // A complete manual certificate pair safely prepares all four state files,
+    // enables TLS, and is idempotent on the next invocation.
+    await writeFile(join(certificateRoot, "privkey.pem"), "private key\n");
+    await assert.rejects(
+      hasManagedCertificate(certificateRoot, letsencryptRoot),
+      /support state is incomplete/u,
+    );
+    assert.deepEqual(
+      await ensureCertbotNginxSupport({
+        certificateRoot,
+        letsencryptRoot,
+        inspectInstaller: async () => {},
+        prepare,
+        validateNginx: async () => {},
+        ...testSecurityOptions,
+      }),
+      { certificateReady: true, supportReady: true, prepared: true },
+    );
+    assert.equal(
+      await hasManagedCertificate(certificateRoot, letsencryptRoot, testSecurityOptions),
+      true,
+    );
+    assert.equal(prepareCalls, 1);
+    for (const { basename, kind } of CERTBOT_NGINX_STATE_FILES) {
+      const path = join(letsencryptRoot, basename);
+      if (process.platform !== "win32") assert.equal((await stat(path)).mode & 0o777, 0o644);
+      if (kind === "digest") assert.match(await readFile(path, "utf8"), /^[0-9a-f]{64}$/u);
+    }
+    assert.deepEqual(
+      await ensureCertbotNginxSupport({
+        certificateRoot,
+        letsencryptRoot,
+        inspectInstaller: async () => {},
+        prepare,
+        validateNginx: async () => {},
+        ...testSecurityOptions,
+      }),
+      { certificateReady: true, supportReady: true, prepared: false },
+    );
+    assert.equal(prepareCalls, 1);
+
+    await writeFile(
+      join(letsencryptRoot, ".updated-options-ssl-nginx-conf-digest.txt"),
+      "b".repeat(64),
+      { mode: 0o644 },
+    );
+    await assert.rejects(
+      hasManagedCertificate(certificateRoot, letsencryptRoot, testSecurityOptions),
+      /state digest does not match/u,
+    );
+    await assert.rejects(
+      ensureCertbotNginxSupport({
+        certificateRoot,
+        letsencryptRoot,
+        inspectInstaller: async () => {},
+        prepare,
+        validateNginx: async () => {},
+        ...testSecurityOptions,
+      }),
+      /state digest does not match/u,
+    );
+    await writeFile(join(letsencryptRoot, "options-ssl-nginx.conf"), "", { mode: 0o644 });
+    await assert.rejects(
+      hasManagedCertificate(certificateRoot, letsencryptRoot, testSecurityOptions),
+      /Unsafe Certbot Nginx state file/u,
+    );
+  } finally {
+    await rm(letsencryptRoot, { recursive: true, force: true });
+  }
+});
+
+test("Certbot preparation accepts the nginx installer only", () => {
+  assert.doesNotThrow(() => assertOnlyNginxInstaller("* nginx\n"));
+  assert.throws(() => assertOnlyNginxInstaller("* apache\n"), /nginx installer only/u);
+  assert.throws(
+    () => assertOnlyNginxInstaller("* nginx\n* apache\n"),
+    /nginx installer only/u,
+  );
+});
+
 test("Hong Kong installer verifies sidecars, EFIT, ITER, and preserves managed TLS", async () => {
-  const [installer, finalize] = await Promise.all([
+  const [installer, finalize, supportHelper] = await Promise.all([
     read("deploy/aliyun-hk/install-release.sh"),
     read("deploy/aliyun-hk/finalize-https.sh"),
+    read("deploy/aliyun-hk/certbot-nginx-support.mjs"),
   ]);
   assert.match(installer, /gzip -cd -- "\$ASSET_FILE\.gz" \| cmp -s/u);
   assert.match(installer, /dist\/client\/data\/exl50u-efit\/index\.json/u);
@@ -58,6 +300,8 @@ test("Hong Kong installer verifies sidecars, EFIT, ITER, and preserves managed T
   assert.match(installer, /device-assets\/iter-high-detail\/v1/u);
   assert.match(installer, /DIRECT_DATA_STATUS[\s\S]*?= 404/u);
   assert.match(installer, /render-nginx-config\.mjs/u);
+  assert.match(installer, /certbot-nginx-support\.mjs/u);
+  assert.doesNotMatch(installer, /node[^\n]*certbot-nginx-support\.mjs/u);
   assert.match(installer, /TLS_WAS_CONFIGURED/u);
   assert.match(installer, /listen\[\[:space:\]\]\+\[\^;\]\*443\[\^;\]\*ssl/u);
   assert.match(installer, /RENDER_ARGS=\(--require-tls/u);
@@ -109,6 +353,8 @@ test("Hong Kong installer verifies sidecars, EFIT, ITER, and preserves managed T
   assert.match(finalize, /ALLOW_HTTP01=false/u);
   assert.match(finalize, /--http-01/u);
   assert.match(finalize, /CERTIFICATE_READY=true/u);
+  assert.match(finalize, /PRESENT_CERTIFICATE_PATHS/u);
+  assert.match(finalize, /certificate pair is incomplete or invalid/u);
   assert.match(finalize, /Certificate issuance skipped/u);
   assert.match(finalize, /openssl x509 -checkend 604800/u);
   assert.match(finalize, /openssl x509 -checkhost fusiondigital\.club/u);
@@ -118,6 +364,11 @@ test("Hong Kong installer verifies sidecars, EFIT, ITER, and preserves managed T
   assert.match(finalize, /authenticator\[\[:space:\]\]\*=\[\[:space:\]\]\*manual/u);
   assert.match(finalize, /certbot reconfigure --cert-name fusiondigital\.club --nginx/u);
   assert.match(finalize, /certbot renew --dry-run/u);
+  assert.match(finalize, /certbot-nginx-support\.mjs/u);
+  assert.ok(
+    finalize.indexOf("certbot-nginx-support.mjs")
+      < finalize.indexOf("render-nginx-config.mjs"),
+  );
   assert.match(finalize, /CONFIG_BACKUP_DIR=\$\(mktemp -d/u);
   assert.match(finalize, /TRANSACTION_ACTIVE=false/u);
   assert.match(finalize, /trap cleanup_on_exit EXIT/u);
@@ -138,6 +389,23 @@ test("Hong Kong installer verifies sidecars, EFIT, ITER, and preserves managed T
     finalize,
     /sshd_config|SSH_DROPIN|PermitRootLogin|PasswordAuthentication|PubkeyAuthentication|systemctl reload ssh|\/usr\/sbin\/sshd/u,
   );
+  assert.match(
+    supportHelper,
+    /\["plugins", "--prepare", "--installers"\]/u,
+  );
+  assert.match(supportHelper, /\["plugins", "--installers"\]/u);
+  assert.match(supportHelper, /Expected the nginx installer only/u);
+  assert.match(supportHelper, /createHash\("sha256"\)/u);
+  assert.match(supportHelper, /state digest does not match/u);
+  assert.match(supportHelper, /execFileSync\("nginx", \["-t"\]/u);
+  assert.match(supportHelper, /options-ssl-nginx\.conf/u);
+  assert.match(supportHelper, /ssl-dhparams\.pem/u);
+  assert.match(supportHelper, /\.updated-options-ssl-nginx-conf-digest\.txt/u);
+  assert.match(supportHelper, /\.updated-ssl-dhparams-pem-digest\.txt/u);
+  assert.match(supportHelper, /must have mode 0644/u);
+  assert.match(supportHelper, /owned by root:root/u);
+  assert.match(supportHelper, /exactly 64 lowercase hex characters/u);
+  assert.doesNotMatch(supportHelper, /certbot[^\n]*run[^\n]*manual[^\n]*nginx/u);
 
   const readme = await read("deploy/aliyun-hk/README.md");
   assert.match(readme, /唯一允许的安装入口/u);
@@ -148,6 +416,12 @@ test("Hong Kong installer verifies sidecars, EFIT, ITER, and preserves managed T
   assert.match(readme, /一次性人工 DNS-01[\s\S]*?certbot reconfigure/u);
   assert.match(readme, /certbot renew --dry-run/u);
   assert.match(readme, /不能宣布正式发布完成/u);
+  assert.match(readme, /certbot certonly --manual --preferred-challenges=dns/u);
+  assert.match(readme, /certbot plugins --prepare --installers/u);
+  assert.match(readme, /774 B/u);
+  assert.match(readme, /424 B/u);
+  assert.match(readme, /\.updated-options-ssl-nginx-conf-digest\.txt/u);
+  assert.match(readme, /\.updated-ssl-dhparams-pem-digest\.txt/u);
   assert.doesNotMatch(readme, /sudo ln -sfn "\$TARGET" \/srv\/fusiondigital\/current/u);
   assert.doesNotMatch(readme, /sudo install -m 0644[\s\S]{0,160}nginx\.conf/u);
 });
