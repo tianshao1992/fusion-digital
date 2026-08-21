@@ -75,6 +75,7 @@ test("checked-in contract pins both production names to the Aliyun Hong Kong IPv
   assert.equal(contract.deployment.instanceId, "i-j6c5xpt6lvn9fdpujlt7");
   assert.deepEqual(contract.deployment.publicNetwork, {
     product: "aliyun-eip",
+    eipId: "eip-j6cn8zd1yjdjqta887j7f",
     lineType: "BGP_PRO",
     bandwidthMbps: 100,
   });
@@ -122,8 +123,12 @@ test("production releases keep Sites as an independent preview without changing 
 
   assert.match(agents, /只有用户明确要求生成预览时，才能发布 Sites 平台地址/u);
   assert.match(release, /Sites 预览是独立、非阻塞步骤/u);
-  assert.doesNotMatch(agents, /正式发布必须.*同时部署到阿里云香港与 OpenAI Sites/u);
-  assert.doesNotMatch(release, /Sites 同步发布是正式发布的必需步骤/u);
+  assert.match(release, /DNS-01 预签与安装/u);
+  assert.match(release, /维护窗口[^。]{0,160}HTTP-01/u);
+  assert.match(release, /一次性人工 DNS-01[\s\S]*?certbot reconfigure/u);
+  assert.match(release, /certbot renew --dry-run/u);
+  assert.match(release, /不能宣布发布完成/u);
+  assert.ok(releaseRaw.indexOf("DNS-01 预签与安装") < releaseRaw.indexOf("DNS 切换与硬门禁"));
 
   const hosting = JSON.parse(hostingRaw);
   assert.deepEqual(Object.keys(hosting).sort(), ["d1", "project_id", "r2"]);
@@ -186,6 +191,26 @@ test("verification rejects the Sites CNAME and Cloudflare address", async () => 
     assert.match(failure.errors.join("; "), /forbidden address.*172\.66\.3\.26/u);
     assert.match(failure.errors.join("; "), /A expected 47\.75\.119\.239/u);
   }
+});
+
+test("verification rejects every trusted view of the legacy Hong Kong light-server IP", async () => {
+  const contract = await loadProductionContract(CONTRACT_PATH);
+  const report = await verifyProductionDns(contract, {
+    fetchImpl: createDnsJsonFetch(({ name, type }) => {
+      if (type === "A") {
+        return { answers: [answer(name, 1, LEGACY_HONG_KONG_IP)] };
+      }
+      return { answers: [] };
+    }),
+    systemResolver: createSystemResolver(),
+  });
+
+  assert.equal(report.ok, false);
+  assert.equal(report.failures.length, 12);
+  assert.ok(report.failures.every(({ errors }) =>
+    errors.some((message) => message.includes(`forbidden address(es): ${LEGACY_HONG_KONG_IP}`))));
+  assert.ok(report.failures.every(({ errors }) =>
+    errors.some((message) => message.includes(`A expected ${PRODUCTION_IP}`))));
 });
 
 test("one divergent China Mobile view fails without hiding the passing views", async () => {
@@ -311,6 +336,16 @@ test("contract validation prevents removing a required route class", async () =>
   assert.throws(
     () => validateProductionContract(contract),
     /exactly one "china-unicom" probe/u,
+  );
+});
+
+test("contract validation requires a canonical EIP identifier", async () => {
+  const contract = clone(await loadProductionContract(CONTRACT_PATH));
+  contract.deployment.publicNetwork.eipId = "legacy-public-ip";
+
+  assert.throws(
+    () => validateProductionContract(contract),
+    /publicNetwork\.eipId must be a canonical EIP ID/u,
   );
 });
 

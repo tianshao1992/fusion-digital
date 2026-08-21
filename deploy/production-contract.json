@@ -8,6 +8,7 @@
     "instanceId": "i-j6c5xpt6lvn9fdpujlt7",
     "publicNetwork": {
       "product": "aliyun-eip",
+      "eipId": "eip-j6cn8zd1yjdjqta887j7f",
       "lineType": "BGP_PRO",
       "bandwidthMbps": 100
     },

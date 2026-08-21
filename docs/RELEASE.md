@@ -144,19 +144,55 @@ git ls-remote https://github.com/tianshao1992/fusion-digital.git refs/heads/main
    执行源码构建。必须调用版本化的 `deploy/aliyun-hk/install-release.sh`；
    安装器会校验 JS/CSS 无损 gzip sidecar、ITER/EFIT 受控路径，并在证书存在时恢复
    HTTPS/HTTP2，禁止直接复制 Nginx 配置绕过这些门禁。
-6. **源站预检**：在改动 DNS 前，使用 IP + Host/SNI 验证新 release、Nginx、公开
+6. **HTTP 源站预检**：在改动 DNS 前，使用新 EIP + Host 验证 release、Nginx、公开
    资源和匿名安全边界。
-7. **DNS 硬门禁**：运行 `npm run release:verify-dns`，并检查阿里云 DNS 所有线路，
+7. **DNS-01 预签与安装**：保持生产 DNS 不变，用受控 DNS-01 流程签发双域名证书并
+   安装到新 ECS；运行 `finalize-https.sh` 复用该证书并事务化启用 TLS。
+8. **SNI 预检**：仍不切 DNS，使用 `--resolve` 将两个生产名称定向到新 EIP，验证
+   证书、HTTP/2、公开资源和匿名安全边界。
+9. **DNS 切换与硬门禁**：确认 SNI 预检通过后才切换全部 AliDNS 线路，运行
+   `npm run release:verify-dns`，并检查阿里云 DNS 所有线路，
    确保两个名称只返回 `47.75.119.239`。
-8. **公网验收**：验证香港双域名 TLS/HTTP、关键页面、搜索、模型清单、Range 请求和
+10. **公网验收**：验证香港双域名 TLS/HTTP、关键页面、搜索、模型清单、Range 请求和
    禁用接口，再用境内电信、联通、移动多节点拨测香港入口。
-9. **留痕**：记录日期、完整 SHA、服务器 release 目录、包 SHA-256、生产 URL、验证
+11. **留痕**：记录日期、完整 SHA、服务器 release 目录、包 SHA-256、生产 URL、验证
    结果和已知限制。
 
 Sites 预览是独立、非阻塞步骤。只有用户明确要求时才生成，并且不得插入任何生产
 DNS 操作，也不能代替香港构建、部署、DNS 与公网验收步骤。
 
-### 3.1 内地 pre-ICP staging 不属于生产发布
+### 3.1 TLS 切换与事务回滚
+
+零停机默认路径是 DNS-01：生产 DNS 仍指向上一源站时签发覆盖 apex/`www` 的证书，
+把完整 Certbot 托管文件安装到新 ECS，再运行：
+
+```bash
+sudo /srv/fusiondigital/current/deploy/aliyun-hk/finalize-https.sh '<ADMIN_EMAIL>'
+```
+
+完整证书已存在且通过有效期、双域名与私钥匹配检查时脚本跳过签发。它会先备份
+Nginx 站点配置；render、`nginx -t`、
+reload、双域名健康检查或 HTTP/2 检查失败时自动恢复并 reload 旧配置。脚本绝不修改
+SSH。只有 `curl --resolve` 的双域名 SNI 验收全部通过后才能执行 DNS 切换。
+
+没有 AliDNS 最小权限 API 凭据时，一次性人工 DNS-01 只可作为切换前预签与 SNI
+验收的桥接措施。脚本发现 renewal `authenticator = manual` 会告警但不阻断预切验收；
+DNS 已全部切到新 EIP 后，正式完成前必须执行：
+
+```bash
+sudo certbot reconfigure --cert-name fusiondigital.club --nginx
+sudo certbot renew --dry-run
+```
+
+并确认 renewal authenticator 已不再是 `manual`。`reconfigure`、dry-run 或认证器检查
+任一步失败都不能宣布发布完成，人工 TXT 不得成为长期续期依赖。
+
+无法使用 DNS-01 时必须声明维护窗口：先切换双域名 DNS 以满足 HTTP-01，再显式执行
+`finalize-https.sh --http-01 '<ADMIN_EMAIL>'`。脚本失败会回滚 Nginx，但不会回滚外部
+DNS；维护者必须在窗口内修复证书或执行已审核的 DNS 回退。不得把 HTTP-01 路径描述
+为零停机。完整步骤见[香港部署手册](../deploy/aliyun-hk/README.md#5-dns-与-https-零停机切换)。
+
+### 3.2 内地 pre-ICP staging 不属于生产发布
 
 阿里云内地 `39.96.61.9` 只用于备案前部署验证。它不得替换本手册事实表中的香港
 生产主机，也不得进入 `deploy/production-contract.json` 的期望 A 记录。staging

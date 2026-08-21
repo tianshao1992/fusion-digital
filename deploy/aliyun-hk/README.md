@@ -166,7 +166,7 @@ sudo bash /tmp/install-fusiondigital-release.sh \
 
 ```bash
 sudo apt-get update
-sudo apt-get install -y ca-certificates curl gnupg nginx certbot python3-certbot-nginx
+sudo apt-get install -y ca-certificates curl gnupg openssl nginx certbot python3-certbot-nginx
 ```
 
 应用要求 Node.js `>=22.13.0`。推荐安装并固定当前 LTS 主版本；以下示例使用
@@ -241,65 +241,107 @@ curl -fsS -H 'Host: fusiondigital.club' \
 curl -fsSI -H 'Host: fusiondigital.club' http://<SERVER_IP>/
 ```
 
-## 5. DNS 与 HTTPS
+## 5. DNS 与 HTTPS 零停机切换
 
-先导出或截图阿里云 DNS 当前记录用于审计；旧记录只能作为调查证据，不能被默认
-视为可用回滚目标。配置必须满足：
+### 5.1 推荐路径：DNS-01 预签证书
 
-1. `@` 只保留指向 `47.75.119.239` 的 A 记录；
-2. `www` 只保留指向 `47.75.119.239` 的 A 记录；
-3. 推荐两个名称各保留一条“默认”线路记录。若确需保留电信、联通、移动、境内、
-   境外等分线路，则**每一条**都必须指向 `47.75.119.239`；
-4. 删除 `custom-domains.chatgpt.site` 或其他 Sites/Cloudflare 主机名的 CNAME，删除
-   旧香港轻量 `47.82.66.79`、`162.159.143.30`、`172.66.3.26` 等旧地址，删除把流量导向其他
-   平台的 AAAA/ALIAS/ANAME；
-5. 保留现有域名所有权验证 TXT；建议 TTL 设为 600 秒；
-6. 至少等待一个旧 TTL，再确认 apex 和 `www` 在多个解析器及国内三网节点都只
-   返回 `47.75.119.239`。
+保持生产 DNS 指向上一源站，先用经批准的 ACME DNS-01 客户端或 AliDNS 插件为
+`fusiondigital.club` 与 `www.fusiondigital.club` 一次性签发证书，并把完整的 Certbot
+托管文件安装到新 ECS。API 凭证必须使用临时、最小权限 secret，不得写入仓库、脚本、
+命令历史或发布记录；DNS-01 工具还必须提供可审计的自动续期方式，不能依赖无人值守
+时必然失败的手工 TXT 提示。
 
-不要只检查阿里云控制台第一行记录。默认与运营商/地域分线路并存会造成部分国内
-节点命中香港源站、另一部分节点命中 Cloudflare 并返回 403。完整 PowerShell DNS
-断言见[生产发布手册](../../docs/RELEASE.md#4-dns-硬门禁)。
+若切换当日确实没有 AliDNS 最小权限 API 凭据，允许把一次性人工 DNS-01 作为仅用于
+切换前预签与 SNI 验收的桥接措施。`finalize-https.sh` 检测到 Certbot renewal
+`authenticator = manual` 时会醒目告警，但不会阻断预切 SNI 验收。DNS 全部切到新 EIP
+后，必须在正式完成前把续期认证迁移为 Nginx/受控 HTTP-01 并验证实际续期路径：
 
-仓库内的 [`deploy/production-contract.json`](../production-contract.json) 是生产
-DNS 的机器可读事实源。本机首先运行版本化硬门禁：
-
-```powershell
-npm run release:verify-dns
+```bash
+sudo certbot reconfigure --cert-name fusiondigital.club --nginx
+sudo certbot renew --dry-run
 ```
 
-AliDNS no-ECS、全球兜底、通用境内及国内三网 ECS 结果是阻塞性硬门禁。本机
-`system-default` 仅作 advisory；若 VPN/代理返回 `198.18.0.0/15` fake-IP，应关闭
-VPN 后人工复核，不能用 fake-IP 结果覆盖或忽略可信 DoH 的失败。
+还必须确认 `/etc/letsencrypt/renewal/fusiondigital.club.conf` 的 `authenticator` 已不再是
+`manual`。迁移或 dry-run 任一步失败都不能宣布正式发布完成；不得把人工 TXT 作为
+长期续期方案。
 
-然后至少执行以下独立只读检查；任一可信结果出现其他地址都应停止上线：
+启用 TLS 前确认下列四个文件均存在且非空：
 
-```powershell
-Resolve-DnsName fusiondigital.club -Type A -Server 223.5.5.5 -DnsOnly
-Resolve-DnsName www.fusiondigital.club -Type A -Server 223.5.5.5 -DnsOnly
-Resolve-DnsName fusiondigital.club -Type A -Server 119.29.29.29 -DnsOnly
-Resolve-DnsName www.fusiondigital.club -Type A -Server 119.29.29.29 -DnsOnly
+```bash
+sudo test -s /etc/letsencrypt/live/fusiondigital.club/fullchain.pem
+sudo test -s /etc/letsencrypt/live/fusiondigital.club/privkey.pem
+sudo test -s /etc/letsencrypt/options-ssl-nginx.conf
+sudo test -s /etc/letsencrypt/ssl-dhparams.pem
 ```
 
-DNS 生效后申请同时覆盖两个名称的证书：
+然后运行 HTTPS 收尾脚本。已有完整证书时，它会先核对至少 7 天有效期、双域名覆盖及
+证书/私钥公钥一致性，再跳过签发并启用 TLS：
 
 ```bash
 sudo /srv/fusiondigital/current/deploy/aliyun-hk/finalize-https.sh \
   '<ADMIN_EMAIL>'
 ```
 
-HTTPS 脚本不会修改、校验或重载 SSH，也不会写入 `sshd_config`。若检测到 `sshd`
-或其他非 Nginx 服务占用 443，它会保持服务器访问配置不变并安全退出；维护者必须先在
-独立会话中确认备用访问路径，再自行处理端口冲突。SSH 公钥部署与禁用密码登录属于
-独立运维变更，不得夹带在 TLS 签发中。
+脚本在修改前备份 Nginx 站点配置；render、`nginx -t`、reload、双域名健康检查或
+HTTP/2 检查任一步失败，都会恢复原配置并再次 reload。脚本不会修改、校验或重载
+SSH，也不会写入 `sshd_config`。若 `sshd` 或其他非 Nginx 服务占用 443，它保持 SSH
+与 Nginx 原样并安全退出。
 
-脚本通过 Certbot 签发双域名证书、从版本化模板启用 HTTPS 重定向与 HTTP/2，并开启
-自动续期 timer。后续 release 的安装器会检测现有证书并保留这套 TLS 配置，不依赖
-Certbot 修改过的临时文件。省略邮箱参数时脚本使用 Certbot 的无邮箱注册方式，适合
-短期临时环境，但不会收到证书到期通知。
+此时生产 DNS 仍未切换。必须先从外部机器用新 EIP + SNI 验证两个名称：
 
-执行脚本前，apex 与 `www` 都必须已解析到香港源站并能通过 HTTP 验证；任一名称未就绪
-时停止签发，不使用单域名证书绕过固定双域名拓扑。
+```powershell
+curl.exe -fsSI --resolve "fusiondigital.club:443:47.75.119.239" https://fusiondigital.club/
+curl.exe -fsSI --resolve "www.fusiondigital.club:443:47.75.119.239" https://www.fusiondigital.club/
+```
+
+两条命令以及公开检索、资产 Range、匿名安全边界全部通过后，才修改阿里云 DNS：
+
+1. `@` 只保留指向 `47.75.119.239` 的 A 记录；
+2. `www` 只保留指向 `47.75.119.239` 的 A 记录；
+3. 推荐两个名称各保留一条“默认”线路记录。若确需保留电信、联通、移动、境内、
+   境外等分线路，则**每一条**都必须指向 `47.75.119.239`；
+4. 删除 `custom-domains.chatgpt.site` 或其他 Sites/Cloudflare 主机名的 CNAME，删除
+   旧香港轻量 `47.82.66.79`、`162.159.143.30`、`172.66.3.26` 等旧地址，删除把
+   流量导向其他平台的 AAAA/ALIAS/ANAME；
+5. 保留现有域名所有权验证 TXT；建议 TTL 设为 600 秒；
+6. 至少等待一个旧 TTL，再确认 apex 和 `www` 在多个解析器及国内三网节点都只
+   返回 `47.75.119.239`。
+
+### 5.2 退化路径：HTTP-01 维护窗口
+
+只有无法使用 DNS-01 时，才能安排明确维护窗口使用 HTTP-01。先记录 DNS 回退证据、
+通知窗口、确认 80 端口与双域名 Host 请求可达，再把 apex 和 `www` 全部切到新 EIP，
+随后显式运行：
+
+```bash
+sudo /srv/fusiondigital/current/deploy/aliyun-hk/finalize-https.sh \
+  --http-01 '<ADMIN_EMAIL>'
+```
+
+没有 `--http-01` 且不存在完整证书时，脚本会拒绝隐式签发。HTTP-01 失败时 Nginx
+配置会自动回滚，但 DNS 已经切换，维护者必须在窗口内修复签发或按已审核方案恢复
+DNS；不得把这段暴露期描述为零停机。
+
+### 5.3 DNS 硬门禁
+
+不要只检查阿里云控制台第一行记录。默认与运营商/地域分线路并存会造成不同节点命中
+不同源站。切换后运行：
+
+```powershell
+npm run release:verify-dns
+Resolve-DnsName fusiondigital.club -Type A -Server 223.5.5.5 -DnsOnly
+Resolve-DnsName www.fusiondigital.club -Type A -Server 223.5.5.5 -DnsOnly
+Resolve-DnsName fusiondigital.club -Type A -Server 119.29.29.29 -DnsOnly
+Resolve-DnsName www.fusiondigital.club -Type A -Server 119.29.29.29 -DnsOnly
+```
+
+AliDNS no-ECS、全球兜底、通用境内及国内三网 ECS 结果是阻塞性硬门禁。本机
+`system-default` 仅作 advisory；若 VPN/代理返回 `198.18.0.0/15` fake-IP，应关闭
+VPN 后人工复核，不能用 fake-IP 结果覆盖或忽略可信 DoH 的失败。完整断言见
+[生产发布手册](../../docs/RELEASE.md#4-dns-硬门禁)。
+
+若本次使用了一次性人工 DNS-01，DNS 硬门禁通过后还必须完成 5.1 中的 renewal
+authenticator 迁移和 `certbot renew --dry-run`，再进入上线完成确认。
 
 ## 6. 上线验收
 

@@ -114,15 +114,22 @@ test("mainland staging does not change the checked-in Hong Kong production contr
   assert.equal(contract.deployment.region, "cn-hongkong");
   assert.equal(contract.deployment.provider, "aliyun-ecs");
   assert.equal(contract.deployment.instanceId, "i-j6c5xpt6lvn9fdpujlt7");
+  assert.equal(contract.deployment.publicNetwork.eipId, "eip-j6cn8zd1yjdjqta887j7f");
   assert.equal(contract.deployment.publicIpv4, "47.75.119.239");
   assert.deepEqual(contract.dns.expectedFinalAddresses.A, ["47.75.119.239"]);
+  assert.ok(contract.dns.forbiddenTargets.addresses.includes("47.82.66.79"));
   assert.ok(!JSON.stringify(contract).includes("39.96.61.9"));
 
   for (const document of ["AGENTS.md", "README.md", "docs/RELEASE.md"]) {
     const source = await read(document);
     assert.match(source, /39\.96\.61\.9/u, `${document} must identify the staging IP`);
     assert.match(source, /pre-ICP staging/u, `${document} must identify the pre-ICP boundary`);
-    assert.match(source, /47\.82\.66\.79/u, `${document} must retain the production IP`);
+    assert.match(source, /47\.75\.119\.239/u, `${document} must retain the production EIP`);
+    assert.match(
+      source,
+      /(?:不得|禁止|清除)[\s\S]{0,160}47\.82\.66\.79|47\.82\.66\.79[\s\S]{0,160}(?:不得|禁止|清除)/u,
+      `${document} must identify the legacy Hong Kong IP as forbidden`,
+    );
     assert.match(source, /备案/u, `${document} must retain the ICP gate`);
   }
 });

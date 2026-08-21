@@ -107,6 +107,12 @@ export function validateProductionContract(contract) {
     throw new Error("deployment.publicNetwork.product must be a non-empty string.");
   }
   if (
+    typeof contract.deployment.publicNetwork.eipId !== "string"
+    || !/^eip-[a-z0-9]+$/u.test(contract.deployment.publicNetwork.eipId)
+  ) {
+    throw new Error("deployment.publicNetwork.eipId must be a canonical EIP ID.");
+  }
+  if (
     typeof contract.deployment.publicNetwork.lineType !== "string"
     || contract.deployment.publicNetwork.lineType === ""
   ) {

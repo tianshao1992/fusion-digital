@@ -11,7 +11,7 @@
   <a href="https://www.fusiondigital.club/"><img alt="Website" src="https://img.shields.io/badge/Website-fusiondigital.club-20BFA9?logo=googlechrome&amp;logoColor=white" /></a>
   <a href="https://codeup.aliyun.com/fiatlux/DT/FusionDigital"><img alt="Codeup" src="https://img.shields.io/badge/Codeup-Aliyun-FF6A00?logo=alibabacloud&amp;logoColor=white" /></a>
   <a href="https://github.com/tianshao1992/fusion-digital"><img alt="GitHub" src="https://img.shields.io/badge/GitHub-Mirror-181717?logo=github&amp;logoColor=white" /></a>
-  <a href="https://fusion-physics-atlas-2026.tianyuanliu1992.chatgpt.site/"><img alt="OpenAI Sites" src="https://img.shields.io/badge/OpenAI_Sites-Synchronized_Mirror-412991?logo=openai&amp;logoColor=white" /></a>
+  <a href="https://fusion-physics-atlas-2026.tianyuanliu1992.chatgpt.site/"><img alt="OpenAI Sites Preview" src="https://img.shields.io/badge/OpenAI_Sites-Preview-412991?logo=openai&amp;logoColor=white" /></a>
   <img alt="Status" src="https://img.shields.io/badge/Status-Research_Preview-3758F9" />
 </p>
 

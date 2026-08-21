@@ -106,6 +106,34 @@ test("Hong Kong installer verifies sidecars, EFIT, ITER, and preserves managed T
   assert.match(finalize, /PORT_443_LISTENERS/u);
   assert.match(finalize, /HTTPS finalization will not modify SSH/u);
   assert.ok(finalize.indexOf("PORT_443_LISTENERS") < finalize.indexOf('certbot "${CERTBOT_ARGS[@]}"'));
+  assert.match(finalize, /ALLOW_HTTP01=false/u);
+  assert.match(finalize, /--http-01/u);
+  assert.match(finalize, /CERTIFICATE_READY=true/u);
+  assert.match(finalize, /Certificate issuance skipped/u);
+  assert.match(finalize, /openssl x509 -checkend 604800/u);
+  assert.match(finalize, /openssl x509 -checkhost fusiondigital\.club/u);
+  assert.match(finalize, /openssl x509 -checkhost www\.fusiondigital\.club/u);
+  assert.match(finalize, /certificate_key_digest[\s\S]*?private_key_digest/u);
+  assert.match(finalize, /RENEWAL_CONFIG=\/etc\/letsencrypt\/renewal\/fusiondigital\.club\.conf/u);
+  assert.match(finalize, /authenticator\[\[:space:\]\]\*=\[\[:space:\]\]\*manual/u);
+  assert.match(finalize, /certbot reconfigure --cert-name fusiondigital\.club --nginx/u);
+  assert.match(finalize, /certbot renew --dry-run/u);
+  assert.match(finalize, /CONFIG_BACKUP_DIR=\$\(mktemp -d/u);
+  assert.match(finalize, /TRANSACTION_ACTIVE=false/u);
+  assert.match(finalize, /trap cleanup_on_exit EXIT/u);
+  assert.match(finalize, /rollback_nginx/u);
+  assert.match(
+    finalize,
+    /cp -a -- "\$CONFIG_BACKUP_DIR\/nginx\.conf" "\$NGINX_CONFIG"/u,
+  );
+  assert.ok(
+    finalize.indexOf("TRANSACTION_ACTIVE=true")
+      < finalize.indexOf("render-nginx-config.mjs"),
+  );
+  assert.ok(
+    finalize.lastIndexOf("TRANSACTION_ACTIVE=false")
+      > finalize.indexOf('test "$HTTP_VERSION" = 2'),
+  );
   assert.doesNotMatch(
     finalize,
     /sshd_config|SSH_DROPIN|PermitRootLogin|PasswordAuthentication|PubkeyAuthentication|systemctl reload ssh|\/usr\/sbin\/sshd/u,
@@ -113,7 +141,13 @@ test("Hong Kong installer verifies sidecars, EFIT, ITER, and preserves managed T
 
   const readme = await read("deploy/aliyun-hk/README.md");
   assert.match(readme, /唯一允许的安装入口/u);
-  assert.match(readme, /HTTPS 脚本不会修改、校验或重载 SSH/u);
+  assert.match(readme, /脚本不会修改、校验或重载\s*SSH/u);
+  assert.match(readme, /推荐路径：DNS-01 预签证书/u);
+  assert.match(readme, /生产 DNS 仍未切换[\s\S]*?--resolve/u);
+  assert.match(readme, /退化路径：HTTP-01 维护窗口/u);
+  assert.match(readme, /一次性人工 DNS-01[\s\S]*?certbot reconfigure/u);
+  assert.match(readme, /certbot renew --dry-run/u);
+  assert.match(readme, /不能宣布正式发布完成/u);
   assert.doesNotMatch(readme, /sudo ln -sfn "\$TARGET" \/srv\/fusiondigital\/current/u);
   assert.doesNotMatch(readme, /sudo install -m 0644[\s\S]{0,160}nginx\.conf/u);
 });
