@@ -103,9 +103,17 @@ test("Hong Kong installer verifies sidecars, EFIT, ITER, and preserves managed T
   assert.match(finalize, /render-nginx-config\.mjs/u);
   assert.match(finalize, /HTTP_VERSION[\s\S]*?= 2/u);
   assert.doesNotMatch(finalize, /--redirect/u);
+  assert.match(finalize, /PORT_443_LISTENERS/u);
+  assert.match(finalize, /HTTPS finalization will not modify SSH/u);
+  assert.ok(finalize.indexOf("PORT_443_LISTENERS") < finalize.indexOf('certbot "${CERTBOT_ARGS[@]}"'));
+  assert.doesNotMatch(
+    finalize,
+    /sshd_config|SSH_DROPIN|PermitRootLogin|PasswordAuthentication|PubkeyAuthentication|systemctl reload ssh|\/usr\/sbin\/sshd/u,
+  );
 
   const readme = await read("deploy/aliyun-hk/README.md");
   assert.match(readme, /唯一允许的安装入口/u);
+  assert.match(readme, /HTTPS 脚本不会修改、校验或重载 SSH/u);
   assert.doesNotMatch(readme, /sudo ln -sfn "\$TARGET" \/srv\/fusiondigital\/current/u);
   assert.doesNotMatch(readme, /sudo install -m 0644[\s\S]{0,160}nginx\.conf/u);
 });

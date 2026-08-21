@@ -3,9 +3,15 @@
   "service": "FusionDigital",
   "environment": "production",
   "deployment": {
-    "provider": "aliyun-light-application-server",
+    "provider": "aliyun-ecs",
     "region": "cn-hongkong",
-    "publicIpv4": "47.82.66.79"
+    "instanceId": "i-j6c5xpt6lvn9fdpujlt7",
+    "publicNetwork": {
+      "product": "aliyun-eip",
+      "lineType": "BGP_PRO",
+      "bandwidthMbps": 100
+    },
+    "publicIpv4": "47.75.119.239"
   },
   "dns": {
     "hostnames": [
@@ -14,7 +20,7 @@
     ],
     "expectedFinalAddresses": {
       "A": [
-        "47.82.66.79"
+        "47.75.119.239"
       ],
       "AAAA": []
     },
@@ -26,6 +32,7 @@
         "chatgpt.site"
       ],
       "addresses": [
+        "47.82.66.79",
         "162.159.143.30",
         "172.66.3.26"
       ]

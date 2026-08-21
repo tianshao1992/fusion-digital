@@ -2,7 +2,7 @@
 
 本目录只用于在阿里云内地实例 `39.96.61.9` 上进行 **pre-ICP staging**。它不是当前
 生产环境，不得承载 `fusiondigital.club` 或 `www.fusiondigital.club` 的公网 DNS。
-当前生产仍是香港服务器 `47.82.66.79`，并继续受
+当前生产仍是香港 ECS 精品 EIP `47.75.119.239`，并继续受
 [`deploy/production-contract.json`](../production-contract.json) 约束。
 
 只有同时满足以下条件，才能另起一个经过评审的生产拓扑变更提交：

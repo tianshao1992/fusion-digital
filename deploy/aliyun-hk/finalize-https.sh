@@ -8,24 +8,20 @@ if [[ ${EUID:-$(id -u)} -ne 0 ]]; then
 fi
 
 ADMIN_EMAIL=${1:-}
-SSH_DROPIN=/etc/ssh/sshd_config.d/99-fusiondigital-bootstrap.conf
 
-# Port 443 was used only as a temporary SSH bootstrap path. Reloading sshd
-# keeps this already-established session alive while releasing the listener
-# for Nginx HTTPS.
-cat >"$SSH_DROPIN" <<'EOF'
-Port 22
-PermitRootLogin prohibit-password
-PasswordAuthentication no
-PubkeyAuthentication yes
-EOF
-
-/usr/sbin/sshd -t
-systemctl reload ssh
-
-if ss -H -ltn '( sport = :443 )' | grep -q .; then
-  echo "TCP 443 is still occupied after reloading sshd" >&2
-  ss -H -ltnp '( sport = :443 )' >&2 || true
+# TLS activation must never create, replace, validate, or reload SSH
+# configuration. The ECS may still rely on Workbench/Cloud Assistant and may
+# not have a tested ordinary public key. SSH hardening is a separate operator
+# task after an independent access path has been verified.
+PORT_443_LISTENERS=$(ss -H -ltnp '( sport = :443 )' 2>/dev/null || true)
+if [[ $PORT_443_LISTENERS == *sshd* ]]; then
+  echo "TCP 443 is occupied by sshd; HTTPS finalization will not modify SSH." >&2
+  printf '%s\n' "$PORT_443_LISTENERS" >&2
+  exit 1
+fi
+if [[ -n $PORT_443_LISTENERS && $PORT_443_LISTENERS != *nginx* ]]; then
+  echo "TCP 443 is occupied by a non-Nginx service; HTTPS finalization stopped." >&2
+  printf '%s\n' "$PORT_443_LISTENERS" >&2
   exit 1
 fi
 

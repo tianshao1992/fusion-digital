@@ -1,8 +1,8 @@
 # FusionDigital 阿里云香港公开匿名版部署
 
 本目录用于把 FusionDigital 以**公开匿名、只读镜像**部署到 Ubuntu 24.04
-阿里云香港轻量应用服务器 `47.82.66.79`。这是 `fusiondigital.club` 的**唯一生产
-部署方式**，正式入口支持：
+阿里云香港 ECS `i-j6c5xpt6lvn9fdpujlt7`，公网入口为 100 Mbps `BGP_PRO` 精品 EIP
+`47.75.119.239`。这是 `fusiondigital.club` 的**唯一生产部署方式**，正式入口支持：
 
 - `https://fusiondigital.club/`
 - `https://www.fusiondigital.club/`
@@ -24,7 +24,7 @@ OpenAI Sites 仅保留平台分配的 `*.chatgpt.site` 预览/人工备用地址
 - 发布包必须在干净的 detached worktree 中以 `public-anonymous` 模式构建，通过
   SSH/SCP 安装到新的不可变 release 目录。
 - `fusiondigital.club` 与 `www.fusiondigital.club` 的阿里云 DNS 所有线路只能返回
-  `47.82.66.79`。
+  `47.75.119.239`。
 - 严禁 apex/`www` 指向 `custom-domains.chatgpt.site`、Cloudflare 或其他平台；旧
   Cloudflare 地址 `162.159.143.30`、`172.66.3.26` 必须从所有分线路记录中删除。
 - 发布/回滚应用不得隐式修改 DNS。应用回滚只切换
@@ -66,7 +66,7 @@ deploy/aliyun-hk/server.mjs
 
 ## 2. 本地生成可复现发布包
 
-构建需要明显多于 1 GiB 内存，必须在开发机或 CI 完成，不能在轻量服务器上
+构建需要明显多于生产 ECS 的运行预算，必须在开发机或 CI 完成，不能在生产服务器上
 构建。应从准备发布的已提交 SHA 建立隔离 worktree；下面示例不会使用当前工作区
 中的未提交文件。
 
@@ -139,7 +139,9 @@ npm run assets:verify
 默认下载源是 GitHub Releases；必须在本地完成下载和 SHA-256 校验，再把文件随
 `dist` 上传。不要让国内用户浏览时回源 GitHub。
 
-上传时使用服务器自己的 SSH 密钥或临时密码，不要把私钥放入仓库或命令记录：
+上传时使用已经验证的服务器 SSH 访问方式，不要把私钥、密码或临时凭证放入仓库或
+命令记录。首次初始化若仅有阿里云 Workbench/云助手免密通道，可先用其文件上传功能
+放入发布包和安装器；在普通 SSH 公钥尚未独立验证前，不得关闭现有登录方式：
 
 ```powershell
 scp $Bundle "root@<SERVER_IP>:/tmp/fusiondigital-$ShortSha.tgz"
@@ -159,7 +161,8 @@ sudo bash /tmp/install-fusiondigital-release.sh \
 
 ## 3. Ubuntu 24.04 初始化
 
-在阿里云轻量应用服务器防火墙中仅开放需要的 TCP 端口：22、80、443。
+在阿里云 ECS 安全组中仅开放需要的 TCP 端口：22、80、443。应用端口 3000 不得
+开放到公网。
 
 ```bash
 sudo apt-get update
@@ -180,7 +183,8 @@ sudo apt-get install -y nodejs
 node --version
 ```
 
-1 GiB 主机应配置 2 GiB swap，但 swap 只是突发保护，不能用于在服务器上构建：
+2 GiB ECS 应至少确认已有 2 GiB swap；若阿里云扩展尚未创建，下列命令才会补齐。
+swap 只是突发保护，不能用于在服务器上构建：
 
 ```bash
 if ! swapon --show=NAME --noheadings | grep -qx /swapfile; then
@@ -242,16 +246,16 @@ curl -fsSI -H 'Host: fusiondigital.club' http://<SERVER_IP>/
 先导出或截图阿里云 DNS 当前记录用于审计；旧记录只能作为调查证据，不能被默认
 视为可用回滚目标。配置必须满足：
 
-1. `@` 只保留指向 `47.82.66.79` 的 A 记录；
-2. `www` 只保留指向 `47.82.66.79` 的 A 记录；
+1. `@` 只保留指向 `47.75.119.239` 的 A 记录；
+2. `www` 只保留指向 `47.75.119.239` 的 A 记录；
 3. 推荐两个名称各保留一条“默认”线路记录。若确需保留电信、联通、移动、境内、
-   境外等分线路，则**每一条**都必须指向 `47.82.66.79`；
+   境外等分线路，则**每一条**都必须指向 `47.75.119.239`；
 4. 删除 `custom-domains.chatgpt.site` 或其他 Sites/Cloudflare 主机名的 CNAME，删除
-   `162.159.143.30`、`172.66.3.26` 等旧 Cloudflare A 记录，删除把流量导向其他
+   旧香港轻量 `47.82.66.79`、`162.159.143.30`、`172.66.3.26` 等旧地址，删除把流量导向其他
    平台的 AAAA/ALIAS/ANAME；
 5. 保留现有域名所有权验证 TXT；建议 TTL 设为 600 秒；
 6. 至少等待一个旧 TTL，再确认 apex 和 `www` 在多个解析器及国内三网节点都只
-   返回 `47.82.66.79`。
+   返回 `47.75.119.239`。
 
 不要只检查阿里云控制台第一行记录。默认与运营商/地域分线路并存会造成部分国内
 节点命中香港源站、另一部分节点命中 Cloudflare 并返回 403。完整 PowerShell DNS
@@ -284,11 +288,15 @@ sudo /srv/fusiondigital/current/deploy/aliyun-hk/finalize-https.sh \
   '<ADMIN_EMAIL>'
 ```
 
-部署时若曾临时让 SSH 监听 443，脚本会先将 SSH 恢复为仅监听 22，再通过 Certbot
-签发双域名证书、从版本化模板启用 HTTPS 重定向与 HTTP/2，并开启自动续期 timer。
-后续 release 的安装器会检测现有证书并保留这套 TLS 配置，不再依赖 Certbot 修改过的
-临时文件。省略邮箱参数时脚本使用 Certbot 的无邮箱注册方式，适合短期临时环境，
-但不会收到证书到期通知。
+HTTPS 脚本不会修改、校验或重载 SSH，也不会写入 `sshd_config`。若检测到 `sshd`
+或其他非 Nginx 服务占用 443，它会保持服务器访问配置不变并安全退出；维护者必须先在
+独立会话中确认备用访问路径，再自行处理端口冲突。SSH 公钥部署与禁用密码登录属于
+独立运维变更，不得夹带在 TLS 签发中。
+
+脚本通过 Certbot 签发双域名证书、从版本化模板启用 HTTPS 重定向与 HTTP/2，并开启
+自动续期 timer。后续 release 的安装器会检测现有证书并保留这套 TLS 配置，不依赖
+Certbot 修改过的临时文件。省略邮箱参数时脚本使用 Certbot 的无邮箱注册方式，适合
+短期临时环境，但不会收到证书到期通知。
 
 执行脚本前，apex 与 `www` 都必须已解析到香港源站并能通过 HTTP 验证；任一名称未就绪
 时停止签发，不使用单域名证书绕过固定双域名拓扑。

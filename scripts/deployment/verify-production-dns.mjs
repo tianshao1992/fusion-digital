@@ -87,6 +87,37 @@ export function validateProductionContract(contract) {
   }
 
   assertObject(contract.deployment, "deployment");
+  if (typeof contract.deployment.provider !== "string" || contract.deployment.provider === "") {
+    throw new Error("deployment.provider must be a non-empty string.");
+  }
+  if (typeof contract.deployment.region !== "string" || contract.deployment.region === "") {
+    throw new Error("deployment.region must be a non-empty string.");
+  }
+  if (
+    typeof contract.deployment.instanceId !== "string"
+    || !/^i-[a-z0-9]+$/u.test(contract.deployment.instanceId)
+  ) {
+    throw new Error("deployment.instanceId must be a canonical ECS instance ID.");
+  }
+  assertObject(contract.deployment.publicNetwork, "deployment.publicNetwork");
+  if (
+    typeof contract.deployment.publicNetwork.product !== "string"
+    || contract.deployment.publicNetwork.product === ""
+  ) {
+    throw new Error("deployment.publicNetwork.product must be a non-empty string.");
+  }
+  if (
+    typeof contract.deployment.publicNetwork.lineType !== "string"
+    || contract.deployment.publicNetwork.lineType === ""
+  ) {
+    throw new Error("deployment.publicNetwork.lineType must be a non-empty string.");
+  }
+  if (
+    !Number.isInteger(contract.deployment.publicNetwork.bandwidthMbps)
+    || contract.deployment.publicNetwork.bandwidthMbps < 1
+  ) {
+    throw new Error("deployment.publicNetwork.bandwidthMbps must be a positive integer.");
+  }
   if (isIP(contract.deployment.publicIpv4) !== 4) {
     throw new Error("deployment.publicIpv4 must be an IPv4 address.");
   }

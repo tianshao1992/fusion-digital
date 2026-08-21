@@ -112,8 +112,10 @@ test("Aliyun VM build targets preserve Hong Kong compatibility and require anony
 test("mainland staging does not change the checked-in Hong Kong production contract", async () => {
   const contract = JSON.parse(await read("deploy/production-contract.json"));
   assert.equal(contract.deployment.region, "cn-hongkong");
-  assert.equal(contract.deployment.publicIpv4, "47.82.66.79");
-  assert.deepEqual(contract.dns.expectedFinalAddresses.A, ["47.82.66.79"]);
+  assert.equal(contract.deployment.provider, "aliyun-ecs");
+  assert.equal(contract.deployment.instanceId, "i-j6c5xpt6lvn9fdpujlt7");
+  assert.equal(contract.deployment.publicIpv4, "47.75.119.239");
+  assert.deepEqual(contract.dns.expectedFinalAddresses.A, ["47.75.119.239"]);
   assert.ok(!JSON.stringify(contract).includes("39.96.61.9"));
 
   for (const document of ["AGENTS.md", "README.md", "docs/RELEASE.md"]) {

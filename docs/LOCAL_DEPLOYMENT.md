@@ -19,10 +19,10 @@ Git 克隆已经包含 Paramak、EXL-50U 浏览器模型、公开 EFIT 派生数
 - Sites 项目 D1、运行时密钥及其访问策略；
 - Sites 版本保存、公开发布和平台分配的 `*.chatgpt.site` 地址。
 
-正式发布不等同于任一端单独部署成功：同一个完整提交 SHA 必须同时发布到阿里云香港
-`47.82.66.79` 和现有 OpenAI Sites 平台地址，任一端失败都不算完成。生产域名
-`fusiondigital.club` / `www.fusiondigital.club` 的所有 DNS 线路仍只指向香港
-`47.82.66.79`，严禁绑定或切换到 Sites。完整发布与协同回滚流程见
+正式发布必须把 Codeup `master`、GitHub `main`、本地 `HEAD` 与阿里云香港 ECS
+release 固定在同一个完整提交 SHA。生产域名 `fusiondigital.club` /
+`www.fusiondigital.club` 的所有 DNS 线路只指向香港精品 EIP `47.75.119.239`，严禁
+绑定或切换到 Sites。Sites 是按需生成、独立且非阻塞的预览。完整发布与回滚流程见
 [生产发布手册](./RELEASE.md)。
 
 因此，未登录的本地环境仍能使用 `/search` 和 `/api/search`；`/api/ask` 会安全回退为带来源的确定性检索。即便本机配置了任一供应商密钥，当前实现也不会在缺少可信 SIWC 身份和配额账本时进行不计费的模型调用，这是预期的安全行为。
@@ -360,7 +360,7 @@ SIWC 是 Sites 平台能力，不是本仓库自建的本地用户名密码系�
 
 ### Sites 构建包超过约 256 MiB
 
-不要在已经 hydration 的工作区发布 Sites。把本机 `public/models/iter-high-detail-v1/` 移出仓库，或从干净克隆执行 `npm run assets:verify:tracked` 与构建；Sites 同步镜像默认由 Worker 从外部镜像按需取得 ITER 18 片。不要通过删除 Git 已跟踪页面内容或进一步压缩模型来规避上限。
+不要在已经 hydration 的工作区发布 Sites 预览。把本机 `public/models/iter-high-detail-v1/` 移出仓库，或从干净克隆执行 `npm run assets:verify:tracked` 与构建；Sites 预览默认由 Worker 从外部镜像按需取得 ITER 18 片。不要通过删除 Git 已跟踪页面内容或进一步压缩模型来规避上限。
 
 ### Codeup SSH 连接失败
 

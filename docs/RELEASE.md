@@ -11,15 +11,16 @@
 | 协作事实源 | Codeup `master` |
 | 公开镜像 | GitHub `main`，必须与 Codeup `master` 为同一完整 SHA |
 | 生产域名 | `fusiondigital.club`、`www.fusiondigital.club` |
-| 生产主机 | 阿里云香港轻量服务器 `47.82.66.79` |
+| 生产主机 | 阿里云香港 ECS `i-j6c5xpt6lvn9fdpujlt7` + 100 Mbps `BGP_PRO` 精品 EIP `47.75.119.239` |
 | 生产模式 | `public-anonymous`，公开只读；身份、审核和写 API 关闭 |
 | 生产部署 | 本地/CI 构建不可变包，经 SSH/SCP 安装到香港服务器 |
-| Sites 定位 | 与香港站同 SHA 同步发布的 `*.chatgpt.site` 公开镜像/人工备用地址 |
-| DNS 权威 | 阿里云 DNS；apex 与 `www` 的所有线路只能到 `47.82.66.79` |
+| Sites 定位 | 按需生成、独立且非阻塞的 `*.chatgpt.site` 预览/人工备用地址 |
+| DNS 权威 | 阿里云 DNS；apex 与 `www` 的所有线路只能到 `47.75.119.239` |
 
-`.openai/hosting.json` 是 Sites **同步镜像**的资源声明，不是生产域名托管声明。
+`.openai/hosting.json` 是 Sites **预览项目**的资源声明，不是生产域名托管声明。
 
-> 正式发布必须把同一个完整提交 SHA 同时部署到阿里云香港与 OpenAI Sites；任一端未成功都不得宣布发布完成。
+> 正式发布必须让 Codeup `master`、GitHub `main`、本地 `HEAD` 与香港 ECS release
+> 使用同一个完整提交 SHA。Sites 预览不参与生产发布门禁。
 
 Sites 保存或发布新版本不得触发 `fusiondigital.club` 的自定义域名绑定、验证或 DNS 修改。
 所谓“人工备用”仅指故障时单独分享平台 URL，不代表自动或手工把生产 DNS 切到
@@ -135,32 +136,25 @@ git ls-remote https://github.com/tianshao1992/fusion-digital.git refs/heads/main
    `npm run check`；敏感信息和第三方许可复核完成。
 3. **镜像**：运行 `npm run release:sync-remotes`，确认 Codeup `master`、GitHub
    `main` 与本地 `HEAD` 为同一 SHA。
-4. **双产物隔离构建**：从同一 SHA 分别建立香港与 Sites 构建目录。香港构建补齐并
-   校验 ITER 运行时资产，设置 `NEXT_PUBLIC_FUSIONDIGITAL_MODE=public-anonymous` 和
-   `FUSIONDIGITAL_BUILD_TARGET=aliyun-hk` 后生成不可变发布包；Sites 构建设置
-   `FUSIONDIGITAL_BUILD_TARGET=sites`、通过 256 MiB 包体门禁，再用官方
-   `package-site.sh` 生成 Sites 归档。两个归档不得互换。
-5. **SSH 部署**：把香港发布包上传到 `47.82.66.79`，安装到全新的 SHA release 目录，
+4. **隔离构建**：从目标 SHA 建立 detached worktree，补齐并校验 ITER 运行时资产，
+   设置 `NEXT_PUBLIC_FUSIONDIGITAL_MODE=public-anonymous` 和
+   `FUSIONDIGITAL_BUILD_TARGET=aliyun-hk` 后生成不可变香港发布包。
+5. **SSH 部署**：把香港发布包上传到 `47.75.119.239`，安装到全新的 SHA release 目录，
    原子切换 `/srv/fusiondigital/current` 并重启服务。生产机不从 GitHub 拉资源，也不
-   在 1 GiB 主机上执行源码构建。必须调用版本化的 `deploy/aliyun-hk/install-release.sh`；
+   执行源码构建。必须调用版本化的 `deploy/aliyun-hk/install-release.sh`；
    安装器会校验 JS/CSS 无损 gzip sidecar、ITER/EFIT 受控路径，并在证书存在时恢复
    HTTPS/HTTP2，禁止直接复制 Nginx 配置绕过这些门禁。
-6. **Sites 同步发布**：用 Sites 归档保存版本，传入的 `commit_sha` 必须等于本次
-   `ReleaseSha`，并与 Codeup `master`、GitHub `main`、香港 release SHA 完全一致；
-   发布到现有平台地址并等待部署状态为 `succeeded`。禁止新增或恢复自定义域名绑定。
-7. **双端一致性门禁**：再次读取香港 release 与 Sites 已部署版本。任一端不成功或
-   SHA 不一致时，将已经更新的一端回滚到两端共同的上一正常 SHA，不得宣布完成。
-8. **源站预检**：在改动 DNS 前，使用 IP + Host/SNI 验证新 release、Nginx、公开
+6. **源站预检**：在改动 DNS 前，使用 IP + Host/SNI 验证新 release、Nginx、公开
    资源和匿名安全边界。
-9. **DNS 硬门禁**：运行 `npm run release:verify-dns`，并
-   检查阿里云 DNS 所有线路，确保两个名称只返回 `47.82.66.79`。
-10. **公网验收**：验证香港双域名和 Sites 平台地址的 TLS/HTTP、关键页面、搜索、
-    模型清单、Range 请求和禁用接口，再用境内电信、联通、移动多节点拨测香港入口。
-11. **留痕**：记录日期、完整 SHA、服务器 release 目录、包 SHA-256、Sites 版本/
-    部署 ID、两端 URL、验证结果和已知限制。
+7. **DNS 硬门禁**：运行 `npm run release:verify-dns`，并检查阿里云 DNS 所有线路，
+   确保两个名称只返回 `47.75.119.239`。
+8. **公网验收**：验证香港双域名 TLS/HTTP、关键页面、搜索、模型清单、Range 请求和
+   禁用接口，再用境内电信、联通、移动多节点拨测香港入口。
+9. **留痕**：记录日期、完整 SHA、服务器 release 目录、包 SHA-256、生产 URL、验证
+   结果和已知限制。
 
-Sites 同步发布是正式发布的必需步骤，但不得插入任何生产 DNS 操作，也不能代替香港
-构建、部署、DNS 与公网验收步骤。
+Sites 预览是独立、非阻塞步骤。只有用户明确要求时才生成，并且不得插入任何生产
+DNS 操作，也不能代替香港构建、部署、DNS 与公网验收步骤。
 
 ### 3.1 内地 pre-ICP staging 不属于生产发布
 
@@ -177,7 +171,7 @@ Sites 同步发布是正式发布的必需步骤，但不得插入任何生产 D
 4. Codeup `master`、GitHub `main`、本地 HEAD 与内地服务器 release 完整 SHA 一致；
 5. 双域名证书、匿名安全边界、Range 请求及国内三网均通过验证。
 
-在该变更提交完成前，生产仍是 `47.82.66.79`，现有 DNS 硬门禁不得放宽。具体 staging
+在该变更提交完成前，生产仍是 `47.75.119.239`，现有 DNS 硬门禁不得放宽。具体 staging
 流程见[阿里云内地备案前预部署](../deploy/aliyun-mainland/README.md)。
 
 ## 4. DNS 硬门禁
@@ -186,11 +180,12 @@ Sites 同步发布是正式发布的必需步骤，但不得插入任何生产 D
 
 对 `@` 和 `www` 分别检查所有启用记录，而不只是“默认”线路：
 
-- A 记录值只能是 `47.82.66.79`；推荐每个名称只保留一条默认线路 A 记录；
+- A 记录值只能是 `47.75.119.239`；推荐每个名称只保留一条默认线路 A 记录；
 - 若保留电信、联通、移动、境内、境外等分线路，所有线路也必须指向同一 IP；
 - 不得存在指向 `custom-domains.chatgpt.site` 或任何 Sites/Cloudflare 主机名的
   CNAME、ALIAS/ANAME；
-- 不得存在旧 Cloudflare A 记录 `162.159.143.30`、`172.66.3.26`；
+- 不得存在旧香港轻量 A 记录 `47.82.66.79` 或旧 Cloudflare A 记录
+  `162.159.143.30`、`172.66.3.26`；
 - 不得存在把流量带往其他平台的 AAAA 记录；
 - 域名所有权验证 TXT 可保留，它不参与 HTTP 路由；
 - 建议 TTL 为 600 秒。修改后至少等待一个旧 TTL，再做最终拨测。
@@ -218,7 +213,7 @@ AliDNS no-ECS、全球回退 ECS `8.8.8.0/24`、通用境内 ECS 和电信/联�
 需要独立人工交叉检查时，以下 PowerShell 还会对多个递归解析器执行硬断言：
 
 ```powershell
-$Expected = "47.82.66.79"
+$Expected = "47.75.119.239"
 $Names = @("fusiondigital.club", "www.fusiondigital.club")
 $Resolvers = @("223.5.5.5", "119.29.29.29", "1.1.1.1")
 
@@ -237,15 +232,15 @@ foreach ($Resolver in $Resolvers) {
 ```
 
 显式递归解析器不可达属于“未验证”，不能被当作通过。最终仍必须使用境内多运营商
-节点复核；所有成功解析的节点都应到 `47.82.66.79`，不得出现 Cloudflare 403。
+节点复核；所有成功解析的节点都应到 `47.75.119.239`，不得出现旧源站或 Cloudflare 403。
 
 ## 5. 源站与公网验收
 
 先绕过 DNS 验证源站证书和应用：
 
 ```powershell
-curl.exe -fsSI --resolve "fusiondigital.club:443:47.82.66.79" https://fusiondigital.club/
-curl.exe -fsSI --resolve "www.fusiondigital.club:443:47.82.66.79" https://www.fusiondigital.club/
+curl.exe -fsSI --resolve "fusiondigital.club:443:47.75.119.239" https://fusiondigital.club/
+curl.exe -fsSI --resolve "www.fusiondigital.club:443:47.75.119.239" https://www.fusiondigital.club/
 ```
 
 再验证公开 DNS 路径：
@@ -269,34 +264,31 @@ curl.exe -fsS "https://fusiondigital.club/api/search?q=tokamak&limit=5" | Out-Nu
 
 任一硬门禁失败时，保留上一正常 release，停止宣布上线并记录失败证据。
 
-## 6. Sites 同步发布规则
+## 6. Sites 预览规则
 
 - Sites 只能发布到平台分配的 `*.chatgpt.site` 地址。
-- 正式发布时，Sites 保存版本的 `commit_sha` 必须等于本次 `ReleaseSha`，与 Codeup
-  `master`、GitHub `main` 和香港 release 完全一致；部署状态必须为 `succeeded`。
+- Sites 预览只在用户明确要求时生成；其成功或失败不改变香港生产发布结论。
 - Sites 平台地址可以用于视觉验收或香港服务器故障时的人工备用访问，但不是中国大陆稳定
   访问承诺，也不是生产 DNS 的回源。
 - 禁止在 Sites 控制面添加 `fusiondigital.club` 或 `www.fusiondigital.club`；若已
   存在绑定，应先解除绑定，再确认阿里云 DNS 仍满足第 4 节。
 - 禁止根据 Sites 的自定义域名引导创建 CNAME 或 Cloudflare A 记录。
-- 不得把代码变更只发布到 Sites 或只发布到香港。任一端发布失败时，按第 3、7 节把
-  已更新的一端恢复到两端共同的上一正常 SHA。
+- Sites 预览不得触发生产回滚、修改 DNS 或改变香港 release。
 
 ## 7. 回滚与故障恢复
 
 ### 7.1 应用回滚
 
-在香港服务器上把 `/srv/fusiondigital/current` 原子切换到两端共同的上一正常
-release，同时把 Sites 重新部署到该 SHA 对应的已保存版本；重启 `fusiondigital`，
-重复双端与公网验收。若某一端尚未更新，只回滚已经更新的一端即可。不得删除故障
-release 或 Sites 版本，直到复盘和证据保留完成。
+在香港 ECS 上把 `/srv/fusiondigital/current` 原子切换到上一正常 release；重启
+`fusiondigital`，重复源站与公网验收。不得删除故障 release，直到复盘和证据保留
+完成。Sites 预览保持独立，不参与生产应用回滚。
 
 ### 7.2 DNS 漂移恢复
 
 若解析再次出现 Sites/Cloudflare：
 
 1. 截图或导出当前阿里云 DNS 记录，记录影响开始时间；
-2. 将 `@`、`www` 的所有线路恢复为 `47.82.66.79`，删除冲突的 CNAME/AAAA/A；
+2. 将 `@`、`www` 的所有线路恢复为 `47.75.119.239`，删除冲突的 CNAME/AAAA/A；
 3. 保留验证 TXT，等待旧 TTL；
 4. 重跑第 4、5 节，并完成国内多运营商拨测；
 5. 核查最近的 Sites 发布或域名操作，防止自动恢复自定义域名。
@@ -316,9 +308,6 @@ Codeup master SHA：
 GitHub main SHA：
 服务器 release：
 发布包 SHA-256：
-OpenAI Sites commit_sha：
-OpenAI Sites 版本/部署 ID：
-OpenAI Sites URL/状态：
 DNS 检查（apex/www；解析器/节点）：
 TLS/HTTP/公开能力/匿名边界：
 国内电信/联通/移动拨测：

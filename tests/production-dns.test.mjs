@@ -12,7 +12,8 @@ import {
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const CONTRACT_PATH = join(ROOT, "deploy", "production-contract.json");
-const PRODUCTION_IP = "47.82.66.79";
+const PRODUCTION_IP = "47.75.119.239";
+const LEGACY_HONG_KONG_IP = "47.82.66.79";
 const CLOUDFLARE_IP = "172.66.3.26";
 
 function normalizeWhitespace(value) {
@@ -69,6 +70,14 @@ test("checked-in contract pins both production names to the Aliyun Hong Kong IPv
     "fusiondigital.club",
     "www.fusiondigital.club",
   ]);
+  assert.equal(contract.deployment.provider, "aliyun-ecs");
+  assert.equal(contract.deployment.region, "cn-hongkong");
+  assert.equal(contract.deployment.instanceId, "i-j6c5xpt6lvn9fdpujlt7");
+  assert.deepEqual(contract.deployment.publicNetwork, {
+    product: "aliyun-eip",
+    lineType: "BGP_PRO",
+    bandwidthMbps: 100,
+  });
   assert.equal(contract.deployment.publicIpv4, PRODUCTION_IP);
   assert.deepEqual(contract.dns.expectedFinalAddresses, {
     A: [PRODUCTION_IP],
@@ -76,6 +85,7 @@ test("checked-in contract pins both production names to the Aliyun Hong Kong IPv
   });
   assert.ok(contract.dns.forbiddenTargets.hostnames.includes("custom-domains.chatgpt.site"));
   assert.ok(contract.dns.forbiddenTargets.hostnameSuffixes.includes("chatgpt.site"));
+  assert.ok(contract.dns.forbiddenTargets.addresses.includes(LEGACY_HONG_KONG_IP));
   assert.ok(contract.dns.forbiddenTargets.addresses.includes("162.159.143.30"));
   assert.ok(contract.dns.forbiddenTargets.addresses.includes(CLOUDFLARE_IP));
   assert.equal(
@@ -101,22 +111,19 @@ test("checked-in contract pins both production names to the Aliyun Hong Kong IPv
   );
 });
 
-test("formal releases pair Hong Kong with the Sites platform mirror without changing production DNS", async () => {
-  const [agentsRaw, releaseRaw, hostingRaw, packageRaw] = await Promise.all([
+test("production releases keep Sites as an independent preview without changing production DNS", async () => {
+  const [agentsRaw, releaseRaw, hostingRaw] = await Promise.all([
     readFile(join(ROOT, "AGENTS.md"), "utf8"),
     readFile(join(ROOT, "docs", "RELEASE.md"), "utf8"),
     readFile(join(ROOT, ".openai", "hosting.json"), "utf8"),
-    readFile(join(ROOT, "package.json"), "utf8"),
   ]);
   const agents = normalizeWhitespace(agentsRaw);
   const release = normalizeWhitespace(releaseRaw);
 
-  assert.match(agents, /正式发布必须.*同时部署到阿里云香港与 OpenAI Sites/u);
-  assert.match(release, /Sites 同步发布是正式发布的必需步骤/u);
-  assert.match(packageRaw, /release:verify-pair/u);
-  assert.match(packageRaw, /test:formal-release/u);
-  assert.doesNotMatch(agents, /只有用户明确要求生成预览时，才能发布 Sites 平台地址/u);
-  assert.doesNotMatch(release, /Sites 预览是独立、非阻塞步骤/u);
+  assert.match(agents, /只有用户明确要求生成预览时，才能发布 Sites 平台地址/u);
+  assert.match(release, /Sites 预览是独立、非阻塞步骤/u);
+  assert.doesNotMatch(agents, /正式发布必须.*同时部署到阿里云香港与 OpenAI Sites/u);
+  assert.doesNotMatch(release, /Sites 同步发布是正式发布的必需步骤/u);
 
   const hosting = JSON.parse(hostingRaw);
   assert.deepEqual(Object.keys(hosting).sort(), ["d1", "project_id", "r2"]);
@@ -177,7 +184,7 @@ test("verification rejects the Sites CNAME and Cloudflare address", async () => 
     assert.notEqual(failure.purpose, "default");
     assert.match(failure.errors.join("; "), /forbidden DNS target.*custom-domains\.chatgpt\.site/u);
     assert.match(failure.errors.join("; "), /forbidden address.*172\.66\.3\.26/u);
-    assert.match(failure.errors.join("; "), /A expected 47\.82\.66\.79/u);
+    assert.match(failure.errors.join("; "), /A expected 47\.75\.119\.239/u);
   }
 });
 
