@@ -162,6 +162,12 @@ export async function assertCertbotNginxStateReady(options = {}) {
   return state;
 }
 
+export async function inspectCertbotNginxStateBeforeIssuance(options = {}) {
+  const state = await classifyCertbotNginxState(options);
+  if (state.status === "INVALID") throw state.error;
+  return state;
+}
+
 async function atomicCopy(source, destination, { mode, uid, gid, enforceOwnership }) {
   const temporaryPath = join(
     dirname(destination),
@@ -222,15 +228,13 @@ export async function ensureCertbotNginxSupport({
   enforceMode = true,
   enforceOwnership = true,
 } = {}) {
-  const initial = await classifyCertbotNginxState({
+  const initial = await inspectCertbotNginxStateBeforeIssuance({
     letsencryptRoot,
     expectedUid,
     expectedGid,
     enforceMode,
     enforceOwnership,
   });
-  if (initial.status === "INVALID") throw initial.error;
-
   if (!(await hasCompleteCertificatePair(certificateRoot))) {
     return {
       certificateReady: false,
@@ -302,8 +306,16 @@ export async function ensureCertbotNginxSupport({
   }
 }
 
-async function main() {
+async function main(args = process.argv.slice(2)) {
   if (process.getuid?.() !== 0) throw new Error("run as root");
+  if (args.length === 1 && args[0] === "--inspect-only") {
+    const state = await inspectCertbotNginxStateBeforeIssuance();
+    console.log(`Certbot Nginx support preflight: ${state.status}.`);
+    return;
+  }
+  if (args.length !== 0) {
+    throw new Error("Usage: certbot-nginx-support.mjs [--inspect-only]");
+  }
   const result = await ensureCertbotNginxSupport();
   if (!result.certificateReady) {
     console.log("No complete certificate pair; leaving Nginx in HTTP-only mode.");

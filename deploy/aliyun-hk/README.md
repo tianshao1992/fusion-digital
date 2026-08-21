@@ -307,6 +307,9 @@ ECS 的“证书 2 个 + support state 0 个”必须经 finalize 安全初始�
 普通 release 遇到该状态会 fail closed。support 状态机只接受 0/4 `ABSENT` 或完整、
 权限与摘要均验证通过的 4/4 `READY`；1–3/4、空文件、符号链接或摘要不匹配都是
 `INVALID`，即使没有证书也硬失败。没有证书但 support 为 `READY` 时仍保持 HTTP-only。
+`finalize-https.sh` 会在任何 `certbot certonly` 前先用只读 `--inspect-only` 执行这套
+分类；`INVALID` 会立即退出且不会调用 Certbot，`ABSENT`/`READY` 才能继续。该预检
+不会在无证书时提前 prepare；只有证书对已经就绪后才执行完整 helper。
 
 然后运行 HTTPS 收尾脚本。已有完整证书时，它会先核对至少 7 天有效期、双域名覆盖及
 证书/私钥公钥一致性，再跳过签发并启用 TLS：

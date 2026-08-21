@@ -182,6 +182,8 @@ Certbot manual 只生成 `fullchain.pem`/`privkey.pem` 证书对；显式 HTTPS 
 安装器与 renderer 只读，不写 `/etc/letsencrypt`。证书对半缺失或证书完整但 support
 state 不完整都必须 fail closed。support 只有 0/4 `ABSENT` 和校验通过的 4/4 `READY`
 是合法状态，其他状态一律 `INVALID`；没有证书但 support 为 `READY` 时仍不能启用 TLS。
+HTTPS 收尾脚本必须在任何 `certbot certonly` 前执行只读 `--inspect-only`；`INVALID`
+立即终止且不得调用 Certbot，`ABSENT`/`READY` 才能继续。无证书时不得提前 prepare。
 
 没有 AliDNS 最小权限 API 凭据时，一次性人工 DNS-01 只可作为切换前预签与 SNI
 验收的桥接措施。脚本发现 renewal `authenticator = manual` 会告警但不阻断预切验收；

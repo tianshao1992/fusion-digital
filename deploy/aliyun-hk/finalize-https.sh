@@ -90,6 +90,10 @@ if [[ -n $PORT_443_LISTENERS && $PORT_443_LISTENERS != *nginx* ]]; then
   exit 1
 fi
 
+# This preflight is read-only: ABSENT and READY are legal, while any partial or
+# unsafe support state stops before Certbot can issue or mutate a certificate.
+node "$SCRIPT_DIR/certbot-nginx-support.mjs" --inspect-only
+
 PRESENT_CERTIFICATE_FILES=0
 PRESENT_CERTIFICATE_PATHS=0
 for CERTIFICATE_FILE in "${CERTIFICATE_FILES[@]}"; do

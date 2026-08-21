@@ -10,6 +10,7 @@ import {
   assertOnlyNginxInstaller,
   CERTBOT_NGINX_STATE_FILES,
   ensureCertbotNginxSupport,
+  inspectCertbotNginxStateBeforeIssuance,
 } from "../deploy/aliyun-hk/certbot-nginx-support.mjs";
 import {
   hasManagedCertificate,
@@ -87,6 +88,14 @@ test("managed TLS material groups certificate pairs separately from Certbot Ngin
     prepareCalls += 1;
     await writeReadySupportState();
   };
+  let certbotStubCalls = 0;
+  const issueAfterReadOnlyPreflight = async () => {
+    await inspectCertbotNginxStateBeforeIssuance({
+      letsencryptRoot,
+      ...testSecurityOptions,
+    });
+    certbotStubCalls += 1;
+  };
 
   try {
     // 0 certificate + 0 support is a valid HTTP-only state.
@@ -109,6 +118,8 @@ test("managed TLS material groups certificate pairs separately from Certbot Ngin
       hasManagedCertificate(certificateRoot, letsencryptRoot, testSecurityOptions),
       /support state is partial \(1\/4\)/u,
     );
+    await assert.rejects(issueAfterReadOnlyPreflight(), /support state is partial \(1\/4\)/u);
+    assert.equal(certbotStubCalls, 0);
     await assert.rejects(
       ensureCertbotNginxSupport({
         certificateRoot,
@@ -127,6 +138,8 @@ test("managed TLS material groups certificate pairs separately from Certbot Ngin
       hasManagedCertificate(certificateRoot, letsencryptRoot, testSecurityOptions),
       /Unsafe Certbot Nginx state file/u,
     );
+    await assert.rejects(issueAfterReadOnlyPreflight(), /Unsafe Certbot Nginx state file/u);
+    assert.equal(certbotStubCalls, 0);
     await rm(join(letsencryptRoot, "options-ssl-nginx.conf"));
 
     const symlinkTarget = join(letsencryptRoot, "support-target.conf");
@@ -144,6 +157,8 @@ test("managed TLS material groups certificate pairs separately from Certbot Ngin
       hasManagedCertificate(certificateRoot, letsencryptRoot, testSecurityOptions),
       /symbolic link/u,
     );
+    await assert.rejects(issueAfterReadOnlyPreflight(), /symbolic link/u);
+    assert.equal(certbotStubCalls, 0);
     await rm(join(letsencryptRoot, "options-ssl-nginx.conf"));
     await rm(symlinkTarget, { recursive: process.platform === "win32" });
 
@@ -175,6 +190,8 @@ test("managed TLS material groups certificate pairs separately from Certbot Ngin
       hasManagedCertificate(certificateRoot, letsencryptRoot, testSecurityOptions),
       /state digest does not match/u,
     );
+    await assert.rejects(issueAfterReadOnlyPreflight(), /state digest does not match/u);
+    assert.equal(certbotStubCalls, 0);
     await assert.rejects(
       ensureCertbotNginxSupport({
         certificateRoot,
@@ -365,9 +382,14 @@ test("Hong Kong installer verifies sidecars, EFIT, ITER, and preserves managed T
   assert.match(finalize, /certbot reconfigure --cert-name fusiondigital\.club --nginx/u);
   assert.match(finalize, /certbot renew --dry-run/u);
   assert.match(finalize, /certbot-nginx-support\.mjs/u);
+  assert.match(finalize, /certbot-nginx-support\.mjs" --inspect-only/u);
   assert.ok(
     finalize.indexOf("certbot-nginx-support.mjs")
       < finalize.indexOf("render-nginx-config.mjs"),
+  );
+  assert.ok(
+    finalize.indexOf('certbot-nginx-support.mjs" --inspect-only')
+      < finalize.indexOf('certbot "${CERTBOT_ARGS[@]}"'),
   );
   assert.match(finalize, /CONFIG_BACKUP_DIR=\$\(mktemp -d/u);
   assert.match(finalize, /TRANSACTION_ACTIVE=false/u);
@@ -405,6 +427,7 @@ test("Hong Kong installer verifies sidecars, EFIT, ITER, and preserves managed T
   assert.match(supportHelper, /must have mode 0644/u);
   assert.match(supportHelper, /owned by root:root/u);
   assert.match(supportHelper, /exactly 64 lowercase hex characters/u);
+  assert.match(supportHelper, /Usage: certbot-nginx-support\.mjs \[--inspect-only\]/u);
   assert.doesNotMatch(supportHelper, /certbot[^\n]*run[^\n]*manual[^\n]*nginx/u);
 
   const readme = await read("deploy/aliyun-hk/README.md");
