@@ -13,6 +13,7 @@ import {
   buildRadialProfiles,
   diagnosticChannels,
 } from '../app/fusion-data/fusionDataDerived';
+import { sourceValueToDisplay } from '../app/fusion-data/fusionDataContract';
 
 const workspaceSource = readFileSync(new URL('../app/fusion-data/FusionDataWorkspace.tsx', import.meta.url), 'utf8');
 const chartsSource = readFileSync(new URL('../app/fusion-data/FusionDataCharts.tsx', import.meta.url), 'utf8');
@@ -59,6 +60,12 @@ test('every mock signal preserves an explicit MDSplus-to-IMAS mapping and indepe
   assert.equal(mappings.ne_line, 'summary/line_average/n_e/value');
   assert.equal(mappings.w_thermal, 'summary/global_quantities/energy_thermal/value');
   assert.equal(mappings.p_ohm, 'summary/global_quantities/power_ohm/value');
+
+  const [ip, density, energy, heating] = mockFusionShots[0].signals;
+  assert.equal(sourceValueToDisplay(1_000_000, ip), 1);
+  assert.equal(sourceValueToDisplay(6e19, density), 6);
+  assert.equal(sourceValueToDisplay(1_000_000, energy), 1);
+  assert.equal(sourceValueToDisplay(1_000_000, heating), 1);
 });
 
 test('mock provider applies catalogue filtering, shot identity and sliced reads through one contract', async () => {

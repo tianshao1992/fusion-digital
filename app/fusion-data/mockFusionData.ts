@@ -10,7 +10,7 @@ import type {
   ShotRef,
   SignalQuery,
 } from './fusionDataContract';
-import { sameShot } from './fusionDataContract';
+import { sameShot, sourceValueToDisplay } from './fusionDataContract';
 
 type ShotSeed = {
   pulse: number;
@@ -68,7 +68,11 @@ function buildDescriptor(seed: ShotSeed, id: string, definition: Omit<FusionSign
   };
 }
 
-function buildPoints(seed: ShotSeed, sample: (time: number, envelope: number) => number): FusionSignalPoint[] {
+function buildPoints(
+  seed: ShotSeed,
+  descriptor: FusionSignalDescriptor,
+  sampleSourceValue: (time: number, envelope: number) => number,
+): FusionSignalPoint[] {
   const points: FusionSignalPoint[] = [];
   const extended = seed.pulse === 10426;
   for (let index = 0; index <= Math.round(DURATION / TIME_STEP); index += 1) {
@@ -77,7 +81,9 @@ function buildPoints(seed: ShotSeed, sample: (time: number, envelope: number) =>
     const gap = seed.pulse === 10423 && time >= 2.1 && time <= 2.3;
     const invalidTail = seed.pulse === 10427 && time >= 3.42;
     const quality: FusionQuality = gap ? 'missing' : invalidTail ? 'invalid' : 'good';
-    const value = quality === 'missing' ? null : Number(sample(time, envelope).toFixed(4));
+    const value = quality === 'missing'
+      ? null
+      : Number(sourceValueToDisplay(sampleSourceValue(time, envelope), descriptor).toFixed(4));
     points.push({ time, value, sigma: value === null ? null : Number((Math.abs(value) * 0.018).toFixed(4)), quality });
   }
   return points;
@@ -104,10 +110,10 @@ function buildSignals(seed: ShotSeed) {
   ];
 
   return [
-    { ...descriptors[0], points: buildPoints(seed, (time, envelope) => 1.03 * seed.currentScale * envelope * (1 + 0.012 * Math.sin(time * 9 + seed.phase))) },
-    { ...descriptors[1], points: buildPoints(seed, (time, envelope) => (0.35 + 5.7 * seed.densityScale * smoothStep(0.48, 1.35, time)) * envelope * (1 + 0.022 * Math.sin(time * 5 + seed.phase))) },
-    { ...descriptors[2], points: buildPoints(seed, (time, envelope) => 0.72 * seed.currentScale * seed.heatingScale * envelope * smoothStep(0.72, 1.38, time) * (1 + 0.035 * Math.cos(time * 4 + seed.phase))) },
-    { ...descriptors[3], points: buildPoints(seed, (time, envelope) => 4.8 * seed.heatingScale * envelope * smoothStep(0.68, 1.05, time) * (1 - 0.34 * smoothStep(3.08, 3.28, time))) },
+    { ...descriptors[0], points: buildPoints(seed, descriptors[0], (time, envelope) => 1.03e6 * seed.currentScale * envelope * (1 + 0.012 * Math.sin(time * 9 + seed.phase))) },
+    { ...descriptors[1], points: buildPoints(seed, descriptors[1], (time, envelope) => (0.35e19 + 5.7e19 * seed.densityScale * smoothStep(0.48, 1.35, time)) * envelope * (1 + 0.022 * Math.sin(time * 5 + seed.phase))) },
+    { ...descriptors[2], points: buildPoints(seed, descriptors[2], (time, envelope) => 0.72e6 * seed.currentScale * seed.heatingScale * envelope * smoothStep(0.72, 1.38, time) * (1 + 0.035 * Math.cos(time * 4 + seed.phase))) },
+    { ...descriptors[3], points: buildPoints(seed, descriptors[3], (time, envelope) => 4.8e6 * seed.heatingScale * envelope * smoothStep(0.68, 1.05, time) * (1 - 0.34 * smoothStep(3.08, 3.28, time))) },
   ];
 }
 

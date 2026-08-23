@@ -57,6 +57,14 @@ export type FusionSignalSeries = FusionSignalDescriptor & {
   points: FusionSignalPoint[];
 };
 
+export function sourceValueToDisplay(
+  sourceValue: number,
+  descriptor: Pick<FusionSignalDescriptor, 'sourceToValueScale' | 'valueSpace'>,
+) {
+  if (descriptor.valueSpace !== 'display') throw new Error(`Unsupported signal value space: ${descriptor.valueSpace}`);
+  return sourceValue * descriptor.sourceToValueScale;
+}
+
 export type FusionEvent = {
   id: string;
   time: number;
