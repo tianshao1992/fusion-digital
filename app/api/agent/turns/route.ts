@@ -1,4 +1,5 @@
 import { POST as ask } from "@/app/api/ask/route";
+import { readBoundedRequestBody } from "@/app/api/ask/request-body";
 import type {
   AgentCompletedMessage,
   AgentRunFailedEvent,
@@ -18,8 +19,12 @@ const textEncoder = new TextEncoder();
 
 export type AskExecutor = (request: Request) => Response | Promise<Response>;
 
-export function POST(request: Request): Response {
-  return createAgentTurnResponse(request, ask);
+export async function POST(request: Request): Promise<Response> {
+  // Vinext may supply a Request implementation that cannot be passed to the
+  // native Request constructor without violating its private brand checks.
+  // Snapshot portable primitives before the asynchronous SSE pump begins.
+  const snapshot = await snapshotAskRequest(request);
+  return createAgentTurnResponseFromSnapshot(request.signal, Promise.resolve(snapshot), ask);
 }
 
 /**
@@ -28,6 +33,38 @@ export function POST(request: Request): Response {
  * without changing the production `/api/ask` security boundary.
  */
 export function createAgentTurnResponse(request: Request, executeAsk: AskExecutor): Response {
+  // Tests and other direct callers still get an immediate Response, but body
+  // consumption begins synchronously before that Response is returned.
+  const snapshot = snapshotAskRequest(request);
+  return createAgentTurnResponseFromSnapshot(request.signal, snapshot, executeAsk);
+}
+
+type AskRequestSnapshot = {
+  url: string;
+  method: string;
+  headers: Headers;
+  body: ArrayBuffer;
+};
+
+async function snapshotAskRequest(request: Request): Promise<AskRequestSnapshot> {
+  const url = request.url;
+  const method = request.method;
+  const headers = new Headers(request.headers);
+  const boundedBody = await readBoundedRequestBody(request);
+  // Rebuild the internal request with a measured body. Hop-by-hop framing from
+  // the public request must not survive the snapshot, and a rejected body is
+  // represented as invalid JSON so `/api/ask` preserves its public error.
+  headers.delete("content-length");
+  headers.delete("transfer-encoding");
+  const body = boundedBody ?? new TextEncoder().encode("{").buffer;
+  return { url, method, headers, body };
+}
+
+function createAgentTurnResponseFromSnapshot(
+  requestSignal: AbortSignal,
+  requestSnapshot: Promise<AskRequestSnapshot>,
+  executeAsk: AskExecutor,
+): Response {
   const runId = crypto.randomUUID();
   const started: AgentStreamEvent = {
     event: "run.started",
@@ -36,9 +73,9 @@ export function createAgentTurnResponse(request: Request, executeAsk: AskExecuto
     delivery: "verified-delivery",
   };
   const askController = new AbortController();
-  const abortFromRequest = () => askController.abort(request.signal.reason);
-  if (request.signal.aborted) abortFromRequest();
-  else request.signal.addEventListener("abort", abortFromRequest, { once: true });
+  const abortFromRequest = () => askController.abort(requestSignal.reason);
+  if (requestSignal.aborted) abortFromRequest();
+  else requestSignal.addEventListener("abort", abortFromRequest, { once: true });
 
   const body = new ReadableStream<Uint8Array>({
     start(controller) {
@@ -47,17 +84,17 @@ export function createAgentTurnResponse(request: Request, executeAsk: AskExecuto
       // completed its full grounding and citation checks.
       controller.enqueue(encodeAgentStreamEvent(started));
       queueMicrotask(() => void pumpVerifiedTurn({
-        request,
+        requestSnapshot,
         executeAsk,
         controller,
         askController,
         started,
-        cleanup: () => request.signal.removeEventListener("abort", abortFromRequest),
+        cleanup: () => requestSignal.removeEventListener("abort", abortFromRequest),
       }));
     },
     cancel(reason) {
       askController.abort(reason ?? new DOMException("Agent stream cancelled", "AbortError"));
-      request.signal.removeEventListener("abort", abortFromRequest);
+      requestSignal.removeEventListener("abort", abortFromRequest);
     },
   });
 
@@ -74,7 +111,7 @@ export function createAgentTurnResponse(request: Request, executeAsk: AskExecuto
 }
 
 type PumpInput = {
-  request: Request;
+  requestSnapshot: Promise<AskRequestSnapshot>;
   executeAsk: AskExecutor;
   controller: ReadableStreamDefaultController<Uint8Array>;
   askController: AbortController;
@@ -83,10 +120,17 @@ type PumpInput = {
 };
 
 async function pumpVerifiedTurn(input: PumpInput): Promise<void> {
-  const { request, executeAsk, controller, askController, started, cleanup } = input;
+  const { requestSnapshot, executeAsk, controller, askController, started, cleanup } = input;
   try {
     if (askController.signal.aborted) return;
-    const askRequest = new Request(request, { signal: askController.signal });
+    const snapshot = await requestSnapshot;
+    if (askController.signal.aborted) return;
+    const askRequest = new Request(snapshot.url, {
+      method: snapshot.method,
+      headers: snapshot.headers,
+      body: snapshot.body.byteLength > 0 ? snapshot.body : undefined,
+      signal: askController.signal,
+    });
     const verifiedResponse = await executeAsk(askRequest);
     if (askController.signal.aborted) return;
 

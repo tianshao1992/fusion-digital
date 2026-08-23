@@ -6,10 +6,10 @@ import { ProviderRequestError, requestProviderAnswer } from "./provider-adapters
 import { cleanProviderId, type PublicLlmProvider } from "./provider-registry";
 import { resolveProviderForUser } from "./user-provider";
 import { isPublicAnonymousMode } from "@/app/deployment-mode";
+import { readBoundedRequestBody } from "./request-body";
 
 export const dynamic = "force-dynamic";
 
-const BODY_LIMIT = 48_000;
 const OUTPUT_LIMIT = 1_600;
 const HISTORY_LIMIT = 10;
 
@@ -271,10 +271,9 @@ function publicProviderFailure(reason: unknown, locale: SearchLocale): { notice:
 
 async function readBody(request: Request): Promise<AskBody | null> {
   try {
-    const contentLength = Number(request.headers.get("content-length"));
-    if (contentLength > BODY_LIMIT) return null;
-    const raw = await request.text();
-    if (raw.length > BODY_LIMIT) return null;
+    const body = await readBoundedRequestBody(request);
+    if (!body) return null;
+    const raw = new TextDecoder().decode(body);
     const value = JSON.parse(raw);
     return value && typeof value === "object" && !Array.isArray(value) ? value as AskBody : null;
   } catch {

@@ -59,13 +59,13 @@ test("verified retrieval is delivered as ordered SSE without an upstream call", 
 test("run.started is readable before the deferred grounded ask resolves", async () => {
   const { createAgentTurnResponse } = await import("../app/api/agent/turns/route.ts");
   const askResult = deferred<Response>();
-  let executorReturned = false;
+  const executorStarted = deferred<void>();
   const response = createAgentTurnResponse(new Request("http://localhost/api/agent/turns", {
     method: "POST",
     headers: sameOriginHeaders,
     body: JSON.stringify({ question: "deferred verified answer" }),
   }), () => {
-    executorReturned = true;
+    executorStarted.resolve();
     return askResult.promise;
   });
 
@@ -77,7 +77,8 @@ test("run.started is readable before the deferred grounded ask resolves", async 
   assert.equal(firstChunk.done, false);
   const firstEvents = parser.push(decoder.decode(firstChunk.value, { stream: true }));
   assert.deepEqual(firstEvents.map((event) => event.event), ["run.started"]);
-  assert.equal(executorReturned, true);
+  assert.equal(askResult.settled, false);
+  await executorStarted.promise;
   assert.equal(askResult.settled, false);
 
   askResult.resolve(jsonAskResponse("The grounded answer is now verified."));
@@ -154,6 +155,31 @@ test("oversized request bodies fail before delivery and the parser enforces fini
     () => parser.push("x".repeat(AGENT_STREAM_LIMITS.maxStreamBytes + 1)),
     AgentStreamProtocolError,
   );
+});
+
+test("a streamed request without Content-Length is cancelled at the shared body limit", async () => {
+  const { POST } = await import("../app/api/agent/turns/route.ts");
+  let cancelled = false;
+  const oversizedBody = new ReadableStream<Uint8Array>({
+    start(controller) {
+      controller.enqueue(new TextEncoder().encode('{"question":"DINA","padding":"'));
+      controller.enqueue(new Uint8Array(48_001).fill(0x78));
+    },
+    cancel() {
+      cancelled = true;
+    },
+  });
+  const response = await POST(new Request("http://localhost/api/agent/turns", {
+    method: "POST",
+    headers: sameOriginHeaders,
+    body: oversizedBody,
+    duplex: "half",
+  } as RequestInit & { duplex: "half" }));
+
+  const events = parseFragmented(await response.text(), 17);
+  assert.deepEqual(events.map((event) => event.event), ["run.started", "run.failed"]);
+  assert.ok(events[1].event === "run.failed" && events[1].error.code === "invalid_json");
+  assert.equal(cancelled, true);
 });
 
 test("event encoding preserves unicode and rejects invalid ordering", () => {
