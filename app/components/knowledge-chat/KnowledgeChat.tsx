@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { FormEvent, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useI18n } from '@/app/i18n';
 import { isPublicAnonymousMode } from '@/app/deployment-mode';
 import type { SearchHit } from '@/app/search/search-core';
@@ -46,9 +46,17 @@ export type KnowledgeChatContext = {
   focusDescription?: string;
 };
 
+export type KnowledgeChatFilters = {
+  domain?: string;
+  type?: string;
+  device?: string;
+  citedOnly?: boolean;
+};
+
 type KnowledgeChatProps = {
   context: KnowledgeChatContext;
-  filters?: { domain?: string; type?: string; device?: string; citedOnly?: boolean };
+  presentation?: 'inline' | 'dock';
+  filters?: KnowledgeChatFilters;
   title?: string;
   titleEn?: string;
   eyebrow?: string;
@@ -60,6 +68,7 @@ type KnowledgeChatProps = {
 
 export default function KnowledgeChat({
   context,
+  presentation = 'inline',
   filters,
   title,
   titleEn,
@@ -69,6 +78,7 @@ export default function KnowledgeChat({
   onDraftChange,
   onEvidenceResults,
 }: KnowledgeChatProps) {
+  const headingId = useId();
   const publicAnonymousMode = isPublicAnonymousMode();
   const { locale, t } = useI18n();
   const [localDraft, setLocalDraft] = useState('');
@@ -217,9 +227,9 @@ export default function KnowledgeChat({
     setError('');
   }
 
-  return <section className="knowledgeChat" aria-labelledby="knowledge-chat-title">
+  return <section className="knowledgeChat" data-presentation={presentation} aria-labelledby={headingId}>
     <header className="knowledgeChatHeader">
-      <div><p>{eyebrow || t('chat.eyebrow')}</p><h2 id="knowledge-chat-title">{activeTitle}</h2><span>{t('chat.persistence')}</span></div>
+      <div><p>{eyebrow || t('chat.eyebrow')}</p><h2 id={headingId}>{activeTitle}</h2><span>{t('chat.persistence')}</span></div>
       <div className="knowledgeChatHeaderTools">
         {!publicAnonymousMode && <label className="knowledgeChatProvider"><span>{t('chat.provider')}</span><select value={selectedProvider} onChange={(event) => selectProvider(event.target.value as ChatProviderId | 'retrieval')} disabled={!providersLoaded || pending}>
           <option value="retrieval">{t('chat.providerRetrieval')}</option>

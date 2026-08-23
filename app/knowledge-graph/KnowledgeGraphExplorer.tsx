@@ -4,7 +4,7 @@ import type { EChartsCoreOption } from 'echarts/core';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import ScientificChart from '@/app/components/charts/ScientificChart';
 import { useChartTheme, type ChartThemePalette } from '@/app/components/charts/chart-theme';
-import KnowledgeChat from '@/app/components/knowledge-chat/KnowledgeChat';
+import { useAgentWorkspace } from '@/app/components/agent-workspace/AgentWorkspace';
 import { useI18n, type AppLocale } from '@/app/i18n';
 import { collectKnowledgeEvidenceSources, normalizeKnowledgeSourceUrl, type KnowledgeEvidenceSourceKind } from './evidenceSources';
 import { formatKnowledgeGraphTooltip } from './knowledgeGraphTooltip';
@@ -79,7 +79,7 @@ const copy = {
     sourceLinkAria: (kind: string, label: string) => `在新标签页打开${kind}：${label}`,
     noSources: '当前子图没有可直接访问的一手来源；可展开邻域或下载完整快照继续核对。',
     noScript: '未启用 JavaScript 时仍可打开当前实体的一手来源；切换节点请下载完整快照。',
-    select: '选择一个节点查看实体详情、关系和原始证据。', chatContext: 'FusionDigital 知识图谱',
+    select: '选择一个节点查看实体详情、关系和原始证据。', chatContext: 'FusionDigital 知识图谱', openAgent: '在智能体中继续',
   },
   en: {
     workspace: 'FusionDigital interactive knowledge-graph workspace', heading: 'Enter the evidence network through a question', entityTopic: 'Entity or topic',
@@ -99,7 +99,7 @@ const copy = {
     sourceLinkAria: (kind: string, label: string) => `Open ${kind} for ${label} in a new tab`,
     noSources: 'No directly accessible primary source is recorded in this subgraph. Expand the neighbourhood or inspect the full snapshot.',
     noScript: 'With JavaScript disabled, the current entity sources remain available. Download the full snapshot to inspect other nodes.',
-    select: 'Select a node to inspect entity details, relations and primary evidence.', chatContext: 'FusionDigital Knowledge Graph',
+    select: 'Select a node to inspect entity details, relations and primary evidence.', chatContext: 'FusionDigital Knowledge Graph', openAgent: 'Continue in Agent',
   },
 } as const;
 
@@ -247,6 +247,7 @@ function nodeDescription(node: KnowledgeGraphNode, locale: AppLocale) {
 }
 
 export default function KnowledgeGraphExplorer({ initial, devices }: ExplorerProps) {
+  const agentWorkspace = useAgentWorkspace();
   const { locale } = useI18n();
   const key = localeKey(locale);
   const ui = copy[key];
@@ -316,7 +317,7 @@ export default function KnowledgeGraphExplorer({ initial, devices }: ExplorerPro
     if (event.dataType === 'node' && event.data?.id) setSelectedId(event.data.id);
   }
 
-  return <><section className="kgWorkspace" aria-label={ui.workspace}>
+  return <section className="kgWorkspace" aria-label={ui.workspace}>
     <aside className="kgFilters">
       <p className="kgPanelIndex">01 / QUERY</p>
       <h2>{ui.heading}</h2>
@@ -329,6 +330,14 @@ export default function KnowledgeGraphExplorer({ initial, devices }: ExplorerPro
       </form>
       <div className="kgFilterFoot">
         <button type="button" onClick={() => { setQuery(''); setDomain('all'); setType('all'); setDevice(''); setLimit(350); setData(initial); setSelectedId(initial.nodes[0]?.id ?? ''); }}>{ui.reset}</button>
+        <button type="button" onClick={() => agentWorkspace.open({ context: {
+          path: '/knowledge-graph',
+          title: ui.chatContext,
+          domain: selected?.domain,
+          focusId: selected?.id,
+          focusLabel: selected ? nodeLabel(selected, locale) : undefined,
+          focusDescription: selected ? nodeDescription(selected, locale) : undefined,
+        } })}>{ui.openAgent}</button>
         <a href="/data/fusion-knowledge-graph.json">{ui.snapshot}</a>
       </div>
       <div className="kgTypeLegend" aria-label={ui.shapeLegend}>{Object.entries(typeMeta).map(([typeKey, meta]) => <span key={typeKey}><i data-type={typeKey} />{meta[key]}</span>)}</div>
@@ -386,16 +395,5 @@ export default function KnowledgeGraphExplorer({ initial, devices }: ExplorerPro
         {selected.tags && selected.tags.length > 0 && <div className="kgTags">{selected.tags.filter((tag) => locale !== 'en' || !HAN.test(tag)).slice(0, 9).map((tag) => <span key={tag}>#{tag}</span>)}</div>}
       </> : <p className="kgDescription">{ui.select}</p>}
     </aside>
-  </section><KnowledgeChat
-    context={{
-      path: '/knowledge-graph',
-      title: ui.chatContext,
-      domain: selected?.domain,
-      focusId: selected?.id,
-      focusLabel: selected ? nodeLabel(selected, locale) : undefined,
-      focusDescription: selected ? nodeDescription(selected, locale) : undefined,
-    }}
-    title="围绕图谱持续提问"
-    titleEn="Continue from the knowledge graph"
-  /></>;
+  </section>;
 }

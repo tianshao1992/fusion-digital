@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import { ThemeBootScript, ThemeProvider } from './components/theme';
 import { I18nProvider } from './i18n';
+import AgentWorkspaceProvider from './components/agent-workspace/AgentWorkspace';
 import { DEFAULT_LOCALE, LOCALE_COOKIE_NAME, localeRegistry, resolveLocale } from './i18n/config';
 import './globals.css';
 import './components/platform-inline-link.css';
@@ -53,6 +54,6 @@ export default async function RootLayout({children}:{children:React.ReactNode}) 
 
   return <html lang={localeDefinition.htmlLang} dir={localeDefinition.dir} suppressHydrationWarning>
     <head><ThemeBootScript /></head>
-    <body><ThemeProvider><I18nProvider initialLocale={initialLocale}>{children}</I18nProvider></ThemeProvider></body>
+    <body><ThemeProvider><I18nProvider initialLocale={initialLocale}><AgentWorkspaceProvider>{children}</AgentWorkspaceProvider></I18nProvider></ThemeProvider></body>
   </html>;
 }

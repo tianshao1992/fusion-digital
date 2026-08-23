@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useRef, useState } from "react";
-import KnowledgeChat from "@/app/components/knowledge-chat/KnowledgeChat";
+import { useAgentWorkspace } from "@/app/components/agent-workspace/AgentWorkspace";
 import { useI18n } from "@/app/i18n";
 import type { SearchHit } from "./search-core";
 
@@ -12,6 +12,7 @@ const typeValues = ["", "work", "paper", "code", "tool", "device", "framework"] 
 
 export default function SearchWorkspace() {
   const { locale } = useI18n();
+  const agentWorkspace = useAgentWorkspace();
   const copy = locale === "en" ? EN : ZH;
   const examples = copy.examples;
   const [query, setQuery] = useState("EXL-50U");
@@ -64,21 +65,15 @@ export default function SearchWorkspace() {
         <label className="citedToggle"><input type="checkbox" checked={citedOnly} onChange={(event) => setCitedOnly(event.target.checked)} />{copy.citedOnly}</label>
         <button type="submit" disabled={searching}>{searching ? copy.searching : copy.search}</button>
       </div>
-      <div className="queryExamples">{examples.map((example) => <button type="button" key={example} onClick={() => { setQuery(example); void runSearch(example); }}>{example}</button>)}</div>
+      <div className="queryExamples"><button className="agentLaunch" type="button" onClick={() => agentWorkspace.open({
+        context: { path: '/search', title: copy.chatContext, focusLabel: query, focusDescription: `${copy.domainAria}: ${copy.domains[domain as keyof typeof copy.domains]} · ${copy.typeAria}: ${copy.types[type as keyof typeof copy.types]}` },
+        draft: query,
+        filters: { domain: domain || undefined, type: type || undefined, citedOnly: true },
+        onEvidenceResults: setResults,
+      })}>{copy.openAgent}</button>{examples.map((example) => <button type="button" key={example} onClick={() => { setQuery(example); void runSearch(example); }}>{example}</button>)}</div>
     </form>
 
     {message && <p className="searchMessage" role="alert">{message}</p>}
-    <KnowledgeChat
-      context={{ path: "/search", title: copy.chatContext }}
-      filters={{ domain: domain || undefined, type: type || undefined, citedOnly: true }}
-      title="检索后继续追问"
-      titleEn="Continue after searching"
-      draft={query}
-      onDraftChange={setQuery}
-      onEvidenceResults={setResults}
-      prompts={examples.slice(0, 3)}
-    />
-
     <section className="resultSection">
       <div className="resultHeader"><div><p>CURATED KNOWLEDGE</p><h2>{copy.results}</h2></div><span>{searching ? "…" : results.length} {copy.records}</span></div>
       {!searching && results.length === 0 ? <div className="emptyResults"><b>{copy.noMatches}</b><p>{copy.noMatchesHint}</p></div> : null}
@@ -99,6 +94,7 @@ const ZH = {
   citedOnly: "仅显示有原始来源的记录", searching: "检索中…", search: "确定性检索", searchFailed: "检索失败", searchRetry: "检索失败，请稍后重试。",
   chatContext: "知识检索与证据问答", results: "检索结果", records: "条", noMatches: "没有匹配记录", noMatchesHint: "尝试减少筛选项，或使用英文缩写、装置名、代码名和论文题名。",
   openRecord: "打开知识记录", sources: "个来源", viewSources: "查看原始来源",
+  openAgent: "在智能体侧栏继续追问 ✦",
   examples: ["EXL-50U 位形控制有哪些证据？", "DINA、MEQ 与实时控制的关系", "聚变诊断如何验证数字孪生？", "哪些工程工具具有公开代码？"],
   domains: { "": "全部知识域", physics: "物理模拟", engineering: "工程仿真", control: "集成控制", diagnostics: "诊断感知", energy: "能量转化", auxiliary: "辅机模拟", data: "数据基座", hmi: "人机交互", integration: "总体集成", "ai-native": "智能原生", facilities: "全球装置" },
   types: { "": "全部类型", work: "研究工作", paper: "论文", code: "代码", tool: "工具", device: "装置", framework: "集成框架" },
@@ -109,6 +105,7 @@ const EN = {
   citedOnly: "Only show records with primary sources", searching: "Searching…", search: "Deterministic search", searchFailed: "Search failed", searchRetry: "Search failed. Please try again.",
   chatContext: "Knowledge search and evidence-grounded Q&A", results: "Search results", records: "records", noMatches: "No matching records", noMatchesHint: "Try fewer filters, or use an English acronym, device name, code name, or paper title.",
   openRecord: "Open knowledge record", sources: "sources", viewSources: "View original sources",
+  openAgent: "Continue in the Agent sidebar ✦",
   examples: ["What evidence supports EXL-50U shape control?", "Compare DINA and MEQ for real-time control", "How can diagnostics validate a fusion digital twin?", "Which engineering tools have public code?"],
   domains: { "": "All knowledge domains", physics: "Physics modelling", engineering: "Engineering simulation", control: "Integrated control", diagnostics: "Diagnostics and sensing", energy: "Energy conversion", auxiliary: "Auxiliary systems", data: "Data foundation", hmi: "Human-machine interaction", integration: "System integration", "ai-native": "AI-native", facilities: "Global facilities" },
   types: { "": "All entity types", work: "Research work", paper: "Paper", code: "Code", tool: "Tool", device: "Device", framework: "Framework" },
