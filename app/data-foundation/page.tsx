@@ -69,7 +69,7 @@ export default async function DataFoundationPage() {
         <p>{en
           ? 'A professional map of operational acquisition, pulse archives, diagnostic objects, IMAS semantics, federated access, scientific databases, provenance and VVUQ—connecting experimental and simulated data without collapsing their distinct authority.'
           : '以运行采集、炮次档案、诊断大对象、IMAS 语义、联邦访问、专业数据库、血缘与 VVUQ 为主线，连接实验与模拟数据，同时保持各自不同的权威性。'}</p>
-        <div className="dataHeroActions"><a href="#architecture">{en ? 'Inspect the architecture' : '查看总体架构'}</a><a href="#catalog">{en ? 'Browse the evidence catalogue' : '浏览证据目录'}</a><Link href="/platform">{en ? 'View platform deployment' : '查看平台部署'}</Link></div>
+        <div className="dataHeroActions"><Link href="/fusion-data">{en ? 'Open the data workspace' : '进入数据工作台'}</Link><a href="#architecture">{en ? 'Inspect the architecture' : '查看总体架构'}</a><a href="#catalog">{en ? 'Browse the evidence catalogue' : '浏览证据目录'}</a><Link href="/platform">{en ? 'View platform deployment' : '查看平台部署'}</Link></div>
       </div>
       <aside className="dataHeroThesis">
         <span>{en ? 'CORE POSITION' : '核心判断'}</span>

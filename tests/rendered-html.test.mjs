@@ -35,7 +35,7 @@ function englishPresentationText(html) {
 
 test('English presentation surfaces contain no source-language Han text', async () => {
   const routes = [
-    '/', '/physics', '/engineering', '/control', '/diagnostics', '/data-foundation', '/ai', '/facilities',
+    '/', '/physics', '/engineering', '/control', '/diagnostics', '/data-foundation', '/fusion-data', '/ai', '/facilities',
     '/platform', '/search', '/knowledge-graph', '/roadmap', '/account', '/research-review',
   ];
   for (const pathname of routes) {

@@ -1,6 +1,7 @@
-import { BarChart, CustomChart, GraphChart, HeatmapChart, ScatterChart } from 'echarts/charts';
+import { BarChart, CustomChart, GraphChart, HeatmapChart, LineChart, ScatterChart } from 'echarts/charts';
 import {
   AriaComponent,
+  AxisPointerComponent,
   DataZoomComponent,
   GridComponent,
   LegendComponent,
@@ -19,8 +20,10 @@ registerEChartsModules([
   CustomChart,
   GraphChart,
   HeatmapChart,
+  LineChart,
   ScatterChart,
   AriaComponent,
+  AxisPointerComponent,
   DataZoomComponent,
   GridComponent,
   LegendComponent,

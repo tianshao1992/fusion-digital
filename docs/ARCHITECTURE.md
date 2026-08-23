@@ -34,6 +34,8 @@ app/physics/page.tsx           物理模拟与集成模拟
 app/engineering/page.tsx       Tokamak 工程仿真
 app/ai/page.tsx                智能原生专题
 app/facilities/page.tsx        全球装置状态
+app/data-foundation/page.tsx   数据标准、档案与证据参考图谱
+app/fusion-data/page.tsx       炮次、IMAS、质量与 CAE 交互工作台
 app/platform/page.tsx          平台架构、统一合同与技术路线
 app/components/                导航、页脚、品牌与动效
 ```
@@ -61,6 +63,23 @@ app/components/                导航、页脚、品牌与动效
 
 - `research/ai-native/sources/*.json`
 - `research/ai-native/sources/*_notes.md`
+
+### 4.4 聚变数据工作台合同
+
+`/fusion-data` 当前只使用 `MockFusionDataProvider` 的确定性合成数据，并持续标注
+`synthetic: true` 与 `mapping-preview`。页面将 shot/pulse、处理 run 和版本化数据产品
+分开建模；ECharts 时序、平衡截面、剖面、质量矩阵与 CAE 查看器共用一个时间游标。
+
+未来 MDSplus 接入必须由服务端只读网关完成，并通过显式映射保存 tree/node、具体
+shot、IMAS IDS path、固定 Data Dictionary 版本、单位、时间模式、质量和血缘。浏览器
+不直连 MDSplus，也不接收任意 TDI/node 查询、永久对象存储凭据或内网 ParaView 地址。
+大型 GGD/CAE 结果由 IMAS-ParaView 和 ParaView/trame 在服务端处理；页面仅嵌入受信
+端点。浏览器本地 VTK 渲染只用于经过抽稀、已授权的派生结果。
+
+可信 trame 地址只能在构建时通过 `NEXT_PUBLIC_PARAVIEW_TRAME_URL` 注入（公网必须为
+HTTPS，本机开发允许 localhost HTTP）。查看器发送 `fusiondigital:viewer-ready` 后，
+页面以 `fusiondigital:set-context` v1 传递 facility/pulse/run、artifact、timestep、time
+和 field；双方必须继续校验精确 origin，不能把此消息合同扩展成任意 URL 或查询入口。
 
 智能原生的 JSON 源数据是事实维护入口；网页 TypeScript、公开 JSON 和 CSV 均由脚本生成。物理、工程和装置模块仍有部分内容直接维护在 TypeScript 中，后续应逐步迁移到带 schema 的结构化数据。
 
