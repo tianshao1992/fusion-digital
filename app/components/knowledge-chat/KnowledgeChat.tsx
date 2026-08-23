@@ -87,6 +87,7 @@ export default function KnowledgeChat({
   const [selectedProvider, setSelectedProvider] = useState<ProviderSelection>(publicAnonymousMode ? 'retrieval' : 'auto');
   const [automaticProviderId, setAutomaticProviderId] = useState<ChatProviderId | null>(null);
   const [providersLoaded, setProvidersLoaded] = useState(publicAnonymousMode);
+  const [authenticated, setAuthenticated] = useState<boolean | null>(publicAnonymousMode ? false : null);
   const [providerPreferencesEnabled, setProviderPreferencesEnabled] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const logRef = useRef<HTMLDivElement | null>(null);
@@ -130,6 +131,7 @@ export default function KnowledgeChat({
         ? payload.providers.filter((provider) => provider && typeof provider.id === 'string' && typeof provider.label === 'string' && typeof provider.model === 'string')
         : [];
       setProviders(safeProviders);
+      setAuthenticated(payload.authenticated === true);
       setProviderPreferencesEnabled(payload.authenticated === true);
       const explicitRetrieval = payload.defaultProvider === 'retrieval';
       const defaultAvailable = !explicitRetrieval
@@ -176,6 +178,7 @@ export default function KnowledgeChat({
     : [t('chat.promptEvidence'), t('chat.promptCompare'), t('chat.promptGaps')];
   const activeTitle = locale === 'en' ? (titleEn || t('chat.defaultTitle')) : (title || t('chat.defaultTitle'));
   const activeProvider = providers.find((provider) => provider.id === (selectedProvider === 'auto' ? automaticProviderId : selectedProvider));
+  const signInRequired = !publicAnonymousMode && providersLoaded && authenticated === false;
 
   function selectProvider(value: ProviderSelection) {
     setSelectedProvider(value);
@@ -294,6 +297,7 @@ export default function KnowledgeChat({
           <option value="retrieval">{t('chat.providerRetrieval')}</option>
           {providers.map((provider) => <option key={provider.id} value={provider.id} disabled={!provider.available}>{provider.label} · {provider.available ? `${provider.model} · ${provider.source === 'personal' ? t('chat.providerPersonal') : t('chat.providerPlatform')}` : t('chat.providerUnavailable')}</option>)}
         </select><small>{activeProvider ? `${activeProvider.label} · ${activeProvider.model}` : t('chat.providerHint')} <Link href="/account#ai-models">{t('chat.providerManage')}</Link></small></label>}
+        {signInRequired && <Link className="knowledgeChatSignIn" href={signInHref}>{t('chat.signInForModels')}</Link>}
         <div className="knowledgeChatStats"><b>{turns.length}</b><span>{t('chat.messages')}</span><button type="button" onClick={newConversation} disabled={!turns.length && !pending}>{t('chat.new')}</button></div>
       </div>
     </header>
@@ -306,7 +310,7 @@ export default function KnowledgeChat({
       {turns.map((turn) => <article className={`knowledgeChatTurn is-${turn.role}`} key={turn.id}>
         <header><span>{turn.role === 'user' ? t('chat.user') : t('chat.assistant')}</span>{turn.role === 'assistant' && <div className="knowledgeChatTurnActions"><b data-mode={turn.mode}>{turn.mode === 'assistant-chat' ? t('chat.chatMode') : turn.mode === 'ai-grounded' ? t('chat.aiMode') : turn.mode === 'assistant-direct' ? t('chat.assistantMode') : t('chat.retrievalMode')}{turn.provider && turn.model ? <small>{turn.provider} · {turn.model}</small> : null}</b>{onCanvasArtifact && <button type="button" onClick={() => sendTurnToCanvas(turn)}>{t('chat.toCanvas')}</button>}</div>}</header>
         <div>{turn.content.split(/\n{2,}/).map((paragraph, index) => <p key={`${turn.id}-${index}`}>{paragraph}</p>)}</div>
-        {turn.notice && <p className="knowledgeChatNotice">{turn.notice}{!publicAnonymousMode && turn.mode === 'retrieval-only' && /登录/.test(turn.notice) ? <> <Link href={signInHref}>{t('chat.signIn')}</Link></> : null}</p>}
+        {turn.notice && <p className="knowledgeChatNotice">{turn.notice}{signInRequired && turn.mode === 'retrieval-only' ? <> <Link href={signInHref}>{t('chat.signIn')}</Link></> : null}</p>}
         {turn.citations?.length ? <div className="knowledgeChatCitations">{turn.citations.map((citation) => <a href={citation.url} target="_blank" rel="noreferrer" key={`${turn.id}-${citation.ref}-${citation.url}`}><b>{citation.ref}</b><span>{citation.label}</span><small>{citation.entryTitle}</small></a>)}</div> : null}
         {turn.caveats?.length ? <details><summary>{t('chat.caveats')}</summary><ul>{turn.caveats.map((item) => <li key={item}>{item}</li>)}</ul></details> : null}
       </article>)}

@@ -14,6 +14,7 @@ const layout = read('app/layout.tsx');
 const search = read('app/search/SearchWorkspace.tsx');
 const graph = read('app/knowledge-graph/KnowledgeGraphExplorer.tsx');
 const chat = read('app/components/knowledge-chat/KnowledgeChat.tsx');
+const messages = read('app/i18n/messages.ts');
 
 test('the Agent Workspace is mounted once at the root and owns the single chat surface', () => {
   assert.match(layout, /<AgentWorkspaceProvider>\{children\}<\/AgentWorkspaceProvider>/);
@@ -43,6 +44,23 @@ test('the authenticated assistant starts with automatic model routing instead of
   assert.match(chat, /setSelectedProvider\(automaticProvider \? 'auto' : 'retrieval'\)/);
   assert.match(chat, /\.\.\.\(selectedProvider === 'auto' \? \{\} : \{ provider: selectedProvider \}\)/);
   assert.match(chat, /<option value="auto" disabled=\{!automaticProviderId\}>/);
+});
+
+test('the anonymous workspace login bridge always opens the fixed Sites account entry', () => {
+  assert.match(workspace, /`\$\{capabilities\.authentication\.authenticatedWorkspaceOrigin\}\/account`/);
+  assert.doesNotMatch(workspace, /authenticatedWorkspaceOrigin\}\$\{pathname\}/);
+  assert.match(workspace, /登录后使用任意模型对话/);
+  assert.match(workspace, /Sign in \/ AI workspace ↗/);
+});
+
+test('chat sign-in guidance follows structured authentication state in both locales', () => {
+  assert.match(chat, /setAuthenticated\(payload\.authenticated === true\)/);
+  assert.match(chat, /const signInRequired = !publicAnonymousMode && providersLoaded && authenticated === false/);
+  assert.match(chat, /\{signInRequired && <Link className="knowledgeChatSignIn" href=\{signInHref\}>/);
+  assert.match(chat, /turn\.notice\}\{signInRequired && turn\.mode === 'retrieval-only'/);
+  assert.doesNotMatch(chat, /\/登录\/\.test\(turn\.notice\)/);
+  assert.match(messages, /'chat\.signInForModels': '登录后使用任意模型对话'/);
+  assert.match(messages, /'chat\.signInForModels': 'Sign in to chat with any model'/);
 });
 
 test('Canvas accepts bounded structured markdown and renders only escaped React nodes', () => {

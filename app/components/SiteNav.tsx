@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { type KeyboardEvent, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { SITES_WORKSPACE_ORIGIN } from '../agent/capabilities';
 import { knowledgeModules } from '../data/knowledge-modules';
 import { useI18n } from '../i18n';
 import { isPublicAnonymousMode } from '../deployment-mode';
@@ -193,6 +194,21 @@ export default function SiteNav({active = 'home'}: SiteNavProps) {
     </div>
   </details>;
 
+  const renderAccountAccess = (mobile = false) => publicAnonymousMode
+    ? <a
+      className={mobile ? undefined : 'siteAccountAccess siteAccountAccess--external'}
+      href={`${SITES_WORKSPACE_ORIGIN}/account`}
+      target="_blank"
+      rel="noreferrer"
+      aria-label={t('nav.aiWorkspaceLabel')}
+    >{t('nav.aiWorkspace')}</a>
+    : <Link
+      className={mobile ? (active === 'account' ? 'active' : '') : `siteAccountAccess${active === 'account' ? ' active' : ''}`}
+      href="/account"
+      aria-current={active === 'account' ? 'page' : undefined}
+      aria-label={t('nav.accountCenter')}
+    >{mobile ? t('nav.accountCenter') : t('nav.account')}</Link>;
+
   return <nav className="siteNav" aria-label={t('nav.main')}>
     <Link className="siteBrand" href="/" aria-label={t('nav.brandHome')}>
       <img src="/fusiondigital-mark.png" alt="" />
@@ -232,10 +248,10 @@ export default function SiteNav({active = 'home'}: SiteNavProps) {
       {localeButton()}
       <ThemeSwitcher labels={themeLabels} compact />
     </div>
-    {!publicAnonymousMode && <Link className={`siteAccountAccess${active === 'account' ? ' active' : ''}`} href="/account" aria-label={t('nav.accountCenter')}>{t('nav.account')}</Link>}
+    {renderAccountAccess()}
     <details className="mobileNav">
       <summary aria-label={t('nav.open')}>{t('nav.menu')}</summary>
-      <div>{links.map((item) => renderLink(item))}{renderKnowledgeMenu(true)}{!publicAnonymousMode && <Link className={active === 'account' ? 'active' : ''} href="/account" aria-current={active === 'account' ? 'page' : undefined}>{t('nav.accountCenter')}</Link>}<div className="siteMobilePreferences" aria-label={t('preferences.group')}>{localeButton('siteLocaleSwitch siteLocaleSwitch--mobile')}<ThemeSwitcher labels={themeLabels} compact /></div></div>
+      <div>{links.map((item) => renderLink(item))}{renderKnowledgeMenu(true)}{renderAccountAccess(true)}<div className="siteMobilePreferences" aria-label={t('preferences.group')}>{localeButton('siteLocaleSwitch siteLocaleSwitch--mobile')}<ThemeSwitcher labels={themeLabels} compact /></div></div>
     </details>
   </nav>;
 }

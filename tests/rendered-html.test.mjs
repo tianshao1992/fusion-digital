@@ -1022,6 +1022,7 @@ test('server-renders the identity-aware account entry without exposing credentia
   assert.match(html, /使用 ChatGPT 注册 \/ 登录/);
   assert.match(html, /模型密钥始终保留在服务端/);
   assert.match(html, /href="\/account"[^>]*aria-label="账户中心"/);
+  assert.doesNotMatch(html, /href="https:\/\/fusion-physics-atlas-2026\.tianyuanliu1992\.chatgpt\.site\/account"/);
   assert.match(html, /href="\/platform#architecture"/);
   assert.doesNotMatch(html, /02 \/ SECURITY BOUNDARY/);
   assert.doesNotMatch(html, /(?:OPENAI|ANTHROPIC|DEEPSEEK|MOONSHOT)_API_KEY|sk-[A-Za-z0-9_-]{16,}/);

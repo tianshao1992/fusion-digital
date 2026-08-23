@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import test from 'node:test';
+import { SITES_WORKSPACE_ORIGIN } from '../app/agent/capabilities.ts';
+import SiteNav from '../app/components/SiteNav.tsx';
 import { selectVisibleNavigationKeys } from '../app/components/site-nav-layout.ts';
+import { ThemeProvider } from '../app/components/theme/index.ts';
 
 const items = [
   { key: 'home', priority: 0, width: 80 },
@@ -39,3 +44,31 @@ test('the active navigation entry remains visible even when it has low priority'
     activeKey: 'roadmap',
   }), ['home', 'physics', 'roadmap']);
 });
+
+test('public-anonymous rendered navigation exposes the fixed Sites account bridge on desktop and mobile', () => {
+  const html = renderSiteNav('public-anonymous');
+  const externalHref = `href="${SITES_WORKSPACE_ORIGIN}/account"`;
+  assert.equal(html.split(externalHref).length - 1, 2);
+  assert.equal(html.split('登录 / AI 工作区 ↗').length - 1, 2);
+  assert.match(html, /class="siteAccountAccess siteAccountAccess--external"/);
+  assert.equal(html.split('target="_blank" rel="noreferrer"').length - 1, 2);
+  assert.doesNotMatch(html, /href="\/account"|signin-with-chatgpt/);
+});
+
+test('identity-aware rendered navigation retains the local account destination', () => {
+  const html = renderSiteNav('sites');
+  assert.equal(html.split('href="/account"').length - 1, 2);
+  assert.doesNotMatch(html, new RegExp(`${SITES_WORKSPACE_ORIGIN.replaceAll('.', '\\.')}/account`));
+  assert.doesNotMatch(html, /signin-with-chatgpt/);
+});
+
+function renderSiteNav(mode: string) {
+  const previousMode = process.env.NEXT_PUBLIC_FUSIONDIGITAL_MODE;
+  process.env.NEXT_PUBLIC_FUSIONDIGITAL_MODE = mode;
+  try {
+    return renderToStaticMarkup(createElement(ThemeProvider, null, createElement(SiteNav)));
+  } finally {
+    if (previousMode === undefined) delete process.env.NEXT_PUBLIC_FUSIONDIGITAL_MODE;
+    else process.env.NEXT_PUBLIC_FUSIONDIGITAL_MODE = previousMode;
+  }
+}

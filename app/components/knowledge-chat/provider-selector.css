@@ -38,6 +38,27 @@
 .knowledgeChatProvider small { color: var(--chat-subtle); font-size: 8px; }
 .knowledgeChatProvider small a { margin-left: 6px; color: var(--chat-info); font-weight: 900; text-decoration: underline; text-underline-offset: 3px; }
 
+.knowledgeChatSignIn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 8px 11px;
+  border: 1px solid var(--chat-info);
+  color: var(--chat-info);
+  background: color-mix(in srgb, var(--chat-info) 8%, transparent);
+  font-size: 9px;
+  font-weight: 900;
+  line-height: 1.35;
+  text-align: center;
+}
+
+.knowledgeChatSignIn:hover,
+.knowledgeChatSignIn:focus-visible {
+  color: var(--chat-ink);
+  background: color-mix(in srgb, var(--chat-info) 15%, transparent);
+  outline: none;
+}
+
 .knowledgeChatStats {
   display: grid;
   grid-template-columns: auto auto;
@@ -71,5 +92,6 @@
 
 @media (max-width: 560px) {
   .knowledgeChatHeader > .knowledgeChatHeaderTools { flex-direction: column; }
-  .knowledgeChatProvider, .knowledgeChatStats { width: 100%; }
+  .knowledgeChatProvider, .knowledgeChatSignIn, .knowledgeChatStats { width: 100%; }
+  .knowledgeChatSignIn { justify-content: center; }
 }

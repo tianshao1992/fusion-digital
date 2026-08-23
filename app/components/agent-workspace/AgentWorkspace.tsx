@@ -181,7 +181,7 @@ export default function AgentWorkspaceProvider({ children }: { children: ReactNo
   }, []);
 
   const sitesHref = capabilities?.authentication.authenticatedWorkspaceOrigin
-    ? `${capabilities.authentication.authenticatedWorkspaceOrigin}${pathname}`
+    ? `${capabilities.authentication.authenticatedWorkspaceOrigin}/account`
     : null;
 
   return <WorkspaceContext.Provider value={api}>
@@ -280,7 +280,7 @@ function CanvasPreview({ content, emptyCopy }: { content: string; emptyCopy: str
 const ZH = {
   trigger: 'AI 助手', triggerHint: '持续对话', title: 'FusionDigital 助手', close: '关闭 FusionDigital 助手',
   canvas: 'Canvas', detecting: '检测能力中', retrieval: '检索模式', modelReady: 'Sites AI 边界',
-  hkBoundaryTitle: '当前站点保持匿名安全边界', hkBoundaryCopy: '这里可持续检索站内证据；登录与模型暂由 Sites 的可信身份边界提供。', openSites: '打开已认证 AI 工作区 ↗',
+  hkBoundaryTitle: '当前站点保持匿名安全边界', hkBoundaryCopy: '这里可持续检索站内证据；前往 Sites 登录后使用任意模型对话（以该工作区已配置且可用的模型为准）。', openSites: '登录 / AI 工作区 ↗',
   conversationTitle: '和 FusionDigital 助手对话',
   prompts: ['介绍你能如何协助我的聚变项目', '围绕当前页面主题，从站内已索引知识说明可探索方向', '结合站内已索引知识，和我讨论聚变数据与数字孪生方案'],
   canvasTitle: '按需 Canvas', canvasHint: '仅在你打开或助手返回结构化内容时显示。', canvasPlaceholder: '记录假设、方案、代码、证据或待验证问题…', canvasEmpty: 'Canvas 目前为空。你可以切换到编辑模式，或把一条助手回复发送到这里。', previewCanvas: '渲染', editCanvas: '编辑', closeCanvas: '关闭 Canvas', clearCanvas: '清空', canvasBoundary: 'Canvas 使用安全的轻量 Markdown 渲染并只保存在本浏览器；它不会执行 HTML，也不会自动提交给模型。',
@@ -289,7 +289,7 @@ const ZH = {
 const EN = {
   trigger: 'AI Assistant', triggerHint: 'Continuous chat', title: 'FusionDigital Assistant', close: 'Close FusionDigital Assistant',
   canvas: 'Canvas', detecting: 'Detecting capabilities', retrieval: 'Retrieval mode', modelReady: 'Sites AI boundary',
-  hkBoundaryTitle: 'This host retains its anonymous security boundary', hkBoundaryCopy: 'You can continue evidence-grounded retrieval here. Trusted sign-in and model access currently remain on Sites.', openSites: 'Open authenticated AI workspace ↗',
+  hkBoundaryTitle: 'This host retains its anonymous security boundary', hkBoundaryCopy: 'You can continue evidence-grounded retrieval here. On Sites, sign in to chat with any model available to that workspace.', openSites: 'Sign in / AI workspace ↗',
   conversationTitle: 'Chat with the FusionDigital Assistant',
   prompts: ['Tell me how you can help with my fusion project', 'Use indexed site knowledge to explain what to explore around this page topic', 'Use indexed site knowledge to discuss fusion data and digital twins with me'],
   canvasTitle: 'On-demand Canvas', canvasHint: 'Shown only when you open it or the assistant returns structured content.', canvasPlaceholder: 'Capture hypotheses, plans, code, evidence, or open questions…', canvasEmpty: 'The Canvas is empty. Switch to Edit, or send an assistant response here.', previewCanvas: 'Render', editCanvas: 'Edit', closeCanvas: 'Close Canvas', clearCanvas: 'Clear', canvasBoundary: 'Canvas uses a safe, limited Markdown renderer and stays in this browser. It never executes HTML or submits itself to the model.',
