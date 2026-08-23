@@ -110,18 +110,19 @@ test("query normalization prevents oversized input", async () => {
 });
 
 test("ask route enforces claim-level citations and conservative quota accounting", async () => {
-  const [ask, usage] = await Promise.all([
+  const [ask, output, usage] = await Promise.all([
     import("node:fs/promises").then(({ readFile }) => readFile(new URL("../app/api/ask/route.ts", import.meta.url), "utf8")),
+    import("node:fs/promises").then(({ readFile }) => readFile(new URL("../app/api/ask/conversation-output.ts", import.meta.url), "utf8")),
     import("node:fs/promises").then(({ readFile }) => readFile(new URL("../db/usage.ts", import.meta.url), "utf8")),
   ]);
-  assert.match(ask, /claims:\s*\{/);
-  assert.match(ask, /minItems:\s*1/);
-  assert.match(ask, /invalidClaim/);
-  assert.match(ask, /stripModelCitationMarkers/);
+  assert.match(output, /claims:\s*\{/);
+  assert.match(output, /minItems:\s*groundingRequired\s*\?\s*1\s*:\s*0/);
+  assert.match(output, /output\.claims\.some\(\(claim\)\s*=>\s*claim\.citationRefs\.length\s*===\s*0\)/);
+  assert.match(output, /stripModelCitationMarkers/);
   assert.match(ask, /new TextEncoder\(\)\.encode\(value\)\.byteLength/);
   assert.match(ask, /normalizeHistory/);
   assert.match(ask, /buildRetrievalQuery/);
-  assert.match(ask, /最近对话（仅用于理解连续提问，不是事实来源）/);
+  assert.match(ask, /保留供应商原生的用户\/助手多轮角色/);
   assert.match(ask, /Write concise English/);
   assert.match(ask, /Today's model Q&A quota has been exhausted/);
   assert.match(ask, /conversationId/);

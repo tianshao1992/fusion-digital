@@ -13,6 +13,10 @@ const FIXED_PROVIDER_ENDPOINTS = Object.freeze({
 
 export type ProviderUsage = { inputTokens: number; outputTokens: number };
 export type ProviderAnswer = ProviderUsage & { outputText: string };
+export type ProviderConversationMessage = {
+  role: "user" | "assistant";
+  content: string;
+};
 export type ProviderRequestErrorKind =
   | "request"
   | "network"
@@ -37,7 +41,10 @@ export class ProviderRequestError extends Error {
 export async function requestProviderAnswer(input: {
   provider: ResolvedLlmProvider;
   instructions: string;
-  modelInput: string;
+  /** Native dialogue roles. `modelInput` remains as a bounded compatibility
+   * seam for older internal callers and is normalized to one user message. */
+  messages?: readonly ProviderConversationMessage[];
+  modelInput?: string;
   maxOutputTokens: number;
   jsonSchema: Record<string, unknown>;
   signal: AbortSignal;
@@ -88,6 +95,7 @@ function fixedProviderEndpoint(provider: ResolvedLlmProvider): string {
 }
 
 function openAiRequest(input: Parameters<typeof requestProviderAnswer>[0]): RequestInit {
+  const messages = normalizedMessages(input);
   return {
     method: "POST",
     headers: {
@@ -100,11 +108,11 @@ function openAiRequest(input: Parameters<typeof requestProviderAnswer>[0]): Requ
       store: false,
       max_output_tokens: input.maxOutputTokens,
       instructions: input.instructions,
-      input: input.modelInput,
+      input: messages,
       text: {
         format: {
           type: "json_schema",
-          name: "fusiondigital_grounded_answer",
+          name: "fusiondigital_assistant_turn",
           strict: true,
           schema: input.jsonSchema,
         },
@@ -114,6 +122,7 @@ function openAiRequest(input: Parameters<typeof requestProviderAnswer>[0]): Requ
 }
 
 function anthropicRequest(input: Parameters<typeof requestProviderAnswer>[0]): RequestInit {
+  const messages = normalizedMessages(input);
   return {
     method: "POST",
     headers: {
@@ -126,7 +135,7 @@ function anthropicRequest(input: Parameters<typeof requestProviderAnswer>[0]): R
       model: input.provider.model,
       max_tokens: input.maxOutputTokens,
       system: input.instructions,
-      messages: [{ role: "user", content: input.modelInput }],
+      messages,
     }),
   };
 }
@@ -134,6 +143,7 @@ function anthropicRequest(input: Parameters<typeof requestProviderAnswer>[0]): R
 function chatCompletionRequest(input: Parameters<typeof requestProviderAnswer>[0]): RequestInit {
   const isKimi = input.provider.id === "kimi";
   const isDeepSeek = input.provider.id === "deepseek";
+  const messages = normalizedMessages(input);
   return {
     method: "POST",
     headers: {
@@ -145,7 +155,7 @@ function chatCompletionRequest(input: Parameters<typeof requestProviderAnswer>[0
       model: input.provider.model,
       messages: [
         { role: "system", content: input.instructions },
-        { role: "user", content: input.modelInput },
+        ...messages,
       ],
       stream: false,
       ...(isDeepSeek
@@ -159,6 +169,34 @@ function chatCompletionRequest(input: Parameters<typeof requestProviderAnswer>[0
         : { max_tokens: input.maxOutputTokens }),
     }),
   };
+}
+
+function normalizedMessages(input: Parameters<typeof requestProviderAnswer>[0]): ProviderConversationMessage[] {
+  const source = input.messages ?? (typeof input.modelInput === "string"
+    ? [{ role: "user" as const, content: input.modelInput }]
+    : []);
+  if (source.length < 1 || source.length > 12) throw new ProviderRequestError("request");
+  const messages: ProviderConversationMessage[] = [];
+  let totalBytes = 0;
+  for (const message of source) {
+    if (!message || (message.role !== "user" && message.role !== "assistant") || typeof message.content !== "string") {
+      throw new ProviderRequestError("request");
+    }
+    const content = message.content.normalize("NFKC").trim();
+    const bytes = new TextEncoder().encode(content).byteLength;
+    if (!content || bytes > 20_000) throw new ProviderRequestError("request");
+    totalBytes += bytes;
+    if (totalBytes > 64_000) throw new ProviderRequestError("request");
+    const previous = messages.at(-1);
+    if (previous?.role === message.role) {
+      previous.content = `${previous.content}\n\n${content}`;
+    } else {
+      messages.push({ role: message.role, content });
+    }
+  }
+  while (messages[0]?.role === "assistant") messages.shift();
+  if (!messages.length || messages.at(-1)?.role !== "user") throw new ProviderRequestError("request");
+  return messages;
 }
 
 async function readBoundedJson(response: Response, signal: AbortSignal): Promise<Record<string, unknown>> {

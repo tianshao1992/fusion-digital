@@ -36,6 +36,25 @@ export type UserProviderEnvelope = {
   providers: UserPublicLlmProvider[];
 };
 
+export function chooseAutomaticDefaultProvider(
+  providers: readonly UserPublicLlmProvider[],
+  preference: LlmProviderId | "retrieval" | null,
+  platformDefault: LlmProviderId | null,
+): LlmProviderId | "retrieval" {
+  if (preference === "retrieval") return "retrieval";
+  if (preference) {
+    return providers.some((provider) => provider.id === preference && provider.available)
+      ? preference
+      : "retrieval";
+  }
+  const personal = providers.find((provider) => provider.available && provider.source === "personal");
+  if (personal) return personal.id;
+  if (platformDefault && providers.some((provider) => provider.id === platformDefault && provider.available)) {
+    return platformDefault;
+  }
+  return providers.find((provider) => provider.available)?.id ?? "retrieval";
+}
+
 type Resolution =
   | { status: "selected"; provider: ResolvedLlmProvider }
   | { status: "retrieval" }
@@ -60,24 +79,29 @@ export async function userProviderEnvelope(
     getUserLlmPreference(principal.user.id),
   ]);
   const personal = new Map(credentials.map((credential) => [credential.provider, credential]));
+  const providers = [...platform.values()].map((provider) => {
+    const credential = personal.get(provider.id);
+    if (!credential) return publicStatus(provider, null);
+    return {
+      id: provider.id,
+      label: provider.label,
+      model: credential.model || provider.model,
+      available: credential.enabled && encryptionSecretPresent(env),
+      configured: true,
+      source: "personal" as const,
+      keyHint: credential.keyHint,
+      region: credential.region,
+      updatedAt: credential.updatedAt,
+    };
+  });
   return {
     authenticated: true,
-    defaultProvider: preference?.defaultProvider ?? getDefaultProviderId(env) ?? "retrieval",
-    providers: [...platform.values()].map((provider) => {
-      const credential = personal.get(provider.id);
-      if (!credential) return publicStatus(provider, null);
-      return {
-        id: provider.id,
-        label: provider.label,
-        model: credential.model || provider.model,
-        available: credential.enabled && encryptionSecretPresent(env),
-        configured: true,
-        source: "personal",
-        keyHint: credential.keyHint,
-        region: credential.region,
-        updatedAt: credential.updatedAt,
-      };
-    }),
+    defaultProvider: chooseAutomaticDefaultProvider(
+      providers,
+      preference?.defaultProvider ?? null,
+      getDefaultProviderId(env),
+    ),
+    providers,
   };
 }
 
@@ -95,6 +119,10 @@ export async function resolveProviderForUser(
     const preference = await getUserLlmPreference(principal.user.id);
     if (preference?.defaultProvider === "retrieval") return { status: "retrieval" };
     requested = preference?.defaultProvider ?? null;
+    if (!requested) {
+      const credentials = await listUserLlmCredentials(principal.user.id);
+      requested = credentials.find((credential) => credential.enabled)?.provider ?? null;
+    }
   }
   requested ??= getDefaultProviderId(env);
   if (!requested) return { status: "retrieval" };

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import type { AgentStreamEvent } from "../app/agent/contracts.ts";
+import { AGENT_CANVAS_LIMITS, type AgentStreamEvent } from "../app/agent/contracts.ts";
 import {
   AGENT_STREAM_LIMITS,
   AgentEventStreamParser,
@@ -224,6 +224,50 @@ test("the parser rejects a completed answer that differs from accumulated deltas
     () => parser.push(new TextDecoder().decode(encoded)),
     /deltas do not match the completed answer/,
   );
+});
+
+test("the verified stream accepts bounded assistant-chat canvas artifacts and rejects oversized ones", () => {
+  const runId = "run-assistant-canvas";
+  const valid = concat([
+    encodeAgentStreamEvent({ event: "run.started", runId, sequence: 1, delivery: "verified-delivery" }),
+    encodeAgentStreamEvent({ event: "message.delta", runId, sequence: 2, delta: "对话答复" }),
+    encodeAgentStreamEvent({
+      event: "message.completed",
+      runId,
+      sequence: 3,
+      message: {
+        mode: "assistant-chat",
+        answer: "对话答复",
+        citations: [],
+        results: [],
+        canvas: { kind: "markdown", title: "步骤", content: "1. 第一步" },
+      },
+    }),
+    encodeAgentStreamEvent({ event: "run.completed", runId, sequence: 4, status: "completed" }),
+  ]);
+  const parser = new AgentEventStreamParser();
+  const events = parser.push(new TextDecoder().decode(valid));
+  parser.finish();
+  assert.equal(events[2]?.event, "message.completed");
+
+  const invalidParser = new AgentEventStreamParser();
+  const invalid = concat([
+    encodeAgentStreamEvent({ event: "run.started", runId, sequence: 1, delivery: "verified-delivery" }),
+    encodeAgentStreamEvent({ event: "message.delta", runId, sequence: 2, delta: "对话答复" }),
+    encodeAgentStreamEvent({
+      event: "message.completed",
+      runId,
+      sequence: 3,
+      message: {
+        mode: "assistant-chat",
+        answer: "对话答复",
+        citations: [],
+        results: [],
+        canvas: { kind: "markdown", title: "步骤", content: "x".repeat(AGENT_CANVAS_LIMITS.maxContentCharacters + 1) },
+      },
+    }),
+  ]);
+  assert.throws(() => invalidParser.push(new TextDecoder().decode(invalid)), AgentStreamProtocolError);
 });
 
 test("KnowledgeChat consumes only the bounded verified-delivery stream", () => {

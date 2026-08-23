@@ -3,6 +3,7 @@ import type {
   AgentStreamEvent,
   AgentStreamEventName,
 } from "./contracts";
+import { AGENT_CANVAS_LIMITS } from "./contracts";
 
 export const AGENT_STREAM_LIMITS = Object.freeze({
   maxDeltaCharacters: 180,
@@ -134,11 +135,26 @@ export class AgentEventStreamParser {
 export function isAgentCompletedMessage(value: unknown): value is AgentCompletedMessage {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
   const message = value as Record<string, unknown>;
-  return (message.mode === "ai-grounded" || message.mode === "retrieval-only" || message.mode === "assistant-direct")
+  return (message.mode === "assistant-chat" || message.mode === "ai-grounded" || message.mode === "retrieval-only" || message.mode === "assistant-direct")
     && typeof message.answer === "string"
     && message.answer.length > 0
     && Array.isArray(message.citations)
-    && Array.isArray(message.results);
+    && Array.isArray(message.results)
+    && validCanvasArtifact(message.canvas);
+}
+
+function validCanvasArtifact(value: unknown): boolean {
+  if (value === undefined || value === null) return true;
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const canvas = value as Record<string, unknown>;
+  if (canvas.kind !== "markdown" || typeof canvas.title !== "string" || typeof canvas.content !== "string") return false;
+  if (Object.keys(canvas).some((key) => key !== "kind" && key !== "title" && key !== "content")) return false;
+  const titleLength = Array.from(canvas.title.trim()).length;
+  const contentLength = Array.from(canvas.content.trim()).length;
+  return titleLength > 0
+    && titleLength <= AGENT_CANVAS_LIMITS.maxTitleCharacters
+    && contentLength > 0
+    && contentLength <= AGENT_CANVAS_LIMITS.maxContentCharacters;
 }
 
 function parseEventBlock(block: string): AgentStreamEvent {

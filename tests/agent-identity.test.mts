@@ -137,7 +137,7 @@ test("deferred ask authentication uses the explicit Request headers snapshot", a
     assert.equal(capturedSubject, "attacker-subject");
 
     const askRoute = readFileSync(new URL("../app/api/ask/route.ts", import.meta.url), "utf8");
-    assert.match(askRoute, /optionalPrincipal\(request\.headers\)/);
+    assert.match(askRoute, /runtime\.principal\(request\.headers\)/);
     assert.doesNotMatch(askRoute, /principal\s*=\s*await optionalPrincipal\(\)/);
   } finally {
     if (previousMode === undefined) delete process.env.NEXT_PUBLIC_FUSIONDIGITAL_MODE;

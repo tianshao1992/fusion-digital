@@ -92,6 +92,11 @@ test('all provider adapters use fixed HTTPS endpoints, private auth headers and 
   ];
 
   const originalFetch = globalThis.fetch;
+  const nativeMessages = [
+    { role: 'user' as const, content: 'First question' },
+    { role: 'assistant' as const, content: 'First answer' },
+    { role: 'user' as const, content: 'Grounded evidence follow-up' },
+  ];
   try {
     for (const entry of cases) {
       const resolution = resolveProvider(entry.id, entry.env);
@@ -105,6 +110,9 @@ test('all provider adapters use fixed HTTPS endpoints, private auth headers and 
         const headers = new Headers(init?.headers);
         const serializedBody = String(init?.body ?? '');
         const body = JSON.parse(serializedBody) as Record<string, unknown>;
+        if (entry.id === 'openai') assert.deepEqual(body.input, nativeMessages);
+        else if (entry.id === 'anthropic') assert.deepEqual(body.messages, nativeMessages);
+        else assert.deepEqual((body.messages as unknown[]).slice(1), nativeMessages);
         entry.assertRequest(headers, body);
         assert.doesNotMatch(serializedBody, /secret-openai|secret-anthropic|secret-deepseek|secret-kimi/);
         return new Response(JSON.stringify(entry.response), { headers: { 'content-type': 'application/json' } });
@@ -112,7 +120,7 @@ test('all provider adapters use fixed HTTPS endpoints, private auth headers and 
       const answer = await requestProviderAnswer({
         provider: resolution.provider,
         instructions: 'Return strict JSON.',
-        modelInput: 'Grounded evidence.',
+        messages: nativeMessages,
         maxOutputTokens: 1600,
         jsonSchema: schema,
         signal: new AbortController().signal,
@@ -141,6 +149,48 @@ test('provider adapter rejects non-JSON and oversized upstream responses without
       provider: resolution.provider, instructions: 'json', modelInput: 'input', maxOutputTokens: 1600,
       jsonSchema: schema, signal: new AbortController().signal,
     }), /oversized/);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('provider dialogue normalization drops orphan assistant history, merges adjacent roles, and forbids assistant prefill', async () => {
+  const resolution = resolveProvider('deepseek', { DEEPSEEK_API_KEY: 'secret-deepseek' });
+  assert.equal(resolution.status, 'selected');
+  if (resolution.status !== 'selected') throw new Error('provider was not selected');
+  const originalFetch = globalThis.fetch;
+  try {
+    globalThis.fetch = async (_url, init) => {
+      const body = JSON.parse(String(init?.body)) as { messages: Array<{ role: string; content: string }> };
+      assert.deepEqual(body.messages.slice(1), [{ role: 'user', content: 'first\n\nsecond' }]);
+      return new Response(JSON.stringify({
+        choices: [{ finish_reason: 'stop', message: { content: groundedJson } }],
+      }), { headers: { 'content-type': 'application/json' } });
+    };
+    await requestProviderAnswer({
+      provider: resolution.provider,
+      instructions: 'json',
+      messages: [
+        { role: 'assistant', content: 'orphan' },
+        { role: 'user', content: 'first' },
+        { role: 'user', content: 'second' },
+      ],
+      maxOutputTokens: 1600,
+      jsonSchema: schema,
+      signal: new AbortController().signal,
+    });
+
+    let fetchCalls = 0;
+    globalThis.fetch = async () => { fetchCalls += 1; throw new Error('must not fetch'); };
+    await assert.rejects(() => requestProviderAnswer({
+      provider: resolution.provider,
+      instructions: 'json',
+      messages: [{ role: 'user', content: 'question' }, { role: 'assistant', content: 'prefill' }],
+      maxOutputTokens: 1600,
+      jsonSchema: schema,
+      signal: new AbortController().signal,
+    }), providerFailure('request'));
+    assert.equal(fetchCalls, 0);
   } finally {
     globalThis.fetch = originalFetch;
   }
