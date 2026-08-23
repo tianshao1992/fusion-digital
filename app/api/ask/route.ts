@@ -113,7 +113,10 @@ export async function POST(request: Request) {
 
   let principal: Awaited<ReturnType<typeof optionalPrincipal>> = null;
   try {
-    principal = await optionalPrincipal();
+    // The Agent SSE route may execute this handler after its outer Response has
+    // returned. Use the request's durable header snapshot instead of Vinext's
+    // request-local `next/headers` context, which has already been cleared.
+    principal = await optionalPrincipal(request.headers);
   } catch {
     // The final quota gate still prevents anonymous or unmetered upstream
     // calls. Continue as anonymous so deterministic retrieval remains usable.

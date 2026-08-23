@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   SITES_WORKSPACE_ORIGIN,
   buildAgentCapabilities,
+  getAgentCapabilities,
 } from "../app/agent/capabilities.ts";
 
 test("standalone public profile is honest about identity and model boundaries", () => {
@@ -16,6 +17,9 @@ test("standalone public profile is honest about identity and model boundaries", 
   assert.equal(capabilities.tools.imageInput, false);
   assert.equal(capabilities.tools.fileInput, false);
   assert.equal(capabilities.tools.externalUrlReader, false);
+  assert.equal(capabilities.conversation.delivery, "verified-delivery");
+  assert.equal(capabilities.conversation.streaming, true);
+  assert.equal(capabilities.conversation.resumable, false);
 });
 
 test("Sites profile exposes only platform-owned sign-in and current implemented tools", () => {
@@ -29,8 +33,34 @@ test("Sites profile exposes only platform-owned sign-in and current implemented 
   });
   assert.equal(capabilities.tools.modelGateway, true);
   assert.equal(capabilities.conversation.persistence, "browser-local");
-  assert.equal(capabilities.conversation.streaming, false);
+  assert.equal(capabilities.conversation.delivery, "verified-delivery");
+  assert.equal(capabilities.conversation.streaming, true);
+  assert.equal(capabilities.conversation.resumable, false);
   assert.equal(capabilities.tools.canvas, "local-workspace");
+});
+
+test("runtime capabilities require an explicit Sites identity trust profile", () => {
+  const previousMode = process.env.NEXT_PUBLIC_FUSIONDIGITAL_MODE;
+  const previousTrustProfile = process.env.FUSIONDIGITAL_IDENTITY_TRUST_PROFILE;
+  try {
+    delete process.env.NEXT_PUBLIC_FUSIONDIGITAL_MODE;
+    delete process.env.FUSIONDIGITAL_IDENTITY_TRUST_PROFILE;
+    assert.equal(getAgentCapabilities().profile, "standalone-public");
+
+    process.env.FUSIONDIGITAL_IDENTITY_TRUST_PROFILE = "sites-siwc";
+    assert.equal(getAgentCapabilities().profile, "sites");
+
+    process.env.NEXT_PUBLIC_FUSIONDIGITAL_MODE = "public-anonymous";
+    assert.equal(getAgentCapabilities().profile, "standalone-public");
+  } finally {
+    if (previousMode === undefined) delete process.env.NEXT_PUBLIC_FUSIONDIGITAL_MODE;
+    else process.env.NEXT_PUBLIC_FUSIONDIGITAL_MODE = previousMode;
+    if (previousTrustProfile === undefined) {
+      delete process.env.FUSIONDIGITAL_IDENTITY_TRUST_PROFILE;
+    } else {
+      process.env.FUSIONDIGITAL_IDENTITY_TRUST_PROFILE = previousTrustProfile;
+    }
+  }
 });
 
 test("capabilities endpoint never leaks provider or credential configuration", async () => {

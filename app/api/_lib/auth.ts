@@ -1,11 +1,25 @@
-import { getChatGPTUser } from "@/app/chatgpt-auth";
+import {
+  getChatGPTUser,
+  getChatGPTUserFromHeaders,
+  type ChatGPTUser,
+} from "@/app/chatgpt-auth";
+import type { HeaderReader } from "@/app/auth/contracts";
 import { provisionUser, type Principal, type Role } from "@/db/accounts";
 import { appendAuditEvent } from "@/db/audit";
 import { ApiError } from "./http";
 
-export async function optionalPrincipal(): Promise<Principal | null> {
-  const identity = await getChatGPTUser();
-  return identity ? provisionUser(identity) : null;
+export type PrincipalProvisioner = (
+  identity: ChatGPTUser,
+) => Promise<Principal>;
+
+export async function optionalPrincipal(
+  requestHeaders?: HeaderReader,
+  provision: PrincipalProvisioner = provisionUser,
+): Promise<Principal | null> {
+  const identity = requestHeaders
+    ? getChatGPTUserFromHeaders(requestHeaders)
+    : await getChatGPTUser();
+  return identity ? provision(identity) : null;
 }
 
 export async function requirePrincipal(): Promise<Principal> {

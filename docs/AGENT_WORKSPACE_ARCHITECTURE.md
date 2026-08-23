@@ -12,10 +12,12 @@
 - 对话、上下文和 Canvas 是三个独立视图；现有站内证据问答被迁入 dock，并继续使用有界本地连续会话。
 - 检索页会传入查询与筛选条件，知识图谱会传入当前实体和描述，其余页面自动传入当前路径与标题。
 - `/api/agent/capabilities` 返回不含凭据的运行能力。Sites 与 standalone public profile 在界面上明确区分。
+- `/api/agent/turns` 复用现有 `/api/ask` 的身份、配额、grounding 和引用校验；只有完整答案通过校验后，才以有界、单调序列的 SSE 事件交付。该切片不可恢复，也不把供应商原始流或隐藏推理暴露给浏览器。
+- 身份解析已拆出 Sites SIWC 与 anonymous 合同；只有服务端显式设置 `FUSIONDIGITAL_IDENTITY_TRUST_PROFILE=sites-siwc` 才信任平台身份头，缺失、未知配置与 `public-anonymous` 均 fail closed。持久线程 repository 当前明确返回 unavailable，没有用本地内存或 D1 假装跨入口数据库。
 - Canvas 当前是 20,000 字符上限的浏览器本地草稿；参考链接当前只保存 URL 标签并允许用户显式打开，不读取正文。
 - standalone public profile 继续确定性检索，并提供前往 Sites 同路径认证工作区的显式链接。
 
-尚未启用的能力包括香港原生登录和模型、服务端线程、SSE、图片/文件输入、正文抓取、模型工具调用和账户同步 Canvas。下文定义这些能力的目标合同与启用门禁。
+尚未启用的能力包括香港原生登录和模型、服务端持久线程、可恢复 SSE、图片/文件输入、正文抓取、模型工具调用和账户同步 Canvas。下文定义这些能力的目标合同与启用门禁。
 
 ## 1. 目标与边界
 

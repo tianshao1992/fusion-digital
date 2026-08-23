@@ -66,6 +66,27 @@ test('chat headings use unique React ids when rendered in reusable surfaces', ()
   assert.doesNotMatch(chat, /id=["']knowledge-chat-title["']/);
 });
 
+test('an active chat request owns every streamed and completed state update', () => {
+  assert.match(chat, /const ownsRequest = \(\) => abortRef\.current === controller;/);
+  assert.match(chat, /if \(ownsRequest\(\)\) \{\s*setPending\(true\);\s*setStreamedAnswer\(''\);\s*setError\(''\);/);
+  assert.match(chat, /if \(ownsRequest\(\)\) \{\s*setStreamedAnswer\(\(current\) =>/);
+  assert.match(chat, /if \(!ownsRequest\(\)\) return;\s*const assistantTurn:/);
+  assert.match(chat, /if \(ownsRequest\(\) && \(reason as Error\)\.name !== 'AbortError'\)/);
+  assert.match(chat, /finally \{\s*if \(ownsRequest\(\)\) \{\s*abortRef\.current = null;\s*setPending\(false\);\s*setStreamedAnswer\(''\);/);
+});
+
+test('Stop releases ownership synchronously so stale React state cannot block the next request', () => {
+  assert.match(chat, /const activeController = abortRef\.current;\s*if \(question\.length < 2 \|\| \(activeController && !activeController\.signal\.aborted\)\) return;/);
+  assert.doesNotMatch(chat, /if \(question\.length < 2 \|\| pending\) return;/);
+  assert.match(chat, /function stopActiveTurn\(\) \{\s*const controller = abortRef\.current;\s*if \(!controller\) return;\s*controller\.abort\(\);\s*if \(abortRef\.current !== controller\) return;\s*abortRef\.current = null;/);
+  assert.match(chat, /onClick=\{stopActiveTurn\}/);
+});
+
+test('New Conversation and unmount revoke old request ownership before clearing transient state', () => {
+  assert.match(chat, /function newConversation\(\) \{\s*const controller = abortRef\.current;\s*controller\?\.abort\(\);\s*if \(abortRef\.current === controller\) abortRef\.current = null;\s*setPending\(false\);\s*setStreamedAnswer\(''\);\s*setTurns\(\[\]\);\s*setConversationId\(newTurnId\(\)\);\s*setDraft\(''\);\s*setError\(''\);/);
+  assert.match(chat, /useEffect\(\(\) => \(\) => \{\s*const controller = abortRef\.current;\s*controller\?\.abort\(\);\s*if \(abortRef\.current === controller\) abortRef\.current = null;\s*\}, \[\]\);/);
+});
+
 function read(path: string) {
   return readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
 }

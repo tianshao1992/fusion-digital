@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import { FormEvent, useEffect, useId, useMemo, useRef, useState } from 'react';
+import type { AgentCompletedMessage, AgentStreamEvent } from '@/app/agent/contracts';
+import { AgentEventStreamParser } from '@/app/agent/sse';
 import { useI18n } from '@/app/i18n';
 import { isPublicAnonymousMode } from '@/app/deployment-mode';
 import type { SearchHit } from '@/app/search/search-core';
@@ -14,25 +16,12 @@ import {
   knowledgeChatStorageKey,
   newTurnId,
   serializeConversation,
-  type ChatCitation,
   type ChatProviderId,
   type ChatTurn,
 } from './conversation';
 import './knowledge-chat.css';
+import './knowledge-chat-streaming.css';
 import './provider-selector.css';
-
-type AskResponse = {
-  mode: 'ai-grounded' | 'retrieval-only' | 'assistant-direct';
-  answer: string;
-  caveats?: string[];
-  citations: ChatCitation[];
-  results: SearchHit[];
-  notice?: string;
-  conversationId?: string;
-  provider?: ChatProviderId;
-  model?: string;
-  error?: { message?: string };
-};
 
 type ProviderOption = { id: ChatProviderId; label: string; model: string; available: boolean; source?: 'personal' | 'platform' | 'none' };
 type ProviderEnvelope = { authenticated?: boolean; defaultProvider: ChatProviderId | 'retrieval' | null; providers: ProviderOption[] };
@@ -85,6 +74,7 @@ export default function KnowledgeChat({
   const [turns, setTurns] = useState<ChatTurn[]>([]);
   const [conversationId, setConversationId] = useState('');
   const [pending, setPending] = useState(false);
+  const [streamedAnswer, setStreamedAnswer] = useState('');
   const [error, setError] = useState('');
   const [restored, setRestored] = useState(false);
   const [providers, setProviders] = useState<ProviderOption[]>([]);
@@ -160,7 +150,11 @@ export default function KnowledgeChat({
     logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: 'smooth' });
   }, [pending, turns]);
 
-  useEffect(() => () => abortRef.current?.abort(), []);
+  useEffect(() => () => {
+    const controller = abortRef.current;
+    controller?.abort();
+    if (abortRef.current === controller) abortRef.current = null;
+  }, []);
 
   const signInHref = useMemo(
     () => `/signin-with-chatgpt?return_to=${encodeURIComponent(context.path || '/knowledge-graph')}`,
@@ -185,25 +179,34 @@ export default function KnowledgeChat({
   async function submit(event?: FormEvent, suggested?: string) {
     event?.preventDefault();
     const question = (suggested ?? currentDraft).normalize('NFKC').trim().slice(0, CHAT_LIMITS.maxUserChars);
-    if (question.length < 2 || pending) return;
+    const activeController = abortRef.current;
+    if (question.length < 2 || (activeController && !activeController.signal.aborted)) return;
+    activeController?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+    const ownsRequest = () => abortRef.current === controller;
     const history = historyForRequest(turns);
     const userTurn: ChatTurn = { id: newTurnId(), role: 'user', content: question, createdAt: new Date().toISOString() };
     setTurns((current) => compactConversation([...current, userTurn]));
     setDraft('');
-    setPending(true);
-    setError('');
-    abortRef.current?.abort();
-    const controller = new AbortController();
-    abortRef.current = controller;
+    if (ownsRequest()) {
+      setPending(true);
+      setStreamedAnswer('');
+      setError('');
+    }
     try {
-      const response = await fetch('/api/ask', {
+      const response = await fetch('/api/agent/turns', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-FusionDigital-Locale': locale },
+        headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream', 'X-FusionDigital-Locale': locale },
         body: JSON.stringify({ question, locale, history, context, filters: { ...filters, citedOnly: true }, conversationId, provider: selectedProvider }),
         signal: controller.signal,
       });
-      const payload = await response.json() as AskResponse;
-      if (!response.ok && !payload.answer) throw new Error(payload.error?.message || (locale === 'en' ? 'The Q&A service is temporarily unavailable.' : '问答服务暂时不可用。'));
+      const payload = await readAgentTurnStream(response, controller.signal, (delta) => {
+        if (ownsRequest()) {
+          setStreamedAnswer((current) => `${current}${delta}`.slice(0, CHAT_LIMITS.maxAssistantChars));
+        }
+      });
+      if (!ownsRequest()) return;
       const assistantTurn: ChatTurn = {
         id: newTurnId(), role: 'assistant', content: payload.answer, createdAt: new Date().toISOString(),
         mode: payload.mode, citations: payload.citations, caveats: payload.caveats, notice: payload.notice,
@@ -213,17 +216,37 @@ export default function KnowledgeChat({
       if (payload.conversationId) setConversationId(payload.conversationId);
       if (payload.results?.length) onEvidenceResults?.(payload.results);
     } catch (reason) {
-      if ((reason as Error).name !== 'AbortError') setError(reason instanceof Error ? reason.message : (locale === 'en' ? 'The Q&A service is temporarily unavailable.' : '问答服务暂时不可用。'));
+      if (ownsRequest() && (reason as Error).name !== 'AbortError') {
+        setError(reason instanceof Error ? reason.message : (locale === 'en' ? 'The Q&A service is temporarily unavailable.' : '问答服务暂时不可用。'));
+      }
     } finally {
-      if (!controller.signal.aborted) setPending(false);
+      if (ownsRequest()) {
+        abortRef.current = null;
+        setPending(false);
+        setStreamedAnswer('');
+      }
     }
   }
 
-  function newConversation() {
-    abortRef.current?.abort();
+  function stopActiveTurn() {
+    const controller = abortRef.current;
+    if (!controller) return;
+    controller.abort();
+    if (abortRef.current !== controller) return;
+    abortRef.current = null;
     setPending(false);
+    setStreamedAnswer('');
+  }
+
+  function newConversation() {
+    const controller = abortRef.current;
+    controller?.abort();
+    if (abortRef.current === controller) abortRef.current = null;
+    setPending(false);
+    setStreamedAnswer('');
     setTurns([]);
     setConversationId(newTurnId());
+    setDraft('');
     setError('');
   }
 
@@ -251,7 +274,7 @@ export default function KnowledgeChat({
         {turn.citations?.length ? <div className="knowledgeChatCitations">{turn.citations.map((citation) => <a href={citation.url} target="_blank" rel="noreferrer" key={`${turn.id}-${citation.ref}-${citation.url}`}><b>{citation.ref}</b><span>{citation.label}</span><small>{citation.entryTitle}</small></a>)}</div> : null}
         {turn.caveats?.length ? <details><summary>{t('chat.caveats')}</summary><ul>{turn.caveats.map((item) => <li key={item}>{item}</li>)}</ul></details> : null}
       </article>)}
-      {pending && <div className="knowledgeChatPending"><i /><span>{t('chat.pending')}</span><button type="button" onClick={() => { abortRef.current?.abort(); setPending(false); }}>{t('chat.stop')}</button></div>}
+      {pending && <div className="knowledgeChatPending"><i /><span>{streamedAnswer || t('chat.pending')}</span><button type="button" onClick={stopActiveTurn}>{t('chat.stop')}</button></div>}
     </div>
     {error && <p className="knowledgeChatError" role="alert">{error}</p>}
     <form className="knowledgeChatComposer" onSubmit={(event) => void submit(event)}>
@@ -263,4 +286,50 @@ export default function KnowledgeChat({
 
 function localizedContextText(value: string, locale: 'zh-CN' | 'en', fallback: string) {
   return locale === 'en' && /[\u3400-\u9fff]/u.test(value) ? fallback : value;
+}
+
+async function readAgentTurnStream(
+  response: Response,
+  signal: AbortSignal,
+  onDelta: (delta: string) => void,
+): Promise<AgentCompletedMessage> {
+  if (!response.ok || !response.body || !response.headers.get('content-type')?.toLowerCase().includes('text/event-stream')) {
+    throw new Error('The agent stream is temporarily unavailable.');
+  }
+  const parser = new AgentEventStreamParser();
+  const decoder = new TextDecoder();
+  const reader = response.body.getReader();
+  let completed: AgentCompletedMessage | null = null;
+  let streamFinished = false;
+
+  const accept = (events: AgentStreamEvent[]) => {
+    for (const event of events) {
+      if (event.event === 'message.delta') onDelta(event.delta);
+      else if (event.event === 'message.completed') completed = event.message;
+      else if (event.event === 'run.failed') throw new Error(event.error.message);
+    }
+  };
+
+  try {
+    while (true) {
+      if (signal.aborted) throw signal.reason ?? new DOMException('Aborted', 'AbortError');
+      const { done, value } = await reader.read();
+      if (done) break;
+      accept(parser.push(decoder.decode(value, { stream: true })));
+    }
+    accept(parser.push(decoder.decode()));
+    parser.finish();
+    streamFinished = true;
+  } finally {
+    if (!streamFinished) {
+      try {
+        await reader.cancel(new DOMException('Agent stream abandoned', 'AbortError'));
+      } catch {
+        // The transport may already have closed after a terminal failure.
+      }
+    }
+    reader.releaseLock();
+  }
+  if (!completed) throw new Error('The agent stream ended without a completed message.');
+  return completed;
 }

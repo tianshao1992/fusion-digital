@@ -1,4 +1,7 @@
-import { isPublicAnonymousMode } from "@/app/deployment-mode";
+import {
+  getIdentityTrustProfile,
+  IDENTITY_TRUST_PROFILES,
+} from "@/app/auth/identity-trust-profile";
 
 export const SITES_WORKSPACE_ORIGIN = "https://fusion-physics-atlas-2026.tianyuanliu1992.chatgpt.site";
 
@@ -14,7 +17,9 @@ export type AgentCapabilities = {
   conversation: {
     continuous: true;
     persistence: "browser-local";
-    streaming: false;
+    delivery: "verified-delivery";
+    streaming: true;
+    resumable: false;
   };
   tools: {
     siteSearch: true;
@@ -28,7 +33,9 @@ export type AgentCapabilities = {
 };
 
 export function getAgentCapabilities(): AgentCapabilities {
-  return buildAgentCapabilities(isPublicAnonymousMode());
+  const sitesIdentityTrusted =
+    getIdentityTrustProfile() === IDENTITY_TRUST_PROFILES.sitesSiwc;
+  return buildAgentCapabilities(!sitesIdentityTrusted);
 }
 
 export function buildAgentCapabilities(publicAnonymous: boolean): AgentCapabilities {
@@ -44,7 +51,9 @@ export function buildAgentCapabilities(publicAnonymous: boolean): AgentCapabilit
     conversation: {
       continuous: true,
       persistence: "browser-local",
-      streaming: false,
+      delivery: "verified-delivery",
+      streaming: true,
+      resumable: false,
     },
     tools: {
       siteSearch: true,
