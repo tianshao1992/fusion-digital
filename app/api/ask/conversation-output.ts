@@ -4,6 +4,7 @@ import {
 } from "@/app/agent/contracts";
 
 export const ASSISTANT_OUTPUT_LIMITS = Object.freeze({
+  maxAnswerCharacters: 4_000,
   maxClaims: 12,
   maxClaimCharacters: 1_200,
   maxCitationRefsPerClaim: 8,
@@ -16,11 +17,21 @@ export type AssistantClaim = {
   citationRefs: string[];
 };
 
-export type AssistantStructuredOutput = {
+export type GroundedAssistantOutput = {
+  kind: "grounded";
   claims: AssistantClaim[];
   caveats: string[];
   canvas: AgentCanvasArtifact | null;
 };
+
+export type ConversationalAssistantOutput = {
+  kind: "conversation";
+  answer: string;
+  caveats: string[];
+  canvas: AgentCanvasArtifact | null;
+};
+
+export type AssistantStructuredOutput = GroundedAssistantOutput | ConversationalAssistantOutput;
 
 export type AssistantOutputValidation =
   | { valid: true; usedRefs: string[] }
@@ -31,25 +42,26 @@ export type AssistantOutputValidation =
  * answer. Keeping this separate from provider parsing lets every supported
  * model protocol share the same post-generation security boundary.
  */
-export function parseAssistantOutput(raw: string): AssistantStructuredOutput | null {
+export function parseAssistantOutput(raw: string, groundingRequired: boolean): AssistantStructuredOutput | null {
   if (!raw) return null;
   try {
     const value = JSON.parse(raw) as Record<string, unknown>;
-    if (!Array.isArray(value.claims) || !Array.isArray(value.caveats)) return null;
-    if (value.claims.length < 1 || value.claims.length > ASSISTANT_OUTPUT_LIMITS.maxClaims) return null;
-    if (value.caveats.length > ASSISTANT_OUTPUT_LIMITS.maxCaveats) return null;
-
-    const claims = value.claims.map(parseClaim);
-    if (claims.some((claim) => claim === null)) return null;
-    const caveats = value.caveats.map((item) => cleanBoundedText(item, ASSISTANT_OUTPUT_LIMITS.maxCaveatCharacters, false));
-    if (caveats.some((item) => item === null)) return null;
-
-    const canvas = parseCanvas(value.canvas);
-    if (canvas === undefined) return null;
+    if (!value || Array.isArray(value)) return null;
+    if (!groundingRequired && Object.prototype.hasOwnProperty.call(value, "answer")) {
+      return parseConversationalAnswer(value);
+    }
+    const grounded = parseClaimsAnswer(value);
+    if (!grounded) return null;
+    if (groundingRequired) return grounded;
+    // Providers without native schema enforcement may still follow the former
+    // claims envelope. Accept that exact bounded shape for compatibility, but
+    // normalize it to the new conversational contract and never retain refs.
+    if (grounded.claims.some((claim) => claim.citationRefs.length > 0)) return null;
     return {
-      claims: claims as AssistantClaim[],
-      caveats: caveats as string[],
-      canvas,
+      kind: "conversation",
+      answer: formatClaims(grounded.claims),
+      caveats: grounded.caveats,
+      canvas: grounded.canvas,
     };
   } catch {
     return null;
@@ -66,11 +78,18 @@ export function validateAssistantOutput(
   allowedRefs: ReadonlySet<string>,
   groundingRequired: boolean,
 ): AssistantOutputValidation {
-  const claimRefs = output.claims.flatMap((claim) => claim.citationRefs);
+  if (groundingRequired && output.kind !== "grounded") {
+    return { valid: false, reason: "missing_grounding" };
+  }
+  if (!groundingRequired && output.kind !== "conversation") {
+    return { valid: false, reason: "invalid_citation" };
+  }
+  const claims = output.kind === "grounded" ? output.claims : [];
+  const claimRefs = claims.flatMap((claim) => claim.citationRefs);
   if (claimRefs.some((ref) => !allowedRefs.has(ref))) {
     return { valid: false, reason: "invalid_citation" };
   }
-  if (groundingRequired && output.claims.some((claim) => claim.citationRefs.length === 0)) {
+  if (groundingRequired && claims.some((claim) => claim.citationRefs.length === 0)) {
     return { valid: false, reason: "missing_grounding" };
   }
   if (!groundingRequired && claimRefs.length > 0) {
@@ -97,7 +116,12 @@ export function validateAssistantOutput(
 }
 
 export function formatAssistantAnswer(output: AssistantStructuredOutput): string {
-  return output.claims
+  if (output.kind === "conversation") return stripModelCitationMarkers(output.answer);
+  return formatClaims(output.claims);
+}
+
+function formatClaims(claims: AssistantClaim[]): string {
+  return claims
     .map((claim) => {
       const text = stripModelCitationMarkers(claim.text);
       const refs = claim.citationRefs.map((ref) => `[${ref}]`).join(" ");
@@ -107,6 +131,7 @@ export function formatAssistantAnswer(output: AssistantStructuredOutput): string
 }
 
 export function assistantAnswerSchema(citationCount: number, groundingRequired: boolean): Record<string, unknown> {
+  if (!groundingRequired) return conversationalAnswerSchema();
   const maxCitationRefs = Math.min(ASSISTANT_OUTPUT_LIMITS.maxCitationRefsPerClaim, Math.max(0, citationCount));
   return {
     type: "object",
@@ -156,9 +181,88 @@ export function assistantAnswerSchema(citationCount: number, groundingRequired: 
   };
 }
 
+function conversationalAnswerSchema(): Record<string, unknown> {
+  return {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      answer: {
+        type: "string",
+        minLength: 1,
+        maxLength: ASSISTANT_OUTPUT_LIMITS.maxAnswerCharacters,
+      },
+      caveats: caveatsSchema(),
+      canvas: canvasSchema(),
+    },
+    required: ["answer", "caveats", "canvas"],
+  };
+}
+
+function parseConversationalAnswer(value: Record<string, unknown>): ConversationalAssistantOutput | null {
+  if (hasUnknownKeys(value, new Set(["answer", "caveats", "canvas"]))) return null;
+  const answer = cleanBoundedText(value.answer, ASSISTANT_OUTPUT_LIMITS.maxAnswerCharacters, true);
+  if (!answer) return null;
+  const caveats = parseCaveats(value.caveats, true);
+  if (!caveats) return null;
+  const canvas = parseCanvas(value.canvas);
+  if (canvas === undefined) return null;
+  return { kind: "conversation", answer, caveats, canvas };
+}
+
+function parseClaimsAnswer(value: Record<string, unknown>): GroundedAssistantOutput | null {
+  if (hasUnknownKeys(value, new Set(["claims", "caveats", "canvas"]))) return null;
+  if (!Array.isArray(value.claims) || !Array.isArray(value.caveats)) return null;
+  if (value.claims.length < 1 || value.claims.length > ASSISTANT_OUTPUT_LIMITS.maxClaims) return null;
+  const claims = value.claims.map(parseClaim);
+  if (claims.some((claim) => claim === null)) return null;
+  const caveats = parseCaveats(value.caveats, false);
+  if (!caveats) return null;
+  const canvas = parseCanvas(value.canvas);
+  if (canvas === undefined) return null;
+  return { kind: "grounded", claims: claims as AssistantClaim[], caveats, canvas };
+}
+
+function parseCaveats(value: unknown, optional: boolean): string[] | null {
+  if (value === undefined && optional) return [];
+  if (!Array.isArray(value) || value.length > ASSISTANT_OUTPUT_LIMITS.maxCaveats) return null;
+  const caveats = value.map((item) => cleanBoundedText(item, ASSISTANT_OUTPUT_LIMITS.maxCaveatCharacters, false));
+  return caveats.some((item) => item === null) ? null : caveats as string[];
+}
+
+function caveatsSchema(): Record<string, unknown> {
+  return {
+    type: "array",
+    items: { type: "string", maxLength: ASSISTANT_OUTPUT_LIMITS.maxCaveatCharacters },
+    maxItems: ASSISTANT_OUTPUT_LIMITS.maxCaveats,
+  };
+}
+
+function canvasSchema(): Record<string, unknown> {
+  return {
+    anyOf: [
+      {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          kind: { type: "string", const: "markdown" },
+          title: { type: "string", minLength: 1, maxLength: AGENT_CANVAS_LIMITS.maxTitleCharacters },
+          content: { type: "string", minLength: 1, maxLength: AGENT_CANVAS_LIMITS.maxContentCharacters },
+        },
+        required: ["kind", "title", "content"],
+      },
+      { type: "null" },
+    ],
+  };
+}
+
+function hasUnknownKeys(value: Record<string, unknown>, allowed: ReadonlySet<string>) {
+  return Object.keys(value).some((key) => !allowed.has(key));
+}
+
 function parseClaim(value: unknown): AssistantClaim | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const candidate = value as Record<string, unknown>;
+  if (hasUnknownKeys(candidate, new Set(["text", "citationRefs"]))) return null;
   const text = cleanBoundedText(candidate.text, ASSISTANT_OUTPUT_LIMITS.maxClaimCharacters, true);
   if (!text || !Array.isArray(candidate.citationRefs)
     || candidate.citationRefs.length > ASSISTANT_OUTPUT_LIMITS.maxCitationRefsPerClaim) return null;

@@ -61,12 +61,10 @@ function modelRuntime(outputText: string, capture: { request?: Parameters<AskRun
   } satisfies Partial<AskRuntime>;
 }
 
-test("authenticated Sites turns call the model without retrieval hits and preserve native dialogue roles", async () => {
+test("authenticated Sites turns accept a DeepSeek conversational answer without retrieval hits and preserve native dialogue roles", async () => {
   const capture: { request?: Parameters<AskRuntime["requestProvider"]>[0]; settled?: string } = {};
   const handler = createAskHandler(modelRuntime(JSON.stringify({
-    claims: [{ text: "欢迎来到 FusionDigital，我们可以继续一起完善这段文案。", citationRefs: [] }],
-    caveats: [],
-    canvas: null,
+    answer: "欢迎来到 FusionDigital，我们可以继续一起完善这段文案。",
   }), capture));
   const response = await handler(askRequest({
     question: "帮我写一段欢迎语\n保留两行结构",
@@ -91,8 +89,31 @@ test("authenticated Sites turns call the model without retrieval hits and preser
   assert.match(capture.request?.messages?.[0].content ?? "", /小刘\n正在开发/);
   assert.match(capture.request?.messages?.at(-1)?.content ?? "", /欢迎语\n保留两行结构/);
   assert.match(capture.request?.instructions ?? "", /deepseek-v4-flash/);
-  const schema = capture.request?.jsonSchema as { properties?: { claims?: { items?: { properties?: { citationRefs?: { minItems?: number } } } } } };
-  assert.equal(schema.properties?.claims?.items?.properties?.citationRefs?.minItems, 0);
+  const schema = capture.request?.jsonSchema as { properties?: { answer?: { maxLength?: number }; claims?: unknown } };
+  assert.ok((schema.properties?.answer?.maxLength ?? 0) > 0);
+  assert.equal(schema.properties?.claims, undefined);
+  assert.match(capture.request?.instructions ?? "", /\"answer\"/);
+  assert.doesNotMatch(capture.request?.instructions ?? "", /\"claims\":\[/);
+});
+
+test("a DeepSeek answer-shaped joke is delivered as arbitrary conversation instead of no-evidence retrieval", async () => {
+  const capture: { settled?: string } = {};
+  const handler = createAskHandler(modelRuntime(JSON.stringify({
+    answer: "有一天，一只中子走进酒吧说：我不用付钱，因为我没有电荷。",
+  }), capture));
+  const response = await handler(askRequest({
+    question: "请你帮我讲一个笑话",
+    conversationId: "conversation-joke-answer-envelope",
+  }));
+  const payload = await response.json() as Record<string, unknown>;
+
+  assert.equal(capture.settled, "succeeded");
+  assert.equal(payload.mode, "assistant-chat");
+  assert.match(String(payload.answer), /中子走进酒吧/);
+  assert.deepEqual(payload.citations, []);
+  assert.deepEqual(payload.results, []);
+  assert.match(String(payload.notice), /DeepSeek.*未检索到匹配/);
+  assert.match(String((payload.caveats as string[]).at(-1)), /事实性陈述视为待验证内容/);
 });
 
 test("assistant model identity bypasses lexical FusionMAE retrieval and uses trusted runtime metadata", async () => {
@@ -215,6 +236,11 @@ test("grounded assistant chat validates every claim and a source-preserving mark
 test("invalid or missing grounded citations reject the model output and never deliver its canvas", async () => {
   for (const output of [
     {
+      answer: "DINA 是面向托卡马克放电与控制研究的代码。",
+      caveats: [],
+      canvas: null,
+    },
+    {
       claims: [{ text: "无引用事实", citationRefs: [] }],
       caveats: [],
       canvas: null,
@@ -274,19 +300,46 @@ test("public-anonymous and explicit retrieval modes bypass identity, quota, and 
 
 test("assistant output schema and parser enforce nullable bounded canvas and per-claim grounding", () => {
   const groundedSchema = assistantAnswerSchema(3, true) as { properties: { claims: { items: { properties: { citationRefs: { minItems: number } } } } } };
-  const conversationalSchema = assistantAnswerSchema(0, false) as typeof groundedSchema;
+  const conversationalSchema = assistantAnswerSchema(0, false) as { properties: { answer?: { maxLength?: number }; claims?: unknown } };
   assert.equal(groundedSchema.properties.claims.items.properties.citationRefs.minItems, 1);
-  assert.equal(conversationalSchema.properties.claims.items.properties.citationRefs.minItems, 0);
+  assert.ok((conversationalSchema.properties.answer?.maxLength ?? 0) > 0);
+  assert.equal(conversationalSchema.properties.claims, undefined);
 
   const parsed = parseAssistantOutput(JSON.stringify({
     claims: [{ text: "对话答复", citationRefs: [] }], caveats: [], canvas: null,
-  }));
+  }), false);
   assert.ok(parsed);
   assert.deepEqual(validateAssistantOutput(parsed, new Set(), false), { valid: true, usedRefs: [] });
   assert.equal(parseAssistantOutput(JSON.stringify({
     claims: [{ text: "答复", citationRefs: [] }], caveats: [],
     canvas: { kind: "markdown", title: "x", content: "x".repeat(8_001) },
-  })), null);
+  }), false), null);
+  assert.equal(parseAssistantOutput(JSON.stringify({
+    answer: "普通对话",
+    unexpected: "not accepted",
+  }), false), null);
+});
+
+test("a genuine provider failure is the condition that falls back for ordinary no-evidence chat", async () => {
+  let providerCalls = 0;
+  const capture: { settled?: string } = {};
+  const handler = createAskHandler({
+    ...modelRuntime("unused", capture),
+    requestProvider: (async () => {
+      providerCalls += 1;
+      throw new Error("simulated provider network failure");
+    }) as AskRuntime["requestProvider"],
+  });
+  const response = await handler(askRequest({
+    question: "请讲一个笑话",
+    conversationId: "conversation-joke-provider-failure",
+  }));
+  const payload = await response.json() as Record<string, unknown>;
+
+  assert.equal(providerCalls, 1);
+  assert.equal(capture.settled, "failed");
+  assert.equal(payload.mode, "retrieval-only");
+  assert.match(String(payload.notice), /网络连接失败/);
 });
 
 test("automatic provider selection prefers usable personal credentials without overriding explicit retrieval", () => {

@@ -116,8 +116,10 @@ test("ask route enforces claim-level citations and conservative quota accounting
     import("node:fs/promises").then(({ readFile }) => readFile(new URL("../db/usage.ts", import.meta.url), "utf8")),
   ]);
   assert.match(output, /claims:\s*\{/);
+  assert.match(output, /answer:\s*\{/);
   assert.match(output, /minItems:\s*groundingRequired\s*\?\s*1\s*:\s*0/);
-  assert.match(output, /output\.claims\.some\(\(claim\)\s*=>\s*claim\.citationRefs\.length\s*===\s*0\)/);
+  assert.match(output, /claims\.some\(\(claim\)\s*=>\s*claim\.citationRefs\.length\s*===\s*0\)/);
+  assert.match(output, /groundingRequired\s*&&\s*output\.kind\s*!==\s*"grounded"/);
   assert.match(output, /stripModelCitationMarkers/);
   assert.match(ask, /new TextEncoder\(\)\.encode\(value\)\.byteLength/);
   assert.match(ask, /normalizeHistory/);
