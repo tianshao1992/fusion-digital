@@ -47,6 +47,11 @@ test('search keeps its structured evidence filters and result projection in the 
   assert.match(workspace, /evidenceResultsRef\.current\?\.\(results\)/);
 });
 
+test('route changes clear search-scoped filters and result callbacks', () => {
+  assert.match(workspace, /queueMicrotask\(\(\) => \{\s*if \(cancelled\) return;\s*setChatFilters\(\{\}\);\s*evidenceResultsRef\.current = null;/);
+  assert.match(workspace, /\}, \[en, pathname\]\);/);
+});
+
 test('the non-modal dialog moves focus inside and removes its hidden trigger from tab order', () => {
   assert.match(workspace, /requestAnimationFrame\(\(\) => closeButtonRef\.current\?\.focus\(\)\)/);
   assert.match(workspace, /tabIndex=\{open \? -1 : 0\}/);

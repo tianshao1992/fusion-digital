@@ -73,6 +73,8 @@ export default function AgentWorkspaceProvider({ children }: { children: ReactNo
     let cancelled = false;
     queueMicrotask(() => {
       if (cancelled) return;
+      setChatFilters({});
+      evidenceResultsRef.current = null;
       setPageContext({
         path: pathname,
         title: document.title || (en ? 'Current FusionDigital page' : '当前 FusionDigital 页面'),
