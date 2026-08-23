@@ -34,7 +34,7 @@ export default async function FusionDataPage() {
   const en = (resolveLocale(store.get(LOCALE_COOKIE_NAME)?.value) ?? DEFAULT_LOCALE) === 'en';
   const paraViewUrl = trustedViewerUrl(process.env.NEXT_PUBLIC_PARAVIEW_TRAME_URL);
   return <main className="fusionDataPage">
-    <SiteNav active="data" />
+      <SiteNav active="fusionData" />
     <header className="fusionDataIntro">
       <div>
         <p><Link href="/data-foundation">{en ? 'Data foundation' : '数据基座'}</Link><span>/</span> {en ? 'Data workspace' : '数据工作台'}</p>

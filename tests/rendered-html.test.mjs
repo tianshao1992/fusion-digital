@@ -294,6 +294,7 @@ test('server-renders the FusionDigital community portal', async () => {
   assert.match(html, /href="\/ai"/);
   assert.match(html, /href="\/facilities"/);
   assert.match(html, /href="\/#prototype-workspace"/);
+  assert.match(html, /href="\/fusion-data"/);
   assert.equal((html.match(/class="siteKnowledgeHome[^\"]*"[^>]*href="\/knowledge-graph"|href="\/knowledge-graph"[^>]*class="siteKnowledgeHome[^\"]*"/g) ?? []).length, 2, 'desktop and mobile Knowledge menus must link to the graph home');
   assert.equal((html.match(/data-knowledge-module=/g) ?? []).length, 20, 'desktop and mobile Knowledge menus must expose all ten modules');
   assert.equal((html.match(/data-primary-nav="home"/g) ?? []).length, 2, 'desktop and mobile primary navigation must expose the home overview');
@@ -307,12 +308,14 @@ test('server-renders the FusionDigital community portal', async () => {
   assert.equal(activeEnglishHomeLinks.length, 2, 'desktop and mobile root navigation entries must both render active Home links in English');
   assert.equal((html.match(/data-primary-nav="roadmap"/g) ?? []).length, 2, 'desktop and mobile primary navigation must expose the program roadmap');
   assert.ok((html.match(/>路线规划<\/a>/g) ?? []).length >= 2, 'desktop and mobile primary navigation must label the destination 路线规划');
+  assert.equal((html.match(/data-primary-nav="fusionData"/g) ?? []).length, 2, 'desktop and mobile primary navigation must expose the fusion data workspace');
+  assert.ok((html.match(/>聚变数据<\/a>/g) ?? []).length >= 2, 'desktop and mobile primary navigation must label the destination 聚变数据');
   assert.doesNotMatch(html, /class="siteKnowledgeRoadmap/, 'Knowledge menus must not duplicate the promoted program roadmap');
   const primaryNavigation = [...html.matchAll(/data-primary-nav="([^"]+)"/g)].map((match) => match[1]);
   assert.deepEqual(primaryNavigation, [
-    'home', 'facilities', 'prototype', 'roadmap', 'knowledge',
-    'home', 'facilities', 'prototype', 'roadmap', 'knowledge',
-  ], 'desktop and mobile navigation must expose the same five destinations with Home first and Knowledge last');
+    'home', 'facilities', 'prototype', 'fusionData', 'roadmap', 'knowledge',
+    'home', 'facilities', 'prototype', 'fusionData', 'roadmap', 'knowledge',
+  ], 'desktop and mobile navigation must expose the same six destinations with Home first and Knowledge last');
   assert.doesNotMatch(html, /知识智能/);
   assert.match(html, /fusiondigital-mark\.png/);
   assert.match(html, /class="brandWordmark"/);
@@ -829,6 +832,25 @@ test('server-renders the fusion data-foundation evidence atlas with accessible c
   assert.match(html, /证据核验截止：(<!-- -->)?2026-08-19/);
   assert.match(html, /href="\/platform"/);
   assert.doesNotMatch(html, /Technical annotation|通用图表占位/);
+
+  const workspaceNavLinks = html.match(/<a(?=[^>]*href="\/fusion-data")(?=[^>]*data-primary-nav="fusionData")[^>]*>/g) ?? [];
+  assert.equal(workspaceNavLinks.length, 2, 'desktop and mobile navigation must expose the fusion data workspace from the data-foundation page');
+  assert.ok(workspaceNavLinks.every((link) => !link.includes('aria-current="page"') && !link.includes('class="active"')), 'the data-foundation page must not mark the separate fusion data workspace as current');
+  assert.equal((html.match(/<a(?=[^>]*data-knowledge-module="data")(?=[^>]*class="active")[^>]*>/g) ?? []).length, 2, 'the data-foundation knowledge module must remain active');
+});
+
+test('marks the independent fusion data workspace as the current primary navigation destination', async () => {
+  const zhResponse = await render('/fusion-data', { cookie: 'fusiondigital_locale=zh-CN' });
+  assert.equal(zhResponse.status, 200);
+  const zhHtml = await zhResponse.text();
+  const activeZhLinks = zhHtml.match(/<a(?=[^>]*href="\/fusion-data")(?=[^>]*class="active")(?=[^>]*aria-current="page")(?=[^>]*data-primary-nav="fusionData")[^>]*>聚变数据<\/a>/g) ?? [];
+  assert.equal(activeZhLinks.length, 2, 'desktop and mobile navigation must both mark 聚变数据 as current');
+
+  const enResponse = await render('/fusion-data', { cookie: 'fusiondigital_locale=en' });
+  assert.equal(enResponse.status, 200);
+  const enHtml = await enResponse.text();
+  const activeEnLinks = enHtml.match(/<a(?=[^>]*href="\/fusion-data")(?=[^>]*class="active")(?=[^>]*aria-current="page")(?=[^>]*data-primary-nav="fusionData")[^>]*>Fusion Data<\/a>/g) ?? [];
+  assert.equal(activeEnLinks.length, 2, 'desktop and mobile navigation must both mark Fusion Data as current');
 });
 
 test('server-renders and validates diagnostics catalog URL filters', async () => {
