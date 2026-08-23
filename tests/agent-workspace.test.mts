@@ -2,7 +2,10 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import {
+  LOCAL_CANVAS_LIMITS,
+  appendCanvasArtifact,
   canPersistCanvasDraft,
+  canvasPreviewBlocks,
   canvasStorageKey,
 } from '../app/agent/local-canvas.ts';
 
@@ -21,13 +24,110 @@ test('the Agent Workspace is mounted once at the root and owns the single chat s
   assert.match(graph, /agentWorkspace\.open/);
 });
 
-test('the dock exposes chat, context and a bounded local Canvas without claiming unavailable tools', () => {
-  assert.match(workspace, /\['chat', 'context', 'canvas'\]/);
-  assert.match(workspace, /slice\(0, 20_000\)/);
-  assert.match(workspace, /系统尚未读取链接正文/);
-  assert.match(workspace, /等待安全网关/);
-  assert.match(workspace, /url\.username \|\| url\.password/);
+test('chat is the primary surface, Context is not a view, and Canvas opens only on demand', () => {
+  assert.match(workspace, /<div className="agentWorkspaceBody">\s*<div className="agentWorkspaceChat">/);
+  assert.match(workspace, /showContext=\{false\}/);
+  assert.match(workspace, /onCanvasArtifact=\{acceptCanvasArtifact\}/);
+  assert.match(chat, /if \(payload\.canvas\) onCanvasArtifact\?\.\(\{\s*\.\.\.payload\.canvas,\s*sourceTurnId: assistantTurn\.id,\s*citations: payload\.citations,/);
+  assert.match(chat, /sendTurnToCanvas\(turn\)/);
+  assert.match(chat, /sourceTurnId: turn\.id,\s*citations: turn\.citations \?\? \[\],/);
+  assert.match(workspace, /\{canvasOpen \? <section id="fusion-agent-canvas"/);
+  assert.match(workspace, /aria-controls="fusion-agent-canvas"/);
+  assert.match(workspace, /aria-expanded=\{canvasOpen\}/);
+  assert.doesNotMatch(workspace, /AgentTab|'context'|agentWorkspaceContextPanel|safeHttpUrl/);
   assert.doesNotMatch(workspace, /dangerouslySetInnerHTML|<iframe|FileReader|readAsDataURL/);
+});
+
+test('the authenticated assistant starts with automatic model routing instead of retrieval', () => {
+  assert.match(chat, /publicAnonymousMode \? 'retrieval' : 'auto'/);
+  assert.match(chat, /setSelectedProvider\(automaticProvider \? 'auto' : 'retrieval'\)/);
+  assert.match(chat, /\.\.\.\(selectedProvider === 'auto' \? \{\} : \{ provider: selectedProvider \}\)/);
+  assert.match(chat, /<option value="auto" disabled=\{!automaticProviderId\}>/);
+});
+
+test('Canvas accepts bounded structured markdown and renders only escaped React nodes', () => {
+  const content = appendCanvasArtifact('', {
+    kind: 'markdown',
+    title: 'Plan',
+    content: '# Result\n\n- first\n- second\n\n```ts\nconst safe = true;\n```\n\n<script>alert(1)</script>',
+    sourceTurnId: 'preview-turn',
+    citations: [],
+  });
+  const blocks = canvasPreviewBlocks(content);
+  assert.ok(content.length <= LOCAL_CANVAS_LIMITS.maxChars);
+  assert.ok(blocks.some((block) => block.kind === 'heading'));
+  assert.ok(blocks.some((block) => block.kind === 'list'));
+  assert.ok(blocks.some((block) => block.kind === 'code'));
+  assert.ok(blocks.some((block) => block.kind === 'paragraph' && block.text.includes('<script>')));
+  assert.match(workspace, /block\.kind === 'code'/);
+  assert.doesNotMatch(workspace, /dangerouslySetInnerHTML/);
+});
+
+test('Canvas namespaces repeated citation refs per turn and persists a self-contained source appendix', () => {
+  let content = appendCanvasArtifact('', {
+    kind: 'markdown',
+    title: 'First comparison',
+    content: 'First result [S1](https://model.invalid/forged-first).',
+    sourceTurnId: 'assistant-turn-one',
+    citations: [{
+      ref: 'S1',
+      label: 'ITER source one',
+      entryTitle: 'First official record',
+      kind: 'official',
+      url: 'https://www.iter.org/source-one',
+    }],
+  });
+  content = appendCanvasArtifact(content, {
+    kind: 'markdown',
+    title: 'Second comparison',
+    content: 'Second result [S1](https://model.invalid/forged-second).',
+    sourceTurnId: 'assistant-turn-two',
+    citations: [{
+      ref: 'S1',
+      label: 'Source two',
+      entryTitle: 'Second research record',
+      kind: 'paper',
+      url: 'https://example.org/source-two',
+    }],
+  });
+
+  assert.match(content, /First result \[turn:assistant-turn-one:S1\]/);
+  assert.match(content, /Second result \[turn:assistant-turn-two:S1\]/);
+  assert.match(content, /Sources \/ 来源 · turn:assistant-turn-one/);
+  assert.match(content, /\[turn:assistant-turn-one:S1\] ITER source one \| First official record \| official \| https:\/\/www\.iter\.org\/source-one/);
+  assert.match(content, /Sources \/ 来源 · turn:assistant-turn-two/);
+  assert.match(content, /\[turn:assistant-turn-two:S1\] Source two \| Second research record \| paper \| https:\/\/example\.org\/source-two/);
+  assert.doesNotMatch(content, /model\.invalid/);
+
+  // Clearing chat state must not invalidate or mutate the separately persisted Canvas text.
+  const retainedCanvas = content;
+  const clearedTurns: unknown[] = [];
+  assert.equal(clearedTurns.length, 0);
+  assert.match(retainedCanvas, /turn:assistant-turn-one:S1/);
+  assert.match(retainedCanvas, /turn:assistant-turn-two:S1/);
+  const newConversation = chat.match(/function newConversation\(\) \{[\s\S]*?\n  \}/)?.[0] ?? '';
+  assert.doesNotMatch(newConversation, /Canvas|onCanvasArtifact|localStorage|setCanvas/i);
+});
+
+test('Canvas source URLs are bounded and accepted only from safe structured citations', () => {
+  const content = appendCanvasArtifact('', {
+    kind: 'markdown',
+    title: 'URL boundary',
+    content: 'Known [S1], credentials [S2], script [S3], oversized [S4], and unknown [S5](https://model.invalid/unknown).',
+    sourceTurnId: 'url-turn',
+    citations: [
+      { ref: 'S1', label: 'Safe', entryTitle: 'Safe source', kind: 'official', url: 'https://example.org/path' },
+      { ref: 'S2', label: 'Credentials', entryTitle: 'Rejected', kind: 'source', url: 'https://user:pass@example.org/private' },
+      { ref: 'S3', label: 'Script', entryTitle: 'Rejected', kind: 'source', url: 'javascript:alert(1)' },
+      { ref: 'S4', label: 'Oversized', entryTitle: 'Rejected', kind: 'source', url: `https://example.org/${'a'.repeat(LOCAL_CANVAS_LIMITS.maxCitationUrlChars)}` },
+    ],
+  });
+
+  assert.match(content, /Known \[turn:url-turn:S1\]/);
+  assert.match(content, /https:\/\/example\.org\/path/);
+  assert.doesNotMatch(content, /user:pass|javascript:|Oversized|model\.invalid/);
+  assert.match(content, /unknown \[S5\]/);
+  assert.ok(content.length <= LOCAL_CANVAS_LIMITS.maxChars);
 });
 
 test('Canvas persistence waits for the active locale key to finish loading', () => {

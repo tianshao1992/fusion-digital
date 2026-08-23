@@ -31,12 +31,26 @@ test('conversation storage is bounded, normalized and safe to restore', () => {
 
 test('conversation stores only provider/model metadata and rejects invalid provider values', () => {
   const restored = compactConversation([
-    { ...turn(1, 'assistant'), provider: 'anthropic', model: 'claude-sonnet-5' },
+    { ...turn(1, 'assistant'), mode: 'assistant-chat', provider: 'anthropic', model: 'claude-sonnet-5' },
     { ...turn(2, 'assistant'), provider: 'http://attacker.invalid', model: 'unsafe model value' },
   ]);
   assert.equal(restored[0].provider, 'anthropic');
   assert.equal(restored[0].model, 'claude-sonnet-5');
+  assert.equal(restored[0].mode, 'assistant-chat');
   assert.equal(restored[1].provider, undefined);
+});
+
+test('request history keeps the newest contiguous turns within its UTF-8 byte budget', () => {
+  const turns = Array.from({ length: 10 }, (_, index): ChatTurn => ({
+    ...turn(index, 'assistant'),
+    content: `${index}:${'聚'.repeat(CHAT_LIMITS.maxAssistantChars - 2)}`,
+  }));
+  const history = historyForRequest(turns);
+  const bytes = new TextEncoder().encode(JSON.stringify(history)).byteLength;
+  assert.ok(bytes <= CHAT_LIMITS.maxRequestHistoryBytes);
+  assert.equal(history.at(-1)?.content, turns.at(-1)?.content);
+  assert.ok(history.length < CHAT_LIMITS.maxRequestTurns);
+  assert.deepEqual(history, historyForRequest(turns.slice(-history.length)));
 });
 
 test('only the latest bounded user and assistant turns are sent as dialogue context', () => {

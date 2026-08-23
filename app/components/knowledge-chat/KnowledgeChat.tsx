@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { FormEvent, useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { AgentCompletedMessage, AgentStreamEvent } from '@/app/agent/contracts';
+import type { CanvasArtifactInput } from '@/app/agent/local-canvas';
 import { AgentEventStreamParser } from '@/app/agent/sse';
 import { useI18n } from '@/app/i18n';
 import { isPublicAnonymousMode } from '@/app/deployment-mode';
@@ -25,6 +26,7 @@ import './provider-selector.css';
 
 type ProviderOption = { id: ChatProviderId; label: string; model: string; available: boolean; source?: 'personal' | 'platform' | 'none' };
 type ProviderEnvelope = { authenticated?: boolean; defaultProvider: ChatProviderId | 'retrieval' | null; providers: ProviderOption[] };
+type ProviderSelection = ChatProviderId | 'retrieval' | 'auto';
 
 export type KnowledgeChatContext = {
   path: string;
@@ -53,6 +55,8 @@ type KnowledgeChatProps = {
   draft?: string;
   onDraftChange?: (value: string) => void;
   onEvidenceResults?: (results: SearchHit[]) => void;
+  showContext?: boolean;
+  onCanvasArtifact?: (artifact: CanvasArtifactInput) => void;
 };
 
 export default function KnowledgeChat({
@@ -66,6 +70,8 @@ export default function KnowledgeChat({
   draft,
   onDraftChange,
   onEvidenceResults,
+  showContext = true,
+  onCanvasArtifact,
 }: KnowledgeChatProps) {
   const headingId = useId();
   const publicAnonymousMode = isPublicAnonymousMode();
@@ -78,7 +84,8 @@ export default function KnowledgeChat({
   const [error, setError] = useState('');
   const [restored, setRestored] = useState(false);
   const [providers, setProviders] = useState<ProviderOption[]>([]);
-  const [selectedProvider, setSelectedProvider] = useState<ChatProviderId | 'retrieval'>('retrieval');
+  const [selectedProvider, setSelectedProvider] = useState<ProviderSelection>(publicAnonymousMode ? 'retrieval' : 'auto');
+  const [automaticProviderId, setAutomaticProviderId] = useState<ChatProviderId | null>(null);
   const [providersLoaded, setProvidersLoaded] = useState(publicAnonymousMode);
   const [providerPreferencesEnabled, setProviderPreferencesEnabled] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
@@ -124,9 +131,13 @@ export default function KnowledgeChat({
         : [];
       setProviders(safeProviders);
       setProviderPreferencesEnabled(payload.authenticated === true);
-      const defaultAvailable = payload.defaultProvider === 'retrieval'
-        || Boolean(payload.defaultProvider && safeProviders.some((provider) => provider.id === payload.defaultProvider && provider.available));
-      setSelectedProvider(defaultAvailable ? payload.defaultProvider! : 'retrieval');
+      const explicitRetrieval = payload.defaultProvider === 'retrieval';
+      const defaultAvailable = !explicitRetrieval
+        ? safeProviders.find((provider) => provider.id === payload.defaultProvider && provider.available)
+        : undefined;
+      const automaticProvider = explicitRetrieval ? undefined : (defaultAvailable ?? safeProviders.find((provider) => provider.available));
+      setAutomaticProviderId(automaticProvider?.id ?? null);
+      setSelectedProvider(automaticProvider ? 'auto' : 'retrieval');
     }).catch((reason) => {
       if ((reason as Error).name !== 'AbortError') setSelectedProvider('retrieval');
     }).finally(() => {
@@ -164,11 +175,11 @@ export default function KnowledgeChat({
     ? prompts
     : [t('chat.promptEvidence'), t('chat.promptCompare'), t('chat.promptGaps')];
   const activeTitle = locale === 'en' ? (titleEn || t('chat.defaultTitle')) : (title || t('chat.defaultTitle'));
-  const activeProvider = providers.find((provider) => provider.id === selectedProvider);
+  const activeProvider = providers.find((provider) => provider.id === (selectedProvider === 'auto' ? automaticProviderId : selectedProvider));
 
-  function selectProvider(value: ChatProviderId | 'retrieval') {
+  function selectProvider(value: ProviderSelection) {
     setSelectedProvider(value);
-    if (!providerPreferencesEnabled) return;
+    if (!providerPreferencesEnabled || value === 'auto') return;
     void fetch('/api/account/llm-credentials', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
@@ -198,7 +209,15 @@ export default function KnowledgeChat({
       const response = await fetch('/api/agent/turns', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream', 'X-FusionDigital-Locale': locale },
-        body: JSON.stringify({ question, locale, history, context, filters: { ...filters, citedOnly: true }, conversationId, provider: selectedProvider }),
+        body: JSON.stringify({
+          question,
+          locale,
+          history,
+          context,
+          filters: { ...filters, citedOnly: true },
+          conversationId,
+          ...(selectedProvider === 'auto' ? {} : { provider: selectedProvider }),
+        }),
         signal: controller.signal,
       });
       const payload = await readAgentTurnStream(response, controller.signal, (delta) => {
@@ -215,6 +234,11 @@ export default function KnowledgeChat({
       setTurns((current) => compactConversation([...current, assistantTurn]));
       if (payload.conversationId) setConversationId(payload.conversationId);
       if (payload.results?.length) onEvidenceResults?.(payload.results);
+      if (payload.canvas) onCanvasArtifact?.({
+        ...payload.canvas,
+        sourceTurnId: assistantTurn.id,
+        citations: payload.citations,
+      });
     } catch (reason) {
       if (ownsRequest() && (reason as Error).name !== 'AbortError') {
         setError(reason instanceof Error ? reason.message : (locale === 'en' ? 'The Q&A service is temporarily unavailable.' : '问答服务暂时不可用。'));
@@ -250,25 +274,37 @@ export default function KnowledgeChat({
     setError('');
   }
 
+  function sendTurnToCanvas(turn: ChatTurn) {
+    if (turn.role !== 'assistant' || !onCanvasArtifact) return;
+    onCanvasArtifact({
+      kind: 'markdown',
+      title: locale === 'en' ? 'Assistant response' : '助手回复',
+      content: turn.content,
+      sourceTurnId: turn.id,
+      citations: turn.citations ?? [],
+    });
+  }
+
   return <section className="knowledgeChat" data-presentation={presentation} aria-labelledby={headingId}>
     <header className="knowledgeChatHeader">
       <div><p>{eyebrow || t('chat.eyebrow')}</p><h2 id={headingId}>{activeTitle}</h2><span>{t('chat.persistence')}</span></div>
       <div className="knowledgeChatHeaderTools">
-        {!publicAnonymousMode && <label className="knowledgeChatProvider"><span>{t('chat.provider')}</span><select value={selectedProvider} onChange={(event) => selectProvider(event.target.value as ChatProviderId | 'retrieval')} disabled={!providersLoaded || pending}>
+        {!publicAnonymousMode && <label className="knowledgeChatProvider"><span>{t('chat.provider')}</span><select value={selectedProvider} onChange={(event) => selectProvider(event.target.value as ProviderSelection)} disabled={!providersLoaded || pending}>
+          <option value="auto" disabled={!automaticProviderId}>{t('chat.providerAuto')}</option>
           <option value="retrieval">{t('chat.providerRetrieval')}</option>
           {providers.map((provider) => <option key={provider.id} value={provider.id} disabled={!provider.available}>{provider.label} · {provider.available ? `${provider.model} · ${provider.source === 'personal' ? t('chat.providerPersonal') : t('chat.providerPlatform')}` : t('chat.providerUnavailable')}</option>)}
         </select><small>{activeProvider ? `${activeProvider.label} · ${activeProvider.model}` : t('chat.providerHint')} <Link href="/account#ai-models">{t('chat.providerManage')}</Link></small></label>}
         <div className="knowledgeChatStats"><b>{turns.length}</b><span>{t('chat.messages')}</span><button type="button" onClick={newConversation} disabled={!turns.length && !pending}>{t('chat.new')}</button></div>
       </div>
     </header>
-    <div className="knowledgeChatContext" aria-live="polite">
+    {showContext && <div className="knowledgeChatContext" aria-live="polite">
       <span>{t('chat.context')}</span><b>{localizedContextText(context.focusLabel || context.title, locale, locale === 'en' ? 'Current knowledge record' : context.title)}</b>
       {context.focusDescription && (locale === 'zh-CN' || !/[\u3400-\u9fff]/u.test(context.focusDescription)) && <p>{context.focusDescription}</p>}
-    </div>
+    </div>}
     <div className="knowledgeChatLog" ref={logRef} role="log" aria-live="polite" aria-label={t('chat.logAria')}>
       {!turns.length && <div className="knowledgeChatEmpty"><b>{t('chat.emptyTitle')}</b><p>{t('chat.emptyCopy')}</p><div>{activePrompts.map((prompt) => <button type="button" key={prompt} onClick={() => void submit(undefined, prompt)}>{prompt}</button>)}</div></div>}
       {turns.map((turn) => <article className={`knowledgeChatTurn is-${turn.role}`} key={turn.id}>
-        <header><span>{turn.role === 'user' ? t('chat.user') : t('chat.assistant')}</span>{turn.role === 'assistant' && <b data-mode={turn.mode}>{turn.mode === 'ai-grounded' ? t('chat.aiMode') : turn.mode === 'assistant-direct' ? t('chat.assistantMode') : t('chat.retrievalMode')}{turn.provider && turn.model ? <small>{turn.provider} · {turn.model}</small> : null}</b>}</header>
+        <header><span>{turn.role === 'user' ? t('chat.user') : t('chat.assistant')}</span>{turn.role === 'assistant' && <div className="knowledgeChatTurnActions"><b data-mode={turn.mode}>{turn.mode === 'assistant-chat' ? t('chat.chatMode') : turn.mode === 'ai-grounded' ? t('chat.aiMode') : turn.mode === 'assistant-direct' ? t('chat.assistantMode') : t('chat.retrievalMode')}{turn.provider && turn.model ? <small>{turn.provider} · {turn.model}</small> : null}</b>{onCanvasArtifact && <button type="button" onClick={() => sendTurnToCanvas(turn)}>{t('chat.toCanvas')}</button>}</div>}</header>
         <div>{turn.content.split(/\n{2,}/).map((paragraph, index) => <p key={`${turn.id}-${index}`}>{paragraph}</p>)}</div>
         {turn.notice && <p className="knowledgeChatNotice">{turn.notice}{!publicAnonymousMode && turn.mode === 'retrieval-only' && /登录/.test(turn.notice) ? <> <Link href={signInHref}>{t('chat.signIn')}</Link></> : null}</p>}
         {turn.citations?.length ? <div className="knowledgeChatCitations">{turn.citations.map((citation) => <a href={citation.url} target="_blank" rel="noreferrer" key={`${turn.id}-${citation.ref}-${citation.url}`}><b>{citation.ref}</b><span>{citation.label}</span><small>{citation.entryTitle}</small></a>)}</div> : null}

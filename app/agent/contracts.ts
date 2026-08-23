@@ -1,6 +1,17 @@
 import type { SearchHit } from "@/app/search/search-core";
 
-export type AgentTurnMode = "ai-grounded" | "retrieval-only" | "assistant-direct";
+export type AgentTurnMode = "assistant-chat" | "ai-grounded" | "retrieval-only" | "assistant-direct";
+
+export const AGENT_CANVAS_LIMITS = Object.freeze({
+  maxTitleCharacters: 120,
+  maxContentCharacters: 8_000,
+});
+
+export type AgentCanvasArtifact = {
+  kind: "markdown";
+  title: string;
+  content: string;
+};
 
 export type AgentTurnCitation = {
   ref: string;
@@ -19,6 +30,7 @@ export type AgentCompletedMessage = {
   citations: AgentTurnCitation[];
   results: SearchHit[];
   notice?: string;
+  canvas?: AgentCanvasArtifact | null;
   conversationId?: string;
   provider?: "openai" | "anthropic" | "deepseek" | "kimi";
   model?: string;
