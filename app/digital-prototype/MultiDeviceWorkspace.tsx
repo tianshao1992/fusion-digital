@@ -11,10 +11,12 @@ import {
 } from 'react';
 import { trackAnalyticsContent } from '@/app/analytics/client';
 import TokamakCadViewer from '../components/TokamakCadViewer';
+import type { Ehl2DiagnosticOverlayOptions } from '../components/device-viewer/Ehl2DiagnosticThreeOverlay';
 import { createEfitHybridDataSource, createEfitStore, EfitPanel, type EfitStore } from '../components/efit';
 import { useI18n } from '../i18n';
 import type { DeviceCatalog, DeviceCatalogEntry, DevicePhysicsOverlay } from './deviceCatalog';
 import Ehl2DiagnosticExperience, { Ehl2DiagnosticNoScriptSummary } from './Ehl2DiagnosticExperience';
+import Exl50uDiagnosticPanel from './Exl50uDiagnosticPanel';
 import TurntableDeviceViewer from './TurntableDeviceViewer';
 
 function MetadataViewer({ device }: { device: DeviceCatalogEntry }) {
@@ -33,10 +35,14 @@ function DeviceViewer({
   device,
   efitOverlay,
   efitStore,
+  efitActive = true,
+  diagnosticOverlayOptions,
 }: {
   device: DeviceCatalogEntry;
   efitOverlay?: DevicePhysicsOverlay;
   efitStore: EfitStore | null;
+  efitActive?: boolean;
+  diagnosticOverlayOptions?: Ehl2DiagnosticOverlayOptions;
 }) {
   const [showEfitSection, setShowEfitSection] = useState(true);
   const [showEfitSurface, setShowEfitSurface] = useState(true);
@@ -71,11 +77,11 @@ function DeviceViewer({
     } : undefined}
     efitOptions={efitOverlay ? {
       mode: efitMode,
-      showSection: showEfitSection,
-      showSurface: showEfitSurface,
-      showMagneticAxis: showEfitAxis,
+      showSection: efitActive && showEfitSection,
+      showSurface: efitActive && showEfitSurface,
+      showMagneticAxis: efitActive && showEfitAxis,
     } : undefined}
-    efitControls={efitOverlay ? {
+    efitControls={efitOverlay && efitActive ? {
       mode: efitMode,
       showSection: showEfitSection,
       showSurface: showEfitSurface,
@@ -85,6 +91,8 @@ function DeviceViewer({
       onShowSurfaceChange: setShowEfitSurface,
       onShowMagneticAxisChange: setShowEfitAxis,
     } : undefined}
+    diagnosticOverlayEnabled={device.diagnosticWorkspace?.kind === 'exl50u-diagview2'}
+    diagnosticOverlayOptions={diagnosticOverlayOptions}
   />;
   if (device.viewer.mode === 'turntable-3d' && device.viewer.turntableManifestEndpoint) return <TurntableDeviceViewer
     title={device.title}
@@ -122,6 +130,11 @@ function ResizableDeviceExperience({
   const [physicsShare, setPhysicsShare] = useState(DEFAULT_PHYSICS_SHARE);
   const [preferenceLoaded, setPreferenceLoaded] = useState(false);
   const [dragging, setDragging] = useState(false);
+  const [analysisMode, setAnalysisMode] = useState<'efit' | 'diagnostic'>('efit');
+  const [diagnosticOverlayOptions, setDiagnosticOverlayOptions] = useState<Ehl2DiagnosticOverlayOptions | undefined>();
+  const exlDiagnosticContract = device.diagnosticWorkspace?.kind === 'exl50u-diagview2'
+    ? device.diagnosticWorkspace
+    : null;
 
   useEffect(() => {
     let cancelled = false;
@@ -196,6 +209,23 @@ function ResizableDeviceExperience({
     '--device-physics-width': `${physicsPercent.toFixed(3)}%`,
   } as CSSProperties;
 
+  const activateAnalysisMode = (nextMode: 'efit' | 'diagnostic') => {
+    if (nextMode === analysisMode) return;
+    if (nextMode === 'diagnostic') efitStore.actions.pause();
+    setAnalysisMode(nextMode);
+  };
+
+  const handleAnalysisTabKeyDown = (event: ReactKeyboardEvent<HTMLButtonElement>) => {
+    if (!exlDiagnosticContract) return;
+    let next: 'efit' | 'diagnostic' | null = null;
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowUp' || event.key === 'Home') next = 'efit';
+    else if (event.key === 'ArrowRight' || event.key === 'ArrowDown' || event.key === 'End') next = 'diagnostic';
+    if (!next) return;
+    event.preventDefault();
+    activateAnalysisMode(next);
+    document.getElementById(`${device.id}-analysis-tab-${next}`)?.focus();
+  };
+
   return <div
     className={`deviceExperienceLayout${dragging ? ' isResizing' : ''}`}
     data-layout="split-resizable"
@@ -203,7 +233,13 @@ function ResizableDeviceExperience({
     style={layoutStyle}
   >
     <div className="deviceViewport hasPhysicsOverlay">
-      <DeviceViewer device={device} efitOverlay={efitOverlay} efitStore={efitStore} />
+      <DeviceViewer
+        device={device}
+        efitOverlay={efitOverlay}
+        efitStore={efitStore}
+        efitActive={analysisMode === 'efit'}
+        diagnosticOverlayOptions={analysisMode === 'diagnostic' ? diagnosticOverlayOptions : undefined}
+      />
     </div>
     <div
       className="devicePaneSeparator"
@@ -231,7 +267,16 @@ function ResizableDeviceExperience({
       onPointerUp={finishResize}
       onPointerCancel={finishResize}
     ><span aria-hidden="true" /></div>
-    <DevicePhysicsPanel device={device} overlay={efitOverlay} store={efitStore} />
+    <DeviceAnalysisPanel
+      device={device}
+      overlay={efitOverlay}
+      store={efitStore}
+      mode={analysisMode}
+      diagnosticContract={exlDiagnosticContract}
+      onModeChange={activateAnalysisMode}
+      onTabKeyDown={handleAnalysisTabKeyDown}
+      onDiagnosticOverlayChange={setDiagnosticOverlayOptions}
+    />
   </div>;
 }
 
@@ -336,22 +381,79 @@ export default function MultiDeviceWorkspace({ catalog }: { catalog: DeviceCatal
   </section>;
 }
 
-function DevicePhysicsPanel({
+function DeviceAnalysisPanel({
   device,
   overlay,
   store,
+  mode,
+  diagnosticContract,
+  onModeChange,
+  onTabKeyDown,
+  onDiagnosticOverlayChange,
 }: {
   device: DeviceCatalogEntry;
   overlay: DeviceCatalogEntry['physicsOverlays'][number];
   store: EfitStore;
+  mode: 'efit' | 'diagnostic';
+  diagnosticContract: Extract<NonNullable<DeviceCatalogEntry['diagnosticWorkspace']>, { kind: 'exl50u-diagview2' }> | null;
+  onModeChange: (mode: 'efit' | 'diagnostic') => void;
+  onTabKeyDown: (event: ReactKeyboardEvent<HTMLButtonElement>) => void;
+  onDiagnosticOverlayChange: (options?: Ehl2DiagnosticOverlayOptions) => void;
 }) {
-  const { content, t } = useI18n();
-  return <aside className="devicePhysicsPanel" aria-label={t('workspace.efitAria', { device: content(device.title) })}>
-    <EfitPanel
-      store={store}
-      preferredShot={overlay.defaultShot}
-      preferredTimeMs={overlay.defaultTimeMs}
-      title={t('workspace.efitTitle')}
-    />
+  const { content, locale, t } = useI18n();
+  const english = locale === 'en';
+  const efitTabId = `${device.id}-analysis-tab-efit`;
+  const diagnosticTabId = `${device.id}-analysis-tab-diagnostic`;
+  const efitPanelId = `${device.id}-analysis-panel-efit`;
+  const diagnosticPanelId = `${device.id}-analysis-panel-diagnostic`;
+  return <aside className="devicePhysicsPanel deviceAnalysisPanel" aria-label={english ? `${content(device.title)} analysis sidebar` : `${content(device.title)} 分析侧栏`}>
+    {diagnosticContract && <div className="deviceAnalysisTabs" role="tablist" aria-label={english ? 'EXL-50U analysis mode' : 'EXL‑50U 分析模式'}>
+      <button
+        id={efitTabId}
+        type="button"
+        role="tab"
+        aria-selected={mode === 'efit'}
+        aria-controls={efitPanelId}
+        tabIndex={mode === 'efit' ? 0 : -1}
+        onKeyDown={onTabKeyDown}
+        onClick={() => onModeChange('efit')}
+      ><span>01</span>{english ? 'EFIT equilibrium' : 'EFIT 平衡'}</button>
+      <button
+        id={diagnosticTabId}
+        type="button"
+        role="tab"
+        aria-selected={mode === 'diagnostic'}
+        aria-controls={diagnosticPanelId}
+        tabIndex={mode === 'diagnostic' ? 0 : -1}
+        onKeyDown={onTabKeyDown}
+        onClick={() => onModeChange('diagnostic')}
+      ><span>02</span>{english ? 'Diagnostic visualization' : '诊断可视化'}</button>
+    </div>}
+    <div
+      id={efitPanelId}
+      role={diagnosticContract ? 'tabpanel' : undefined}
+      aria-labelledby={diagnosticContract ? efitTabId : undefined}
+      hidden={Boolean(diagnosticContract) && mode !== 'efit'}
+    >
+      <EfitPanel
+        store={store}
+        preferredShot={overlay.defaultShot}
+        preferredTimeMs={overlay.defaultTimeMs}
+        title={t('workspace.efitTitle')}
+      />
+    </div>
+    {diagnosticContract && <div
+      id={diagnosticPanelId}
+      role="tabpanel"
+      aria-labelledby={diagnosticTabId}
+      hidden={mode !== 'diagnostic'}
+      tabIndex={0}
+    >
+      <Exl50uDiagnosticPanel
+        active={mode === 'diagnostic'}
+        contract={diagnosticContract}
+        onOverlayChange={onDiagnosticOverlayChange}
+      />
+    </div>}
   </aside>;
 }

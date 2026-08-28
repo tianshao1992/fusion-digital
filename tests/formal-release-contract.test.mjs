@@ -38,6 +38,8 @@ const MANIFEST_SHA256 = "d".repeat(64);
 const DNS_REPORT_SHA256 = "e".repeat(64);
 const SHARED_PATHS = [
   "/models/device-catalog.json",
+  "/models/exl50u-diagview2-v1/manifest.json",
+  "/models/exl50u-diagview2-v1/diagview2-ports.json",
   "/models/ehl2-preliminary-v1/model-manifest.json",
   "/models/ehl2-preliminary-v1/diagview2-ports.json",
   "/models/ehl2-preliminary-v1/ehl2-preliminary.meshopt.glb",
@@ -153,6 +155,13 @@ test("contract pins both repositories, Hong Kong premium EIP, and Sites", () => 
     schema: "fusiondigital.shared-content-v1",
     paths: SHARED_PATHS,
   });
+  assert.deepEqual(
+    contract.sharedContent.paths.filter((path) => path.startsWith("/models/exl50u-diagview2-v1/")),
+    [
+      "/models/exl50u-diagview2-v1/manifest.json",
+      "/models/exl50u-diagview2-v1/diagview2-ports.json",
+    ],
+  );
   assert.deepEqual(contract.forbiddenSitesCustomDomains, [
     "fusiondigital.club",
     "www.fusiondigital.club",

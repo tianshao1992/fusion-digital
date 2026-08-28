@@ -17,6 +17,8 @@ const englishContent: Record<string, string> = {
   '10 炮 / 5,804 帧 EFIT · 18303 + 6 炮偏滤器拓扑': '10 shots / 5,804 EFIT frames · divertor topology for 18303 + 6 shots',
   '紧凑球形托卡马克 EXL‑50U 2026 升级样机，联动三维装配、EFIT 磁面与放电时序。': 'Compact spherical-tokamak EXL‑50U 2026 upgrade prototype linking the 3D assembly, EFIT flux surfaces and discharge timeline.',
   '标准 / 高清 Meshopt GLB 5.6 / 13.4 MB · 12 个系统 · 10 炮 5,804 帧 EFIT · 7 炮偏滤器拓扑': 'Standard / high-detail Meshopt GLB 5.6 / 13.4 MB · 12 systems · 5,804 EFIT frames across 10 shots · divertor topology for 7 shots',
+  '紧凑球形托卡马克 EXL‑50U 2026 升级样机，联动三维装配、EFIT 磁面与放电时序，并以 84 个经米制审阅修正的历史设计端口复现 Camera、Array 与 Laser 三类诊断几何。': 'Compact spherical-tokamak EXL‑50U 2026 upgrade prototype linking the 3D assembly, EFIT flux surfaces and discharge timeline, with Camera, Array and Laser geometry reconstructed from 84 historical design ports after reviewed metre-scale corrections.',
+  '标准 / 高清 Meshopt GLB 5.6 / 13.4 MB · 12 个系统 · 84 个历史设计端口 · 3 类诊断 · 10 炮 5,804 帧 EFIT · 7 炮偏滤器拓扑': 'Standard / high-detail Meshopt GLB 5.6 / 13.4 MB · 12 systems · 84 historical design ports · 3 diagnostic types · 5,804 EFIT frames across 10 shots · divertor topology for 7 shots',
   'ITER 教育简化模型': 'ITER Educational Simplified Model',
   'ITER 教育高精度模型': 'ITER Educational High-Detail Model',
   '高精度分片三维': 'High-detail sharded 3D',

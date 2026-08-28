@@ -1,6 +1,6 @@
 {
   "schemaVersion": "2.3",
-  "asOf": "2026-08-21",
+  "asOf": "2026-08-28",
   "securityPolicy": {
     "previewOnly": true,
     "showDownloadActions": false,
@@ -42,9 +42,9 @@
       "eyebrow": "AUTHORIZED · REAL-TIME 3D",
       "state": "简化派生实时三维",
       "tone": "controlled",
-      "facts": ["用户授权公开展示", "12 个主要系统组件", "10 炮 / 5,804 帧 EFIT · 18303 + 6 炮偏滤器拓扑"],
-      "deviceOverview": "紧凑球形托卡马克 EXL‑50U 2026 升级样机，联动三维装配、EFIT 磁面与放电时序。",
-      "fileSummary": "标准 / 高清 Meshopt GLB 5.6 / 13.4 MB · 12 个系统 · 10 炮 5,804 帧 EFIT · 7 炮偏滤器拓扑",
+      "facts": ["用户授权公开展示", "12 个主要系统组件", "84 个历史设计端口 · Camera / Array / Laser", "10 炮 / 5,804 帧 EFIT · 18303 + 6 炮偏滤器拓扑"],
+      "deviceOverview": "紧凑球形托卡马克 EXL‑50U 2026 升级样机，联动三维装配、EFIT 磁面与放电时序，并以 84 个经米制审阅修正的历史设计端口复现 Camera、Array 与 Laser 三类诊断几何。",
+      "fileSummary": "标准 / 高清 Meshopt GLB 5.6 / 13.4 MB · 12 个系统 · 84 个历史设计端口 · 3 类诊断 · 10 炮 5,804 帧 EFIT · 7 炮偏滤器拓扑",
       "copy": "公开加载经授权、脱敏和轻量化的简化派生几何；标准与高清两档均采用细化曲面离散、锐边法线与 Meshopt 传输压缩。原装配合并为 12 个主要系统组件，支持组件选择、显隐、隔离、透明度与 X/Y/Z 剖切；十炮 EFIT 可联动播放轴对称磁面、LCFS、磁轴和放电时序。18303 显示经离线校验的 v1 主/次 X 点、开放分离支及 limiter 交点代理；新增六炮按帧显示经有界校验的 topology graph v2，包括边界/近边界 X 点、已解析分离支及 canonical limiter 交点。未解析臂与未经审查的开放区域只显示线框，不生成 SOL 或偏滤器体积。原始 CAD、STEP、完整磁通网格和工程权威模型不会由网站下发。",
       "availability": "online-public-simplified",
       "delivery": "public-static",
@@ -68,7 +68,17 @@
           "statement": "Visualization-derived axisymmetric EFIT flux surfaces for ten reviewed shots (5,804 source frames). Shot 18303 exposes reviewed v1 saddle-point, open-separatrix and limiter-intersection derivatives. Six additional shots expose bounded topology-graph v2 evidence with per-shot canonical limiter geometry, boundary and near-boundary X points, resolved constant-flux separatrix branches, wall intersections and explicit unresolved records. Near-boundary candidates are not active X points; unresolved or unreviewed open regions are not filled, extrapolated or presented as SOL. The CAD registration is provisional; limiter intersections are not verified divertor-target strike points, engineering metrology or a real-time control result."
         }
       ],
-      "diagnosticWorkspace": null
+      "diagnosticWorkspace": {
+        "kind": "exl50u-diagview2",
+        "authority": "design-reference",
+        "coordinateFrame": "EXL50U_WEB_METRES_REVIEWED_DIAGVIEW2_V1",
+        "asOf": "2026-08-28",
+        "sourceLabel": "DiagView2 geometry engine and reviewed EXL50U historical port table",
+        "sourceRevision": "868d74d5e0e6c9abaec0eb623bcdd13ead771c79",
+        "portDatasetEndpoint": "/models/exl50u-diagview2-v1/diagview2-ports.json",
+        "capabilities": ["camera", "array", "laser", "reviewed-port-poses", "browser-overlay"],
+        "statement": "Browser visualization of 84 historical EXL-50U design port records after reviewed metre-unit correction and repair of the S2 coordinate formula, using the authorized public simplified CAD derivative. It supports Camera, Array and Laser design geometry and browser overlays. It is not measured or as-installed survey data, a calibrated diagnostic or optical model, validated engineering clear-aperture analysis, manufacturing authority, or an experimental diagnostic result."
+      }
     },
     {
       "id": "ehl-2-preliminary",

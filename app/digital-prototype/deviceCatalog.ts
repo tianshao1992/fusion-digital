@@ -14,7 +14,7 @@ export type DevicePhysicsOverlay = {
   statement: string;
 };
 
-export type DeviceDiagnosticWorkspace = {
+export type Ehl2DeviceDiagnosticWorkspace = {
   kind: 'ehl2-diagview2';
   authority: 'design-reference';
   coordinateFrame: 'EHL2_WEB_METRES_PROVISIONAL_DIAGVIEW2_V1';
@@ -35,6 +35,28 @@ export type DeviceDiagnosticWorkspace = {
   ];
   statement: string;
 };
+
+export type Exl50uDiagnosticWorkspace = {
+  kind: 'exl50u-diagview2';
+  authority: 'design-reference';
+  coordinateFrame: 'EXL50U_WEB_METRES_REVIEWED_DIAGVIEW2_V1';
+  asOf: '2026-08-28';
+  sourceLabel: 'DiagView2 geometry engine and reviewed EXL50U historical port table';
+  sourceRevision: '868d74d5e0e6c9abaec0eb623bcdd13ead771c79';
+  portDatasetEndpoint: '/models/exl50u-diagview2-v1/diagview2-ports.json';
+  capabilities: readonly [
+    'camera',
+    'array',
+    'laser',
+    'reviewed-port-poses',
+    'browser-overlay',
+  ];
+  statement: string;
+};
+
+export type DeviceDiagnosticWorkspace =
+  | Ehl2DeviceDiagnosticWorkspace
+  | Exl50uDiagnosticWorkspace;
 
 export type DeviceCatalogEntry = {
   id: string;
@@ -193,7 +215,7 @@ export function parseDeviceCatalog(input: unknown): DeviceCatalog {
           throw new Error(`${id}.diagnosticWorkspace.capabilities must be a string array`);
         }
         const capabilities = [...workspace.capabilities];
-        const reviewedCapabilities = [
+        const ehl2Capabilities = [
           'camera',
           'array',
           'laser',
@@ -204,36 +226,71 @@ export function parseDeviceCatalog(input: unknown): DeviceCatalog {
           'optical-view-capture',
           'virtual-forward-model',
         ] as const;
-        if (id !== 'ehl-2-preliminary' || mode !== 'real-3d') {
-          throw new Error(`${id} cannot expose the EHL-2 diagnostic workspace`);
+        const exl50uCapabilities = [
+          'camera',
+          'array',
+          'laser',
+          'reviewed-port-poses',
+          'browser-overlay',
+        ] as const;
+        const statement = stringValue(workspace.statement, `${id}.diagnosticWorkspace.statement`);
+        if (mode !== 'real-3d') {
+          throw new Error(`${id} diagnostic workspace requires a real-3d viewer`);
         }
-        if (kind !== 'ehl2-diagview2'
-          || authority !== 'design-reference'
-          || coordinateFrame !== 'EHL2_WEB_METRES_PROVISIONAL_DIAGVIEW2_V1'
-          || asOf !== '2026-08-21'
-          || sourceLabel !== 'DiagView2 geometry-analysis engine and reviewed EHL-2 flange dataset'
-          || sourceRevision !== EHL2_DIAGVIEW2_SOURCE.branchCommit
-          || portDatasetEndpoint !== '/models/ehl2-preliminary-v1/diagview2-ports.json'
-          || capabilities.length !== reviewedCapabilities.length
-          || capabilities.some((capability, capabilityIndex) => capability !== reviewedCapabilities[capabilityIndex])) {
-          throw new Error(`${id}.diagnosticWorkspace is not a reviewed DiagView2 contract`);
+        if (id === 'ehl-2-preliminary') {
+          if (kind !== 'ehl2-diagview2'
+            || authority !== 'design-reference'
+            || coordinateFrame !== 'EHL2_WEB_METRES_PROVISIONAL_DIAGVIEW2_V1'
+            || asOf !== '2026-08-21'
+            || sourceLabel !== 'DiagView2 geometry-analysis engine and reviewed EHL-2 flange dataset'
+            || sourceRevision !== EHL2_DIAGVIEW2_SOURCE.branchCommit
+            || portDatasetEndpoint !== '/models/ehl2-preliminary-v1/diagview2-ports.json'
+            || capabilities.length !== ehl2Capabilities.length
+            || capabilities.some((capability, capabilityIndex) => capability !== ehl2Capabilities[capabilityIndex])) {
+            throw new Error(`${id}.diagnosticWorkspace is not a reviewed DiagView2 contract`);
+          }
+          return {
+            kind: 'ehl2-diagview2',
+            authority: 'design-reference',
+            coordinateFrame: 'EHL2_WEB_METRES_PROVISIONAL_DIAGVIEW2_V1',
+            asOf: '2026-08-21',
+            sourceLabel: 'DiagView2 geometry-analysis engine and reviewed EHL-2 flange dataset',
+            sourceRevision: EHL2_DIAGVIEW2_SOURCE.branchCommit,
+            portDatasetEndpoint: '/models/ehl2-preliminary-v1/diagview2-ports.json',
+            capabilities: ehl2Capabilities,
+            statement,
+          } satisfies Ehl2DeviceDiagnosticWorkspace;
         }
-        return {
-          kind,
-          authority,
-          coordinateFrame,
-          asOf,
-          sourceLabel,
-          sourceRevision,
-          portDatasetEndpoint,
-          capabilities: capabilities as unknown as DeviceDiagnosticWorkspace['capabilities'],
-          statement: stringValue(workspace.statement, `${id}.diagnosticWorkspace.statement`),
-        } as DeviceDiagnosticWorkspace;
+        if (id === 'exl-50u-2026-upgrade') {
+          if (kind !== 'exl50u-diagview2'
+            || authority !== 'design-reference'
+            || coordinateFrame !== 'EXL50U_WEB_METRES_REVIEWED_DIAGVIEW2_V1'
+            || asOf !== '2026-08-28'
+            || sourceLabel !== 'DiagView2 geometry engine and reviewed EXL50U historical port table'
+            || sourceRevision !== '868d74d5e0e6c9abaec0eb623bcdd13ead771c79'
+            || portDatasetEndpoint !== '/models/exl50u-diagview2-v1/diagview2-ports.json'
+            || capabilities.length !== exl50uCapabilities.length
+            || capabilities.some((capability, capabilityIndex) => capability !== exl50uCapabilities[capabilityIndex])) {
+            throw new Error(`${id}.diagnosticWorkspace is not a reviewed DiagView2 contract`);
+          }
+          return {
+            kind: 'exl50u-diagview2',
+            authority: 'design-reference',
+            coordinateFrame: 'EXL50U_WEB_METRES_REVIEWED_DIAGVIEW2_V1',
+            asOf: '2026-08-28',
+            sourceLabel: 'DiagView2 geometry engine and reviewed EXL50U historical port table',
+            sourceRevision: '868d74d5e0e6c9abaec0eb623bcdd13ead771c79',
+            portDatasetEndpoint: '/models/exl50u-diagview2-v1/diagview2-ports.json',
+            capabilities: exl50uCapabilities,
+            statement,
+          } satisfies Exl50uDiagnosticWorkspace;
+        }
+        throw new Error(`${id}.diagnosticWorkspace must be null`);
       })();
-    if (id === 'ehl-2-preliminary' && diagnosticWorkspace === null) {
-      throw new Error('ehl-2-preliminary requires its reviewed diagnostic workspace contract');
+    if ((id === 'ehl-2-preliminary' || id === 'exl-50u-2026-upgrade') && diagnosticWorkspace === null) {
+      throw new Error(`${id} requires its reviewed diagnostic workspace contract`);
     }
-    if (id !== 'ehl-2-preliminary' && diagnosticWorkspace !== null) {
+    if (id !== 'ehl-2-preliminary' && id !== 'exl-50u-2026-upgrade' && diagnosticWorkspace !== null) {
       throw new Error(`${id} diagnosticWorkspace must be null`);
     }
 

@@ -1,0 +1,88 @@
+{
+  "schemaVersion": "fusiondigital.exl50u.diagview2-package-manifest.v1",
+  "id": "exl50u-diagview2-v1",
+  "asOf": "2026-08-28",
+  "deviceId": "EXL-50U",
+  "authority": "historical-design-reference",
+  "dataset": {
+    "path": "/models/exl50u-diagview2-v1/diagview2-ports.json",
+    "format": "application/json",
+    "schemaVersion": "fusiondigital.exl50u.diagview2-ports.v1",
+    "bytes": 54071,
+    "sha256": "D108A52C7127A858A2ACEFFFDB4A51A09A565B1AED5252CAE0E75C095A430530",
+    "recordCount": 84,
+    "sectionCounts": {
+      "U1": 12,
+      "U2": 12,
+      "S1": 12,
+      "S2": 12,
+      "S3": 12,
+      "L1": 12,
+      "L2": 12
+    }
+  },
+  "source": {
+    "repository": "DiagView",
+    "branch": "origin/digView2",
+    "branchRevision": "868d74d5e0e6c9abaec0eb623bcdd13ead771c79",
+    "sourceDataCommit": "b8f04aff8d1b3c59d5ea95a20047eb9dd968ca23",
+    "introducedCommit": "b8f04aff8d1b3c59d5ea95a20047eb9dd968ca23",
+    "deletedCommit": "550e0801f56f110d58500b61a4415847755f4f30",
+    "path": "data/EXL50U_position.xlsx",
+    "gitBlobSha1": "30817819689b9fff0cb047ba7deae6aa7cb0bdd0",
+    "byteLength": 1365912,
+    "sha256": "93395B12183048E65CCD9235D3C9F50098AC80F48A1949FB5205DA90EC28CDC6"
+  },
+  "publication": {
+    "publishedCellRanges": [
+      "side_flange!A:E",
+      "mid_flange!A:F"
+    ],
+    "omittedSheets": [
+      "Sheet3"
+    ],
+    "sourceWorkbookIncluded": false,
+    "helperColumnsIncluded": false,
+    "formulasPublished": false,
+    "embeddedImagesIncluded": false,
+    "engineeringUseAllowed": false
+  },
+  "unitReview": {
+    "sourceAuthoredUnit": "metre",
+    "historicalParserAssumption": "millimetre",
+    "historicalParserScaleFactor": 0.001,
+    "publishedScaleFactor": 1,
+    "historicalParser": {
+      "path": "src/data_parser.py",
+      "gitBlobSha1": "d005ccc306262ad785d589f45ac428efc4d5793f"
+    },
+    "decision": "Publish the workbook numeric coordinates at authored metre scale; reject the historical unconditional /1000 conversion.",
+    "rationale": "The 0.8-1.841 coordinate magnitudes are metre-scale and align with the current metre-based public EXL-50U CAD; applying /1000 would collapse the ports by three orders of magnitude.",
+    "authorityBoundary": "This is a reviewed compatibility correction for the current public metre-based CAD, not surveyed, as-built, experimental or engineering-authoritative geometry."
+  },
+  "formulaReview": {
+    "s2CanonicalRadiusMetres": 1.841,
+    "s2RecomputedCoordinates": [
+      "X",
+      "Y"
+    ],
+    "s2RepairedCells": [
+      "C4",
+      "C6",
+      "C8",
+      "C10",
+      "C12"
+    ],
+    "s2RejectedFormulaPattern": "$H$2*COS(Bn/PI()*180)",
+    "s2ReviewedFormulaPattern": "$H$2*COS(Bn/180*PI())",
+    "s2Decision": "Recompute every S2 X/Y pair from azimuth and the reviewed 1.841 m canonical radius; never publish cached formula results.",
+    "sideReviewedCell": "D26",
+    "sideReviewedFormula": "(1.1485+0.6515)/2",
+    "sideReviewedValueMetres": 0.9,
+    "sideDecision": "Publish D26 only after verifying its cache equals 0.9 m and matches the remaining S1 Z constants D27:D37."
+  },
+  "generator": {
+    "path": "scripts/exl50u/build_diagview2_ports.mjs",
+    "deterministic": true
+  }
+}

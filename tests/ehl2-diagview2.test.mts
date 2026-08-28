@@ -1233,13 +1233,19 @@ test('the Three overlay renders reviewed geometry under the physical-web-metres 
   assert.equal(overlayRoot.parent, null);
 });
 
-test('Tokamak viewer updates DiagView2 options without reloading CAD and loads the overlay only for EHL-2', async () => {
+test('Tokamak viewer updates DiagView2 options without reloading CAD and uses a stable device capability gate', async () => {
   const viewer = await readFile(
     new URL('../app/components/TokamakCadViewer.tsx', import.meta.url),
     'utf8',
   );
+  assert.match(viewer, /diagnosticOverlayEnabled\?: boolean;/,
+    'non-EHL devices need an explicit, typed opt-in for the existing Three overlay');
+  assert.match(viewer, /const diagnosticOverlaySession = ehl2Session \|\| diagnosticOverlayEnabled;/,
+    'EHL must remain implicitly enabled while other devices opt in explicitly');
   assert.match(viewer, /diagnosticOverlayOptionsRef\.current = diagnosticOverlayOptions;[\s\S]{0,160}diagnosticOverlay\?\.setOptions\(diagnosticOverlayOptions\);[\s\S]{0,80}\[diagnosticOverlayOptions\]/);
-  assert.match(viewer, /const diagnosticOverlayModulePromise = ehl2Session[\s\S]{0,120}import\('\.\/device-viewer\/Ehl2DiagnosticThreeOverlay'\)[\s\S]{0,80}Promise\.resolve\(null\)/);
+  assert.match(viewer, /const diagnosticOverlayModulePromise = diagnosticOverlaySession[\s\S]{0,120}import\('\.\/device-viewer\/Ehl2DiagnosticThreeOverlay'\)[\s\S]{0,80}Promise\.resolve\(null\)/);
+  assert.match(viewer, /const diagnosticRuntimeModulePromise = ehl2Session[\s\S]{0,120}import\('\.\/device-viewer\/ehl2DiagnosticRuntime'\)[\s\S]{0,80}Promise\.resolve\(null\)/,
+    'the BVH diagnostic runtime must remain restricted to EHL-2');
   assert.match(viewer, /createEhl2DiagnosticThreeOverlay\([\s\S]{0,120}physicalWebMetresRoot: model/);
   assert.match(viewer, /localDiagnosticOverlay\?\.dispose\(\)/);
   assert.match(viewer, /diagnosticOverlay: localDiagnosticOverlay/);
@@ -1250,6 +1256,10 @@ test('Tokamak viewer updates DiagView2 options without reloading CAD and loads t
   assert.ok(initializationDeps, 'unable to locate the CAD/WebGL initialization effect dependency list');
   assert.doesNotMatch(initializationDeps[1], /diagnosticOverlayOptions/,
     'changing DiagView2 controls must call setOptions, not reload the CAD/WebGL scene');
+  assert.match(initializationDeps[1], /diagnosticOverlaySession/,
+    'the initialization effect must depend on the stable device capability gate');
+  assert.doesNotMatch(initializationDeps[1], /diagnosticOverlayEnabled/,
+    'the derived stable gate is the only overlay-capability dependency');
 });
 
 test('diagnostic viewer appearance settings clamp finite inputs and fail closed on invalid state', async () => {
@@ -1359,16 +1369,21 @@ test('diagnostic viewer appearance settings clamp finite inputs and fail closed 
     'changing an informational viewport overlay must not reload CAD');
 });
 
-test('the public catalog enables DiagView2 only for the real-3D EHL-2 entry and fails closed on drift', async () => {
+test('the public catalog enables only the reviewed EHL-2 and EXL-50U DiagView2 contracts', async () => {
   const rawCatalog = JSON.parse(await readFile(
     new URL('../public/models/device-catalog.json', import.meta.url),
     'utf8',
   ));
   const catalog = parseDeviceCatalog(rawCatalog);
   const enabled = catalog.devices.filter((device) => device.diagnosticWorkspace !== null);
-  assert.deepEqual(enabled.map((device) => device.id), ['ehl-2-preliminary']);
+  assert.deepEqual(enabled.map((device) => device.id), ['exl-50u-2026-upgrade', 'ehl-2-preliminary']);
+  assert.deepEqual(
+    catalog.devices.filter((device) => device.diagnosticWorkspace === null).map((device) => device.id),
+    ['paramak-full-device', 'iter-educational-model'],
+  );
 
-  const ehl = enabled[0];
+  const ehl = enabled.find((device) => device.id === 'ehl-2-preliminary');
+  assert.ok(ehl);
   assert.equal(ehl.viewer.mode, 'real-3d');
   assert.deepEqual(ehl.diagnosticWorkspace, {
     kind: 'ehl2-diagview2',
@@ -1388,16 +1403,71 @@ test('the public catalog enables DiagView2 only for the real-3D EHL-2 entry and 
   assert.match(ehl.diagnosticWorkspace?.statement ?? '', /validated engineering clear-aperture analysis/i);
   assert.match(ehl.diagnosticWorkspace?.statement ?? '', /not .*manufacturing authority/i);
 
+  const exl = enabled.find((device) => device.id === 'exl-50u-2026-upgrade');
+  assert.ok(exl);
+  assert.equal(exl.viewer.mode, 'real-3d');
+  assert.deepEqual(exl.diagnosticWorkspace, {
+    kind: 'exl50u-diagview2',
+    authority: 'design-reference',
+    coordinateFrame: 'EXL50U_WEB_METRES_REVIEWED_DIAGVIEW2_V1',
+    asOf: '2026-08-28',
+    sourceLabel: 'DiagView2 geometry engine and reviewed EXL50U historical port table',
+    sourceRevision: '868d74d5e0e6c9abaec0eb623bcdd13ead771c79',
+    portDatasetEndpoint: '/models/exl50u-diagview2-v1/diagview2-ports.json',
+    capabilities: ['camera', 'array', 'laser', 'reviewed-port-poses', 'browser-overlay'],
+    statement: rawCatalog.devices.find((device: { id: string }) => device.id === exl.id).diagnosticWorkspace.statement,
+  });
+  assert.match(exl.diagnosticWorkspace?.statement ?? '', /84 historical EXL-50U design port records/i);
+  assert.match(exl.diagnosticWorkspace?.statement ?? '', /reviewed metre-unit correction/i);
+  assert.match(exl.diagnosticWorkspace?.statement ?? '', /repair of the S2 coordinate formula/i);
+  assert.match(exl.diagnosticWorkspace?.statement ?? '', /public simplified CAD derivative/i);
+  assert.match(exl.diagnosticWorkspace?.statement ?? '', /not measured or as-installed survey data/i);
+  assert.match(exl.diagnosticWorkspace?.statement ?? '', /calibrated diagnostic or optical model/i);
+  assert.match(exl.diagnosticWorkspace?.statement ?? '', /validated engineering clear-aperture analysis/i);
+  assert.match(exl.diagnosticWorkspace?.statement ?? '', /manufacturing authority/i);
+
+  assert.ok(exl.facts.some((fact) => /84 个历史设计端口/.test(fact)));
+  assert.ok(exl.facts.some((fact) => /Camera \/ Array \/ Laser/.test(fact)));
+  assert.match(exl.deviceOverview, /84 个经米制审阅修正的历史设计端口/);
+  assert.match(exl.deviceOverview, /Camera、Array 与 Laser 三类诊断几何/);
+  assert.match(exl.fileSummary, /84 个历史设计端口 · 3 类诊断/);
+
   const withoutEhlWorkspace = structuredClone(rawCatalog);
   withoutEhlWorkspace.devices.find((device: { id: string }) => device.id === ehl.id).diagnosticWorkspace = null;
   assert.throws(() => parseDeviceCatalog(withoutEhlWorkspace), /requires its reviewed diagnostic workspace contract/);
 
-  const enabledOnExl = structuredClone(rawCatalog);
-  const exl = enabledOnExl.devices.find((device: { id: string }) => device.id === 'exl-50u-2026-upgrade');
-  exl.diagnosticWorkspace = structuredClone(
-    enabledOnExl.devices.find((device: { id: string }) => device.id === ehl.id).diagnosticWorkspace,
+  const withoutExlWorkspace = structuredClone(rawCatalog);
+  withoutExlWorkspace.devices.find((device: { id: string }) => device.id === exl.id).diagnosticWorkspace = null;
+  assert.throws(() => parseDeviceCatalog(withoutExlWorkspace), /requires its reviewed diagnostic workspace contract/);
+
+  const wrongDevice = structuredClone(rawCatalog);
+  wrongDevice.devices.find((device: { id: string }) => device.id === 'paramak-full-device').diagnosticWorkspace = structuredClone(
+    wrongDevice.devices.find((device: { id: string }) => device.id === exl.id).diagnosticWorkspace,
   );
-  assert.throws(() => parseDeviceCatalog(enabledOnExl), /cannot expose the EHL-2 diagnostic workspace/);
+  assert.throws(() => parseDeviceCatalog(wrongDevice), /paramak-full-device\.diagnosticWorkspace must be null/);
+
+  for (const [field, invalidValue] of [
+    ['kind', 'ehl2-diagview2'],
+    ['sourceRevision', '0000000000000000000000000000000000000000'],
+    ['coordinateFrame', 'EXL50U_WEB_METRES_PROVISIONAL_DIAGVIEW2_V1'],
+    ['portDatasetEndpoint', '/models/ehl2-preliminary-v1/diagview2-ports.json'],
+  ] as const) {
+    const invalidExlContract = structuredClone(rawCatalog);
+    invalidExlContract.devices.find((device: { id: string }) => device.id === exl.id).diagnosticWorkspace[field] = invalidValue;
+    assert.throws(
+      () => parseDeviceCatalog(invalidExlContract),
+      /exl-50u-2026-upgrade\.diagnosticWorkspace is not a reviewed DiagView2 contract/,
+      `EXL-50U ${field} drift must fail closed`,
+    );
+  }
+
+  const reorderedCapabilities = structuredClone(rawCatalog);
+  reorderedCapabilities.devices.find((device: { id: string }) => device.id === exl.id).diagnosticWorkspace.capabilities.reverse();
+  assert.throws(
+    () => parseDeviceCatalog(reorderedCapabilities),
+    /exl-50u-2026-upgrade\.diagnosticWorkspace is not a reviewed DiagView2 contract/,
+    'EXL-50U capability order drift must fail closed',
+  );
 
   const staleRevision = structuredClone(rawCatalog);
   staleRevision.devices.find((device: { id: string }) => device.id === ehl.id).diagnosticWorkspace.sourceRevision = '0000000000000000000000000000000000000000';

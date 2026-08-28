@@ -89,6 +89,44 @@ test('EFIT controls, store and Three overlay share one external frame state', as
     'the UI and store must share one reviewed playback-rate contract');
 });
 
+test('EXL analysis sidebar switches accessibly between persistent EFIT and reviewed DiagView2 visualization', async () => {
+  const catalog = JSON.parse(await source('public/models/device-catalog.json'));
+  const workspace = await source('app/digital-prototype/MultiDeviceWorkspace.tsx');
+  const panel = await source('app/digital-prototype/Exl50uDiagnosticPanel.tsx');
+  const viewer = await source('app/components/TokamakCadViewer.tsx');
+  const css = await source('app/digital-prototype/workspace-layout.css');
+  const exl = catalog.devices.find((device) => device.id === 'exl-50u-2026-upgrade');
+
+  assert.equal(exl.diagnosticWorkspace.kind, 'exl50u-diagview2');
+  assert.equal(exl.diagnosticWorkspace.portDatasetEndpoint, '/models/exl50u-diagview2-v1/diagview2-ports.json');
+  assert.deepEqual(exl.diagnosticWorkspace.capabilities, [
+    'camera', 'array', 'laser', 'reviewed-port-poses', 'browser-overlay',
+  ]);
+  assert.match(workspace, /className="deviceAnalysisTabs" role="tablist"/);
+  assert.match(workspace, /role="tab"[\s\S]*?aria-selected=\{mode === 'efit'\}[\s\S]*?EFIT equilibrium/);
+  assert.match(workspace, /role="tab"[\s\S]*?aria-selected=\{mode === 'diagnostic'\}[\s\S]*?Diagnostic visualization/);
+  assert.match(workspace, /if \(nextMode === 'diagnostic'\) efitStore\.actions\.pause\(\)/,
+    'leaving EFIT must pause playback without destroying its state');
+  assert.match(workspace, /efitActive=\{analysisMode === 'efit'\}/);
+  assert.match(workspace, /diagnosticOverlayOptions=\{analysisMode === 'diagnostic' \? diagnosticOverlayOptions : undefined\}/);
+  assert.match(workspace, /hidden=\{Boolean\(diagnosticContract\) && mode !== 'efit'\}/,
+    'EFIT remains mounted while its tab is hidden so shot and time selections persist');
+  assert.match(workspace, /hidden=\{mode !== 'diagnostic'\}/);
+  assert.match(workspace, /event\.key === 'ArrowLeft'[\s\S]*?event\.key === 'ArrowRight'[\s\S]*?event\.key === 'Home'[\s\S]*?event\.key === 'End'/);
+
+  assert.match(panel, /parseExl50uDiagView2PortDataset\(await response\.json\(\)\)/);
+  assert.match(panel, /\(\['CAMERA', 'ARRAY', 'LASER'\] as const\)/);
+  assert.match(panel, /localOffsetMm: updateTuple/);
+  assert.match(panel, /rotationDeg: updateTuple/);
+  assert.match(panel, /showAllPorts/);
+  assert.match(panel, /84 条历史设计记录；S2 公式已审阅修复/);
+  assert.match(panel, /不复用源仓未验证的全局 G-file/);
+  assert.match(viewer, /const diagnosticOverlaySession = ehl2Session \|\| diagnosticOverlayEnabled/);
+  assert.match(viewer, /diagnosticOverlayModulePromise = diagnosticOverlaySession/);
+  assert.match(cssRule(css, '.deviceAnalysisTabs'), /position:sticky/);
+  assert.match(cssRule(css, ".deviceAnalysisPanel [role='tabpanel'][hidden]"), /display:none/);
+});
+
 test('digital-prototype split layout exposes an accessible and persistent resize contract', async () => {
   const workspace = await source('app/digital-prototype/MultiDeviceWorkspace.tsx');
 

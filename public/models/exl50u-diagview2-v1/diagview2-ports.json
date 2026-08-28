@@ -1,0 +1,2797 @@
+{
+  "schemaVersion": "fusiondigital.exl50u.diagview2-ports.v1",
+  "id": "exl50u-diagview2-ports-v1",
+  "asOf": "2026-08-28",
+  "deviceId": "EXL-50U",
+  "authority": "historical-design-reference",
+  "source": {
+    "repository": "DiagView",
+    "branch": "origin/digView2",
+    "branchRevision": "868d74d5e0e6c9abaec0eb623bcdd13ead771c79",
+    "sourceDataCommit": "b8f04aff8d1b3c59d5ea95a20047eb9dd968ca23",
+    "introducedCommit": "b8f04aff8d1b3c59d5ea95a20047eb9dd968ca23",
+    "deletedCommit": "550e0801f56f110d58500b61a4415847755f4f30",
+    "path": "data/EXL50U_position.xlsx",
+    "gitBlobSha1": "30817819689b9fff0cb047ba7deae6aa7cb0bdd0",
+    "byteLength": 1365912,
+    "sha256": "93395B12183048E65CCD9235D3C9F50098AC80F48A1949FB5205DA90EC28CDC6"
+  },
+  "publication": {
+    "publishedCellRanges": [
+      "side_flange!A:E",
+      "mid_flange!A:F"
+    ],
+    "omittedSheets": [
+      "Sheet3"
+    ],
+    "sourceWorkbookIncluded": false,
+    "helperColumnsIncluded": false,
+    "formulasPublished": false,
+    "embeddedImagesIncluded": false,
+    "engineeringUseAllowed": false
+  },
+  "unitReview": {
+    "sourceAuthoredUnit": "metre",
+    "historicalParserAssumption": "millimetre",
+    "historicalParserScaleFactor": 0.001,
+    "publishedScaleFactor": 1,
+    "historicalParser": {
+      "path": "src/data_parser.py",
+      "gitBlobSha1": "d005ccc306262ad785d589f45ac428efc4d5793f"
+    },
+    "decision": "Publish the workbook numeric coordinates at authored metre scale; reject the historical unconditional /1000 conversion.",
+    "rationale": "The 0.8-1.841 coordinate magnitudes are metre-scale and align with the current metre-based public EXL-50U CAD; applying /1000 would collapse the ports by three orders of magnitude.",
+    "authorityBoundary": "This is a reviewed compatibility correction for the current public metre-based CAD, not surveyed, as-built, experimental or engineering-authoritative geometry."
+  },
+  "formulaReview": {
+    "s2CanonicalRadiusMetres": 1.841,
+    "s2RecomputedCoordinates": [
+      "X",
+      "Y"
+    ],
+    "s2RepairedCells": [
+      "C4",
+      "C6",
+      "C8",
+      "C10",
+      "C12"
+    ],
+    "s2RejectedFormulaPattern": "$H$2*COS(Bn/PI()*180)",
+    "s2ReviewedFormulaPattern": "$H$2*COS(Bn/180*PI())",
+    "s2Decision": "Recompute every S2 X/Y pair from azimuth and the reviewed 1.841 m canonical radius; never publish cached formula results.",
+    "sideReviewedCell": "D26",
+    "sideReviewedFormula": "(1.1485+0.6515)/2",
+    "sideReviewedValueMetres": 0.9,
+    "sideDecision": "Publish D26 only after verifying its cache equals 0.9 m and matches the remaining S1 Z constants D27:D37."
+  },
+  "coordinateSystem": {
+    "sourceUnit": "metre",
+    "publishedUnit": "metre",
+    "diagViewFrame": "right-handed XYZ; Z vertical",
+    "webFrame": "right-handed XYZ; Y vertical",
+    "diagViewToWebPoint": "[x, y, z] -> [x, z, -y]",
+    "diagViewToWebDirection": "[x, y, z] -> [x, z, -y]",
+    "normalConvention": "n = cos(theta) * [cos(phi), sin(phi), 0] + sin(theta) * [0, 0, 1]"
+  },
+  "sectionOrder": [
+    "U1",
+    "U2",
+    "S1",
+    "S2",
+    "S3",
+    "L1",
+    "L2"
+  ],
+  "recordCount": 84,
+  "sectionCounts": {
+    "U1": 12,
+    "U2": 12,
+    "S1": 12,
+    "S2": 12,
+    "S3": 12,
+    "L1": 12,
+    "L2": 12
+  },
+  "records": [
+    {
+      "id": "U1@0",
+      "sourceCellRange": "side_flange!A2:E2",
+      "section": "U1",
+      "flangeType": "side_flange",
+      "azimuthDeg": 0,
+      "poloidalNormalDeg": 270,
+      "sourceAuthoredMetres": {
+        "r": 1.43982,
+        "z": 1.8165
+      },
+      "diagViewMetres": [
+        1.43982,
+        0,
+        1.8165
+      ],
+      "diagViewNormal": [
+        0,
+        0,
+        -1
+      ],
+      "webMetres": [
+        1.43982,
+        1.8165,
+        0
+      ],
+      "webNormal": [
+        0,
+        -1,
+        0
+      ]
+    },
+    {
+      "id": "U1@30",
+      "sourceCellRange": "side_flange!A3:E3",
+      "section": "U1",
+      "flangeType": "side_flange",
+      "azimuthDeg": 30,
+      "poloidalNormalDeg": 270,
+      "sourceAuthoredMetres": {
+        "r": 1.43982,
+        "z": 1.8165
+      },
+      "diagViewMetres": [
+        1.246920696877,
+        0.71991,
+        1.8165
+      ],
+      "diagViewNormal": [
+        0,
+        0,
+        -1
+      ],
+      "webMetres": [
+        1.246920696877,
+        1.8165,
+        -0.71991
+      ],
+      "webNormal": [
+        0,
+        -1,
+        0
+      ]
+    },
+    {
+      "id": "U1@60",
+      "sourceCellRange": "side_flange!A4:E4",
+      "section": "U1",
+      "flangeType": "side_flange",
+      "azimuthDeg": 60,
+      "poloidalNormalDeg": 270,
+      "sourceAuthoredMetres": {
+        "r": 1.43982,
+        "z": 1.8165
+      },
+      "diagViewMetres": [
+        0.71991,
+        1.246920696877,
+        1.8165
+      ],
+      "diagViewNormal": [
+        0,
+        0,
+        -1
+      ],
+      "webMetres": [
+        0.71991,
+        1.8165,
+        -1.246920696877
+      ],
+      "webNormal": [
+        0,
+        -1,
+        0
+      ]
+    },
+    {
+      "id": "U1@90",
+      "sourceCellRange": "side_flange!A5:E5",
+      "section": "U1",
+      "flangeType": "side_flange",
+      "azimuthDeg": 90,
+      "poloidalNormalDeg": 270,
+      "sourceAuthoredMetres": {
+        "r": 1.43982,
+        "z": 1.8165
+      },
+      "diagViewMetres": [
+        0,
+        1.43982,
+        1.8165
+      ],
+      "diagViewNormal": [
+        0,
+        0,
+        -1
+      ],
+      "webMetres": [
+        0,
+        1.8165,
+        -1.43982
+      ],
+      "webNormal": [
+        0,
+        -1,
+        0
+      ]
+    },
+    {
+      "id": "U1@120",
+      "sourceCellRange": "side_flange!A6:E6",
+      "section": "U1",
+      "flangeType": "side_flange",
+      "azimuthDeg": 120,
+      "poloidalNormalDeg": 270,
+      "sourceAuthoredMetres": {
+        "r": 1.43982,
+        "z": 1.8165
+      },
+      "diagViewMetres": [
+        -0.71991,
+        1.246920696877,
+        1.8165
+      ],
+      "diagViewNormal": [
+        0,
+        0,
+        -1
+      ],
+      "webMetres": [
+        -0.71991,
+        1.8165,
+        -1.246920696877
+      ],
+      "webNormal": [
+        0,
+        -1,
+        0
+      ]
+    },
+    {
+      "id": "U1@150",
+      "sourceCellRange": "side_flange!A7:E7",
+      "section": "U1",
+      "flangeType": "side_flange",
+      "azimuthDeg": 150,
+      "poloidalNormalDeg": 270,
+      "sourceAuthoredMetres": {
+        "r": 1.43982,
+        "z": 1.8165
+      },
+      "diagViewMetres": [
+        -1.246920696877,
+        0.71991,
+        1.8165
+      ],
+      "diagViewNormal": [
+        0,
+        0,
+        -1
+      ],
+      "webMetres": [
+        -1.246920696877,
+        1.8165,
+        -0.71991
+      ],
+      "webNormal": [
+        0,
+        -1,
+        0
+      ]
+    },
+    {
+      "id": "U1@180",
+      "sourceCellRange": "side_flange!A8:E8",
+      "section": "U1",
+      "flangeType": "side_flange",
+      "azimuthDeg": 180,
+      "poloidalNormalDeg": 270,
+      "sourceAuthoredMetres": {
+        "r": 1.43982,
+        "z": 1.8165
+      },
+      "diagViewMetres": [
+        -1.43982,
+        0,
+        1.8165
+      ],
+      "diagViewNormal": [
+        0,
+        0,
+        -1
+      ],
+      "webMetres": [
+        -1.43982,
+        1.8165,
+        0
+      ],
+      "webNormal": [
+        0,
+        -1,
+        0
+      ]
+    },
+    {
+      "id": "U1@210",
+      "sourceCellRange": "side_flange!A9:E9",
+      "section": "U1",
+      "flangeType": "side_flange",
+      "azimuthDeg": 210,
+      "poloidalNormalDeg": 270,
+      "sourceAuthoredMetres": {
+        "r": 1.43982,
+        "z": 1.8165
+      },
+      "diagViewMetres": [
+        -1.246920696877,
+        -0.71991,
+        1.8165
+      ],
+      "diagViewNormal": [
+        0,
+        0,
+        -1
+      ],
+      "webMetres": [
+        -1.246920696877,
+        1.8165,
+        0.71991
+      ],
+      "webNormal": [
+        0,
+        -1,
+        0
+      ]
+    },
+    {
+      "id": "U1@240",
+      "sourceCellRange": "side_flange!A10:E10",
+      "section": "U1",
+      "flangeType": "side_flange",
+      "azimuthDeg": 240,
+      "poloidalNormalDeg": 270,
+      "sourceAuthoredMetres": {
+        "r": 1.43982,
+        "z": 1.8165
+      },
+      "diagViewMetres": [
+        -0.71991,
+        -1.246920696877,
+        1.8165
+      ],
+      "diagViewNormal": [
+        0,
+        0,
+        -1
+      ],
+      "webMetres": [
+        -0.71991,
+        1.8165,
+        1.246920696877
+      ],
+      "webNormal": [
+        0,
+        -1,
+        0
+      ]
+    },
+    {
+      "id": "U1@270",
+      "sourceCellRange": "side_flange!A11:E11",
+      "section": "U1",
+      "flangeType": "side_flange",
+      "azimuthDeg": 270,
+      "poloidalNormalDeg": 270,
+      "sourceAuthoredMetres": {
+        "r": 1.43982,
+        "z": 1.8165
+      },
+      "diagViewMetres": [
+        0,
+        -1.43982,
+        1.8165
+      ],
+      "diagViewNormal": [
+        0,
+        0,
+        -1
+      ],
+      "webMetres": [
+        0,
+        1.8165,
+        1.43982
+      ],
+      "webNormal": [
+        0,
+        -1,
+        0
+      ]
+    },
+    {
+      "id": "U1@300",
+      "sourceCellRange": "side_flange!A12:E12",
+      "section": "U1",
+      "flangeType": "side_flange",
+      "azimuthDeg": 300,
+      "poloidalNormalDeg": 270,
+      "sourceAuthoredMetres": {
+        "r": 1.43982,
+        "z": 1.8165
+      },
+      "diagViewMetres": [
+        0.71991,
+        -1.246920696877,
+        1.8165
+      ],
+      "diagViewNormal": [
+        0,
+        0,
+        -1
+      ],
+      "webMetres": [
+        0.71991,
+        1.8165,
+        1.246920696877
+      ],
+      "webNormal": [
+        0,
+        -1,
+        0
+      ]
+    },
+    {
+      "id": "U1@330",
+      "sourceCellRange": "side_flange!A13:E13",
+      "section": "U1",
+      "flangeType": "side_flange",
+      "azimuthDeg": 330,
+      "poloidalNormalDeg": 270,
+      "sourceAuthoredMetres": {
+        "r": 1.43982,
+        "z": 1.8165
+      },
+      "diagViewMetres": [
+        1.246920696877,
+        -0.71991,
+        1.8165
+      ],
+      "diagViewNormal": [
+        0,
+        0,
+        -1
+      ],
+      "webMetres": [
+        1.246920696877,
+        1.8165,
+        0.71991
+      ],
+      "webNormal": [
+        0,
+        -1,
+        0
+      ]
+    },
+    {
+      "id": "U2@0",
+      "sourceCellRange": "side_flange!A14:E14",
+      "section": "U2",
+      "flangeType": "side_flange",
+      "azimuthDeg": 0,
+      "poloidalNormalDeg": 220,
+      "sourceAuthoredMetres": {
+        "r": 1.43982,
+        "z": 1.60099
+      },
+      "diagViewMetres": [
+        1.43982,
+        0,
+        1.60099
+      ],
+      "diagViewNormal": [
+        -0.766044443119,
+        0,
+        -0.642787609687
+      ],
+      "webMetres": [
+        1.43982,
+        1.60099,
+        0
+      ],
+      "webNormal": [
+        -0.766044443119,
+        -0.642787609687,
+        0
+      ]
+    },
+    {
+      "id": "U2@30",
+      "sourceCellRange": "side_flange!A15:E15",
+      "section": "U2",
+      "flangeType": "side_flange",
+      "azimuthDeg": 30,
+      "poloidalNormalDeg": 220,
+      "sourceAuthoredMetres": {
+        "r": 1.43982,
+        "z": 1.60099
+      },
+      "diagViewMetres": [
+        1.246920696877,
+        0.71991,
+        1.60099
+      ],
+      "diagViewNormal": [
+        -0.663413948169,
+        -0.383022221559,
+        -0.642787609687
+      ],
+      "webMetres": [
+        1.246920696877,
+        1.60099,
+        -0.71991
+      ],
+      "webNormal": [
+        -0.663413948169,
+        -0.642787609687,
+        0.383022221559
+      ]
+    },
+    {
+      "id": "U2@60",
+      "sourceCellRange": "side_flange!A16:E16",
+      "section": "U2",
+      "flangeType": "side_flange",
+      "azimuthDeg": 60,
+      "poloidalNormalDeg": 220,
+      "sourceAuthoredMetres": {
+        "r": 1.43982,
+        "z": 1.60099
+      },
+      "diagViewMetres": [
+        0.71991,
+        1.246920696877,
+        1.60099
+      ],
+      "diagViewNormal": [
+        -0.383022221559,
+        -0.663413948169,
+        -0.642787609687
+      ],
+      "webMetres": [
+        0.71991,
+        1.60099,
+        -1.246920696877
+      ],
+      "webNormal": [
+        -0.383022221559,
+        -0.642787609687,
+        0.663413948169
+      ]
+    },
+    {
+      "id": "U2@90",
+      "sourceCellRange": "side_flange!A17:E17",
+      "section": "U2",
+      "flangeType": "side_flange",
+      "azimuthDeg": 90,
+      "poloidalNormalDeg": 220,
+      "sourceAuthoredMetres": {
+        "r": 1.43982,
+        "z": 1.60099
+      },
+      "diagViewMetres": [
+        0,
+        1.43982,
+        1.60099
+      ],
+      "diagViewNormal": [
+        0,
+        -0.766044443119,
+        -0.642787609687
+      ],
+      "webMetres": [
+        0,
+        1.60099,
+        -1.43982
+      ],
+      "webNormal": [
+        0,
+        -0.642787609687,
+        0.766044443119
+      ]
+    },
+    {
+      "id": "U2@120",
+      "sourceCellRange": "side_flange!A18:E18",
+      "section": "U2",
+      "flangeType": "side_flange",
+      "azimuthDeg": 120,
+      "poloidalNormalDeg": 220,
+      "sourceAuthoredMetres": {
+        "r": 1.43982,
+        "z": 1.60099
+      },
+      "diagViewMetres": [
+        -0.71991,
+        1.246920696877,
+        1.60099
+      ],
+      "diagViewNormal": [
+        0.383022221559,
+        -0.663413948169,
+        -0.642787609687
+      ],
+      "webMetres": [
+        -0.71991,
+        1.60099,
+        -1.246920696877
+      ],
+      "webNormal": [
+        0.383022221559,
+        -0.642787609687,
+        0.663413948169
+      ]
+    },
+    {
+      "id": "U2@150",
+      "sourceCellRange": "side_flange!A19:E19",
+      "section": "U2",
+      "flangeType": "side_flange",
+      "azimuthDeg": 150,
+      "poloidalNormalDeg": 220,
+      "sourceAuthoredMetres": {
+        "r": 1.43982,
+        "z": 1.60099
+      },
+      "diagViewMetres": [
+        -1.246920696877,
+        0.71991,
+        1.60099
+      ],
+      "diagViewNormal": [
+        0.663413948169,
+        -0.383022221559,
+        -0.642787609687
+      ],
+      "webMetres": [
+        -1.246920696877,
+        1.60099,
+        -0.71991
+      ],
+      "webNormal": [
+        0.663413948169,
+        -0.642787609687,
+        0.383022221559
+      ]
+    },
+    {
+      "id": "U2@180",
+      "sourceCellRange": "side_flange!A20:E20",
+      "section": "U2",
+      "flangeType": "side_flange",
+      "azimuthDeg": 180,
+      "poloidalNormalDeg": 220,
+      "sourceAuthoredMetres": {
+        "r": 1.43982,
+        "z": 1.60099
+      },
+      "diagViewMetres": [
+        -1.43982,
+        0,
+        1.60099
+      ],
+      "diagViewNormal": [
+        0.766044443119,
+        0,
+        -0.642787609687
+      ],
+      "webMetres": [
+        -1.43982,
+        1.60099,
+        0
+      ],
+      "webNormal": [
+        0.766044443119,
+        -0.642787609687,
+        0
+      ]
+    },
+    {
+      "id": "U2@210",
+      "sourceCellRange": "side_flange!A21:E21",
+      "section": "U2",
+      "flangeType": "side_flange",
+      "azimuthDeg": 210,
+      "poloidalNormalDeg": 220,
+      "sourceAuthoredMetres": {
+        "r": 1.43982,
+        "z": 1.60099
+      },
+      "diagViewMetres": [
+        -1.246920696877,
+        -0.71991,
+        1.60099
+      ],
+      "diagViewNormal": [
+        0.663413948169,
+        0.383022221559,
+        -0.642787609687
+      ],
+      "webMetres": [
+        -1.246920696877,
+        1.60099,
+        0.71991
+      ],
+      "webNormal": [
+        0.663413948169,
+        -0.642787609687,
+        -0.383022221559
+      ]
+    },
+    {
+      "id": "U2@240",
+      "sourceCellRange": "side_flange!A22:E22",
+      "section": "U2",
+      "flangeType": "side_flange",
+      "azimuthDeg": 240,
+      "poloidalNormalDeg": 220,
+      "sourceAuthoredMetres": {
+        "r": 1.43982,
+        "z": 1.60099
+      },
+      "diagViewMetres": [
+        -0.71991,
+        -1.246920696877,
+        1.60099
+      ],
+      "diagViewNormal": [
+        0.383022221559,
+        0.663413948169,
+        -0.642787609687
+      ],
+      "webMetres": [
+        -0.71991,
+        1.60099,
+        1.246920696877
+      ],
+      "webNormal": [
+        0.383022221559,
+        -0.642787609687,
+        -0.663413948169
+      ]
+    },
+    {
+      "id": "U2@270",
+      "sourceCellRange": "side_flange!A23:E23",
+      "section": "U2",
+      "flangeType": "side_flange",
+      "azimuthDeg": 270,
+      "poloidalNormalDeg": 220,
+      "sourceAuthoredMetres": {
+        "r": 1.43982,
+        "z": 1.60099
+      },
+      "diagViewMetres": [
+        0,
+        -1.43982,
+        1.60099
+      ],
+      "diagViewNormal": [
+        0,
+        0.766044443119,
+        -0.642787609687
+      ],
+      "webMetres": [
+        0,
+        1.60099,
+        1.43982
+      ],
+      "webNormal": [
+        0,
+        -0.642787609687,
+        -0.766044443119
+      ]
+    },
+    {
+      "id": "U2@300",
+      "sourceCellRange": "side_flange!A24:E24",
+      "section": "U2",
+      "flangeType": "side_flange",
+      "azimuthDeg": 300,
+      "poloidalNormalDeg": 220,
+      "sourceAuthoredMetres": {
+        "r": 1.43982,
+        "z": 1.60099
+      },
+      "diagViewMetres": [
+        0.71991,
+        -1.246920696877,
+        1.60099
+      ],
+      "diagViewNormal": [
+        -0.383022221559,
+        0.663413948169,
+        -0.642787609687
+      ],
+      "webMetres": [
+        0.71991,
+        1.60099,
+        1.246920696877
+      ],
+      "webNormal": [
+        -0.383022221559,
+        -0.642787609687,
+        -0.663413948169
+      ]
+    },
+    {
+      "id": "U2@330",
+      "sourceCellRange": "side_flange!A25:E25",
+      "section": "U2",
+      "flangeType": "side_flange",
+      "azimuthDeg": 330,
+      "poloidalNormalDeg": 220,
+      "sourceAuthoredMetres": {
+        "r": 1.43982,
+        "z": 1.60099
+      },
+      "diagViewMetres": [
+        1.246920696877,
+        -0.71991,
+        1.60099
+      ],
+      "diagViewNormal": [
+        -0.663413948169,
+        0.383022221559,
+        -0.642787609687
+      ],
+      "webMetres": [
+        1.246920696877,
+        1.60099,
+        0.71991
+      ],
+      "webNormal": [
+        -0.663413948169,
+        -0.642787609687,
+        -0.383022221559
+      ]
+    },
+    {
+      "id": "S1@0",
+      "sourceCellRange": "side_flange!A26:E26",
+      "section": "S1",
+      "flangeType": "side_flange",
+      "azimuthDeg": 0,
+      "poloidalNormalDeg": 180,
+      "sourceAuthoredMetres": {
+        "r": 1.841,
+        "z": 0.9
+      },
+      "diagViewMetres": [
+        1.841,
+        0,
+        0.9
+      ],
+      "diagViewNormal": [
+        -1,
+        0,
+        0
+      ],
+      "webMetres": [
+        1.841,
+        0.9,
+        0
+      ],
+      "webNormal": [
+        -1,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "S1@30",
+      "sourceCellRange": "side_flange!A27:E27",
+      "section": "S1",
+      "flangeType": "side_flange",
+      "azimuthDeg": 30,
+      "poloidalNormalDeg": 180,
+      "sourceAuthoredMetres": {
+        "r": 1.841,
+        "z": 0.9
+      },
+      "diagViewMetres": [
+        1.594352768367,
+        0.9205,
+        0.9
+      ],
+      "diagViewNormal": [
+        -0.866025403784,
+        -0.5,
+        0
+      ],
+      "webMetres": [
+        1.594352768367,
+        0.9,
+        -0.9205
+      ],
+      "webNormal": [
+        -0.866025403784,
+        0,
+        0.5
+      ]
+    },
+    {
+      "id": "S1@60",
+      "sourceCellRange": "side_flange!A28:E28",
+      "section": "S1",
+      "flangeType": "side_flange",
+      "azimuthDeg": 60,
+      "poloidalNormalDeg": 180,
+      "sourceAuthoredMetres": {
+        "r": 1.841,
+        "z": 0.9
+      },
+      "diagViewMetres": [
+        0.9205,
+        1.594352768367,
+        0.9
+      ],
+      "diagViewNormal": [
+        -0.5,
+        -0.866025403784,
+        0
+      ],
+      "webMetres": [
+        0.9205,
+        0.9,
+        -1.594352768367
+      ],
+      "webNormal": [
+        -0.5,
+        0,
+        0.866025403784
+      ]
+    },
+    {
+      "id": "S1@90",
+      "sourceCellRange": "side_flange!A29:E29",
+      "section": "S1",
+      "flangeType": "side_flange",
+      "azimuthDeg": 90,
+      "poloidalNormalDeg": 180,
+      "sourceAuthoredMetres": {
+        "r": 1.841,
+        "z": 0.9
+      },
+      "diagViewMetres": [
+        0,
+        1.841,
+        0.9
+      ],
+      "diagViewNormal": [
+        0,
+        -1,
+        0
+      ],
+      "webMetres": [
+        0,
+        0.9,
+        -1.841
+      ],
+      "webNormal": [
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "id": "S1@120",
+      "sourceCellRange": "side_flange!A30:E30",
+      "section": "S1",
+      "flangeType": "side_flange",
+      "azimuthDeg": 120,
+      "poloidalNormalDeg": 180,
+      "sourceAuthoredMetres": {
+        "r": 1.841,
+        "z": 0.9
+      },
+      "diagViewMetres": [
+        -0.9205,
+        1.594352768367,
+        0.9
+      ],
+      "diagViewNormal": [
+        0.5,
+        -0.866025403784,
+        0
+      ],
+      "webMetres": [
+        -0.9205,
+        0.9,
+        -1.594352768367
+      ],
+      "webNormal": [
+        0.5,
+        0,
+        0.866025403784
+      ]
+    },
+    {
+      "id": "S1@150",
+      "sourceCellRange": "side_flange!A31:E31",
+      "section": "S1",
+      "flangeType": "side_flange",
+      "azimuthDeg": 150,
+      "poloidalNormalDeg": 180,
+      "sourceAuthoredMetres": {
+        "r": 1.841,
+        "z": 0.9
+      },
+      "diagViewMetres": [
+        -1.594352768367,
+        0.9205,
+        0.9
+      ],
+      "diagViewNormal": [
+        0.866025403784,
+        -0.5,
+        0
+      ],
+      "webMetres": [
+        -1.594352768367,
+        0.9,
+        -0.9205
+      ],
+      "webNormal": [
+        0.866025403784,
+        0,
+        0.5
+      ]
+    },
+    {
+      "id": "S1@180",
+      "sourceCellRange": "side_flange!A32:E32",
+      "section": "S1",
+      "flangeType": "side_flange",
+      "azimuthDeg": 180,
+      "poloidalNormalDeg": 180,
+      "sourceAuthoredMetres": {
+        "r": 1.841,
+        "z": 0.9
+      },
+      "diagViewMetres": [
+        -1.841,
+        0,
+        0.9
+      ],
+      "diagViewNormal": [
+        1,
+        0,
+        0
+      ],
+      "webMetres": [
+        -1.841,
+        0.9,
+        0
+      ],
+      "webNormal": [
+        1,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "S1@210",
+      "sourceCellRange": "side_flange!A33:E33",
+      "section": "S1",
+      "flangeType": "side_flange",
+      "azimuthDeg": 210,
+      "poloidalNormalDeg": 180,
+      "sourceAuthoredMetres": {
+        "r": 1.841,
+        "z": 0.9
+      },
+      "diagViewMetres": [
+        -1.594352768367,
+        -0.9205,
+        0.9
+      ],
+      "diagViewNormal": [
+        0.866025403784,
+        0.5,
+        0
+      ],
+      "webMetres": [
+        -1.594352768367,
+        0.9,
+        0.9205
+      ],
+      "webNormal": [
+        0.866025403784,
+        0,
+        -0.5
+      ]
+    },
+    {
+      "id": "S1@240",
+      "sourceCellRange": "side_flange!A34:E34",
+      "section": "S1",
+      "flangeType": "side_flange",
+      "azimuthDeg": 240,
+      "poloidalNormalDeg": 180,
+      "sourceAuthoredMetres": {
+        "r": 1.841,
+        "z": 0.9
+      },
+      "diagViewMetres": [
+        -0.9205,
+        -1.594352768367,
+        0.9
+      ],
+      "diagViewNormal": [
+        0.5,
+        0.866025403784,
+        0
+      ],
+      "webMetres": [
+        -0.9205,
+        0.9,
+        1.594352768367
+      ],
+      "webNormal": [
+        0.5,
+        0,
+        -0.866025403784
+      ]
+    },
+    {
+      "id": "S1@270",
+      "sourceCellRange": "side_flange!A35:E35",
+      "section": "S1",
+      "flangeType": "side_flange",
+      "azimuthDeg": 270,
+      "poloidalNormalDeg": 180,
+      "sourceAuthoredMetres": {
+        "r": 1.841,
+        "z": 0.9
+      },
+      "diagViewMetres": [
+        0,
+        -1.841,
+        0.9
+      ],
+      "diagViewNormal": [
+        0,
+        1,
+        0
+      ],
+      "webMetres": [
+        0,
+        0.9,
+        1.841
+      ],
+      "webNormal": [
+        0,
+        0,
+        -1
+      ]
+    },
+    {
+      "id": "S1@300",
+      "sourceCellRange": "side_flange!A36:E36",
+      "section": "S1",
+      "flangeType": "side_flange",
+      "azimuthDeg": 300,
+      "poloidalNormalDeg": 180,
+      "sourceAuthoredMetres": {
+        "r": 1.841,
+        "z": 0.9
+      },
+      "diagViewMetres": [
+        0.9205,
+        -1.594352768367,
+        0.9
+      ],
+      "diagViewNormal": [
+        -0.5,
+        0.866025403784,
+        0
+      ],
+      "webMetres": [
+        0.9205,
+        0.9,
+        1.594352768367
+      ],
+      "webNormal": [
+        -0.5,
+        0,
+        -0.866025403784
+      ]
+    },
+    {
+      "id": "S1@330",
+      "sourceCellRange": "side_flange!A37:E37",
+      "section": "S1",
+      "flangeType": "side_flange",
+      "azimuthDeg": 330,
+      "poloidalNormalDeg": 180,
+      "sourceAuthoredMetres": {
+        "r": 1.841,
+        "z": 0.9
+      },
+      "diagViewMetres": [
+        1.594352768367,
+        -0.9205,
+        0.9
+      ],
+      "diagViewNormal": [
+        -0.866025403784,
+        0.5,
+        0
+      ],
+      "webMetres": [
+        1.594352768367,
+        0.9,
+        0.9205
+      ],
+      "webNormal": [
+        -0.866025403784,
+        0,
+        -0.5
+      ]
+    },
+    {
+      "id": "S2@0",
+      "sourceCellRange": "mid_flange!A2:F2",
+      "section": "S2",
+      "flangeType": "mid_flange",
+      "azimuthDeg": 0,
+      "poloidalNormalDeg": 180,
+      "sourceAuthoredMetres": {
+        "x": 1.841,
+        "y": 0,
+        "z": 0
+      },
+      "diagViewMetres": [
+        1.841,
+        0,
+        0
+      ],
+      "diagViewNormal": [
+        -1,
+        0,
+        0
+      ],
+      "webMetres": [
+        1.841,
+        0,
+        0
+      ],
+      "webNormal": [
+        -1,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "S2@30",
+      "sourceCellRange": "mid_flange!A3:F3",
+      "section": "S2",
+      "flangeType": "mid_flange",
+      "azimuthDeg": 30,
+      "poloidalNormalDeg": 180,
+      "sourceAuthoredMetres": {
+        "x": 1.594352768367,
+        "y": 0.9205,
+        "z": 0
+      },
+      "diagViewMetres": [
+        1.594352768367,
+        0.9205,
+        0
+      ],
+      "diagViewNormal": [
+        -0.866025403784,
+        -0.5,
+        0
+      ],
+      "webMetres": [
+        1.594352768367,
+        0,
+        -0.9205
+      ],
+      "webNormal": [
+        -0.866025403784,
+        0,
+        0.5
+      ]
+    },
+    {
+      "id": "S2@60",
+      "sourceCellRange": "mid_flange!A4:F4",
+      "section": "S2",
+      "flangeType": "mid_flange",
+      "azimuthDeg": 60,
+      "poloidalNormalDeg": 180,
+      "sourceAuthoredMetres": {
+        "x": 0.9205,
+        "y": 1.594352768367,
+        "z": 0
+      },
+      "diagViewMetres": [
+        0.9205,
+        1.594352768367,
+        0
+      ],
+      "diagViewNormal": [
+        -0.5,
+        -0.866025403784,
+        0
+      ],
+      "webMetres": [
+        0.9205,
+        0,
+        -1.594352768367
+      ],
+      "webNormal": [
+        -0.5,
+        0,
+        0.866025403784
+      ]
+    },
+    {
+      "id": "S2@90",
+      "sourceCellRange": "mid_flange!A5:F5",
+      "section": "S2",
+      "flangeType": "mid_flange",
+      "azimuthDeg": 90,
+      "poloidalNormalDeg": 180,
+      "sourceAuthoredMetres": {
+        "x": 0,
+        "y": 1.841,
+        "z": 0
+      },
+      "diagViewMetres": [
+        0,
+        1.841,
+        0
+      ],
+      "diagViewNormal": [
+        0,
+        -1,
+        0
+      ],
+      "webMetres": [
+        0,
+        0,
+        -1.841
+      ],
+      "webNormal": [
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "id": "S2@120",
+      "sourceCellRange": "mid_flange!A6:F6",
+      "section": "S2",
+      "flangeType": "mid_flange",
+      "azimuthDeg": 120,
+      "poloidalNormalDeg": 180,
+      "sourceAuthoredMetres": {
+        "x": -0.9205,
+        "y": 1.594352768367,
+        "z": 0
+      },
+      "diagViewMetres": [
+        -0.9205,
+        1.594352768367,
+        0
+      ],
+      "diagViewNormal": [
+        0.5,
+        -0.866025403784,
+        0
+      ],
+      "webMetres": [
+        -0.9205,
+        0,
+        -1.594352768367
+      ],
+      "webNormal": [
+        0.5,
+        0,
+        0.866025403784
+      ]
+    },
+    {
+      "id": "S2@150",
+      "sourceCellRange": "mid_flange!A7:F7",
+      "section": "S2",
+      "flangeType": "mid_flange",
+      "azimuthDeg": 150,
+      "poloidalNormalDeg": 180,
+      "sourceAuthoredMetres": {
+        "x": -1.594352768367,
+        "y": 0.9205,
+        "z": 0
+      },
+      "diagViewMetres": [
+        -1.594352768367,
+        0.9205,
+        0
+      ],
+      "diagViewNormal": [
+        0.866025403784,
+        -0.5,
+        0
+      ],
+      "webMetres": [
+        -1.594352768367,
+        0,
+        -0.9205
+      ],
+      "webNormal": [
+        0.866025403784,
+        0,
+        0.5
+      ]
+    },
+    {
+      "id": "S2@180",
+      "sourceCellRange": "mid_flange!A8:F8",
+      "section": "S2",
+      "flangeType": "mid_flange",
+      "azimuthDeg": 180,
+      "poloidalNormalDeg": 180,
+      "sourceAuthoredMetres": {
+        "x": -1.841,
+        "y": 0,
+        "z": 0
+      },
+      "diagViewMetres": [
+        -1.841,
+        0,
+        0
+      ],
+      "diagViewNormal": [
+        1,
+        0,
+        0
+      ],
+      "webMetres": [
+        -1.841,
+        0,
+        0
+      ],
+      "webNormal": [
+        1,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "S2@210",
+      "sourceCellRange": "mid_flange!A9:F9",
+      "section": "S2",
+      "flangeType": "mid_flange",
+      "azimuthDeg": 210,
+      "poloidalNormalDeg": 180,
+      "sourceAuthoredMetres": {
+        "x": -1.594352768367,
+        "y": -0.9205,
+        "z": 0
+      },
+      "diagViewMetres": [
+        -1.594352768367,
+        -0.9205,
+        0
+      ],
+      "diagViewNormal": [
+        0.866025403784,
+        0.5,
+        0
+      ],
+      "webMetres": [
+        -1.594352768367,
+        0,
+        0.9205
+      ],
+      "webNormal": [
+        0.866025403784,
+        0,
+        -0.5
+      ]
+    },
+    {
+      "id": "S2@240",
+      "sourceCellRange": "mid_flange!A10:F10",
+      "section": "S2",
+      "flangeType": "mid_flange",
+      "azimuthDeg": 240,
+      "poloidalNormalDeg": 180,
+      "sourceAuthoredMetres": {
+        "x": -0.9205,
+        "y": -1.594352768367,
+        "z": 0
+      },
+      "diagViewMetres": [
+        -0.9205,
+        -1.594352768367,
+        0
+      ],
+      "diagViewNormal": [
+        0.5,
+        0.866025403784,
+        0
+      ],
+      "webMetres": [
+        -0.9205,
+        0,
+        1.594352768367
+      ],
+      "webNormal": [
+        0.5,
+        0,
+        -0.866025403784
+      ]
+    },
+    {
+      "id": "S2@270",
+      "sourceCellRange": "mid_flange!A11:F11",
+      "section": "S2",
+      "flangeType": "mid_flange",
+      "azimuthDeg": 270,
+      "poloidalNormalDeg": 180,
+      "sourceAuthoredMetres": {
+        "x": 0,
+        "y": -1.841,
+        "z": 0
+      },
+      "diagViewMetres": [
+        0,
+        -1.841,
+        0
+      ],
+      "diagViewNormal": [
+        0,
+        1,
+        0
+      ],
+      "webMetres": [
+        0,
+        0,
+        1.841
+      ],
+      "webNormal": [
+        0,
+        0,
+        -1
+      ]
+    },
+    {
+      "id": "S2@300",
+      "sourceCellRange": "mid_flange!A12:F12",
+      "section": "S2",
+      "flangeType": "mid_flange",
+      "azimuthDeg": 300,
+      "poloidalNormalDeg": 180,
+      "sourceAuthoredMetres": {
+        "x": 0.9205,
+        "y": -1.594352768367,
+        "z": 0
+      },
+      "diagViewMetres": [
+        0.9205,
+        -1.594352768367,
+        0
+      ],
+      "diagViewNormal": [
+        -0.5,
+        0.866025403784,
+        0
+      ],
+      "webMetres": [
+        0.9205,
+        0,
+        1.594352768367
+      ],
+      "webNormal": [
+        -0.5,
+        0,
+        -0.866025403784
+      ]
+    },
+    {
+      "id": "S2@330",
+      "sourceCellRange": "mid_flange!A13:F13",
+      "section": "S2",
+      "flangeType": "mid_flange",
+      "azimuthDeg": 330,
+      "poloidalNormalDeg": 180,
+      "sourceAuthoredMetres": {
+        "x": 1.594352768367,
+        "y": -0.9205,
+        "z": 0
+      },
+      "diagViewMetres": [
+        1.594352768367,
+        -0.9205,
+        0
+      ],
+      "diagViewNormal": [
+        -0.866025403784,
+        0.5,
+        0
+      ],
+      "webMetres": [
+        1.594352768367,
+        0,
+        0.9205
+      ],
+      "webNormal": [
+        -0.866025403784,
+        0,
+        -0.5
+      ]
+    },
+    {
+      "id": "S3@0",
+      "sourceCellRange": "side_flange!A38:E38",
+      "section": "S3",
+      "flangeType": "side_flange",
+      "azimuthDeg": 0,
+      "poloidalNormalDeg": 180,
+      "sourceAuthoredMetres": {
+        "r": 1.841,
+        "z": -0.9
+      },
+      "diagViewMetres": [
+        1.841,
+        0,
+        -0.9
+      ],
+      "diagViewNormal": [
+        -1,
+        0,
+        0
+      ],
+      "webMetres": [
+        1.841,
+        -0.9,
+        0
+      ],
+      "webNormal": [
+        -1,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "S3@30",
+      "sourceCellRange": "side_flange!A39:E39",
+      "section": "S3",
+      "flangeType": "side_flange",
+      "azimuthDeg": 30,
+      "poloidalNormalDeg": 180,
+      "sourceAuthoredMetres": {
+        "r": 1.841,
+        "z": -0.9
+      },
+      "diagViewMetres": [
+        1.594352768367,
+        0.9205,
+        -0.9
+      ],
+      "diagViewNormal": [
+        -0.866025403784,
+        -0.5,
+        0
+      ],
+      "webMetres": [
+        1.594352768367,
+        -0.9,
+        -0.9205
+      ],
+      "webNormal": [
+        -0.866025403784,
+        0,
+        0.5
+      ]
+    },
+    {
+      "id": "S3@60",
+      "sourceCellRange": "side_flange!A40:E40",
+      "section": "S3",
+      "flangeType": "side_flange",
+      "azimuthDeg": 60,
+      "poloidalNormalDeg": 180,
+      "sourceAuthoredMetres": {
+        "r": 1.841,
+        "z": -0.9
+      },
+      "diagViewMetres": [
+        0.9205,
+        1.594352768367,
+        -0.9
+      ],
+      "diagViewNormal": [
+        -0.5,
+        -0.866025403784,
+        0
+      ],
+      "webMetres": [
+        0.9205,
+        -0.9,
+        -1.594352768367
+      ],
+      "webNormal": [
+        -0.5,
+        0,
+        0.866025403784
+      ]
+    },
+    {
+      "id": "S3@90",
+      "sourceCellRange": "side_flange!A41:E41",
+      "section": "S3",
+      "flangeType": "side_flange",
+      "azimuthDeg": 90,
+      "poloidalNormalDeg": 180,
+      "sourceAuthoredMetres": {
+        "r": 1.841,
+        "z": -0.9
+      },
+      "diagViewMetres": [
+        0,
+        1.841,
+        -0.9
+      ],
+      "diagViewNormal": [
+        0,
+        -1,
+        0
+      ],
+      "webMetres": [
+        0,
+        -0.9,
+        -1.841
+      ],
+      "webNormal": [
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "id": "S3@120",
+      "sourceCellRange": "side_flange!A42:E42",
+      "section": "S3",
+      "flangeType": "side_flange",
+      "azimuthDeg": 120,
+      "poloidalNormalDeg": 180,
+      "sourceAuthoredMetres": {
+        "r": 1.841,
+        "z": -0.9
+      },
+      "diagViewMetres": [
+        -0.9205,
+        1.594352768367,
+        -0.9
+      ],
+      "diagViewNormal": [
+        0.5,
+        -0.866025403784,
+        0
+      ],
+      "webMetres": [
+        -0.9205,
+        -0.9,
+        -1.594352768367
+      ],
+      "webNormal": [
+        0.5,
+        0,
+        0.866025403784
+      ]
+    },
+    {
+      "id": "S3@150",
+      "sourceCellRange": "side_flange!A43:E43",
+      "section": "S3",
+      "flangeType": "side_flange",
+      "azimuthDeg": 150,
+      "poloidalNormalDeg": 180,
+      "sourceAuthoredMetres": {
+        "r": 1.841,
+        "z": -0.9
+      },
+      "diagViewMetres": [
+        -1.594352768367,
+        0.9205,
+        -0.9
+      ],
+      "diagViewNormal": [
+        0.866025403784,
+        -0.5,
+        0
+      ],
+      "webMetres": [
+        -1.594352768367,
+        -0.9,
+        -0.9205
+      ],
+      "webNormal": [
+        0.866025403784,
+        0,
+        0.5
+      ]
+    },
+    {
+      "id": "S3@180",
+      "sourceCellRange": "side_flange!A44:E44",
+      "section": "S3",
+      "flangeType": "side_flange",
+      "azimuthDeg": 180,
+      "poloidalNormalDeg": 180,
+      "sourceAuthoredMetres": {
+        "r": 1.841,
+        "z": -0.9
+      },
+      "diagViewMetres": [
+        -1.841,
+        0,
+        -0.9
+      ],
+      "diagViewNormal": [
+        1,
+        0,
+        0
+      ],
+      "webMetres": [
+        -1.841,
+        -0.9,
+        0
+      ],
+      "webNormal": [
+        1,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "S3@210",
+      "sourceCellRange": "side_flange!A45:E45",
+      "section": "S3",
+      "flangeType": "side_flange",
+      "azimuthDeg": 210,
+      "poloidalNormalDeg": 180,
+      "sourceAuthoredMetres": {
+        "r": 1.841,
+        "z": -0.9
+      },
+      "diagViewMetres": [
+        -1.594352768367,
+        -0.9205,
+        -0.9
+      ],
+      "diagViewNormal": [
+        0.866025403784,
+        0.5,
+        0
+      ],
+      "webMetres": [
+        -1.594352768367,
+        -0.9,
+        0.9205
+      ],
+      "webNormal": [
+        0.866025403784,
+        0,
+        -0.5
+      ]
+    },
+    {
+      "id": "S3@240",
+      "sourceCellRange": "side_flange!A46:E46",
+      "section": "S3",
+      "flangeType": "side_flange",
+      "azimuthDeg": 240,
+      "poloidalNormalDeg": 180,
+      "sourceAuthoredMetres": {
+        "r": 1.841,
+        "z": -0.9
+      },
+      "diagViewMetres": [
+        -0.9205,
+        -1.594352768367,
+        -0.9
+      ],
+      "diagViewNormal": [
+        0.5,
+        0.866025403784,
+        0
+      ],
+      "webMetres": [
+        -0.9205,
+        -0.9,
+        1.594352768367
+      ],
+      "webNormal": [
+        0.5,
+        0,
+        -0.866025403784
+      ]
+    },
+    {
+      "id": "S3@270",
+      "sourceCellRange": "side_flange!A47:E47",
+      "section": "S3",
+      "flangeType": "side_flange",
+      "azimuthDeg": 270,
+      "poloidalNormalDeg": 180,
+      "sourceAuthoredMetres": {
+        "r": 1.841,
+        "z": -0.9
+      },
+      "diagViewMetres": [
+        0,
+        -1.841,
+        -0.9
+      ],
+      "diagViewNormal": [
+        0,
+        1,
+        0
+      ],
+      "webMetres": [
+        0,
+        -0.9,
+        1.841
+      ],
+      "webNormal": [
+        0,
+        0,
+        -1
+      ]
+    },
+    {
+      "id": "S3@300",
+      "sourceCellRange": "side_flange!A48:E48",
+      "section": "S3",
+      "flangeType": "side_flange",
+      "azimuthDeg": 300,
+      "poloidalNormalDeg": 180,
+      "sourceAuthoredMetres": {
+        "r": 1.841,
+        "z": -0.9
+      },
+      "diagViewMetres": [
+        0.9205,
+        -1.594352768367,
+        -0.9
+      ],
+      "diagViewNormal": [
+        -0.5,
+        0.866025403784,
+        0
+      ],
+      "webMetres": [
+        0.9205,
+        -0.9,
+        1.594352768367
+      ],
+      "webNormal": [
+        -0.5,
+        0,
+        -0.866025403784
+      ]
+    },
+    {
+      "id": "S3@330",
+      "sourceCellRange": "side_flange!A49:E49",
+      "section": "S3",
+      "flangeType": "side_flange",
+      "azimuthDeg": 330,
+      "poloidalNormalDeg": 180,
+      "sourceAuthoredMetres": {
+        "r": 1.841,
+        "z": -0.9
+      },
+      "diagViewMetres": [
+        1.594352768367,
+        -0.9205,
+        -0.9
+      ],
+      "diagViewNormal": [
+        -0.866025403784,
+        0.5,
+        0
+      ],
+      "webMetres": [
+        1.594352768367,
+        -0.9,
+        0.9205
+      ],
+      "webNormal": [
+        -0.866025403784,
+        0,
+        -0.5
+      ]
+    },
+    {
+      "id": "L1@0",
+      "sourceCellRange": "side_flange!A50:E50",
+      "section": "L1",
+      "flangeType": "side_flange",
+      "azimuthDeg": 0,
+      "poloidalNormalDeg": 130,
+      "sourceAuthoredMetres": {
+        "r": 1.43982,
+        "z": -1.8165
+      },
+      "diagViewMetres": [
+        1.43982,
+        0,
+        -1.8165
+      ],
+      "diagViewNormal": [
+        -0.642787609687,
+        0,
+        0.766044443119
+      ],
+      "webMetres": [
+        1.43982,
+        -1.8165,
+        0
+      ],
+      "webNormal": [
+        -0.642787609687,
+        0.766044443119,
+        0
+      ]
+    },
+    {
+      "id": "L1@30",
+      "sourceCellRange": "side_flange!A51:E51",
+      "section": "L1",
+      "flangeType": "side_flange",
+      "azimuthDeg": 30,
+      "poloidalNormalDeg": 130,
+      "sourceAuthoredMetres": {
+        "r": 1.43982,
+        "z": -1.8165
+      },
+      "diagViewMetres": [
+        1.246920696877,
+        0.71991,
+        -1.8165
+      ],
+      "diagViewNormal": [
+        -0.556670399226,
+        -0.321393804843,
+        0.766044443119
+      ],
+      "webMetres": [
+        1.246920696877,
+        -1.8165,
+        -0.71991
+      ],
+      "webNormal": [
+        -0.556670399226,
+        0.766044443119,
+        0.321393804843
+      ]
+    },
+    {
+      "id": "L1@60",
+      "sourceCellRange": "side_flange!A52:E52",
+      "section": "L1",
+      "flangeType": "side_flange",
+      "azimuthDeg": 60,
+      "poloidalNormalDeg": 130,
+      "sourceAuthoredMetres": {
+        "r": 1.43982,
+        "z": -1.8165
+      },
+      "diagViewMetres": [
+        0.71991,
+        1.246920696877,
+        -1.8165
+      ],
+      "diagViewNormal": [
+        -0.321393804843,
+        -0.556670399226,
+        0.766044443119
+      ],
+      "webMetres": [
+        0.71991,
+        -1.8165,
+        -1.246920696877
+      ],
+      "webNormal": [
+        -0.321393804843,
+        0.766044443119,
+        0.556670399226
+      ]
+    },
+    {
+      "id": "L1@90",
+      "sourceCellRange": "side_flange!A53:E53",
+      "section": "L1",
+      "flangeType": "side_flange",
+      "azimuthDeg": 90,
+      "poloidalNormalDeg": 130,
+      "sourceAuthoredMetres": {
+        "r": 1.43982,
+        "z": -1.8165
+      },
+      "diagViewMetres": [
+        0,
+        1.43982,
+        -1.8165
+      ],
+      "diagViewNormal": [
+        0,
+        -0.642787609687,
+        0.766044443119
+      ],
+      "webMetres": [
+        0,
+        -1.8165,
+        -1.43982
+      ],
+      "webNormal": [
+        0,
+        0.766044443119,
+        0.642787609687
+      ]
+    },
+    {
+      "id": "L1@120",
+      "sourceCellRange": "side_flange!A54:E54",
+      "section": "L1",
+      "flangeType": "side_flange",
+      "azimuthDeg": 120,
+      "poloidalNormalDeg": 130,
+      "sourceAuthoredMetres": {
+        "r": 1.43982,
+        "z": -1.8165
+      },
+      "diagViewMetres": [
+        -0.71991,
+        1.246920696877,
+        -1.8165
+      ],
+      "diagViewNormal": [
+        0.321393804843,
+        -0.556670399226,
+        0.766044443119
+      ],
+      "webMetres": [
+        -0.71991,
+        -1.8165,
+        -1.246920696877
+      ],
+      "webNormal": [
+        0.321393804843,
+        0.766044443119,
+        0.556670399226
+      ]
+    },
+    {
+      "id": "L1@150",
+      "sourceCellRange": "side_flange!A55:E55",
+      "section": "L1",
+      "flangeType": "side_flange",
+      "azimuthDeg": 150,
+      "poloidalNormalDeg": 130,
+      "sourceAuthoredMetres": {
+        "r": 1.43982,
+        "z": -1.8165
+      },
+      "diagViewMetres": [
+        -1.246920696877,
+        0.71991,
+        -1.8165
+      ],
+      "diagViewNormal": [
+        0.556670399226,
+        -0.321393804843,
+        0.766044443119
+      ],
+      "webMetres": [
+        -1.246920696877,
+        -1.8165,
+        -0.71991
+      ],
+      "webNormal": [
+        0.556670399226,
+        0.766044443119,
+        0.321393804843
+      ]
+    },
+    {
+      "id": "L1@180",
+      "sourceCellRange": "side_flange!A56:E56",
+      "section": "L1",
+      "flangeType": "side_flange",
+      "azimuthDeg": 180,
+      "poloidalNormalDeg": 130,
+      "sourceAuthoredMetres": {
+        "r": 1.43982,
+        "z": -1.8165
+      },
+      "diagViewMetres": [
+        -1.43982,
+        0,
+        -1.8165
+      ],
+      "diagViewNormal": [
+        0.642787609687,
+        0,
+        0.766044443119
+      ],
+      "webMetres": [
+        -1.43982,
+        -1.8165,
+        0
+      ],
+      "webNormal": [
+        0.642787609687,
+        0.766044443119,
+        0
+      ]
+    },
+    {
+      "id": "L1@210",
+      "sourceCellRange": "side_flange!A57:E57",
+      "section": "L1",
+      "flangeType": "side_flange",
+      "azimuthDeg": 210,
+      "poloidalNormalDeg": 130,
+      "sourceAuthoredMetres": {
+        "r": 1.43982,
+        "z": -1.8165
+      },
+      "diagViewMetres": [
+        -1.246920696877,
+        -0.71991,
+        -1.8165
+      ],
+      "diagViewNormal": [
+        0.556670399226,
+        0.321393804843,
+        0.766044443119
+      ],
+      "webMetres": [
+        -1.246920696877,
+        -1.8165,
+        0.71991
+      ],
+      "webNormal": [
+        0.556670399226,
+        0.766044443119,
+        -0.321393804843
+      ]
+    },
+    {
+      "id": "L1@240",
+      "sourceCellRange": "side_flange!A58:E58",
+      "section": "L1",
+      "flangeType": "side_flange",
+      "azimuthDeg": 240,
+      "poloidalNormalDeg": 130,
+      "sourceAuthoredMetres": {
+        "r": 1.43982,
+        "z": -1.8165
+      },
+      "diagViewMetres": [
+        -0.71991,
+        -1.246920696877,
+        -1.8165
+      ],
+      "diagViewNormal": [
+        0.321393804843,
+        0.556670399226,
+        0.766044443119
+      ],
+      "webMetres": [
+        -0.71991,
+        -1.8165,
+        1.246920696877
+      ],
+      "webNormal": [
+        0.321393804843,
+        0.766044443119,
+        -0.556670399226
+      ]
+    },
+    {
+      "id": "L1@270",
+      "sourceCellRange": "side_flange!A59:E59",
+      "section": "L1",
+      "flangeType": "side_flange",
+      "azimuthDeg": 270,
+      "poloidalNormalDeg": 130,
+      "sourceAuthoredMetres": {
+        "r": 1.43982,
+        "z": -1.8165
+      },
+      "diagViewMetres": [
+        0,
+        -1.43982,
+        -1.8165
+      ],
+      "diagViewNormal": [
+        0,
+        0.642787609687,
+        0.766044443119
+      ],
+      "webMetres": [
+        0,
+        -1.8165,
+        1.43982
+      ],
+      "webNormal": [
+        0,
+        0.766044443119,
+        -0.642787609687
+      ]
+    },
+    {
+      "id": "L1@300",
+      "sourceCellRange": "side_flange!A60:E60",
+      "section": "L1",
+      "flangeType": "side_flange",
+      "azimuthDeg": 300,
+      "poloidalNormalDeg": 130,
+      "sourceAuthoredMetres": {
+        "r": 1.43982,
+        "z": -1.8165
+      },
+      "diagViewMetres": [
+        0.71991,
+        -1.246920696877,
+        -1.8165
+      ],
+      "diagViewNormal": [
+        -0.321393804843,
+        0.556670399226,
+        0.766044443119
+      ],
+      "webMetres": [
+        0.71991,
+        -1.8165,
+        1.246920696877
+      ],
+      "webNormal": [
+        -0.321393804843,
+        0.766044443119,
+        -0.556670399226
+      ]
+    },
+    {
+      "id": "L1@330",
+      "sourceCellRange": "side_flange!A61:E61",
+      "section": "L1",
+      "flangeType": "side_flange",
+      "azimuthDeg": 330,
+      "poloidalNormalDeg": 130,
+      "sourceAuthoredMetres": {
+        "r": 1.43982,
+        "z": -1.8165
+      },
+      "diagViewMetres": [
+        1.246920696877,
+        -0.71991,
+        -1.8165
+      ],
+      "diagViewNormal": [
+        -0.556670399226,
+        0.321393804843,
+        0.766044443119
+      ],
+      "webMetres": [
+        1.246920696877,
+        -1.8165,
+        0.71991
+      ],
+      "webNormal": [
+        -0.556670399226,
+        0.766044443119,
+        -0.321393804843
+      ]
+    },
+    {
+      "id": "L2@0",
+      "sourceCellRange": "side_flange!A62:E62",
+      "section": "L2",
+      "flangeType": "side_flange",
+      "azimuthDeg": 0,
+      "poloidalNormalDeg": 90,
+      "sourceAuthoredMetres": {
+        "r": 0.8,
+        "z": -1.8165
+      },
+      "diagViewMetres": [
+        0.8,
+        0,
+        -1.8165
+      ],
+      "diagViewNormal": [
+        0,
+        0,
+        1
+      ],
+      "webMetres": [
+        0.8,
+        -1.8165,
+        0
+      ],
+      "webNormal": [
+        0,
+        1,
+        0
+      ]
+    },
+    {
+      "id": "L2@30",
+      "sourceCellRange": "side_flange!A63:E63",
+      "section": "L2",
+      "flangeType": "side_flange",
+      "azimuthDeg": 30,
+      "poloidalNormalDeg": 90,
+      "sourceAuthoredMetres": {
+        "r": 0.8,
+        "z": -1.8165
+      },
+      "diagViewMetres": [
+        0.692820323028,
+        0.4,
+        -1.8165
+      ],
+      "diagViewNormal": [
+        0,
+        0,
+        1
+      ],
+      "webMetres": [
+        0.692820323028,
+        -1.8165,
+        -0.4
+      ],
+      "webNormal": [
+        0,
+        1,
+        0
+      ]
+    },
+    {
+      "id": "L2@60",
+      "sourceCellRange": "side_flange!A64:E64",
+      "section": "L2",
+      "flangeType": "side_flange",
+      "azimuthDeg": 60,
+      "poloidalNormalDeg": 90,
+      "sourceAuthoredMetres": {
+        "r": 0.8,
+        "z": -1.8165
+      },
+      "diagViewMetres": [
+        0.4,
+        0.692820323028,
+        -1.8165
+      ],
+      "diagViewNormal": [
+        0,
+        0,
+        1
+      ],
+      "webMetres": [
+        0.4,
+        -1.8165,
+        -0.692820323028
+      ],
+      "webNormal": [
+        0,
+        1,
+        0
+      ]
+    },
+    {
+      "id": "L2@90",
+      "sourceCellRange": "side_flange!A65:E65",
+      "section": "L2",
+      "flangeType": "side_flange",
+      "azimuthDeg": 90,
+      "poloidalNormalDeg": 90,
+      "sourceAuthoredMetres": {
+        "r": 0.8,
+        "z": -1.8165
+      },
+      "diagViewMetres": [
+        0,
+        0.8,
+        -1.8165
+      ],
+      "diagViewNormal": [
+        0,
+        0,
+        1
+      ],
+      "webMetres": [
+        0,
+        -1.8165,
+        -0.8
+      ],
+      "webNormal": [
+        0,
+        1,
+        0
+      ]
+    },
+    {
+      "id": "L2@120",
+      "sourceCellRange": "side_flange!A66:E66",
+      "section": "L2",
+      "flangeType": "side_flange",
+      "azimuthDeg": 120,
+      "poloidalNormalDeg": 90,
+      "sourceAuthoredMetres": {
+        "r": 0.8,
+        "z": -1.8165
+      },
+      "diagViewMetres": [
+        -0.4,
+        0.692820323028,
+        -1.8165
+      ],
+      "diagViewNormal": [
+        0,
+        0,
+        1
+      ],
+      "webMetres": [
+        -0.4,
+        -1.8165,
+        -0.692820323028
+      ],
+      "webNormal": [
+        0,
+        1,
+        0
+      ]
+    },
+    {
+      "id": "L2@150",
+      "sourceCellRange": "side_flange!A67:E67",
+      "section": "L2",
+      "flangeType": "side_flange",
+      "azimuthDeg": 150,
+      "poloidalNormalDeg": 90,
+      "sourceAuthoredMetres": {
+        "r": 0.8,
+        "z": -1.8165
+      },
+      "diagViewMetres": [
+        -0.692820323028,
+        0.4,
+        -1.8165
+      ],
+      "diagViewNormal": [
+        0,
+        0,
+        1
+      ],
+      "webMetres": [
+        -0.692820323028,
+        -1.8165,
+        -0.4
+      ],
+      "webNormal": [
+        0,
+        1,
+        0
+      ]
+    },
+    {
+      "id": "L2@180",
+      "sourceCellRange": "side_flange!A68:E68",
+      "section": "L2",
+      "flangeType": "side_flange",
+      "azimuthDeg": 180,
+      "poloidalNormalDeg": 90,
+      "sourceAuthoredMetres": {
+        "r": 0.8,
+        "z": -1.8165
+      },
+      "diagViewMetres": [
+        -0.8,
+        0,
+        -1.8165
+      ],
+      "diagViewNormal": [
+        0,
+        0,
+        1
+      ],
+      "webMetres": [
+        -0.8,
+        -1.8165,
+        0
+      ],
+      "webNormal": [
+        0,
+        1,
+        0
+      ]
+    },
+    {
+      "id": "L2@210",
+      "sourceCellRange": "side_flange!A69:E69",
+      "section": "L2",
+      "flangeType": "side_flange",
+      "azimuthDeg": 210,
+      "poloidalNormalDeg": 90,
+      "sourceAuthoredMetres": {
+        "r": 0.8,
+        "z": -1.8165
+      },
+      "diagViewMetres": [
+        -0.692820323028,
+        -0.4,
+        -1.8165
+      ],
+      "diagViewNormal": [
+        0,
+        0,
+        1
+      ],
+      "webMetres": [
+        -0.692820323028,
+        -1.8165,
+        0.4
+      ],
+      "webNormal": [
+        0,
+        1,
+        0
+      ]
+    },
+    {
+      "id": "L2@240",
+      "sourceCellRange": "side_flange!A70:E70",
+      "section": "L2",
+      "flangeType": "side_flange",
+      "azimuthDeg": 240,
+      "poloidalNormalDeg": 90,
+      "sourceAuthoredMetres": {
+        "r": 0.8,
+        "z": -1.8165
+      },
+      "diagViewMetres": [
+        -0.4,
+        -0.692820323028,
+        -1.8165
+      ],
+      "diagViewNormal": [
+        0,
+        0,
+        1
+      ],
+      "webMetres": [
+        -0.4,
+        -1.8165,
+        0.692820323028
+      ],
+      "webNormal": [
+        0,
+        1,
+        0
+      ]
+    },
+    {
+      "id": "L2@270",
+      "sourceCellRange": "side_flange!A71:E71",
+      "section": "L2",
+      "flangeType": "side_flange",
+      "azimuthDeg": 270,
+      "poloidalNormalDeg": 90,
+      "sourceAuthoredMetres": {
+        "r": 0.8,
+        "z": -1.8165
+      },
+      "diagViewMetres": [
+        0,
+        -0.8,
+        -1.8165
+      ],
+      "diagViewNormal": [
+        0,
+        0,
+        1
+      ],
+      "webMetres": [
+        0,
+        -1.8165,
+        0.8
+      ],
+      "webNormal": [
+        0,
+        1,
+        0
+      ]
+    },
+    {
+      "id": "L2@300",
+      "sourceCellRange": "side_flange!A72:E72",
+      "section": "L2",
+      "flangeType": "side_flange",
+      "azimuthDeg": 300,
+      "poloidalNormalDeg": 90,
+      "sourceAuthoredMetres": {
+        "r": 0.8,
+        "z": -1.8165
+      },
+      "diagViewMetres": [
+        0.4,
+        -0.692820323028,
+        -1.8165
+      ],
+      "diagViewNormal": [
+        0,
+        0,
+        1
+      ],
+      "webMetres": [
+        0.4,
+        -1.8165,
+        0.692820323028
+      ],
+      "webNormal": [
+        0,
+        1,
+        0
+      ]
+    },
+    {
+      "id": "L2@330",
+      "sourceCellRange": "side_flange!A73:E73",
+      "section": "L2",
+      "flangeType": "side_flange",
+      "azimuthDeg": 330,
+      "poloidalNormalDeg": 90,
+      "sourceAuthoredMetres": {
+        "r": 0.8,
+        "z": -1.8165
+      },
+      "diagViewMetres": [
+        0.692820323028,
+        -0.4,
+        -1.8165
+      ],
+      "diagViewNormal": [
+        0,
+        0,
+        1
+      ],
+      "webMetres": [
+        0.692820323028,
+        -1.8165,
+        0.4
+      ],
+      "webNormal": [
+        0,
+        1,
+        0
+      ]
+    }
+  ]
+}

@@ -83,6 +83,12 @@ export type TokamakCadViewerProps = {
   efitStore?: EfitStore | EfitStoreLike | null;
   efitAlignment?: EfitAlignmentContract;
   efitOptions?: EfitThreeOverlayOptions;
+  /**
+   * Stable device-level capability gate for the existing DiagView2 Three
+   * overlay. EHL-2 enables the overlay implicitly; other devices must opt in.
+   * Changing overlay options remains a live update and never reloads CAD.
+   */
+  diagnosticOverlayEnabled?: boolean;
   diagnosticOverlayOptions?: Ehl2DiagnosticOverlayOptions;
   onDiagnosticRuntimeReady?: (runtime: Ehl2DiagnosticRuntime | null) => void;
   /**
@@ -450,6 +456,7 @@ function TokamakCadViewerSession({
   efitStore = null,
   efitAlignment,
   efitOptions,
+  diagnosticOverlayEnabled = false,
   diagnosticOverlayOptions,
   onDiagnosticRuntimeReady,
   diagnosticViewerSettings,
@@ -461,6 +468,7 @@ function TokamakCadViewerSession({
   const { content, locale, t } = useI18n();
   const { resolvedTheme } = useTheme();
   const ehl2Session = isEhl2ViewerSession(viewerId, manifestUrl);
+  const diagnosticOverlaySession = ehl2Session || diagnosticOverlayEnabled;
   const wireframeAllowed = !ehl2Session;
   const i18nRef = useRef({ content, t });
   const visualThemeRef = useRef(resolvedTheme);
@@ -852,7 +860,7 @@ function TokamakCadViewerSession({
       const environmentModulePromise = appearancePreset === 'industrial-silver-v1'
         ? import('three/examples/jsm/environments/RoomEnvironment.js')
         : Promise.resolve(null);
-      const diagnosticOverlayModulePromise = ehl2Session
+      const diagnosticOverlayModulePromise = diagnosticOverlaySession
         ? import('./device-viewer/Ehl2DiagnosticThreeOverlay')
         : Promise.resolve(null);
       const diagnosticRuntimeModulePromise = ehl2Session
@@ -1762,7 +1770,7 @@ function TokamakCadViewerSession({
     });
 
     return () => { disposed = true; releaseResources(); viewerRef.current = null; };
-  }, [activated, appearancePreset, attempt, availableModels, ehl2Session, manifest, selectedModel, viewerId, wireframeAllowed]);
+  }, [activated, appearancePreset, attempt, availableModels, diagnosticOverlaySession, ehl2Session, manifest, selectedModel, viewerId, wireframeAllowed]);
 
   useEffect(() => {
     const overlay = viewerRef.current?.efitOverlay;

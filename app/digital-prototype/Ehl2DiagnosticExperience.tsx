@@ -190,23 +190,27 @@ const DEFAULT_PLASMA_PANEL_SETTINGS: PlasmaPanelSettings = {
   delta: .4,
 };
 const EHL2_VIEWER_PARTS = [
-  { id: 'EHL2-WEB-01', zh: '真空室', en: 'Vacuum vessel', opacity: .55 },
+  // The desktop DiagView2 source used per-model transparency to expose the
+  // centre of the machine. The public web workspace intentionally starts from
+  // the same opaque industrial render used by EXL-50U; transparency remains an
+  // explicit user control below.
+  { id: 'EHL2-WEB-01', zh: '真空室', en: 'Vacuum vessel', opacity: 1 },
   { id: 'EHL2-WEB-02', zh: '固定限制器', en: 'Fixed limiter', opacity: 1 },
   { id: 'EHL2-WEB-03', zh: '中心管组件', en: 'Centre-post assembly', opacity: 1 },
-  { id: 'EHL2-WEB-04', zh: '偏滤器', en: 'Divertor', opacity: .45 },
-  { id: 'EHL2-WEB-05', zh: '波纹管组件', en: 'Bellows assembly', opacity: .1 },
-  { id: 'EHL2-WEB-06', zh: '杜瓦总装', en: 'Dewar assembly', opacity: .45 },
+  { id: 'EHL2-WEB-04', zh: '偏滤器', en: 'Divertor', opacity: 1 },
+  { id: 'EHL2-WEB-05', zh: '波纹管组件', en: 'Bellows assembly', opacity: 1 },
+  { id: 'EHL2-WEB-06', zh: '杜瓦总装', en: 'Dewar assembly', opacity: 1 },
 ] as const;
 const DEFAULT_PART_OPACITIES = Object.freeze(Object.fromEntries(EHL2_VIEWER_PARTS.map((part) => [part.id, part.opacity])));
 const DEFAULT_PORT_DISPLAY: PortDisplaySettings = { visible: false, opacity: .95, showInfoPanel: true, scope: 'selected' };
 const DEFAULT_SLICE: WorkspaceSettings['slice'] = Object.freeze({ kind: 'none', offsetM: 0, rotationDeg: 0, side: 'positive', cameraDesignId: null });
 const DEFAULT_VIEWER_APPEARANCE: ViewerAppearanceSettings = {
   environmentPreset: 'room-platform-substitute',
-  environmentIntensity: 2,
+  environmentIntensity: 1.08,
   backgroundEnabled: false,
   backgroundIntensity: 1,
   backgroundBlurriness: .2,
-  defaultLightsEnabled: false,
+  defaultLightsEnabled: true,
   castShadow: false,
 };
 const defaultViewerState = (): Ehl2DiagnosticViewerState => ({
@@ -1250,7 +1254,7 @@ export default function Ehl2DiagnosticExperience({ device }: Props) {
               <NumberField label={ui('背景模糊', 'Background blurriness')} value={viewerAppearance.backgroundBlurriness} min={0} max={1} step={.05} unit="ratio" disabled={!viewerAppearance.backgroundEnabled} onChange={(value) => setViewerAppearance((current) => ({ ...current, backgroundBlurriness: value }))} />
               <label><input type="checkbox" checked={viewerAppearance.castShadow} onChange={(event) => setViewerAppearance((current) => ({ ...current, castShadow: event.currentTarget.checked }))} />{ui('启用实时阴影', 'Cast real-time shadows')}</label>
               <small>{ui('源端 city HDRI 不随仓发布；此处使用 Three.js RoomEnvironment 作为明确标注的平台替代，不宣称 HDRI 像素等价。', 'The source city HDRI is not published with the repository. Three.js RoomEnvironment is an explicitly labelled platform substitute, not pixel-equivalent HDRI reconstruction.')}</small>
-              <button className={styles.secondaryButton} type="button" onClick={() => setViewerAppearance({ ...DEFAULT_VIEWER_APPEARANCE })}>{ui('恢复源推荐光照', 'Restore source lighting defaults')}</button>
+              <button className={styles.secondaryButton} type="button" onClick={() => setViewerAppearance({ ...DEFAULT_VIEWER_APPEARANCE })}>{ui('恢复装置渲染默认值', 'Restore device-render defaults')}</button>
             </fieldset>
             <fieldset className={styles.partControls}>
               <legend>{ui('公开 CAD 部件显隐与透明度', 'Published CAD part visibility and opacity')}</legend>
@@ -1292,7 +1296,7 @@ function SourceParitySummary({ english }: { english: boolean }) {
       <li><b>{ui('几何与 CAD', 'Geometry and CAD')}</b><span>Camera 41 / 141 · Array 2–201 · Laser polyline · R<sub>n</sub>R<sub>u</sub>R<sub>v</sub> · BVH first hit · finite frustum · render slicing · asymmetric optical-centre PNG</span></li>
       <li><b>{ui('项目与报告', 'Project and reports')}</b><span>{ui('v2 / 增强 v3、多诊断叠加、源 CAD 分析包、单诊断 JSON / CSV / HTML、多诊断 HTML。', 'v2 / enhanced v3, multi-diagnostic overlays, source-CAD analysis bundles, per-diagnostic JSON / CSV / HTML and combined HTML.')}</span></li>
       <li><b>{ui('物理与前端', 'Physics and front end')}</b><span>{ui('宽带 / 谱线设置、Te / ne / PEC / 离子丰度、参数化 R0 / a / κ / δ 与约 10 层 GEQDSK 磁通面三维上下文、5 mm 虚拟 R–Z 线积分、径向与二维场图、全通道表、JSON / MATLAB / SVG 导出。', 'Broadband/spectral settings, Te/ne/PEC/ion fraction, parametric R0/a/κ/δ and an approximately ten-layer GEQDSK flux-surface 3D context, 5 mm virtual R-Z line integration, radial and 2D field plots, all-channel tables, and JSON/MATLAB/SVG exports.')}</span></li>
-      <li><b>{ui('平台等价设置', 'Platform-equivalent settings')}</b><span>{ui('当前/41 端口标记、Info 面板、部件检索/显隐/隔离/透明度、XYZ 剖切、自由相机视角、自动旋转、全屏、环境映射/强度/背景模糊与实时阴影均可操作并恢复。源 city HDRI 像素资产未随仓发布；Three RoomEnvironment 明确标为平台替代。', 'Selected/all-41 port markers, the information panel, part search/visibility/isolation/opacity, XYZ clipping, free-orbit camera view, auto-rotation, fullscreen, environment map/intensity/background blur and real-time shadows are controllable and restorable. The source city HDRI pixels are not published; Three RoomEnvironment is explicitly labelled as a platform substitute.')}</span></li>
+      <li><b>{ui('平台等价设置', 'Platform-equivalent settings')}</b><span>{ui('当前/41 端口标记、Info 面板、部件检索/显隐/隔离/透明度、XYZ 剖切、自由相机视角、自动旋转、全屏、环境映射/强度/背景模糊与实时阴影均可操作并恢复。装置默认采用与 EXL‑50U 一致的全不透明工业渲染，不继承源程序的逐部件透明度；源 city HDRI 像素未随仓发布，Three RoomEnvironment 明确标为平台替代。', 'Selected/all-41 port markers, the information panel, part search/visibility/isolation/opacity, XYZ clipping, free-orbit camera view, auto-rotation, fullscreen, environment map/intensity/background blur and real-time shadows are controllable and restorable. The device starts with the same fully opaque industrial rendering as EXL-50U instead of inheriting the source app\'s per-part transparency. The source city HDRI pixels are not published; Three RoomEnvironment is explicitly labelled as a platform substitute.')}</span></li>
     </ul>
   </section>;
 }

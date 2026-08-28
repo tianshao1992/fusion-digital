@@ -7,9 +7,9 @@
     "excludes": [
       "public/models/iter-high-detail-v1/"
     ],
-    "fileCount": 414,
-    "totalBytes": 259810219,
-    "treeSha256": "7d51ddfbc2972f8bfa517d7407a6685137c5cadc2f1e671fc2d16da087f4798c",
+    "fileCount": 417,
+    "totalBytes": 260744709,
+    "treeSha256": "c20bd514656d0e7ce02c51d56979af4c2e743b230b88e4f1f7cf1f648fad3609",
     "files": [
       {
         "path": "public/FusionDigital-technical-roadmap-2026-08-15.docx",
@@ -1552,6 +1552,11 @@
         "sha256": "2653c150ba51effed28efe50713492475c8fe0578360da797fbe82b6e6eb47e1"
       },
       {
+        "path": "public/fusiondigital-logo-white.png",
+        "bytes": 875991,
+        "sha256": "f0d29b015c32ea1cd241aaaf84fe652a81430444a74921c65f9485f41fb79565"
+      },
+      {
         "path": "public/fusiondigital-mark.png",
         "bytes": 1130163,
         "sha256": "3f570755e9013610bd3802dcc2cefebe2ad2fc37a6cfb9660660eb6d90977184"
@@ -1578,8 +1583,8 @@
       },
       {
         "path": "public/models/device-catalog.json",
-        "bytes": 9846,
-        "sha256": "35d4bd65b9983c43d201ec025e6e37d20df5df04c84cfc19c470996d48a4274b"
+        "bytes": 11073,
+        "sha256": "d0f3ac55a8c86f25128ae5b185d1e946efe75f1ef1fec60e8da3733a430a3fa3"
       },
       {
         "path": "public/models/device-manifest.schema.json",
@@ -1605,6 +1610,16 @@
         "path": "public/models/ehl2-preliminary-v1/model-manifest.json",
         "bytes": 9995,
         "sha256": "e293c5a9f173c647c14c9511343e180583dd8f524c87e7ea8d5ee687b29e79b0"
+      },
+      {
+        "path": "public/models/exl50u-diagview2-v1/diagview2-ports.json",
+        "bytes": 54071,
+        "sha256": "d108a52c7127a858a2acefffdb4a51a09a565b1aed5252cae0e75c095a430530"
+      },
+      {
+        "path": "public/models/exl50u-diagview2-v1/manifest.json",
+        "bytes": 3201,
+        "sha256": "0bcc9a19ce93dc476b8bfc42aeb3c033842d3c56474b7fab1fdc7f0aaacdc954"
       },
       {
         "path": "public/models/exl50u-interactive/exl50u-interactive-high.meshopt.glb",
