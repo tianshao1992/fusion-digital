@@ -2,6 +2,7 @@
 
 import type { EChartsCoreOption } from 'echarts/core';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { trackAnalyticsContent } from '@/app/analytics/client';
 import ScientificChart from '@/app/components/charts/ScientificChart';
 import { useChartTheme, type ChartThemePalette } from '@/app/components/charts/chart-theme';
 import { useAgentWorkspace } from '@/app/components/agent-workspace/AgentWorkspace';
@@ -270,6 +271,10 @@ export default function KnowledgeGraphExplorer({ initial, devices }: ExplorerPro
   const nodeIndex = useMemo(() => new Map(data.nodes.map((node) => [node.id, node])), [data.nodes]);
   const evidenceSources = useMemo(() => selected ? collectKnowledgeEvidenceSources(selected, selectedRelations, nodeIndex) : [], [nodeIndex, selected, selectedRelations]);
   const option = useMemo(() => graphOption(data, selectedId, chartTheme, locale), [chartTheme, data, locale, selectedId]);
+
+  useEffect(() => {
+    if (selectedId) trackAnalyticsContent('knowledge-node', selectedId);
+  }, [selectedId]);
 
   async function load(params: { focus?: string; requestedDepth?: 0 | 1 | 2; requestedLimit?: number } = {}) {
     requestRef.current?.abort();

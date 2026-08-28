@@ -9,6 +9,7 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent,
 } from 'react';
+import { trackAnalyticsContent } from '@/app/analytics/client';
 import TokamakCadViewer from '../components/TokamakCadViewer';
 import { createEfitHybridDataSource, createEfitStore, EfitPanel, type EfitStore } from '../components/efit';
 import { useI18n } from '../i18n';
@@ -267,6 +268,10 @@ export default function MultiDeviceWorkspace({ catalog }: { catalog: DeviceCatal
   const { content, t } = useI18n();
   const [selectedId, setSelectedId] = useState(catalog.devices[0].id);
   const current = catalog.devices.find((device) => device.id === selectedId) ?? catalog.devices[0];
+
+  useEffect(() => {
+    trackAnalyticsContent('prototype-device', selectedId);
+  }, [selectedId]);
 
   const handleDeviceTabKeyDown = (event: ReactKeyboardEvent<HTMLButtonElement>, index: number) => {
     let nextIndex: number | null = null;

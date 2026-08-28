@@ -6,6 +6,7 @@ import { ITER_HIGH_DETAIL_RELEASE_ASSETS } from "./iter-high-assets.generated";
 export interface Env {
   ASSETS: Fetcher;
   DB: NonNullable<Cloudflare.Env["DB"]>;
+  FUSIONDIGITAL_ANALYTICS_INGEST_SECRET?: string;
   ITER_HIGH_DETAIL_ASSET_BASE_URL?: string;
   IMAGES: {
     input(stream: ReadableStream): {
@@ -21,6 +22,7 @@ declare global {
   // the D1 capability (rather than a request-scoped Env object) keeps the Node
   // SSR bundle free of `cloudflare:workers` and avoids cross-request mutation.
   var __FUSIONDIGITAL_DB__: Env["DB"] | undefined;
+  var __FUSIONDIGITAL_ANALYTICS_INGEST_SECRET__: string | undefined;
 }
 
 interface ExecutionContext {
@@ -435,6 +437,15 @@ const worker = {
         throw new Error("D1 binding changed within an active Worker isolate");
       }
       globalThis.__FUSIONDIGITAL_DB__ = env.DB;
+    }
+    if (env?.FUSIONDIGITAL_ANALYTICS_INGEST_SECRET) {
+      if (
+        globalThis.__FUSIONDIGITAL_ANALYTICS_INGEST_SECRET__
+        && globalThis.__FUSIONDIGITAL_ANALYTICS_INGEST_SECRET__ !== env.FUSIONDIGITAL_ANALYTICS_INGEST_SECRET
+      ) {
+        throw new Error("Analytics ingest secret changed within an active Worker isolate");
+      }
+      globalThis.__FUSIONDIGITAL_ANALYTICS_INGEST_SECRET__ = env.FUSIONDIGITAL_ANALYTICS_INGEST_SECRET;
     }
     const url = new URL(request.url);
 

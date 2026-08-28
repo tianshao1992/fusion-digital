@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { useAgentWorkspace } from "@/app/components/agent-workspace/AgentWorkspace";
 import { useI18n } from "@/app/i18n";
+import { trackAnalyticsContent } from "@/app/analytics/client";
 import type { SearchHit } from "./search-core";
 
 type SearchResponse = { count: number; results: SearchHit[] };
@@ -39,7 +40,14 @@ export default function SearchWorkspace() {
       const response = await fetch(`/api/search?${params}`, { headers: { Accept: "application/json", "X-FusionDigital-Locale": locale } });
       const payload = await response.json() as SearchResponse & { error?: { message?: string } };
       if (!response.ok) throw new Error(payload.error?.message || copy.searchFailed);
-      if (current === requestId.current) setResults(payload.results);
+      if (current === requestId.current) {
+        setResults(payload.results);
+        const resultBucket = payload.results.length === 0 ? "0" : payload.results.length < 5 ? "1-4" : payload.results.length < 15 ? "5-14" : "15+";
+        trackAnalyticsContent(
+          "search",
+          `domain=${domain || "all"}|type=${type || "all"}|cited=${citedOnly ? "yes" : "no"}|results=${resultBucket}`,
+        );
+      }
     } catch (reason) {
       if (current === requestId.current) setMessage(reason instanceof Error ? reason.message : copy.searchRetry);
     } finally {

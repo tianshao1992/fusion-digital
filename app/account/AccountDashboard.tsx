@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useI18n } from "@/app/i18n";
 
@@ -42,7 +43,7 @@ export default function AccountDashboard({ fallbackIdentity }:Props) {
   const requestPercent = ratio(account.usage.requestCount, account.quota.dailyRequestLimit);
   const tokenPercent = ratio(usedTokens, account.quota.dailyTokenLimit);
   return <div className="accountDashboard">
-    <section className="accountProfile"><header><span>IDENTITY</span><i>ACTIVE</i></header><div className="accountAvatar" aria-hidden="true">{account.displayName.slice(0,1).toUpperCase()}</div><h3>{account.displayName}</h3><p>{account.email}</p><small>ID · {account.id}</small><div className="accountRoles" aria-label={en?'Account roles':'账户角色'}>{(account.roles.length ? account.roles : ["member"]).map(role => <span key={role}>{role}</span>)}</div></section>
+    <section className="accountProfile"><header><span>IDENTITY</span><i>ACTIVE</i></header><div className="accountAvatar" aria-hidden="true">{account.displayName.slice(0,1).toUpperCase()}</div><h3>{account.displayName}</h3><p>{account.email}</p><small>ID · {account.id}</small><div className="accountRoles" aria-label={en?'Account roles':'账户角色'}>{(account.roles.length ? account.roles : ["member"]).map(role => <span key={role}>{role}</span>)}</div>{account.roles.includes("admin") && <Link className="accountAnalyticsLink" href="/admin/analytics"><span>{en?'Admin analytics':'管理员访问分析'}</span><b aria-hidden="true">↗</b></Link>}</section>
     <section className="accountQuota"><header><span>TODAY / UTC</span><b>{en?'Daily quota':'每日额度'}</b></header>
       <div className="quotaMetric"><div><span>{en?'Requests':'请求次数'}</span><strong>{number(account.usage.requestCount,numberLocale)} <small>/ {number(account.quota.dailyRequestLimit,numberLocale)}</small></strong></div><div className="quotaRail" role="progressbar" aria-label={en?'Today’s request quota':'今日请求额度'} aria-valuemin={0} aria-valuemax={account.quota.dailyRequestLimit} aria-valuenow={account.usage.requestCount}><i style={{width:`${requestPercent}%`}} /></div><small>{requestPercent}% {en?'used':'已使用'}</small></div>
       <div className="quotaMetric"><div><span>{en?'Model tokens':'模型 Token'}</span><strong>{number(usedTokens,numberLocale)} <small>/ {number(account.quota.dailyTokenLimit,numberLocale)}</small></strong></div><div className="quotaRail tokenRail" role="progressbar" aria-label={en?'Today’s token quota':'今日 Token 额度'} aria-valuemin={0} aria-valuemax={account.quota.dailyTokenLimit} aria-valuenow={Math.min(usedTokens, account.quota.dailyTokenLimit)} aria-valuetext={`${number(usedTokens,numberLocale)} / ${number(account.quota.dailyTokenLimit,numberLocale)} tokens`}><i style={{width:`${tokenPercent}%`}} /></div><small>{tokenPercent}% {en?'used · per-request limit':'已使用 · 单次上限'} {number(account.quota.maxTokensPerRequest,numberLocale)}</small></div>

@@ -19,6 +19,10 @@
 
 `.openai/hosting.json` 是 Sites **预览项目**的资源声明，不是生产域名托管声明。
 
+匿名访问统计的字段边界、HMAC 转发、管理员授权与发布验收见
+[`ANALYTICS.md`](ANALYTICS.md)。统计功能不得削弱本手册的公开匿名模式、双端同 SHA
+或生产 DNS 门禁。
+
 > 正式发布必须让 Codeup `master`、GitHub `main`、本地 `HEAD`、香港 ECS release
 > 与 OpenAI Sites source 使用同一个完整提交 SHA；任一端未成功都不得宣布发布完成。
 

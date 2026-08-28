@@ -235,7 +235,6 @@ id -Gn www-data | grep -qw fusiondigital || {
   echo "www-data must belong to the fusiondigital group; complete README section 3 first" >&2
   exit 1
 }
-
 [[ -f $BUNDLE && ! -L $BUNDLE ]] || {
   echo "bundle must be a regular file, not a symbolic link: $BUNDLE" >&2
   exit 1
@@ -297,6 +296,13 @@ test -f "$PENDING/deploy/aliyun-hk/nginx.conf"
 test -f "$PENDING/deploy/aliyun-hk/render-nginx-config.mjs"
 test -f "$PENDING/deploy/aliyun-hk/certbot-nginx-support.mjs"
 test -f "$PENDING/deploy/aliyun-hk/direct-execution.mjs"
+test -f "$PENDING/deploy/aliyun-hk/analytics-collector.mjs"
+test -f "$PENDING/deploy/aliyun-hk/analytics-forwarder.mjs"
+test -f "$PENDING/deploy/aliyun-hk/install-analytics-forwarder.sh"
+test -f "$PENDING/deploy/aliyun-hk/fusiondigital-analytics-collector.service"
+test -f "$PENDING/deploy/aliyun-hk/fusiondigital-analytics-forwarder.service"
+test -f "$PENDING/deploy/aliyun-hk/fusiondigital-analytics-forwarder.timer"
+test -f "$PENDING/deploy/aliyun-hk/fusiondigital-analytics.logrotate"
 test -f "$PENDING/.fusiondigital-release.json"
 node -e '
   const fs = require("node:fs");
@@ -329,7 +335,8 @@ chown -R root:fusiondigital "$PENDING"
 find "$PENDING" -type d -exec chmod 750 {} +
 find "$PENDING" -type f -exec chmod 640 {} +
 chmod 750 "$PENDING/deploy/aliyun-hk/finalize-https.sh" \
-  "$PENDING/deploy/aliyun-hk/install-release.sh"
+  "$PENDING/deploy/aliyun-hk/install-release.sh" \
+  "$PENDING/deploy/aliyun-hk/install-analytics-forwarder.sh"
 mv "$PENDING" "$TARGET"
 TARGET_CREATED_BY_THIS_RUN=true
 PENDING=""

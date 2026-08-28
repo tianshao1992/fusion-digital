@@ -7,6 +7,7 @@ import { useI18n } from '../../i18n';
 import EfitSignalsChart from './EfitSignalsChart';
 import EfitTimelineControls from './EfitTimelineControls';
 import { efitShotOptionLabel, resolveShotGeometry } from './shot-geometry';
+import { trackAnalyticsContent } from '@/app/analytics/client';
 import type { EfitStore } from './store';
 import { useEfitStore } from './use-efit-store';
 import './efit-panel.css';
@@ -128,7 +129,11 @@ export default function EfitPanel({
           <select
             value={snapshot.activeShot ?? ''}
             disabled={!snapshot.manifest || snapshot.status === 'loading-index'}
-            onChange={(event) => void store.actions.selectShot(Number(event.currentTarget.value))}
+            onChange={(event) => {
+              const shot = Number(event.currentTarget.value);
+              trackAnalyticsContent('efit-shot', String(shot));
+              void store.actions.selectShot(shot);
+            }}
           >
             {!snapshot.manifest && <option value="">{t('efit.loading')}</option>}
             {snapshot.manifest?.shots.map((shot) => (

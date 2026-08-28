@@ -29,6 +29,7 @@
   <a href="https://codeup.aliyun.com/fiatlux/DT/FusionDigital">Codeup 仓库</a> ·
   <a href="https://github.com/tianshao1992/fusion-digital">GitHub 镜像</a> ·
   <a href="./docs/PLATFORM_TECHNICAL_ROADMAP.md">平台技术路线</a> ·
+  <a href="./docs/ANALYTICS.md">匿名访问统计</a> ·
   <a href="./CONTRIBUTING.md">贡献指南</a>
 </p>
 
@@ -77,6 +78,7 @@ FusionDigital 由新奥聚变人工智能团队维护。项目将聚变物理、
 - **实验诊断复现**：展示经审核的 EFIT 标量、轮廓、拓扑和时间序列派生物，同时保持原始 G-file、psi 网格和实验档案的受控边界。
 - **控制与诊断图谱**：按任务、装置、代码、论文、证据等级和部署阶段双向索引控制与诊断工作。
 - **身份与人工治理**：Sites 平台环境可由 D1 承载账户、角色、配额、审计、研究候选和职责分离审核；阿里云香港公开生产版有意关闭这些写能力。
+- **隐私化访问分析**：香港只记录不含 IP、完整 UA、查询词和身份的同源匿名事件；Sites 端由 `admin` 角色查看 DAU、MAU、PV、内容热度和匿名会话路径。
 - **可复现研究流水线**：源数据经归一化、去重和审计后生成网页 JSON、CSV、BIB、TypeScript 与 Word 报告。
 - **中英双语与主题适配**：关键页面支持中英文切换、明暗主题、响应式布局和键盘访问。
 
@@ -89,7 +91,7 @@ FusionDigital 由新奥聚变人工智能团队维护。项目将聚变物理、
 | 控制与诊断 | [`/control`](https://fusiondigital.club/control) · [`/diagnostics`](https://fusiondigital.club/diagnostics) | T0–T9 控制任务、DG0–DG11 诊断任务、装置/PCS、证据与孪生接口 |
 | 智能与证据 | [`/ai`](https://fusiondigital.club/ai) · [`/search`](https://fusiondigital.club/search) · [`/knowledge-graph`](https://fusiondigital.club/knowledge-graph) | AI 工作目录、确定性检索、引用问答与一至两跳证据关系 |
 | 装置与样机 | [`/facilities`](https://fusiondigital.club/facilities) · [`/#prototype-workspace`](https://fusiondigital.club/#prototype-workspace) | 全球装置状态、Paramak / EXL-50U / EHL-2 / ITER 目录、三维模型与 EFIT 工作台 |
-| 账户与治理 | `/account` · `/research-review` | 代码与预览环境能力；阿里云香港 `public-anonymous` 生产版不开放账户、审核和写 API |
+| 账户与治理 | `/account` · `/research-review` · `/admin/analytics` | Sites 协作面的账户、审核与管理员访问统计；阿里云香港 `public-anonymous` 生产版不开放这些管理页面和查询 API |
 
 ## 🔥 快速上手
 

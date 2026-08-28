@@ -1,0 +1,9 @@
+/var/log/fusiondigital/analytics.log {
+    daily
+    maxsize 16M
+    rotate 8
+    missingok
+    notifempty
+    nocompress
+    create 0640 fusionanalytics fusionanalytics
+}

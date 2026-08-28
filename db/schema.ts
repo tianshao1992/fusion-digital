@@ -627,6 +627,64 @@ export const candidateReviews = sqliteTable(
   ],
 );
 
+export const analyticsEvents = sqliteTable(
+  "analytics_events",
+  {
+    id: text("id").primaryKey(),
+    source: text("source", { enum: ["club"] }).notNull(),
+    eventType: text("event_type", {
+      enum: ["page_view", "content_view", "engagement"],
+    }).notNull(),
+    visitorId: text("visitor_id").notNull(),
+    sessionId: text("session_id").notNull(),
+    path: text("path").notNull(),
+    contentKey: text("content_key"),
+    referrerSource: text("referrer_source", {
+      enum: [
+        "search:google", "search:bing", "search:baidu", "search:other",
+        "ai:chatgpt", "code:github", "social:wechat", "social:zhihu",
+        "social:other", "other",
+      ],
+    }),
+    deviceClass: text("device_class", {
+      enum: ["desktop", "tablet", "mobile", "other"],
+    }).notNull(),
+    durationMs: integer("duration_ms"),
+    occurredAt: text("occurred_at").notNull(),
+    occurredDate: text("occurred_date").notNull(),
+    receivedAt: text("received_at").notNull().default(now),
+  },
+  (table) => [
+    index("idx_analytics_events_occurred_at").on(table.occurredAt),
+    index("idx_analytics_events_date_source").on(table.occurredDate, table.source),
+    index("idx_analytics_events_path_date").on(table.path, table.occurredDate),
+    index("idx_analytics_events_visitor_date").on(table.visitorId, table.occurredDate),
+    index("idx_analytics_events_session_time").on(table.sessionId, table.occurredAt),
+    check("ck_analytics_events_source", sql`${table.source} = 'club'`),
+    check(
+      "ck_analytics_events_type",
+      sql`${table.eventType} in ('page_view', 'content_view', 'engagement')`,
+    ),
+    check(
+      "ck_analytics_events_device_class",
+      sql`${table.deviceClass} in ('desktop', 'tablet', 'mobile', 'other')`,
+    ),
+    check("ck_analytics_events_path", sql`length(${table.path}) between 1 and 160`),
+    check(
+      "ck_analytics_events_content_key",
+      sql`${table.contentKey} is null or length(${table.contentKey}) between 1 and 160`,
+    ),
+    check(
+      "ck_analytics_events_referrer_source",
+      sql`${table.referrerSource} is null or ${table.referrerSource} in ('search:google', 'search:bing', 'search:baidu', 'search:other', 'ai:chatgpt', 'code:github', 'social:wechat', 'social:zhihu', 'social:other', 'other')`,
+    ),
+    check(
+      "ck_analytics_events_duration",
+      sql`${table.durationMs} is null or ${table.durationMs} between 1000 and 1800000`,
+    ),
+  ],
+);
+
 export type UserRow = typeof users.$inferSelect;
 export type UserLlmCredentialRow = typeof userLlmCredentials.$inferSelect;
 export type UserLlmPreferenceRow = typeof userLlmPreferences.$inferSelect;
@@ -636,3 +694,4 @@ export type EvidenceRow = typeof evidence.$inferSelect;
 export type RelationRow = typeof relations.$inferSelect;
 export type ResearchRunRow = typeof researchRuns.$inferSelect;
 export type CandidateChangeRow = typeof candidateChanges.$inferSelect;
+export type AnalyticsEventRow = typeof analyticsEvents.$inferSelect;

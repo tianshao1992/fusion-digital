@@ -12,6 +12,12 @@
 进入 Node 的请求都会清除四个 `oai-authenticated-user-*` 身份头。公开问答固定
 使用站内确定性检索，不调用外部模型。
 
+访问统计是唯一的本机 sidecar 例外：Nginx 限流后只把 4 KiB JSON body、Origin 与
+Content-Type 交给 `127.0.0.1:3101` 的专用 collector，并关闭该 location 的 access log。
+collector 严格校验后在内存中对 event/visitor/session 标识做 HMAC，只有脱敏结果能写入
+专用日志；请求绝不进入香港应用 Node、D1 或认证代码。五分钟定时器再把批次签名发送到
+固定 Sites 管理数据面。详见 [`docs/ANALYTICS.md`](../../docs/ANALYTICS.md)。
+
 OpenAI Sites 只使用平台分配的 `*.chatgpt.site` 同步协作地址，不得绑定上述两个生产
 名称；正式发布时其 source SHA 必须与香港 active release 一致。`.openai/hosting.json`
 不是生产托管声明。所有机器和 Codex 在操作前
@@ -38,12 +44,11 @@ Internet :80/:443
         |
         v
 Nginx (TLS、身份头清理、写 API 关闭、受控资产映射)
-        |
-        v
-vinext 127.0.0.1:3000 (public-anonymous)
+        |-- public reads --> vinext 127.0.0.1:3000 (public-anonymous)
+        `-- analytics POST --> collector 127.0.0.1:3101 --> scoped-HMAC JSONL
 ```
 
-不要在安全组中开放 3000 端口。`server.mjs` 将监听地址硬编码为
+不要在安全组中开放 3000 或 3101 端口。`server.mjs` 将应用监听地址硬编码为
 `127.0.0.1`，并在 `NEXT_PUBLIC_FUSIONDIGITAL_MODE` 不是
 `public-anonymous` 时拒绝启动。
 
@@ -491,6 +496,10 @@ Sites 平台分配的 `*.chatgpt.site` URL 单独发给使用者作为人工备�
 - 研究候选创建、提交、审核等所有写操作；
 - Cloudflare D1 与 Images binding；
 - 任意客户端指定的模型或资产上游。
+
+专用匿名统计端点只进入 loopback collector；Nginx 不记录或转发旧 `x-fd-*` 头，collector
+也只在 HMAC 后落盘。它不是应用 Node 写 API，也不改变以上边界。管理员页面和统计查询
+API 仍只存在于 Sites，香港公网固定返回 404。
 
 这些限制属于部署信任边界，不应通过伪造请求头、开放 3000 端口或删除 Nginx
 404 规则来绕过。

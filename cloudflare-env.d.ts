@@ -27,6 +27,7 @@ declare namespace Cloudflare {
   interface Env {
     DB?: D1Database;
     ITER_HIGH_DETAIL_ASSET_BASE_URL?: string;
+    FUSIONDIGITAL_ANALYTICS_INGEST_SECRET?: string;
   }
 }
 

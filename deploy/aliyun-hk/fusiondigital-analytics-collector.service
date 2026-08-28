@@ -1,0 +1,46 @@
+[Unit]
+Description=Collect privacy-minimized FusionDigital analytics on loopback
+Documentation=file:/srv/fusiondigital/current/deploy/aliyun-hk/README.md
+After=local-fs.target
+Before=nginx.service fusiondigital-analytics-forwarder.service
+
+[Service]
+Type=simple
+User=fusionanalytics
+Group=fusionanalytics
+EnvironmentFile=/etc/fusiondigital/analytics.env
+ExecStart=/usr/bin/node /usr/local/lib/fusiondigital-analytics/current/analytics-collector.mjs
+Restart=on-failure
+RestartSec=2s
+TimeoutStartSec=10s
+TimeoutStopSec=15s
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectHostname=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectClock=true
+ProtectProc=invisible
+ProcSubset=pid
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+CapabilityBoundingSet=
+AmbientCapabilities=
+RestrictAddressFamilies=AF_UNIX AF_INET
+IPAddressDeny=any
+IPAddressAllow=localhost
+SocketBindDeny=any
+SocketBindAllow=tcp:3101
+ReadWritePaths=/var/log/fusiondigital
+UMask=0027
+MemoryMax=128M
+TasksMax=32
+
+[Install]
+WantedBy=multi-user.target
