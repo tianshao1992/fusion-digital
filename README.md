@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./public/fusiondigital-mark.png" alt="FusionDigital 标识" width="112" />
+  <img src="./public/fusiondigital-logo-white.png" alt="FusionDigital 白底 Logo" width="112" />
 </p>
 
 <h1 align="center">🚀 FusionDigital</h1>
