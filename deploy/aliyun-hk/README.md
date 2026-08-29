@@ -15,8 +15,9 @@
 访问统计是唯一的本机 sidecar 例外：Nginx 限流后只把 4 KiB JSON body、Origin 与
 Content-Type 交给 `127.0.0.1:3101` 的专用 collector，并关闭该 location 的 access log。
 collector 严格校验后在内存中对 event/visitor/session 标识做 HMAC，只有脱敏结果能写入
-专用日志；请求绝不进入香港应用 Node、D1 或认证代码。五分钟定时器再把批次签名发送到
-固定 Sites 管理数据面。详见 [`docs/ANALYTICS.md`](../../docs/ANALYTICS.md)。
+短期 JSONL journal 与本机 SQLite；请求绝不进入香港应用 Node、D1 或认证代码。Sites
+只在管理员鉴权后经双向 HMAC 精确端点读取聚合报表，公开页面不回源 Sites。详见
+[`docs/ANALYTICS.md`](../../docs/ANALYTICS.md)。
 
 OpenAI Sites 只使用平台分配的 `*.chatgpt.site` 同步协作地址，不得绑定上述两个生产
 名称；正式发布时其 source SHA 必须与香港 active release 一致。`.openai/hosting.json`
@@ -45,7 +46,8 @@ Internet :80/:443
         v
 Nginx (TLS、身份头清理、写 API 关闭、受控资产映射)
         |-- public reads --> vinext 127.0.0.1:3000 (public-anonymous)
-        `-- analytics POST --> collector 127.0.0.1:3101 --> scoped-HMAC JSONL
+        |-- analytics POST --> collector 127.0.0.1:3101 --> HMAC journal + SQLite
+        `-- signed admin report --> collector --> aggregate-only signed response
 ```
 
 不要在安全组中开放 3000 或 3101 端口。`server.mjs` 将应用监听地址硬编码为
@@ -199,6 +201,11 @@ sudo bash /tmp/install-fusiondigital-release.sh \
   "<FULL_COMMIT_SHA>" \
   "<64_CHAR_LOWERCASE_SHA256>"
 ```
+
+生产安装器会在应用、Nginx、TLS 和资产探针通过后，自动安装并验证同一 release 的统计
+collector、SQLite 与本机 TLS 报表桥；任一步失败都会使整个 release 回滚。首次执行前
+必须按 [`docs/ANALYTICS.md`](../../docs/ANALYTICS.md) 安全配置香港专用匿名化密钥和
+Sites/HK 共用报表桥密钥。不要把 Secret 放在上述命令行中。
 
 ## 3. Ubuntu 24.04 初始化
 
@@ -497,9 +504,10 @@ Sites 平台分配的 `*.chatgpt.site` URL 单独发给使用者作为人工备�
 - Cloudflare D1 与 Images binding；
 - 任意客户端指定的模型或资产上游。
 
-专用匿名统计端点只进入 loopback collector；Nginx 不记录或转发旧 `x-fd-*` 头，collector
-也只在 HMAC 后落盘。它不是应用 Node 写 API，也不改变以上边界。管理员页面和统计查询
-API 仍只存在于 Sites，香港公网固定返回 404。
+专用匿名统计写入和签名报表桥只进入 loopback collector；Nginx 不记录身份或网络元数据，
+collector 也只在 HMAC 后落盘。它们不是应用 Node 写 API，也不改变以上边界。管理员页面
+和统计查询 API 仍只存在于 Sites，香港公网固定返回 404；桥只返回聚合数据并要求时戳、
+nonce 与双向 HMAC。
 
 这些限制属于部署信任边界，不应通过伪造请求头、开放 3000 端口或删除 Nginx
 404 规则来绕过。

@@ -2,7 +2,7 @@
 Description=Collect privacy-minimized FusionDigital analytics on loopback
 Documentation=file:/srv/fusiondigital/current/deploy/aliyun-hk/README.md
 After=local-fs.target
-Before=nginx.service fusiondigital-analytics-forwarder.service
+Before=nginx.service
 
 [Service]
 Type=simple
@@ -12,7 +12,7 @@ EnvironmentFile=/etc/fusiondigital/analytics.env
 ExecStart=/usr/bin/node /usr/local/lib/fusiondigital-analytics/current/analytics-collector.mjs
 Restart=on-failure
 RestartSec=2s
-TimeoutStartSec=10s
+TimeoutStartSec=120s
 TimeoutStopSec=15s
 NoNewPrivileges=true
 PrivateTmp=true
@@ -37,8 +37,10 @@ IPAddressDeny=any
 IPAddressAllow=localhost
 SocketBindDeny=any
 SocketBindAllow=tcp:3101
-ReadWritePaths=/var/log/fusiondigital
-UMask=0027
+ReadWritePaths=/var/log/fusiondigital /var/lib/fusiondigital-analytics
+StateDirectory=fusiondigital-analytics
+StateDirectoryMode=0700
+UMask=0077
 MemoryMax=128M
 TasksMax=32
 

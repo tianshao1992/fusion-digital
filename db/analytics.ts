@@ -79,7 +79,7 @@ export async function getAnalyticsReport(
        count(DISTINCT CASE WHEN event_type = 'page_view' AND occurred_date >= ? THEN visitor_id END) AS wau,
        count(DISTINCT CASE WHEN event_type = 'page_view' AND occurred_date >= ? THEN visitor_id END) AS mau,
        coalesce(avg(CASE WHEN event_type = 'engagement' AND occurred_date >= ? THEN duration_ms END), 0) AS average_duration_ms,
-       max(CASE WHEN occurred_date >= ? THEN received_at END) AS updated_at
+       max(CASE WHEN occurred_date >= ? THEN occurred_at END) AS updated_at
      FROM analytics_events
      WHERE occurred_date BETWEEN ? AND ?`,
   ).bind(startDate, startDate, startDate, endDate, weekStart, monthStart, startDate, startDate, queryStart, endDate)
@@ -116,7 +116,7 @@ export async function getAnalyticsReport(
      WHERE occurred_date BETWEEN ? AND ?
      GROUP BY path, content_key
      HAVING sum(CASE WHEN event_type IN ('page_view', 'content_view') THEN 1 ELSE 0 END) > 0
-     ORDER BY views DESC, visitors DESC, path
+     ORDER BY views DESC, visitors DESC, path, content_key
      LIMIT 80`,
   ).bind(startDate, endDate).all<ContentQueryRow>();
 
@@ -201,7 +201,7 @@ async function breakdownQuery(
      FROM analytics_events
      WHERE event_type = 'page_view' AND occurred_date BETWEEN ? AND ?
      GROUP BY ${field}
-     ORDER BY page_views DESC`,
+     ORDER BY page_views DESC, key`,
   ).bind(startDate, endDate).all<BreakdownQueryRow>();
   return (rows.results ?? []).map((row) => ({
     key: row.key,
@@ -222,7 +222,7 @@ async function recentSessionQuery(startDate: string, endDate: string): Promise<A
      WHERE occurred_date BETWEEN ? AND ?
      GROUP BY session_id, visitor_id, source, device_class
      HAVING sum(CASE WHEN event_type = 'page_view' THEN 1 ELSE 0 END) > 0
-     ORDER BY ended_at DESC
+     ORDER BY ended_at DESC, session_id
      LIMIT ?`,
   ).bind(startDate, endDate, MAX_RECENT_SESSIONS).all<SessionQueryRow>();
   const sessions = sessionRows.results ?? [];

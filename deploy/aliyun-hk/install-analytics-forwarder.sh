@@ -16,17 +16,26 @@ for command in node install systemctl stat getent id realpath dirname flock user
 done
 
 install -d -m 0755 /run/lock
-exec 9>/run/lock/fusiondigital-deploy.lock
-flock -n 9 || {
-  echo "another FusionDigital deployment or analytics installation is running" >&2
-  exit 1
-}
+if [[ ${FUSIONDIGITAL_DEPLOY_LOCK_HELD:-0} == 1 ]]; then
+  [[ $(readlink "/proc/$$/fd/9" 2>/dev/null || true) == /run/lock/fusiondigital-deploy.lock ]] \
+    && flock -n 9 || {
+      echo "the parent deployment lock was not inherited" >&2
+      exit 1
+    }
+else
+  exec 9>/run/lock/fusiondigital-deploy.lock
+  flock -n 9 || {
+    echo "another FusionDigital deployment or analytics installation is running" >&2
+    exit 1
+  }
+fi
 
 SCRIPT_DIR=$(realpath -e -- "$(dirname -- "${BASH_SOURCE[0]}")")
 RELEASE_ROOT=$(realpath -e -- "$SCRIPT_DIR/../..")
 ENV_DIR=/etc/fusiondigital
 ENV_FILE=$ENV_DIR/analytics.env
 STATE_DIR=/var/lib/fusiondigital-analytics
+DATABASE_FILE=$STATE_DIR/analytics.sqlite
 LOG_DIR=/var/log/fusiondigital
 LOG_FILE=$LOG_DIR/analytics.log
 LOGROTATE_FILE=/etc/logrotate.d/fusiondigital-analytics
@@ -38,6 +47,7 @@ RUNTIME_RELEASES=$RUNTIME_ROOT/releases
 RUNTIME_CURRENT=$RUNTIME_ROOT/current
 RUNTIME_NEXT=$RUNTIME_ROOT/.current.next.$$
 RUNTIME_PENDING=""
+LABEL_SOURCE=$RELEASE_ROOT/dist/client/data/fusion-knowledge-graph.json
 BACKUP_DIR=""
 PREVIOUS_RUNTIME=""
 TRANSACTION_ACTIVE=false
@@ -49,6 +59,8 @@ COLLECTOR_WAS_ENABLED=false
 COLLECTOR_WAS_ACTIVE=false
 TIMER_WAS_ENABLED=false
 TIMER_WAS_ACTIVE=false
+DATABASE_EXISTED=false
+DATABASE_BACKUP_READY=false
 
 restore_file() {
   local existed=$1
@@ -79,6 +91,15 @@ rollback_transaction() {
   restore_file "$HAD_FORWARDER_SERVICE" "$BACKUP_DIR/forwarder.service" "$FORWARDER_SERVICE_FILE"
   restore_file "$HAD_TIMER" "$BACKUP_DIR/forwarder.timer" "$TIMER_FILE"
   restore_file "$HAD_LOGROTATE" "$BACKUP_DIR/logrotate" "$LOGROTATE_FILE"
+  if "$DATABASE_BACKUP_READY"; then
+    rm -f -- "$DATABASE_FILE-wal" "$DATABASE_FILE-shm"
+    cp -a "$BACKUP_DIR/analytics.sqlite" "$DATABASE_FILE"
+    chown fusionanalytics:fusionanalytics "$DATABASE_FILE"
+    chmod 0600 "$DATABASE_FILE"
+  elif ! "$DATABASE_EXISTED"; then
+    rm -f -- "$DATABASE_FILE-wal" "$DATABASE_FILE-shm"
+    rm -f -- "$DATABASE_FILE"
+  fi
   systemctl daemon-reload || true
 
   "$COLLECTOR_WAS_ENABLED" && systemctl enable fusiondigital-analytics-collector.service >/dev/null 2>&1
@@ -106,9 +127,8 @@ cleanup_on_exit() {
 }
 trap cleanup_on_exit EXIT
 
-for source in analytics-collector.mjs analytics-forwarder.mjs direct-execution.mjs \
-  fusiondigital-analytics-collector.service fusiondigital-analytics-forwarder.service \
-  fusiondigital-analytics-forwarder.timer fusiondigital-analytics.logrotate; do
+for source in analytics-collector.mjs analytics-store.mjs direct-execution.mjs \
+  fusiondigital-analytics-collector.service fusiondigital-analytics.logrotate; do
   [[ -f "$SCRIPT_DIR/$source" && ! -L "$SCRIPT_DIR/$source" ]] || {
     echo "analytics runtime file is missing or unsafe: $source" >&2
     exit 1
@@ -133,10 +153,22 @@ ENV_MODE=$(stat -Lc '%a' "$ENV_FILE")
 node --input-type=module - "$ENV_FILE" <<'NODE'
 import { readFileSync } from "node:fs";
 const lines = readFileSync(process.argv[2], "utf8").split(/\r?\n/u).filter(Boolean);
-if (lines.length !== 1 || !lines[0].startsWith("FUSIONDIGITAL_ANALYTICS_INGEST_SECRET=")) process.exit(1);
-const value = lines[0].slice(lines[0].indexOf("=") + 1);
-if (!/^[A-Za-z0-9_-]{43,128}$/u.test(value)) process.exit(1);
+const allowed = new Set([
+  "FUSIONDIGITAL_ANALYTICS_PSEUDONYM_SECRET",
+  "FUSIONDIGITAL_ANALYTICS_REPORT_SECRET",
+  "FUSIONDIGITAL_ANALYTICS_INGEST_SECRET",
+]);
+const values = new Map();
+for (const line of lines) {
+  const match = /^([A-Z0-9_]+)=([A-Za-z0-9_-]{43,128})$/u.exec(line);
+  if (!match || !allowed.has(match[1]) || values.has(match[1])) process.exit(1);
+  values.set(match[1], match[2]);
+}
+if (!values.has("FUSIONDIGITAL_ANALYTICS_PSEUDONYM_SECRET")
+  || !values.has("FUSIONDIGITAL_ANALYTICS_REPORT_SECRET")
+  || values.size > 3) process.exit(1);
 NODE
+node --input-type=module -e 'import("node:sqlite").then(({DatabaseSync}) => { const db = new DatabaseSync(":memory:"); db.exec("CREATE TABLE probe (id INTEGER) STRICT"); db.close(); })'
 
 if ! getent passwd fusionanalytics >/dev/null; then
   if getent group fusionanalytics >/dev/null; then
@@ -191,9 +223,21 @@ done
   exit 1
 }
 install -d -m 0700 -o fusionanalytics -g fusionanalytics "$STATE_DIR"
+if [[ ! -e "$DATABASE_FILE" && ! -L "$DATABASE_FILE" ]]; then
+  for orphan in "$DATABASE_FILE-wal" "$DATABASE_FILE-shm"; do
+    [[ ! -e "$orphan" && ! -L "$orphan" ]] || {
+      echo "orphan analytics database sidecar must be reviewed manually: $orphan" >&2
+      exit 1
+    }
+  done
+fi
 
 [[ -f "$RELEASE_ROOT/.fusiondigital-release.json" && ! -L "$RELEASE_ROOT/.fusiondigital-release.json" ]] || {
   echo "release manifest is missing or unsafe" >&2
+  exit 1
+}
+[[ -f "$LABEL_SOURCE" && ! -L "$LABEL_SOURCE" && $(stat -Lc '%h' "$LABEL_SOURCE") == 1 ]] || {
+  echo "analytics content label source is missing or unsafe" >&2
   exit 1
 }
 RELEASE_SHA=$(node -e '
@@ -209,9 +253,30 @@ RUNTIME_TARGET=$RUNTIME_RELEASES/$RELEASE_SHA
 install -d -m 0755 -o root -g root "$RUNTIME_ROOT" "$RUNTIME_RELEASES"
 if [[ ! -e "$RUNTIME_TARGET" ]]; then
   RUNTIME_PENDING=$(mktemp -d "$RUNTIME_RELEASES/.pending.XXXXXX")
-  for runtime_file in analytics-collector.mjs analytics-forwarder.mjs direct-execution.mjs; do
+  for runtime_file in analytics-collector.mjs analytics-store.mjs direct-execution.mjs; do
     install -m 0640 -o root -g fusionanalytics "$SCRIPT_DIR/$runtime_file" "$RUNTIME_PENDING/$runtime_file"
   done
+  node --input-type=module - "$LABEL_SOURCE" "$RUNTIME_PENDING/analytics-content-labels.json" <<'NODE'
+import { readFileSync, writeFileSync } from "node:fs";
+const snapshot = JSON.parse(readFileSync(process.argv[2], "utf8"));
+if (!snapshot || !Array.isArray(snapshot.nodes) || snapshot.nodes.length > 2000) process.exit(1);
+const digest = (value) => {
+  let first = 0x811c9dc5;
+  let second = 0x9e3779b9;
+  for (let index = 0; index < value.length; index += 1) {
+    const code = value.charCodeAt(index);
+    first = Math.imul(first ^ code, 0x01000193);
+    second = Math.imul(second ^ code, 0x85ebca6b);
+  }
+  return `${(first >>> 0).toString(16).padStart(8, "0")}${(second >>> 0).toString(16).padStart(8, "0")}`;
+};
+const labels = Object.create(null);
+for (const node of snapshot.nodes) {
+  if (!node || typeof node.id !== "string" || typeof node.label !== "string" || node.label.length < 1 || node.label.length > 200) process.exit(1);
+  labels[digest(node.id)] = node.label;
+}
+writeFileSync(process.argv[3], `${JSON.stringify(labels)}\n`, { encoding: "utf8", mode: 0o640, flag: "wx" });
+NODE
   chown root:fusionanalytics "$RUNTIME_PENDING"
   chmod 0750 "$RUNTIME_PENDING"
   mv "$RUNTIME_PENDING" "$RUNTIME_TARGET"
@@ -221,19 +286,22 @@ else
     echo "unsafe analytics runtime target" >&2
     exit 1
   }
-  for runtime_file in analytics-collector.mjs analytics-forwarder.mjs direct-execution.mjs; do
+  for runtime_file in analytics-collector.mjs analytics-store.mjs direct-execution.mjs; do
     [[ -f "$RUNTIME_TARGET/$runtime_file" && ! -L "$RUNTIME_TARGET/$runtime_file" ]] || exit 1
     cmp -s "$SCRIPT_DIR/$runtime_file" "$RUNTIME_TARGET/$runtime_file"
   done
+  [[ -f "$RUNTIME_TARGET/analytics-content-labels.json" && ! -L "$RUNTIME_TARGET/analytics-content-labels.json" ]] || exit 1
 fi
 # mktemp creates root:root; the dedicated non-root services must be able to
 # traverse the immutable target. Reapply this contract on idempotent retries.
 chown root:fusionanalytics "$RUNTIME_TARGET"
 chmod 0750 "$RUNTIME_TARGET"
-for runtime_file in analytics-collector.mjs analytics-forwarder.mjs direct-execution.mjs; do
+for runtime_file in analytics-collector.mjs analytics-store.mjs direct-execution.mjs; do
   chown root:fusionanalytics "$RUNTIME_TARGET/$runtime_file"
   chmod 0640 "$RUNTIME_TARGET/$runtime_file"
 done
+chown root:fusionanalytics "$RUNTIME_TARGET/analytics-content-labels.json"
+chmod 0640 "$RUNTIME_TARGET/analytics-content-labels.json"
 
 [[ ! -e "$RUNTIME_CURRENT" || -L "$RUNTIME_CURRENT" ]] || {
   echo "$RUNTIME_CURRENT must be a symlink" >&2
@@ -275,21 +343,65 @@ systemctl is-enabled --quiet fusiondigital-analytics-forwarder.timer 2>/dev/null
 systemctl is-active --quiet fusiondigital-analytics-forwarder.timer 2>/dev/null && TIMER_WAS_ACTIVE=true
 
 TRANSACTION_ACTIVE=true
-systemctl stop fusiondigital-analytics-forwarder.timer >/dev/null 2>&1 || true
+systemctl disable --now fusiondigital-analytics-forwarder.timer >/dev/null 2>&1 || true
 systemctl stop fusiondigital-analytics-forwarder.service >/dev/null 2>&1 || true
 systemctl stop fusiondigital-analytics-collector.service >/dev/null 2>&1 || true
+if [[ -e "$DATABASE_FILE" || -L "$DATABASE_FILE" ]]; then
+  DATABASE_EXISTED=true
+  [[ -f "$DATABASE_FILE" && ! -L "$DATABASE_FILE" && $(stat -Lc '%h' "$DATABASE_FILE") == 1 ]] || {
+    echo "$DATABASE_FILE must be a single regular file" >&2
+    exit 1
+  }
+  [[ $(stat -Lc '%U:%G' "$DATABASE_FILE") == fusionanalytics:fusionanalytics ]] || {
+    echo "$DATABASE_FILE must be owned by fusionanalytics" >&2
+    exit 1
+  }
+  DATABASE_MODE=$(stat -Lc '%a' "$DATABASE_FILE")
+  (( (8#$DATABASE_MODE & 0077) == 0 )) || {
+    echo "$DATABASE_FILE must not be accessible by group or other users" >&2
+    exit 1
+  }
+  for sidecar in "$DATABASE_FILE-wal" "$DATABASE_FILE-shm"; do
+    if [[ -e "$sidecar" || -L "$sidecar" ]]; then
+      [[ -f "$sidecar" && ! -L "$sidecar" && $(stat -Lc '%h' "$sidecar") == 1 ]] || {
+        echo "analytics database sidecar is unsafe" >&2
+        exit 1
+      }
+      [[ $(stat -Lc '%U:%G' "$sidecar") == fusionanalytics:fusionanalytics ]] || {
+        echo "analytics database sidecar must be owned by fusionanalytics" >&2
+        exit 1
+      }
+      SIDECAR_MODE=$(stat -Lc '%a' "$sidecar")
+      (( (8#$SIDECAR_MODE & 0077) == 0 )) || {
+        echo "analytics database sidecar must not be accessible by group or other users" >&2
+        exit 1
+      }
+    fi
+  done
+  node --input-type=module - "$DATABASE_FILE" <<'NODE'
+import { DatabaseSync } from "node:sqlite";
+const database = new DatabaseSync(process.argv[2]);
+const result = database.prepare("PRAGMA quick_check").get();
+if (result?.quick_check !== "ok") process.exit(1);
+const checkpoint = database.prepare("PRAGMA wal_checkpoint(TRUNCATE)").get();
+if (checkpoint?.busy !== 0 || checkpoint?.log !== checkpoint?.checkpointed) process.exit(1);
+database.close();
+NODE
+  cp -a "$DATABASE_FILE" "$BACKUP_DIR/analytics.sqlite"
+  cmp -s "$DATABASE_FILE" "$BACKUP_DIR/analytics.sqlite"
+  DATABASE_BACKUP_READY=true
+fi
 ln -s "$RUNTIME_TARGET" "$RUNTIME_NEXT"
 mv -Tf "$RUNTIME_NEXT" "$RUNTIME_CURRENT"
 install -m 0644 "$SCRIPT_DIR/fusiondigital-analytics-collector.service" "$COLLECTOR_SERVICE_FILE"
-install -m 0644 "$SCRIPT_DIR/fusiondigital-analytics-forwarder.service" "$FORWARDER_SERVICE_FILE"
-install -m 0644 "$SCRIPT_DIR/fusiondigital-analytics-forwarder.timer" "$TIMER_FILE"
+rm -f -- "$FORWARDER_SERVICE_FILE" "$TIMER_FILE"
 install -m 0644 "$SCRIPT_DIR/fusiondigital-analytics.logrotate" "$LOGROTATE_FILE"
 logrotate --debug "$LOGROTATE_FILE" >/dev/null
 systemctl daemon-reload
 systemctl enable fusiondigital-analytics-collector.service >/dev/null
 systemctl restart fusiondigital-analytics-collector.service
 COLLECTOR_HEALTHY=false
-for attempt in {1..30}; do
+for attempt in {1..120}; do
   if node "$RUNTIME_CURRENT/analytics-collector.mjs" --probe >/dev/null 2>&1; then
     COLLECTOR_HEALTHY=true
     break
@@ -301,8 +413,25 @@ done
   echo "analytics collector did not become ready" >&2
   exit 1
 }
-systemctl start fusiondigital-analytics-forwarder.service
-systemctl enable --now fusiondigital-analytics-forwarder.timer >/dev/null
+node "$RUNTIME_CURRENT/analytics-collector.mjs" --report-probe >/dev/null
+node "$RUNTIME_CURRENT/analytics-collector.mjs" --report-tls-probe >/dev/null
+[[ -f "$DATABASE_FILE" && ! -L "$DATABASE_FILE" && $(stat -Lc '%h' "$DATABASE_FILE") == 1 ]] || exit 1
+[[ $(stat -Lc '%U:%G' "$DATABASE_FILE") == fusionanalytics:fusionanalytics ]] || exit 1
+DATABASE_MODE=$(stat -Lc '%a' "$DATABASE_FILE")
+(( (8#$DATABASE_MODE & 0077) == 0 )) || exit 1
+for sidecar in "$DATABASE_FILE-wal" "$DATABASE_FILE-shm"; do
+  if [[ -e "$sidecar" || -L "$sidecar" ]]; then
+    [[ -f "$sidecar" && ! -L "$sidecar" && $(stat -Lc '%h' "$sidecar") == 1 ]] || exit 1
+    [[ $(stat -Lc '%U:%G' "$sidecar") == fusionanalytics:fusionanalytics ]] || exit 1
+    SIDECAR_MODE=$(stat -Lc '%a' "$sidecar")
+    (( (8#$SIDECAR_MODE & 0077) == 0 )) || exit 1
+  fi
+done
+[[ ! -e "$FORWARDER_SERVICE_FILE" && ! -L "$FORWARDER_SERVICE_FILE" ]] || exit 1
+[[ ! -e "$TIMER_FILE" && ! -L "$TIMER_FILE" ]] || exit 1
+! systemctl is-enabled --quiet fusiondigital-analytics-forwarder.timer 2>/dev/null || exit 1
+! systemctl is-active --quiet fusiondigital-analytics-forwarder.timer 2>/dev/null || exit 1
+! systemctl is-active --quiet fusiondigital-analytics-forwarder.service 2>/dev/null || exit 1
 
 TRANSACTION_ACTIVE=false
-echo "FusionDigital loopback analytics collector and signed forwarder are enabled."
+echo "FusionDigital loopback analytics collector and signed admin report bridge are enabled."

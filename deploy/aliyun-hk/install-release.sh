@@ -297,11 +297,9 @@ test -f "$PENDING/deploy/aliyun-hk/render-nginx-config.mjs"
 test -f "$PENDING/deploy/aliyun-hk/certbot-nginx-support.mjs"
 test -f "$PENDING/deploy/aliyun-hk/direct-execution.mjs"
 test -f "$PENDING/deploy/aliyun-hk/analytics-collector.mjs"
-test -f "$PENDING/deploy/aliyun-hk/analytics-forwarder.mjs"
+test -f "$PENDING/deploy/aliyun-hk/analytics-store.mjs"
 test -f "$PENDING/deploy/aliyun-hk/install-analytics-forwarder.sh"
 test -f "$PENDING/deploy/aliyun-hk/fusiondigital-analytics-collector.service"
-test -f "$PENDING/deploy/aliyun-hk/fusiondigital-analytics-forwarder.service"
-test -f "$PENDING/deploy/aliyun-hk/fusiondigital-analytics-forwarder.timer"
 test -f "$PENDING/deploy/aliyun-hk/fusiondigital-analytics.logrotate"
 test -f "$PENDING/.fusiondigital-release.json"
 node -e '
@@ -479,5 +477,12 @@ if $TLS_IS_CONFIGURED; then
   test "$HTTP_VERSION" = 2
 fi
 
-echo "FusionDigital Hong Kong release $RELEASE is healthy with controlled assets."
+[[ -f /etc/fusiondigital/analytics.env && ! -L /etc/fusiondigital/analytics.env ]] || {
+  echo "root-only analytics secrets must be provisioned before a production release" >&2
+  exit 1
+}
+FUSIONDIGITAL_DEPLOY_LOCK_HELD=1 \
+  "$TARGET/deploy/aliyun-hk/install-analytics-forwarder.sh"
+
 TRANSACTION_ACTIVE=false
+echo "FusionDigital Hong Kong release $RELEASE is healthy with controlled assets and analytics."

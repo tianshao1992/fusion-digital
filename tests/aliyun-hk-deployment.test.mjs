@@ -416,9 +416,15 @@ test("Hong Kong installer verifies sidecars, EFIT, ITER, and preserves managed T
   assert.match(installer, /TARGET_CREATED_BY_THIS_RUN=false/u);
   assert.match(installer, /mv "\$PENDING" "\$TARGET"\s+TARGET_CREATED_BY_THIS_RUN=true/u);
   assert.match(installer, /\$TARGET_CREATED_BY_THIS_RUN/u);
+  assert.match(installer, /root-only analytics secrets must be provisioned/u);
+  assert.match(installer, /FUSIONDIGITAL_DEPLOY_LOCK_HELD=1/u);
   assert.ok(
-    installer.indexOf("is healthy with controlled assets")
+    installer.indexOf('"$TARGET/deploy/aliyun-hk/install-analytics-forwarder.sh"')
       < installer.lastIndexOf("TRANSACTION_ACTIVE=false"),
+  );
+  assert.ok(
+    installer.lastIndexOf("TRANSACTION_ACTIVE=false")
+      < installer.indexOf("is healthy with controlled assets"),
   );
   assert.match(finalize, /certonly/u);
   assert.match(finalize, /--keep-until-expiring/u);
