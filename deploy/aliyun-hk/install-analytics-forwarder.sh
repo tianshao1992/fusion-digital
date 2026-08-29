@@ -8,7 +8,7 @@ if [[ ${EUID:-$(id -u)} -ne 0 ]]; then
 fi
 
 for command in node install systemctl stat getent id realpath dirname flock useradd usermod \
-  ln mv mktemp cp rm readlink logrotate chown chmod cmp grep; do
+  ln mv mktemp cp rm readlink logrotate chown chmod cmp grep sleep; do
   command -v "$command" >/dev/null || {
     echo "missing prerequisite: $command" >&2
     exit 1
@@ -288,7 +288,19 @@ logrotate --debug "$LOGROTATE_FILE" >/dev/null
 systemctl daemon-reload
 systemctl enable fusiondigital-analytics-collector.service >/dev/null
 systemctl restart fusiondigital-analytics-collector.service
-node "$RUNTIME_CURRENT/analytics-collector.mjs" --probe >/dev/null
+COLLECTOR_HEALTHY=false
+for attempt in {1..30}; do
+  if node "$RUNTIME_CURRENT/analytics-collector.mjs" --probe >/dev/null 2>&1; then
+    COLLECTOR_HEALTHY=true
+    break
+  fi
+  systemctl is-active --quiet fusiondigital-analytics-collector.service || break
+  sleep 1
+done
+"$COLLECTOR_HEALTHY" || {
+  echo "analytics collector did not become ready" >&2
+  exit 1
+}
 systemctl start fusiondigital-analytics-forwarder.service
 systemctl enable --now fusiondigital-analytics-forwarder.timer >/dev/null
 

@@ -386,6 +386,7 @@ test("admin APIs and Hong Kong ingress remain fail-closed and privacy-minimized"
   const collector = readFileSync(new URL("../deploy/aliyun-hk/analytics-collector.mjs", import.meta.url), "utf8");
   const collectorService = readFileSync(new URL("../deploy/aliyun-hk/fusiondigital-analytics-collector.service", import.meta.url), "utf8");
   const forwarderService = readFileSync(new URL("../deploy/aliyun-hk/fusiondigital-analytics-forwarder.service", import.meta.url), "utf8");
+  const installer = readFileSync(new URL("../deploy/aliyun-hk/install-analytics-forwarder.sh", import.meta.url), "utf8");
   const logrotate = readFileSync(new URL("../deploy/aliyun-hk/fusiondigital-analytics.logrotate", import.meta.url), "utf8");
   const migration = readFileSync(new URL("../drizzle/0002_unique_morbius.sql", import.meta.url), "utf8");
 
@@ -412,6 +413,10 @@ test("admin APIs and Hong Kong ingress remain fail-closed and privacy-minimized"
   assert.match(collectorService, /ReadWritePaths=\/var\/log\/fusiondigital/u);
   assert.match(forwarderService, /After=network-online\.target fusiondigital-analytics-collector\.service/u);
   assert.match(forwarderService, /ExecStartPre=.*--probe/u);
+  assert.match(installer, /for attempt in \{1\.\.30\}/u);
+  assert.match(installer, /--probe >\/dev\/null 2>&1/u);
+  assert.match(installer, /systemctl is-active --quiet fusiondigital-analytics-collector\.service \|\| break/u);
+  assert.match(installer, /sleep 1/u);
   assert.match(logrotate, /create 0640 fusionanalytics fusionanalytics/u);
   assert.match(logrotate, /nocompress/u);
   assert.match(migration, /CREATE TABLE `analytics_events`/u);
