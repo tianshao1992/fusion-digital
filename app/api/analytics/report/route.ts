@@ -20,6 +20,9 @@ export async function GET(request: Request): Promise<Response> {
     const report = await fetchClubAnalyticsReport(days, analyticsReportSecret());
     return ok({ report, requestId });
   } catch (error) {
+    if (error instanceof AnalyticsReportBridgeError) {
+      console.error("analytics-report-bridge-failure", { stage: error.stage });
+    }
     return handleApiError(
       error instanceof AnalyticsReportBridgeError
         ? new ApiError(502, "INTERNAL_ERROR", "Analytics report service is unavailable")

@@ -14,7 +14,18 @@ const TIMESTAMP_PATTERN = /^\d{10}$/u;
 const NONCE_PATTERN = /^[A-Za-z0-9_-]{22}$/u;
 
 export class AnalyticsReportBridgeError extends Error {
-  constructor(message = "Analytics report service is unavailable") {
+  constructor(
+    readonly stage:
+      | "secret"
+      | "nonce"
+      | "fetch"
+      | "response"
+      | "response-body"
+      | "response-signature"
+      | "response-payload"
+      | "unknown" = "unknown",
+    message = "Analytics report service is unavailable",
+  ) {
     super(message);
     this.name = "AnalyticsReportBridgeError";
   }
@@ -29,11 +40,11 @@ export async function fetchClubAnalyticsReport(
     nonce?: string;
   } = {},
 ): Promise<AnalyticsReport> {
-  if (!secret || !SECRET_PATTERN.test(secret)) throw new AnalyticsReportBridgeError();
+  if (!secret || !SECRET_PATTERN.test(secret)) throw new AnalyticsReportBridgeError("secret");
   const now = options.now ?? new Date();
   const timestamp = String(Math.floor(now.getTime() / 1_000));
   const nonce = options.nonce ?? randomNonce();
-  if (!NONCE_PATTERN.test(nonce)) throw new AnalyticsReportBridgeError();
+  if (!NONCE_PATTERN.test(nonce)) throw new AnalyticsReportBridgeError("nonce");
   const body = JSON.stringify({ schemaVersion: 1, days });
   const signature = await reportSignature({ kind: "request", body, timestamp, nonce, secret, status: 0 });
   let response: Response;
@@ -53,7 +64,7 @@ export async function fetchClubAnalyticsReport(
       signal: AbortSignal.timeout(5_000),
     });
   } catch {
-    throw new AnalyticsReportBridgeError();
+    throw new AnalyticsReportBridgeError("fetch");
   }
   const responseTimestamp = response.headers.get("x-fd-analytics-report-timestamp");
   const responseSignature = response.headers.get("x-fd-analytics-report-signature");
@@ -62,7 +73,7 @@ export async function fetchClubAnalyticsReport(
     || !response.headers.get("content-type")?.toLowerCase().startsWith("application/json")
     || (contentLengthHeader !== null
       && (!/^\d+$/u.test(contentLengthHeader) || Number(contentLengthHeader) > MAX_RESPONSE_BYTES))) {
-    throw new AnalyticsReportBridgeError();
+    throw new AnalyticsReportBridgeError("response");
   }
   const responseBody = await readBoundedResponseBody(response);
   if (!responseTimestamp
@@ -77,7 +88,7 @@ export async function fetchClubAnalyticsReport(
       secret,
       status: response.status,
     })) {
-    throw new AnalyticsReportBridgeError();
+    throw new AnalyticsReportBridgeError("response-signature");
   }
   try {
     const envelope = JSON.parse(responseBody) as { schemaVersion?: unknown; report?: unknown };
@@ -87,12 +98,12 @@ export async function fetchClubAnalyticsReport(
     }
     return parseAnalyticsReport(envelope.report);
   } catch {
-    throw new AnalyticsReportBridgeError();
+    throw new AnalyticsReportBridgeError("response-payload");
   }
 }
 
 async function readBoundedResponseBody(response: Response): Promise<string> {
-  if (!response.body) throw new AnalyticsReportBridgeError();
+  if (!response.body) throw new AnalyticsReportBridgeError("response-body");
   const reader = response.body.getReader();
   const chunks: Uint8Array[] = [];
   let total = 0;
@@ -103,13 +114,13 @@ async function readBoundedResponseBody(response: Response): Promise<string> {
       total += value.byteLength;
       if (total > MAX_RESPONSE_BYTES) {
         await reader.cancel();
-        throw new AnalyticsReportBridgeError();
+        throw new AnalyticsReportBridgeError("response-body");
       }
       chunks.push(value);
     }
   } catch (error) {
     if (error instanceof AnalyticsReportBridgeError) throw error;
-    throw new AnalyticsReportBridgeError();
+    throw new AnalyticsReportBridgeError("response-body");
   } finally {
     reader.releaseLock();
   }
@@ -122,7 +133,7 @@ async function readBoundedResponseBody(response: Response): Promise<string> {
   try {
     return new TextDecoder("utf-8", { fatal: true }).decode(body);
   } catch {
-    throw new AnalyticsReportBridgeError();
+    throw new AnalyticsReportBridgeError("response-body");
   }
 }
 
