@@ -500,7 +500,11 @@ test("admin APIs and Hong Kong ingress remain fail-closed and privacy-minimized"
   assert.match(reportRoute, /isPublicAnonymousMode\(\).*status: 404/u);
   assert.equal(existsSync(new URL("../app/api/analytics/ingest/route.ts", import.meta.url)), false);
   assert.match(bridge, /https:\/\/fusiondigital\.club/u);
-  assert.match(bridge, /redirect: "error"/u);
+  assert.match(bridge, /redirect: "manual"/u);
+  assert.doesNotMatch(bridge, /redirect: "error"/u);
+  assert.match(bridge, /new AbortController\(\)/u);
+  assert.doesNotMatch(bridge, /AbortSignal\.timeout/u);
+  assert.doesNotMatch(bridge, /cache: "no-store"/u);
   assert.match(bridge, /parseAnalyticsReport/u);
   assert.match(bridge, /response\.body\.getReader\(\)/u);
   assert.match(nginx, /location = \/admin\/analytics \{ return 404; \}/u);

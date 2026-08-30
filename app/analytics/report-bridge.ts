@@ -19,6 +19,7 @@ export class AnalyticsReportBridgeError extends Error {
       | "secret"
       | "nonce"
       | "fetch"
+      | "fetch-timeout"
       | "response"
       | "response-body"
       | "response-signature"
@@ -47,6 +48,8 @@ export async function fetchClubAnalyticsReport(
   if (!NONCE_PATTERN.test(nonce)) throw new AnalyticsReportBridgeError("nonce");
   const body = JSON.stringify({ schemaVersion: 1, days });
   const signature = await reportSignature({ kind: "request", body, timestamp, nonce, secret, status: 0 });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 5_000);
   let response: Response;
   try {
     response = await (options.fetcher ?? fetch)(ANALYTICS_REPORT_BRIDGE_URL, {
@@ -59,12 +62,13 @@ export async function fetchClubAnalyticsReport(
         "x-fd-analytics-report-timestamp": timestamp,
       },
       body,
-      cache: "no-store",
-      redirect: "error",
-      signal: AbortSignal.timeout(5_000),
+      redirect: "manual",
+      signal: controller.signal,
     });
   } catch {
-    throw new AnalyticsReportBridgeError("fetch");
+    throw new AnalyticsReportBridgeError(controller.signal.aborted ? "fetch-timeout" : "fetch");
+  } finally {
+    clearTimeout(timeout);
   }
   const responseTimestamp = response.headers.get("x-fd-analytics-report-timestamp");
   const responseSignature = response.headers.get("x-fd-analytics-report-signature");
