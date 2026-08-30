@@ -488,6 +488,8 @@ test("admin APIs and Hong Kong ingress remain fail-closed and privacy-minimized"
   const tracker = readFileSync(new URL("../app/analytics/AnalyticsTracker.tsx", import.meta.url), "utf8");
   const collector = readFileSync(new URL("../deploy/aliyun-hk/analytics-collector.mjs", import.meta.url), "utf8");
   const store = readFileSync(new URL("../deploy/aliyun-hk/analytics-store.mjs", import.meta.url), "utf8");
+  const worker = readFileSync(new URL("../worker/index.ts", import.meta.url), "utf8");
+  const cloudflareEnv = readFileSync(new URL("../cloudflare-env.d.ts", import.meta.url), "utf8");
   const collectorService = readFileSync(new URL("../deploy/aliyun-hk/fusiondigital-analytics-collector.service", import.meta.url), "utf8");
   const installer = readFileSync(new URL("../deploy/aliyun-hk/install-analytics-forwarder.sh", import.meta.url), "utf8");
   const logrotate = readFileSync(new URL("../deploy/aliyun-hk/fusiondigital-analytics.logrotate", import.meta.url), "utf8");
@@ -526,6 +528,11 @@ test("admin APIs and Hong Kong ingress remain fail-closed and privacy-minimized"
   assert.match(collector, /FUSIONDIGITAL_ANALYTICS_REPORT_SECRET/u);
   assert.match(collector, /verifyReportRequest/u);
   assert.match(collector, /consumeNonce/u);
+  assert.match(worker, /FUSIONDIGITAL_ANALYTICS_REPORT_SECRET\?: string/u);
+  assert.match(worker, /globalThis\.__FUSIONDIGITAL_ANALYTICS_REPORT_SECRET__ = env\.FUSIONDIGITAL_ANALYTICS_REPORT_SECRET/u);
+  assert.doesNotMatch(worker, /FUSIONDIGITAL_ANALYTICS_INGEST_SECRET/u);
+  assert.match(cloudflareEnv, /FUSIONDIGITAL_ANALYTICS_REPORT_SECRET\?: string/u);
+  assert.doesNotMatch(cloudflareEnv, /FUSIONDIGITAL_ANALYTICS_INGEST_SECRET/u);
   assert.match(collector, /constants\.O_NOFOLLOW/u);
   assert.match(collector, /console\.error\("FusionDigital analytics collector failed without persisting request data\."\)/u);
   assert.doesNotMatch(collector, /console\.(?:log|error)\(`|console\.(?:log|error)\([^\n]*\$\{/u);
