@@ -18,31 +18,19 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-function trustedViewerUrl(raw: string | undefined) {
-  if (!raw) return null;
-  try {
-    const url = new URL(raw);
-    if (url.protocol === 'https:' || (url.protocol === 'http:' && ['localhost', '127.0.0.1'].includes(url.hostname))) return url.toString();
-  } catch {
-    return null;
-  }
-  return null;
-}
-
 export default async function FusionDataPage() {
   const store = await cookies();
   const en = (resolveLocale(store.get(LOCALE_COOKIE_NAME)?.value) ?? DEFAULT_LOCALE) === 'en';
-  const paraViewUrl = trustedViewerUrl(process.env.NEXT_PUBLIC_PARAVIEW_TRAME_URL);
   return <main className="fusionDataPage">
       <SiteNav active="fusionData" />
     <header className="fusionDataIntro">
       <div>
         <p><Link href="/data-foundation">{en ? 'Data foundation' : '数据基座'}</Link><span>/</span> {en ? 'Data workspace' : '数据工作台'}</p>
-        <h1>Fusion Data Workspace <b>MOCK</b></h1>
+        <h1>Fusion Data Workspace <b>EXL-50U SNAPSHOT</b></h1>
       </div>
-      <p>{en ? 'Pulses, signals, IMAS semantics, quality and CAE results share one traceable time context.' : '炮次、信号、IMAS 语义、质量和 CAE 结果共用一个可追溯时间上下文。'}</p>
+      <p>{en ? 'Four reviewed EXL-50U shots: authoritative IMAS H5, read-only MDSplus projection, and a hashed public snapshot.' : '4 炮经审核的 EXL-50U 数据：权威 IMAS H5、MDSplus 只读时序投影与可校验的公开快照。'}</p>
     </header>
-    <FusionDataWorkspace paraViewUrl={paraViewUrl} />
+    <FusionDataWorkspace />
     <SiteFooter />
   </main>;
 }

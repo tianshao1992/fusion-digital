@@ -7,9 +7,9 @@
     "excludes": [
       "public/models/iter-high-detail-v1/"
     ],
-    "fileCount": 419,
-    "totalBytes": 260776866,
-    "treeSha256": "727cbf5694983385cde81b17a9451535b5b021d855bd547b0170a5e5b3a25a90",
+    "fileCount": 424,
+    "totalBytes": 260999308,
+    "treeSha256": "d4dbf3bbc446385a3a0c2cfd83e58f604e8ef66a8f90015feeedc9f75f165f55",
     "files": [
       {
         "path": "public/FusionDigital-technical-roadmap-2026-08-15.docx",
@@ -1145,6 +1145,31 @@
         "path": "public/data/exl50u-efit/shot-18308.bin",
         "bytes": 4544128,
         "sha256": "90da2a61bbe8a962a9a4c94344234bd929586887d293393c12585772523e8174"
+      },
+      {
+        "path": "public/data/exl50u-mdsplus-snapshot-v1/manifest.json",
+        "bytes": 2639,
+        "sha256": "ec3dcaec69db30d7dc6530e1efc1d5d59d7b34919391c2af3590ed23dcc6d59e"
+      },
+      {
+        "path": "public/data/exl50u-mdsplus-snapshot-v1/shot-20831.jsonl.gz",
+        "bytes": 57087,
+        "sha256": "1a21a24452592e8782bbc520b0d06aa509ac16f55f913b76e12334035f3ad73e"
+      },
+      {
+        "path": "public/data/exl50u-mdsplus-snapshot-v1/shot-20833.jsonl.gz",
+        "bytes": 54239,
+        "sha256": "b2a754ab2f301403f47b22bed22c349379ea0a3ffb28445a4f0d8f5cdb406720"
+      },
+      {
+        "path": "public/data/exl50u-mdsplus-snapshot-v1/shot-20835.jsonl.gz",
+        "bytes": 54372,
+        "sha256": "d89edf3d0d3a73c4da48066b01446f35317de73f63061a911525bd513c2b06bf"
+      },
+      {
+        "path": "public/data/exl50u-mdsplus-snapshot-v1/shot-20836.jsonl.gz",
+        "bytes": 54105,
+        "sha256": "0d2f491b83f53c2f7fb011b06bb3da5922eb0b49db813fecd0c2232cdad1589f"
       },
       {
         "path": "public/data/fusion-ai-native-landscape.json",

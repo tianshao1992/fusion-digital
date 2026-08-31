@@ -35,7 +35,7 @@ app/engineering/page.tsx       Tokamak 工程仿真
 app/ai/page.tsx                智能原生专题
 app/facilities/page.tsx        全球装置状态
 app/data-foundation/page.tsx   数据标准、档案与证据参考图谱
-app/fusion-data/page.tsx       炮次、IMAS、质量与 CAE 交互工作台
+app/fusion-data/page.tsx       EXL-50U 已审核炮次快照与可追溯曲线工作台
 app/platform/page.tsx          平台架构、统一合同与技术路线
 app/components/                导航、页脚、品牌与动效
 ```
@@ -66,20 +66,18 @@ app/components/                导航、页脚、品牌与动效
 
 ### 4.4 聚变数据工作台合同
 
-`/fusion-data` 当前只使用 `MockFusionDataProvider` 的确定性合成数据，并持续标注
-`synthetic: true` 与 `mapping-preview`。页面将 shot/pulse、处理 run 和版本化数据产品
-分开建模；ECharts 时序、平衡截面、剖面、质量矩阵与 CAE 查看器共用一个时间游标。
+`/fusion-data` 使用 `public/data/exl50u-mdsplus-snapshot-v1/` 中经过审核、版本化且固定的
+EXL-50U 公开快照。每个炮次文件同时保留 `shot -> dataset_id -> IDS -> occurrence -> run
+-> signal/path` 追溯链、源点数、公开点数、单位与 SHA-256；浏览器在解压前后分别校验
+哈希后才渲染。当前发布 20831、20833、20835、20836 四炮，每炮包含磁测 IP、PF C12、
+TF C00 和朗缪尔探针 EMB000 的四条一维信号。不同信号按各自时间轴取最近采样，不补零、
+不插值，也不把旧炮或合成曲线作为回退。
 
-未来 MDSplus 接入必须由服务端只读网关完成，并通过显式映射保存 tree/node、具体
-shot、IMAS IDS path、固定 Data Dictionary 版本、单位、时间模式、质量和血缘。浏览器
-不直连 MDSplus，也不接收任意 TDI/node 查询、永久对象存储凭据或内网 ParaView 地址。
-大型 GGD/CAE 结果由 IMAS-ParaView 和 ParaView/trame 在服务端处理；页面仅嵌入受信
-端点。浏览器本地 VTK 渲染只用于经过抽稀、已授权的派生结果。
-
-可信 trame 地址只能在构建时通过 `NEXT_PUBLIC_PARAVIEW_TRAME_URL` 注入（公网必须为
-HTTPS，本机开发允许 localhost HTTP）。查看器发送 `fusiondigital:viewer-ready` 后，
-页面以 `fusiondigital:set-context` v1 传递 facility/pulse/run、artifact、timestep、time
-和 field；双方必须继续校验精确 origin，不能把此消息合同扩展成任意 URL 或查询入口。
+页面明确标记“固定快照、非实时”。浏览器不连接内网 MDSplus，不包含内部地址、凭据或
+权威 H5 路径；离线导出器先用数据集目录确认炮号及推荐 `occ/run`，再读取白名单信号。
+完整 IMAS IDS、equilibrium、剖面、误差/质量位和 CAE/GGD 仍未公开，不能由一维投影
+推造。未来运行时接入必须通过受控 HTTPS 网关，并继续执行身份授权、查询白名单、范围
+限制、降采样、审计和 H5/MDSplus 一致性核验。
 
 智能原生的 JSON 源数据是事实维护入口；网页 TypeScript、公开 JSON 和 CSV 均由脚本生成。物理、工程和装置模块仍有部分内容直接维护在 TypeScript 中，后续应逐步迁移到带 schema 的结构化数据。
 

@@ -49,6 +49,11 @@ const SHARED_PATHS = [
   "/device-data/exl50u-efit/shot-18303.bin",
   "/device-data/exl50u-efit-v2/index.json",
   "/device-data/exl50u-efit-v2/shot-20213-part-000.jsonl.gz",
+  "/data/exl50u-mdsplus-snapshot-v1/manifest.json",
+  "/data/exl50u-mdsplus-snapshot-v1/shot-20831.jsonl.gz",
+  "/data/exl50u-mdsplus-snapshot-v1/shot-20833.jsonl.gz",
+  "/data/exl50u-mdsplus-snapshot-v1/shot-20835.jsonl.gz",
+  "/data/exl50u-mdsplus-snapshot-v1/shot-20836.jsonl.gz",
   "/models/iter-public-simplified/model-manifest.json",
   "/device-assets/iter-high-detail/v1/cryostat-base.f4daa0cabe2cdc3fb44057d57c5b5863c295015b2d692ea34f86cc7a96a9a34e.high.meshopt.glb",
 ];
@@ -169,6 +174,16 @@ test("contract pins both repositories, Hong Kong premium EIP, and Sites", () => 
     [
       "/models/exl50u-sensor-points-v1/manifest.json",
       "/models/exl50u-sensor-points-v1/sensor-points.json",
+    ],
+  );
+  assert.deepEqual(
+    contract.sharedContent.paths.filter((path) => path.startsWith("/data/exl50u-mdsplus-snapshot-v1/")),
+    [
+      "/data/exl50u-mdsplus-snapshot-v1/manifest.json",
+      "/data/exl50u-mdsplus-snapshot-v1/shot-20831.jsonl.gz",
+      "/data/exl50u-mdsplus-snapshot-v1/shot-20833.jsonl.gz",
+      "/data/exl50u-mdsplus-snapshot-v1/shot-20835.jsonl.gz",
+      "/data/exl50u-mdsplus-snapshot-v1/shot-20836.jsonl.gz",
     ],
   );
   assert.deepEqual(contract.forbiddenSitesCustomDomains, [

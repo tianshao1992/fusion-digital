@@ -65,6 +65,7 @@
 .fusionQuality--warning { background: var(--color-warning); }
 .fusionQuality--invalid { background: var(--color-danger); }
 .fusionQuality--missing { border: 1px solid var(--color-workbench-muted); background: transparent; }
+.fusionQuality--unknown { border: 1px solid var(--color-workbench-muted); background: color-mix(in srgb, var(--color-workbench-muted) 28%, transparent); }
 .fusionRailNote { margin: 6px 10px 10px; padding: 11px; border: 1px dashed var(--color-workbench-line); border-radius: 6px; }
 .fusionRailNote b { color: var(--color-workbench-accent); font: 800 9px/1.2 ui-monospace, SFMono-Regular, Consolas, monospace; }
 .fusionRailNote p { margin: 7px 0 0; color: var(--color-workbench-muted); font-size: 10px; line-height: 1.6; }
@@ -96,6 +97,40 @@
 .fusionEventTrack button:hover, .fusionEventTrack button:focus-visible { outline: none; background: var(--color-workbench-raised); }
 .fusionEventTrack time { color: var(--color-workbench-info); font: 700 8px/1 ui-monospace, SFMono-Regular, Consolas, monospace; }
 .fusionEventTrack b { font-size: 9px; font-weight: 650; }
+
+.fusionSnapshotState { display: grid; min-height: 300px; place-content: center; padding: 48px; text-align: center; }
+.fusionSnapshotState > b { color: var(--color-workbench-accent); font: 800 10px/1 ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: .09em; }
+.fusionSnapshotState h2 { margin: 15px 0 9px; font-size: 21px; }
+.fusionSnapshotState p { max-width: 680px; margin: 0; color: var(--color-workbench-muted); font-size: 11px; line-height: 1.7; overflow-wrap: anywhere; }
+
+.fusionCoverageTrack { display: flex; min-height: 52px; overflow-x: auto; border-top: 1px solid var(--color-workbench-line); background: var(--color-workbench-panel); }
+.fusionCoverageTrack > span { display: grid; place-items: center; padding: 0 12px; color: var(--color-workbench-muted); border-right: 1px solid var(--color-workbench-line); font: 750 8px/1 ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: .08em; }
+.fusionCoverageTrack button { display: grid; gap: 4px; min-width: 145px; padding: 8px 12px; border: 0; border-right: 1px solid var(--color-workbench-line); color: var(--color-workbench-ink); background: transparent; text-align: left; cursor: pointer; }
+.fusionCoverageTrack button[aria-pressed='true'] { background: color-mix(in srgb, var(--color-workbench-info) 11%, var(--color-workbench-raised)); }
+.fusionCoverageTrack button:focus-visible { outline: 2px solid var(--color-workbench-info); outline-offset: -2px; }
+.fusionCoverageTrack b { font: 700 9px/1.2 ui-monospace, SFMono-Regular, Consolas, monospace; }
+.fusionCoverageTrack time { color: var(--color-workbench-muted); font: 600 8px/1.2 ui-monospace, SFMono-Regular, Consolas, monospace; }
+
+.fusionDatasetCards { display: grid; gap: 6px; padding: 10px; }
+.fusionDatasetCards button { display: grid; grid-template-columns: 7px minmax(0, 1fr) auto; gap: 9px; align-items: center; padding: 10px; border: 1px solid var(--color-workbench-line); border-radius: 5px; color: var(--color-workbench-ink); background: var(--color-workbench-panel); text-align: left; cursor: pointer; }
+.fusionDatasetCards button[aria-pressed='true'] { border-color: var(--color-workbench-info); background: color-mix(in srgb, var(--color-workbench-info) 9%, var(--color-workbench-panel)); }
+.fusionDatasetCards button:focus-visible { outline: 2px solid var(--color-workbench-info); outline-offset: 1px; }
+.fusionDatasetCards i { width: 7px; height: 24px; border-radius: 999px; }
+.fusionDatasetCards span { display: grid; gap: 3px; min-width: 0; }
+.fusionDatasetCards b, .fusionDatasetCards small, .fusionDatasetCards em { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+.fusionDatasetCards b { font-size: 10px; }
+.fusionDatasetCards small { overflow: hidden; color: var(--color-workbench-muted); font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
+.fusionDatasetCards em { color: var(--color-workbench-info); font-size: 9px; font-style: normal; }
+
+.fusionSamplingTable { padding: 10px 12px; }
+.fusionSamplingTable p { margin: 10px 0 0; color: var(--color-workbench-muted); font-size: 9px; line-height: 1.6; }
+
+.fusionUnavailableGrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.fusionUnavailableGrid > div { display: grid; gap: 7px; min-height: 92px; padding: 14px; border-right: 1px solid var(--color-workbench-line); background: repeating-linear-gradient(135deg, transparent 0 12px, color-mix(in srgb, var(--color-workbench-line) 24%, transparent) 12px 13px); }
+.fusionUnavailableGrid > div:last-child { border-right: 0; }
+.fusionUnavailableGrid b { font-size: 11px; }
+.fusionUnavailableGrid code { color: var(--color-workbench-info); font-size: 9px; }
+.fusionUnavailableGrid span { color: var(--color-workbench-muted); font-size: 9px; line-height: 1.4; }
 
 .fusionTimebar { position: sticky; z-index: 6; bottom: 10px; display: grid; grid-template-columns: 30px 72px minmax(120px, 1fr) 30px auto; gap: 10px; align-items: center; padding: 10px 12px; box-shadow: 0 12px 30px rgb(0 0 0 / 22%); }
 .fusionTimebar button { width: 30px; height: 28px; border: 1px solid var(--color-workbench-line); border-radius: 5px; color: var(--color-workbench-ink); background: var(--color-workbench-panel); cursor: pointer; }
@@ -185,6 +220,8 @@
   .fusionCaePanel > footer { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .fusionViewerToolbar { align-items: flex-start; flex-wrap: wrap; }
   .fusionViewerToolbar > span { width: 100%; margin: 3px 0 0; }
+  .fusionUnavailableGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fusionUnavailableGrid > div { border-bottom: 1px solid var(--color-workbench-line); }
 }
 
 @media (max-width: 480px) {
@@ -193,6 +230,8 @@
   .fusionShotHeader dl > div { min-width: 80px; border-left: 0; }
   .fusionWorkspace { padding-inline: 8px; }
   .fusionPanelHeading { padding-inline: 10px; }
+  .fusionUnavailableGrid { grid-template-columns: 1fr; }
+  .fusionUnavailableGrid > div { border-right: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) { .fusionShotSelect { scroll-behavior: auto; } }

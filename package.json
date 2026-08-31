@@ -31,6 +31,7 @@
     "assets:hydrate": "node scripts/assets/runtime-assets.mjs hydrate",
     "assets:stage": "node scripts/assets/runtime-assets.mjs stage",
     "assets:refresh-lock": "node scripts/assets/runtime-assets.mjs refresh-lock",
+    "data:export-exl50u": "node scripts/fusion-data/export-exl50u-public-snapshot.mjs",
     "db:generate": "drizzle-kit generate",
     "db:local:migrate": "wrangler d1 migrations apply DB --local --config wrangler.local.jsonc --persist-to .wrangler/state",
     "db:local:verify": "wrangler d1 execute DB --local --config wrangler.local.jsonc --command \"SELECT name FROM sqlite_schema WHERE type = 'table' AND name NOT LIKE '_cf_%' ORDER BY name; PRAGMA foreign_key_check;\" --persist-to .wrangler/state --json",

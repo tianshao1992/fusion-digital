@@ -1,0 +1,82 @@
+{
+  "schemaVersion": "fusiondigital.exl50u.public-snapshot.v1",
+  "snapshotId": "exl50u-mdsplus-20260901-r1",
+  "generatedAt": "2026-08-31T17:28:51.520Z",
+  "facility": "EXL-50U",
+  "state": "versioned-public-snapshot",
+  "live": false,
+  "source": {
+    "authority": "IMAS H5",
+    "projection": "read-only MDSplus time-series projection",
+    "browserConnection": "none"
+  },
+  "publication": {
+    "scope": "4 reviewed shots and 4 allowlisted 1D signals per shot",
+    "missingValuePolicy": "preserve-null",
+    "interpolation": "none",
+    "qualityBasis": "not-provided-by-source",
+    "peakClaims": "not-published"
+  },
+  "shots": [
+    {
+      "pulse": 20831,
+      "path": "shot-20831.jsonl.gz",
+      "signalCount": 4,
+      "compressedBytes": 57087,
+      "compressedSha256": "1a21a24452592e8782bbc520b0d06aa509ac16f55f913b76e12334035f3ad73e",
+      "contentBytes": 133109,
+      "contentSha256": "ac92f882c5437087283855b57430d84b6e7cc6dafc6a3a1220312ac79fc405a2",
+      "datasetIds": [
+        "20831/magnetics/0/r0",
+        "20831/pf_active/0/r0",
+        "20831/tf/0/r0",
+        "20831/langmuir_probes/0/r0"
+      ]
+    },
+    {
+      "pulse": 20833,
+      "path": "shot-20833.jsonl.gz",
+      "signalCount": 4,
+      "compressedBytes": 54239,
+      "compressedSha256": "b2a754ab2f301403f47b22bed22c349379ea0a3ffb28445a4f0d8f5cdb406720",
+      "contentBytes": 131872,
+      "contentSha256": "22539b72febb349ba6c5f0a0b24d547b52141968229097c94897137083065107",
+      "datasetIds": [
+        "20833/magnetics/0/r0",
+        "20833/pf_active/0/r0",
+        "20833/tf/0/r0",
+        "20833/langmuir_probes/0/r0"
+      ]
+    },
+    {
+      "pulse": 20835,
+      "path": "shot-20835.jsonl.gz",
+      "signalCount": 4,
+      "compressedBytes": 54372,
+      "compressedSha256": "d89edf3d0d3a73c4da48066b01446f35317de73f63061a911525bd513c2b06bf",
+      "contentBytes": 132249,
+      "contentSha256": "60391b4e09d6bed85a3d4674fd26c49daf7f4ab0d402e45a61e818583a5d535f",
+      "datasetIds": [
+        "20835/magnetics/0/r0",
+        "20835/pf_active/0/r0",
+        "20835/tf/0/r0",
+        "20835/langmuir_probes/0/r0"
+      ]
+    },
+    {
+      "pulse": 20836,
+      "path": "shot-20836.jsonl.gz",
+      "signalCount": 4,
+      "compressedBytes": 54105,
+      "compressedSha256": "0d2f491b83f53c2f7fb011b06bb3da5922eb0b49db813fecd0c2232cdad1589f",
+      "contentBytes": 131835,
+      "contentSha256": "73cb1e2dbb6f75c1da87ef02f072bc6bc6e77e24ec359771457ed5f65cfa3dd1",
+      "datasetIds": [
+        "20836/magnetics/0/r1",
+        "20836/pf_active/0/r1",
+        "20836/tf/0/r1",
+        "20836/langmuir_probes/0/r1"
+      ]
+    }
+  ]
+}
