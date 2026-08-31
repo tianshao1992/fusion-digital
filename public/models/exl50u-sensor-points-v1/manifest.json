@@ -1,0 +1,67 @@
+{
+  "schemaVersion": "fusiondigital.exl50u.sensor-points-package.v1",
+  "id": "exl50u-sensor-points-v1",
+  "asOf": "2026-08-31",
+  "deviceId": "EXL-50U",
+  "authority": "user-provided-nominal-installation-points",
+  "dataset": {
+    "path": "/models/exl50u-sensor-points-v1/sensor-points.json",
+    "format": "application/json",
+    "schemaVersion": "fusiondigital.exl50u.sensor-points.v1",
+    "bytes": 29772,
+    "sha256": "B90986B52AA4B31210CB4B2A8129EE6DD1BC3217E331B8702D46019ED4358D3D",
+    "recordCount": 76,
+    "familyCounts": {
+      "LD": 42,
+      "PF": 7,
+      "TF": 14,
+      "TF_V": 12,
+      "SMOKE": 1
+    }
+  },
+  "coordinateReview": {
+    "sourceTuple": [
+      "elevation_mm",
+      "radius_mm",
+      "toroidal_deg"
+    ],
+    "sourceUnits": [
+      "millimetre",
+      "millimetre",
+      "degree"
+    ],
+    "elevationDatumMm": 4805,
+    "pointCountInsideCadBounds": 76,
+    "cadBoundsMillimetres": {
+      "min": [
+        -2915.914493,
+        -2915.914493,
+        -4804.999999
+      ],
+      "max": [
+        2915.914493,
+        2915.914493,
+        2502
+      ]
+    },
+    "status": "cad-registered-provisional-not-surveyed"
+  },
+  "publication": {
+    "precisePointPublicationAuthorized": true,
+    "authorizedAt": "2026-08-31",
+    "publicDualEndpoint": true,
+    "sourceGeometryIncluded": false,
+    "browserMutationAuthoritative": false,
+    "engineeringUseAllowed": false
+  },
+  "delivery": {
+    "existingDeviceModelOnly": true,
+    "markerLayerOnly": true,
+    "objIncluded": false,
+    "stlIncluded": false
+  },
+  "generator": {
+    "path": "scripts/exl50u/build_sensor_points.mjs",
+    "deterministic": true
+  }
+}

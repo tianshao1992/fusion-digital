@@ -1,0 +1,161 @@
+.sensorPointPanel{
+  min-height:100%;
+  padding:12px;
+  color:#dcece6;
+  background:#07110e;
+}
+
+.sensorPointLoading,.sensorPointError{
+  min-height:180px;
+  padding:28px 18px;
+  color:#9eb8ae;
+  font-size:12px;
+}
+
+.sensorPointError h3{color:#ff9a9d}
+
+.sensorPointHeader{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:16px;
+  padding:10px 8px 14px;
+  border-bottom:1px solid #76cbb638;
+}
+
+.sensorPointHeader small{
+  display:block;
+  margin-bottom:7px;
+  color:#7edfc8;
+  font:900 10px/1 ui-monospace,Consolas,monospace;
+  letter-spacing:.13em;
+}
+
+.sensorPointHeader h3{margin:0;color:#f3faf7;font-size:clamp(18px,1.25vw,24px);font-weight:450}
+.sensorPointHeader>b{color:#f19a72;font:400 32px/1 ui-monospace,Consolas,monospace}
+
+.sensorPointBoundary{
+  margin:12px 0;
+  padding:10px 11px;
+  border-left:3px solid #f19a72;
+  color:#b8aaa0;
+  background:#1b130e;
+  font-size:11px;
+  line-height:1.55;
+}
+
+.sensorPointTabs{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:1px;
+  margin-bottom:12px;
+  padding:1px;
+  background:#73cdb63b;
+}
+
+.sensorPointTabs button{
+  display:grid;
+  place-items:center;
+  gap:4px;
+  min-height:46px;
+  padding:7px 4px;
+  border:0;
+  color:#91aca2;
+  background:#0a1713;
+  font-size:11px;
+  font-weight:900;
+}
+
+.sensorPointTabs button span{color:#5b9485;font:800 9px/1 ui-monospace,Consolas,monospace}
+.sensorPointTabs button[aria-selected='true']{color:#06100d;background:#83dcc6}
+.sensorPointTabs button[aria-selected='true'] span{color:#255e50}
+.sensorPointTabs button:focus-visible{outline:2px solid #f19a72;outline-offset:-3px}
+
+.sensorPointFilters{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:8px}
+.sensorPointFilters label,.sensorPointEdit label{display:grid;gap:5px;color:#82a094;font-size:11px}
+.sensorPointFilters input,.sensorPointFilters select,.sensorPointEdit input,.sensorPointEdit select{
+  width:100%;
+  min-width:0;
+  height:38px;
+  padding:0 8px;
+  border:1px solid #76cbb642;
+  border-radius:0;
+  outline:0;
+  color:#eaf6f2;
+  background:#081511;
+  font:700 12px/1 ui-monospace,Consolas,monospace;
+}
+
+.sensorPointFilters input:focus,.sensorPointFilters select:focus,.sensorPointEdit input:focus,.sensorPointEdit select:focus{border-color:#7ee0c7;box-shadow:0 0 0 1px #7ee0c7}
+.sensorPointViewToggles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:9px 0}
+.sensorPointViewToggles button,.sensorPointVisibility,.sensorFamilyManager button,.sensorPointActions button{
+  min-height:34px;
+  border:1px solid #75cdb63d;
+  color:#9fb8ae;
+  background:#0a1713;
+  font-size:11px;
+  font-weight:800;
+}
+.sensorPointViewToggles button[aria-pressed='true']{border-color:#7edbc3;color:#dff8f1;background:#10241d}
+.sensorPointResultCount{margin:8px 0;color:#6f9587;font:800 10px/1 ui-monospace,Consolas,monospace}
+
+.sensorPointList{
+  display:grid;
+  gap:5px;
+  max-height:520px;
+  padding-right:3px;
+  overflow:auto;
+  scrollbar-color:#47776a #08120f;
+}
+
+.sensorPointList article{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  border:1px solid #5b8e8130;
+  border-left:3px solid var(--sensor-color);
+  background:#091510;
+}
+.sensorPointList article.isSelected{border-color:#f3a178;box-shadow:inset 0 0 0 1px #f3a17855;background:#1a1510}
+.sensorPointSelect{display:grid;gap:5px;min-width:0;padding:9px;border:0;text-align:left;color:inherit;background:transparent}
+.sensorPointSelect span{display:flex;align-items:baseline;justify-content:space-between;gap:8px;min-width:0}
+.sensorPointSelect b{min-width:0;overflow:hidden;color:#e7f4ef;font-size:12px;text-overflow:ellipsis;white-space:nowrap}
+.sensorPointSelect small{flex:none;color:#6c9587;font:700 9px/1 ui-monospace,Consolas,monospace}
+.sensorPointSelect em{overflow:hidden;color:#8fa89f;font:500 10px/1 ui-monospace,Consolas,monospace;font-style:normal;text-overflow:ellipsis;white-space:nowrap}
+.sensorPointVisibility{min-width:48px;border-width:0 0 0 1px}
+
+.sensorPointEdit{display:grid;gap:11px;padding:12px;border:1px solid #75cdb63d;background:#091510}
+.sensorPointIdentity{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding-bottom:9px;border-bottom:1px solid #75cdb627}
+.sensorPointIdentity b{color:#f1a079;font:900 12px/1 ui-monospace,Consolas,monospace}
+.sensorPointIdentity span{overflow:hidden;color:#91aa9f;font-size:11px;text-overflow:ellipsis;white-space:nowrap}
+.sensorTupleGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.sensorPointWebCoordinate{margin:0;padding:8px;color:#7fb29f;background:#07100d;font:700 10px/1.5 ui-monospace,Consolas,monospace;overflow-wrap:anywhere}
+.sensorPointActions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.sensorPointActions button.primary{border-color:#82dac4;color:#07120f;background:#82dac4}
+
+.sensorPointStats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:0 0 10px}
+.sensorPointStats div{padding:10px;border:1px solid #75cdb62f;background:#091510}
+.sensorPointStats dt{color:#75998c;font-size:10px}.sensorPointStats dd{margin:5px 0 0;color:#e9f6f1;font:700 18px/1 ui-monospace,Consolas,monospace}
+.sensorFamilyManager{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.sensorFamilyManager button{display:flex;align-items:center;justify-content:flex-start;gap:8px;padding:0 9px}
+.sensorFamilyManager button span{width:7px;height:7px;border-radius:50%}
+.sensorFamilyManager button[aria-pressed='false']{opacity:.46}
+.sensorPointManageActions{grid-template-columns:repeat(2,minmax(0,1fr));margin-top:10px}
+.sensorPointContractLink{margin:10px 0 0;text-align:right}.sensorPointContractLink a{color:#83d8c3;font-size:11px}
+.sensorPointNotice{margin:11px 0 0;padding:9px;border:1px solid #f19a7244;color:#c9b3a5;background:#1b130e;font-size:11px;line-height:1.5}
+
+.sensorPointPanel button:hover,.sensorPointPanel button:focus-visible{outline:1px solid #7ee0c7;outline-offset:-2px}
+
+@container physics-panel (max-width:410px){
+  .sensorPointFilters,.sensorTupleGrid{grid-template-columns:1fr}
+  .sensorPointActions{grid-template-columns:1fr}
+}
+
+:root[data-theme='light'] .sensorPointPanel{color:var(--color-ink);background:var(--color-surface-muted)}
+:root[data-theme='light'] .sensorPointHeader h3{color:var(--color-ink)}
+:root[data-theme='light'] .sensorPointFilters input,
+:root[data-theme='light'] .sensorPointFilters select,
+:root[data-theme='light'] .sensorPointEdit input,
+:root[data-theme='light'] .sensorPointEdit select,
+:root[data-theme='light'] .sensorPointEdit,
+:root[data-theme='light'] .sensorPointList article,
+:root[data-theme='light'] .sensorPointStats div{color:var(--color-ink);border-color:var(--color-border);background:var(--color-surface-raised)}

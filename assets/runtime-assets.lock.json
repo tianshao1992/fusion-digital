@@ -7,9 +7,9 @@
     "excludes": [
       "public/models/iter-high-detail-v1/"
     ],
-    "fileCount": 417,
-    "totalBytes": 260744709,
-    "treeSha256": "c20bd514656d0e7ce02c51d56979af4c2e743b230b88e4f1f7cf1f648fad3609",
+    "fileCount": 419,
+    "totalBytes": 260776866,
+    "treeSha256": "727cbf5694983385cde81b17a9451535b5b021d855bd547b0170a5e5b3a25a90",
     "files": [
       {
         "path": "public/FusionDigital-technical-roadmap-2026-08-15.docx",
@@ -1583,8 +1583,8 @@
       },
       {
         "path": "public/models/device-catalog.json",
-        "bytes": 11073,
-        "sha256": "d0f3ac55a8c86f25128ae5b185d1e946efe75f1ef1fec60e8da3733a430a3fa3"
+        "bytes": 11805,
+        "sha256": "6577e1fb00ec45952bbcb91e35bcec4a340c460b028be8b4d0b2d9427858ae5d"
       },
       {
         "path": "public/models/device-manifest.schema.json",
@@ -2020,6 +2020,16 @@
         "path": "public/models/exl50u-secure-preview/turntable-manifest.json",
         "bytes": 22517,
         "sha256": "c79ff9ca36e8989b0eca90dbf2d10f576286eb3005b7570fce500f1d329b5726"
+      },
+      {
+        "path": "public/models/exl50u-sensor-points-v1/manifest.json",
+        "bytes": 1653,
+        "sha256": "715e6b5aefb9066f1c30b3c0aff3a82fc4bba5605f9c303a12ab90f0c4bcc275"
+      },
+      {
+        "path": "public/models/exl50u-sensor-points-v1/sensor-points.json",
+        "bytes": 29772,
+        "sha256": "b90986b52aa4b31210cb4b2a8129ee6dd1bc3217e331b8702d46019ed4358d3d"
       },
       {
         "path": "public/models/iter-public-simplified/model-manifest.json",

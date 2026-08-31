@@ -18,6 +18,7 @@ import {
   SRGBColorSpace,
   Vector3,
   type Material,
+  type Raycaster,
   type Texture,
 } from 'three';
 import {
@@ -71,6 +72,8 @@ export type Ehl2DiagnosticPortMarkerPoint = {
   /** Reviewed flange normal in the same Web Y-up frame. */
   normalWeb?: readonly [number, number, number];
   label?: string;
+  color?: number;
+  detail?: string;
 };
 
 export type Ehl2DiagnosticPortMarkers = {
@@ -82,6 +85,15 @@ export type Ehl2DiagnosticPortMarkers = {
   selectedColor?: number;
   /** Only the selected port may receive a label, preventing a 41-label occlusion wall. */
   showSelectedLabel?: boolean;
+};
+
+export type Ehl2DiagnosticPointMarkers = Ehl2DiagnosticPortMarkers & {
+  layerId: string;
+  markerKind: string;
+  authority: string;
+  coordinateFrame: string;
+  labelDetail: string;
+  interactive?: boolean;
 };
 
 export type Ehl2DiagnosticWorkbenchOverlayOptions = {
@@ -113,19 +125,34 @@ export type Ehl2DiagnosticWorkbenchOverlayOptions = {
   }[];
 };
 
+/**
+ * A lightweight device-local point layer. It deliberately has no diagnostic
+ * rays or camera geometry, so host measurement points never masquerade as a
+ * DiagView2 design and never require a second CAD model.
+ */
+export type DevicePointMarkersOverlayOptions = {
+  kind: 'device-point-markers';
+  labelLocale: 'zh-CN' | 'en';
+  depthMode: 'xray' | 'physical';
+  pointMarkers: Ehl2DiagnosticPointMarkers;
+};
+
 export type Ehl2DiagnosticOverlayOptions =
   | (Ehl2PptDiagnosticOverlayOptions & {
     plasmaContext?: Ehl2DiagnosticPlasmaContext;
     plasmaContexts?: readonly Ehl2DiagnosticPlasmaContext[];
     plasmaClippingPlanesWebMetres?: readonly Ehl2DiagnosticPlane[];
     portMarkers?: Ehl2DiagnosticPortMarkers;
+    pointMarkers?: Ehl2DiagnosticPointMarkers;
   })
   | (Ehl2DiagnosticWorkbenchOverlayOptions & {
     plasmaContext?: Ehl2DiagnosticPlasmaContext;
     plasmaContexts?: readonly Ehl2DiagnosticPlasmaContext[];
     plasmaClippingPlanesWebMetres?: readonly Ehl2DiagnosticPlane[];
     portMarkers?: Ehl2DiagnosticPortMarkers;
-  });
+    pointMarkers?: Ehl2DiagnosticPointMarkers;
+  })
+  | DevicePointMarkersOverlayOptions;
 
 export type Ehl2DiagnosticThreeOverlayContext = {
   /**
@@ -138,6 +165,8 @@ export type Ehl2DiagnosticThreeOverlayContext = {
 export type Ehl2DiagnosticThreeOverlay = {
   /** Undefined is an explicit disabled state; it does not select defaults. */
   setOptions: (options?: Ehl2DiagnosticOverlayOptions) => void;
+  /** Returns a stable marker id only for layers that explicitly enable interaction. */
+  pickPointMarker: (raycaster: Raycaster) => string | null;
   dispose: () => void;
 };
 
@@ -147,6 +176,7 @@ type Segment = readonly [Vec3Tuple, Vec3Tuple];
 const ROOT_NAME = 'EHL2_DIAGNOSTIC_FOV_OVERLAY';
 const PLASMA_CONTEXT_NAME = 'EHL2_DIAGVIEW2_GEQDSK_PLASMA_CONTEXT';
 const PORT_MARKERS_NAME = 'EHL2_DIAGVIEW2_REVIEWED_PORT_MARKERS';
+const POINT_MARKERS_NAME = 'FUSIONDIGITAL_DEVICE_POINT_MARKERS';
 const PLASMA_BOUNDARY_TARGET_POINTS = 92;
 const PLASMA_BOUNDARY_MAX_POINTS = 96;
 const PLASMA_TOROIDAL_SEGMENTS = 64;
@@ -181,18 +211,26 @@ type NormalizedPlasmaContext = {
   inputBoundaryPointCount: number;
 };
 
-type NormalizedPortMarkers = {
+type NormalizedPointMarkers = {
   points: readonly {
     id: string;
     positionWebMetres: Vec3Tuple;
     normalWeb: Vec3Tuple | null;
     label: string;
+    color: number;
+    detail: string;
   }[];
   opacity: number;
   selectedId: string | null;
   color: number;
   selectedColor: number;
   showSelectedLabel: boolean;
+  layerId: string;
+  markerKind: string;
+  authority: string;
+  coordinateFrame: string;
+  labelDetail: string;
+  interactive: boolean;
 };
 
 function safeIdentifier(value: unknown, fallback: string) {
@@ -502,7 +540,10 @@ function normalizePlasmaClippingPlanes(input: unknown, physicalWebMetresRoot: Ob
   return planes;
 }
 
-function normalizePortMarkers(input: unknown): NormalizedPortMarkers | null {
+function normalizePointMarkers(
+  input: unknown,
+  defaults: Pick<NormalizedPointMarkers, 'layerId' | 'markerKind' | 'authority' | 'coordinateFrame' | 'labelDetail' | 'interactive'>,
+): NormalizedPointMarkers | null {
   if (!input || typeof input !== 'object' || Array.isArray(input)) return null;
   const record = input as Record<string, unknown>;
   if (record.visible !== undefined && typeof record.visible !== 'boolean') return null;
@@ -513,17 +554,26 @@ function normalizePortMarkers(input: unknown): NormalizedPortMarkers | null {
   const selectedColor = safeColor(record.selectedColor, 0xffa568);
   if (color === null || selectedColor === null) return null;
   if (record.showSelectedLabel !== undefined && typeof record.showSelectedLabel !== 'boolean') return null;
+  if (record.interactive !== undefined && typeof record.interactive !== 'boolean') return null;
+  const layerId = safeIdentifier(record.layerId, defaults.layerId);
+  const markerKind = safeIdentifier(record.markerKind, defaults.markerKind);
+  const authority = safeLabel(record.authority, defaults.authority);
+  const coordinateFrame = safeLabel(record.coordinateFrame, defaults.coordinateFrame);
+  const labelDetail = safeLabel(record.labelDetail, defaults.labelDetail);
+  if (!layerId || !markerKind || !authority || !coordinateFrame || !labelDetail) return null;
   if (!Array.isArray(record.pointsWebMetres) || record.pointsWebMetres.length === 0 || record.pointsWebMetres.length > 256) return null;
   const seen = new Set<string>();
-  const points: NormalizedPortMarkers['points'][number][] = [];
+  const points: NormalizedPointMarkers['points'][number][] = [];
   for (const item of record.pointsWebMetres) {
     if (!item || typeof item !== 'object' || Array.isArray(item)) return null;
     const pointRecord = item as Record<string, unknown>;
     const id = safeIdentifier(pointRecord.id, '');
     const label = safeLabel(pointRecord.label, id ?? '');
+    const pointColor = safeColor(pointRecord.color, color);
+    const detail = safeLabel(pointRecord.detail, labelDetail);
     const position = pointRecord.positionWebMetres;
     const normal = pointRecord.normalWeb;
-    if (!id || !label || seen.has(id) || !Array.isArray(position) || position.length !== 3
+    if (!id || !label || pointColor === null || !detail || seen.has(id) || !Array.isArray(position) || position.length !== 3
       || position.some((coordinate) => typeof coordinate !== 'number' || !Number.isFinite(coordinate) || Math.abs(coordinate) > 100)) return null;
     let normalWeb: Vec3Tuple | null = null;
     if (normal !== undefined) {
@@ -534,7 +584,7 @@ function normalizePortMarkers(input: unknown): NormalizedPortMarkers | null {
       normalWeb = [normal[0] / length, normal[1] / length, normal[2] / length];
     }
     seen.add(id);
-    points.push({ id, label, positionWebMetres: [position[0], position[1], position[2]], normalWeb });
+    points.push({ id, label, positionWebMetres: [position[0], position[1], position[2]], normalWeb, color: pointColor, detail });
   }
   const selectedId = record.selectedId === undefined ? null : safeIdentifier(record.selectedId, '');
   if (record.selectedId !== undefined && !selectedId) return null;
@@ -545,6 +595,12 @@ function normalizePortMarkers(input: unknown): NormalizedPortMarkers | null {
     color,
     selectedColor,
     showSelectedLabel: record.showSelectedLabel === true,
+    layerId,
+    markerKind,
+    authority,
+    coordinateFrame,
+    labelDetail,
+    interactive: record.interactive === undefined ? defaults.interactive : record.interactive,
   };
 }
 
@@ -780,6 +836,7 @@ function createMarker(
   opacity: number,
   depthTest: boolean,
   renderOrder: number,
+  interactive = false,
 ) {
   const material = new MeshBasicMaterial({
     color,
@@ -789,7 +846,8 @@ function createMarker(
     depthWrite: false,
     toneMapped: false,
   });
-  const marker = suppressRaycast(new Mesh(new SphereGeometry(radius, 12, 8), material));
+  const marker = new Mesh(new SphereGeometry(radius, 12, 8), material);
+  if (!interactive) suppressRaycast(marker);
   marker.name = name;
   marker.position.copy(vector(position));
   marker.frustumCulled = false;
@@ -900,73 +958,83 @@ function createLabel(
   return label;
 }
 
-function createPortMarkersGroup(
+function createMarkersGroup(
   input: unknown,
   depthTest: boolean,
-  labelLocale: 'zh-CN' | 'en',
+  defaults: Pick<NormalizedPointMarkers, 'layerId' | 'markerKind' | 'authority' | 'coordinateFrame' | 'labelDetail' | 'interactive'>,
+  groupName: string,
+  includeLayerToken = true,
+  groupKind = defaults.markerKind,
 ) {
-  const ports = normalizePortMarkers(input);
-  if (!ports) return null;
+  const markers = normalizePointMarkers(input, defaults);
+  if (!markers) return null;
   const group = suppressRaycast(new Group());
-  group.name = PORT_MARKERS_NAME;
+  group.name = includeLayerToken ? `${groupName}_${objectNameToken(markers.layerId)}` : groupName;
   group.userData = {
-    kind: 'ehl2-diagview2-reviewed-port-centres',
-    authority: 'reviewed-design-port-context-not-as-built-survey',
-    coordinateFrame: 'EHL2 web Y-up metres',
-    pointCount: ports.points.length,
-    selectedId: ports.selectedId,
-    raycast: false,
+    kind: groupKind,
+    layerId: markers.layerId,
+    authority: markers.authority,
+    coordinateFrame: markers.coordinateFrame,
+    pointCount: markers.points.length,
+    selectedId: markers.selectedId,
+    interactive: markers.interactive,
+    raycast: markers.interactive,
   };
-  ports.points.forEach((port) => {
-    const selected = port.id === ports.selectedId;
-    const color = selected ? ports.selectedColor : ports.color;
+  markers.points.forEach((point) => {
+    const selected = point.id === markers.selectedId;
+    const color = selected ? markers.selectedColor : point.color;
     const marker = createMarker(
-      `${PORT_MARKERS_NAME}_${objectNameToken(port.id)}`,
-      port.positionWebMetres,
+      `${group.name}_${objectNameToken(point.id)}`,
+      point.positionWebMetres,
       color,
       selected ? 0.052 : 0.025,
-      selected ? Math.max(0.92, ports.opacity) : ports.opacity,
+      selected ? Math.max(0.92, markers.opacity) : markers.opacity,
       depthTest,
       selected ? 29 : 27,
+      markers.interactive,
     );
     marker.userData = {
-      kind: 'reviewed-port-centre-marker',
-      portId: port.id,
-      label: port.label,
+      kind: markers.markerKind,
+      pointMarkerId: markers.interactive ? point.id : undefined,
+      interactivePointMarker: markers.interactive,
+      /* Keep portId for the reviewed-port contract and its existing tests. */
+      portId: markers.interactive ? undefined : point.id,
+      label: point.label,
       selected,
-      authority: group.userData.authority,
-      positionWebMetres: [...port.positionWebMetres],
+      authority: markers.authority,
+      coordinateFrame: markers.coordinateFrame,
+      positionWebMetres: [...point.positionWebMetres],
     };
     group.add(marker);
-    if (port.normalWeb) {
+    if (point.normalWeb) {
       const end: Vec3Tuple = [
-        port.positionWebMetres[0] + port.normalWeb[0] * 0.2,
-        port.positionWebMetres[1] + port.normalWeb[1] * 0.2,
-        port.positionWebMetres[2] + port.normalWeb[2] * 0.2,
+        point.positionWebMetres[0] + point.normalWeb[0] * 0.2,
+        point.positionWebMetres[1] + point.normalWeb[1] * 0.2,
+        point.positionWebMetres[2] + point.normalWeb[2] * 0.2,
       ];
       const normalIndicator = createLineSegments(
         `${marker.name}_NORMAL`,
-        [[port.positionWebMetres, end]],
+        [[point.positionWebMetres, end]],
         color,
-        ports.opacity,
+        markers.opacity,
         depthTest,
         selected ? 29 : 27,
       );
       normalIndicator.userData = {
-        kind: 'reviewed-port-normal-indicator',
-        portId: port.id,
+        kind: markers.interactive ? `${markers.markerKind}-normal-indicator` : 'reviewed-port-normal-indicator',
+        portId: markers.interactive ? undefined : point.id,
         lengthMetres: 0.2,
-        authority: group.userData.authority,
+        authority: markers.authority,
       };
       group.add(normalIndicator);
     }
-    if (selected && ports.showSelectedLabel) {
+    if (selected && markers.showSelectedLabel) {
       const accent = `#${color.toString(16).padStart(6, '0')}`;
       group.add(createLabel(
         `${marker.name}_LABEL`,
-        port.positionWebMetres,
-        port.label,
-        labelLocale === 'zh-CN' ? '经审阅设计端口 · 非实装测量' : 'REVIEWED DESIGN PORT · NOT AS-BUILT SURVEY',
+        point.positionWebMetres,
+        point.label,
+        point.detail,
         accent,
         depthTest,
         30,
@@ -974,6 +1042,30 @@ function createPortMarkersGroup(
     }
   });
   return group;
+}
+
+function createPortMarkersGroup(input: unknown, depthTest: boolean, labelLocale: 'zh-CN' | 'en') {
+  return createMarkersGroup(input, depthTest, {
+    layerId: 'reviewed-port-centres',
+    markerKind: 'reviewed-port-centre-marker',
+    authority: 'reviewed-design-port-context-not-as-built-survey',
+    coordinateFrame: 'EHL2 web Y-up metres',
+    labelDetail: labelLocale === 'zh-CN'
+      ? '经审阅设计端口 · 非实装测量'
+      : 'REVIEWED DESIGN PORT · NOT AS-BUILT SURVEY',
+    interactive: false,
+  }, PORT_MARKERS_NAME, false, 'ehl2-diagview2-reviewed-port-centres');
+}
+
+function createDevicePointMarkersGroup(input: unknown, depthTest: boolean) {
+  return createMarkersGroup(input, depthTest, {
+    layerId: 'device-points',
+    markerKind: 'device-point-marker',
+    authority: 'visualization-context-not-engineering-authority',
+    coordinateFrame: 'device web Y-up metres',
+    labelDetail: 'DEVICE POINT · LOCAL VISUALIZATION CONTEXT',
+    interactive: true,
+  }, POINT_MARKERS_NAME);
 }
 
 function createScenarioGroup(
@@ -1325,6 +1417,7 @@ export function createEhl2DiagnosticThreeOverlay(
       plasmaContexts?: unknown;
       plasmaClippingPlanesWebMetres?: unknown;
       portMarkers?: unknown;
+      pointMarkers?: unknown;
     };
     const requestedDepthTest = contextOptions.depthMode === 'physical';
     const plasmaClippingPlanes = normalizePlasmaClippingPlanes(
@@ -1363,6 +1456,21 @@ export function createEhl2DiagnosticThreeOverlay(
       contextOptions.labelLocale === 'zh-CN' ? 'zh-CN' : 'en',
     );
     if (portMarkersGroup) nextContent.add(portMarkersGroup);
+    const pointMarkersGroup = createDevicePointMarkersGroup(
+      contextOptions.pointMarkers,
+      requestedDepthTest,
+    );
+    if (pointMarkersGroup) nextContent.add(pointMarkersGroup);
+    if ((nextOptions as { kind?: unknown }).kind === 'device-point-markers') {
+      if (!pointMarkersGroup) {
+        root.visible = false;
+        return;
+      }
+      root.add(nextContent);
+      root.visible = true;
+      content = nextContent;
+      return;
+    }
     if ((nextOptions as { kind?: unknown }).kind === 'diagview2-workbench') {
       const workbench = nextOptions as Ehl2DiagnosticWorkbenchOverlayOptions;
       workbench.backgroundLayers?.forEach((background) => {
@@ -1395,10 +1503,25 @@ export function createEhl2DiagnosticThreeOverlay(
     content = nextContent;
   };
 
+  const pickPointMarker = (raycaster: Raycaster) => {
+    if (disposed || !root.visible || !content) return null;
+    const hits = raycaster.intersectObject(content, true);
+    for (const hit of hits) {
+      let node: Object3D | null = hit.object;
+      while (node && node !== content) {
+        if (node.userData.interactivePointMarker === true
+          && typeof node.userData.pointMarkerId === 'string') return node.userData.pointMarkerId;
+        node = node.parent;
+      }
+    }
+    return null;
+  };
+
   setOptions(initialOptions);
 
   return {
     setOptions,
+    pickPointMarker,
     dispose: () => {
       if (disposed) return;
       disposed = true;

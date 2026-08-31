@@ -99,19 +99,24 @@ test('EXL analysis sidebar switches accessibly between persistent EFIT and revie
 
   assert.equal(exl.diagnosticWorkspace.kind, 'exl50u-diagview2');
   assert.equal(exl.diagnosticWorkspace.portDatasetEndpoint, '/models/exl50u-diagview2-v1/diagview2-ports.json');
+  assert.equal(exl.diagnosticWorkspace.sensorDatasetEndpoint, '/models/exl50u-sensor-points-v1/sensor-points.json');
+  assert.equal(exl.diagnosticWorkspace.sensorManifestEndpoint, '/models/exl50u-sensor-points-v1/manifest.json');
   assert.deepEqual(exl.diagnosticWorkspace.capabilities, [
     'camera', 'array', 'laser', 'reviewed-port-poses', 'browser-overlay',
+    'host-sensor-points', 'sensor-point-draft-management',
   ]);
   assert.match(workspace, /className="deviceAnalysisTabs" role="tablist"/);
   assert.match(workspace, /role="tab"[\s\S]*?aria-selected=\{mode === 'efit'\}[\s\S]*?EFIT equilibrium/);
   assert.match(workspace, /role="tab"[\s\S]*?aria-selected=\{mode === 'diagnostic'\}[\s\S]*?Diagnostic visualization/);
+  assert.match(workspace, /role="tab"[\s\S]*?aria-selected=\{mode === 'sensors'\}[\s\S]*?Host points/);
   assert.match(workspace, /if \(nextMode === 'diagnostic'\) efitStore\.actions\.pause\(\)/,
     'leaving EFIT must pause playback without destroying its state');
   assert.match(workspace, /efitActive=\{analysisMode === 'efit'\}/);
-  assert.match(workspace, /diagnosticOverlayOptions=\{analysisMode === 'diagnostic' \? diagnosticOverlayOptions : undefined\}/);
+  assert.match(workspace, /diagnosticOverlayOptions=\{analysisMode === 'diagnostic'[\s\S]*?\? diagnosticOverlayOptions[\s\S]*?: analysisMode === 'sensors' \? sensorOverlayOptions : undefined\}/);
   assert.match(workspace, /hidden=\{Boolean\(diagnosticContract\) && mode !== 'efit'\}/,
     'EFIT remains mounted while its tab is hidden so shot and time selections persist');
   assert.match(workspace, /hidden=\{mode !== 'diagnostic'\}/);
+  assert.match(workspace, /hidden=\{mode !== 'sensors'\}/);
   assert.match(workspace, /event\.key === 'ArrowLeft'[\s\S]*?event\.key === 'ArrowRight'[\s\S]*?event\.key === 'Home'[\s\S]*?event\.key === 'End'/);
 
   assert.match(panel, /parseExl50uDiagView2PortDataset\(await response\.json\(\)\)/);

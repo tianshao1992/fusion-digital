@@ -17,7 +17,10 @@ import { useI18n } from '../i18n';
 import type { DeviceCatalog, DeviceCatalogEntry, DevicePhysicsOverlay } from './deviceCatalog';
 import Ehl2DiagnosticExperience, { Ehl2DiagnosticNoScriptSummary } from './Ehl2DiagnosticExperience';
 import Exl50uDiagnosticPanel from './Exl50uDiagnosticPanel';
+import Exl50uSensorPointPanel from './Exl50uSensorPointPanel';
 import TurntableDeviceViewer from './TurntableDeviceViewer';
+
+type Exl50uAnalysisMode = 'efit' | 'diagnostic' | 'sensors';
 
 function MetadataViewer({ device }: { device: DeviceCatalogEntry }) {
   const { content, t } = useI18n();
@@ -37,12 +40,16 @@ function DeviceViewer({
   efitStore,
   efitActive = true,
   diagnosticOverlayOptions,
+  onDiagnosticMarkerSelect,
+  diagnosticFocusPoint,
 }: {
   device: DeviceCatalogEntry;
   efitOverlay?: DevicePhysicsOverlay;
   efitStore: EfitStore | null;
   efitActive?: boolean;
   diagnosticOverlayOptions?: Ehl2DiagnosticOverlayOptions;
+  onDiagnosticMarkerSelect?: (markerId: string) => void;
+  diagnosticFocusPoint?: readonly [number, number, number] | null;
 }) {
   const [showEfitSection, setShowEfitSection] = useState(true);
   const [showEfitSurface, setShowEfitSurface] = useState(true);
@@ -93,6 +100,8 @@ function DeviceViewer({
     } : undefined}
     diagnosticOverlayEnabled={device.diagnosticWorkspace?.kind === 'exl50u-diagview2'}
     diagnosticOverlayOptions={diagnosticOverlayOptions}
+    onDiagnosticMarkerSelect={onDiagnosticMarkerSelect}
+    diagnosticFocusPoint={diagnosticFocusPoint}
   />;
   if (device.viewer.mode === 'turntable-3d' && device.viewer.turntableManifestEndpoint) return <TurntableDeviceViewer
     title={device.title}
@@ -130,8 +139,11 @@ function ResizableDeviceExperience({
   const [physicsShare, setPhysicsShare] = useState(DEFAULT_PHYSICS_SHARE);
   const [preferenceLoaded, setPreferenceLoaded] = useState(false);
   const [dragging, setDragging] = useState(false);
-  const [analysisMode, setAnalysisMode] = useState<'efit' | 'diagnostic'>('efit');
+  const [analysisMode, setAnalysisMode] = useState<Exl50uAnalysisMode>('efit');
   const [diagnosticOverlayOptions, setDiagnosticOverlayOptions] = useState<Ehl2DiagnosticOverlayOptions | undefined>();
+  const [sensorOverlayOptions, setSensorOverlayOptions] = useState<Ehl2DiagnosticOverlayOptions | undefined>();
+  const [selectedSensorId, setSelectedSensorId] = useState<string | null>(null);
+  const [sensorFocusPoint, setSensorFocusPoint] = useState<readonly [number, number, number] | null>(null);
   const exlDiagnosticContract = device.diagnosticWorkspace?.kind === 'exl50u-diagview2'
     ? device.diagnosticWorkspace
     : null;
@@ -209,17 +221,22 @@ function ResizableDeviceExperience({
     '--device-physics-width': `${physicsPercent.toFixed(3)}%`,
   } as CSSProperties;
 
-  const activateAnalysisMode = (nextMode: 'efit' | 'diagnostic') => {
+  const activateAnalysisMode = (nextMode: Exl50uAnalysisMode) => {
     if (nextMode === analysisMode) return;
     if (nextMode === 'diagnostic') efitStore.actions.pause();
+    if (nextMode === 'sensors') efitStore.actions.pause();
     setAnalysisMode(nextMode);
   };
 
   const handleAnalysisTabKeyDown = (event: ReactKeyboardEvent<HTMLButtonElement>) => {
     if (!exlDiagnosticContract) return;
-    let next: 'efit' | 'diagnostic' | null = null;
-    if (event.key === 'ArrowLeft' || event.key === 'ArrowUp' || event.key === 'Home') next = 'efit';
-    else if (event.key === 'ArrowRight' || event.key === 'ArrowDown' || event.key === 'End') next = 'diagnostic';
+    const order: Exl50uAnalysisMode[] = ['efit', 'diagnostic', 'sensors'];
+    const index = order.indexOf(analysisMode);
+    let next: Exl50uAnalysisMode | null = null;
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') next = order[(index - 1 + order.length) % order.length];
+    else if (event.key === 'ArrowRight' || event.key === 'ArrowDown') next = order[(index + 1) % order.length];
+    else if (event.key === 'Home') next = order[0];
+    else if (event.key === 'End') next = order[order.length - 1];
     if (!next) return;
     event.preventDefault();
     activateAnalysisMode(next);
@@ -238,7 +255,11 @@ function ResizableDeviceExperience({
         efitOverlay={efitOverlay}
         efitStore={efitStore}
         efitActive={analysisMode === 'efit'}
-        diagnosticOverlayOptions={analysisMode === 'diagnostic' ? diagnosticOverlayOptions : undefined}
+        diagnosticOverlayOptions={analysisMode === 'diagnostic'
+          ? diagnosticOverlayOptions
+          : analysisMode === 'sensors' ? sensorOverlayOptions : undefined}
+        onDiagnosticMarkerSelect={analysisMode === 'sensors' ? setSelectedSensorId : undefined}
+        diagnosticFocusPoint={analysisMode === 'sensors' ? sensorFocusPoint : null}
       />
     </div>
     <div
@@ -276,6 +297,10 @@ function ResizableDeviceExperience({
       onModeChange={activateAnalysisMode}
       onTabKeyDown={handleAnalysisTabKeyDown}
       onDiagnosticOverlayChange={setDiagnosticOverlayOptions}
+      selectedSensorId={selectedSensorId}
+      onSelectedSensorIdChange={setSelectedSensorId}
+      onSensorOverlayChange={setSensorOverlayOptions}
+      onSensorFocusPoint={(point) => setSensorFocusPoint([...point] as [number, number, number])}
     />
   </div>;
 }
@@ -390,22 +415,32 @@ function DeviceAnalysisPanel({
   onModeChange,
   onTabKeyDown,
   onDiagnosticOverlayChange,
+  selectedSensorId,
+  onSelectedSensorIdChange,
+  onSensorOverlayChange,
+  onSensorFocusPoint,
 }: {
   device: DeviceCatalogEntry;
   overlay: DeviceCatalogEntry['physicsOverlays'][number];
   store: EfitStore;
-  mode: 'efit' | 'diagnostic';
+  mode: Exl50uAnalysisMode;
   diagnosticContract: Extract<NonNullable<DeviceCatalogEntry['diagnosticWorkspace']>, { kind: 'exl50u-diagview2' }> | null;
-  onModeChange: (mode: 'efit' | 'diagnostic') => void;
+  onModeChange: (mode: Exl50uAnalysisMode) => void;
   onTabKeyDown: (event: ReactKeyboardEvent<HTMLButtonElement>) => void;
   onDiagnosticOverlayChange: (options?: Ehl2DiagnosticOverlayOptions) => void;
+  selectedSensorId: string | null;
+  onSelectedSensorIdChange: (pointId: string) => void;
+  onSensorOverlayChange: (options?: Ehl2DiagnosticOverlayOptions) => void;
+  onSensorFocusPoint: (point: readonly [number, number, number]) => void;
 }) {
   const { content, locale, t } = useI18n();
   const english = locale === 'en';
   const efitTabId = `${device.id}-analysis-tab-efit`;
   const diagnosticTabId = `${device.id}-analysis-tab-diagnostic`;
+  const sensorsTabId = `${device.id}-analysis-tab-sensors`;
   const efitPanelId = `${device.id}-analysis-panel-efit`;
   const diagnosticPanelId = `${device.id}-analysis-panel-diagnostic`;
+  const sensorsPanelId = `${device.id}-analysis-panel-sensors`;
   return <aside className="devicePhysicsPanel deviceAnalysisPanel" aria-label={english ? `${content(device.title)} analysis sidebar` : `${content(device.title)} 分析侧栏`}>
     {diagnosticContract && <div className="deviceAnalysisTabs" role="tablist" aria-label={english ? 'EXL-50U analysis mode' : 'EXL‑50U 分析模式'}>
       <button
@@ -428,6 +463,16 @@ function DeviceAnalysisPanel({
         onKeyDown={onTabKeyDown}
         onClick={() => onModeChange('diagnostic')}
       ><span>02</span>{english ? 'Diagnostic visualization' : '诊断可视化'}</button>
+      <button
+        id={sensorsTabId}
+        type="button"
+        role="tab"
+        aria-selected={mode === 'sensors'}
+        aria-controls={sensorsPanelId}
+        tabIndex={mode === 'sensors' ? 0 : -1}
+        onKeyDown={onTabKeyDown}
+        onClick={() => onModeChange('sensors')}
+      ><span>03</span>{english ? 'Host points' : '主机测点'}</button>
     </div>}
     <div
       id={efitPanelId}
@@ -453,6 +498,22 @@ function DeviceAnalysisPanel({
         active={mode === 'diagnostic'}
         contract={diagnosticContract}
         onOverlayChange={onDiagnosticOverlayChange}
+      />
+    </div>}
+    {diagnosticContract && <div
+      id={sensorsPanelId}
+      role="tabpanel"
+      aria-labelledby={sensorsTabId}
+      hidden={mode !== 'sensors'}
+      tabIndex={0}
+    >
+      <Exl50uSensorPointPanel
+        active={mode === 'sensors'}
+        contract={diagnosticContract}
+        selectedPointId={selectedSensorId}
+        onSelectedPointIdChange={onSelectedSensorIdChange}
+        onOverlayChange={onSensorOverlayChange}
+        onFocusPoint={onSensorFocusPoint}
       />
     </div>}
   </aside>;

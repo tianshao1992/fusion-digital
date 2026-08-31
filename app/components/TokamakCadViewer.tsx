@@ -90,6 +90,10 @@ export type TokamakCadViewerProps = {
    */
   diagnosticOverlayEnabled?: boolean;
   diagnosticOverlayOptions?: Ehl2DiagnosticOverlayOptions;
+  /** Stable id emitted when an explicitly interactive overlay marker is picked. */
+  onDiagnosticMarkerSelect?: (markerId: string) => void;
+  /** Device-web-metres point to centre without reloading or replacing the CAD. */
+  diagnosticFocusPoint?: readonly [number, number, number] | null;
   onDiagnosticRuntimeReady?: (runtime: Ehl2DiagnosticRuntime | null) => void;
   /**
    * EHL-2 diagnostic-view appearance overrides. These are deliberately a
@@ -192,6 +196,7 @@ type ViewerApi = {
   applyVisibility: (hidden: Set<string>, isolated: Set<string>) => void;
   selectParts: (partIds: Set<string>) => void;
   pickPart: (event: PointerEvent) => string | null;
+  focusWebPoint: (pointWebMetres: readonly [number, number, number]) => void;
   captureView: () => ViewSnapshot;
   applyView: (snapshot: ViewSnapshot) => void;
   resize: (refit?: boolean) => void;
@@ -458,6 +463,8 @@ function TokamakCadViewerSession({
   efitOptions,
   diagnosticOverlayEnabled = false,
   diagnosticOverlayOptions,
+  onDiagnosticMarkerSelect,
+  diagnosticFocusPoint = null,
   onDiagnosticRuntimeReady,
   diagnosticViewerSettings,
   diagnosticViewerState,
@@ -490,6 +497,8 @@ function TokamakCadViewerSession({
     options: efitOptions,
   });
   const diagnosticOverlayOptionsRef = useRef(diagnosticOverlayOptions);
+  const diagnosticMarkerSelectRef = useRef(onDiagnosticMarkerSelect);
+  const diagnosticFocusPointRef = useRef(diagnosticFocusPoint);
   const diagnosticRuntimeReadyRef = useRef(onDiagnosticRuntimeReady);
   const diagnosticRuntimeRef = useRef<Ehl2DiagnosticRuntime | null>(null);
   const initialDiagnosticViewerSettings = normalizeEhl2DiagnosticViewerSettings(diagnosticViewerSettings);
@@ -703,6 +712,15 @@ function TokamakCadViewerSession({
     diagnosticOverlayOptionsRef.current = diagnosticOverlayOptions;
     viewerRef.current?.diagnosticOverlay?.setOptions(diagnosticOverlayOptions);
   }, [diagnosticOverlayOptions]);
+
+  useEffect(() => {
+    diagnosticMarkerSelectRef.current = onDiagnosticMarkerSelect;
+  }, [onDiagnosticMarkerSelect]);
+
+  useEffect(() => {
+    diagnosticFocusPointRef.current = diagnosticFocusPoint;
+    if (diagnosticFocusPoint) viewerRef.current?.focusWebPoint(diagnosticFocusPoint);
+  }, [diagnosticFocusPoint]);
 
   useEffect(() => {
     const previous = diagnosticRuntimeReadyRef.current;
@@ -1581,11 +1599,18 @@ function TokamakCadViewerSession({
       };
       const raycaster = new THREE.Raycaster();
       const pointer = new THREE.Vector2();
-      const pickPart = (event: PointerEvent) => {
+      const setRaycasterFromPointer = (event: PointerEvent) => {
         const rect = renderer.domElement.getBoundingClientRect();
         pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
         pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
         raycaster.setFromCamera(pointer, camera);
+      };
+      const pickPointMarker = (event: PointerEvent) => {
+        setRaycasterFromPointer(event);
+        return localDiagnosticOverlay?.pickPointMarker(raycaster) ?? null;
+      };
+      const pickPart = (event: PointerEvent) => {
+        setRaycasterFromPointer(event);
         for (const hit of raycaster.intersectObject(model, true)) {
           let node: Object3D | null = hit.object;
           let visible = true;
@@ -1602,6 +1627,28 @@ function TokamakCadViewerSession({
           }
         }
         return null;
+      };
+      const focusWebPoint = (pointWebMetres: readonly [number, number, number]) => {
+        if (pointWebMetres.length !== 3 || pointWebMetres.some((value) => !Number.isFinite(value))) return;
+        model.updateWorldMatrix(true, false);
+        const targetWorld = model.localToWorld(new THREE.Vector3(
+          pointWebMetres[0],
+          pointWebMetres[1],
+          pointWebMetres[2],
+        ));
+        const viewOffset = camera.position.clone().sub(controls.target);
+        if (viewOffset.lengthSq() <= 1e-12) viewOffset.set(0.92, 0.58, 1);
+        const focusDistance = Math.min(
+          viewOffset.length(),
+          Math.max(controls.minDistance, modelRadius * 1.25),
+        );
+        viewOffset.normalize().multiplyScalar(focusDistance);
+        controls.target.copy(targetWorld);
+        camera.position.copy(targetWorld).add(viewOffset);
+        camera.lookAt(targetWorld);
+        camera.updateProjectionMatrix();
+        controls.update();
+        preserveViewOnResize = true;
       };
 
       const resize = (refit = false) => {
@@ -1642,6 +1689,11 @@ function TokamakCadViewerSession({
         const start = pointerDownRef.current;
         pointerDownRef.current = null;
         if (!start || Math.hypot(event.clientX - start.x, event.clientY - start.y) > 5) return;
+        const markerId = pickPointMarker(event);
+        if (markerId) {
+          diagnosticMarkerSelectRef.current?.(markerId);
+          return;
+        }
         const partId = pickPart(event);
         const additive = event.ctrlKey || event.metaKey || event.shiftKey;
         const next = additive ? new Set(selectedPartIdsRef.current) : new Set<string>();
@@ -1714,6 +1766,7 @@ function TokamakCadViewerSession({
         applyVisibility,
         selectParts,
         pickPart,
+        focusWebPoint,
         captureView: () => ({
           position: camera.position.toArray() as [number, number, number],
           target: controls.target.toArray() as [number, number, number],
@@ -1746,6 +1799,7 @@ function TokamakCadViewerSession({
         interactionRef.current.clipOffset,
       );
       viewerRef.current.setAnalyticPlasmaVisible(analyticPlasmaVisibleRef.current);
+      if (diagnosticFocusPointRef.current) viewerRef.current.focusWebPoint(diagnosticFocusPointRef.current);
       controls.autoRotate = interactionRef.current.autoRotate;
       setStats({ meshes, triangles: Math.round(triangles), renderer: renderer.capabilities.isWebGL2 ? 'WEBGL 2' : 'WEBGL', parts: nodeByPartId.size });
       setProgress(100);

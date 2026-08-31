@@ -1414,13 +1414,26 @@ test('the public catalog enables only the reviewed EHL-2 and EXL-50U DiagView2 c
     sourceLabel: 'DiagView2 geometry engine and reviewed EXL50U historical port table',
     sourceRevision: '868d74d5e0e6c9abaec0eb623bcdd13ead771c79',
     portDatasetEndpoint: '/models/exl50u-diagview2-v1/diagview2-ports.json',
-    capabilities: ['camera', 'array', 'laser', 'reviewed-port-poses', 'browser-overlay'],
+    sensorDatasetEndpoint: '/models/exl50u-sensor-points-v1/sensor-points.json',
+    sensorManifestEndpoint: '/models/exl50u-sensor-points-v1/manifest.json',
+    capabilities: [
+      'camera',
+      'array',
+      'laser',
+      'reviewed-port-poses',
+      'browser-overlay',
+      'host-sensor-points',
+      'sensor-point-draft-management',
+    ],
     statement: rawCatalog.devices.find((device: { id: string }) => device.id === exl.id).diagnosticWorkspace.statement,
   });
   assert.match(exl.diagnosticWorkspace?.statement ?? '', /84 historical EXL-50U design port records/i);
   assert.match(exl.diagnosticWorkspace?.statement ?? '', /reviewed metre-unit correction/i);
   assert.match(exl.diagnosticWorkspace?.statement ?? '', /repair of the S2 coordinate formula/i);
   assert.match(exl.diagnosticWorkspace?.statement ?? '', /public simplified CAD derivative/i);
+  assert.match(exl.diagnosticWorkspace?.statement ?? '', /76 user-authorized public nominal host sensor points/i);
+  assert.match(exl.diagnosticWorkspace?.statement ?? '', /non-authoritative browser-local sensor-point drafts/i);
+  assert.match(exl.diagnosticWorkspace?.statement ?? '', /loads no OBJ or STL geometry/i);
   assert.match(exl.diagnosticWorkspace?.statement ?? '', /not measured or as-installed survey data/i);
   assert.match(exl.diagnosticWorkspace?.statement ?? '', /calibrated diagnostic or optical model/i);
   assert.match(exl.diagnosticWorkspace?.statement ?? '', /validated engineering clear-aperture analysis/i);
@@ -1428,9 +1441,12 @@ test('the public catalog enables only the reviewed EHL-2 and EXL-50U DiagView2 c
 
   assert.ok(exl.facts.some((fact) => /84 个历史设计端口/.test(fact)));
   assert.ok(exl.facts.some((fact) => /Camera \/ Array \/ Laser/.test(fact)));
+  assert.ok(exl.facts.some((fact) => /76 个公开授权名义测点 · 本地非权威草稿/.test(fact)));
   assert.match(exl.deviceOverview, /84 个经米制审阅修正的历史设计端口/);
-  assert.match(exl.deviceOverview, /Camera、Array 与 Laser 三类诊断几何/);
-  assert.match(exl.fileSummary, /84 个历史设计端口 · 3 类诊断/);
+  assert.match(exl.deviceOverview, /76 个名义主机测点/);
+  assert.match(exl.deviceOverview, /非权威本地草稿/);
+  assert.match(exl.fileSummary, /84 个历史设计端口 · 76 个名义测点/);
+  assert.match(exl.fileSummary, /不加载测点 OBJ\/STL/);
 
   const withoutEhlWorkspace = structuredClone(rawCatalog);
   withoutEhlWorkspace.devices.find((device: { id: string }) => device.id === ehl.id).diagnosticWorkspace = null;
@@ -1451,6 +1467,8 @@ test('the public catalog enables only the reviewed EHL-2 and EXL-50U DiagView2 c
     ['sourceRevision', '0000000000000000000000000000000000000000'],
     ['coordinateFrame', 'EXL50U_WEB_METRES_PROVISIONAL_DIAGVIEW2_V1'],
     ['portDatasetEndpoint', '/models/ehl2-preliminary-v1/diagview2-ports.json'],
+    ['sensorDatasetEndpoint', '/models/ehl2-preliminary-v1/diagview2-ports.json'],
+    ['sensorManifestEndpoint', '/models/ehl2-preliminary-v1/model-manifest.json'],
   ] as const) {
     const invalidExlContract = structuredClone(rawCatalog);
     invalidExlContract.devices.find((device: { id: string }) => device.id === exl.id).diagnosticWorkspace[field] = invalidValue;

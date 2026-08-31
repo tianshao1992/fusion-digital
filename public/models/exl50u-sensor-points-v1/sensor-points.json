@@ -1,0 +1,1422 @@
+{
+  "schemaVersion": "fusiondigital.exl50u.sensor-points.v1",
+  "id": "exl50u-host-sensor-points-v1",
+  "asOf": "2026-08-31",
+  "deviceId": "EXL-50U",
+  "authority": "user-provided-nominal-installation-points",
+  "source": {
+    "fileName": "sensor_positions.json",
+    "bytes": 4642,
+    "sha256": "DDF9CAC621BF7DCF26F70A879F65381B9D0944AD02CDB460E7F1660F5B563789"
+  },
+  "publication": {
+    "precisePointPublicationAuthorized": true,
+    "authorizedAt": "2026-08-31",
+    "publicDualEndpoint": true,
+    "sourceGeometryIncluded": false,
+    "browserMutationAuthoritative": false,
+    "engineeringUseAllowed": false
+  },
+  "coordinateSystem": {
+    "id": "EXL50U_CYLINDRICAL_H_R_PHI_V1",
+    "sourceTuple": [
+      "elevation_mm",
+      "radius_mm",
+      "toroidal_deg"
+    ],
+    "sourceUnits": [
+      "millimetre",
+      "millimetre",
+      "degree"
+    ],
+    "elevationDatumMm": 4805,
+    "sourceFrame": "right-handed cylindrical; phi=0 along +X and increases toward +Y",
+    "webFrame": "right-handed XYZ; Y vertical",
+    "sourceToWebPoint": "[H_mm, R_mm, phi_deg] -> [R*cos(phi), H-4805, -R*sin(phi)] / 1000",
+    "reviewStatus": "cad-registered-provisional-not-surveyed",
+    "reviewBoundary": "The source JSON omits field labels, units and datum. The published interpretation is registered against the supplied millimetre CAD mesh and remains non-survey, non-as-built visualization data."
+  },
+  "runtimeGeometry": {
+    "mode": "marker-layer-on-existing-exl50u-model",
+    "geometryAssets": [],
+    "redundantObjOrStlLoaded": false
+  },
+  "recordCount": 76,
+  "familyCounts": {
+    "LD": 42,
+    "PF": 7,
+    "TF": 14,
+    "TF_V": 12,
+    "SMOKE": 1
+  },
+  "records": [
+    {
+      "id": "EXL50U-SP-001",
+      "sourceIndex": 1,
+      "sourceKey": "LD001",
+      "displayName": "LD001",
+      "family": "LD",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 7211.65,
+        "rMm": 800,
+        "phiDeg": 345
+      },
+      "webMetres": [
+        0.772740661031,
+        2.40665,
+        0.207055236082
+      ]
+    },
+    {
+      "id": "EXL50U-SP-002",
+      "sourceIndex": 2,
+      "sourceKey": "LD002",
+      "displayName": "LD002",
+      "family": "LD",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 7211.65,
+        "rMm": 800,
+        "phiDeg": 45
+      },
+      "webMetres": [
+        0.565685424949,
+        2.40665,
+        -0.565685424949
+      ]
+    },
+    {
+      "id": "EXL50U-SP-003",
+      "sourceIndex": 3,
+      "sourceKey": "LD003",
+      "displayName": "LD003",
+      "family": "LD",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 7211.65,
+        "rMm": 800,
+        "phiDeg": 105
+      },
+      "webMetres": [
+        -0.207055236082,
+        2.40665,
+        -0.772740661031
+      ]
+    },
+    {
+      "id": "EXL50U-SP-004",
+      "sourceIndex": 4,
+      "sourceKey": "LD004",
+      "displayName": "LD004",
+      "family": "LD",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 7061.65,
+        "rMm": 800,
+        "phiDeg": 165
+      },
+      "webMetres": [
+        -0.772740661031,
+        2.25665,
+        -0.207055236082
+      ]
+    },
+    {
+      "id": "EXL50U-SP-005",
+      "sourceIndex": 5,
+      "sourceKey": "LD005",
+      "displayName": "LD005",
+      "family": "LD",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 7061.65,
+        "rMm": 800,
+        "phiDeg": 225
+      },
+      "webMetres": [
+        -0.565685424949,
+        2.25665,
+        0.565685424949
+      ]
+    },
+    {
+      "id": "EXL50U-SP-006",
+      "sourceIndex": 6,
+      "sourceKey": "LD006",
+      "displayName": "LD006",
+      "family": "LD",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 7211.65,
+        "rMm": 800,
+        "phiDeg": 285
+      },
+      "webMetres": [
+        0.207055236082,
+        2.40665,
+        0.772740661031
+      ]
+    },
+    {
+      "id": "EXL50U-SP-007",
+      "sourceIndex": 7,
+      "sourceKey": "LD007",
+      "displayName": "LD007",
+      "family": "LD",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 2719.65,
+        "rMm": 570,
+        "phiDeg": 285
+      },
+      "webMetres": [
+        0.147526855708,
+        -2.08535,
+        0.550577720985
+      ]
+    },
+    {
+      "id": "EXL50U-SP-008",
+      "sourceIndex": 8,
+      "sourceKey": "LD008",
+      "displayName": "LD008",
+      "family": "LD",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 2719.65,
+        "rMm": 570,
+        "phiDeg": 315
+      },
+      "webMetres": [
+        0.403050865276,
+        -2.08535,
+        0.403050865276
+      ]
+    },
+    {
+      "id": "EXL50U-SP-009",
+      "sourceIndex": 9,
+      "sourceKey": "LD009",
+      "displayName": "LD009",
+      "family": "LD",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 5436,
+        "rMm": 1938.5,
+        "phiDeg": 135
+      },
+      "webMetres": [
+        -1.37072649533,
+        0.631,
+        -1.37072649533
+      ]
+    },
+    {
+      "id": "EXL50U-SP-010",
+      "sourceIndex": 10,
+      "sourceKey": "LD010",
+      "displayName": "LD010",
+      "family": "LD",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 4546,
+        "rMm": 1938.5,
+        "phiDeg": 135
+      },
+      "webMetres": [
+        -1.37072649533,
+        -0.259,
+        -1.37072649533
+      ]
+    },
+    {
+      "id": "EXL50U-SP-011",
+      "sourceIndex": 11,
+      "sourceKey": "LD011",
+      "displayName": "LD011",
+      "family": "LD",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 2719.65,
+        "rMm": 570,
+        "phiDeg": 345
+      },
+      "webMetres": [
+        0.550577720985,
+        -2.08535,
+        0.147526855708
+      ]
+    },
+    {
+      "id": "EXL50U-SP-012",
+      "sourceIndex": 12,
+      "sourceKey": "LD012",
+      "displayName": "LD012",
+      "family": "LD",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 2719.65,
+        "rMm": 570,
+        "phiDeg": 15
+      },
+      "webMetres": [
+        0.550577720985,
+        -2.08535,
+        -0.147526855708
+      ]
+    },
+    {
+      "id": "EXL50U-SP-013",
+      "sourceIndex": 13,
+      "sourceKey": "LD013",
+      "displayName": "LD013",
+      "family": "LD",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 5436,
+        "rMm": 1938.5,
+        "phiDeg": 315
+      },
+      "webMetres": [
+        1.37072649533,
+        0.631,
+        1.37072649533
+      ]
+    },
+    {
+      "id": "EXL50U-SP-014",
+      "sourceIndex": 14,
+      "sourceKey": "LD014",
+      "displayName": "LD014",
+      "family": "LD",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 4546,
+        "rMm": 1938.5,
+        "phiDeg": 315
+      },
+      "webMetres": [
+        1.37072649533,
+        -0.259,
+        1.37072649533
+      ]
+    },
+    {
+      "id": "EXL50U-SP-015",
+      "sourceIndex": 15,
+      "sourceKey": "LD015",
+      "displayName": "LD015",
+      "family": "LD",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 2265,
+        "rMm": 1400,
+        "phiDeg": 0
+      },
+      "webMetres": [
+        1.4,
+        -2.54,
+        0
+      ]
+    },
+    {
+      "id": "EXL50U-SP-016",
+      "sourceIndex": 16,
+      "sourceKey": "LD016",
+      "displayName": "LD016",
+      "family": "LD",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 2265,
+        "rMm": 1400,
+        "phiDeg": 90
+      },
+      "webMetres": [
+        0,
+        -2.54,
+        -1.4
+      ]
+    },
+    {
+      "id": "EXL50U-SP-017",
+      "sourceIndex": 17,
+      "sourceKey": "LD017",
+      "displayName": "LD017",
+      "family": "LD",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 2265,
+        "rMm": 1400,
+        "phiDeg": 180
+      },
+      "webMetres": [
+        -1.4,
+        -2.54,
+        0
+      ]
+    },
+    {
+      "id": "EXL50U-SP-018",
+      "sourceIndex": 18,
+      "sourceKey": "LD018",
+      "displayName": "LD018",
+      "family": "LD",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 2265,
+        "rMm": 1400,
+        "phiDeg": 270
+      },
+      "webMetres": [
+        0,
+        -2.54,
+        1.4
+      ]
+    },
+    {
+      "id": "EXL50U-SP-019",
+      "sourceIndex": 19,
+      "sourceKey": "LD019",
+      "displayName": "LD019",
+      "family": "LD",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 7061.65,
+        "rMm": 800,
+        "phiDeg": 45
+      },
+      "webMetres": [
+        0.565685424949,
+        2.25665,
+        -0.565685424949
+      ]
+    },
+    {
+      "id": "EXL50U-SP-020",
+      "sourceIndex": 20,
+      "sourceKey": "LD020",
+      "displayName": "LD020",
+      "family": "LD",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 7061.65,
+        "rMm": 800,
+        "phiDeg": 105
+      },
+      "webMetres": [
+        -0.207055236082,
+        2.25665,
+        -0.772740661031
+      ]
+    },
+    {
+      "id": "EXL50U-SP-021",
+      "sourceIndex": 21,
+      "sourceKey": "LD021",
+      "displayName": "LD021",
+      "family": "LD",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 7211.65,
+        "rMm": 800,
+        "phiDeg": 165
+      },
+      "webMetres": [
+        -0.772740661031,
+        2.40665,
+        -0.207055236082
+      ]
+    },
+    {
+      "id": "EXL50U-SP-022",
+      "sourceIndex": 22,
+      "sourceKey": "LD022",
+      "displayName": "LD022",
+      "family": "LD",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 7211.65,
+        "rMm": 800,
+        "phiDeg": 225
+      },
+      "webMetres": [
+        -0.565685424949,
+        2.40665,
+        0.565685424949
+      ]
+    },
+    {
+      "id": "EXL50U-SP-023",
+      "sourceIndex": 23,
+      "sourceKey": "LD023",
+      "displayName": "LD023",
+      "family": "LD",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 7061.65,
+        "rMm": 800,
+        "phiDeg": 345
+      },
+      "webMetres": [
+        0.772740661031,
+        2.25665,
+        0.207055236082
+      ]
+    },
+    {
+      "id": "EXL50U-SP-024",
+      "sourceIndex": 24,
+      "sourceKey": "LD024",
+      "displayName": "LD024",
+      "family": "LD",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 7061.65,
+        "rMm": 800,
+        "phiDeg": 285
+      },
+      "webMetres": [
+        0.207055236082,
+        2.25665,
+        0.772740661031
+      ]
+    },
+    {
+      "id": "EXL50U-SP-025",
+      "sourceIndex": 25,
+      "sourceKey": "LD025",
+      "displayName": "LD025",
+      "family": "LD",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 2719.65,
+        "rMm": 570,
+        "phiDeg": 45
+      },
+      "webMetres": [
+        0.403050865276,
+        -2.08535,
+        -0.403050865276
+      ]
+    },
+    {
+      "id": "EXL50U-SP-026",
+      "sourceIndex": 26,
+      "sourceKey": "LD026",
+      "displayName": "LD026",
+      "family": "LD",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 2719.65,
+        "rMm": 570,
+        "phiDeg": 75
+      },
+      "webMetres": [
+        0.147526855708,
+        -2.08535,
+        -0.550577720985
+      ]
+    },
+    {
+      "id": "EXL50U-SP-027",
+      "sourceIndex": 27,
+      "sourceKey": "LD027",
+      "displayName": "LD027",
+      "family": "LD",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 2719.65,
+        "rMm": 570,
+        "phiDeg": 105
+      },
+      "webMetres": [
+        -0.147526855708,
+        -2.08535,
+        -0.550577720985
+      ]
+    },
+    {
+      "id": "EXL50U-SP-028",
+      "sourceIndex": 28,
+      "sourceKey": "LD028",
+      "displayName": "LD028",
+      "family": "LD",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 2719.65,
+        "rMm": 570,
+        "phiDeg": 135
+      },
+      "webMetres": [
+        -0.403050865276,
+        -2.08535,
+        -0.403050865276
+      ]
+    },
+    {
+      "id": "EXL50U-SP-029",
+      "sourceIndex": 29,
+      "sourceKey": "LD029",
+      "displayName": "LD029",
+      "family": "LD",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 2719.65,
+        "rMm": 570,
+        "phiDeg": 165
+      },
+      "webMetres": [
+        -0.550577720985,
+        -2.08535,
+        -0.147526855708
+      ]
+    },
+    {
+      "id": "EXL50U-SP-030",
+      "sourceIndex": 30,
+      "sourceKey": "LD030",
+      "displayName": "LD030",
+      "family": "LD",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 2719.65,
+        "rMm": 570,
+        "phiDeg": 195
+      },
+      "webMetres": [
+        -0.550577720985,
+        -2.08535,
+        0.147526855708
+      ]
+    },
+    {
+      "id": "EXL50U-SP-031",
+      "sourceIndex": 31,
+      "sourceKey": "LD031",
+      "displayName": "LD031",
+      "family": "LD",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 2719.65,
+        "rMm": 570,
+        "phiDeg": 225
+      },
+      "webMetres": [
+        -0.403050865276,
+        -2.08535,
+        0.403050865276
+      ]
+    },
+    {
+      "id": "EXL50U-SP-032",
+      "sourceIndex": 32,
+      "sourceKey": "LD032",
+      "displayName": "LD032",
+      "family": "LD",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 2719.65,
+        "rMm": 570,
+        "phiDeg": 255
+      },
+      "webMetres": [
+        -0.147526855708,
+        -2.08535,
+        0.550577720985
+      ]
+    },
+    {
+      "id": "EXL50U-SP-033",
+      "sourceIndex": 33,
+      "sourceKey": "LD033",
+      "displayName": "LD033",
+      "family": "LD",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 6889.65,
+        "rMm": 570,
+        "phiDeg": 15
+      },
+      "webMetres": [
+        0.550577720985,
+        2.08465,
+        -0.147526855708
+      ]
+    },
+    {
+      "id": "EXL50U-SP-034",
+      "sourceIndex": 34,
+      "sourceKey": "LD034",
+      "displayName": "LD034",
+      "family": "LD",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 6889.65,
+        "rMm": 570,
+        "phiDeg": 75
+      },
+      "webMetres": [
+        0.147526855708,
+        2.08465,
+        -0.550577720985
+      ]
+    },
+    {
+      "id": "EXL50U-SP-035",
+      "sourceIndex": 35,
+      "sourceKey": "LD035",
+      "displayName": "LD035",
+      "family": "LD",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 6889.65,
+        "rMm": 570,
+        "phiDeg": 135
+      },
+      "webMetres": [
+        -0.403050865276,
+        2.08465,
+        -0.403050865276
+      ]
+    },
+    {
+      "id": "EXL50U-SP-036",
+      "sourceIndex": 36,
+      "sourceKey": "LD036",
+      "displayName": "LD036",
+      "family": "LD",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 6889.65,
+        "rMm": 570,
+        "phiDeg": 195
+      },
+      "webMetres": [
+        -0.550577720985,
+        2.08465,
+        0.147526855708
+      ]
+    },
+    {
+      "id": "EXL50U-SP-037",
+      "sourceIndex": 37,
+      "sourceKey": "LD037",
+      "displayName": "LD037",
+      "family": "LD",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 6889.65,
+        "rMm": 570,
+        "phiDeg": 255
+      },
+      "webMetres": [
+        -0.147526855708,
+        2.08465,
+        0.550577720985
+      ]
+    },
+    {
+      "id": "EXL50U-SP-038",
+      "sourceIndex": 38,
+      "sourceKey": "LD038",
+      "displayName": "LD038",
+      "family": "LD",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 6889.65,
+        "rMm": 570,
+        "phiDeg": 315
+      },
+      "webMetres": [
+        0.403050865276,
+        2.08465,
+        0.403050865276
+      ]
+    },
+    {
+      "id": "EXL50U-SP-039",
+      "sourceIndex": 39,
+      "sourceKey": "LD039",
+      "displayName": "LD039",
+      "family": "LD",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 5436,
+        "rMm": 1938.5,
+        "phiDeg": 45
+      },
+      "webMetres": [
+        1.37072649533,
+        0.631,
+        -1.37072649533
+      ]
+    },
+    {
+      "id": "EXL50U-SP-040",
+      "sourceIndex": 40,
+      "sourceKey": "LD040",
+      "displayName": "LD040",
+      "family": "LD",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 4546,
+        "rMm": 1938.5,
+        "phiDeg": 45
+      },
+      "webMetres": [
+        1.37072649533,
+        -0.259,
+        -1.37072649533
+      ]
+    },
+    {
+      "id": "EXL50U-SP-041",
+      "sourceIndex": 41,
+      "sourceKey": "LD041",
+      "displayName": "LD041",
+      "family": "LD",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 5436,
+        "rMm": 1938.5,
+        "phiDeg": 225
+      },
+      "webMetres": [
+        -1.37072649533,
+        0.631,
+        1.37072649533
+      ]
+    },
+    {
+      "id": "EXL50U-SP-042",
+      "sourceIndex": 42,
+      "sourceKey": "LD042",
+      "displayName": "LD042",
+      "family": "LD",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 4546,
+        "rMm": 1938.5,
+        "phiDeg": 225
+      },
+      "webMetres": [
+        -1.37072649533,
+        -0.259,
+        1.37072649533
+      ]
+    },
+    {
+      "id": "EXL50U-SP-043",
+      "sourceIndex": 43,
+      "sourceKey": "PF10",
+      "displayName": "PF10",
+      "family": "PF",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 4347.956744789897,
+        "rMm": 2250.0875231535197,
+        "phiDeg": 164.49473484190284
+      },
+      "webMetres": [
+        -2.168197593577,
+        -0.45704325521,
+        -0.601508983357
+      ]
+    },
+    {
+      "id": "EXL50U-SP-044",
+      "sourceIndex": 44,
+      "sourceKey": "PF3",
+      "displayName": "PF3",
+      "family": "PF",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 6592.397343132191,
+        "rMm": 624.8417752433863,
+        "phiDeg": 150.43122533315423
+      },
+      "webMetres": [
+        -0.543464876313,
+        1.787397343132,
+        -0.308339378451
+      ]
+    },
+    {
+      "id": "EXL50U-SP-045",
+      "sourceIndex": 45,
+      "sourceKey": "PF5",
+      "displayName": "PF5",
+      "family": "PF",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 6586.248491539758,
+        "rMm": 1124.213441523139,
+        "phiDeg": 152.11219369831724
+      },
+      "webMetres": [
+        -0.993653132694,
+        1.78124849154,
+        -0.525841529349
+      ]
+    },
+    {
+      "id": "EXL50U-SP-046",
+      "sourceIndex": 46,
+      "sourceKey": "PF6",
+      "displayName": "PF6",
+      "family": "PF",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 3000.24858245665,
+        "rMm": 1124.8349358804105,
+        "phiDeg": 145.95216984452594
+      },
+      "webMetres": [
+        -0.932005014902,
+        -1.804751417543,
+        -0.62977796498
+      ]
+    },
+    {
+      "id": "EXL50U-SP-047",
+      "sourceIndex": 47,
+      "sourceKey": "PF7",
+      "displayName": "PF7",
+      "family": "PF",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 6159.964073180514,
+        "rMm": 1843.043893408682,
+        "phiDeg": 156.60473293942158
+      },
+      "webMetres": [
+        -1.691522516657,
+        1.354964073181,
+        -0.731821268258
+      ]
+    },
+    {
+      "id": "EXL50U-SP-048",
+      "sourceIndex": 48,
+      "sourceKey": "PF8",
+      "displayName": "PF8",
+      "family": "PF",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 3438.1718239824067,
+        "rMm": 1843.0038611674777,
+        "phiDeg": 156.88330831916008
+      },
+      "webMetres": [
+        -1.69502384843,
+        -1.366828176018,
+        -0.723572653941
+      ]
+    },
+    {
+      "id": "EXL50U-SP-049",
+      "sourceIndex": 49,
+      "sourceKey": "PF9",
+      "displayName": "PF9",
+      "family": "PF",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 5234.996749870644,
+        "rMm": 2250.0824764588942,
+        "phiDeg": 164.50952224187932
+      },
+      "webMetres": [
+        -2.168347900733,
+        0.429996749871,
+        -0.600948027915
+      ]
+    },
+    {
+      "id": "EXL50U-SP-050",
+      "sourceIndex": 50,
+      "sourceKey": "TF01",
+      "displayName": "TF01",
+      "family": "TF",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 2285.493538729136,
+        "rMm": 1702.0588324382989,
+        "phiDeg": 194.5236983843938
+      },
+      "webMetres": [
+        -1.647667834743,
+        -2.519506461271,
+        0.426843033719
+      ]
+    },
+    {
+      "id": "EXL50U-SP-051",
+      "sourceIndex": 51,
+      "sourceKey": "TF02",
+      "displayName": "TF02",
+      "family": "TF",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 2184.6153837836646,
+        "rMm": 1742.2025702329915,
+        "phiDeg": 194.1262756974486
+      },
+      "webMetres": [
+        -1.689518699154,
+        -2.620384616216,
+        0.425201553306
+      ]
+    },
+    {
+      "id": "EXL50U-SP-052",
+      "sourceIndex": 52,
+      "sourceKey": "TF1",
+      "displayName": "TF1",
+      "family": "TF",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 7048.4,
+        "rMm": 544.1,
+        "phiDeg": 187.5
+      },
+      "webMetres": [
+        -0.539445149073,
+        2.2434,
+        0.071019301187
+      ]
+    },
+    {
+      "id": "EXL50U-SP-053",
+      "sourceIndex": 53,
+      "sourceKey": "TF10",
+      "displayName": "TF10",
+      "family": "TF",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 7027.4,
+        "rMm": 536.9,
+        "phiDeg": 97.5
+      },
+      "webMetres": [
+        -0.070079512603,
+        2.2224,
+        -0.532306746072
+      ]
+    },
+    {
+      "id": "EXL50U-SP-054",
+      "sourceIndex": 54,
+      "sourceKey": "TF10_V",
+      "displayName": "TF10_V",
+      "family": "TF_V",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 2209.6,
+        "rMm": 1220.1,
+        "phiDeg": 285
+      },
+      "webMetres": [
+        0.31578511693,
+        -2.5954,
+        1.178526100655
+      ]
+    },
+    {
+      "id": "EXL50U-SP-055",
+      "sourceIndex": 55,
+      "sourceKey": "TF11",
+      "displayName": "TF11",
+      "family": "TF",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 7027.4,
+        "rMm": 536.9,
+        "phiDeg": 127.5
+      },
+      "webMetres": [
+        -0.326844011235,
+        2.2224,
+        -0.425951408402
+      ]
+    },
+    {
+      "id": "EXL50U-SP-056",
+      "sourceIndex": 56,
+      "sourceKey": "TF11_V",
+      "displayName": "TF11_V",
+      "family": "TF_V",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 2209.6,
+        "rMm": 1220.1,
+        "phiDeg": 315
+      },
+      "webMetres": [
+        0.862740983726,
+        -2.5954,
+        0.862740983726
+      ]
+    },
+    {
+      "id": "EXL50U-SP-057",
+      "sourceIndex": 57,
+      "sourceKey": "TF12",
+      "displayName": "TF12",
+      "family": "TF",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 7027.4,
+        "rMm": 536.9,
+        "phiDeg": 157.5
+      },
+      "webMetres": [
+        -0.496030921005,
+        2.2224,
+        -0.205462734837
+      ]
+    },
+    {
+      "id": "EXL50U-SP-058",
+      "sourceIndex": 58,
+      "sourceKey": "TF12_V",
+      "displayName": "TF12_V",
+      "family": "TF_V",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 2209.6,
+        "rMm": 1220.1,
+        "phiDeg": 345
+      },
+      "webMetres": [
+        1.178526100655,
+        -2.5954,
+        0.31578511693
+      ]
+    },
+    {
+      "id": "EXL50U-SP-059",
+      "sourceIndex": 59,
+      "sourceKey": "TF1_V",
+      "displayName": "TF1_V",
+      "family": "TF_V",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 2209.6,
+        "rMm": 1220.1,
+        "phiDeg": 15
+      },
+      "webMetres": [
+        1.178526100655,
+        -2.5954,
+        -0.31578511693
+      ]
+    },
+    {
+      "id": "EXL50U-SP-060",
+      "sourceIndex": 60,
+      "sourceKey": "TF2",
+      "displayName": "TF2",
+      "family": "TF",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 7003.1,
+        "rMm": 574.8,
+        "phiDeg": 217.5
+      },
+      "webMetres": [
+        -0.456019499999,
+        2.1981,
+        0.349916069394
+      ]
+    },
+    {
+      "id": "EXL50U-SP-061",
+      "sourceIndex": 61,
+      "sourceKey": "TF2_V",
+      "displayName": "TF2_V",
+      "family": "TF_V",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 2209.6,
+        "rMm": 1220.1,
+        "phiDeg": 45
+      },
+      "webMetres": [
+        0.862740983726,
+        -2.5954,
+        -0.862740983726
+      ]
+    },
+    {
+      "id": "EXL50U-SP-062",
+      "sourceIndex": 62,
+      "sourceKey": "TF3",
+      "displayName": "TF3",
+      "family": "TF",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 7041.3,
+        "rMm": 550.5,
+        "phiDeg": 247.5
+      },
+      "webMetres": [
+        -0.210667229517,
+        2.2363,
+        0.508595682647
+      ]
+    },
+    {
+      "id": "EXL50U-SP-063",
+      "sourceIndex": 63,
+      "sourceKey": "TF3_V",
+      "displayName": "TF3_V",
+      "family": "TF_V",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 2209.6,
+        "rMm": 1220.1,
+        "phiDeg": 75
+      },
+      "webMetres": [
+        0.31578511693,
+        -2.5954,
+        -1.178526100655
+      ]
+    },
+    {
+      "id": "EXL50U-SP-064",
+      "sourceIndex": 64,
+      "sourceKey": "TF4",
+      "displayName": "TF4",
+      "family": "TF",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 7027.4,
+        "rMm": 536.9,
+        "phiDeg": 277.5
+      },
+      "webMetres": [
+        0.070079512603,
+        2.2224,
+        0.532306746072
+      ]
+    },
+    {
+      "id": "EXL50U-SP-065",
+      "sourceIndex": 65,
+      "sourceKey": "TF4_V",
+      "displayName": "TF4_V",
+      "family": "TF_V",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 2209.6,
+        "rMm": 1220.1,
+        "phiDeg": 105
+      },
+      "webMetres": [
+        -0.31578511693,
+        -2.5954,
+        -1.178526100655
+      ]
+    },
+    {
+      "id": "EXL50U-SP-066",
+      "sourceIndex": 66,
+      "sourceKey": "TF5",
+      "displayName": "TF5",
+      "family": "TF",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 7027.4,
+        "rMm": 536.9,
+        "phiDeg": 307.5
+      },
+      "webMetres": [
+        0.326844011235,
+        2.2224,
+        0.425951408402
+      ]
+    },
+    {
+      "id": "EXL50U-SP-067",
+      "sourceIndex": 67,
+      "sourceKey": "TF5_V",
+      "displayName": "TF5_V",
+      "family": "TF_V",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 2209.6,
+        "rMm": 1220.1,
+        "phiDeg": 135
+      },
+      "webMetres": [
+        -0.862740983726,
+        -2.5954,
+        -0.862740983726
+      ]
+    },
+    {
+      "id": "EXL50U-SP-068",
+      "sourceIndex": 68,
+      "sourceKey": "TF6",
+      "displayName": "TF6",
+      "family": "TF",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 7027.4,
+        "rMm": 536.9,
+        "phiDeg": 337.5
+      },
+      "webMetres": [
+        0.496030921005,
+        2.2224,
+        0.205462734837
+      ]
+    },
+    {
+      "id": "EXL50U-SP-069",
+      "sourceIndex": 69,
+      "sourceKey": "TF6_V",
+      "displayName": "TF6_V",
+      "family": "TF_V",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 2209.6,
+        "rMm": 1220.1,
+        "phiDeg": 165
+      },
+      "webMetres": [
+        -1.178526100655,
+        -2.5954,
+        -0.31578511693
+      ]
+    },
+    {
+      "id": "EXL50U-SP-070",
+      "sourceIndex": 70,
+      "sourceKey": "TF7",
+      "displayName": "TF7",
+      "family": "TF",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 7027.4,
+        "rMm": 536.9,
+        "phiDeg": 7.5
+      },
+      "webMetres": [
+        0.532306746072,
+        2.2224,
+        -0.070079512603
+      ]
+    },
+    {
+      "id": "EXL50U-SP-071",
+      "sourceIndex": 71,
+      "sourceKey": "TF7_V",
+      "displayName": "TF7_V",
+      "family": "TF_V",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 2209.6,
+        "rMm": 1220.1,
+        "phiDeg": 195
+      },
+      "webMetres": [
+        -1.178526100655,
+        -2.5954,
+        0.31578511693
+      ]
+    },
+    {
+      "id": "EXL50U-SP-072",
+      "sourceIndex": 72,
+      "sourceKey": "TF8",
+      "displayName": "TF8",
+      "family": "TF",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 7027.4,
+        "rMm": 536.9,
+        "phiDeg": 37.5
+      },
+      "webMetres": [
+        0.425951408402,
+        2.2224,
+        -0.326844011235
+      ]
+    },
+    {
+      "id": "EXL50U-SP-073",
+      "sourceIndex": 73,
+      "sourceKey": "TF8_V",
+      "displayName": "TF8_V",
+      "family": "TF_V",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 2209.6,
+        "rMm": 1220.1,
+        "phiDeg": 225
+      },
+      "webMetres": [
+        -0.862740983726,
+        -2.5954,
+        0.862740983726
+      ]
+    },
+    {
+      "id": "EXL50U-SP-074",
+      "sourceIndex": 74,
+      "sourceKey": "TF9",
+      "displayName": "TF9",
+      "family": "TF",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 7027.4,
+        "rMm": 536.9,
+        "phiDeg": 67.5
+      },
+      "webMetres": [
+        0.205462734837,
+        2.2224,
+        -0.496030921005
+      ]
+    },
+    {
+      "id": "EXL50U-SP-075",
+      "sourceIndex": 75,
+      "sourceKey": "TF9_V",
+      "displayName": "TF9_V",
+      "family": "TF_V",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 2209.6,
+        "rMm": 1220.1,
+        "phiDeg": 255
+      },
+      "webMetres": [
+        -0.31578511693,
+        -2.5954,
+        1.178526100655
+      ]
+    },
+    {
+      "id": "EXL50U-SP-076",
+      "sourceIndex": 76,
+      "sourceKey": "烟雾上（一圈）",
+      "displayName": "烟雾上（一圈）",
+      "family": "SMOKE",
+      "status": "active",
+      "sourceTuple": {
+        "hMm": 2719.6499999999996,
+        "rMm": 722.6451187667166,
+        "phiDeg": 132.74910212270464
+      },
+      "webMetres": [
+        -0.490523729472,
+        -2.08535,
+        -0.530662264065
+      ]
+    }
+  ]
+}

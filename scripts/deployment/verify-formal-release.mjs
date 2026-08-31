@@ -31,6 +31,8 @@ const FIXED = Object.freeze({
     "/models/device-catalog.json",
     "/models/exl50u-diagview2-v1/manifest.json",
     "/models/exl50u-diagview2-v1/diagview2-ports.json",
+    "/models/exl50u-sensor-points-v1/manifest.json",
+    "/models/exl50u-sensor-points-v1/sensor-points.json",
     "/models/ehl2-preliminary-v1/model-manifest.json",
     "/models/ehl2-preliminary-v1/diagview2-ports.json",
     "/models/ehl2-preliminary-v1/ehl2-preliminary.meshopt.glb",

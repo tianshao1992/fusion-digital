@@ -40,6 +40,8 @@ const SHARED_PATHS = [
   "/models/device-catalog.json",
   "/models/exl50u-diagview2-v1/manifest.json",
   "/models/exl50u-diagview2-v1/diagview2-ports.json",
+  "/models/exl50u-sensor-points-v1/manifest.json",
+  "/models/exl50u-sensor-points-v1/sensor-points.json",
   "/models/ehl2-preliminary-v1/model-manifest.json",
   "/models/ehl2-preliminary-v1/diagview2-ports.json",
   "/models/ehl2-preliminary-v1/ehl2-preliminary.meshopt.glb",
@@ -160,6 +162,13 @@ test("contract pins both repositories, Hong Kong premium EIP, and Sites", () => 
     [
       "/models/exl50u-diagview2-v1/manifest.json",
       "/models/exl50u-diagview2-v1/diagview2-ports.json",
+    ],
+  );
+  assert.deepEqual(
+    contract.sharedContent.paths.filter((path) => path.startsWith("/models/exl50u-sensor-points-v1/")),
+    [
+      "/models/exl50u-sensor-points-v1/manifest.json",
+      "/models/exl50u-sensor-points-v1/sensor-points.json",
     ],
   );
   assert.deepEqual(contract.forbiddenSitesCustomDomains, [

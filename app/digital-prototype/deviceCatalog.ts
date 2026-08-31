@@ -44,12 +44,16 @@ export type Exl50uDiagnosticWorkspace = {
   sourceLabel: 'DiagView2 geometry engine and reviewed EXL50U historical port table';
   sourceRevision: '868d74d5e0e6c9abaec0eb623bcdd13ead771c79';
   portDatasetEndpoint: '/models/exl50u-diagview2-v1/diagview2-ports.json';
+  sensorDatasetEndpoint: '/models/exl50u-sensor-points-v1/sensor-points.json';
+  sensorManifestEndpoint: '/models/exl50u-sensor-points-v1/manifest.json';
   capabilities: readonly [
     'camera',
     'array',
     'laser',
     'reviewed-port-poses',
     'browser-overlay',
+    'host-sensor-points',
+    'sensor-point-draft-management',
   ];
   statement: string;
 };
@@ -210,6 +214,12 @@ export function parseDeviceCatalog(input: unknown): DeviceCatalog {
         const sourceLabel = stringValue(workspace.sourceLabel, `${id}.diagnosticWorkspace.sourceLabel`);
         const sourceRevision = stringValue(workspace.sourceRevision, `${id}.diagnosticWorkspace.sourceRevision`);
         const portDatasetEndpoint = stringValue(workspace.portDatasetEndpoint, `${id}.diagnosticWorkspace.portDatasetEndpoint`);
+        const sensorDatasetEndpoint = workspace.sensorDatasetEndpoint === undefined
+          ? undefined
+          : stringValue(workspace.sensorDatasetEndpoint, `${id}.diagnosticWorkspace.sensorDatasetEndpoint`);
+        const sensorManifestEndpoint = workspace.sensorManifestEndpoint === undefined
+          ? undefined
+          : stringValue(workspace.sensorManifestEndpoint, `${id}.diagnosticWorkspace.sensorManifestEndpoint`);
         if (!Array.isArray(workspace.capabilities)
           || !workspace.capabilities.every((capability) => typeof capability === 'string')) {
           throw new Error(`${id}.diagnosticWorkspace.capabilities must be a string array`);
@@ -232,6 +242,8 @@ export function parseDeviceCatalog(input: unknown): DeviceCatalog {
           'laser',
           'reviewed-port-poses',
           'browser-overlay',
+          'host-sensor-points',
+          'sensor-point-draft-management',
         ] as const;
         const statement = stringValue(workspace.statement, `${id}.diagnosticWorkspace.statement`);
         if (mode !== 'real-3d') {
@@ -245,6 +257,8 @@ export function parseDeviceCatalog(input: unknown): DeviceCatalog {
             || sourceLabel !== 'DiagView2 geometry-analysis engine and reviewed EHL-2 flange dataset'
             || sourceRevision !== EHL2_DIAGVIEW2_SOURCE.branchCommit
             || portDatasetEndpoint !== '/models/ehl2-preliminary-v1/diagview2-ports.json'
+            || sensorDatasetEndpoint !== undefined
+            || sensorManifestEndpoint !== undefined
             || capabilities.length !== ehl2Capabilities.length
             || capabilities.some((capability, capabilityIndex) => capability !== ehl2Capabilities[capabilityIndex])) {
             throw new Error(`${id}.diagnosticWorkspace is not a reviewed DiagView2 contract`);
@@ -269,6 +283,8 @@ export function parseDeviceCatalog(input: unknown): DeviceCatalog {
             || sourceLabel !== 'DiagView2 geometry engine and reviewed EXL50U historical port table'
             || sourceRevision !== '868d74d5e0e6c9abaec0eb623bcdd13ead771c79'
             || portDatasetEndpoint !== '/models/exl50u-diagview2-v1/diagview2-ports.json'
+            || sensorDatasetEndpoint !== '/models/exl50u-sensor-points-v1/sensor-points.json'
+            || sensorManifestEndpoint !== '/models/exl50u-sensor-points-v1/manifest.json'
             || capabilities.length !== exl50uCapabilities.length
             || capabilities.some((capability, capabilityIndex) => capability !== exl50uCapabilities[capabilityIndex])) {
             throw new Error(`${id}.diagnosticWorkspace is not a reviewed DiagView2 contract`);
@@ -281,6 +297,8 @@ export function parseDeviceCatalog(input: unknown): DeviceCatalog {
             sourceLabel: 'DiagView2 geometry engine and reviewed EXL50U historical port table',
             sourceRevision: '868d74d5e0e6c9abaec0eb623bcdd13ead771c79',
             portDatasetEndpoint: '/models/exl50u-diagview2-v1/diagview2-ports.json',
+            sensorDatasetEndpoint: '/models/exl50u-sensor-points-v1/sensor-points.json',
+            sensorManifestEndpoint: '/models/exl50u-sensor-points-v1/manifest.json',
             capabilities: exl50uCapabilities,
             statement,
           } satisfies Exl50uDiagnosticWorkspace;
