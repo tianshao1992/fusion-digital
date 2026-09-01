@@ -92,6 +92,21 @@ def strict_system_audit(
 
 
 class ExportSetVerifierTests(unittest.TestCase):
+    def test_ap214_iso_short_name_tuple_is_recognized_strictly(self) -> None:
+        supported, family = supported_application_protocol(
+            "AUTOMOTIVE_DESIGN { 1 0 10303 214 3 1 1 }"
+        )
+        self.assertTrue(supported)
+        self.assertEqual(family, "AP214")
+
+        for rejected in (
+            "AUTOMOTIVE_DESIGN { 1 0 10303 203 3 1 1 }",
+            "AUTOMOTIVE_DESIGN { 1 0 10303 214 3 1 1 } FORGED",
+            "AUTOMOTIVE_DESIGN { 1 0 10303 214 3 1 }",
+        ):
+            with self.subTest(schema=rejected):
+                self.assertEqual(supported_application_protocol(rejected), (False, None))
+
     def create_contract(self, root: Path) -> tuple[Path, Path, Path]:
         exports = root / "exports"
         exports.mkdir()

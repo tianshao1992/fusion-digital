@@ -102,6 +102,16 @@ def supported_application_protocol(value: object) -> tuple[bool, str | None]:
     normalized = value.strip().upper()
     if normalized in {"AUTOMOTIVE_DESIGN", "AUTOMOTIVE_DESIGN_CC2"}:
         return True, "AP214"
+    # Some AP214 exporters append the ISO short-name tuple to the
+    # schema identifier, for example:
+    #   AUTOMOTIVE_DESIGN { 1 0 10303 214 3 1 1 }
+    # Treat only the canonical AP214 tuple as AUTOMOTIVE_DESIGN.  A loose
+    # substring check would accidentally admit AP203 or arbitrary suffixes.
+    if re.fullmatch(
+        r"AUTOMOTIVE_DESIGN(?:_CC2)?\s*\{\s*1\s+0\s+10303\s+214(?:\s+\d+){3}\s*\}",
+        normalized,
+    ):
+        return True, "AP214"
     ap214 = re.search(r"(?:^|_)AP_?214(?:_|$)", normalized) is not None
     ap214 = ap214 or re.search(r"(?:^|_)ISO_?10303_?214(?:_|$)", normalized) is not None
     ap242 = re.search(r"(?:^|_)AP_?242(?:_|$)", normalized) is not None
