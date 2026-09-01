@@ -174,7 +174,7 @@ test('digital-prototype workspace gives device summaries to the top cards and sa
     assert.match(declarations, /width:100%/, `${selector} must fill the available page width`);
     assert.doesNotMatch(declarations, /max-width:/, `${selector} must not retain the former 1600px ceiling`);
   }
-  assert.match(workspaceCss, /\.deviceSelector\s*\{[^}]*grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/);
+  assert.match(workspaceCss, /\.deviceSelector\s*\{[^}]*grid-template-columns:repeat\(5,minmax\(0,1fr\)\)/);
   assert.match(workspaceCss, /\.multiDeviceIntro\s*\{[^}]*display:block/);
   assert.match(cssRule(workspaceCss, '.deviceStage'), /display:block/);
   assert.match(cssRule(workspaceCss, '.deviceStage[hidden]'), /display:none/);
@@ -226,16 +226,17 @@ test('digital-prototype workspace gives device summaries to the top cards and sa
   assert.doesNotMatch(workspace, /PREVIEW SECURITY POLICY|AXISYMMETRIC FLUX SURFACE/);
 });
 
-test('all four device cards publish technical overview and model/data summaries without authorization copy', async () => {
+test('all five device cards publish technical overview and model/data summaries without authorization copy', async () => {
   const catalog = JSON.parse(await source('public/models/device-catalog.json'));
   assert.equal(catalog.schemaVersion, '2.3');
-  assert.equal(catalog.devices.length, 4);
+  assert.equal(catalog.devices.length, 5);
   for (const device of catalog.devices) {
     assert.ok(device.deviceOverview.length > 30, `${device.id} needs a substantive device overview`);
     assert.ok(device.fileSummary.length > 15, `${device.id} needs a model/data file summary`);
     assert.doesNotMatch(`${device.deviceOverview} ${device.fileSummary}`, /授权|许可|PUBLIC|AUTHORIZED|LICEN[CS]E|GOVERNANCE/i);
   }
   assert.match(catalog.devices.find(({ id }) => id === 'exl-50u-2026-upgrade').fileSummary, /Meshopt GLB 5\.6 \/ 13\.4 MB[\s\S]*5,804[\s\S]*7 炮偏滤器拓扑/);
+  assert.match(catalog.devices.find(({ id }) => id === 'exl50u-general-assembly-20260630').fileSummary, /8 个共同原点系统导出待完成[\s\S]*当前无可加载 GLB/);
   assert.equal(catalog.devices.find(({ id }) => id === 'paramak-full-device').fileSummary, '2.2 MB GLB · 17 个稳定部件');
   assert.match(catalog.devices.find(({ id }) => id === 'ehl-2-preliminary').fileSummary, /14\.2 MB Meshopt GLB[\s\S]*247 万[\s\S]*41 个法兰位姿[\s\S]*3 类诊断/);
   assert.match(catalog.devices.find(({ id }) => id === 'iter-educational-model').fileSummary, /18 个 Meshopt GLB 分片[\s\S]*98\.5 MB/);

@@ -63,6 +63,15 @@ const validEvent = {
 
 test("analytics input is strict, semantic, and excludes free text and network identities", () => {
   assert.deepEqual(parseAnalyticsEventInput(validEvent), validEvent);
+  const generalAssemblyView = {
+    ...validEvent,
+    eventType: "content_view" as const,
+    path: "/",
+    contentKey: "prototype-device:exl50u-general-assembly-20260630",
+    referrerSource: null,
+  };
+  assert.deepEqual(parseAnalyticsEventInput(generalAssemblyView), generalAssemblyView);
+  assert.deepEqual(parseCollectorEvent(generalAssemblyView), generalAssemblyView);
   assert.throws(() => parseAnalyticsEventInput({ ...validEvent, path: "/search?q=private" }), /approved public/u);
   assert.throws(() => parseAnalyticsEventInput({ ...validEvent, visitorId: "short" }), /opaque/u);
   assert.throws(() => parseAnalyticsEventInput({ ...validEvent, email: "person@example.org" }), /unsupported field/u);

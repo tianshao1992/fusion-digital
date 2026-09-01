@@ -27,6 +27,7 @@ const fixedLabels = new Map([
   ["section:resources", "开放资源"],
   ["prototype-device:paramak-full-device", "Paramak 全装置样机"],
   ["prototype-device:exl-50u-2026-upgrade", "EXL-50U 2026 升级样机"],
+  ["prototype-device:exl50u-general-assembly-20260630", "EXL-50U 总装（2026-06-30）"],
   ["prototype-device:ehl-2-preliminary", "EHL-2 初步设计样机"],
   ["prototype-device:iter-educational-model", "ITER 教学模型"],
 ]);

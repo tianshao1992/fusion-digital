@@ -267,7 +267,7 @@ test('publishes only catalog-declared EXL, ITER and EHL browser derivatives and 
 
 test('public device catalog is fail-closed and authorizes only bounded, verifiable browser assets', async () => {
   const catalog = JSON.parse(await readFile(resolve(publicRoot, 'models/device-catalog.json'), 'utf8'));
-  assert.ok(Array.isArray(catalog.devices) && catalog.devices.length === 4);
+  assert.ok(Array.isArray(catalog.devices) && catalog.devices.length === 5);
 
   for (const device of catalog.devices) {
     const viewer = device.viewer;

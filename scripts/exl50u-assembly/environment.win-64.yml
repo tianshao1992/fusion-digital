@@ -1,0 +1,12 @@
+name: fusiondigital-exl50u-assembly
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - python=3.11.16
+  - cadquery=2.8.0
+  - ocp=7.9.3.1
+  - occt=7.9.3
+  - vtk=9.6.1
+  - numpy=2.4.6
+  - psutil=7.2.2

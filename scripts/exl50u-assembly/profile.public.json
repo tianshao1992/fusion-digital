@@ -1,0 +1,142 @@
+{
+  "schemaVersion": "fusiondigital.exl50u-assembly-public-profile.v1",
+  "deviceId": "exl50u-general-assembly-20260630",
+  "manifestId": "exl50u-general-assembly-v1",
+  "stableNodePrefix": "EXL50U_GA_PART__",
+  "coordinateSystem": {
+    "linearUnit": "metre",
+    "sourceUpAxis": "Z",
+    "sourceHandedness": "right",
+    "upAxis": "Y",
+    "handedness": "right",
+    "sourceToWebScale": 1
+  },
+  "encoding": {
+    "position": "Float32, non-normalized",
+    "normal": "normalized signed Int8",
+    "extensionsRequired": ["EXT_meshopt_compression"]
+  },
+  "budgets": {
+    "posterBytes": 367001,
+    "previewBytes": 12582912,
+    "previewTriangles": 700000,
+    "previewDecodedGpuBytes": 134217728,
+    "highBytes": 50331648,
+    "highTriangles": 4480000,
+    "highDecodedGpuBytes": 402653184
+  },
+  "systems": [
+    {
+      "id": "host-system",
+      "partId": "EXL50U-GA-HOST-SYSTEM",
+      "nodeName": "EXL50U_GA_PART__host-system",
+      "title": "主机系统",
+      "shortTitle": "主机",
+      "category": "structure",
+      "color": "#AAB5B2",
+      "previewTriangleBudget": 85000,
+      "highTriangleBudget": 550000,
+      "highByteBudget": 6291456,
+      "highDecodedGpuByteBudget": 50331648
+    },
+    {
+      "id": "heating-system",
+      "partId": "EXL50U-GA-HEATING-SYSTEM",
+      "nodeName": "EXL50U_GA_PART__heating-system",
+      "title": "加热系统",
+      "shortTitle": "加热",
+      "category": "layer",
+      "color": "#D69A58",
+      "previewTriangleBudget": 100000,
+      "highTriangleBudget": 700000,
+      "highByteBudget": 7340032,
+      "highDecodedGpuByteBudget": 58720256
+    },
+    {
+      "id": "auxiliary-system",
+      "partId": "EXL50U-GA-AUXILIARY-SYSTEM",
+      "nodeName": "EXL50U_GA_PART__auxiliary-system",
+      "title": "辅助系统",
+      "shortTitle": "辅助",
+      "category": "structure",
+      "color": "#7597A8",
+      "previewTriangleBudget": 50000,
+      "highTriangleBudget": 300000,
+      "highByteBudget": 3145728,
+      "highDecodedGpuByteBudget": 25165824
+    },
+    {
+      "id": "power-system",
+      "partId": "EXL50U-GA-POWER-SYSTEM",
+      "nodeName": "EXL50U_GA_PART__power-system",
+      "title": "电源系统",
+      "shortTitle": "电源",
+      "category": "layer",
+      "color": "#C7A85B",
+      "previewTriangleBudget": 50000,
+      "highTriangleBudget": 300000,
+      "highByteBudget": 3145728,
+      "highDecodedGpuByteBudget": 25165824
+    },
+    {
+      "id": "control-system",
+      "partId": "EXL50U-GA-CONTROL-SYSTEM",
+      "nodeName": "EXL50U_GA_PART__control-system",
+      "title": "控制系统",
+      "shortTitle": "控制",
+      "category": "layer",
+      "color": "#688BA5",
+      "previewTriangleBudget": 40000,
+      "highTriangleBudget": 250000,
+      "highByteBudget": 3145728,
+      "highDecodedGpuByteBudget": 20971520
+    },
+    {
+      "id": "infrastructure",
+      "partId": "EXL50U-GA-INFRASTRUCTURE",
+      "nodeName": "EXL50U_GA_PART__infrastructure",
+      "title": "基础设施",
+      "shortTitle": "基础设施",
+      "category": "structure",
+      "color": "#8B8176",
+      "previewTriangleBudget": 80000,
+      "highTriangleBudget": 500000,
+      "highByteBudget": 5242880,
+      "highDecodedGpuByteBudget": 41943040
+    },
+    {
+      "id": "measurement-reference",
+      "partId": "EXL50U-GA-MEASUREMENT-REFERENCE",
+      "nodeName": "EXL50U_GA_PART__measurement-reference",
+      "title": "测量参考",
+      "shortTitle": "测量参考",
+      "category": "layer",
+      "color": "#C46E60",
+      "previewTriangleBudget": 20000,
+      "highTriangleBudget": 80000,
+      "highByteBudget": 1048576,
+      "highDecodedGpuByteBudget": 8388608
+    },
+    {
+      "id": "diagnostics-system",
+      "partId": "EXL50U-GA-DIAGNOSTICS-SYSTEM",
+      "nodeName": "EXL50U_GA_PART__diagnostics-system",
+      "title": "诊断系统",
+      "shortTitle": "诊断",
+      "category": "layer",
+      "color": "#6FA39B",
+      "previewTriangleBudget": 275000,
+      "highTriangleBudget": 1800000,
+      "highByteBudget": 20971520,
+      "highDecodedGpuByteBudget": 171966464
+    }
+  ],
+  "publication": {
+    "classification": "PUBLIC",
+    "authority": "illustrative",
+    "redistributionAllowed": true,
+    "engineeringUseAllowed": false,
+    "sourceCadPublished": false,
+    "privateLabelsPublished": false
+  }
+}

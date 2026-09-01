@@ -1379,7 +1379,7 @@ test('the public catalog enables only the reviewed EHL-2 and EXL-50U DiagView2 c
   assert.deepEqual(enabled.map((device) => device.id), ['exl-50u-2026-upgrade', 'ehl-2-preliminary']);
   assert.deepEqual(
     catalog.devices.filter((device) => device.diagnosticWorkspace === null).map((device) => device.id),
-    ['paramak-full-device', 'iter-educational-model'],
+    ['paramak-full-device', 'exl50u-general-assembly-20260630', 'iter-educational-model'],
   );
 
   const ehl = enabled.find((device) => device.id === 'ehl-2-preliminary');

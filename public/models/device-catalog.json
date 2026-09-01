@@ -1,6 +1,6 @@
 {
   "schemaVersion": "2.3",
-  "asOf": "2026-08-31",
+  "asOf": "2026-09-01",
   "securityPolicy": {
     "previewOnly": true,
     "showDownloadActions": false,
@@ -83,8 +83,32 @@
       }
     },
     {
-      "id": "ehl-2-preliminary",
+      "id": "exl50u-general-assembly-20260630",
       "index": "03",
+      "title": "EXL‑50U 总装（2026‑06‑30）",
+      "eyebrow": "PIPELINE · ASSETS PENDING",
+      "state": "总装派生准备中",
+      "tone": "restricted",
+      "facts": ["8 个公开通用系统", "预览目标上限 70 万三角面 · 12 MB", "高清目标上限 448 万三角面 · 48 MB", "共同原点与视觉复核未完成"],
+      "deviceOverview": "面向 EXL‑50U 装置集成总装的独立数字样机入口，覆盖主机、加热、辅助、电源、控制、基础设施、测量参考与诊断八个通用系统。",
+      "fileSummary": "转换与验收管线已就绪 · 8 个共同原点系统导出待完成 · 当前无可加载 GLB",
+      "copy": "已建立与现有 EXL‑50U、EHL‑2 浏览器模型一致的系统级 STEP、一次受控 QEM、Float32 位置、Int8 法线和 Meshopt 压缩方案。当前仅展示公开元数据与交付状态；必须先从权威 CAD 环境导出八个保持共同装配原点和世界位姿的系统文件，再通过 preview/high 双 LOD、运行时几何、共同原点和并排视觉复核，才会开放三维资产。不会复用现有 EXL‑50U 的 EFIT、历史端口或 76 个名义测点坐标合同。原始 STEP、私有装配标签、BOM、PMI、图纸、作者信息和工程权威模型均不由网站下发。",
+      "availability": "pipeline-ready-assets-pending",
+      "delivery": "local-only",
+      "comparisonFrame": null,
+      "statement": "Conversion contract and public metadata only. No browser assembly geometry is published until all eight common-origin exports, both LOD runtime QA results, and the visual/common-origin review receipt pass.",
+      "viewer": {
+        "mode": "metadata-only",
+        "manifestEndpoint": null,
+        "turntableManifestEndpoint": null,
+        "overlayEligible": false
+      },
+      "physicsOverlays": [],
+      "diagnosticWorkspace": null
+    },
+    {
+      "id": "ehl-2-preliminary",
+      "index": "04",
       "title": "EHL‑2 初步设计模型",
       "eyebrow": "AUTHORIZED · PRELIMINARY 3D",
       "state": "约半面数浏览器派生",
@@ -118,7 +142,7 @@
     },
     {
       "id": "iter-educational-model",
-      "index": "04",
+      "index": "05",
       "title": "ITER 教育高精度模型",
       "eyebrow": "AUTHORIZED · REAL-TIME 3D",
       "state": "高精度分片三维",

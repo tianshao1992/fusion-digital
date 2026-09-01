@@ -329,6 +329,7 @@ test('server-renders the FusionDigital community portal', async () => {
   assert.match(html, /装置三维可视化/);
   assert.doesNotMatch(html, /装置、三维与 EFIT 联动|从顶部装置卡选择样机/);
   assert.match(html, /EXL(?:‑|-)?50U 2026 升级版/);
+  assert.match(html, /EXL(?:‑|-)?50U 总装（2026(?:‑|-)?06(?:‑|-)?30）/);
   assert.match(html, /ITER 教育高精度模型/);
   assert.match(html, /搜索名称、ID 或工程标签/);
   assert.doesNotMatch(html, /class="tokamakCadTrust"|class="tokamakCadFootnotes"/);
@@ -468,6 +469,7 @@ test('homepage owns the public full-device digital-prototype workspace', async (
   assert.match(html, /data-three-viewer="paramak-full-device"/);
   assert.match(html, /Paramak/);
   assert.match(html, /EXL(?:‑|-)?50U 2026 升级版/);
+  assert.match(html, /EXL(?:‑|-)?50U 总装（2026(?:‑|-)?06(?:‑|-)?30）/);
   assert.match(html, /ITER 教育高精度模型/);
   assert.match(html, /EHL(?:‑|-)?2 初步设计模型/);
   assert.match(html, /简化派生实时三维/);
@@ -504,12 +506,12 @@ test('homepage owns the public full-device digital-prototype workspace', async (
     new URL('../public/models/device-catalog.json', import.meta.url),
     'utf8',
   ));
-  assert.equal(catalog.devices.length, 4);
+  assert.equal(catalog.devices.length, 5);
   assert.deepEqual(
     catalog.devices.map((device) => device.id),
-    ['paramak-full-device', 'exl-50u-2026-upgrade', 'ehl-2-preliminary', 'iter-educational-model'],
+    ['paramak-full-device', 'exl-50u-2026-upgrade', 'exl50u-general-assembly-20260630', 'ehl-2-preliminary', 'iter-educational-model'],
   );
-  assert.deepEqual(catalog.devices.map((device) => device.index), ['01', '02', '03', '04']);
+  assert.deepEqual(catalog.devices.map((device) => device.index), ['01', '02', '03', '04', '05']);
   assert.ok(
     html.indexOf('aria-controls="device-panel-ehl-2-preliminary"')
       < html.indexOf('aria-controls="device-panel-iter-educational-model"'),
@@ -547,6 +549,15 @@ test('homepage owns the public full-device digital-prototype workspace', async (
   assert.equal(catalog.securityPolicy.showDownloadActions, false);
   assert.equal(catalog.securityPolicy.sourceCadDelivered, false);
   assert.equal(catalog.devices.filter((device) => device.viewer.manifestEndpoint !== null).length, 4);
+  const generalAssembly = catalog.devices.find((device) => device.id === 'exl50u-general-assembly-20260630');
+  assert.equal(generalAssembly.delivery, 'local-only');
+  assert.equal(generalAssembly.viewer.mode, 'metadata-only');
+  assert.equal(generalAssembly.viewer.manifestEndpoint, null);
+  assert.equal(generalAssembly.viewer.turntableManifestEndpoint, null);
+  assert.equal(generalAssembly.viewer.overlayEligible, false);
+  assert.equal(generalAssembly.physicsOverlays.length, 0);
+  assert.equal(generalAssembly.diagnosticWorkspace, null);
+  assert.match(generalAssembly.fileSummary, /当前无可加载 GLB/);
   const exl = catalog.devices.find((device) => device.id === 'exl-50u-2026-upgrade');
   assert.equal(exl.delivery, 'public-static');
   assert.equal(exl.viewer.mode, 'real-3d');

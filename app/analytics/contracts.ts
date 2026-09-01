@@ -156,6 +156,7 @@ const EVENT_INPUT_FIELDS = new Set([
 const PROTOTYPE_DEVICES = new Set([
   "paramak-full-device",
   "exl-50u-2026-upgrade",
+  "exl50u-general-assembly-20260630",
   "ehl-2-preliminary",
   "iter-educational-model",
 ]);

@@ -44,7 +44,7 @@ const REFERRER_SOURCES = new Set([
   "social:other", "other",
 ]);
 const PROTOTYPE_DEVICES = new Set([
-  "paramak-full-device", "exl-50u-2026-upgrade", "ehl-2-preliminary", "iter-educational-model",
+  "paramak-full-device", "exl-50u-2026-upgrade", "exl50u-general-assembly-20260630", "ehl-2-preliminary", "iter-educational-model",
 ]);
 const EFIT_SHOTS = new Set([
   "18301", "18303", "18304", "18308", "20213", "20289", "20666", "20669", "20707", "20708",
