@@ -1,9 +1,11 @@
 import {
   BufferGeometry,
   CanvasTexture,
+  DataTexture,
   DoubleSide,
   Float32BufferAttribute,
   Group,
+  LinearFilter,
   LineBasicMaterial,
   LineSegments,
   Mesh,
@@ -12,6 +14,7 @@ import {
   Plane,
   CylinderGeometry,
   Quaternion,
+  RGBAFormat,
   SphereGeometry,
   Sprite,
   SpriteMaterial,
@@ -94,6 +97,9 @@ export type Ehl2DiagnosticPointMarkers = Ehl2DiagnosticPortMarkers & {
   coordinateFrame: string;
   labelDetail: string;
   interactive?: boolean;
+  /** Dark outer and light inner rings keep custom colours visible on both CAD and void backgrounds. */
+  outlineDarkColor?: number;
+  outlineLightColor?: number;
 };
 
 export type Ehl2DiagnosticWorkbenchOverlayOptions = {
@@ -224,6 +230,8 @@ type NormalizedPointMarkers = {
   selectedId: string | null;
   color: number;
   selectedColor: number;
+  outlineDarkColor: number;
+  outlineLightColor: number;
   showSelectedLabel: boolean;
   layerId: string;
   markerKind: string;
@@ -552,7 +560,9 @@ function normalizePointMarkers(
   if (typeof opacity !== 'number' || !Number.isFinite(opacity) || opacity <= 0 || opacity > 1) return null;
   const color = safeColor(record.color, 0x70dfca);
   const selectedColor = safeColor(record.selectedColor, 0xffa568);
-  if (color === null || selectedColor === null) return null;
+  const outlineDarkColor = safeColor(record.outlineDarkColor, 0x0b0f14);
+  const outlineLightColor = safeColor(record.outlineLightColor, 0xf8fafc);
+  if (color === null || selectedColor === null || outlineDarkColor === null || outlineLightColor === null) return null;
   if (record.showSelectedLabel !== undefined && typeof record.showSelectedLabel !== 'boolean') return null;
   if (record.interactive !== undefined && typeof record.interactive !== 'boolean') return null;
   const layerId = safeIdentifier(record.layerId, defaults.layerId);
@@ -594,6 +604,8 @@ function normalizePointMarkers(
     selectedId: selectedId && seen.has(selectedId) ? selectedId : null,
     color,
     selectedColor,
+    outlineDarkColor,
+    outlineLightColor,
     showSelectedLabel: record.showSelectedLabel === true,
     layerId,
     markerKind,
@@ -855,6 +867,66 @@ function createMarker(
   return marker;
 }
 
+function writeTextureColor(
+  data: Uint8Array,
+  pixelIndex: number,
+  color: number,
+  alpha: number,
+) {
+  const offset = pixelIndex * 4;
+  data[offset] = (color >> 16) & 0xff;
+  data[offset + 1] = (color >> 8) & 0xff;
+  data[offset + 2] = color & 0xff;
+  data[offset + 3] = alpha;
+}
+
+function createMarkerOutlineTexture(darkColor: number, lightColor: number) {
+  const size = 64;
+  const centre = (size - 1) / 2;
+  const data = new Uint8Array(size * size * 4);
+  for (let y = 0; y < size; y += 1) {
+    for (let x = 0; x < size; x += 1) {
+      const distance = Math.hypot(x - centre, y - centre);
+      const pixelIndex = y * size + x;
+      if (distance >= 26 && distance <= 31) writeTextureColor(data, pixelIndex, darkColor, 255);
+      else if (distance >= 22 && distance < 26) writeTextureColor(data, pixelIndex, lightColor, 255);
+    }
+  }
+  const texture = new DataTexture(data, size, size, RGBAFormat);
+  texture.colorSpace = SRGBColorSpace;
+  texture.magFilter = LinearFilter;
+  texture.minFilter = LinearFilter;
+  texture.generateMipmaps = false;
+  texture.needsUpdate = true;
+  return texture;
+}
+
+function createMarkerOutline(
+  name: string,
+  position: Vec3Tuple,
+  texture: Texture,
+  size: number,
+  depthTest: boolean,
+  renderOrder: number,
+) {
+  const material = new SpriteMaterial({
+    map: texture,
+    transparent: true,
+    opacity: 1,
+    depthTest,
+    depthWrite: false,
+    toneMapped: false,
+  });
+  const outline = suppressRaycast(new Sprite(material));
+  outline.name = name;
+  outline.position.copy(vector(position));
+  outline.scale.set(size, size, 1);
+  outline.frustumCulled = false;
+  outline.renderOrder = renderOrder;
+  outline.userData = { kind: 'point-marker-contrast-outline' };
+  return outline;
+}
+
 function createCylinderSegment(
   name: string,
   start: Vec3Tuple,
@@ -980,9 +1052,22 @@ function createMarkersGroup(
     interactive: markers.interactive,
     raycast: markers.interactive,
   };
+  const outlineTexture = markers.interactive
+    ? createMarkerOutlineTexture(markers.outlineDarkColor, markers.outlineLightColor)
+    : null;
   markers.points.forEach((point) => {
     const selected = point.id === markers.selectedId;
-    const color = selected ? markers.selectedColor : point.color;
+    const color = markers.interactive ? point.color : (selected ? markers.selectedColor : point.color);
+    if (outlineTexture) {
+      group.add(createMarkerOutline(
+        `${group.name}_${objectNameToken(point.id)}_CONTRAST_OUTLINE`,
+        point.positionWebMetres,
+        outlineTexture,
+        selected ? 0.17 : 0.084,
+        depthTest,
+        selected ? 28 : 26,
+      ));
+    }
     const marker = createMarker(
       `${group.name}_${objectNameToken(point.id)}`,
       point.positionWebMetres,

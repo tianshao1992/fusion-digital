@@ -3,7 +3,15 @@ import { createHash } from 'node:crypto';
 import { readFile, readdir } from 'node:fs/promises';
 import { extname, join } from 'node:path';
 import test from 'node:test';
-import { Group, Raycaster, Vector3 } from 'three';
+import { Group, Mesh, Raycaster, Sprite, Vector3 } from 'three';
+import {
+  DEFAULT_EXL50U_SENSOR_FAMILY_COLORS,
+  EXL50U_SENSOR_FAMILIES,
+  normalizeExl50uSensorColorHex,
+  normalizeExl50uSensorFamilyColors,
+  normalizeExl50uSensorPointColorOverrides,
+  resolveExl50uSensorPointColor,
+} from '../app/components/device-viewer/exl50uSensorPointColors.ts';
 import {
   EXL50U_SENSOR_ELEVATION_DATUM_MM,
   EXL50U_SENSOR_POINT_DATASET_URL,
@@ -180,6 +188,30 @@ test('runtime delivery is marker-only on the existing model and contains no OBJ 
   assert.deepEqual((await readdir(packageDirectory)).sort(), ['manifest.json', 'sensor-points.json']);
 });
 
+test('the marker palette is high-contrast, theme-stable and strictly configurable', async () => {
+  assert.deepEqual(EXL50U_SENSOR_FAMILIES, ['LD', 'PF', 'TF', 'TF_V', 'SMOKE']);
+  assert.deepEqual(DEFAULT_EXL50U_SENSOR_FAMILY_COLORS, {
+    LD: '#E40046',
+    PF: '#FFD600',
+    TF: '#0057B8',
+    TF_V: '#008A3B',
+    SMOKE: '#F7F7F7',
+  });
+  assert.equal(normalizeExl50uSensorColorHex('#e40046'), '#E40046');
+  for (const invalid of ['E40046', '#FFF', '#GG0046', '#E4004600', 'orange', '', null]) {
+    assert.equal(normalizeExl50uSensorColorHex(invalid), null);
+  }
+  assert.deepEqual(normalizeExl50uSensorFamilyColors(DEFAULT_EXL50U_SENSOR_FAMILY_COLORS), DEFAULT_EXL50U_SENSOR_FAMILY_COLORS);
+  assert.equal(normalizeExl50uSensorFamilyColors({ ...DEFAULT_EXL50U_SENSOR_FAMILY_COLORS, EXTRA: '#FFFFFF' }), null);
+
+  const dataset = await loadDataset();
+  const point = dataset.records[0];
+  const overrides = normalizeExl50uSensorPointColorOverrides({ [point.id]: '#112233' }, new Set(dataset.records.map((item) => item.id)));
+  assert.ok(overrides);
+  assert.equal(resolveExl50uSensorPointColor(point, DEFAULT_EXL50U_SENSOR_FAMILY_COLORS, overrides), '#112233');
+  assert.equal(normalizeExl50uSensorPointColorOverrides({ UNKNOWN: '#112233' }, new Set(dataset.records.map((item) => item.id))), null);
+});
+
 test('device point markers are pickable while reviewed port markers remain non-interactive', () => {
   const physicalRoot = new Group();
   const overlay = createEhl2DiagnosticThreeOverlay({ physicalWebMetresRoot: physicalRoot });
@@ -194,12 +226,31 @@ test('device point markers are pickable while reviewed port markers remain non-i
       coordinateFrame: 'EXL50U_CYLINDRICAL_H_R_PHI_V1',
       labelDetail: 'TEST POINT',
       interactive: true,
-      pointsWebMetres: [{ id: 'EXL50U-SP-001', positionWebMetres: [0, 0, 0], label: 'LD001' }],
+      selectedId: 'EXL50U-SP-001',
+      selectedColor: 0x00ff00,
+      outlineDarkColor: 0x0b0f14,
+      outlineLightColor: 0xf8fafc,
+      pointsWebMetres: [{ id: 'EXL50U-SP-001', positionWebMetres: [0, 0, 0], label: 'LD001', color: 0xe40046 }],
     },
   });
   physicalRoot.updateMatrixWorld(true);
   const centreRay = new Raycaster(new Vector3(0, 0, 2), new Vector3(0, 0, -1), 0, 5);
   assert.equal(overlay.pickPointMarker(centreRay), 'EXL50U-SP-001');
+  const editableMarkers: Mesh[] = [];
+  physicalRoot.traverse((node) => {
+    if (node.userData.pointMarkerId === 'EXL50U-SP-001') editableMarkers.push(node as Mesh);
+  });
+  assert.equal(editableMarkers.length, 1);
+  const editableMarker = editableMarkers[0];
+  assert.ok(editableMarker.isMesh);
+  assert.equal((editableMarker.material as unknown as { color: { getHex(): number } }).color.getHex(), 0xe40046, 'selection must preserve the custom fill colour');
+  const contrastOutlines: Sprite[] = [];
+  physicalRoot.traverse((node) => {
+    if (node.userData.kind === 'point-marker-contrast-outline') contrastOutlines.push(node as Sprite);
+  });
+  assert.equal(contrastOutlines.length, 1);
+  assert.ok(contrastOutlines[0].isSprite);
+  assert.ok((contrastOutlines[0].material as { map?: unknown }).map, 'the marker must carry a black/white contrast-ring texture');
 
   overlay.setOptions({
     kind: 'device-point-markers',
@@ -229,9 +280,17 @@ test('the EXL-50U UI exposes three analysis modes and versioned local point mana
   const panel = await readFile(new URL('../app/digital-prototype/Exl50uSensorPointPanel.tsx', import.meta.url), 'utf8');
   for (const label of ['EFIT 平衡', '诊断可视化', '主机测点']) assert.match(workspace, new RegExp(label));
   for (const label of ['浏览定位', '单点编辑', '批量管理']) assert.match(panel, new RegExp(label));
-  assert.match(panel, /fusiondigital\.exl50u\.sensor-draft\.v1/);
+  assert.match(panel, /fusiondigital\.exl50u\.sensor-draft\.v2/);
+  assert.match(panel, /fusion-digital:exl50u-sensor-draft:v2:/);
   assert.match(panel, /fusion-digital:exl50u-sensor-draft:v1:/);
   assert.match(panel, /window\.localStorage\.setItem\(DRAFT_KEY/);
+  assert.match(panel, /familyColors/);
+  assert.match(panel, /pointColorOverrides/);
+  assert.match(panel, /type="color"/);
+  assert.match(panel, /跟随类别颜色/);
+  assert.match(panel, /恢复默认色/);
+  assert.match(panel, /统一该类颜色/);
+  assert.match(panel, /'color_hex', 'color_source'/);
   assert.match(panel, /updateExl50uSensorPoint\(selectedPoint/);
   assert.match(panel, /value\.trim\(\) === ''/);
   assert.match(panel, /type="number" required/);

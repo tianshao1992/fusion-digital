@@ -9,6 +9,20 @@ import {
 } from 'react';
 import type { Ehl2DiagnosticOverlayOptions } from '../components/device-viewer/Ehl2DiagnosticThreeOverlay';
 import {
+  DEFAULT_EXL50U_SENSOR_FAMILY_COLORS,
+  EXL50U_SENSOR_FAMILIES,
+  EXL50U_SENSOR_MARKER_OUTLINE_DARK,
+  EXL50U_SENSOR_MARKER_OUTLINE_LIGHT,
+  exl50uSensorColorHexToNumber,
+  normalizeExl50uSensorColorHex,
+  normalizeExl50uSensorFamilyColors,
+  normalizeExl50uSensorPointColorOverrides,
+  resolveExl50uSensorPointColor,
+  type Exl50uSensorColorHex,
+  type Exl50uSensorFamilyColors,
+  type Exl50uSensorPointColorOverrides,
+} from '../components/device-viewer/exl50uSensorPointColors';
+import {
   EXL50U_SENSOR_POINT_DATASET_URL,
   EXL50U_SENSOR_POINT_SCHEMA_VERSION,
   EXL50U_SENSOR_SOURCE_SHA256,
@@ -29,7 +43,7 @@ type SensorPointContract = Readonly<{
   sensorManifestEndpoint: string;
 }>;
 
-type SensorDraft = Readonly<{
+type SensorDraftV1 = Readonly<{
   schemaVersion: 'fusiondigital.exl50u.sensor-draft.v1';
   sourceSchemaVersion: typeof EXL50U_SENSOR_POINT_SCHEMA_VERSION;
   sourceSha256: typeof EXL50U_SENSOR_SOURCE_SHA256;
@@ -38,16 +52,24 @@ type SensorDraft = Readonly<{
   hiddenIds: readonly string[];
 }>;
 
-const DRAFT_SCHEMA = 'fusiondigital.exl50u.sensor-draft.v1' as const;
-const DRAFT_KEY = `fusion-digital:exl50u-sensor-draft:v1:${EXL50U_SENSOR_SOURCE_SHA256}`;
-const FAMILIES = ['LD', 'PF', 'TF', 'TF_V', 'SMOKE'] as const;
-const FAMILY_COLORS: Readonly<Record<Exl50uSensorFamily, number>> = {
-  LD: 0x76dbc8,
-  PF: 0xf0b867,
-  TF: 0x78a8e8,
-  TF_V: 0xa98ae5,
-  SMOKE: 0xff8068,
-};
+type SensorDraft = Readonly<{
+  schemaVersion: 'fusiondigital.exl50u.sensor-draft.v2';
+  sourceSchemaVersion: typeof EXL50U_SENSOR_POINT_SCHEMA_VERSION;
+  sourceSha256: typeof EXL50U_SENSOR_SOURCE_SHA256;
+  savedAt: string;
+  records: readonly Exl50uSensorPoint[];
+  hiddenIds: readonly string[];
+  familyColors: Exl50uSensorFamilyColors;
+  pointColorOverrides: Exl50uSensorPointColorOverrides;
+}>;
+
+type ParsedSensorDraft = Readonly<{ draft: SensorDraft; migratedFromV1: boolean }>;
+
+const DRAFT_SCHEMA = 'fusiondigital.exl50u.sensor-draft.v2' as const;
+const LEGACY_DRAFT_SCHEMA: SensorDraftV1['schemaVersion'] = 'fusiondigital.exl50u.sensor-draft.v1';
+const DRAFT_KEY = `fusion-digital:exl50u-sensor-draft:v2:${EXL50U_SENSOR_SOURCE_SHA256}`;
+const LEGACY_DRAFT_KEY = `fusion-digital:exl50u-sensor-draft:v1:${EXL50U_SENSOR_SOURCE_SHA256}`;
+const FAMILIES = EXL50U_SENSOR_FAMILIES;
 
 type SensorPointEditForm = {
   displayName: string;
@@ -55,6 +77,8 @@ type SensorPointEditForm = {
   hMm: string;
   rMm: string;
   phiDeg: string;
+  inheritFamilyColor: boolean;
+  colorHex: Exl50uSensorColorHex;
 };
 
 function familyLabel(family: Exl50uSensorFamily, english: boolean) {
@@ -70,10 +94,11 @@ function samePoint(left: Exl50uSensorPoint, right: Exl50uSensorPoint) {
     && left.sourceTuple.phiDeg === right.sourceTuple.phiDeg;
 }
 
-function parseDraft(raw: string, baseline: Exl50uSensorPointDataset): SensorDraft | null {
+function parseDraft(raw: string, baseline: Exl50uSensorPointDataset): ParsedSensorDraft | null {
   try {
-    const value = JSON.parse(raw) as Partial<SensorDraft>;
-    if (value.schemaVersion !== DRAFT_SCHEMA
+    const value = JSON.parse(raw) as Record<string, unknown>;
+    const migratedFromV1 = value.schemaVersion === LEGACY_DRAFT_SCHEMA;
+    if ((!migratedFromV1 && value.schemaVersion !== DRAFT_SCHEMA)
       || value.sourceSchemaVersion !== baseline.schemaVersion
       || value.sourceSha256 !== baseline.source.sha256
       || typeof value.savedAt !== 'string'
@@ -101,14 +126,26 @@ function parseDraft(raw: string, baseline: Exl50uSensorPointDataset): SensorDraf
     });
     if (new Set(records.map((point) => point.id)).size !== baseline.records.length) return null;
     const knownIds = new Set(baseline.records.map((point) => point.id));
-    const hiddenIds = value.hiddenIds.filter((id): id is string => typeof id === 'string' && knownIds.has(id));
+    const hiddenIds = (value.hiddenIds as unknown[]).filter((id): id is string => typeof id === 'string' && knownIds.has(id));
+    const familyColors = migratedFromV1
+      ? DEFAULT_EXL50U_SENSOR_FAMILY_COLORS
+      : normalizeExl50uSensorFamilyColors(value.familyColors);
+    const pointColorOverrides = migratedFromV1
+      ? {}
+      : normalizeExl50uSensorPointColorOverrides(value.pointColorOverrides, knownIds);
+    if (!familyColors || !pointColorOverrides) return null;
     return {
-      schemaVersion: DRAFT_SCHEMA,
-      sourceSchemaVersion: baseline.schemaVersion,
-      sourceSha256: baseline.source.sha256,
-      savedAt: value.savedAt,
-      records,
-      hiddenIds: [...new Set(hiddenIds)].sort(),
+      migratedFromV1,
+      draft: {
+        schemaVersion: DRAFT_SCHEMA,
+        sourceSchemaVersion: baseline.schemaVersion,
+        sourceSha256: baseline.source.sha256,
+        savedAt: value.savedAt,
+        records,
+        hiddenIds: [...new Set(hiddenIds)].sort(),
+        familyColors,
+        pointColorOverrides,
+      },
     };
   } catch {
     return null;
@@ -119,6 +156,8 @@ function makeDraft(
   dataset: Exl50uSensorPointDataset,
   records: readonly Exl50uSensorPoint[],
   hiddenIds: ReadonlySet<string>,
+  familyColors: Exl50uSensorFamilyColors,
+  pointColorOverrides: Exl50uSensorPointColorOverrides,
 ): SensorDraft {
   return {
     schemaVersion: DRAFT_SCHEMA,
@@ -127,6 +166,8 @@ function makeDraft(
     savedAt: new Date().toISOString(),
     records,
     hiddenIds: [...hiddenIds].sort(),
+    familyColors,
+    pointColorOverrides,
   };
 }
 
@@ -144,30 +185,42 @@ function csvCell(value: string | number) {
   return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
 }
 
-function editFormFor(point: Exl50uSensorPoint): SensorPointEditForm {
+function editFormFor(
+  point: Exl50uSensorPoint,
+  colorHex: Exl50uSensorColorHex,
+  hasPointColorOverride: boolean,
+): SensorPointEditForm {
   return {
     displayName: point.displayName,
     family: point.family,
     hMm: String(point.sourceTuple.hMm),
     rMm: String(point.sourceTuple.rMm),
     phiDeg: String(point.sourceTuple.phiDeg),
+    inheritFamilyColor: !hasPointColorOverride,
+    colorHex,
   };
 }
 
 function SensorPointEditor({
   point,
+  pointColor,
+  familyColor,
+  hasPointColorOverride,
   english,
   onApply,
   onReset,
   onLocate,
 }: {
   point: Exl50uSensorPoint;
+  pointColor: Exl50uSensorColorHex;
+  familyColor: Exl50uSensorColorHex;
+  hasPointColorOverride: boolean;
   english: boolean;
   onApply: (form: SensorPointEditForm) => void;
   onReset: () => void;
   onLocate: () => void;
 }) {
-  const [form, setForm] = useState<SensorPointEditForm>(() => editFormFor(point));
+  const [form, setForm] = useState<SensorPointEditForm>(() => editFormFor(point, pointColor, hasPointColorOverride));
   return <form className="sensorPointEdit" onSubmit={(event) => { event.preventDefault(); onApply(form); }}>
     <div className="sensorPointIdentity"><b>{point.id}</b><span>{point.sourceKey}</span></div>
     <label>{english ? 'Display name' : '显示名称'}<input value={form.displayName} required maxLength={80} onChange={(event) => setForm((current) => ({ ...current, displayName: event.target.value }))} /></label>
@@ -177,6 +230,31 @@ function SensorPointEditor({
       <label>R / mm<input type="number" required step="any" value={form.rMm} onChange={(event) => setForm((current) => ({ ...current, rMm: event.target.value }))} /></label>
       <label>φ / °<input type="number" required min="0" max="359.999999" step="any" value={form.phiDeg} onChange={(event) => setForm((current) => ({ ...current, phiDeg: event.target.value }))} /></label>
     </div>
+    <fieldset className="sensorPointColorEditor">
+      <legend>{english ? 'Point colour' : '测点颜色'}</legend>
+      <label className="sensorPointColorFollow">
+        <input type="checkbox" checked={form.inheritFamilyColor} onChange={(event) => setForm((current) => ({
+          ...current,
+          inheritFamilyColor: event.target.checked,
+          colorHex: event.target.checked ? familyColor : current.colorHex,
+        }))} />
+        <span>{english ? 'Follow family colour' : '跟随类别颜色'}</span>
+      </label>
+      <label className="sensorPointColorPicker">
+        <span>{form.inheritFamilyColor ? (english ? 'Inherited' : '继承颜色') : (english ? 'Custom' : '自定义颜色')}</span>
+        <input
+          type="color"
+          value={form.colorHex}
+          disabled={form.inheritFamilyColor}
+          onChange={(event) => setForm((current) => ({
+            ...current,
+            inheritFamilyColor: false,
+            colorHex: event.target.value.toUpperCase() as Exl50uSensorColorHex,
+          }))}
+        />
+        <output>{form.colorHex}</output>
+      </label>
+    </fieldset>
     <p className="sensorPointWebCoordinate">Web XYZ / m · {point.webMetres.map((value) => value.toFixed(4)).join(' / ')}</p>
     <div className="sensorPointActions">
       <button type="submit" className="primary">{english ? 'Apply to draft' : '应用到草稿'}</button>
@@ -206,6 +284,8 @@ export default function Exl50uSensorPointPanel({
   const [dataset, setDataset] = useState<Exl50uSensorPointDataset | null>(null);
   const [records, setRecords] = useState<readonly Exl50uSensorPoint[]>([]);
   const [hiddenIds, setHiddenIds] = useState<ReadonlySet<string>>(() => new Set());
+  const [familyColors, setFamilyColors] = useState<Exl50uSensorFamilyColors>(() => ({ ...DEFAULT_EXL50U_SENSOR_FAMILY_COLORS }));
+  const [pointColorOverrides, setPointColorOverrides] = useState<Exl50uSensorPointColorOverrides>({});
   const [tab, setTab] = useState<SensorPanelTab>('browse');
   const [query, setQuery] = useState('');
   const [family, setFamily] = useState<'ALL' | Exl50uSensorFamily>('ALL');
@@ -225,13 +305,22 @@ export default function Exl50uSensorPointPanel({
     }).then((nextDataset) => {
       let nextRecords = nextDataset.records;
       let nextHidden = new Set<string>();
+      let nextFamilyColors = DEFAULT_EXL50U_SENSOR_FAMILY_COLORS;
+      let nextPointColorOverrides: Exl50uSensorPointColorOverrides = {};
       try {
-        const raw = window.localStorage.getItem(DRAFT_KEY);
-        const saved = raw ? parseDraft(raw, nextDataset) : null;
+        const currentRaw = window.localStorage.getItem(DRAFT_KEY);
+        const legacyRaw = currentRaw ? null : window.localStorage.getItem(LEGACY_DRAFT_KEY);
+        const saved = currentRaw
+          ? parseDraft(currentRaw, nextDataset)
+          : (legacyRaw ? parseDraft(legacyRaw, nextDataset) : null);
         if (saved) {
-          nextRecords = saved.records;
-          nextHidden = new Set(saved.hiddenIds);
-          setNotice(english ? 'Restored a version-matched local draft.' : '已恢复与当前版本匹配的本地草稿。');
+          nextRecords = saved.draft.records;
+          nextHidden = new Set(saved.draft.hiddenIds);
+          nextFamilyColors = saved.draft.familyColors;
+          nextPointColorOverrides = saved.draft.pointColorOverrides;
+          setNotice(saved.migratedFromV1
+            ? (english ? 'Restored the legacy draft; save once to migrate its colour settings.' : '已恢复旧版草稿；保存一次即可迁移颜色设置。')
+            : (english ? 'Restored a version-matched local draft.' : '已恢复与当前版本匹配的本地草稿。'));
         }
       } catch {
         // Browser storage is optional. The reviewed public baseline still loads.
@@ -240,6 +329,8 @@ export default function Exl50uSensorPointPanel({
       setDataset(nextDataset);
       setRecords(nextRecords);
       setHiddenIds(nextHidden);
+      setFamilyColors(nextFamilyColors);
+      setPointColorOverrides(nextPointColorOverrides);
       onSelectedPointIdChange(selectedPointId && nextRecords.some((point) => point.id === selectedPointId)
         ? selectedPointId
         : nextRecords[0].id);
@@ -259,6 +350,14 @@ export default function Exl50uSensorPointPanel({
     const baseline = baselineById.get(point.id);
     return baseline ? !samePoint(point, baseline) : true;
   }).map((point) => point.id)), [baselineById, records]);
+  const pointColorById = useMemo(() => new Map(records.map((point) => [
+    point.id,
+    resolveExl50uSensorPointColor(point, familyColors, pointColorOverrides),
+  ])), [familyColors, pointColorOverrides, records]);
+  const customizedFamilyCount = useMemo(() => FAMILIES.filter(
+    (item) => familyColors[item] !== DEFAULT_EXL50U_SENSOR_FAMILY_COLORS[item],
+  ).length, [familyColors]);
+  const customizedPointCount = Object.keys(pointColorOverrides).length;
 
   const currentFamilyCounts = useMemo(() => FAMILIES.reduce<Record<Exl50uSensorFamily, number>>((counts, item) => {
     counts[item] = records.filter((point) => point.family === item).length;
@@ -285,20 +384,21 @@ export default function Exl50uSensorPointPanel({
         coordinateFrame: dataset.coordinateSystem.id,
         labelDetail: english ? 'NOMINAL HOST POINT · LOCAL DRAFT' : '主机名义测点 · 本地草稿',
         interactive: true,
-        opacity: 0.9,
+        opacity: 1,
         selectedId: selectedPoint && !hiddenIds.has(selectedPoint.id) ? selectedPoint.id : undefined,
-        selectedColor: 0xffa568,
+        outlineDarkColor: EXL50U_SENSOR_MARKER_OUTLINE_DARK,
+        outlineLightColor: EXL50U_SENSOR_MARKER_OUTLINE_LIGHT,
         showSelectedLabel: showLabels,
         pointsWebMetres: visible.map((point) => ({
           id: point.id,
           positionWebMetres: point.webMetres,
           label: point.displayName,
-          color: FAMILY_COLORS[point.family],
+          color: exl50uSensorColorHexToNumber(pointColorById.get(point.id) ?? familyColors[point.family]),
           detail: `${familyLabel(point.family, english)} · H ${point.sourceTuple.hMm.toFixed(1)} mm · R ${point.sourceTuple.rMm.toFixed(1)} mm · φ ${point.sourceTuple.phiDeg.toFixed(1)}°`,
         })),
       },
     };
-  }, [active, dataset, depthMode, english, hiddenIds, records, selectedPoint, showLabels]);
+  }, [active, dataset, depthMode, english, familyColors, hiddenIds, pointColorById, records, selectedPoint, showLabels]);
 
   useEffect(() => {
     onOverlayChange(overlayOptions);
@@ -339,6 +439,28 @@ export default function Exl50uSensorPointPanel({
     setNotice(english ? 'Family visibility changed in the unsaved browser draft.' : '类别显隐已修改，浏览器草稿尚未保存。');
   };
 
+  const setFamilyColor = (item: Exl50uSensorFamily, candidate: string) => {
+    const color = normalizeExl50uSensorColorHex(candidate);
+    if (!color) return;
+    setFamilyColors((current) => ({ ...current, [item]: color }));
+    setNotice(english
+      ? `Changed ${familyLabel(item, true)} for points that follow their family colour.`
+      : `已修改 ${familyLabel(item, false)} 类别颜色；设置为单点颜色的测点不受影响。`);
+  };
+
+  const resetFamilyColor = (item: Exl50uSensorFamily) => {
+    setFamilyColors((current) => ({ ...current, [item]: DEFAULT_EXL50U_SENSOR_FAMILY_COLORS[item] }));
+    setNotice(english ? 'Restored the high-contrast family default.' : '已恢复该类别的高对比度默认色。');
+  };
+
+  const clearFamilyPointColors = (item: Exl50uSensorFamily) => {
+    const familyIds = new Set(records.filter((point) => point.family === item).map((point) => point.id));
+    setPointColorOverrides((current) => Object.fromEntries(
+      Object.entries(current).filter(([pointId]) => !familyIds.has(pointId)),
+    ) as Exl50uSensorPointColorOverrides);
+    setNotice(english ? 'All points in this family now follow the family colour.' : '该类别内所有测点已统一跟随类别颜色。');
+  };
+
   const applyEdit = (form: SensorPointEditForm) => {
     if (!selectedPoint) return;
     try {
@@ -350,7 +472,15 @@ export default function Exl50uSensorPointPanel({
         family: form.family,
         sourceTuple: { hMm: Number(form.hMm), rMm: Number(form.rMm), phiDeg: Number(form.phiDeg) },
       });
+      const colorHex = normalizeExl50uSensorColorHex(form.colorHex);
+      if (!colorHex) throw new Error(english ? 'Choose a valid six-digit point colour.' : '请选择有效的六位测点颜色。');
       setRecords((current) => current.map((point) => point.id === updated.id ? updated : point));
+      setPointColorOverrides((current) => {
+        const next = { ...current };
+        if (form.inheritFamilyColor) delete next[updated.id];
+        else next[updated.id] = colorHex;
+        return next;
+      });
       setNotice(english ? 'Applied to the unsaved browser draft.' : '已应用到尚未保存的浏览器草稿。');
       onFocusPoint(updated.webMetres);
     } catch (error) {
@@ -368,6 +498,11 @@ export default function Exl50uSensorPointPanel({
       next.delete(baseline.id);
       return next;
     });
+    setPointColorOverrides((current) => {
+      const next = { ...current };
+      delete next[baseline.id];
+      return next;
+    });
     setNotice(english ? 'Restored this point from the public baseline; the browser draft is unsaved.' : '该测点已恢复为公共基线，浏览器草稿尚未保存。');
   };
 
@@ -375,14 +510,20 @@ export default function Exl50uSensorPointPanel({
     if (!dataset) return;
     setRecords(dataset.records);
     setHiddenIds(new Set());
-    try { window.localStorage.removeItem(DRAFT_KEY); } catch { /* optional storage */ }
+    setFamilyColors({ ...DEFAULT_EXL50U_SENSOR_FAMILY_COLORS });
+    setPointColorOverrides({});
+    try {
+      window.localStorage.removeItem(DRAFT_KEY);
+      window.localStorage.removeItem(LEGACY_DRAFT_KEY);
+    } catch { /* optional storage */ }
     setNotice(english ? 'Restored all 76 public baseline points.' : '已恢复全部 76 个公共基线测点。');
   };
 
   const saveDraft = () => {
     if (!dataset) return;
     try {
-      window.localStorage.setItem(DRAFT_KEY, JSON.stringify(makeDraft(dataset, records, hiddenIds)));
+      window.localStorage.setItem(DRAFT_KEY, JSON.stringify(makeDraft(dataset, records, hiddenIds, familyColors, pointColorOverrides)));
+      window.localStorage.removeItem(LEGACY_DRAFT_KEY);
       setNotice(english ? 'Saved locally in this browser.' : '已保存在当前浏览器本地。');
     } catch {
       setNotice(english ? 'Browser storage is unavailable; export the draft instead.' : '浏览器存储不可用，请改为导出草稿。');
@@ -391,15 +532,17 @@ export default function Exl50uSensorPointPanel({
 
   const exportDraft = () => {
     if (!dataset) return;
-    downloadText('exl50u-sensor-draft-v1.json', 'application/json;charset=utf-8', `${JSON.stringify(makeDraft(dataset, records, hiddenIds), null, 2)}\n`);
+    downloadText('exl50u-sensor-draft-v2.json', 'application/json;charset=utf-8', `${JSON.stringify(makeDraft(dataset, records, hiddenIds, familyColors, pointColorOverrides), null, 2)}\n`);
   };
 
   const exportCsv = () => {
-    const header = ['stable_id', 'source_key', 'display_name', 'family', 'elevation_mm', 'radius_mm', 'toroidal_deg', 'web_x_m', 'web_y_m', 'web_z_m', 'visible'];
+    const header = ['stable_id', 'source_key', 'display_name', 'family', 'elevation_mm', 'radius_mm', 'toroidal_deg', 'web_x_m', 'web_y_m', 'web_z_m', 'visible', 'color_hex', 'color_source'];
     const rows = records.map((point) => [
       point.id, point.sourceKey, point.displayName, point.family,
       point.sourceTuple.hMm, point.sourceTuple.rMm, point.sourceTuple.phiDeg,
       ...point.webMetres, hiddenIds.has(point.id) ? 'false' : 'true',
+      pointColorById.get(point.id) ?? familyColors[point.family],
+      pointColorOverrides[point.id] ? 'point' : 'family',
     ]);
     downloadText('exl50u-sensor-points-v1.csv', 'text/csv;charset=utf-8', `\uFEFF${[header, ...rows].map((row) => row.map(csvCell).join(',')).join('\r\n')}\r\n`);
   };
@@ -472,7 +615,7 @@ export default function Exl50uSensorPointPanel({
         {filtered.map((point) => {
           const selected = selectedPointId === point.id;
           const hidden = hiddenIds.has(point.id);
-          return <article key={point.id} className={selected ? 'isSelected' : ''} style={{ '--sensor-color': `#${FAMILY_COLORS[point.family].toString(16).padStart(6, '0')}` } as CSSProperties}>
+          return <article key={point.id} className={selected ? 'isSelected' : ''} style={{ '--sensor-color': pointColorById.get(point.id) ?? familyColors[point.family] } as CSSProperties}>
             <button type="button" className="sensorPointSelect" onClick={() => selectAndFocus(point)}>
               <span><b>{point.displayName}</b><small>{point.id} · {familyLabel(point.family, english)}</small></span>
               <em>H {point.sourceTuple.hMm.toFixed(1)} · R {point.sourceTuple.rMm.toFixed(1)} · φ {point.sourceTuple.phiDeg.toFixed(1)}°</em>
@@ -485,8 +628,11 @@ export default function Exl50uSensorPointPanel({
 
     <div id="exl50u-sensor-panel-edit" role="tabpanel" aria-labelledby="exl50u-sensor-tab-edit" hidden={tab !== 'edit'}>
       {selectedPoint ? <SensorPointEditor
-        key={`${selectedPoint.id}:${selectedPoint.displayName}:${selectedPoint.family}:${selectedPoint.sourceTuple.hMm}:${selectedPoint.sourceTuple.rMm}:${selectedPoint.sourceTuple.phiDeg}`}
+        key={`${selectedPoint.id}:${selectedPoint.displayName}:${selectedPoint.family}:${selectedPoint.sourceTuple.hMm}:${selectedPoint.sourceTuple.rMm}:${selectedPoint.sourceTuple.phiDeg}:${pointColorById.get(selectedPoint.id)}`}
         point={selectedPoint}
+        pointColor={pointColorById.get(selectedPoint.id) ?? familyColors[selectedPoint.family]}
+        familyColor={familyColors[selectedPoint.family]}
+        hasPointColorOverride={Boolean(pointColorOverrides[selectedPoint.id])}
         english={english}
         onApply={applyEdit}
         onReset={resetPoint}
@@ -498,13 +644,31 @@ export default function Exl50uSensorPointPanel({
       <dl className="sensorPointStats">
         <div><dt>{english ? 'Modified' : '已修改'}</dt><dd>{dirtyIds.size}</dd></div>
         <div><dt>{english ? 'Hidden' : '已隐藏'}</dt><dd>{hiddenIds.size}</dd></div>
+        <div><dt>{english ? 'Custom colours' : '自定义颜色'}</dt><dd>{customizedFamilyCount + customizedPointCount}</dd></div>
         <div><dt>{english ? 'Duplicate CAD models' : '新增整机网格'}</dt><dd>0</dd></div>
       </dl>
       <div className="sensorFamilyManager">
         {FAMILIES.map((item) => {
           const familyPoints = records.filter((point) => point.family === item);
           const allHidden = familyPoints.every((point) => hiddenIds.has(point.id));
-          return <button key={item} type="button" aria-pressed={!allHidden} onClick={() => toggleFamilyVisibility(item)}><span style={{ backgroundColor: `#${FAMILY_COLORS[item].toString(16).padStart(6, '0')}` }} />{familyLabel(item, english)} · {familyPoints.length}</button>;
+          const familyOverrideCount = familyPoints.filter((point) => pointColorOverrides[point.id]).length;
+          return <section key={item} className="sensorFamilyRow">
+            <div className="sensorFamilyIdentity">
+              <span className="sensorFamilySwatch" style={{ '--sensor-color': familyColors[item] } as CSSProperties} />
+              <b>{familyLabel(item, english)}</b>
+              <small>{familyPoints.length} {english ? 'points' : '点'} · {familyOverrideCount} {english ? 'point colours' : '单点颜色'}</small>
+            </div>
+            <label className="sensorFamilyColorPicker">
+              <span>{english ? 'Family colour' : '类别颜色'}</span>
+              <input type="color" aria-label={`${familyLabel(item, english)} ${english ? 'family colour' : '类别颜色'}`} value={familyColors[item]} onChange={(event) => setFamilyColor(item, event.target.value)} />
+              <output>{familyColors[item]}</output>
+            </label>
+            <div className="sensorFamilyActions">
+              <button type="button" aria-pressed={!allHidden} onClick={() => toggleFamilyVisibility(item)}>{allHidden ? (english ? 'Show family' : '显示类别') : (english ? 'Hide family' : '隐藏类别')}</button>
+              <button type="button" onClick={() => resetFamilyColor(item)}>{english ? 'Restore default' : '恢复默认色'}</button>
+              <button type="button" disabled={familyOverrideCount === 0} onClick={() => clearFamilyPointColors(item)}>{english ? 'Unify family colour' : '统一该类颜色'}</button>
+            </div>
+          </section>;
         })}
       </div>
       <div className="sensorPointActions sensorPointManageActions">
