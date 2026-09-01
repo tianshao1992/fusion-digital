@@ -258,6 +258,7 @@ function mockFetch(
 
 function publicAssetFetch() {
   let chunkRequests = 0;
+  const chunkRequestsByPath = new Map<string, number>();
   const fetch = async (input: RequestInfo | URL, init: RequestInit = {}): Promise<Response> => {
     const pathname = new URL(String(input), 'http://localhost').pathname;
     const match = /^\/device-data\/(exl50u-efit(?:-v2)?)\/([a-z0-9.-]+)$/.exec(pathname);
@@ -282,7 +283,10 @@ function publicAssetFetch() {
         },
       });
     }
-    if (match[2].endsWith('.jsonl.gz')) chunkRequests += 1;
+    if (match[2].endsWith('.jsonl.gz')) {
+      chunkRequests += 1;
+      chunkRequestsByPath.set(pathname, (chunkRequestsByPath.get(pathname) ?? 0) + 1);
+    }
     const contentType = match[2].endsWith('.json')
       ? 'application/json'
       : match[2].endsWith('.jsonl.gz') ? 'application/gzip' : 'application/octet-stream';
@@ -292,7 +296,11 @@ function publicAssetFetch() {
       headers: { 'Content-Type': contentType, 'Content-Length': String(payload.length) },
     });
   };
-  return { fetch, chunkRequests: () => chunkRequests };
+  return {
+    fetch,
+    chunkRequests: () => chunkRequests,
+    chunkRequestSnapshot: () => [...chunkRequestsByPath.entries()].sort(([left], [right]) => left.localeCompare(right)),
+  };
 }
 
 test('hybrid v2 source exposes legacy and graph shots, finite signal summaries, and a cached decoded frame', async () => {
@@ -324,6 +332,159 @@ test('hybrid v2 source exposes legacy and graph shots, finite signal summaries, 
   assert.equal(frame.lcfsRMaxM, 1.1);
   await source.loadFrame(20289, 0);
   assert.equal(network.chunkRequests(), 1, 'the verified chunk should be served from the bounded LRU');
+});
+
+test('graph-v2 preparation retains exactly one complete active shot for network-independent playback loops', async () => {
+  const network = publicAssetFetch();
+  const source = createEfitHybridDataSource({
+    fetch: network.fetch,
+    maxCachedChunks: 1,
+    maxCachedGraphFrames: 4,
+  });
+  const manifest = await source.loadManifest();
+  const firstShot = manifest.shots.find((shot) => shot.shot === 20213);
+  const secondShot = manifest.shots.find((shot) => shot.shot === 20289);
+  assert.ok(firstShot?.topologyGraph);
+  assert.ok(secondShot?.topologyGraph);
+
+  await source.prepareShot?.(firstShot.shot);
+  assert.equal(network.chunkRequests(), firstShot.topologyGraph.chunks.length);
+  firstShot.topologyGraph.chunks.forEach((chunk) => {
+    const pathname = new URL(chunk.url, 'http://localhost').pathname;
+    assert.deepEqual(
+      network.chunkRequestSnapshot().find(([path]) => path === pathname),
+      [pathname, 1],
+      `prepared chunk ${pathname} must be requested exactly once`,
+    );
+  });
+  const afterFirstPrepare = network.chunkRequestSnapshot();
+  for (let pass = 0; pass < 2; pass += 1) {
+    for (let frameIndex = 0; frameIndex < firstShot.frameCount; frameIndex += 1) {
+      await source.loadFrame(firstShot.shot, frameIndex);
+    }
+  }
+  assert.deepEqual(
+    network.chunkRequestSnapshot(),
+    afterFirstPrepare,
+    'first playback and the second loop must use only the prepared in-memory package',
+  );
+  const cachedFrame = await source.loadFrame(firstShot.shot, 0);
+  assert.strictEqual(await source.loadFrame(firstShot.shot, 0), cachedFrame, 'graph frames should use the same bounded final-frame LRU as legacy shots');
+
+  await source.prepareShot?.(secondShot.shot);
+  const afterSecondPrepare = network.chunkRequestSnapshot();
+  for (let frameIndex = 0; frameIndex < secondShot.frameCount; frameIndex += 1) {
+    await source.loadFrame(secondShot.shot, frameIndex);
+  }
+  assert.deepEqual(
+    network.chunkRequestSnapshot(),
+    afterSecondPrepare,
+    'the newly selected shot must remain independent of the one-entry streaming LRU',
+  );
+
+  const beforeOldShotProbe = network.chunkRequests();
+  for (const chunk of firstShot.topologyGraph.chunks) {
+    await source.loadFrame(firstShot.shot, chunk.frameStart);
+  }
+  assert.ok(
+    network.chunkRequests() - beforeOldShotProbe >= firstShot.topologyGraph.chunks.length - 1,
+    'successfully preparing another shot must release the previous whole-shot package',
+  );
+  const afterOldShotProbe = network.chunkRequestSnapshot();
+  for (let frameIndex = 0; frameIndex < secondShot.frameCount; frameIndex += 1) {
+    await source.loadFrame(secondShot.shot, frameIndex);
+  }
+  assert.deepEqual(
+    network.chunkRequestSnapshot(),
+    afterOldShotProbe,
+    'ordinary old-shot traffic must not evict the active prepared package',
+  );
+});
+
+test('graph-v2 budget fallback releases the prior whole-shot package and keeps bounded streaming available', async () => {
+  const network = publicAssetFetch();
+  const source = createEfitHybridDataSource({
+    fetch: network.fetch,
+    maxCachedChunks: 1,
+    maxPreparedGraphShotBytes: 2 * 1024 * 1024,
+  });
+  const manifest = await source.loadManifest();
+  const smallShot = manifest.shots.find((shot) => shot.shot === 20289);
+  assert.ok(smallShot?.topologyGraph);
+
+  await source.prepareShot?.(smallShot.shot);
+  assert.equal(network.chunkRequests(), smallShot.topologyGraph.chunks.length);
+  await source.prepareShot?.(20213);
+  assert.equal(
+    network.chunkRequests(),
+    smallShot.topologyGraph.chunks.length,
+    'an ineligible package must not be partially preloaded',
+  );
+  await source.loadFrame(20213, 0);
+  assert.equal(
+    network.chunkRequests(),
+    smallShot.topologyGraph.chunks.length + 1,
+    'the existing on-demand path must remain available after preparation fallback',
+  );
+
+  const beforeOldShotProbe = network.chunkRequests();
+  for (const chunk of smallShot.topologyGraph.chunks) {
+    await source.loadFrame(smallShot.shot, chunk.frameStart);
+  }
+  assert.ok(
+    network.chunkRequests() - beforeOldShotProbe >= smallShot.topologyGraph.chunks.length - 1,
+    'selecting a streaming shot must release the previous whole-shot package',
+  );
+});
+
+test('graph-v2 preparation is fail-closed, stops sibling workers, and preserves the last complete shot', async () => {
+  const network = publicAssetFetch();
+  let failCandidate = true;
+  let candidateRequests = 0;
+  const fetch = async (input: RequestInfo | URL, init: RequestInit = {}): Promise<Response> => {
+    const pathname = new URL(String(input), 'http://localhost').pathname;
+    if (/\/shot-20213-part-\d{3}\.jsonl\.gz$/.test(pathname)) {
+      candidateRequests += 1;
+      if (failCandidate && pathname.endsWith('part-003.jsonl.gz')) {
+        return new Response('candidate failed', { status: 503 });
+      }
+    }
+    return network.fetch(input, init);
+  };
+  const source = createEfitHybridDataSource({ fetch, maxCachedChunks: 1 });
+  const manifest = await source.loadManifest();
+  const stableShot = manifest.shots.find((shot) => shot.shot === 20289);
+  const candidateShot = manifest.shots.find((shot) => shot.shot === 20213);
+  assert.ok(stableShot?.topologyGraph);
+  assert.ok(candidateShot?.topologyGraph);
+
+  await source.prepareShot?.(stableShot.shot);
+  await assert.rejects(source.prepareShot?.(candidateShot.shot), /request failed \(503\)/);
+  assert.ok(
+    candidateRequests <= 4,
+    'the first failed worker must stop its siblings from scheduling the rest of the shot',
+  );
+  const afterFailure = network.chunkRequestSnapshot();
+  for (let frameIndex = 0; frameIndex < stableShot.frameCount; frameIndex += 1) {
+    await source.loadFrame(stableShot.shot, frameIndex);
+  }
+  assert.deepEqual(
+    network.chunkRequestSnapshot(),
+    afterFailure,
+    'a failed candidate must not replace the last atomically prepared shot',
+  );
+
+  failCandidate = false;
+  await source.prepareShot?.(candidateShot.shot);
+  const afterRecovery = network.chunkRequestSnapshot();
+  for (let frameIndex = 0; frameIndex < candidateShot.frameCount; frameIndex += 1) {
+    await source.loadFrame(candidateShot.shot, frameIndex);
+  }
+  assert.deepEqual(
+    network.chunkRequestSnapshot(),
+    afterRecovery,
+    'a clean retry must atomically prepare the complete candidate',
+  );
 });
 
 test('hybrid source explicitly prepares one reviewed legacy shot and evicts its raw predecessor atomically', async () => {
@@ -371,6 +532,34 @@ test('hybrid v2 source shares one in-flight chunk across concurrent consumers', 
   secondController.abort();
   const results = await Promise.allSettled([first, second]);
   assert.ok(results.every((result) => result.status === 'rejected' && result.reason?.name === 'AbortError'));
+});
+
+test('hybrid catalog callers cancel independently while sharing one underlying request', async () => {
+  const fixtureValue = fixture();
+  const network = mockFetch(fixtureValue.catalog, fixtureValue.compressed);
+  let releaseIndex: (() => void) | undefined;
+  let indexRequests = 0;
+  const fetch = async (input: RequestInfo | URL, init: RequestInit = {}): Promise<Response> => {
+    const pathname = new URL(String(input), 'http://localhost').pathname;
+    if (pathname === V2_INDEX_URL) {
+      indexRequests += 1;
+      assert.equal(init.signal, undefined, 'the shared catalog request must not inherit one caller signal');
+      await new Promise<void>((resolve) => { releaseIndex = resolve; });
+    }
+    return network.fetch(input, init);
+  };
+  const source = createEfitHybridDataSource({ fetch });
+  const firstController = new AbortController();
+  const secondController = new AbortController();
+  const first = source.loadManifest({ signal: firstController.signal });
+  const second = source.loadManifest({ signal: secondController.signal });
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  firstController.abort();
+  await assert.rejects(first, (error: unknown) => error instanceof Error && error.name === 'AbortError');
+  releaseIndex?.();
+  const manifest = await second;
+  assert.equal(indexRequests, 1);
+  assert.deepEqual(manifest.shots.map((shot) => shot.shot), [18301, 20289]);
 });
 
 test('3D X-point marker semantics keep near-boundary evidence visually inactive', () => {

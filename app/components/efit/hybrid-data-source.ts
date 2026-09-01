@@ -26,6 +26,12 @@ const MAX_DECOMPRESSED_CHUNK_BYTES = 32 * 1024 * 1024;
 const MAX_SHOTS = 256;
 const MAX_FRAMES_PER_SHOT = 20_000;
 const MAX_FRAMES_PER_CHUNK = 16;
+const MAX_PREPARED_GRAPH_SHOT_CHUNKS = 64;
+const DEFAULT_MAX_PREPARED_GRAPH_SHOT_BYTES = 16 * 1024 * 1024;
+const DEFAULT_MAX_PREPARED_GRAPH_SHOT_DECODED_BYTES = 64 * 1024 * 1024;
+const GRAPH_PREPARE_CONCURRENCY = 4;
+const MAX_CACHED_CHUNK_DECODED_BYTES = 32 * 1024 * 1024;
+const MAX_CACHED_GRAPH_FRAME_BYTES = 32 * 1024 * 1024;
 
 type FetchLike = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 type JsonRecord = Record<string, unknown>;
@@ -35,13 +41,31 @@ export type EfitHybridDataSourceOptions = {
   legacyIndexUrl?: string;
   fetch?: FetchLike;
   maxCachedChunks?: number;
+  maxCachedGraphFrames?: number;
   maxCachedLegacyFrames?: number;
   maxPreparedLegacyShotBytes?: number;
+  maxPreparedGraphShotBytes?: number;
+  maxPreparedGraphShotDecodedBytes?: number;
 };
 
 type NormalizedGraphCatalog = {
   manifest: EfitManifest;
   sourceByShot: ReadonlyMap<EfitShotId, EfitShotManifest>;
+};
+
+type LoadedTopologyChunk = {
+  frames: readonly EfitTopologyGraphFramePayload[];
+  decodedByteLength: number;
+};
+
+type PreparedGraphShot = {
+  shotId: EfitShotId;
+  chunks: ReadonlyMap<string, LoadedTopologyChunk>;
+};
+
+type CachedGraphFrame = {
+  frame: EfitFrame;
+  retainedByteLength: number;
 };
 
 function abortError(): Error {
@@ -558,7 +582,7 @@ async function verifyGeometryCoordinateHash(geometry: EfitGeometry): Promise<voi
   }
 }
 
-async function decompressGzipText(bytes: ArrayBuffer, signal?: AbortSignal): Promise<string> {
+async function decompressGzipText(bytes: ArrayBuffer, signal?: AbortSignal): Promise<{ text: string; byteLength: number }> {
   checkAborted(signal);
   if (typeof DecompressionStream === 'undefined') throw new Error('This browser cannot decode EFIT gzip chunks.');
   const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
@@ -576,7 +600,7 @@ async function decompressGzipText(bytes: ArrayBuffer, signal?: AbortSignal): Pro
       result += decoder.decode(next.value, { stream: true });
     }
     result += decoder.decode();
-    return result;
+    return { text: result, byteLength: decodedBytes };
   } finally {
     reader.releaseLock();
   }
@@ -688,24 +712,47 @@ export function createEfitHybridDataSource(options: EfitHybridDataSourceOptions 
   const maxCachedChunks = Number.isInteger(configuredCacheSize)
     ? Math.min(64, Math.max(1, configuredCacheSize as number))
     : 8;
+  const configuredGraphFrameCacheSize = options.maxCachedGraphFrames;
+  const maxCachedGraphFrames = Number.isInteger(configuredGraphFrameCacheSize)
+    ? Math.min(512, Math.max(4, configuredGraphFrameCacheSize as number))
+    : 48;
+  const configuredPreparedGraphShotBytes = options.maxPreparedGraphShotBytes;
+  const maxPreparedGraphShotBytes = Number.isSafeInteger(configuredPreparedGraphShotBytes)
+    ? Math.min(DEFAULT_MAX_PREPARED_GRAPH_SHOT_BYTES, Math.max(0, configuredPreparedGraphShotBytes as number))
+    : DEFAULT_MAX_PREPARED_GRAPH_SHOT_BYTES;
+  const configuredPreparedGraphShotDecodedBytes = options.maxPreparedGraphShotDecodedBytes;
+  const maxPreparedGraphShotDecodedBytes = Number.isSafeInteger(configuredPreparedGraphShotDecodedBytes)
+    ? Math.min(
+      DEFAULT_MAX_PREPARED_GRAPH_SHOT_DECODED_BYTES,
+      Math.max(0, configuredPreparedGraphShotDecodedBytes as number),
+    )
+    : DEFAULT_MAX_PREPARED_GRAPH_SHOT_DECODED_BYTES;
   let catalogPromise: Promise<NormalizedGraphCatalog> | null = null;
   let legacyFallback = false;
-  const chunkCache = new Map<string, readonly EfitTopologyGraphFramePayload[]>();
-  const pendingChunks = new Map<string, Promise<readonly EfitTopologyGraphFramePayload[]>>();
+  const chunkCache = new Map<string, LoadedTopologyChunk>();
+  const pendingChunks = new Map<string, Promise<LoadedTopologyChunk>>();
+  const graphFrameCache = new Map<string, CachedGraphFrame>();
+  let chunkCacheDecodedBytes = 0;
+  let graphFrameCacheBytes = 0;
+  let preparedGraphShot: PreparedGraphShot | null = null;
+  let prepareGeneration = 0;
 
   async function loadCatalog(request: EfitDataRequest = {}): Promise<NormalizedGraphCatalog> {
     checkAborted(request.signal);
     if (!catalogPromise) {
       catalogPromise = (async () => {
-        const response = await fetcher(indexUrl, { signal: request.signal });
+        // Catalog loading is shared across shot selection, playback and
+        // prefetch. One caller's cancellation must stop only that caller's
+        // wait, not the shared request needed by a newer selection.
+        const response = await fetcher(indexUrl);
         if (response.status === 404) {
           legacyFallback = true;
-          const manifest = await legacySource.loadManifest(request);
+          const manifest = await legacySource.loadManifest();
           return { manifest, sourceByShot: new Map(manifest.shots.map((shot) => [shot.shot, shot])) };
         }
         if (!response.ok) throw new Error(`EFIT v2 catalog request failed (${response.status}).`);
         const raw = await response.json();
-        const legacyManifest = await legacySource.loadManifest(request);
+        const legacyManifest = await legacySource.loadManifest();
         const normalized = normalizeEfitHybridCatalog(raw, legacyManifest, indexUrl, legacyIndexUrl);
         await Promise.all([
           verifyGeometryCoordinateHash(normalized.manifest.geometry),
@@ -717,19 +764,48 @@ export function createEfitHybridDataSource(options: EfitHybridDataSourceOptions 
         throw error;
       });
     }
-    const result = await catalogPromise;
+    const result = await raceWithAbort(catalogPromise, request.signal);
     checkAborted(request.signal);
     return result;
   }
 
-  function rememberChunk(key: string, frames: readonly EfitTopologyGraphFramePayload[]): void {
+  function chunkKey(chunk: EfitTopologyGraphChunkDescriptor): string {
+    return `${chunk.url}:${chunk.sha256}`;
+  }
+
+  function rememberChunk(key: string, loaded: LoadedTopologyChunk): void {
+    const previous = chunkCache.get(key);
+    if (previous) chunkCacheDecodedBytes -= previous.decodedByteLength;
     chunkCache.delete(key);
-    chunkCache.set(key, frames);
-    while (chunkCache.size > maxCachedChunks) {
+    chunkCache.set(key, loaded);
+    chunkCacheDecodedBytes += loaded.decodedByteLength;
+    while (chunkCache.size > maxCachedChunks || chunkCacheDecodedBytes > MAX_CACHED_CHUNK_DECODED_BYTES) {
       const oldest = chunkCache.keys().next().value as string | undefined;
       if (!oldest) break;
+      const evicted = chunkCache.get(oldest);
       chunkCache.delete(oldest);
+      if (evicted) chunkCacheDecodedBytes -= evicted.decodedByteLength;
     }
+  }
+
+  function rememberGraphFrame(key: string, value: CachedGraphFrame): void {
+    const previous = graphFrameCache.get(key);
+    if (previous) graphFrameCacheBytes -= previous.retainedByteLength;
+    graphFrameCache.delete(key);
+    graphFrameCache.set(key, value);
+    graphFrameCacheBytes += value.retainedByteLength;
+    while (graphFrameCache.size > maxCachedGraphFrames || graphFrameCacheBytes > MAX_CACHED_GRAPH_FRAME_BYTES) {
+      const oldest = graphFrameCache.keys().next().value as string | undefined;
+      if (oldest === undefined) break;
+      const evicted = graphFrameCache.get(oldest);
+      graphFrameCache.delete(oldest);
+      if (evicted) graphFrameCacheBytes -= evicted.retainedByteLength;
+    }
+  }
+
+  function clearGraphFrameCache(): void {
+    graphFrameCache.clear();
+    graphFrameCacheBytes = 0;
   }
 
   async function loadChunk(
@@ -738,8 +814,15 @@ export function createEfitHybridDataSource(options: EfitHybridDataSourceOptions 
     geometry: EfitGeometry,
     numericQuantization: EfitNumericQuantizationContract,
     signal?: AbortSignal,
-  ): Promise<readonly EfitTopologyGraphFramePayload[]> {
-    const key = `${chunk.url}:${chunk.sha256}`;
+  ): Promise<LoadedTopologyChunk> {
+    const key = chunkKey(chunk);
+    const prepared = preparedGraphShot?.shotId === shot.shot
+      ? preparedGraphShot.chunks.get(key)
+      : undefined;
+    if (prepared) {
+      checkAborted(signal);
+      return prepared;
+    }
     const cached = chunkCache.get(key);
     if (cached) {
       checkAborted(signal);
@@ -771,7 +854,7 @@ export function createEfitHybridDataSource(options: EfitHybridDataSourceOptions 
       }
       if (await digestHex(bytes) !== chunk.sha256) throw new Error('EFIT topology chunk SHA-256 mismatch.');
       const decoded = await decompressGzipText(bytes);
-      const lines = decoded.split(/\r?\n/).filter((line) => line.length > 0);
+      const lines = decoded.text.split(/\r?\n/).filter((line) => line.length > 0);
       if (lines.length !== chunk.frameCount) throw new Error('EFIT topology chunk frame count mismatch.');
       const descriptor = shot.topologyGraph;
       if (!descriptor) throw new Error(`Shot ${shot.shot} has no topology graph descriptor.`);
@@ -793,35 +876,140 @@ export function createEfitHybridDataSource(options: EfitHybridDataSourceOptions 
           expectedTimeMs: chunk.availableTimesMs[localIndex],
         });
       });
-      rememberChunk(key, frames);
-      return frames;
+      const loaded = { frames, decodedByteLength: decoded.byteLength } satisfies LoadedTopologyChunk;
+      rememberChunk(key, loaded);
+      return loaded;
     })().finally(() => pendingChunks.delete(key));
     pendingChunks.set(key, pending);
     return raceWithAbort(pending, signal);
   }
 
+  function graphContext(catalog: NormalizedGraphCatalog, shot: EfitShotManifest): {
+    geometry: EfitGeometry;
+    numericQuantization: EfitNumericQuantizationContract;
+    chunks: readonly EfitTopologyGraphChunkDescriptor[];
+  } {
+    const geometry = shot.geometryId === catalog.manifest.geometry.geometryId
+      ? catalog.manifest.geometry
+      : catalog.manifest.geometries?.find((candidate) => candidate.geometryId === shot.geometryId);
+    if (!geometry) throw new Error(`EFIT shot ${shot.shot} references an unavailable geometry.`);
+    const numericQuantization = catalog.manifest.numericQuantization;
+    if (!numericQuantization) throw new Error('EFIT v2 catalog is missing its numeric quantization contract.');
+    const chunks = shot.topologyGraph?.chunks;
+    if (!chunks) throw new Error(`Shot ${shot.shot} has no topology graph descriptor.`);
+    return { geometry, numericQuantization, chunks };
+  }
+
+  async function prepareGraphShot(
+    catalog: NormalizedGraphCatalog,
+    shot: EfitShotManifest,
+    generation: number,
+    request: EfitDataRequest,
+  ): Promise<void> {
+    checkAborted(request.signal);
+    if (preparedGraphShot?.shotId === shot.shot) return;
+    const { geometry, numericQuantization, chunks } = graphContext(catalog, shot);
+    const compressedBytes = chunks.reduce((total, chunk) => total + chunk.byteLength, 0);
+    // Future or unexpectedly large packages retain the bounded streaming path.
+    // The currently published post-20000 shots all fit inside these reviewed
+    // limits, so normal selection preloads and verifies the whole shot.
+    if (chunks.length === 0 || chunks.length > MAX_PREPARED_GRAPH_SHOT_CHUNKS
+      || maxPreparedGraphShotDecodedBytes === 0
+      || !Number.isSafeInteger(compressedBytes) || compressedBytes > maxPreparedGraphShotBytes) {
+      if (generation === prepareGeneration) {
+        preparedGraphShot = null;
+        clearGraphFrameCache();
+      }
+      return;
+    }
+
+    const candidate = new Map<string, LoadedTopologyChunk>();
+    let nextChunkIndex = 0;
+    let decodedBytes = 0;
+    let decodedBudgetExceeded = false;
+    let preparationStopped = false;
+    let preparationError: unknown;
+    const worker = async (): Promise<void> => {
+      try {
+        while (!decodedBudgetExceeded && !preparationStopped) {
+          checkAborted(request.signal);
+          if (generation !== prepareGeneration) return;
+          const index = nextChunkIndex;
+          nextChunkIndex += 1;
+          const chunk = chunks[index];
+          if (!chunk) return;
+          const loaded = await loadChunk(chunk, shot, geometry, numericQuantization, request.signal);
+          checkAborted(request.signal);
+          if (generation !== prepareGeneration || preparationStopped) return;
+          loaded.frames.forEach((payload, localIndex) => {
+            const summary = shot.frames[chunk.frameStart + localIndex];
+            if (!summary) throw new Error(`EFIT shot ${shot.shot} has no summary for prepared frame ${chunk.frameStart + localIndex}.`);
+            assertPayloadMatchesSummary(payload, summary);
+          });
+          candidate.set(chunkKey(chunk), loaded);
+          decodedBytes += loaded.decodedByteLength;
+          if (decodedBytes > maxPreparedGraphShotDecodedBytes) decodedBudgetExceeded = true;
+        }
+      } catch (error) {
+        preparationStopped = true;
+        if (preparationError === undefined) preparationError = error;
+      }
+    };
+    await Promise.all(Array.from(
+      { length: Math.min(GRAPH_PREPARE_CONCURRENCY, chunks.length) },
+      () => worker(),
+    ));
+    if (preparationError !== undefined) throw preparationError;
+    checkAborted(request.signal);
+    if (generation !== prepareGeneration) return;
+    if (decodedBudgetExceeded) {
+      preparedGraphShot = null;
+      clearGraphFrameCache();
+      return;
+    }
+    if (candidate.size !== chunks.length) throw new Error(`EFIT shot ${shot.shot} preparation did not verify every topology chunk.`);
+
+    // Swap only after every chunk and every catalog summary is verified. A
+    // failed, aborted or stale selection therefore leaves the previous shot
+    // available and cannot expose a partially prepared package to playback.
+    clearGraphFrameCache();
+    preparedGraphShot = { shotId: shot.shot, chunks: candidate };
+  }
+
   async function loadFrame(shotId: EfitShotId, frameIndex: number, request: EfitDataRequest = {}): Promise<EfitFrame> {
+    if (!Number.isInteger(frameIndex) || frameIndex < 0) throw new Error(`EFIT shot ${shotId} has no frame ${frameIndex}.`);
+    const frameKey = `${shotId}:${frameIndex}`;
+    const cachedFrame = graphFrameCache.get(frameKey);
+    if (cachedFrame) {
+      checkAborted(request.signal);
+      rememberGraphFrame(frameKey, cachedFrame);
+      return cachedFrame.frame;
+    }
     const catalog = await loadCatalog(request);
     const shot = catalog.sourceByShot.get(shotId);
     if (!shot) throw new Error(`EFIT shot ${shotId} is not present in the v2 catalog.`);
     if (legacyFallback || shot.sourceKind !== 'topology-graph-v2') return legacySource.loadFrame(shotId, frameIndex, request);
     if (!Number.isInteger(frameIndex) || frameIndex < 0 || frameIndex >= shot.frameCount) throw new Error(`EFIT shot ${shotId} has no frame ${frameIndex}.`);
-    const geometry = shot.geometryId === catalog.manifest.geometry.geometryId
-      ? catalog.manifest.geometry
-      : catalog.manifest.geometries?.find((candidate) => candidate.geometryId === shot.geometryId);
-    if (!geometry) throw new Error(`EFIT shot ${shotId} references an unavailable geometry.`);
-    const numericQuantization = catalog.manifest.numericQuantization;
-    if (!numericQuantization) throw new Error('EFIT v2 catalog is missing its numeric quantization contract.');
-    const chunk = shot.topologyGraph?.chunks.find((candidate) => frameIndex >= candidate.frameStart
+    const { geometry, numericQuantization, chunks } = graphContext(catalog, shot);
+    const chunk = chunks.find((candidate) => frameIndex >= candidate.frameStart
       && frameIndex < candidate.frameStart + candidate.frameCount);
     if (!chunk) throw new Error(`EFIT shot ${shotId} frame ${frameIndex} has no chunk descriptor.`);
-    const payloads = await loadChunk(chunk, shot, geometry, numericQuantization, request.signal);
-    const payload = payloads[frameIndex - chunk.frameStart];
+    const loaded = await loadChunk(chunk, shot, geometry, numericQuantization, request.signal);
+    const payload = loaded.frames[frameIndex - chunk.frameStart];
     if (!payload) throw new Error(`EFIT shot ${shotId} frame ${frameIndex} is missing from its chunk.`);
     const summary = shot.frames[frameIndex];
     if (!summary) throw new Error(`EFIT shot ${shotId} frame ${frameIndex} has no timeline summary.`);
     assertPayloadMatchesSummary(payload, summary);
-    return frameFromPayload(payload, shotId, frameIndex);
+    const frame = frameFromPayload(payload, shotId, frameIndex);
+    const contourBytes = frame.contours.reduce(
+      (total, contour) => total + contour.rM.byteLength + contour.zM.byteLength,
+      0,
+    );
+    rememberGraphFrame(frameKey, {
+      frame,
+      retainedByteLength: Math.ceil(loaded.decodedByteLength / loaded.frames.length) + contourBytes,
+    });
+    return frame;
   }
 
   return {
@@ -837,12 +1025,21 @@ export function createEfitHybridDataSource(options: EfitHybridDataSourceOptions 
         : shot.frames;
     },
     async prepareShot(shotId, request = {}) {
+      const generation = ++prepareGeneration;
+      checkAborted(request.signal);
       const catalog = await loadCatalog(request);
       const shot = catalog.sourceByShot.get(shotId);
       if (!shot) throw new Error(`EFIT shot ${shotId} is not present in the v2 catalog.`);
       if (legacyFallback || shot.sourceKind !== 'topology-graph-v2') {
         await legacySource.prepareShot?.(shotId, request);
+        checkAborted(request.signal);
+        if (generation === prepareGeneration) {
+          preparedGraphShot = null;
+          clearGraphFrameCache();
+        }
+        return;
       }
+      await prepareGraphShot(catalog, shot, generation, request);
     },
     loadFrame,
     prefetchFrame(shotId, frameIndex) {
