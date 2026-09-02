@@ -61,4 +61,7 @@ next-env.d.ts
 # Reproducible runtime-model hydration and upload staging. The reviewed ITER
 # derivative is restored from assets/runtime-assets.lock.json, not committed.
 /public/models/iter-high-detail-v1/
+# The EXL-50U general-assembly metadata and publication notice are tracked, but
+# its reviewed preview and 20 high-detail GLBs are hydrated from the lock.
+/public/models/exl50u-general-assembly-v1/*.glb
 /.runtime-assets/

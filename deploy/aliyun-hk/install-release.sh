@@ -78,6 +78,7 @@ EFIT_HEADERS=""
 EFIT_BODY=""
 ITER_HEADERS=""
 ASSET_HEADERS=""
+RUNTIME_ASSET_REPORT=""
 PREVIOUS=""
 HAD_NGINX_CONFIG=false
 HAD_NGINX_ENABLED=false
@@ -296,12 +297,14 @@ test -f "$PENDING/deploy/aliyun-hk/nginx.conf"
 test -f "$PENDING/deploy/aliyun-hk/render-nginx-config.mjs"
 test -f "$PENDING/deploy/aliyun-hk/certbot-nginx-support.mjs"
 test -f "$PENDING/deploy/aliyun-hk/direct-execution.mjs"
+test -f "$PENDING/deploy/aliyun-hk/verify-runtime-assets.mjs"
 test -f "$PENDING/deploy/aliyun-hk/analytics-collector.mjs"
 test -f "$PENDING/deploy/aliyun-hk/analytics-store.mjs"
 test -f "$PENDING/deploy/aliyun-hk/install-analytics-forwarder.sh"
 test -f "$PENDING/deploy/aliyun-hk/fusiondigital-analytics-collector.service"
 test -f "$PENDING/deploy/aliyun-hk/fusiondigital-analytics.logrotate"
 test -f "$PENDING/.fusiondigital-release.json"
+test -f "$PENDING/assets/runtime-assets.lock.json"
 node -e '
   const fs = require("node:fs");
   const manifest = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
@@ -314,9 +317,10 @@ node -e '
   ) process.exit(1);
 ' "$PENDING/.fusiondigital-release.json" "$RELEASE"
 
-ITER_DIR="$PENDING/dist/client/models/iter-high-detail-v1"
-test "$(find "$ITER_DIR" -maxdepth 1 -type f | wc -l)" -eq 18
-test "$(find "$ITER_DIR" -maxdepth 1 -type f -printf '%s\n' | awk '{ total += $1 } END { print total + 0 }')" -eq 98507692
+# This verifies every locked byte and digest for both external bundles, while
+# retaining the existing /device-assets/iter-high-detail/v1 CLI contract.
+# The EXL-50U bundle is mandatory only after its catalog entry is activated.
+RUNTIME_ASSET_REPORT=$(node "$PENDING/deploy/aliyun-hk/verify-runtime-assets.mjs" "$PENDING")
 test -f "$PENDING/dist/client/data/exl50u-efit/index.json"
 test -f "$PENDING/dist/client/data/exl50u-efit-v2/index.json"
 
@@ -338,7 +342,6 @@ chmod 750 "$PENDING/deploy/aliyun-hk/finalize-https.sh" \
 mv "$PENDING" "$TARGET"
 TARGET_CREATED_BY_THIS_RUN=true
 PENDING=""
-ITER_DIR="$TARGET/dist/client/models/iter-high-detail-v1"
 
 CONFIG_BACKUP_DIR=$(mktemp -d /tmp/fusiondigital-config.XXXXXX)
 if [[ -e $NGINX_CONFIG || -L $NGINX_CONFIG ]]; then
@@ -378,6 +381,7 @@ systemctl is-enabled --quiet nginx 2>/dev/null && NGINX_WAS_ENABLED=true
 TRANSACTION_ACTIVE=true
 install -m 0644 "$TARGET/deploy/aliyun-hk/fusiondigital.service" "$SERVICE_CONFIG"
 RENDER_ARGS=(
+  --runtime-lock "$TARGET/assets/runtime-assets.lock.json"
   "$TARGET/deploy/aliyun-hk/nginx.conf"
   "$NGINX_CONFIG"
 )
@@ -450,14 +454,32 @@ node -e '
   if (body.length < 2 || body[0] !== 0x1f || body[1] !== 0x8b) process.exit(1);
 ' "$EFIT_BODY"
 
-ITER_FILE=$(find "$ITER_DIR" -maxdepth 1 -type f -name '*.high.meshopt.glb' -printf '%f\n' | LC_ALL=C sort | sed -n '1p')
-test -n "$ITER_FILE"
 ITER_HEADERS=$(mktemp)
-curl -fsS -D "$ITER_HEADERS" -o /dev/null "${ORIGIN_CURL_ARGS[@]}" \
-  -H 'Range: bytes=0-1023' \
-  "$ORIGIN_URL/device-assets/iter-high-detail/v1/$ITER_FILE"
-grep -Eq '^HTTP/[0-9.]+ 206' "$ITER_HEADERS"
-grep -Eiq '^Content-Range: bytes 0-1023/' "$ITER_HEADERS"
+while IFS= read -r RUNTIME_ROUTE; do
+  test -n "$RUNTIME_ROUTE"
+  : > "$ITER_HEADERS"
+  curl -fsS -D "$ITER_HEADERS" -o /dev/null "${ORIGIN_CURL_ARGS[@]}" \
+    -H 'Accept-Encoding: gzip' -H 'Range: bytes=0-1023' \
+    "$ORIGIN_URL$RUNTIME_ROUTE"
+  grep -Eq '^HTTP/[0-9.]+ 206' "$ITER_HEADERS"
+  grep -Eiq '^Content-Range: bytes 0-1023/' "$ITER_HEADERS"
+  grep -Eiq '^Content-Length: 1024' "$ITER_HEADERS"
+  grep -Eiq '^Content-Type: model/gltf-binary' "$ITER_HEADERS"
+  grep -Eiq '^Accept-Ranges: bytes' "$ITER_HEADERS"
+  grep -Eiq '^Cache-Control: public, max-age=31536000, immutable' "$ITER_HEADERS"
+  grep -Eiq '^Referrer-Policy: no-referrer' "$ITER_HEADERS"
+  grep -Eiq '^X-Content-Type-Options: nosniff' "$ITER_HEADERS"
+  grep -Eiq '^Cross-Origin-Resource-Policy: same-origin' "$ITER_HEADERS"
+  grep -Eiq '^Content-Disposition: inline' "$ITER_HEADERS"
+  ! grep -Eiq '^Content-Encoding:' "$ITER_HEADERS"
+done < <(node -e '
+  const report = JSON.parse(process.argv[1]);
+  for (const bundle of report.bundles) console.log(bundle.firstRoute);
+' "$RUNTIME_ASSET_REPORT")
+
+UNKNOWN_DEVICE_ASSET_STATUS=$(curl -sS -o /dev/null -w '%{http_code}' "${ORIGIN_CURL_ARGS[@]}" \
+  "$ORIGIN_URL/device-assets/exl50u-general-assembly/v1/unknown.glb")
+test "$UNKNOWN_DEVICE_ASSET_STATUS" = 404
 
 DIRECT_DATA_STATUS=$(curl -sS -o /dev/null -w '%{http_code}' "${ORIGIN_CURL_ARGS[@]}" \
   "$ORIGIN_URL/data/exl50u-efit/index.json")

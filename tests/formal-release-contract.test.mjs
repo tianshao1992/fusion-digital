@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { after, before, test } from "node:test";
@@ -9,6 +10,7 @@ import { fileURLToPath } from "node:url";
 
 import {
   computeSharedContentDigest,
+  computeExternalRuntimeAssetDigest,
   loadFormalReleaseContract,
   validateRepositoryStatus,
   validateFormalReleaseContract,
@@ -36,6 +38,15 @@ const HK_ARCHIVE_SHA256 = "a".repeat(64);
 const SITES_ARCHIVE_SHA256 = "b".repeat(64);
 const MANIFEST_SHA256 = "d".repeat(64);
 const DNS_REPORT_SHA256 = "e".repeat(64);
+const ASSET_MIRROR_SHA = "0123456789abcdef0123456789abcdef01234567";
+const ASSET_MIRROR_ORIGIN = "https://raw.githubusercontent.com";
+const ASSET_MIRROR_REPOSITORY = "tianshao1992/fusion-physics-atlas-assets";
+const EXL_GENERAL_ASSEMBLY_MANIFEST = "/models/exl50u-general-assembly-v1/model-manifest.json";
+const EXL_GENERAL_ASSEMBLY_NOTICE = "/models/exl50u-general-assembly-v1/PUBLICATION-NOTICE.md";
+const EXL_GENERAL_ASSEMBLY_SHARED_PATHS = [
+  EXL_GENERAL_ASSEMBLY_MANIFEST,
+  EXL_GENERAL_ASSEMBLY_NOTICE,
+];
 const SHARED_PATHS = [
   "/models/device-catalog.json",
   "/models/exl50u-diagview2-v1/manifest.json",
@@ -59,10 +70,87 @@ const SHARED_PATHS = [
 ];
 
 let contract;
+let runtimeLock;
+let deviceCatalog;
+let activationContract;
 let temporaryDirectory;
 
-function validEvidence(sha = SHA) {
-  const entries = SHARED_PATHS.map((path, index) => {
+function externalRuntimeEvidence(lock = runtimeLock) {
+  const headers = {
+    content_type: "model/gltf-binary",
+    content_encoding: "identity",
+    cache_control: "public, max-age=31536000, immutable",
+    accept_ranges: "bytes",
+  };
+  return {
+    schema: "fusiondigital.external-runtime-assets-evidence-v1",
+    asset_mirror: {
+      provider: "github-raw-fixed-commit",
+      origin: ASSET_MIRROR_ORIGIN,
+      repository_path: ASSET_MIRROR_REPOSITORY,
+      commit_sha: ASSET_MIRROR_SHA,
+      redirect_count: 0,
+    },
+    bundles: lock.externalBundles.map((bundle) => {
+      const mirrorBase = `${ASSET_MIRROR_ORIGIN}/${ASSET_MIRROR_REPOSITORY}/${ASSET_MIRROR_SHA}/${bundle.id}`;
+      const entries = bundle.files.map((file) => ({
+        path: file.route,
+        hong_kong: {
+          status: 200,
+          bytes: file.bytes,
+          sha256: file.sha256,
+          ...headers,
+          delivery: "local-hydrated",
+        },
+        sites: {
+          status: 200,
+          bytes: file.bytes,
+          sha256: file.sha256,
+          ...headers,
+          delivery: "https-fallback",
+          upstream_url: `${mirrorBase}/${file.filename}`,
+        },
+      }));
+      const first = bundle.files[0];
+      return {
+        id: bundle.id,
+        entries,
+        hong_kong_aggregate_sha256: computeExternalRuntimeAssetDigest(entries, "hong_kong"),
+        sites_aggregate_sha256: computeExternalRuntimeAssetDigest(entries, "sites"),
+        range: {
+          hong_kong: {
+            path: first.route,
+            status: 206,
+            bytes: 1,
+            content_range: `bytes 0-0/${first.bytes}`,
+            ...headers,
+            delivery: "local-hydrated",
+          },
+          sites: {
+            path: first.route,
+            status: 206,
+            bytes: 1,
+            content_range: `bytes 0-0/${first.bytes}`,
+            ...headers,
+            delivery: "https-fallback",
+            upstream_url: `${mirrorBase}/${first.filename}`,
+          },
+        },
+      };
+    }),
+    unknown_path: {
+      path: "/device-assets/__formal-release-unknown__.glb",
+      hong_kong_status: 404,
+      sites_status: 404,
+    },
+  };
+}
+
+function validEvidence(sha = SHA, lock = runtimeLock) {
+  const activeSharedPaths = lock.externalBundles.some(
+    (bundle) => bundle.id === "exl50u-general-assembly-v1",
+  ) ? [...SHARED_PATHS, ...EXL_GENERAL_ASSEMBLY_SHARED_PATHS] : SHARED_PATHS;
+  const entries = activeSharedPaths.map((path, index) => {
     const sha256 = createHash("sha256").update(path, "utf8").digest("hex");
     const observation = { status: 200, bytes: 1000 + index, sha256 };
     return { path, hong_kong: { ...observation }, sites: { ...observation } };
@@ -119,6 +207,7 @@ function validEvidence(sha = SHA) {
       hong_kong_aggregate_sha256: computeSharedContentDigest(entries, "hong_kong"),
       sites_aggregate_sha256: computeSharedContentDigest(entries, "sites"),
     },
+    externalRuntimeAssets: externalRuntimeEvidence(lock),
   };
   return evidence;
 }
@@ -127,15 +216,85 @@ function clone(value) {
   return structuredClone(value);
 }
 
-function failure(evidence, pattern) {
-  const result = verifyFormalReleaseEvidence(contract, evidence);
+function catalogForLock(lock) {
+  if (!lock.externalBundles.some((bundle) => bundle.id === "exl50u-general-assembly-v1")) {
+    return deviceCatalog;
+  }
+  const catalog = clone(deviceCatalog);
+  catalog.devices = catalog.devices.map((device) => (
+    device.id === "exl50u-general-assembly-20260630"
+      ? clone(activationContract.replacement)
+      : device
+  ));
+  return catalog;
+}
+
+function failure(evidence, pattern, lock = runtimeLock, catalog = catalogForLock(lock)) {
+  const result = verifyFormalReleaseEvidence(contract, evidence, lock, catalog);
   assert.equal(result.ok, false);
   assert.equal(result.commit_sha, null);
   assert.match(result.errors.join("\n"), pattern);
 }
 
+function twoActiveBundleRuntimeLock() {
+  const files = Array.from({ length: 21 }, (_value, index) => {
+    const role = index === 0 ? "preview" : `anonymous-shard-${String(index).padStart(2, "0")}`;
+    const sha256 = createHash("sha256").update(`EXL ACTIVE PAIR FIXTURE ${index}`, "utf8").digest("hex");
+    const filename = index === 0
+      ? `device.preview.${sha256}.meshopt.glb`
+      : `anonymous-shard-${String(index).padStart(2, "0")}.${sha256}.high.meshopt.glb`;
+    return {
+      role,
+      filename,
+      route: `/device-assets/exl50u-general-assembly/v1/${filename}`,
+      bytes: 4_096 + index,
+      sha256,
+    };
+  });
+  const aggregate = createHash("sha256");
+  for (const file of [...files].sort((left, right) => left.filename.localeCompare(right.filename, "en"))) {
+    aggregate.update(`${file.filename}\0${file.bytes}\0${file.sha256}\n`, "utf8");
+  }
+  const exlBundle = {
+    id: "exl50u-general-assembly-v1",
+    title: "EXL-50U integrated-assembly anonymous browser visualization derivative",
+    classification: "PUBLIC",
+    redistributionAllowed: true,
+    engineeringUseAllowed: false,
+    sourceCadIncluded: false,
+    licensePath: "public/models/exl50u-general-assembly-v1/PUBLICATION-NOTICE.md",
+    destinationRoot: "public/models/exl50u-general-assembly-v1",
+    stageDirectoryName: "exl50u-general-assembly-v1",
+    routeRoot: "/device-assets/exl50u-general-assembly/v1",
+    acquisition: {
+      defaultBaseUrl: null,
+      baseUrlEnv: "FUSION_EXL50U_GA_ASSET_BASE_URL",
+      sourceDirEnv: "FUSION_EXL50U_GA_ASSET_SOURCE_DIR",
+    },
+    fileCount: files.length,
+    totalBytes: files.reduce((sum, file) => sum + file.bytes, 0),
+    aggregateSha256: aggregate.digest("hex"),
+    files,
+  };
+  const lock = clone(runtimeLock);
+  lock.externalBundles = lock.externalBundles.filter(
+    (bundle) => bundle.id !== "exl50u-general-assembly-v1",
+  );
+  lock.externalBundles.push(exlBundle);
+  assert.deepEqual(
+    lock.externalBundles.map((bundle) => bundle.id),
+    ["iter-high-detail-v1", "exl50u-general-assembly-v1"],
+  );
+  return lock;
+}
+
 before(async () => {
-  contract = await loadFormalReleaseContract(CONTRACT_PATH);
+  [contract, runtimeLock, deviceCatalog, activationContract] = await Promise.all([
+    loadFormalReleaseContract(CONTRACT_PATH),
+    readFile(join(ROOT, "assets/runtime-assets.lock.json"), "utf8").then(JSON.parse),
+    readFile(join(ROOT, "public/models/device-catalog.json"), "utf8").then(JSON.parse),
+    readFile(join(ROOT, "scripts/assets/exl50u-general-assembly-catalog-activation-contract.json"), "utf8").then(JSON.parse),
+  ]);
   temporaryDirectory = await mkdtemp(join(tmpdir(), "fusiondigital-paired-release-"));
 });
 
@@ -158,9 +317,51 @@ test("contract pins both repositories, Hong Kong premium EIP, and Sites", () => 
   assert.equal(contract.sites.projectId, PROJECT_ID);
   assert.equal(contract.sites.platformUrl, SITES_URL);
   assert.equal(contract.sites.requiredStatus, "succeeded");
+  assert.equal(contract.externalRuntimeAssets.lockPath, "assets/runtime-assets.lock.json");
+  assert.equal(contract.externalRuntimeAssets.hongKong.verifyEveryFile, true);
+  assert.equal(contract.externalRuntimeAssets.hongKong.contentEncoding, "identity");
+  assert.equal(contract.externalRuntimeAssets.evidenceSchema, "fusiondigital.external-runtime-assets-evidence-v1");
+  assert.equal(contract.externalRuntimeAssets.sites.fallbackProbeEveryBundle, true);
+  assert.equal(contract.externalRuntimeAssets.sites.hydrated, false);
+  assert.equal(contract.externalRuntimeAssets.sites.archiveLimitBytes, 256 * 1024 * 1024);
+  assert.deepEqual(contract.externalRuntimeAssets.sites.mirror, {
+    provider: "github-raw-fixed-commit",
+    origin: ASSET_MIRROR_ORIGIN,
+    repositoryPath: ASSET_MIRROR_REPOSITORY,
+    commitShaPattern: "^[0-9a-f]{40}$",
+    bundlePathPolicy: "exact-bundle-id",
+    requireNoRedirects: true,
+  });
+  assert.deepEqual(
+    contract.externalRuntimeAssets.bundles.map((bundle) => ({
+      id: bundle.id,
+      activation: bundle.activation,
+      sourceDirEnv: bundle.sourceDirEnv,
+      baseUrlEnv: bundle.baseUrlEnv,
+    })),
+    [
+      {
+        id: "iter-high-detail-v1",
+        activation: "required",
+        sourceDirEnv: "FUSION_ASSET_SOURCE_DIR",
+        baseUrlEnv: "FUSION_ASSET_BASE_URL",
+      },
+      {
+        id: "exl50u-general-assembly-v1",
+        activation: "catalog-real-3d",
+        sourceDirEnv: "FUSION_EXL50U_GA_ASSET_SOURCE_DIR",
+        baseUrlEnv: "FUSION_EXL50U_GA_ASSET_BASE_URL",
+      },
+    ],
+  );
   assert.deepEqual(contract.sharedContent, {
     schema: "fusiondigital.shared-content-v1",
     paths: SHARED_PATHS,
+    conditionalPaths: EXL_GENERAL_ASSEMBLY_SHARED_PATHS.map((path) => ({
+      activation: "external-runtime-bundle-active",
+      bundleId: "exl50u-general-assembly-v1",
+      path,
+    })),
   });
   assert.deepEqual(
     contract.sharedContent.paths.filter((path) => path.startsWith("/models/exl50u-diagview2-v1/")),
@@ -175,6 +376,15 @@ test("contract pins both repositories, Hong Kong premium EIP, and Sites", () => 
       "/models/exl50u-sensor-points-v1/manifest.json",
       "/models/exl50u-sensor-points-v1/sensor-points.json",
     ],
+  );
+  assert.equal(contract.sharedContent.paths.includes(EXL_GENERAL_ASSEMBLY_MANIFEST), false);
+  assert.deepEqual(
+    contract.sharedContent.conditionalPaths,
+    EXL_GENERAL_ASSEMBLY_SHARED_PATHS.map((path) => ({
+      activation: "external-runtime-bundle-active",
+      bundleId: "exl50u-general-assembly-v1",
+      path,
+    })),
   );
   assert.deepEqual(
     contract.sharedContent.paths.filter((path) => path.startsWith("/data/exl50u-mdsplus-snapshot-v1/")),
@@ -198,6 +408,11 @@ test("fixed contract rejects EIP, Sites identity, and policy drift", () => {
     (value) => { value.sites.projectId = "appgprj_other"; },
     (value) => { value.sites.platformUrl = "https://other.chatgpt.site"; },
     (value) => { value.sites.requiredStatus = "optional"; },
+    (value) => { value.externalRuntimeAssets.sites.hydrated = true; },
+    (value) => { value.externalRuntimeAssets.sites.mirror.repositoryPath = "other/assets"; },
+    (value) => { value.externalRuntimeAssets.sites.mirror.requireNoRedirects = false; },
+    (value) => { value.externalRuntimeAssets.bundles[1].fileCount = 20; },
+    (value) => { value.sharedContent.conditionalPaths[0].bundleId = "other-bundle"; },
   ]) {
     const changed = clone(contract);
     mutate(changed);
@@ -206,11 +421,203 @@ test("fixed contract rejects EIP, Sites identity, and policy drift", () => {
 });
 
 test("exactly matching Git, Hong Kong, and Sites provenance passes", () => {
-  assert.deepEqual(verifyFormalReleaseEvidence(contract, validEvidence()), {
+  assert.deepEqual(verifyFormalReleaseEvidence(contract, validEvidence(), runtimeLock, deviceCatalog), {
     ok: true,
     commit_sha: SHA,
     errors: [],
   });
+});
+
+test("pair evidence accepts every path for ITER and an activated EXL bundle", () => {
+  const lock = twoActiveBundleRuntimeLock();
+  const evidence = validEvidence(SHA, lock);
+  assert.deepEqual(
+    evidence.externalRuntimeAssets.bundles.map(({ id, entries }) => [id, entries.length]),
+    [["iter-high-detail-v1", 18], ["exl50u-general-assembly-v1", 21]],
+  );
+  assert.deepEqual(
+    evidence.sharedContent.entries.slice(-2).map(({ path }) => path),
+    EXL_GENERAL_ASSEMBLY_SHARED_PATHS,
+  );
+  assert.deepEqual(verifyFormalReleaseEvidence(contract, evidence, lock, catalogForLock(lock)), {
+    ok: true,
+    commit_sha: SHA,
+    errors: [],
+  });
+});
+
+test("EXL manifest pair evidence is conditional on runtime-lock activation", () => {
+  const metadataEvidence = validEvidence();
+  assert.equal(
+    metadataEvidence.sharedContent.entries.some(({ path }) => EXL_GENERAL_ASSEMBLY_SHARED_PATHS.includes(path)),
+    false,
+  );
+  assert.equal(
+    verifyFormalReleaseEvidence(contract, metadataEvidence, runtimeLock, deviceCatalog).ok,
+    true,
+  );
+
+  const activeLock = twoActiveBundleRuntimeLock();
+  const activeCatalog = catalogForLock(activeLock);
+  for (const requiredPath of EXL_GENERAL_ASSEMBLY_SHARED_PATHS) {
+    const missing = validEvidence(SHA, activeLock);
+    missing.sharedContent.entries = missing.sharedContent.entries.filter(({ path }) => path !== requiredPath);
+    missing.sharedContent.hong_kong_aggregate_sha256 = computeSharedContentDigest(
+      missing.sharedContent.entries,
+      "hong_kong",
+    );
+    missing.sharedContent.sites_aggregate_sha256 = computeSharedContentDigest(
+      missing.sharedContent.entries,
+      "sites",
+    );
+    failure(missing, /sharedContent\.entries must contain exactly/u, activeLock, activeCatalog);
+
+    for (const mutate of [
+      (entry) => { entry.sites.status = 404; },
+      (entry) => { entry.sites.sha256 = "f".repeat(64); },
+      (entry) => { entry.sites.bytes += 1; },
+    ]) {
+      const evidence = validEvidence(SHA, activeLock);
+      mutate(evidence.sharedContent.entries.find(({ path }) => path === requiredPath));
+      failure(evidence, /sharedContent\.entries/u, activeLock, activeCatalog);
+    }
+  }
+});
+
+test("pair evidence fails closed when the second active bundle is omitted or loses independent delivery proof", () => {
+  const lock = twoActiveBundleRuntimeLock();
+  const missingBundle = validEvidence(SHA, lock);
+  missingBundle.externalRuntimeAssets.bundles.pop();
+  failure(missingBundle, /exactly 2 active locked bundles/u, lock);
+
+  const forgedFallback = validEvidence(SHA, lock);
+  forgedFallback.externalRuntimeAssets.bundles[1].entries[20].sites.upstream_url =
+    `https://fusiondigital.club/${lock.externalBundles[1].files[20].filename}`;
+  failure(forgedFallback, /independent HTTPS fallback/u, lock);
+
+  const missingRange = validEvidence(SHA, lock);
+  missingRange.externalRuntimeAssets.bundles[1].range.sites.status = 200;
+  failure(missingRange, /one-byte 206/u, lock);
+});
+
+test("formal evidence requires the fixed-repository, fixed-commit raw fallback", () => {
+  const filename = runtimeLock.externalBundles[0].files[0].filename;
+  for (const url of [
+    `https://user:secret@assets.example.test/releases/${filename}`,
+    `https://@assets.example.test/releases/${filename}`,
+    `https://assets.example.test/releases/${filename}?`,
+    `https://assets.example.test/releases/${filename}#`,
+    `https://assets.fusiondigital.club/releases/${filename}`,
+    `https://fusiondigital.club./releases/${filename}`,
+    `https://another-project.chatgpt.site/releases/${filename}`,
+    `https://another-project.chatgpt.site./releases/${filename}`,
+    `https://raw.githubusercontent.com/other/fusion-physics-atlas-assets/${ASSET_MIRROR_SHA}/iter-high-detail-v1/${filename}`,
+    `https://raw.githubusercontent.com/${ASSET_MIRROR_REPOSITORY}/main/iter-high-detail-v1/${filename}`,
+    `https://raw.githubusercontent.com/${ASSET_MIRROR_REPOSITORY}/${ASSET_MIRROR_SHA.slice(0, 39)}/iter-high-detail-v1/${filename}`,
+    `https://raw.githubusercontent.com/${ASSET_MIRROR_REPOSITORY}/${ASSET_MIRROR_SHA.toUpperCase()}/iter-high-detail-v1/${filename}`,
+    `https://raw.githubusercontent.com/${ASSET_MIRROR_REPOSITORY}/${ASSET_MIRROR_SHA}/exl50u-general-assembly-v1/${filename}`,
+    `https://raw.githubusercontent.com/${ASSET_MIRROR_REPOSITORY}/${ASSET_MIRROR_SHA}/iter-high-detail-v1/extra/${filename}`,
+  ]) {
+    const evidence = validEvidence();
+    evidence.externalRuntimeAssets.bundles[0].entries[0].sites.upstream_url = url;
+    failure(evidence, /independent HTTPS fallback/u);
+  }
+
+  const rangeEvidence = validEvidence();
+  const rangeFilename = runtimeLock.externalBundles[0].files[0].filename;
+  rangeEvidence.externalRuntimeAssets.bundles[0].range.sites.upstream_url =
+    `https://user:secret@assets.example.test/releases/${rangeFilename}`;
+  failure(rangeEvidence, /independent HTTPS fallback/u);
+
+  const splitMirror = validEvidence();
+  const secondFilename = runtimeLock.externalBundles[0].files[1].filename;
+  splitMirror.externalRuntimeAssets.bundles[0].entries[1].sites.upstream_url =
+    `https://raw.githubusercontent.com/${ASSET_MIRROR_REPOSITORY}/${"1".repeat(40)}/iter-high-detail-v1/${secondFilename}`;
+  failure(splitMirror, /independent HTTPS fallback/u);
+
+  for (const mutate of [
+    (evidence) => { evidence.externalRuntimeAssets.asset_mirror.commit_sha = "main"; },
+    (evidence) => { evidence.externalRuntimeAssets.asset_mirror.commit_sha = ASSET_MIRROR_SHA.toUpperCase(); },
+    (evidence) => { evidence.externalRuntimeAssets.asset_mirror.repository_path = "other/assets"; },
+    (evidence) => { evidence.externalRuntimeAssets.asset_mirror.redirect_count = 1; },
+  ]) {
+    const evidence = validEvidence();
+    mutate(evidence);
+    failure(evidence, /asset_mirror/u);
+  }
+
+  const fixedRawMirror = validEvidence();
+  const rawBase = `${ASSET_MIRROR_ORIGIN}/${ASSET_MIRROR_REPOSITORY}/${ASSET_MIRROR_SHA}/iter-high-detail-v1`;
+  for (let index = 0; index < runtimeLock.externalBundles[0].files.length; index += 1) {
+    fixedRawMirror.externalRuntimeAssets.bundles[0].entries[index].sites.upstream_url =
+      `${rawBase}/${runtimeLock.externalBundles[0].files[index].filename}`;
+  }
+  fixedRawMirror.externalRuntimeAssets.bundles[0].range.sites.upstream_url =
+    `${rawBase}/${runtimeLock.externalBundles[0].files[0].filename}`;
+  assert.equal(
+    verifyFormalReleaseEvidence(contract, fixedRawMirror, runtimeLock, deviceCatalog).ok,
+    true,
+    "a fixed-commit raw.githubusercontent.com direct mirror remains permitted",
+  );
+});
+
+test("formal verification performs complete runtime-lock validation", () => {
+  const active = twoActiveBundleRuntimeLock();
+  const mutations = [
+    (lock) => { lock.externalBundles[0].title = "forged"; },
+    (lock) => { lock.externalBundles[0].files[0].partId = "forged"; },
+    (lock) => { lock.externalBundles[0].files[0].manifestPartId = "ITER-FORGED"; },
+    (lock) => { lock.externalBundles[0].secret = "private"; },
+    (lock) => { lock.externalBundles[1].classification = "INTERNAL"; },
+    (lock) => { lock.externalBundles[1].redistributionAllowed = false; },
+    (lock) => { lock.externalBundles[1].engineeringUseAllowed = true; },
+    (lock) => { lock.externalBundles[1].sourceCadIncluded = true; },
+    (lock) => { lock.externalBundles[1].sourceCad = "private/source.stp"; },
+    (lock) => { lock.externalBundles[0].acquisition.defaultBaseUrl = "http://assets.example.test/releases"; },
+    (lock) => { lock.externalBundles[0].acquisition.defaultBaseUrl = "https://user:secret@assets.example.test/releases"; },
+    (lock) => { lock.externalBundles[1].files[0].bytes = null; },
+    (lock) => { lock.externalBundles[1].files[0].sha256 = null; },
+  ];
+  for (const mutate of mutations) {
+    const lock = clone(active);
+    mutate(lock);
+    const evidence = validEvidence(SHA, lock);
+    failure(evidence, /runtime asset lock failed complete validation/u, lock, catalogForLock(active));
+  }
+});
+
+test("formal verification binds EXL runtime-lock activation to the catalog state", () => {
+  const active = twoActiveBundleRuntimeLock();
+  failure(
+    validEvidence(SHA, active),
+    /active EXL-50U runtime lock requires the exact real-3d catalog card/u,
+    active,
+    deviceCatalog,
+  );
+  failure(
+    validEvidence(),
+    /metadata-only EXL-50U runtime lock requires the exact pending catalog state/u,
+    runtimeLock,
+    catalogForLock(active),
+  );
+  const activeWithPrivateExtra = catalogForLock(active);
+  activeWithPrivateExtra.devices.find(({ id }) => id === "exl50u-general-assembly-20260630")
+    .privateSourceCad = "D:/private/source.stp";
+  failure(
+    validEvidence(SHA, active),
+    /exact real-3d catalog card/u,
+    active,
+    activeWithPrivateExtra,
+  );
+  const metadataWithPrivateExtra = clone(deviceCatalog);
+  metadataWithPrivateExtra.devices.find(({ id }) => id === "exl50u-general-assembly-20260630")
+    .privateSourceCad = "D:/private/source.stp";
+  failure(
+    validEvidence(),
+    /missing or unknown fields/u,
+    runtimeLock,
+    metadataWithPrivateExtra,
+  );
 });
 
 test("any missing or divergent deployment SHA fails closed", () => {
@@ -263,7 +670,7 @@ test("Sites successful deployment, exact platform URL, and target are mandatory"
 test("Sites permits only inactive unrelated domain records and never production domains", () => {
   const unrelated = validEvidence();
   unrelated.sites.custom_domains.push({ hostname: "preview.example.org", status: "pending" });
-  assert.equal(verifyFormalReleaseEvidence(contract, unrelated).ok, true);
+  assert.equal(verifyFormalReleaseEvidence(contract, unrelated, runtimeLock, deviceCatalog).ok, true);
   const active = validEvidence();
   active.sites.custom_domains.push({ hostname: "preview.example.org", status: "active" });
   failure(active, /must remain pending and inactive/u);
@@ -342,6 +749,25 @@ test("canonical shared-content digest is path, status, byte, and hash sensitive"
     const entries = clone(evidence.sharedContent.entries);
     mutate(entries);
     assert.notEqual(computeSharedContentDigest(entries, "hong_kong"), original);
+  }
+});
+
+test("every active external-runtime path, digest, header, range, fallback and unknown 404 is mandatory", () => {
+  for (const [mutate, pattern] of [
+    [(value) => { value.externalRuntimeAssets.bundles[0].entries.pop(); }, /cover every locked file/u],
+    [(value) => { value.externalRuntimeAssets.bundles[0].entries[0].hong_kong.bytes += 1; }, /runtime lock/u],
+    [(value) => { value.externalRuntimeAssets.bundles[0].entries[0].sites.sha256 = "0".repeat(64); }, /runtime lock/u],
+    [(value) => { value.externalRuntimeAssets.bundles[0].hong_kong_aggregate_sha256 = "0".repeat(64); }, /aggregate_sha256/u],
+    [(value) => { value.externalRuntimeAssets.bundles[0].entries[0].hong_kong.content_encoding = "gzip"; }, /identity/u],
+    [(value) => { value.externalRuntimeAssets.bundles[0].entries[0].sites.cache_control = "no-store"; }, /immutable/u],
+    [(value) => { value.externalRuntimeAssets.bundles[0].range.hong_kong.status = 200; }, /one-byte 206/u],
+    [(value) => { value.externalRuntimeAssets.bundles[0].range.sites.content_range = "bytes 1-1/2"; }, /content_range/u],
+    [(value) => { value.externalRuntimeAssets.bundles[0].entries[0].sites.upstream_url = SITES_URL; }, /independent HTTPS fallback/u],
+    [(value) => { value.externalRuntimeAssets.unknown_path.sites_status = 200; }, /prove 404/u],
+  ]) {
+    const evidence = validEvidence();
+    mutate(evidence);
+    failure(evidence, pattern);
   }
 });
 

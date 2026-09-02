@@ -140,15 +140,19 @@ git ls-remote https://github.com/tianshao1992/fusion-digital.git refs/heads/main
    `npm run check`；敏感信息和第三方许可复核完成。
 3. **镜像**：运行 `npm run release:sync-remotes`，确认 Codeup `master`、GitHub
    `main` 与本地 `HEAD` 为同一 SHA。
-4. **隔离构建**：从目标 SHA 建立两个 detached worktree。香港 worktree 补齐并校验
-   ITER 运行时资产，设置 `NEXT_PUBLIC_FUSIONDIGITAL_MODE=public-anonymous` 和
+4. **隔离构建**：从目标 SHA 建立两个 detached worktree。香港 worktree 按
+   `assets/runtime-assets.lock.json` 补齐并逐文件校验 ITER 以及所有已激活外置 bundle，
+   设置 `NEXT_PUBLIC_FUSIONDIGITAL_MODE=public-anonymous` 和
    `FUSIONDIGITAL_BUILD_TARGET=aliyun-hk` 后生成不可变发布包；未 hydration 的 Sites
-   worktree 设置 `FUSIONDIGITAL_BUILD_TARGET=sites`，使用官方 `package-site.sh` 归档。
+   worktree 设置 `FUSIONDIGITAL_BUILD_TARGET=sites`，postbuild 删除两类外置 GLB cache
+   并保持 256 MiB 展开上限，再使用官方 `package-site.sh` 归档。两个 bundle 的
+   source-dir/base-url 独立，旧 ITER CLI 保持兼容。
 5. **SSH 部署**：把香港发布包上传到 `47.75.119.239`，安装到全新的 SHA release 目录，
    原子切换 `/srv/fusiondigital/current` 并重启服务。生产机不从 GitHub 拉资源，也不
    执行源码构建。必须调用版本化的 `deploy/aliyun-hk/install-release.sh`；
-   安装器会校验 JS/CSS 无损 gzip sidecar、ITER/EFIT 受控路径，并在证书存在时恢复
-   HTTPS/HTTP2，禁止直接复制 Nginx 配置绕过这些门禁。
+   安装器会校验 JS/CSS 无损 gzip sidecar、版本化 runtime lock、每个已激活 bundle 的
+   全部文件字节数/SHA-256、各 bundle Range/identity/缓存/安全头及 EFIT 受控路径，并在
+   证书存在时恢复 HTTPS/HTTP2，禁止直接复制 Nginx 配置绕过这些门禁。
 6. **HTTP 源站预检**：在改动 DNS 前，使用新 EIP + Host 验证 release、Nginx、公开
    资源和匿名安全边界。
 7. **DNS-01 预签与安装**：保持生产 DNS 不变，用受控 DNS-01 流程签发双域名证书并
@@ -320,7 +324,13 @@ curl.exe -fsS "https://fusiondigital.club/api/search?q=tokamak&limit=5" | Out-Nu
 生产匿名边界至少应满足：
 
 - 首页、搜索、公开模型/数据清单返回成功；
-- ITER Range 请求返回 `206` 和 `Content-Range`；
+- ITER 以及每个已激活外置 bundle 的 Range 请求返回 `206`、精确 `Content-Range` 和
+  `Content-Length`，GLB 保持 identity 编码；未知 `/device-assets/**` 路径返回 `404`；
+- 仓库外 formal pair evidence 必须按 runtime asset lock 对每个已激活外置 bundle 的
+  每条路径分别记录香港与 Sites 的 `status/bytes/sha256`，并记录规范聚合摘要、
+  `model/gltf-binary`、identity、immutable cache、`Accept-Ranges: bytes`；每个 bundle
+  两端都要有一条真实 `206` 探针。Sites 的每条记录必须证明独立 HTTPS fallback
+  上游，不能把 Sites 自身或生产域名伪装成 fallback；两端未知路径都必须实测 `404`。
 - TLS 协商支持 HTTP/2，JS/CSS 在客户端声明 `Accept-Encoding: gzip` 时返回无损
   `Content-Encoding: gzip`；EFIT `.jsonl.gz` 保持 identity 编码并支持 Range；
 - `/api/account`、`/api/research/runs`、`/signin-with-chatgpt`、`/callback` 返回
@@ -342,6 +352,22 @@ curl.exe -fsS "https://fusiondigital.club/api/search?q=tokamak&limit=5" | Out-Nu
 - 禁止根据 Sites 的自定义域名引导创建 CNAME 或 Cloudflare A 记录。
 - Sites 部署不得修改 DNS；若其正式同步部署失败，应按第 3 节处理香港 release，不能
   通过生产域名切换来掩盖失败。
+- Sites 不 hydrate `iter-high-detail-v1` 或 `exl50u-general-assembly-v1`；Worker 只接受
+  由版本化 manifest 生成的精确 21 文件 EXL 白名单，先查本地精确路径，再使用单独配置
+  的固定提交 raw base URL（ITER 为 `ITER_HIGH_DETAIL_ASSET_BASE_URL`，EXL 为
+  `EXL50U_GENERAL_ASSEMBLY_ASSET_BASE_URL`）。两个 bundle 都没有默认网络源。base URL
+  必须精确为 `https://raw.githubusercontent.com/tianshao1992/fusion-physics-atlas-assets/`
+  `<40位小写提交SHA>/<精确bundle-id>`，严禁其他仓库、branch/tag/短 SHA、userinfo、
+  query、fragment 或额外路径。Worker 使用 `redirect: manual`；任何 3xx、已重定向响应或
+  最终 URL 漂移都失败。未知路径必须 `404`，未配置
+  fallback 时必须 `503`，不得扫描目录、接受客户端上游或回退 HTTP。GitHub Releases
+  常规 URL 会跨 origin `302`，因此必须拒绝。
+- EXL manifest 与 runtime lock 必须同时固定 `classification=PUBLIC`、
+  `redistributionAllowed=true`、`engineeringUseAllowed=false`，并明确不含 source CAD；
+  schema、投影、catalog 激活、formal pair 与香港安装任一层不满足即失败。metadata-only
+  安装会递归检查整个 `dist/client` 是否夹带 EXL bundle、1.4 formal manifest 或匿名 GLB。
+  所有安装状态都把 `dist/client/**/*.glb` 与 lock 的 path/bytes/SHA-256 完整对账，并只从
+  完整校验后的 lock 生成逐文件 Nginx `location =`，不得让未锁定文件公开。
 - 发布记录必须包含 Sites source `commit_sha`、version 或 deployment ID、平台 URL、
   succeeded 状态，以及香港 active release 的同一完整 SHA。
 

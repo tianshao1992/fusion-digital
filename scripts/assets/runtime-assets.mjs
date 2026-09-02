@@ -20,6 +20,22 @@ import { pipeline } from "node:stream/promises";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { execFile } from "node:child_process";
+import {
+  EXL50U_GA_ALLOWLIST_PATH,
+  EXL50U_GA_BUNDLE_ID,
+  EXL50U_GA_DESTINATION,
+  EXL50U_GA_FILE_COUNT,
+  EXL50U_GA_MANIFEST_PATH,
+  EXL50U_GA_PUBLICATION_NOTICE,
+  EXL50U_GA_PUBLICATION_NOTICE_PATH,
+  EXL50U_GA_ROUTE_ROOT,
+  extractExl50uGeneralAssemblyAssets,
+  parseExl50uGeneralAssemblyAllowlist,
+} from "./exl50u-general-assembly-runtime-contract.mjs";
+import {
+  validateRuntimeAssetBundle,
+  validateRuntimeAssetLock,
+} from "../../deploy/aliyun-hk/verify-runtime-assets.mjs";
 
 const execFileAsync = promisify(execFile);
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
@@ -33,12 +49,13 @@ const ITER_MANIFEST_PATH = join(
   "model-manifest.json",
 );
 const ITER_ALLOWLIST_PATH = join(REPO_ROOT, "worker", "iter-high-assets.generated.ts");
-const WORKER_PATH = join(REPO_ROOT, "worker", "index.ts");
-const DEFAULT_DESTINATION = "public/models/iter-high-detail-v1";
-const DEFAULT_STAGE_DIRECTORY = "iter-high-detail-v1";
-const DEFAULT_STAGE_OUTPUT = ".runtime-assets/iter-high-detail-v1-stage";
-const BASE_URL_ENV = "FUSION_ASSET_BASE_URL";
-const SOURCE_DIR_ENV = "FUSION_ASSET_SOURCE_DIR";
+const ITER_BUNDLE_ID = "iter-high-detail-v1";
+const ITER_DESTINATION = "public/models/iter-high-detail-v1";
+const ITER_STAGE_DIRECTORY = "iter-high-detail-v1";
+const ITER_BASE_URL_ENV = "FUSION_ASSET_BASE_URL";
+const ITER_SOURCE_DIR_ENV = "FUSION_ASSET_SOURCE_DIR";
+const EXL50U_GA_BASE_URL_ENV = "FUSION_EXL50U_GA_ASSET_BASE_URL";
+const EXL50U_GA_SOURCE_DIR_ENV = "FUSION_EXL50U_GA_ASSET_SOURCE_DIR";
 const EXPECTED_ITER_COMPONENTS = 18;
 const EXPECTED_ITER_BYTES = 98_507_692;
 
@@ -113,7 +130,27 @@ function resolveRepositoryPath(value, label) {
   return absolute;
 }
 
-function normalizeHttpsBaseUrl(value) {
+function forbiddenRuntimeMirrorHost(hostname) {
+  const host = String(hostname).toLowerCase();
+  return host.endsWith(".")
+    || host === "fusiondigital.club"
+    || host.endsWith(".fusiondigital.club")
+    || host === "chatgpt.site"
+    || host.endsWith(".chatgpt.site");
+}
+
+function canonicalUrlText(value) {
+  return typeof value === "string"
+    && value !== ""
+    && value === value.trim()
+    && !/[\u0000-\u001f\u007f?#]/u.test(value)
+    && !/^[a-z][a-z0-9+.-]*:\/\/[^/]*@/iu.test(value);
+}
+
+export function normalizeHttpsBaseUrl(value) {
+  if (!canonicalUrlText(value)) {
+    throw new Error("Asset base URL must be a canonical HTTPS URL");
+  }
   let parsed;
   try {
     parsed = new URL(value);
@@ -123,10 +160,45 @@ function normalizeHttpsBaseUrl(value) {
   if (parsed.protocol !== "https:") {
     throw new Error("Asset base URL must use HTTPS; use --source-dir for offline or local transfer");
   }
-  if (parsed.username || parsed.password || parsed.search || parsed.hash) {
+  if (
+    parsed.username
+    || parsed.password
+    || parsed.search
+    || parsed.hash
+    || forbiddenRuntimeMirrorHost(parsed.hostname)
+  ) {
     throw new Error("Asset base URL must not contain credentials, query parameters, or a fragment");
   }
-  return parsed.href.replace(/\/+$/, "");
+  const normalized = parsed.href.replace(/\/+$/, "");
+  if (normalized !== value.replace(/\/+$/, "")) {
+    throw new Error("Asset base URL must already be in canonical URL form");
+  }
+  return normalized;
+}
+
+export function assertControlledAssetResponseUrl(responseUrl, expectedUrl) {
+  if (!canonicalUrlText(responseUrl) || !canonicalUrlText(expectedUrl)) {
+    throw new Error("Asset download returned an invalid final URL");
+  }
+  let final;
+  let expected;
+  try {
+    final = new URL(responseUrl);
+    expected = new URL(expectedUrl);
+  } catch {
+    throw new Error("Asset download returned an invalid final URL");
+  }
+  if (
+    final.protocol !== "https:"
+    || final.username
+    || final.password
+    || final.search
+    || final.hash
+    || forbiddenRuntimeMirrorHost(final.hostname)
+    || final.origin !== expected.origin
+    || final.pathname !== expected.pathname
+    || final.href !== expected.href
+  ) throw new Error("Asset download redirected outside its controlled HTTPS base and digest path");
 }
 
 async function gitTrackedPublicPaths() {
@@ -135,11 +207,18 @@ async function gitTrackedPublicPaths() {
     ["ls-files", "-z", "--", "public"],
     { cwd: REPO_ROOT, encoding: "utf8", maxBuffer: 16 * 1024 * 1024 },
   );
-  return stdout
+  const paths = stdout
     .split("\0")
     .filter(Boolean)
-    .map((value) => value.replaceAll("\\", "/"))
-    .filter((value) => !value.startsWith(`${DEFAULT_DESTINATION}/`))
+    .map((value) => value.replaceAll("\\", "/"));
+  const forbiddenExlGlbs = paths.filter((value) => (
+    value.startsWith(`${EXL50U_GA_DESTINATION}/`) && value.endsWith(".glb")
+  ));
+  if (forbiddenExlGlbs.length > 0) {
+    throw new Error("EXL-50U general-assembly GLBs must remain external and must not be tracked by Git");
+  }
+  return paths
+    .filter((value) => !value.startsWith(`${ITER_DESTINATION}/`))
     .sort(codepointCompare);
 }
 
@@ -162,10 +241,6 @@ async function readIterSourceContract() {
     throw new Error(`Worker allowlist must contain exactly ${EXPECTED_ITER_COMPONENTS} ITER assets`);
   }
 
-  const workerSource = await readFile(WORKER_PATH, "utf8");
-  const baseMatch = /const ITER_HIGH_DETAIL_RELEASE_BASE\s*=\s*"([^"]+)"/.exec(workerSource);
-  if (!baseMatch) throw new Error("Worker ITER release base URL was not found");
-  const defaultBaseUrl = normalizeHttpsBaseUrl(baseMatch[1]);
   const generatedByPart = new Map(generatedEntries.map((entry) => [entry.partId, entry]));
 
   const files = bundle.components.map((component) => {
@@ -208,7 +283,44 @@ async function readIterSourceContract() {
     );
   }
 
-  return { defaultBaseUrl, files, totalBytes };
+  return { defaultBaseUrl: null, files, totalBytes };
+}
+
+async function readExl50uGeneralAssemblySourceContract() {
+  const manifestPresent = await exists(EXL50U_GA_MANIFEST_PATH);
+  const allowlistSource = await readFile(EXL50U_GA_ALLOWLIST_PATH, "utf8");
+  const generatedEntries = parseExl50uGeneralAssemblyAllowlist(allowlistSource);
+  if (!manifestPresent) {
+    if (generatedEntries.length !== 0) {
+      throw new Error("EXL-50U Worker allowlist must remain empty while the formal 1.4 manifest is absent");
+    }
+    return null;
+  }
+
+  if (!await exists(EXL50U_GA_PUBLICATION_NOTICE_PATH)) {
+    throw new Error("EXL-50U formal manifest requires its public non-engineering publication notice");
+  }
+  if (await readFile(EXL50U_GA_PUBLICATION_NOTICE_PATH, "utf8") !== EXL50U_GA_PUBLICATION_NOTICE) {
+    throw new Error("EXL-50U publication notice must match the fixed anonymous public contract exactly");
+  }
+  const manifest = JSON.parse(await readFile(EXL50U_GA_MANIFEST_PATH, "utf8"));
+  const extracted = extractExl50uGeneralAssemblyAssets(manifest);
+  if (generatedEntries.length !== EXL50U_GA_FILE_COUNT) {
+    throw new Error(`EXL-50U Worker allowlist must contain exactly ${EXL50U_GA_FILE_COUNT} reviewed assets`);
+  }
+  for (let index = 0; index < extracted.files.length; index += 1) {
+    const expected = extracted.files[index];
+    const generated = generatedEntries[index];
+    if (
+      generated?.role !== expected.role
+      || generated?.filename !== expected.filename
+      || generated?.sha256 !== expected.sha256
+      || generated?.bytes !== expected.bytes
+    ) {
+      throw new Error(`EXL-50U manifest and Worker allowlist disagree at ${expected.role}`);
+    }
+  }
+  return extracted;
 }
 
 export async function refreshLock() {
@@ -224,14 +336,20 @@ export async function refreshLock() {
       sha256: await sha256File(absolute),
     });
   }
-  const iter = await readIterSourceContract();
+  const [iter, exl50uGeneralAssembly] = await Promise.all([
+    readIterSourceContract(),
+    readExl50uGeneralAssemblySourceContract(),
+  ]);
   const lock = {
     schemaVersion: "fusiondigital.runtime-assets.v1",
     generatedAt: "2026-08-16",
     gitAssets: {
       root: "public",
       acquisition: "git",
-      excludes: [`${DEFAULT_DESTINATION}/`],
+      excludes: [
+        `${ITER_DESTINATION}/`,
+        `${EXL50U_GA_DESTINATION}/*.glb`,
+      ],
       fileCount: files.length,
       totalBytes: files.reduce((sum, file) => sum + file.bytes, 0),
       treeSha256: canonicalTreeDigest(files),
@@ -239,47 +357,62 @@ export async function refreshLock() {
     },
     externalBundles: [
       {
-        id: "iter-high-detail-v1",
+        id: ITER_BUNDLE_ID,
         title: "ITER reviewed high-detail browser visualization derivative",
         classification: "PUBLIC_VISUALIZATION_DERIVATIVE",
         engineeringUseAllowed: false,
         sourceCadIncluded: false,
         licensePath: "public/licenses/ITER-PUBLIC-VISUALIZATION-DERIVATIVE.txt",
-        destinationRoot: DEFAULT_DESTINATION,
-        stageDirectoryName: DEFAULT_STAGE_DIRECTORY,
+        destinationRoot: ITER_DESTINATION,
+        stageDirectoryName: ITER_STAGE_DIRECTORY,
         routeRoot: "/device-assets/iter-high-detail/v1",
         acquisition: {
           defaultBaseUrl: iter.defaultBaseUrl,
-          baseUrlEnv: BASE_URL_ENV,
-          sourceDirEnv: SOURCE_DIR_ENV,
+          baseUrlEnv: ITER_BASE_URL_ENV,
+          sourceDirEnv: ITER_SOURCE_DIR_ENV,
         },
         fileCount: iter.files.length,
         totalBytes: iter.totalBytes,
         aggregateSha256: canonicalBundleDigest(iter.files),
         files: iter.files,
       },
+      ...(exl50uGeneralAssembly ? [{
+        id: EXL50U_GA_BUNDLE_ID,
+        title: "EXL-50U integrated-assembly anonymous browser visualization derivative",
+        classification: "PUBLIC",
+        redistributionAllowed: true,
+        engineeringUseAllowed: false,
+        sourceCadIncluded: false,
+        licensePath: `${EXL50U_GA_DESTINATION}/PUBLICATION-NOTICE.md`,
+        destinationRoot: EXL50U_GA_DESTINATION,
+        stageDirectoryName: EXL50U_GA_BUNDLE_ID,
+        routeRoot: EXL50U_GA_ROUTE_ROOT,
+        acquisition: {
+          defaultBaseUrl: null,
+          baseUrlEnv: EXL50U_GA_BASE_URL_ENV,
+          sourceDirEnv: EXL50U_GA_SOURCE_DIR_ENV,
+        },
+        fileCount: exl50uGeneralAssembly.files.length,
+        totalBytes: exl50uGeneralAssembly.totalBytes,
+        aggregateSha256: canonicalBundleDigest(exl50uGeneralAssembly.files),
+        files: exl50uGeneralAssembly.files,
+      }] : []),
     ],
   };
+  validateRuntimeAssetLock(lock);
   await mkdir(dirname(LOCK_PATH), { recursive: true });
   await writeFile(LOCK_PATH, `${JSON.stringify(lock, null, 2)}\n`, "utf8");
   console.log(
     `Refreshed ${toPosix(relative(REPO_ROOT, LOCK_PATH))}: `
-      + `${files.length} Git assets, ${iter.files.length} external assets.`,
+      + `${files.length} Git assets, ${lock.externalBundles.length} external bundle(s), `
+      + `${lock.externalBundles.reduce((sum, bundle) => sum + bundle.fileCount, 0)} external assets.`,
   );
   return lock;
 }
 
 export async function loadLock() {
   const lock = JSON.parse(await readFile(LOCK_PATH, "utf8"));
-  if (lock?.schemaVersion !== "fusiondigital.runtime-assets.v1") {
-    throw new Error("Unsupported or missing runtime asset lock schemaVersion");
-  }
-  if (!Array.isArray(lock?.gitAssets?.files) || !Array.isArray(lock?.externalBundles)) {
-    throw new Error("Runtime asset lock is incomplete");
-  }
-  if (lock.externalBundles.length !== 1 || lock.externalBundles[0].id !== "iter-high-detail-v1") {
-    throw new Error("Runtime asset lock must contain exactly the ITER high-detail v1 external bundle");
-  }
+  validateRuntimeAssetLock(lock);
   return lock;
 }
 
@@ -339,31 +472,27 @@ async function verifyTracked(lock, { throwOnError = true } = {}) {
   return { ok: failures.length === 0, verified: files.length - failures.length, failures };
 }
 
-function iterBundle(lock) {
-  const bundle = lock.externalBundles[0];
-  assertRelativeRepositoryPath(bundle.destinationRoot, "External bundle destinationRoot");
-  if (
-    bundle.fileCount !== EXPECTED_ITER_COMPONENTS
-    || bundle.files.length !== EXPECTED_ITER_COMPONENTS
-    || bundle.totalBytes !== EXPECTED_ITER_BYTES
-    || bundle.files.reduce((sum, file) => sum + file.bytes, 0) !== EXPECTED_ITER_BYTES
-    || canonicalBundleDigest(bundle.files) !== bundle.aggregateSha256
-    || bundle.sourceCadIncluded !== false
-  ) {
-    throw new Error("ITER external bundle summary is invalid");
+export function validateExternalBundleContract(bundle) {
+  return validateRuntimeAssetBundle(bundle);
+}
+
+export function selectExternalBundle(lock, id = ITER_BUNDLE_ID) {
+  const bundle = lock.externalBundles.find((candidate) => candidate.id === id);
+  if (!bundle) {
+    if (id === EXL50U_GA_BUNDLE_ID) {
+      throw new Error(`${id} is not activated; keep the catalog metadata-only until reviewed hashes exist`);
+    }
+    throw new Error(`Unknown or inactive external runtime bundle: ${id}`);
   }
+  validateExternalBundleContract(bundle);
   return bundle;
 }
 
-async function verifyExternal(lock, { throwOnError = true } = {}) {
-  const bundle = iterBundle(lock);
+async function verifyExternalBundle(bundle, { throwOnError = true } = {}) {
   const destination = resolveRepositoryPath(bundle.destinationRoot, "External bundle destinationRoot");
   const failures = [];
   let verified = 0;
   for (const file of bundle.files) {
-    if (file.filename.includes("/") || file.filename.includes("\\")) {
-      throw new Error(`Unsafe external asset filename: ${file.filename}`);
-    }
     const result = await inspectLockedFile(join(destination, file.filename), file);
     if (result.ok) verified += 1;
     else failures.push({ filename: file.filename, ...result });
@@ -372,10 +501,15 @@ async function verifyExternal(lock, { throwOnError = true } = {}) {
     const sample = failures.slice(0, 5).map((item) => `${item.filename} (${item.state})`).join(", ");
     throw new Error(`External runtime assets failed verification: ${sample}`);
   }
-  return { ok: failures.length === 0, verified, failures };
+  return { id: bundle.id, ok: failures.length === 0, verified, failures };
 }
 
-async function verifyCommand({ trackedOnly = false } = {}) {
+async function verifyExternal(lock, { throwOnError = true, bundleId } = {}) {
+  const bundles = bundleId ? [selectExternalBundle(lock, bundleId)] : lock.externalBundles;
+  return Promise.all(bundles.map((bundle) => verifyExternalBundle(bundle, { throwOnError })));
+}
+
+async function verifyCommand({ trackedOnly = false, bundle } = {}) {
   const lock = await loadLock();
   const tracked = await verifyTracked(lock);
   console.log(
@@ -383,30 +517,35 @@ async function verifyCommand({ trackedOnly = false } = {}) {
       + `(${formatBytes(lock.gitAssets.totalBytes)}).`,
   );
   if (trackedOnly) return;
-  const bundle = iterBundle(lock);
-  const external = await verifyExternal(lock);
-  console.log(
-    `Verified ${external.verified}/${bundle.fileCount} ${bundle.id} assets `
-      + `(${formatBytes(bundle.totalBytes)}).`,
-  );
+  const external = await verifyExternal(lock, { bundleId: bundle });
+  for (const result of external) {
+    const bundle = selectExternalBundle(lock, result.id);
+    console.log(
+      `Verified ${result.verified}/${bundle.fileCount} ${bundle.id} assets `
+        + `(${formatBytes(bundle.totalBytes)}).`,
+    );
+  }
 }
 
 async function statusCommand() {
   const lock = await loadLock();
   const tracked = await verifyTracked(lock, { throwOnError: false });
-  const bundle = iterBundle(lock);
   const external = await verifyExternal(lock, { throwOnError: false });
   console.log(`Git assets     ${tracked.ok ? "ready" : "drift"}  ${tracked.verified}/${lock.gitAssets.fileCount}`);
-  console.log(`ITER HD assets ${external.ok ? "ready" : "missing/incomplete"}  ${external.verified}/${bundle.fileCount}`);
-  console.log(`ITER target    ${bundle.destinationRoot}`);
-  console.log(
-    `Acquisition   npm run assets:hydrate (HTTPS), or --source-dir / ${bundle.acquisition.sourceDirEnv}`,
-  );
+  for (const result of external) {
+    const bundle = selectExternalBundle(lock, result.id);
+    console.log(`${bundle.id.padEnd(21)} ${result.ok ? "ready" : "missing/incomplete"}  ${result.verified}/${bundle.fileCount}`);
+    console.log(`  target       ${bundle.destinationRoot}`);
+    console.log(`  acquisition  npm run assets:hydrate -- --bundle ${bundle.id} --source-dir DIR`);
+  }
+  if (!lock.externalBundles.some((bundle) => bundle.id === EXL50U_GA_BUNDLE_ID)) {
+    console.log(`${EXL50U_GA_BUNDLE_ID.padEnd(21)} metadata-only (no reviewed formal hashes)`);
+  }
   if (!tracked.ok) {
     for (const item of tracked.failures.slice(0, 5)) console.log(`  git: ${item.path} [${item.state}]`);
   }
-  if (!external.ok) {
-    for (const item of external.failures.slice(0, 5)) console.log(`  iter: ${item.filename} [${item.state}]`);
+  for (const result of external.filter((item) => !item.ok)) {
+    for (const item of result.failures.slice(0, 5)) console.log(`  ${result.id}: ${item.filename} [${item.state}]`);
   }
 }
 
@@ -459,7 +598,7 @@ export async function verifyOfflineSource(source, file) {
   }
 }
 
-async function installOne({ file, destination, sourceDir, baseUrl }) {
+async function installOne({ file, destination, sourceDir, baseUrl, stageDirectoryName }) {
   const target = join(destination, file.filename);
   const present = await inspectLockedFile(target, file);
   if (present.ok) return { state: "skipped", filename: file.filename };
@@ -468,7 +607,7 @@ async function installOne({ file, destination, sourceDir, baseUrl }) {
   try {
     if (sourceDir) {
       const direct = join(sourceDir, file.filename);
-      const staged = join(sourceDir, DEFAULT_STAGE_DIRECTORY, file.filename);
+      const staged = join(sourceDir, stageDirectoryName, file.filename);
       const source = (await exists(direct)) ? direct : staged;
       if (!(await exists(source))) throw new Error(`Offline source file is missing: ${file.filename}`);
       // Validate the source before copy so a wrong or unexpectedly large file
@@ -495,9 +634,7 @@ async function installOne({ file, destination, sourceDir, baseUrl }) {
         if (!response.ok || !response.body) {
           throw new Error(`Download failed (${response.status}) for ${file.filename}`);
         }
-        if (new URL(response.url).protocol !== "https:") {
-          throw new Error(`Download redirected away from HTTPS for ${file.filename}`);
-        }
+        assertControlledAssetResponseUrl(response.url, url);
         const contentLength = response.headers.get("content-length");
         if (contentLength && Number(contentLength) !== file.bytes) {
           controller.abort();
@@ -545,11 +682,11 @@ async function runPool(items, concurrency, task) {
 async function hydrateCommand(options) {
   const lock = await loadLock();
   await verifyTracked(lock);
-  const bundle = iterBundle(lock);
+  const bundle = selectExternalBundle(lock, options.bundle);
   const destination = resolveRepositoryPath(bundle.destinationRoot, "External bundle destinationRoot");
   await mkdir(destination, { recursive: true });
 
-  const sourceDirValue = options.sourceDir ?? process.env[SOURCE_DIR_ENV];
+  const sourceDirValue = options.sourceDir ?? process.env[bundle.acquisition.sourceDirEnv];
   const sourceDir = sourceDirValue ? resolve(sourceDirValue) : undefined;
   if (sourceDir && !(await exists(sourceDir))) {
     throw new Error(`Offline source directory does not exist: ${sourceDir}`);
@@ -557,7 +694,8 @@ async function hydrateCommand(options) {
   const baseUrl = sourceDir
     ? undefined
     : normalizeHttpsBaseUrl(
-      options.baseUrl ?? process.env[BASE_URL_ENV] ?? bundle.acquisition.defaultBaseUrl,
+      options.baseUrl ?? process.env[bundle.acquisition.baseUrlEnv] ?? bundle.acquisition.defaultBaseUrl
+        ?? (() => { throw new Error(`${bundle.id} requires --base-url, ${bundle.acquisition.baseUrlEnv}, or --source-dir`); })(),
     );
   const concurrency = Number(options.concurrency ?? 3);
   if (!Number.isInteger(concurrency) || concurrency < 1 || concurrency > 8) {
@@ -570,11 +708,12 @@ async function hydrateCommand(options) {
     destination,
     sourceDir,
     baseUrl,
+    stageDirectoryName: bundle.stageDirectoryName,
   }));
   const installed = results.filter((result) => result.state === "installed").length;
   const skipped = results.length - installed;
-  await verifyExternal(lock);
-  console.log(`ITER runtime assets ready: ${installed} installed, ${skipped} already verified.`);
+  await verifyExternalBundle(bundle);
+  console.log(`${bundle.id} runtime assets ready: ${installed} installed, ${skipped} already verified.`);
 }
 
 export async function validateStageOutput(output, bundle, { requireComplete = false } = {}) {
@@ -651,10 +790,10 @@ export async function validateStageOutput(output, bundle, { requireComplete = fa
 async function stageCommand(options) {
   const lock = await loadLock();
   await verifyTracked(lock);
-  await verifyExternal(lock);
-  const bundle = iterBundle(lock);
+  const bundle = selectExternalBundle(lock, options.bundle);
+  await verifyExternalBundle(bundle);
   const source = resolveRepositoryPath(bundle.destinationRoot, "External bundle destinationRoot");
-  const output = resolve(options.output ?? DEFAULT_STAGE_OUTPUT);
+  const output = resolve(options.output ?? `.runtime-assets/${bundle.stageDirectoryName}-stage`);
   if (output === REPO_ROOT || output === source) {
     throw new Error("Stage output must not be the repository root or hydrated asset directory");
   }
@@ -709,12 +848,12 @@ function parseArguments(argv) {
       options.trackedOnly = true;
       continue;
     }
-    const key = ["--base-url", "--source-dir", "--concurrency", "--output"]
+    const key = ["--bundle", "--base-url", "--source-dir", "--concurrency", "--output"]
       .find((candidate) => token === candidate || token.startsWith(`${candidate}=`));
     if (!key) throw new Error(`Unknown option: ${token}`);
     const { value, consumed } = takeValue(index, token);
     index += consumed;
-    options[{ "--base-url": "baseUrl", "--source-dir": "sourceDir", "--concurrency": "concurrency", "--output": "output" }[key]] = value;
+    options[{ "--bundle": "bundle", "--base-url": "baseUrl", "--source-dir": "sourceDir", "--concurrency": "concurrency", "--output": "output" }[key]] = value;
   }
   return { command, options };
 }
@@ -725,13 +864,14 @@ function printHelp() {
 Commands:
   status                         Report Git and external runtime asset readiness
   verify [--tracked-only]        Verify bytes and SHA-256 against the lock
-  hydrate [options]              Fetch or import the 18 ITER high-detail files
-  stage [--output <directory>]   Copy a verified upload-ready offline bundle
+  hydrate [options]              Fetch or import one selected external bundle
+  stage [options]                Copy one verified upload-ready offline bundle
   refresh-lock                   Regenerate the lock from Git, manifest, and worker allowlist
 
-Hydrate options:
-  --base-url <https-url>         HTTPS mirror; default can use ${BASE_URL_ENV}
-  --source-dir <directory>       Offline extracted bundle; default can use ${SOURCE_DIR_ENV}
+Bundle options (default remains ${ITER_BUNDLE_ID} for CLI compatibility):
+  --bundle <id>                  ${ITER_BUNDLE_ID} or ${EXL50U_GA_BUNDLE_ID}
+  --base-url <https-url>         HTTPS mirror; bundle-specific default/env is in the lock
+  --source-dir <directory>       Offline extracted bundle; bundle-specific env is in the lock
   --concurrency <1-8>            Concurrent HTTPS downloads (default: 3)
 `);
 }

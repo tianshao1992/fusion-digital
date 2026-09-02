@@ -3,6 +3,16 @@ import { createHash } from 'node:crypto';
 import { readFile, readdir, stat } from 'node:fs/promises';
 import test from 'node:test';
 
+async function pathExists(url) {
+  try {
+    await stat(url);
+    return true;
+  } catch (error) {
+    if (error?.code === 'ENOENT') return false;
+    throw error;
+  }
+}
+
 async function render(pathname = '/', headers = {}) {
   const workerUrl = new URL('../dist/server/index.js', import.meta.url);
   workerUrl.searchParams.set('test', `${process.pid}-${Date.now()}-${pathname}`);
@@ -270,7 +280,7 @@ test('ships a closed, public DeviceManifest for the CAD viewer', async () => {
   assert.equal(manifest.schemaVersion, '1.1');
   assert.equal(manifest.access.classification, 'PUBLIC');
   assert.equal(manifest.access.redistributionAllowed, true);
-  assert.deepEqual(schema.properties.schemaVersion.enum, ['1.1', '1.2', '1.3']);
+  assert.deepEqual(schema.properties.schemaVersion.enum, ['1.1', '1.2', '1.3', '1.4']);
   const parts = manifest.systems.flatMap((system) => system.parts);
   assert.equal(parts.length, 17);
   assert.equal(new Set(parts.map((part) => part.id)).size, parts.length);
@@ -548,16 +558,22 @@ test('homepage owns the public full-device digital-prototype workspace', async (
   }
   assert.equal(catalog.securityPolicy.showDownloadActions, false);
   assert.equal(catalog.securityPolicy.sourceCadDelivered, false);
-  assert.equal(catalog.devices.filter((device) => device.viewer.manifestEndpoint !== null).length, 4);
+  const formalGeneralAssembly = await pathExists(
+    new URL('../public/models/exl50u-general-assembly-v1/model-manifest.json', import.meta.url),
+  );
+  assert.equal(catalog.devices.filter((device) => device.viewer.manifestEndpoint !== null).length,
+    formalGeneralAssembly ? 5 : 4);
   const generalAssembly = catalog.devices.find((device) => device.id === 'exl50u-general-assembly-20260630');
-  assert.equal(generalAssembly.delivery, 'local-only');
-  assert.equal(generalAssembly.viewer.mode, 'metadata-only');
-  assert.equal(generalAssembly.viewer.manifestEndpoint, null);
+  assert.equal(generalAssembly.delivery, formalGeneralAssembly ? 'public-static' : 'local-only');
+  assert.equal(generalAssembly.viewer.mode, formalGeneralAssembly ? 'real-3d' : 'metadata-only');
+  assert.equal(generalAssembly.viewer.manifestEndpoint,
+    formalGeneralAssembly ? '/models/exl50u-general-assembly-v1/model-manifest.json' : null);
   assert.equal(generalAssembly.viewer.turntableManifestEndpoint, null);
   assert.equal(generalAssembly.viewer.overlayEligible, false);
   assert.equal(generalAssembly.physicsOverlays.length, 0);
   assert.equal(generalAssembly.diagnosticWorkspace, null);
-  assert.match(generalAssembly.fileSummary, /当前无可加载 GLB/);
+  if (formalGeneralAssembly) assert.doesNotMatch(generalAssembly.fileSummary, /当前无可加载 GLB/);
+  else assert.match(generalAssembly.fileSummary, /当前无可加载 GLB/);
   const exl = catalog.devices.find((device) => device.id === 'exl-50u-2026-upgrade');
   assert.equal(exl.delivery, 'public-static');
   assert.equal(exl.viewer.mode, 'real-3d');

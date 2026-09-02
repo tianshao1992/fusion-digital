@@ -28,6 +28,10 @@ never the normal conversion input. Export one private STEP per approved public
 system from the authoritative CAD workstation. Each export must retain the
 same world placement and common origin; it must not be re-centred. Do not
 export PMI, drawings, BOM tables, author metadata, or source filesystem paths.
+The browser derivative retains the common-origin geometry's approximate metre
+scale for visual framing. That does not publish PMI, dimension annotations or
+authoritative dimension tables, and the resulting coordinates must not be used
+for measurement, design or manufacturing.
 
 The private mapping from source files to the generic public system IDs in
 `profile.public.json` stays beside the source evidence and never enters Git or
@@ -256,6 +260,11 @@ new digital-prototype card.
 The original STEP and all private audit/scratch/raw files must never be copied
 into `public/`, `.openai/`, a Sites archive, an Aliyun release archive, GitHub
 or Codeup.
+
+Published visualization coordinates and bounds retain an approximate metre
+scale for appearance review; they are not an engineering-dimensional authority.
+Publication excludes PMI, dimension annotations and authoritative dimension
+tables, rather than claiming that browser-visible geometry is scale-free.
 
 The monolithic whole-device STEP is intentionally not converted by this
 pipeline. Until the eight authoritative, common-origin system exports exist,

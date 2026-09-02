@@ -40,7 +40,7 @@ byte count and SHA-256. A complete local or internal deployment restores them
 with:
 
 ```bash
-npm run assets:hydrate
+npm run assets:hydrate -- --bundle iter-high-detail-v1 --source-dir "/reviewed/iter-high-detail-v1"
 npm run assets:verify
 ```
 
@@ -55,8 +55,12 @@ npm run assets:verify
 ```
 
 Sites is built from a clean checkout without the hydrated 18-file directory so
-the static archive remains below its roughly 256 MiB limit. The production
-Worker can use `ITER_HIGH_DETAIL_ASSET_BASE_URL` for a stable runtime mirror.
+the static archive remains below its roughly 256 MiB limit. The Worker has no
+default network source. It can use an explicitly configured
+`ITER_HIGH_DETAIL_ASSET_BASE_URL` only when it exactly matches
+`https://raw.githubusercontent.com/tianshao1992/fusion-physics-atlas-assets/<lowercase-40-hex-commit>/iter-high-detail-v1`.
+Branches, tags, short SHAs, other repositories, redirects and final-URL drift are
+rejected; ordinary GitHub Release URLs are therefore not valid runtime mirrors.
 Internal self-contained deployments hydrate before build and use the local-first
 path. Both modes expose the same reviewed same-origin routes and enforce the same
 allow-list. See [runtime asset bootstrap](./ASSET_BOOTSTRAP.md) for Codeup SSH,

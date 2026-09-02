@@ -284,11 +284,13 @@ test('catalog keeps ITER fail-closed until the complete public preview package i
 
 test('viewer supports a verified component-only model while preserving 18-node selection', async () => {
   const viewer = await readFile(new URL('../app/components/TokamakCadViewer.tsx', import.meta.url), 'utf8');
+  const viewerChoices = await readFile(new URL('../app/components/device-viewer/viewerModelChoices.ts', import.meta.url), 'utf8');
   const workspace = await readFile(new URL('../app/digital-prototype/MultiDeviceWorkspace.tsx', import.meta.url), 'utf8');
 
-  assert.match(viewer, /const compatibilityModels = manifest\.assets\.webModel \?/,
+  assert.match(viewerChoices, /const compatibilityModels = manifest\.assets\.webModel \?/,
     'the viewer must not synthesize a standard model when the manifest is component-only');
-  assert.match(viewer, /Boolean\(preview\)[\s\S]*shouldPreferPreview\(\)/,
+  assert.match(viewer, /initialViewerModelChoice\(variants, shouldPreferPreview\(\)\)/);
+  assert.match(viewerChoices, /preferPreviewForConstrainedDevice[\s\S]*&& preview[\s\S]*&& declaredDefault/,
     'resource hints may constrain only manifests that actually publish a preview');
   assert.match(viewer, /disabled=\{status === 'loading' && selectedModel\?\.id === asset\.id\}/,
     'a user must be able to cancel a large in-flight LOD by selecting the other model');

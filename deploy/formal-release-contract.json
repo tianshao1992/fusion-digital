@@ -22,6 +22,66 @@
     "requiredStatus": "succeeded",
     "build": { "target": "sites" }
   },
+  "externalRuntimeAssets": {
+    "schema": "fusiondigital.external-runtime-assets-v1",
+    "evidenceSchema": "fusiondigital.external-runtime-assets-evidence-v1",
+    "lockPath": "assets/runtime-assets.lock.json",
+    "installerVerifierPath": "deploy/aliyun-hk/verify-runtime-assets.mjs",
+    "responseHeaders": {
+      "contentType": "model/gltf-binary",
+      "contentEncoding": "identity",
+      "cacheControl": "public, max-age=31536000, immutable",
+      "acceptRanges": "bytes"
+    },
+    "hongKong": {
+      "delivery": "local-hydrated",
+      "verifyEveryFile": true,
+      "rangeProbeEveryBundle": true,
+      "contentEncoding": "identity",
+      "unknownPathStatus": 404
+    },
+    "sites": {
+      "delivery": "strict-allowlist-local-first-https-fallback",
+      "hydrated": false,
+      "verifyEveryFile": true,
+      "rangeProbeEveryBundle": true,
+      "fallbackProbeEveryBundle": true,
+      "unknownPathStatus": 404,
+      "archiveLimitBytes": 268435456,
+      "mirror": {
+        "provider": "github-raw-fixed-commit",
+        "origin": "https://raw.githubusercontent.com",
+        "repositoryPath": "tianshao1992/fusion-physics-atlas-assets",
+        "commitShaPattern": "^[0-9a-f]{40}$",
+        "bundlePathPolicy": "exact-bundle-id",
+        "requireNoRedirects": true
+      }
+    },
+    "bundles": [
+      {
+        "id": "iter-high-detail-v1",
+        "activation": "required",
+        "routeRoot": "/device-assets/iter-high-detail/v1",
+        "fileCount": 18,
+        "totalBytes": 98507692,
+        "sourceDirEnv": "FUSION_ASSET_SOURCE_DIR",
+        "baseUrlEnv": "FUSION_ASSET_BASE_URL"
+      },
+      {
+        "id": "exl50u-general-assembly-v1",
+        "activation": "catalog-real-3d",
+        "catalogDeviceId": "exl50u-general-assembly-20260630",
+        "manifestEndpoint": "/models/exl50u-general-assembly-v1/model-manifest.json",
+        "routeRoot": "/device-assets/exl50u-general-assembly/v1",
+        "fileCount": 21,
+        "shardCount": 20,
+        "maxTotalBytes": 314572800,
+        "runtimeSynthesizedRoot": "EXL50U_GA_VISUALIZATION",
+        "sourceDirEnv": "FUSION_EXL50U_GA_ASSET_SOURCE_DIR",
+        "baseUrlEnv": "FUSION_EXL50U_GA_ASSET_BASE_URL"
+      }
+    ]
+  },
   "sharedContent": {
     "schema": "fusiondigital.shared-content-v1",
     "paths": [
@@ -44,6 +104,18 @@
       "/data/exl50u-mdsplus-snapshot-v1/shot-20836.jsonl.gz",
       "/models/iter-public-simplified/model-manifest.json",
       "/device-assets/iter-high-detail/v1/cryostat-base.f4daa0cabe2cdc3fb44057d57c5b5863c295015b2d692ea34f86cc7a96a9a34e.high.meshopt.glb"
+    ],
+    "conditionalPaths": [
+      {
+        "activation": "external-runtime-bundle-active",
+        "bundleId": "exl50u-general-assembly-v1",
+        "path": "/models/exl50u-general-assembly-v1/model-manifest.json"
+      },
+      {
+        "activation": "external-runtime-bundle-active",
+        "bundleId": "exl50u-general-assembly-v1",
+        "path": "/models/exl50u-general-assembly-v1/PUBLICATION-NOTICE.md"
+      }
     ]
   },
   "forbiddenSitesCustomDomains": [

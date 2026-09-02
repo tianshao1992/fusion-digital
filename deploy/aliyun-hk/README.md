@@ -66,6 +66,8 @@ dist/
 package.json
 node_modules/vinext/
 deploy/aliyun-hk/server.mjs
+deploy/aliyun-hk/verify-runtime-assets.mjs
+assets/runtime-assets.lock.json
 ```
 
 `vinext` 是开发依赖，因此服务器执行 `npm ci --omit=dev` 后不能运行
@@ -94,9 +96,21 @@ npm run assets:verify:tracked
 # 仓库门禁要求外置 ITER 文件此时尚未进入 public；先在干净树上完成全量检查。
 npm run check
 
-# 国内稳定部署必须把 ITER 18 个高清分片纳入 dist。若原工作区已经 hydrate，
-# 优先从已校验目录导入；否则直接运行 npm run assets:hydrate。
-npm run assets:hydrate -- --source-dir "$Repo\public\models\iter-high-detail-v1"
+# 香港稳定部署必须把每个已激活外置 bundle 纳入 dist；每个 bundle
+# 都显式指定独立的已审核离线目录，不存在网络默认值。
+npm run assets:hydrate -- --bundle iter-high-detail-v1 `
+  --source-dir "$Repo\public\models\iter-high-detail-v1"
+
+# 仅当版本化 lock 已包含 exl50u-general-assembly-v1 时执行；该 bundle 没有
+# 默认网络源，必须给出单独的已 QA source-dir 或显式 HTTPS base-url。
+$RuntimeLock = Get-Content "assets\runtime-assets.lock.json" -Raw | ConvertFrom-Json
+if ($RuntimeLock.externalBundles.id -contains "exl50u-general-assembly-v1") {
+  if (-not $env:FUSION_EXL50U_GA_RELEASE_SOURCE) {
+    throw "FUSION_EXL50U_GA_RELEASE_SOURCE is required for the activated EXL-50U bundle"
+  }
+  npm run assets:hydrate -- --bundle exl50u-general-assembly-v1 `
+    --source-dir $env:FUSION_EXL50U_GA_RELEASE_SOURCE
+}
 npm run assets:verify
 
 $env:NEXT_PUBLIC_FUSIONDIGITAL_MODE = "public-anonymous"
@@ -122,15 +136,10 @@ $ReleaseManifestJson = $ReleaseManifest | ConvertTo-Json -Compress
   [System.Text.UTF8Encoding]::new($false)
 )
 
-$IterFiles = Get-ChildItem "dist\client\models\iter-high-detail-v1" -File
-if ($IterFiles.Count -ne 18) {
-  throw "ITER high-detail bundle is incomplete"
-}
-if (($IterFiles | Measure-Object Length -Sum).Sum -ne 98507692) {
-  throw "ITER high-detail bundle has the wrong byte length"
-}
+node deploy/aliyun-hk/verify-runtime-assets.mjs .
 
-tar.exe -czf $Bundle dist package.json node_modules/vinext deploy/aliyun-hk .fusiondigital-release.json
+tar.exe -czf $Bundle dist package.json node_modules/vinext deploy/aliyun-hk `
+  assets/runtime-assets.lock.json .fusiondigital-release.json
 $BundleSha256 = (Get-FileHash -LiteralPath $Bundle -Algorithm SHA256).Hash.ToLowerInvariant()
 Write-Host "Bundle: $Bundle"
 Write-Host "Bundle SHA-256: $BundleSha256"
@@ -140,12 +149,106 @@ Write-Host "Commit: $Sha"
 若本机没有已 hydrate 的目录，改为：
 
 ```powershell
-npm run assets:hydrate
+npm run assets:hydrate -- --bundle iter-high-detail-v1 `
+  --source-dir "D:\controlled\iter-high-detail-v1"
+# EXL 激活后另行使用其独立、已复核的离线目录：
+npm run assets:hydrate -- --bundle exl50u-general-assembly-v1 `
+  --source-dir "D:\controlled\exl50u-general-assembly-v1"
 npm run assets:verify
 ```
 
-默认下载源是 GitHub Releases；必须在本地完成下载和 SHA-256 校验，再把文件随
-`dist` 上传。不要让国内用户浏览时回源 GitHub。
+两个 bundle 都没有默认网络源，必须显式提供各自的 `--source-dir`，或配置独立、已审核、
+无重定向并直接返回 `200/206` 的不可变 HTTPS 镜像。GitHub Releases 的常规下载 URL
+会 `302` 到另一 origin，按 fail-closed 合同必须拒绝，不能再作为默认值。ITER 使用
+`FUSION_ASSET_SOURCE_DIR` / `FUSION_ASSET_BASE_URL`；EXL-50U 总装使用独立的
+`FUSION_EXL50U_GA_ASSET_SOURCE_DIR` / `FUSION_EXL50U_GA_ASSET_BASE_URL`。两个 bundle
+不能共用、猜测目录或让国内用户浏览时临时回源。
+
+### 2.1 EXL-50U 总装正式激活（当前仓库仍为 metadata-only）
+
+只有 21 个公开匿名 GLB（1 个 preview + 20 个高精度运输分片）全部完成 QA 后，才执行
+下列一次性激活。项目器只读取公开派生 manifest 与 GLB，不读取 STEP、BOM、PMI 或源
+装配标签；GLB JSON 必须没有任意 `name` / `extras`，唯一公开根名
+`EXL50U_GA_VISUALIZATION` 由运行时合成，不写回 GLB。正式格式固定为 Float32 POSITION、
+normalized Int8 NORMAL、Uint32 indices、Meshopt 与 GPU instancing。
+
+```powershell
+$Reviewed = "D:\controlled\exl50u-ga-reviewed"       # 仓库外，只含已 QA 公开派生
+$Projected = "D:\controlled\exl50u-ga-release-v1"   # 必须是不存在的新目录
+
+npm run assets:project-exl50u-general-assembly -- `
+  --derivative-manifest "$Reviewed\public-derivative-manifest.json" `
+  --asset-dir $Reviewed --output $Projected --as-of YYYY-MM-DD
+
+# 人工复核投影 manifest/notice 不含私有元数据后，只把这两个小文件纳入 Git。
+New-Item -ItemType Directory -Force "public\models\exl50u-general-assembly-v1" | Out-Null
+Copy-Item "$Projected\model-manifest.json" "public\models\exl50u-general-assembly-v1\model-manifest.json"
+Copy-Item "$Projected\PUBLICATION-NOTICE.md" "public\models\exl50u-general-assembly-v1\PUBLICATION-NOTICE.md"
+
+npm run assets:generate-exl50u-general-assembly-allowlist
+$CatalogCandidate = "D:\controlled\device-catalog.exl50u-ga.activated.json" # 必须不存在
+npm run assets:activate-exl50u-general-assembly-catalog -- `
+  --catalog "public\models\device-catalog.json" `
+  --manifest "$Projected\model-manifest.json" `
+  --output $CatalogCandidate
+# 人工复核候选后，以候选完整替换 public/models/device-catalog.json。激活器会拒绝
+# ASSETS PENDING、无 GLB、八系统、共同原点/common-origin 等旧管线文案，并固定
+# online-public-simplified / public-static / real-3d 与正式 manifestEndpoint。
+# 先精确暂存新 manifest/notice、已复核 catalog 和生成白名单；refresh-lock 只枚举
+# git ls-files，未暂存的新文件不会进入 Git-managed runtime lock。禁止使用 git add .。
+git add -- "public/models/exl50u-general-assembly-v1/model-manifest.json" `
+  "public/models/exl50u-general-assembly-v1/PUBLICATION-NOTICE.md" `
+  "public/models/device-catalog.json" `
+  "worker/exl50u-general-assembly-assets.generated.ts"
+npm run assets:refresh-lock
+git add -- "assets/runtime-assets.lock.json"
+npm run assets:hydrate -- --bundle exl50u-general-assembly-v1 --source-dir $Projected
+npm run assets:verify
+node --test tests/external-runtime-bundle-contract.test.mjs tests/runtime-assets.test.mjs
+```
+
+`public/models/exl50u-general-assembly-v1/model-manifest.json` 是否存在是仓库测试的正式状态开关。
+激活提交必须在同一提交中加入该 manifest，并同步替换 catalog、生成精确 Worker 白名单、
+把 EXL bundle 写入 runtime lock；不能通过临时移走 manifest 让测试退回 metadata-only。
+下列五组验收会据此进入 **active 分支**，验证 real-3d catalog、manifest endpoint、21 文件
+白名单与 runtime lock 相干；manifest 不存在时则严格要求 metadata-only、空白名单且 lock
+未激活。八系统私有转换管线由独立测试继续验证，不能替代正式匿名派生的 active 验收。
+
+```powershell
+node --test tests/external-runtime-bundle-contract.test.mjs `
+  tests/exl50u-general-assembly.test.mjs tests/rendered-html.test.mjs tests/efit-ui.test.mjs
+npx tsx --test tests/exl50u-anonymous-shard-viewer.test.mts
+```
+
+不要复制或 Git add `$Projected\*.glb`；`.gitignore` 与 lock 只允许跟踪 manifest、公告、
+生成白名单和真实摘要锁。Sites 构建不 hydrate 这两个外置缓存，postbuild 会删除两类
+GLB 并保持展开包小于 256 MiB；其运行时值
+`EXL50U_GENERAL_ASSEMBLY_ASSET_BASE_URL` 必须精确配置为
+`https://raw.githubusercontent.com/tianshao1992/fusion-physics-atlas-assets/<40位小写提交SHA>/exl50u-general-assembly-v1`；
+不得使用其他仓库、分支/tag/短 SHA、香港生产域名、Sites 域名或任何会重定向的
+Releases 下载地址。ITER Worker 对应变量是
+`ITER_HIGH_DETAIL_ASSET_BASE_URL`，EXL Worker 对应变量是
+`EXL50U_GENERAL_ASSEMBLY_ASSET_BASE_URL`。Worker 先尝试本地精确文件，再代理显式目录；
+白名单以外路径始终 404。香港构建则保留两类缓存并逐文件复核字节数与 SHA-256。
+投影后的 DeviceManifest 还必须保留匿名 `derivationEvidence`：实际选中的尝试与
+preview/high 比例、QEM 收据数量与摘要、target-miss/保留不可约几何计数，以及
+renderable/skipped 与 preview/high 零缺失覆盖对账；这些字段不得包含源路径、零件名、
+BOM、PMI 或装配树。
+
+公开 GLB 和 manifest 的 `boundsMetres` 会保留用于浏览器取景的近似米制尺度。公开包排除的
+是源 CAD、PMI、尺寸标注和权威尺寸表，而不是声称可视几何没有尺度；这些近似坐标与包围盒
+只能用于外观展示，不得作为测量、设计、制造或任何工程尺寸依据。
+
+EXL-50U 正式 manifest 的访问策略在 schema、投影器、运行时提取器、catalog 激活器、
+runtime lock 与香港安装器各层都必须精确为 `classification=PUBLIC`、
+`redistributionAllowed=true`、`engineeringUseAllowed=false`。任何一层出现 `INTERNAL`、
+不可再分发、源 CAD 声明或工程用途声明，都必须阻断激活和安装，不能由另一层兜底放行。
+
+两个 Worker `*_ASSET_BASE_URL` 只接受上述固定 raw origin/repository、40 位小写完整
+提交 SHA 和精确 bundle id；userinfo、query、fragment、编码路径或尾随额外段均拒绝。
+Worker 使用 `redirect: manual`，任何 3xx、`Response.redirected=true` 或最终 URL 与
+期望的 origin/repository/commit/bundle/filename 不完全一致都返回失败。runtime lock、
+formal pair evidence 与两份发布文档使用同一口径。
 
 上传时使用已经验证的服务器 SSH 访问方式，不要把私钥、密码或临时凭证放入仓库或
 命令记录。每台开发机必须使用自己的 SSH 密钥，不能从另一台机器、聊天或网盘复制
@@ -192,8 +295,12 @@ if ($LASTEXITCODE -ne 0) {
 合同，并与应用发布变更分开提交。
 
 必须始终调用仓库内的安装器，而不是手工覆盖 current、systemd 和 Nginx。安装器会
-核对完整提交 SHA、包 SHA-256、ITER 字节数、EFIT 入口、每个 gzip sidecar 的解压
-字节一致性，并在已有证书时从版本化模板恢复 HTTPS/HTTP2 配置：
+核对完整提交 SHA、包 SHA-256、runtime lock、每个已激活外置 bundle 的逐文件字节数与
+SHA-256、EFIT 入口、每个 gzip sidecar 的解压字节一致性，并在已有证书时从版本化模板
+恢复 HTTPS/HTTP2 配置。metadata-only 状态会递归检查整个 `dist/client`，拒绝放在任意
+其他目录中的 EXL bundle、1.4 formal manifest 或摘要命名匿名 GLB；安装器还会把全部
+`dist/client/**/*.glb` 与 Git/external lock 的精确 path、字节和 SHA-256 对账。Nginx 的
+所有 GLB `location =` 只能从完整校验后的 runtime lock 逐文件渲染，不能用目录或正则放宽：
 
 ```bash
 sudo bash /tmp/install-fusiondigital-release.sh \
@@ -263,7 +370,7 @@ sudo install -d -m 0750 -o root -g fusiondigital \
 
 唯一允许的安装入口是第 2 节上传的版本化 `install-release.sh`。不得手工解包、直接
 修改 `/srv/fusiondigital/current`、复制 `nginx.conf` 或覆盖 systemd unit；这些旁路
-会跳过归档安全检查、并发锁、gzip/ITER/EFIT 门禁、TLS renderer 与事务回滚。
+会跳过归档安全检查、并发锁、gzip/外置资产/EFIT 门禁、TLS renderer 与事务回滚。
 
 第 3 节初始化与包管理只执行一次；日常 release 安装器不会运行 `apt`、改 NodeSource、
 swap 或用户组。安装器使用完整 SHA 建立不可变 release，在写入任何 Nginx/systemd 配置前备份当前
@@ -459,6 +566,19 @@ ITER Range 请求应返回 206 和 `Content-Range`：
 curl -fsSI -H 'Range: bytes=0-1023' \
   'https://fusiondigital.club/device-assets/iter-high-detail/v1/cs.d1a8a1b30b9da86cd5d428012c3ce599fb16eca0b4778da3507bd26ceba78cdb.high.meshopt.glb'
 ```
+
+安装器会从 lock 对 ITER 以及已激活的 EXL-50U bundle 各选一个真实摘要路径，强制验证
+`206`、精确 `Content-Length` / `Content-Range`、identity 编码、immutable cache 和全部
+安全头。手工复核 EXL 路径时从 lock 读取，不能填占位摘要：
+
+```bash
+EXL_ROUTE=$(node -e 'const x=require("./assets/runtime-assets.lock.json"); console.log(x.externalBundles.find((b)=>b.id==="exl50u-general-assembly-v1")?.files[0]?.route ?? "")')
+test -z "$EXL_ROUTE" || curl -fsSI -H 'Accept-Encoding: gzip' -H 'Range: bytes=0-1023' "https://fusiondigital.club$EXL_ROUTE"
+curl -sS -o /dev/null -w '%{http_code}\n' \
+  https://fusiondigital.club/device-assets/exl50u-general-assembly/v1/unknown.glb
+```
+
+第一条在 bundle 尚未正式激活时为空；第二条必须始终返回 `404`。
 
 安全边界应返回 404，即使客户端伪造平台身份头：
 

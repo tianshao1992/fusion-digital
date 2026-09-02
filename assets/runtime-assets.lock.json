@@ -5,11 +5,12 @@
     "root": "public",
     "acquisition": "git",
     "excludes": [
-      "public/models/iter-high-detail-v1/"
+      "public/models/iter-high-detail-v1/",
+      "public/models/exl50u-general-assembly-v1/*.glb"
     ],
     "fileCount": 424,
-    "totalBytes": 261001276,
-    "treeSha256": "dc0dc1b4cd7f39a82d390386b1ed06e788a0fe38cdb252f7b4ffa11dae998b02",
+    "totalBytes": 261010153,
+    "treeSha256": "f4d409ded3043de62626bb04dc3eb3004be2ed61e3f440aac0ba1d87d3e5ad3e",
     "files": [
       {
         "path": "public/FusionDigital-technical-roadmap-2026-08-15.docx",
@@ -1613,8 +1614,8 @@
       },
       {
         "path": "public/models/device-manifest.schema.json",
-        "bytes": 12562,
-        "sha256": "527b5cbf2d5bdae5f570666110eb07bac01c379aac4cd12be5ec350de61f7052"
+        "bytes": 21439,
+        "sha256": "1bd5cc2039cc8cbfe4fbef7a8b816b540c318503cd2b49ecd17febfff35f70fb"
       },
       {
         "path": "public/models/ehl2-preliminary-v1/PUBLICATION-NOTICE.md",
@@ -2145,7 +2146,7 @@
       "stageDirectoryName": "iter-high-detail-v1",
       "routeRoot": "/device-assets/iter-high-detail/v1",
       "acquisition": {
-        "defaultBaseUrl": "https://github.com/tianshao1992/fusion-physics-atlas-assets/releases/download/iter-education-hd-v1",
+        "defaultBaseUrl": null,
         "baseUrlEnv": "FUSION_ASSET_BASE_URL",
         "sourceDirEnv": "FUSION_ASSET_SOURCE_DIR"
       },

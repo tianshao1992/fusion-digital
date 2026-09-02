@@ -1,0 +1,61 @@
+{
+  "schemaVersion": "1.4",
+  "id": "exl50u-general-assembly-v1",
+  "title": "EXL-50U integrated general-assembly visualization",
+  "devicePackage": {
+    "kind": "public-simplified-derivative",
+    "deviceClass": "EXL-50U integrated general assembly",
+    "authority": "illustrative",
+    "replacementContract": [
+      "all browser files pass the anonymous public-derivative QA gates",
+      "the original CAD, assembly tree, PMI, dimension annotations, authoritative dimension tables and BOM are excluded",
+      "the public visualization geometry retains an approximate metre-scale envelope but is not a dimensional authority",
+      "all routes, byte lengths and SHA-256 digests are generated from reviewed GLBs",
+      "the 20 high-detail groups are anonymous transport shards and not engineering systems"
+    ]
+  },
+  "access": {
+    "classification": "PUBLIC",
+    "redistributionAllowed": true,
+    "engineeringUseAllowed": false,
+    "statement": "Public anonymous visualization derivative only. It excludes source CAD, PMI and authoritative dimension records; its approximate metre-scale geometry is not an engineering authority."
+  },
+  "coordinateSystem": {
+    "linearUnit": "metre",
+    "upAxis": "Y",
+    "handedness": "right",
+    "sourceToWebScale": 1
+  },
+  "systems": [
+    {
+      "id": "anonymous-general-assembly",
+      "title": "匿名总装可视化",
+      "shortTitle": "GENERAL ASSEMBLY",
+      "category": "structure",
+      "color": "#69c9d0",
+      "description": "单一公开可视化根，仅用于整机外观展示；不表达 BOM、工程系统或源装配树。",
+      "parts": [
+        {
+          "id": "EXL50U-GA-VISUALIZATION",
+          "title": "EXL-50U 总装可视化",
+          "nodeName": "EXL50U_GA_VISUALIZATION",
+          "description": "公开匿名浏览器派生根；运输分片不可解释为工程部件。",
+          "engineeringTag": "EXL50U.PUBLIC.ANONYMOUS_VISUALIZATION"
+        }
+      ]
+    }
+  ],
+  "generator": {
+    "name": "FusionDigital EXL-50U anonymous derivative projector",
+    "version": "1.0.0",
+    "repository": "https://github.com/tianshao1992/fusion-digital",
+    "license": "User-authorized public visualization derivative",
+    "licenseUrl": "/models/exl50u-general-assembly-v1/PUBLICATION-NOTICE.md",
+    "conversion": {
+      "pipeline": "anonymous FDMESH definitions and placements -> reviewed QEM simplification -> glTF 2.0 GPU instancing -> Meshopt transport -> deterministic public manifest projection",
+      "converter": "FusionDigital anonymous public-derivative pipeline",
+      "converterVersion": "1.0.0"
+    }
+  },
+  "disclaimer": "Illustrative public visualization only. It is not dimensionally authoritative and must not be used for design, manufacturing, safety, physics analysis, configuration control or operations."
+}

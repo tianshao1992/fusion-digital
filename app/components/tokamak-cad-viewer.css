@@ -59,6 +59,7 @@
 .status-error .tokamakCadStatus{color:#ffb084}.status-error .tokamakCadStatus i{background:var(--cad-orange)}
 
 .tokamakCadWorkspace{display:grid;grid-template-columns:minmax(210px,250px) minmax(0,1fr) minmax(220px,270px);height:clamp(600px,60vw,780px);min-height:600px;background:#07100d}
+.tokamakCadShell--anonymous .tokamakCadWorkspace{grid-template-columns:minmax(0,1fr)}
 .tokamakCadViewportShell{position:relative;height:100%;min-height:0;overflow:hidden;isolation:isolate;background:
   radial-gradient(ellipse at 50% 51%,#16382f 0,#091612 37%,#050b09 72%)}
 .tokamakCadViewportShell:before,.tokamakCadViewportShell:after{content:"";position:absolute;z-index:4;pointer-events:none}
@@ -91,6 +92,7 @@
 .tokamakCadLaunchGlyph:before,.tokamakCadLaunchGlyph:after,.tokamakFallbackTorus:before,.tokamakFallbackTorus:after{content:"";position:absolute;border-radius:50%;inset:14px;border:1px solid #64ead542}.tokamakCadLaunchGlyph:after,.tokamakFallbackTorus:after{inset:32px 48px;background:var(--cad-orange);border:0;box-shadow:0 0 22px var(--cad-orange),0 0 60px #ff7a2f66;animation:tokamakCadCore 2.5s ease-in-out infinite}.tokamakCadLaunchGlyph span,.tokamakFallbackTorus span{position:absolute;inset:-17px 59px;border:1px solid #9b7cff80}.tokamakCadLaunchGlyph i,.tokamakFallbackTorus i{position:absolute;left:50%;top:-27px;width:1px;height:160px;background:#64ead52e}.tokamakCadLaunchGlyph b,.tokamakFallbackTorus b{position:absolute;left:-28px;right:-28px;top:50%;height:1px;background:#64ead52e}
 
 .tokamakCadLoading{gap:16px;color:#9ab1a7}.tokamakCadLoading>span{font-size:9px;font-weight:900;letter-spacing:.2em;color:var(--cad-cyan)}.tokamakCadLoading>div{width:min(420px,70vw);height:2px;background:#396055;overflow:hidden}.tokamakCadLoading>div i{display:block;height:100%;background:linear-gradient(90deg,var(--cad-orange),var(--cad-cyan));box-shadow:0 0 16px var(--cad-cyan);transition:width .25s}.tokamakCadLoading>b{font-size:11px;letter-spacing:.08em;color:#bdd0c8}
+.tokamakCadShardProgress{display:block;min-height:1.4em;color:var(--cad-cyan);font:800 10px/1.4 ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:.06em}
 .tokamakCadLodNotice{display:block;max-width:620px;margin:-7px auto 16px;color:#ffd0aa;font:normal 9px/1.65 "Microsoft YaHei UI","Microsoft YaHei",sans-serif;letter-spacing:.02em}
 .tokamakCadLoading .tokamakCadLodNotice{margin:0;color:#ffd0aa}
 .tokamakCadFallback{background:radial-gradient(circle at 50% 47%,#25170fe8,#06100df0 66%)}.tokamakFallbackTorus{filter:grayscale(.25);opacity:.72}.tokamakCadFallback>div:last-child{display:flex;gap:10px}.tokamakCadFallback a{background:transparent;color:var(--cad-orange)}

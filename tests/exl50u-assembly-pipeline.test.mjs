@@ -515,6 +515,9 @@ test("synthetic eight-system device survives Meshopt and strict runtime QA", asy
       "utf8",
     );
     assert.ok(publicationNotice.startsWith("# EXL-50U integrated-assembly public derivative candidate"));
+    assert.match(publicationNotice, /approximate metre-scale envelope/u);
+    assert.match(publicationNotice, /dimension annotations, authoritative dimension tables/u);
+    assert.doesNotMatch(publicationNotice, /Source CAD, dimensions,/u);
     assert.equal(workerFragment.unknownRoutes, "404");
     for (const asset of stagedBundle.files) {
       assert.match(

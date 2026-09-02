@@ -428,7 +428,7 @@ function buildManifest(profile, asOf, assets, fingerprint) {
         id: system.partId,
         title: system.title,
         nodeName: system.nodeName,
-        description: "保持共同装配原点的公开系统级节点；不包含制造尺寸、PMI 或工程分析权威。",
+        description: "保持共同装配原点和近似米制尺度的公开系统级节点；不包含 PMI、制造尺寸标注、权威尺寸表或工程分析权威，且不得用于测量。",
         engineeringTag: `EXL50U.GA.${system.id.toUpperCase().replaceAll("-", "_")}`,
       }],
     })),
@@ -585,7 +585,7 @@ async function main() {
     await writeJson(join(temporary, "metadata", "worker-allowlist.candidate.json"), workerFragment);
     await writeFile(
       join(temporary, "metadata", "PUBLICATION-NOTICE.md"),
-      "# EXL-50U integrated-assembly public derivative candidate\n\nThis candidate contains simplified browser-rendering derivatives only. Source CAD, dimensions, PMI, BOM, drawings, author metadata and build evidence are excluded. It is illustrative, unreleased and not suitable for engineering, manufacturing, safety, physics analysis or operations.\n",
+      "# EXL-50U integrated-assembly public derivative candidate\n\nThis candidate contains simplified browser-rendering derivatives only. Source CAD, PMI, dimension annotations, authoritative dimension tables, BOM, drawings, author metadata and build evidence are excluded. Its visible geometry retains an approximate metre-scale envelope for appearance review, but it is not a dimensional authority and must not be used for measurement. It is illustrative, unreleased and not suitable for engineering, manufacturing, safety, physics analysis or operations.\n",
       { encoding: "utf8", flag: "wx" },
     );
     await claimDirectoryNoClobber(canonicalRelease);

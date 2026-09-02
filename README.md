@@ -121,8 +121,8 @@ npm run dev
 # 提交前质量门：必须在未 hydrate 的工作树中执行（lint + Sites build + 串行测试）
 npm run check
 
-# 完整恢复 ITER 18 个高清运行时分片，并校验字节数与 SHA-256
-npm run assets:hydrate
+# 从已审核的离线目录完整恢复 ITER 18 个高清运行时分片
+npm run assets:hydrate -- --bundle iter-high-detail-v1 --source-dir "/reviewed/iter-high-detail-v1"
 npm run assets:verify
 
 # 初始化并核验本地 D1（账户/审核等能力的本地开发）
@@ -141,7 +141,7 @@ npm run db:local:verify
 | 开发 / 构建 / 启动 | `npm run dev` · `npm run build` · `npm run start` |
 | 统一质量门 | `npm run check` |
 | 查看与校验公开资产 | `npm run assets:status` · `npm run assets:verify:tracked` |
-| 补齐并校验完整资产 | `npm run assets:hydrate` · `npm run assets:verify` |
+| 补齐并校验完整资产 | `npm run assets:hydrate -- --bundle <id> --source-dir <reviewed-dir>` · `npm run assets:verify` |
 | 重建 AI 研究数据 | `npm run research:ai` · `npm run research:audit` |
 | 重建控制研究数据 | `npm run research:control` · `npm run research:control:audit` |
 | 重建诊断研究数据 | `npm run research:diagnostics` · `npm run research:diagnostics:audit` |

@@ -15,8 +15,12 @@ import {
 } from "../deploy/aliyun-hk/certbot-nginx-support.mjs";
 import {
   hasManagedCertificate,
+  lockedGlbRoutesFromRuntimeLock,
+  renderExl50uLockedRoutes,
+  renderLockedGlbRoutes,
   renderNginxConfig,
 } from "../deploy/aliyun-hk/render-nginx-config.mjs";
+import { validateRuntimeAssetLock } from "../deploy/aliyun-hk/verify-runtime-assets.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -55,7 +59,13 @@ test("Hong Kong Node CLIs execute through the current release directory symlink"
     const template = join(current, "deploy", "aliyun-hk", "nginx.conf");
     const rendered = join(temporaryRoot, "rendered-nginx.conf");
 
-    const renderResult = await runNode([renderer, template, rendered]);
+    const renderResult = await runNode([
+      renderer,
+      "--runtime-lock",
+      join(current, "assets", "runtime-assets.lock.json"),
+      template,
+      rendered,
+    ]);
     assert.equal(renderResult.code, 0, renderResult.stderr);
     assert.match(renderResult.stdout, /Rendered FusionDigital Nginx config/u);
     assert.match(await readFile(rendered, "utf8"), /server_name fusiondigital\.club/u);
@@ -90,16 +100,93 @@ test("Hong Kong Nginx uses safe named aliases and lossless static compression", 
   assert.match(nginx, /gzip on;/u);
   assert.match(nginx, /gzip_static on;/u);
   assert.match(nginx, /gzip_types[^;]*application\/javascript[^;]*application\/json/u);
-  assert.match(nginx, /\?<iter_high_file>/u);
+  assert.doesNotMatch(nginx, /\?<iter_high_file>/u);
+  assert.match(nginx, /FUSIONDIGITAL_LOCKED_GLB_ROUTES_BEGIN/u);
+  assert.match(nginx, /FUSIONDIGITAL_LOCKED_GLB_ROUTES_END/u);
   assert.match(nginx, /\?<efit_json_dir>/u);
   assert.match(nginx, /\?<efit_bin_dir>exl50u-efit/u);
   assert.match(nginx, /\?<efit_gz_dir>exl50u-efit-v2/u);
-  assert.match(nginx, /alias[^;]*\$iter_high_file;/u);
+  assert.doesNotMatch(nginx, /alias[^;]*\$iter_high_file;/u);
+  assert.doesNotMatch(nginx, /exl50u_ga_file|device\.preview\.\[a-f0-9\]/u);
+  assert.match(nginx, /models\/exl50u-general-assembly-v1\/.+\\\.glb\$" \{ return 404;/u);
+  assert.match(
+    nginx,
+    /location = \/models\/exl50u-general-assembly-v1\/model-manifest\.json \{[\s\S]*?default_type application\/json;[\s\S]*?Cache-Control "no-store, private, max-age=0"/u,
+  );
+  assert.match(
+    nginx,
+    /location = \/models\/exl50u-general-assembly-v1\/PUBLICATION-NOTICE\.md \{[\s\S]*?default_type text\/markdown;[\s\S]*?Cache-Control "no-store, private, max-age=0"/u,
+  );
+  assert.match(nginx, /location ~\* \\.glb\$ \{ return 404; \}/u);
+  assert.doesNotMatch(nginx, /\(\?:json\|csv[^\n]+\|glb\|/u);
   assert.doesNotMatch(nginx, /alias[^;]*\$[12](?:\b|\/)/u);
   assert.match(nginx, /location ~ \^\/device-data\//u);
   assert.doesNotMatch(nginx, /location ~ \^\/(?:\(\?:device-\)\?)?data\/\([^\n]+\)\/[^{]+\{\s*alias/u);
   assert.match(nginx, /\.jsonl\\\.gz\)\$ \{[\s\S]*?gzip off;[\s\S]*?gzip_static off;/u);
   assert.match(nginx, /location ~ \^\/\(\?:device-\)\?data\/exl50u-efit[^{]+\{\s*return 404;/u);
+});
+
+test("Hong Kong Nginx exposes EXL assets only as exact runtime-lock locations", () => {
+  const sha256 = "a".repeat(64);
+  const filename = `device.preview.${sha256}.meshopt.glb`;
+  const rendered = renderExl50uLockedRoutes([{
+    filename,
+    route: `/device-assets/exl50u-general-assembly/v1/${filename}`,
+  }]);
+  assert.match(rendered, new RegExp(`location = /device-assets/exl50u-general-assembly/v1/${filename.replaceAll(".", "\\.")} \\{`, "u"));
+  assert.match(rendered, new RegExp(`alias /srv/fusiondigital/current/dist/client/models/exl50u-general-assembly-v1/${filename.replaceAll(".", "\\.")};`, "u"));
+  assert.doesNotMatch(rendered, /location ~|\$exl50u_ga_file/u);
+  assert.throws(
+    () => renderExl50uLockedRoutes([{ filename, route: `/device-assets/exl50u-general-assembly/v1/${"b".repeat(64)}.glb` }]),
+    /unsafe/u,
+  );
+});
+
+test("Hong Kong Nginx renders every and only runtime-lock GLB as an exact route", async () => {
+  const lock = JSON.parse(await read("assets/runtime-assets.lock.json"));
+  const bundles = validateRuntimeAssetLock(lock);
+  const routes = lockedGlbRoutesFromRuntimeLock(lock, bundles);
+  const expected = lock.gitAssets.files.filter((file) => file.path.endsWith(".glb")).length
+    + bundles.reduce((sum, bundle) => sum + bundle.files.length, 0);
+  assert.equal(routes.length, expected);
+  assert.deepEqual(
+    routes.filter((route) => route.clientPath.startsWith("models/exl50u-interactive/")),
+    [
+      {
+        route: "/device-assets/exl50u-interactive/exl50u-interactive-high.meshopt.glb",
+        clientPath: "models/exl50u-interactive/exl50u-interactive-high.meshopt.glb",
+        cachePolicy: "private",
+      },
+      {
+        route: "/device-assets/exl50u-interactive/exl50u-interactive.glb",
+        clientPath: "models/exl50u-interactive/exl50u-interactive.glb",
+        cachePolicy: "private",
+      },
+    ],
+  );
+  const rendered = renderLockedGlbRoutes(routes);
+  assert.equal((rendered.match(/location = [^\n]+\.glb \{/gu) ?? []).length, expected);
+  assert.match(
+    rendered,
+    /location = \/device-assets\/exl50u-interactive\/exl50u-interactive\.glb \{[\s\S]*?Cache-Control "no-store, private, max-age=0"/u,
+  );
+  assert.match(
+    rendered,
+    /location = \/models\/ehl2-preliminary-v1\/ehl2-preliminary\.meshopt\.glb \{[\s\S]*?Cache-Control "public, max-age=3600"/u,
+  );
+  assert.match(
+    rendered,
+    /location = \/device-assets\/iter-high-detail\/v1\/[a-z0-9.-]+\.glb \{[\s\S]*?Cache-Control "public, max-age=31536000, immutable"/u,
+  );
+  assert.throws(
+    () => renderLockedGlbRoutes([{
+      route: "/models/unsafe.glb",
+      clientPath: "models/unsafe.glb",
+      cachePolicy: "public, max-age=31536000, immutable\"; return 302 /",
+    }]),
+    /unsafe/u,
+  );
+  assert.doesNotMatch(rendered, /location ~|\$iter_high_file|\$exl50u_ga_file/u);
 });
 
 test("Hong Kong TLS rendering is deterministic and enables HTTP2", async () => {
@@ -375,8 +462,17 @@ test("Hong Kong installer verifies sidecars, EFIT, ITER, and preserves managed T
   assert.match(installer, /dist\/client\/data\/exl50u-efit-v2\/index\.json/u);
   assert.match(installer, /device-data\/exl50u-efit-v2/u);
   assert.match(installer, /device-assets\/iter-high-detail\/v1/u);
+  assert.match(installer, /verify-runtime-assets\.mjs/u);
+  assert.match(installer, /assets\/runtime-assets\.lock\.json/u);
+  assert.match(installer, /for \(const bundle of report\.bundles\) console\.log\(bundle\.firstRoute\)/u);
+  assert.match(installer, /Content-Length: 1024/u);
+  assert.match(installer, /Content-Type: model\/gltf-binary/u);
+  assert.match(installer, /Cache-Control: public, max-age=31536000, immutable/u);
+  assert.match(installer, /! grep -Eiq '\^Content-Encoding:'/u);
+  assert.match(installer, /UNKNOWN_DEVICE_ASSET_STATUS[\s\S]*?= 404/u);
   assert.match(installer, /DIRECT_DATA_STATUS[\s\S]*?= 404/u);
   assert.match(installer, /render-nginx-config\.mjs/u);
+  assert.match(installer, /--runtime-lock "\$TARGET\/assets\/runtime-assets\.lock\.json"/u);
   assert.match(installer, /certbot-nginx-support\.mjs/u);
   assert.match(installer, /test -f "\$PENDING\/deploy\/aliyun-hk\/direct-execution\.mjs"/u);
   assert.doesNotMatch(installer, /node[^\n]*certbot-nginx-support\.mjs/u);
@@ -429,6 +525,7 @@ test("Hong Kong installer verifies sidecars, EFIT, ITER, and preserves managed T
   assert.match(finalize, /certonly/u);
   assert.match(finalize, /--keep-until-expiring/u);
   assert.match(finalize, /render-nginx-config\.mjs/u);
+  assert.match(finalize, /--runtime-lock \/srv\/fusiondigital\/current\/assets\/runtime-assets\.lock\.json/u);
   assert.match(finalize, /HTTP_VERSION[\s\S]*?= 2/u);
   assert.doesNotMatch(finalize, /--redirect/u);
   assert.match(finalize, /PORT_443_LISTENERS/u);

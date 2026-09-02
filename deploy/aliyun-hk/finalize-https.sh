@@ -205,6 +205,7 @@ warn_if_manual_renewal
 
 node /srv/fusiondigital/current/deploy/aliyun-hk/render-nginx-config.mjs \
   --require-tls \
+  --runtime-lock /srv/fusiondigital/current/assets/runtime-assets.lock.json \
   /srv/fusiondigital/current/deploy/aliyun-hk/nginx.conf \
   "$NGINX_CONFIG"
 nginx -t

@@ -5,6 +5,25 @@ export const MAX_COMPONENT_SHARD_MESH_INSTANCES = 300;
 export const MAX_COMPONENT_BUNDLE_MESH_INSTANCES = 1_000;
 export const ITER_COMPONENT_BUNDLE_FORMAT = 'glTF 2.0 binary + EXT_meshopt_compression + KHR_mesh_quantization; POSITION normalized Int16 per mesh; NORMAL normalized Int8 (8-bit)';
 const ITER_COMPONENT_ASSET_PATH = /^\/device-assets\/iter-high-detail\/v1\/([a-z0-9-]+)\.([a-f0-9]{64})\.high\.meshopt\.glb$/;
+export const EXL50U_GA_MANIFEST_ID = 'exl50u-general-assembly-v1';
+export const EXL50U_GA_VISUALIZATION_ROOT = 'EXL50U_GA_VISUALIZATION';
+export const EXL50U_ANONYMOUS_SHARD_COUNT = 20;
+export const MAX_ANONYMOUS_PREVIEW_BYTES = 12 * 1024 * 1024;
+export const MAX_ANONYMOUS_PREVIEW_DECODED_BYTES = 192 * 1024 * 1024;
+export const MAX_ANONYMOUS_SHARD_BYTES = 24 * 1024 * 1024;
+export const MAX_ANONYMOUS_DELIVERY_BYTES = 300 * 1024 * 1024;
+export const MAX_ANONYMOUS_SHARD_DECODED_BYTES = 96 * 1024 * 1024;
+export const MAX_ANONYMOUS_BUNDLE_DECODED_BYTES = 1_536 * 1024 * 1024;
+export const MAX_ANONYMOUS_SHARD_PLACEMENT_INSTANCES = 250_000;
+export const MAX_ANONYMOUS_BUNDLE_PLACEMENT_INSTANCES = (
+  EXL50U_ANONYMOUS_SHARD_COUNT * MAX_ANONYMOUS_SHARD_PLACEMENT_INSTANCES
+);
+export const MAX_ANONYMOUS_SCENE_TRIANGLES = 30_000_000;
+export const MAX_ANONYMOUS_DRAW_CALLS = 800;
+export const ANONYMOUS_SHARD_BUNDLE_FORMAT = 'glTF 2.0 binary + EXT_meshopt_compression + EXT_mesh_gpu_instancing; POSITION Float32; NORMAL normalized Int8 (8-bit); indices Uint32';
+export const ANONYMOUS_SHARD_REQUIRED_EXTENSIONS = ['EXT_mesh_gpu_instancing', 'EXT_meshopt_compression'] as const;
+const EXL50U_ANONYMOUS_SHARD_PATH = /^\/device-assets\/exl50u-general-assembly\/v1\/anonymous-shard-(\d{2})\.([a-f0-9]{64})\.high\.meshopt\.glb$/;
+const EXL50U_PREVIEW_ASSET_PATH = /^\/device-assets\/exl50u-general-assembly\/v1\/device\.preview\.([a-f0-9]{64})\.meshopt\.glb$/;
 
 export type DeviceManifestPart = {
   id: string;
@@ -70,6 +89,74 @@ export type DeviceComponentBundle = {
   components: DeviceComponentModel[];
 };
 
+export type DeviceAnonymousShardModel = {
+  id: string;
+  index: number;
+  path: string;
+  sha256: string;
+  bytes: number;
+  uniqueGeometryMeshes: number;
+  uniqueGeometryTriangles: number;
+  uniqueGeometryVertices: number;
+  placementInstances: number;
+  drawCalls: number;
+  sceneDrawTriangles: number;
+  decodedGpuBytes: number;
+  boundsMetres: NonNullable<DeviceWebModel['boundsMetres']>;
+};
+
+export type DeviceAnonymousShardBundle = {
+  id: string;
+  label: string;
+  quality: 'high';
+  delivery: 'shards';
+  format: typeof ANONYMOUS_SHARD_BUNDLE_FORMAT;
+  rootNodeName: typeof EXL50U_GA_VISUALIZATION_ROOT;
+  extensionsRequired: [...typeof ANONYMOUS_SHARD_REQUIRED_EXTENSIONS];
+  grouping: {
+    kind: 'anonymous-transport';
+    engineeringSemantic: false;
+    engineeringUseAllowed: false;
+    representsBom: false;
+    representsEngineeringSystems: false;
+    representsAssemblyTree: false;
+  };
+  bytes: number;
+  uniqueGeometryMeshes: number;
+  uniqueGeometryTriangles: number;
+  uniqueGeometryVertices: number;
+  placementInstances: number;
+  drawCalls: number;
+  sceneDrawTriangles: number;
+  decodedGpuBytes: number;
+  boundsMetres: NonNullable<DeviceWebModel['boundsMetres']>;
+  shards: DeviceAnonymousShardModel[];
+};
+
+export type DeviceAnonymousDerivationEvidence = {
+  kind: 'anonymous-public-derivative';
+  selectedAttempt: 1 | 2;
+  selectedRatios: { preview: number; high: number };
+  qem: {
+    receiptCount: number;
+    receiptSha256: string;
+    targetMissCount: number;
+    retainedIrreducibleCount: number;
+  };
+  coverage: {
+    renderableDefinitions: number;
+    renderableOccurrences: number;
+    skippedDefinitions: number;
+    skippedOccurrences: number;
+    sourceDefinitions: number;
+    sourceOccurrences: number;
+    previewMissingDefinitions: 0;
+    previewMissingOccurrences: 0;
+    highMissingDefinitions: 0;
+    highMissingOccurrences: 0;
+  };
+};
+
 export type AnalyticPlasmaVisualization = {
   kind: 'analytic-design-proxy';
   label: string;
@@ -121,12 +208,14 @@ export type DeviceManifest = {
     webModel?: DeviceWebModel;
     webModels?: DeviceWebModelVariant[];
     componentBundles?: DeviceComponentBundle[];
+    shardBundles?: DeviceAnonymousShardBundle[];
     sourceCad?: { path: string; format: string; sha256: string; bytes: number };
     poster?: { path: string; sha256: string; bytes: number };
   };
   visualizations?: {
     analyticPlasma?: AnalyticPlasmaVisualization;
   };
+  derivationEvidence?: DeviceAnonymousDerivationEvidence;
   systems: DeviceManifestSystem[];
   generator: {
     name: string;
@@ -173,11 +262,184 @@ function isSafePublicAssetPath(value: unknown): value is string {
   return typeof value === 'string'
     && (value.startsWith('/models/')
       || value.startsWith('/device-assets/exl50u-interactive/')
+      || value.startsWith('/device-assets/exl50u-general-assembly/')
       || value.startsWith('/device-assets/iter-high-detail/'))
     && !value.includes('..')
     && !value.includes('%')
     && !value.includes('//')
     && !/^[a-z]+:/i.test(value);
+}
+
+function hasExactKeys(value: Record<string, unknown>, keys: readonly string[]) {
+  const expected = new Set(keys);
+  return Object.keys(value).length === expected.size
+    && Object.keys(value).every((key) => expected.has(key));
+}
+
+function hasExactRequiredExtensions(value: unknown): value is [...typeof ANONYMOUS_SHARD_REQUIRED_EXTENSIONS] {
+  return Array.isArray(value)
+    && value.length === ANONYMOUS_SHARD_REQUIRED_EXTENSIONS.length
+    && value.every((extension, index) => extension === ANONYMOUS_SHARD_REQUIRED_EXTENSIONS[index]);
+}
+
+function validateAnonymousDerivationEvidence(value: unknown): asserts value is DeviceAnonymousDerivationEvidence {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('EXL-50U 总装缺少匿名派生证据。');
+  const evidence = value as Record<string, unknown>;
+  const ratios = evidence.selectedRatios as Record<string, unknown> | undefined;
+  const qem = evidence.qem as Record<string, unknown> | undefined;
+  const coverage = evidence.coverage as Record<string, unknown> | undefined;
+  const integer = (candidate: unknown, positive = false) => Number.isSafeInteger(candidate)
+    && Number(candidate) >= (positive ? 1 : 0);
+  if (!hasExactKeys(evidence, ['kind', 'selectedAttempt', 'selectedRatios', 'qem', 'coverage'])
+    || evidence.kind !== 'anonymous-public-derivative'
+    || (evidence.selectedAttempt !== 1 && evidence.selectedAttempt !== 2)
+    || !ratios || Array.isArray(ratios) || !hasExactKeys(ratios, ['preview', 'high'])
+    || ['preview', 'high'].some((key) => typeof ratios[key] !== 'number'
+      || !Number.isFinite(ratios[key]) || Number(ratios[key]) <= 0 || Number(ratios[key]) > 1)
+    || !qem || Array.isArray(qem)
+    || !hasExactKeys(qem, ['receiptCount', 'receiptSha256', 'targetMissCount', 'retainedIrreducibleCount'])
+    || !integer(qem.receiptCount, true)
+    || typeof qem.receiptSha256 !== 'string' || !/^[a-f0-9]{64}$/.test(qem.receiptSha256)
+    || !integer(qem.targetMissCount) || !integer(qem.retainedIrreducibleCount)
+    || qem.targetMissCount !== qem.retainedIrreducibleCount
+    || Number(qem.targetMissCount) > Number(qem.receiptCount)
+    || !coverage || Array.isArray(coverage)
+    || !hasExactKeys(coverage, [
+      'renderableDefinitions', 'renderableOccurrences', 'skippedDefinitions', 'skippedOccurrences',
+      'sourceDefinitions', 'sourceOccurrences', 'previewMissingDefinitions',
+      'previewMissingOccurrences', 'highMissingDefinitions', 'highMissingOccurrences',
+    ])
+    || !integer(coverage.renderableDefinitions, true) || !integer(coverage.renderableOccurrences, true)
+    || !integer(coverage.skippedDefinitions) || !integer(coverage.skippedOccurrences)
+    || !integer(coverage.sourceDefinitions, true) || !integer(coverage.sourceOccurrences, true)
+    || Number(coverage.sourceDefinitions) !== Number(coverage.renderableDefinitions) + Number(coverage.skippedDefinitions)
+    || Number(coverage.sourceOccurrences) !== Number(coverage.renderableOccurrences) + Number(coverage.skippedOccurrences)
+    || coverage.previewMissingDefinitions !== 0 || coverage.previewMissingOccurrences !== 0
+    || coverage.highMissingDefinitions !== 0 || coverage.highMissingOccurrences !== 0) {
+    throw new Error('EXL-50U 总装匿名派生证据的 QEM 收据或几何覆盖对账无效。');
+  }
+}
+
+function validateAnonymousShardBundles(
+  value: unknown,
+  preview: DeviceWebModel,
+  reservedViewerChoiceIds: Set<string>,
+) {
+  if (!Array.isArray(value) || value.length !== 1) {
+    throw new Error('EXL-50U 总装匿名分片清单必须且只能声明一个 shardBundles 项。');
+  }
+  const bundle = value[0] as Record<string, unknown>;
+  const bundleKeys = [
+    'id', 'label', 'quality', 'delivery', 'format', 'rootNodeName', 'extensionsRequired',
+    'grouping', 'bytes', 'uniqueGeometryMeshes', 'uniqueGeometryTriangles',
+    'uniqueGeometryVertices', 'placementInstances', 'drawCalls', 'sceneDrawTriangles',
+    'decodedGpuBytes', 'boundsMetres', 'shards',
+  ] as const;
+  const groupingKeys = [
+    'kind', 'engineeringSemantic', 'engineeringUseAllowed', 'representsBom',
+    'representsEngineeringSystems', 'representsAssemblyTree',
+  ] as const;
+  const shardKeys = [
+    'id', 'index', 'path', 'sha256', 'bytes', 'uniqueGeometryMeshes',
+    'uniqueGeometryTriangles', 'uniqueGeometryVertices', 'placementInstances',
+    'drawCalls', 'sceneDrawTriangles', 'decodedGpuBytes', 'boundsMetres',
+  ] as const;
+  const grouping = bundle?.grouping as Record<string, unknown> | undefined;
+  const positiveBundleMetrics = [
+    'uniqueGeometryMeshes', 'uniqueGeometryTriangles', 'uniqueGeometryVertices',
+    'placementInstances', 'drawCalls', 'sceneDrawTriangles', 'decodedGpuBytes',
+  ] as const;
+  if (!bundle || typeof bundle !== 'object' || Array.isArray(bundle)
+    || !hasExactKeys(bundle, bundleKeys)
+    || typeof bundle.id !== 'string'
+    || !/^[a-z0-9][a-z0-9-]*$/.test(bundle.id)
+    || reservedViewerChoiceIds.has(bundle.id)
+    || typeof bundle.label !== 'string' || bundle.label.trim() === ''
+    || bundle.quality !== 'high'
+    || bundle.delivery !== 'shards'
+    || bundle.format !== ANONYMOUS_SHARD_BUNDLE_FORMAT
+    || bundle.rootNodeName !== EXL50U_GA_VISUALIZATION_ROOT
+    || !hasExactRequiredExtensions(bundle.extensionsRequired)
+    || !grouping || Array.isArray(grouping) || !hasExactKeys(grouping, groupingKeys)
+    || grouping.kind !== 'anonymous-transport'
+    || grouping.engineeringSemantic !== false
+    || grouping.engineeringUseAllowed !== false
+    || grouping.representsBom !== false
+    || grouping.representsEngineeringSystems !== false
+    || grouping.representsAssemblyTree !== false
+    || !Number.isSafeInteger(bundle.bytes) || Number(bundle.bytes) <= 0
+    || Number(bundle.bytes) + preview.bytes > MAX_ANONYMOUS_DELIVERY_BYTES
+    || positiveBundleMetrics.some((field) => !Number.isSafeInteger(bundle[field]) || Number(bundle[field]) <= 0)
+    || Number(bundle.decodedGpuBytes) > MAX_ANONYMOUS_BUNDLE_DECODED_BYTES
+    || Number(bundle.placementInstances) > MAX_ANONYMOUS_BUNDLE_PLACEMENT_INSTANCES
+    || Number(bundle.sceneDrawTriangles) > MAX_ANONYMOUS_SCENE_TRIANGLES
+    || Number(bundle.drawCalls) > MAX_ANONYMOUS_DRAW_CALLS
+    || Number(bundle.placementInstances) < Number(bundle.uniqueGeometryMeshes)
+    || Number(bundle.drawCalls) < Number(bundle.uniqueGeometryMeshes)
+    || Number(bundle.drawCalls) > Number(bundle.placementInstances)
+    || Number(bundle.sceneDrawTriangles) < Number(bundle.uniqueGeometryTriangles)
+    || !isBoundsMetres(bundle.boundsMetres)
+    || !Array.isArray(bundle.shards)
+    || bundle.shards.length !== EXL50U_ANONYMOUS_SHARD_COUNT) {
+    throw new Error('EXL-50U 总装匿名分片包身份、预算或非工程语义声明无效。');
+  }
+
+  const seenIds = new Set<string>();
+  const seenPaths = new Set<string>();
+  const seenDigests = new Set<string>();
+  const totals = Object.fromEntries(positiveBundleMetrics.map((field) => [field, 0])) as Record<typeof positiveBundleMetrics[number], number>;
+  let byteTotal = 0;
+  const unionMin: [number, number, number] = [Infinity, Infinity, Infinity];
+  const unionMax: [number, number, number] = [-Infinity, -Infinity, -Infinity];
+  for (let offset = 0; offset < bundle.shards.length; offset += 1) {
+    const shard = bundle.shards[offset] as Record<string, unknown>;
+    const expectedIndex = offset + 1;
+    const expectedId = `anonymous-shard-${String(expectedIndex).padStart(2, '0')}`;
+    const path = typeof shard?.path === 'string' ? shard.path : '';
+    const pathMatch = path.match(EXL50U_ANONYMOUS_SHARD_PATH);
+    const digest = typeof shard?.sha256 === 'string' ? shard.sha256.toLowerCase() : '';
+    if (!shard || typeof shard !== 'object' || Array.isArray(shard)
+      || !hasExactKeys(shard, shardKeys)
+      || shard.id !== expectedId
+      || shard.index !== expectedIndex
+      || seenIds.has(expectedId)
+      || !pathMatch
+      || Number(pathMatch[1]) !== expectedIndex
+      || pathMatch[2] !== digest
+      || seenPaths.has(path)
+      || seenDigests.has(digest)
+      || !Number.isSafeInteger(shard.bytes) || Number(shard.bytes) <= 0
+      || Number(shard.bytes) >= MAX_ANONYMOUS_SHARD_BYTES
+      || positiveBundleMetrics.some((field) => !Number.isSafeInteger(shard[field]) || Number(shard[field]) <= 0)
+      || Number(shard.decodedGpuBytes) > MAX_ANONYMOUS_SHARD_DECODED_BYTES
+      || Number(shard.placementInstances) > MAX_ANONYMOUS_SHARD_PLACEMENT_INSTANCES
+      || Number(shard.sceneDrawTriangles) > MAX_ANONYMOUS_SCENE_TRIANGLES
+      || Number(shard.drawCalls) > MAX_ANONYMOUS_DRAW_CALLS
+      || Number(shard.placementInstances) < Number(shard.uniqueGeometryMeshes)
+      || Number(shard.drawCalls) < Number(shard.uniqueGeometryMeshes)
+      || Number(shard.drawCalls) > Number(shard.placementInstances)
+      || Number(shard.sceneDrawTriangles) < Number(shard.uniqueGeometryTriangles)
+      || !isBoundsMetres(shard.boundsMetres)) {
+      throw new Error(`EXL-50U 总装匿名分片 ${expectedId} 的顺序、路径、摘要或预算无效。`);
+    }
+    seenIds.add(expectedId);
+    seenPaths.add(path);
+    seenDigests.add(digest);
+    byteTotal += Number(shard.bytes);
+    for (const field of positiveBundleMetrics) totals[field] += Number(shard[field]);
+    const bounds = shard.boundsMetres as NonNullable<DeviceWebModel['boundsMetres']>;
+    for (let axis = 0; axis < 3; axis += 1) {
+      unionMin[axis] = Math.min(unionMin[axis], bounds.min[axis]);
+      unionMax[axis] = Math.max(unionMax[axis], bounds.max[axis]);
+    }
+  }
+  const bundleBounds = bundle.boundsMetres as NonNullable<DeviceWebModel['boundsMetres']>;
+  if (byteTotal !== bundle.bytes
+    || positiveBundleMetrics.some((field) => totals[field] !== bundle[field])
+    || unionMin.some((coordinate, axis) => coordinate !== bundleBounds.min[axis])
+    || unionMax.some((coordinate, axis) => coordinate !== bundleBounds.max[axis])) {
+    throw new Error('EXL-50U 总装匿名分片包的逐片汇总预算或包围盒不一致。');
+  }
 }
 
 function validateComponentBundles(
@@ -418,9 +680,12 @@ function validateWebModels(value: unknown, compatibilityAsset: DeviceWebModel) {
 }
 
 function localManifestAssetPaths(manifest: DeviceManifest) {
+  const externalAnonymousPreview = manifest.schemaVersion === '1.4'
+    && manifest.id === EXL50U_GA_MANIFEST_ID
+    && (manifest.assets.shardBundles?.length ?? 0) > 0;
   return [
-    ...(manifest.assets.webModel ? [manifest.assets.webModel.path] : []),
-    ...(manifest.assets.webModels?.map((asset) => asset.path) ?? []),
+    ...(!externalAnonymousPreview && manifest.assets.webModel ? [manifest.assets.webModel.path] : []),
+    ...(!externalAnonymousPreview ? (manifest.assets.webModels?.map((asset) => asset.path) ?? []) : []),
     ...(manifest.assets.poster ? [manifest.assets.poster.path] : []),
     ...(manifest.assets.sourceCad ? [manifest.assets.sourceCad.path] : []),
   ];
@@ -456,9 +721,11 @@ export function parseDeviceManifest(value: unknown, options: ParseDeviceManifest
   if (!value || typeof value !== 'object') throw new Error('装置清单不是有效的 JSON 对象。');
   const manifest = value as Partial<DeviceManifest>;
   if (!manifest.id || !manifest.title || !manifest.schemaVersion) throw new Error('装置清单缺少 id、title 或 schemaVersion。');
-  if (!['1.1', '1.2', '1.3'].includes(manifest.schemaVersion)) throw new Error(`不支持的装置清单版本：${manifest.schemaVersion}。`);
+  if (!['1.1', '1.2', '1.3', '1.4'].includes(manifest.schemaVersion)) throw new Error(`不支持的装置清单版本：${manifest.schemaVersion}。`);
   if (manifest.schemaVersion === '1.1'
-    && (manifest.assets?.componentBundles !== undefined || manifest.visualizations !== undefined)) {
+    && (manifest.assets?.componentBundles !== undefined
+      || manifest.assets?.shardBundles !== undefined
+      || manifest.visualizations !== undefined)) {
     throw new Error('装置清单 1.1 不支持分片资产或解析可视化扩展。');
   }
   if (!manifest.devicePackage
@@ -488,11 +755,34 @@ export function parseDeviceManifest(value: unknown, options: ParseDeviceManifest
   const assets = manifest.assets;
   const hasWebModel = isAsset(assets.webModel);
   const hasComponentBundles = Array.isArray(assets.componentBundles) && assets.componentBundles.length > 0;
-  if (!hasWebModel && !hasComponentBundles) throw new Error('装置清单至少需要 webModel 或 componentBundles。');
-  if (!hasWebModel && manifest.schemaVersion !== '1.3') throw new Error('仅分片的高精度装置清单必须使用 1.3 版本。');
+  const hasShardBundles = Array.isArray(assets.shardBundles) && assets.shardBundles.length > 0;
+  if (!hasWebModel && !hasComponentBundles && !hasShardBundles) {
+    throw new Error('装置清单至少需要 webModel、componentBundles 或 shardBundles。');
+  }
+  if (!hasWebModel && hasComponentBundles && manifest.schemaVersion !== '1.3') {
+    throw new Error('仅分片的高精度装置清单必须使用 1.3 版本。');
+  }
+  if (assets.shardBundles !== undefined
+    && (manifest.schemaVersion !== '1.4'
+      || manifest.id !== EXL50U_GA_MANIFEST_ID
+      || !hasWebModel
+      || assets.componentBundles !== undefined
+      || assets.sourceCad !== undefined
+      || manifest.access.classification !== 'PUBLIC'
+      || manifest.access.redistributionAllowed !== true
+      || manifest.access.engineeringUseAllowed !== false)) {
+    throw new Error('匿名 shardBundles 仅允许 EXL-50U 总装 1.4 公开非工程预览合同。');
+  }
+  if (manifest.schemaVersion === '1.4' && assets.shardBundles === undefined) {
+    throw new Error('装置清单 1.4 仅用于受控的 EXL-50U 总装匿名分片合同。');
+  }
   if (assets.webModels !== undefined) {
     if (!hasWebModel) throw new Error('webModels 需要兼容 webModel 资产。');
     validateWebModels(assets.webModels, assets.webModel as DeviceWebModel);
+    if (assets.shardBundles !== undefined
+      && assets.webModels.some((asset) => asset.quality !== 'preview')) {
+      throw new Error('匿名分片合同只能把兼容 preview 声明为单体 webModels 资产。');
+    }
   }
   if (assets.sourceCad !== undefined && !isAsset(assets.sourceCad)) throw new Error('装置清单包含无效的 sourceCad 资产。');
   if (assets.poster !== undefined && !isAssetWithoutFormat(assets.poster)) throw new Error('装置清单包含无效的 poster 资产。');
@@ -526,6 +816,30 @@ export function parseDeviceManifest(value: unknown, options: ParseDeviceManifest
       throw new Error('分片高清资产必须提供高于兼容预览的几何细节。');
     }
   }
+  if (assets.shardBundles !== undefined) {
+    validateAnonymousDerivationEvidence(manifest.derivationEvidence);
+    const preview = assets.webModel as DeviceWebModel;
+    const previewPathMatch = preview.path.match(EXL50U_PREVIEW_ASSET_PATH);
+    if (!previewPathMatch
+      || previewPathMatch[1] !== preview.sha256.toLowerCase()
+      || preview.bytes > MAX_ANONYMOUS_PREVIEW_BYTES
+      || !Number.isSafeInteger(preview.triangles) || Number(preview.triangles) <= 0
+      || !Number.isSafeInteger(preview.vertices) || Number(preview.vertices) <= 0
+      || !Number.isSafeInteger(preview.decodedGpuBytes) || Number(preview.decodedGpuBytes) <= 0
+      || Number(preview.decodedGpuBytes) > MAX_ANONYMOUS_PREVIEW_DECODED_BYTES
+      || Number(preview.triangles) > MAX_ANONYMOUS_SCENE_TRIANGLES
+      || !isBoundsMetres(preview.boundsMetres)) {
+      throw new Error('EXL-50U 总装 preview 必须使用摘要锁定路径并满足压缩、解码与几何预算。');
+    }
+    validateAnonymousShardBundles(
+      assets.shardBundles,
+      preview,
+      new Set(assets.webModels?.map((asset) => asset.id) ?? ['standard']),
+    );
+    if (Number(assets.shardBundles[0]?.sceneDrawTriangles) <= Number(preview.triangles ?? 0)) {
+      throw new Error('EXL-50U 总装匿名高精度分片必须提供高于兼容 preview 的场景几何细节。');
+    }
+  }
   if (manifest.visualizations?.analyticPlasma !== undefined) validateAnalyticPlasma(manifest.visualizations.analyticPlasma);
   if (!manifest.generator?.name || !manifest.generator.version || !manifest.generator.license || !manifest.generator.licenseUrl) {
     throw new Error('装置清单缺少生成器与许可来源。');
@@ -542,7 +856,7 @@ export function parseDeviceManifest(value: unknown, options: ParseDeviceManifest
       || conversion.highLodSharpEdgeNormals !== true)) {
     throw new Error('高清 LOD 缺少离散化精度或锐边法线声明。');
   }
-  if (assets.componentBundles?.length
+  if ((assets.componentBundles?.length || assets.shardBundles?.length)
     && (!conversion?.pipeline || !conversion.converter || !conversion.converterVersion)) {
     throw new Error('分片高清 LOD 缺少可复现的转换流水线声明。');
   }

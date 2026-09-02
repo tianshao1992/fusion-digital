@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { execFile } from "node:child_process";
 import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, join, resolve, sep } from "node:path";
@@ -9,8 +10,11 @@ import { tmpdir } from "node:os";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { promisify } from "node:util";
 import {
+  assertControlledAssetResponseUrl,
   codepointCompare,
   createExpectedByteLimit,
+  normalizeHttpsBaseUrl,
+  validateExternalBundleContract,
   validateStageOutput,
   verifyOfflineSource,
 } from "../scripts/assets/runtime-assets.mjs";
@@ -103,15 +107,25 @@ test("ITER lock is identical to the current manifest and Worker allowlist", asyn
   assert.equal(bundle.files.reduce((sum, file) => sum + file.bytes, 0), 98_507_692);
 });
 
-test("external ITER derivatives are ignored by Git and use credential-free HTTPS acquisition", async () => {
+test("runtime commands reuse the complete exact external-bundle validator", async () => {
+  const lock = await readJson(LOCK_PATH);
+  assert.doesNotThrow(() => validateExternalBundleContract(lock.externalBundles[0]));
+  for (const mutate of [
+    (bundle) => { bundle.title = "forged"; },
+    (bundle) => { bundle.files[0].partId = "forged"; },
+    (bundle) => { bundle.files[0].manifestPartId = "ITER-FORGED"; },
+    (bundle) => { bundle.privateSourceCad = "D:/private/source.stp"; },
+  ]) {
+    const bundle = structuredClone(lock.externalBundles[0]);
+    mutate(bundle);
+    assert.throws(() => validateExternalBundleContract(bundle), /invalid|undeclared|contract/u);
+  }
+});
+
+test("external ITER derivatives are ignored by Git and require explicit reviewed acquisition", async () => {
   const lock = await readJson(LOCK_PATH);
   const bundle = lock.externalBundles[0];
-  const base = new URL(bundle.acquisition.defaultBaseUrl);
-  assert.equal(base.protocol, "https:");
-  assert.equal(base.username, "");
-  assert.equal(base.password, "");
-  assert.equal(base.search, "");
-  assert.equal(base.hash, "");
+  assert.equal(bundle.acquisition.defaultBaseUrl, null);
   assert.equal(bundle.acquisition.baseUrlEnv, "FUSION_ASSET_BASE_URL");
   assert.equal(bundle.acquisition.sourceDirEnv, "FUSION_ASSET_SOURCE_DIR");
 
@@ -128,6 +142,48 @@ test("external ITER derivatives are ignored by Git and use credential-free HTTPS
   assert.match(ignored, /public\/models\/iter-high-detail-v1/);
 });
 
+test("runtime acquisition rejects credentialed bases and redirect drift", () => {
+  const base = "https://assets.example.test/releases/v1";
+  const filename = `component.${"a".repeat(64)}.high.meshopt.glb`;
+  const expected = `${base}/${filename}`;
+  assert.equal(normalizeHttpsBaseUrl(`${base}/`), base);
+  const fixedRawBase = "https://raw.githubusercontent.com/tianshao1992/fusion-physics-atlas-assets/0123456789abcdef0123456789abcdef01234567/iter-high-detail-v1";
+  assert.equal(normalizeHttpsBaseUrl(fixedRawBase), fixedRawBase);
+  for (const value of [
+    "http://assets.example.test/releases/v1",
+    "https://user:secret@assets.example.test/releases/v1",
+    "https://@assets.example.test/releases/v1",
+    "https://assets.example.test/releases/v1?token=secret",
+    "https://assets.example.test/releases/v1?",
+    "https://assets.example.test/releases/v1#fragment",
+    "https://assets.example.test/releases/v1#",
+    " https://assets.example.test/releases/v1",
+    "https://fusiondigital.club/device-assets/v1",
+    "https://fusiondigital.club./device-assets/v1",
+    "https://preview.chatgpt.site/device-assets/v1",
+    "https://preview.chatgpt.site./device-assets/v1",
+    "https://assets.example.test:443/releases/v1",
+    "https://assets.example.test\\outside/releases/v1",
+  ]) assert.throws(() => normalizeHttpsBaseUrl(value), /Asset base URL/u, value);
+
+  assert.doesNotThrow(() => assertControlledAssetResponseUrl(expected, expected));
+  for (const finalUrl of [
+    `http://assets.example.test/releases/v1/${filename}`,
+    `https://user:secret@assets.example.test/releases/v1/${filename}`,
+    `https://other.example.test/releases/v1/${filename}`,
+    `https://assets.example.test/outside/${filename}`,
+    `${expected}?token=secret`,
+    `https://fusiondigital.club/releases/v1/${filename}`,
+    `https://preview.chatgpt.site/releases/v1/${filename}`,
+  ]) {
+    assert.throws(
+      () => assertControlledAssetResponseUrl(finalUrl, expected),
+      /invalid final URL|controlled HTTPS base/u,
+      finalUrl,
+    );
+  }
+});
+
 test("postbuild prunes only the Sites ITER cache and preserves the public-anonymous bundle", async () => {
   const scratch = await mkdtemp(join(tmpdir(), "fusion-postbuild-iter-"));
   const app = join(scratch, "app");
@@ -138,8 +194,8 @@ test("postbuild prunes only the Sites ITER cache and preserves the public-anonym
   const sourceAsset = join(scratch, "public", "models", "iter-high-detail-v1", "source.glb");
   const lockPath = join(scratch, "runtime-assets.lock.json");
   const files = [
-    { filename: "alpha.high.meshopt.glb", bytes: 3 },
-    { filename: "beta.high.meshopt.glb", bytes: 5 },
+    { filename: "alpha.high.meshopt.glb", bytes: 3, sha256: createHash("sha256").update("abc").digest("hex") },
+    { filename: "beta.high.meshopt.glb", bytes: 5, sha256: createHash("sha256").update("12345").digest("hex") },
   ];
 
   try {

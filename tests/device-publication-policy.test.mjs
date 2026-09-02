@@ -5,6 +5,7 @@ import { readdir, readFile, stat } from 'node:fs/promises';
 import { extname, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
+import { extractExl50uGeneralAssemblyAssets } from '../scripts/assets/exl50u-general-assembly-runtime-contract.mjs';
 
 const repositoryRoot = fileURLToPath(new URL('../', import.meta.url));
 const publicRoot = resolve(repositoryRoot, 'public');
@@ -27,6 +28,8 @@ const maxExlHighTriangles = 2_000_000;
 const maxExlMobileDecodedGpuBytes = 160 * 1024 * 1024;
 const iterManifestEndpoint = '/models/iter-public-simplified/model-manifest.json';
 const ehlManifestEndpoint = '/models/ehl2-preliminary-v1/model-manifest.json';
+const runtimeAssetMirrorCommit = '0123456789abcdef0123456789abcdef01234567';
+const runtimeAssetMirrorRoot = `https://raw.githubusercontent.com/tianshao1992/fusion-physics-atlas-assets/${runtimeAssetMirrorCommit}`;
 const maxEhlPublicDerivativeBytes = 16 * 1024 * 1024;
 const maxEhlDecodedGpuBytes = 128 * 1024 * 1024;
 const reviewedEhlArtifact = Object.freeze({
@@ -186,13 +189,20 @@ async function renderHomepageWorkspace() {
   );
 }
 
-async function fetchFromWorker(pathname, init) {
+function responseAt(url, init, redirected = false) {
+  const response = new Response(init?.body ?? null, init);
+  Object.defineProperty(response, 'url', { configurable: true, value: url });
+  Object.defineProperty(response, 'redirected', { configurable: true, value: redirected });
+  return response;
+}
+
+async function fetchFromWorker(pathname, init, bindings = {}) {
   const workerUrl = new URL('../dist/server/index.js', import.meta.url);
   workerUrl.searchParams.set('publication-header-test', `${process.pid}-${Date.now()}-${pathname}`);
   const { default: worker } = await import(workerUrl.href);
   return worker.fetch(
     new Request(`http://localhost${pathname}`, init),
-    { ASSETS: { fetch: async (request) => {
+    { ...bindings, ASSETS: { fetch: async (request) => {
       const assetPathname = new URL(request.url).pathname;
       if (assetPathname.startsWith('/models/iter-high-detail-v1/')) {
         return new Response('Not found', { status: 404 });
@@ -217,6 +227,20 @@ test('publishes only catalog-declared EXL, ITER and EHL browser derivatives and 
     const publicModelPath = relative(repositoryRoot, endpointToPublicPath(asset.path)).replaceAll('\\', '/').toLowerCase();
     return [publicModelPath, publicModelPath.replace(/^public\//, 'dist/client/')];
   }));
+  const exlGeneralAssembly = catalog.devices.find(
+    (device) => device.id === 'exl50u-general-assembly-20260630',
+  );
+  if (exlGeneralAssembly?.viewer?.mode === 'real-3d') {
+    const generalAssemblyManifest = JSON.parse(await readFile(
+      endpointToPublicPath(exlGeneralAssembly.viewer.manifestEndpoint),
+      'utf8',
+    ));
+    const { files } = extractExl50uGeneralAssemblyAssets(generalAssemblyManifest);
+    for (const file of files) {
+      allowedExlGeometry.add(`public/models/exl50u-general-assembly-v1/${file.filename}`);
+      allowedExlGeometry.add(`dist/client/models/exl50u-general-assembly-v1/${file.filename}`);
+    }
+  }
   const iter = catalog.devices.find((device) => identifiesIterDevice(device.id));
   assert.equal(iter?.viewer?.mode, 'real-3d', 'ITER public geometry requires an explicit real-3d catalog entry');
   assert.equal(iter.viewer.manifestEndpoint, iterManifestEndpoint);
@@ -267,6 +291,7 @@ test('publishes only catalog-declared EXL, ITER and EHL browser derivatives and 
 
 test('public device catalog is fail-closed and authorizes only bounded, verifiable browser assets', async () => {
   const catalog = JSON.parse(await readFile(resolve(publicRoot, 'models/device-catalog.json'), 'utf8'));
+  const runtimeLock = JSON.parse(await readFile(resolve(repositoryRoot, 'assets/runtime-assets.lock.json'), 'utf8'));
   assert.ok(Array.isArray(catalog.devices) && catalog.devices.length === 5);
 
   for (const device of catalog.devices) {
@@ -283,13 +308,30 @@ test('public device catalog is fail-closed and authorizes only bounded, verifiab
       assert.equal(manifest.access?.classification, 'PUBLIC');
       assert.equal(manifest.access?.redistributionAllowed, true);
       assert.equal(manifest.access?.engineeringUseAllowed, false);
-      const isExlDerivative = identifiesExlDevice(device.id);
+      const isExlGeneralAssembly = device.id === 'exl50u-general-assembly-20260630';
+      const isExlDerivative = identifiesExlDevice(device.id) && !isExlGeneralAssembly;
       const isIterDerivative = identifiesIterDevice(device.id);
       const isEhlDerivative = identifiesEhlDevice(device.id);
       let glb = null;
       if (isIterDerivative) {
         assert.equal(manifest.schemaVersion, '1.3', 'component-only ITER delivery requires manifest 1.3');
         assert.equal(manifest.assets?.webModel, undefined, 'ITER must not expose a monolithic fallback model');
+      } else if (isExlGeneralAssembly) {
+        assert.equal(manifestEndpoint, '/models/exl50u-general-assembly-v1/model-manifest.json');
+        const { files, totalBytes } = extractExl50uGeneralAssemblyAssets(manifest);
+        const lockedBundle = runtimeLock.externalBundles?.find(
+          (bundle) => bundle.id === 'exl50u-general-assembly-v1',
+        );
+        assert.ok(lockedBundle, 'active EXL-50U general assembly requires its external runtime lock');
+        assert.equal(lockedBundle.fileCount, 21);
+        assert.equal(lockedBundle.totalBytes, totalBytes);
+        assert.deepEqual(
+          lockedBundle.files.map(({ role, filename, route, sha256, bytes }) => (
+            { role, filename, route, sha256, bytes }
+          )),
+          files,
+          'active EXL-50U general-assembly manifest and runtime lock must be identical',
+        );
       } else {
         const byteBudget = isExlDerivative
           ? maxExlPublicDerivativeBytes
@@ -318,7 +360,44 @@ test('public device catalog is fail-closed and authorizes only bounded, verifiab
           `${device.id} poster hash must match its declaration`);
       }
 
-      if (isExlDerivative) {
+      if (isExlGeneralAssembly) {
+        const { files, totalBytes } = extractExl50uGeneralAssemblyAssets(manifest);
+        assert.equal(manifest.schemaVersion, '1.4');
+        assert.equal(manifest.devicePackage?.kind, 'public-simplified-derivative');
+        assert.equal(manifest.devicePackage?.authority, 'illustrative');
+        assert.equal(manifest.assets.sourceCad, undefined);
+        assert.equal(manifest.assets.webModels.length, 1);
+        assert.equal(manifest.assets.shardBundles.length, 1);
+        assert.equal(files.length, 21);
+        assert.ok(totalBytes <= 300 * 1024 * 1024);
+        assert.ok(files[0].bytes <= 12 * 1024 * 1024);
+        assert.ok(files.slice(1).every((file) => file.bytes < 24 * 1024 * 1024));
+        const shardBundle = manifest.assets.shardBundles[0];
+        assert.equal(shardBundle.shards.length, 20);
+        assert.deepEqual(shardBundle.grouping, {
+          kind: 'anonymous-transport',
+          engineeringSemantic: false,
+          engineeringUseAllowed: false,
+          representsBom: false,
+          representsEngineeringSystems: false,
+          representsAssemblyTree: false,
+        });
+        assert.equal(manifest.systems.length, 1);
+        assert.equal(manifest.systems[0].parts.length, 1);
+        assert.equal(manifest.systems[0].parts[0].nodeName, 'EXL50U_GA_VISUALIZATION');
+        assert.equal(viewer.overlayEligible, false);
+        assert.match(device.statement, /anonymous public visualization derivative/i);
+        for (const value of collectStrings(manifest)) {
+          assert.doesNotMatch(value, localPathPattern);
+          if (hasGeometryOrSourceExtension(value)) {
+            assert.match(
+              value,
+              /^\/device-assets\/exl50u-general-assembly\/v1\/(?:device\.preview|anonymous-shard-(?:0[1-9]|1[0-9]|20))\.[a-f0-9]{64}(?:\.high)?\.meshopt\.glb$/,
+              `EXL-50U general assembly exposes an undeclared geometry/source path: ${value}`,
+            );
+          }
+        }
+      } else if (isExlDerivative) {
         assert.equal(manifest.devicePackage?.kind, 'public-simplified-derivative');
         assert.equal(manifest.devicePackage?.authority, 'illustrative');
         assert.equal(manifest.assets.sourceCad, undefined, 'EXL public derivative must never declare source CAD');
@@ -793,6 +872,83 @@ test('controlled raster previews and authorized EXL browser geometry receive def
   }
 });
 
+test('Sites Worker exposes only the exact reviewed EXL-50U general-assembly metadata paths', async () => {
+  const manifestPath = '/models/exl50u-general-assembly-v1/model-manifest.json';
+  const noticePath = '/models/exl50u-general-assembly-v1/PUBLICATION-NOTICE.md';
+  const metadata = [
+    {
+      pathname: manifestPath,
+      payload: JSON.stringify({ schemaVersion: '1.4', id: 'exl50u-general-assembly-v1' }),
+      contentType: 'application/json; charset=utf-8',
+    },
+    {
+      pathname: noticePath,
+      payload: '# Reviewed public visualization notice\n',
+      contentType: 'text/markdown; charset=utf-8',
+    },
+  ];
+  const workerUrl = new URL('../dist/server/index.js', import.meta.url);
+  workerUrl.searchParams.set('exl50u-ga-manifest-route-test', `${process.pid}-${Date.now()}`);
+  const { default: worker } = await import(workerUrl.href);
+  const context = { waitUntil() {}, passThroughOnException() {} };
+
+  for (const { pathname, payload, contentType } of metadata) {
+    for (const method of ['GET', 'HEAD']) {
+      let assetCalls = 0;
+      const response = await worker.fetch(
+        new Request(`http://localhost${pathname}`, { method }),
+        {
+          ASSETS: {
+            fetch: async (request) => {
+              assetCalls += 1;
+              assert.equal(new URL(request.url).pathname, pathname);
+              assert.equal(request.method, method);
+              return new Response(method === 'HEAD' ? null : payload, {
+                status: 200,
+                headers: {
+                  'Content-Encoding': 'gzip',
+                  'Content-Type': 'text/plain',
+                  'Set-Cookie': 'never-forward=true',
+                },
+              });
+            },
+          },
+        },
+        context,
+      );
+      assert.equal(response.status, 200);
+      assert.equal(assetCalls, 1);
+      assert.equal(response.headers.get('content-type'), contentType);
+      assert.match(response.headers.get('cache-control') ?? '', /no-store.*private/i);
+      assert.equal(response.headers.get('referrer-policy'), 'no-referrer');
+      assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
+      assert.equal(response.headers.get('cross-origin-resource-policy'), 'same-origin');
+      assert.match(response.headers.get('content-disposition') ?? '', /^inline\b/i);
+      assert.equal(response.headers.get('content-encoding'), null);
+      assert.equal(response.headers.get('set-cookie'), null);
+      assert.equal(method === 'HEAD' ? response.body : await response.text(), method === 'HEAD' ? null : payload);
+    }
+  }
+
+  for (const [pathname, method] of [
+    ['/models/exl50u-general-assembly-v1', 'GET'],
+    ['/models/exl50u-general-assembly-v1/other.json', 'GET'],
+    ['/models/exl50u-general-assembly-v1/anonymous-shard-01.example.high.meshopt.glb', 'GET'],
+    [manifestPath, 'POST'],
+    [noticePath, 'POST'],
+  ]) {
+    let assetCalls = 0;
+    const response = await worker.fetch(
+      new Request(`http://localhost${pathname}`, { method }),
+      { ASSETS: { fetch: async () => { assetCalls += 1; return new Response('unexpected'); } } },
+      context,
+    );
+    assert.equal(response.status, 404, `${method} ${pathname} must fail closed`);
+    assert.equal(assetCalls, 0, `${method} ${pathname} must not reach the asset binding`);
+    assert.match(response.headers.get('cache-control') ?? '', /no-store/i);
+  }
+});
+
 test('ITER high-detail proxy enforces its content-addressed HTTP and header boundary', async (t) => {
   const workerUrl = new URL('../dist/server/index.js', import.meta.url);
   workerUrl.searchParams.set('iter-proxy-contract-test', `${process.pid}-${Date.now()}`);
@@ -805,9 +961,10 @@ test('ITER high-detail proxy enforces its content-addressed HTTP and header boun
   const route = `/device-assets/iter-high-detail/v1/${filename}`;
   const asset = {
     bytes: payload.byteLength,
-    upstreamUrl: `https://github.com/tianshao1992/fusion-physics-atlas-assets/releases/download/iter-education-hd-v1/${filename}`,
+    upstreamUrl: `https://assets.example.test/iter-v1/${filename}`,
   };
-  const partialResponse = (first, last, headers = {}) => new Response(payload.slice(first, last + 1), {
+  const partialResponse = (first, last, headers = {}) => responseAt(asset.upstreamUrl, {
+    body: payload.slice(first, last + 1),
     status: 206,
     headers: {
       'Content-Length': String(last - first + 1),
@@ -844,7 +1001,7 @@ test('ITER high-detail proxy enforces its content-addressed HTTP and header boun
 
     assert.equal(captured.input, asset.upstreamUrl);
     assert.equal(captured.init.method, 'GET');
-    assert.equal(captured.init.redirect, 'follow');
+    assert.equal(captured.init.redirect, 'manual');
     const forwarded = new Headers(captured.init.headers);
     assert.equal(forwarded.get('accept-encoding'), 'identity');
     assert.equal(forwarded.get('range'), 'bytes=0-63');
@@ -912,7 +1069,7 @@ test('ITER high-detail proxy enforces its content-addressed HTTP and header boun
       headers: { Range: 'bytes=0-63', 'If-Range': '"stale"' },
     }), asset, async (_input, init) => {
       ifRange = new Headers(init.headers).get('if-range');
-      return new Response(payload, { status: 200, headers: { 'Content-Length': '128' } });
+      return responseAt(asset.upstreamUrl, { body: payload, status: 200, headers: { 'Content-Length': '128' } });
     });
     assert.equal(ifRange, '"stale"');
     assert.equal(full.status, 200);
@@ -921,7 +1078,7 @@ test('ITER high-detail proxy enforces its content-addressed HTTP and header boun
     const head = await proxyIterHighDetailAsset(
       new Request(`http://localhost${route}`, { method: 'HEAD' }),
       asset,
-      async () => new Response(payload, { status: 200, headers: { 'Content-Length': '128' } }),
+      async () => responseAt(asset.upstreamUrl, { body: payload, status: 200, headers: { 'Content-Length': '128' } }),
     );
     assert.equal(head.status, 200);
     assert.equal(head.body, null);
@@ -932,7 +1089,7 @@ test('ITER high-detail proxy enforces its content-addressed HTTP and header boun
     const response = await proxyIterHighDetailAsset(
       new Request(`http://localhost${route}`, { headers: { 'If-None-Match': '"component-v1"' } }),
       asset,
-      async () => new Response(null, {
+      async () => responseAt(asset.upstreamUrl, {
         status: 304,
         headers: {
           ETag: '"component-v1"',
@@ -975,7 +1132,8 @@ test('ITER high-detail proxy enforces its content-addressed HTTP and header boun
     const unsatisfied = await proxyIterHighDetailAsset(
       new Request(`http://localhost${route}`, { headers: { Range: 'bytes=0-63' } }),
       asset,
-      async () => new Response('upstream detail', {
+      async () => responseAt(asset.upstreamUrl, {
+        body: 'upstream detail',
         status: 416,
         headers: { 'Content-Range': 'bytes */128', 'Set-Cookie': 'never=forward' },
       }),
@@ -988,7 +1146,8 @@ test('ITER high-detail proxy enforces its content-addressed HTTP and header boun
     const limited = await proxyIterHighDetailAsset(
       new Request(`http://localhost${route}`),
       asset,
-      async () => new Response('upstream detail', {
+      async () => responseAt(asset.upstreamUrl, {
+        body: 'upstream detail',
         status: 429,
         headers: { 'Retry-After': '120', 'Set-Cookie': 'never=forward' },
       }),
@@ -1004,7 +1163,7 @@ test('ITER high-detail proxy enforces its content-addressed HTTP and header boun
     const serverFailure = await proxyIterHighDetailAsset(
       new Request(`http://localhost${route}`),
       asset,
-      async () => new Response('upstream detail', { status: 500, headers: { 'Retry-After': '30' } }),
+      async () => responseAt(asset.upstreamUrl, { body: 'upstream detail', status: 500, headers: { 'Retry-After': '30' } }),
     );
     assert.equal(serverFailure.status, 503);
     assert.equal(serverFailure.headers.get('retry-after'), '30');
@@ -1065,8 +1224,27 @@ test('ITER high-detail delivery is local-first and only uses a strictly configur
   const localPath = `/models/iter-high-detail-v1/${filename}`;
   const workerUrl = new URL('../dist/server/index.js', import.meta.url);
   workerUrl.searchParams.set('iter-local-first-test', `${process.pid}-${Date.now()}`);
-  const { default: worker } = await import(workerUrl.href);
+  const { default: worker, normalizeImmutableAssetMirrorBase } = await import(workerUrl.href);
   const context = { waitUntil() {}, passThroughOnException() {} };
+  await t.test('accepts only this raw repository, a lowercase full commit and the caller-specific bundle directory', () => {
+    const iterBase = `${runtimeAssetMirrorRoot}/iter-high-detail-v1`;
+    const exlBase = `${runtimeAssetMirrorRoot}/exl50u-general-assembly-v1`;
+    assert.equal(normalizeImmutableAssetMirrorBase(`${iterBase}/`, 'iter-high-detail-v1'), iterBase);
+    assert.equal(normalizeImmutableAssetMirrorBase(exlBase, 'exl50u-general-assembly-v1'), exlBase);
+    for (const [base, bundle] of [
+      ['https://assets.internal.example/fusion/iter-v1', 'iter-high-detail-v1'],
+      [`https://raw.githubusercontent.com/other-owner/fusion-physics-atlas-assets/${runtimeAssetMirrorCommit}/iter-high-detail-v1`, 'iter-high-detail-v1'],
+      [`https://raw.githubusercontent.com/tianshao1992/other-assets/${runtimeAssetMirrorCommit}/iter-high-detail-v1`, 'iter-high-detail-v1'],
+      ['https://raw.githubusercontent.com/tianshao1992/fusion-physics-atlas-assets/main/iter-high-detail-v1', 'iter-high-detail-v1'],
+      [`${runtimeAssetMirrorRoot.toUpperCase()}/iter-high-detail-v1`, 'iter-high-detail-v1'],
+      [`${runtimeAssetMirrorRoot}/exl50u-general-assembly-v1`, 'iter-high-detail-v1'],
+      [`${runtimeAssetMirrorRoot}/iter-high-detail-v1/extra`, 'iter-high-detail-v1'],
+      [`${runtimeAssetMirrorRoot}/%69ter-high-detail-v1`, 'iter-high-detail-v1'],
+      [`${runtimeAssetMirrorRoot}/iter-high-detail-v1`, 'exl50u-general-assembly-v1'],
+    ]) {
+      assert.equal(normalizeImmutableAssetMirrorBase(base, bundle), null, `${base} must fail for ${bundle}`);
+    }
+  });
 
   await t.test('serves the exact local allowlisted file before consulting any mirror', async () => {
     const originalFetch = globalThis.fetch;
@@ -1110,12 +1288,12 @@ test('ITER high-detail delivery is local-first and only uses a strictly configur
 
   await t.test('appends only the allowlisted filename to a valid mirror base', async () => {
     const originalFetch = globalThis.fetch;
-    const mirrorBase = 'https://assets.internal.example/fusion/iter-v1/';
+    const mirrorBase = `${runtimeAssetMirrorRoot}/iter-high-detail-v1/`;
     let remoteRequest;
     let localCalls = 0;
     globalThis.fetch = async (input, init) => {
       remoteRequest = { input, init };
-      return new Response(null, {
+      return responseAt(`${mirrorBase}${filename}`, {
         status: 200,
         headers: { 'Content-Length': String(component.bytes), ETag: `"${component.sha256}"` },
       });
@@ -1137,7 +1315,25 @@ test('ITER high-detail delivery is local-first and only uses a strictly configur
       assert.equal(localCalls, 1);
       assert.equal(remoteRequest.input, `${mirrorBase}${filename}`);
       assert.equal(remoteRequest.init.method, 'HEAD');
+      assert.equal(remoteRequest.init.redirect, 'manual');
       assert.equal(new Headers(remoteRequest.init.headers).get('accept-encoding'), 'identity');
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  await t.test('has no implicit network source when the explicit mirror is absent', async () => {
+    const originalFetch = globalThis.fetch;
+    let remoteCalls = 0;
+    globalThis.fetch = async () => { remoteCalls += 1; throw new Error('must not fetch'); };
+    try {
+      const response = await worker.fetch(
+        new Request(`http://localhost${component.path}`, { method: 'HEAD' }),
+        { ASSETS: { fetch: async () => new Response('Not found', { status: 404 }) } },
+        context,
+      );
+      assert.equal(response.status, 503);
+      assert.equal(remoteCalls, 0);
     } finally {
       globalThis.fetch = originalFetch;
     }
@@ -1154,8 +1350,22 @@ test('ITER high-detail delivery is local-first and only uses a strictly configur
       for (const base of [
         'ftp://assets.internal.example/iter',
         'https://user:secret@assets.internal.example/iter',
+        'https://@assets.internal.example/iter',
         'https://assets.internal.example/iter?token=secret',
+        'https://assets.internal.example/iter?',
         'https://assets.internal.example/iter#release',
+        'https://assets.internal.example/iter#',
+        'https://assets.fusiondigital.club/iter',
+        'https://fusiondigital.club./iter',
+        'https://another-project.chatgpt.site/iter',
+        'https://another-project.chatgpt.site./iter',
+        'https://assets.internal.example:443/iter',
+        'https://assets.internal.example\\outside/iter',
+        'https://raw.githubusercontent.com/tianshao1992/fusion-physics-atlas-assets/main/iter-high-detail-v1',
+        `https://raw.githubusercontent.com/tianshao1992/fusion-physics-atlas-assets/${runtimeAssetMirrorCommit.slice(0, 39)}/iter-high-detail-v1`,
+        `https://raw.githubusercontent.com/tianshao1992/fusion-physics-atlas-assets/${runtimeAssetMirrorCommit}0/iter-high-detail-v1`,
+        `https://raw.githubusercontent.com/tianshao1992/fusion-physics-atlas-assets/${runtimeAssetMirrorCommit.toUpperCase()}/iter-high-detail-v1`,
+        `${runtimeAssetMirrorRoot}/exl50u-general-assembly-v1`,
         '../relative',
         ' https://assets.internal.example/iter',
       ]) {
@@ -1171,6 +1381,73 @@ test('ITER high-detail delivery is local-first and only uses a strictly configur
         assert.match(response.headers.get('cache-control') ?? '', /no-store/i);
       }
       assert.equal(remoteCalls, 0);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  await t.test('rejects every 3xx, redirected response and final URL drift', async () => {
+    const originalFetch = globalThis.fetch;
+    const mirrorBase = `${runtimeAssetMirrorRoot}/iter-high-detail-v1`;
+    const expectedUrl = `${mirrorBase}/${filename}`;
+    try {
+      let redirectMode;
+      globalThis.fetch = async (_input, init) => {
+        redirectMode = init.redirect;
+        return responseAt(expectedUrl, {
+          status: 302,
+          headers: { Location: expectedUrl },
+        });
+      };
+      const redirectResponse = await worker.fetch(
+        new Request(`http://localhost${component.path}`, { method: 'HEAD' }),
+        {
+          ITER_HIGH_DETAIL_ASSET_BASE_URL: mirrorBase,
+          ASSETS: { fetch: async () => new Response('Not found', { status: 404 }) },
+        },
+        context,
+      );
+      assert.equal(redirectMode, 'manual');
+      assert.equal(redirectResponse.status, 503);
+
+      globalThis.fetch = async () => responseAt(expectedUrl, {
+        status: 200,
+        headers: { 'Content-Length': String(component.bytes), ETag: `"${component.sha256}"` },
+      }, true);
+      const followedResponse = await worker.fetch(
+        new Request(`http://localhost${component.path}`, { method: 'HEAD' }),
+        {
+          ITER_HIGH_DETAIL_ASSET_BASE_URL: mirrorBase,
+          ASSETS: { fetch: async () => new Response('Not found', { status: 404 }) },
+        },
+        context,
+      );
+      assert.equal(followedResponse.status, 503);
+
+      for (const finalUrl of [
+        `http://raw.githubusercontent.com/tianshao1992/fusion-physics-atlas-assets/${runtimeAssetMirrorCommit}/iter-high-detail-v1/${filename}`,
+        `https://other.githubusercontent.com/tianshao1992/fusion-physics-atlas-assets/${runtimeAssetMirrorCommit}/iter-high-detail-v1/${filename}`,
+        `${runtimeAssetMirrorRoot}/outside/${filename}`,
+        `${expectedUrl}?token=secret`,
+        `${expectedUrl}#fragment`,
+        `https://fusiondigital.club/device-assets/iter-high-detail/v1/${filename}`,
+        `https://fusion-physics-atlas-2026.tianyuanliu1992.chatgpt.site/device-assets/iter-high-detail/v1/${filename}`,
+      ]) {
+        globalThis.fetch = async () => responseAt(finalUrl, {
+          status: 200,
+          headers: { 'Content-Length': String(component.bytes), ETag: `"${component.sha256}"` },
+        });
+        const response = await worker.fetch(
+          new Request(`http://localhost${component.path}`, { method: 'HEAD' }),
+          {
+            ITER_HIGH_DETAIL_ASSET_BASE_URL: mirrorBase,
+            ASSETS: { fetch: async () => new Response('Not found', { status: 404 }) },
+          },
+          context,
+        );
+        assert.equal(response.status, 503, finalUrl);
+        assert.match(response.headers.get('cache-control') ?? '', /no-store/i);
+      }
     } finally {
       globalThis.fetch = originalFetch;
     }
@@ -1195,7 +1472,7 @@ test('ITER high-detail production allowlist exactly mirrors the reviewed manifes
   assert.ok(bundle, 'the reviewed component bundle must exist before the Worker allowlist is enabled');
   assert.equal(bundle.components?.length, 18);
 
-  const releaseBase = 'https://github.com/tianshao1992/fusion-physics-atlas-assets/releases/download/iter-education-hd-v1/';
+  const releaseBase = `${runtimeAssetMirrorRoot}/iter-high-detail-v1/`;
   const byUpstreamUrl = new Map(bundle.components.map((component) => {
     assert.match(component.path, /^\/device-assets\/iter-high-detail\/v1\/[a-z0-9-]+\.[a-f0-9]{64}\.high\.meshopt\.glb$/);
     const filename = component.path.split('/').at(-1);
@@ -1211,16 +1488,21 @@ test('ITER high-detail production allowlist exactly mirrors the reviewed manifes
     const component = byUpstreamUrl.get(url);
     assert.ok(component, `Worker requested an undeclared release URL: ${url}`);
     assert.equal(init.method, 'HEAD');
+    assert.equal(init.redirect, 'manual');
     assert.equal(new Headers(init.headers).get('accept-encoding'), 'identity');
     requested.add(url);
-    return new Response(null, {
+    return responseAt(url, {
       status: 200,
       headers: { 'Content-Length': String(component.bytes), ETag: `"${component.sha256}"` },
     });
   };
   try {
     for (const component of bundle.components) {
-      const response = await fetchFromWorker(component.path, { method: 'HEAD' });
+      const response = await fetchFromWorker(
+        component.path,
+        { method: 'HEAD' },
+        { ITER_HIGH_DETAIL_ASSET_BASE_URL: releaseBase },
+      );
       assert.equal(response.status, 200, `${component.partId} must be on the exact Worker allowlist`);
       assert.equal(response.body, null);
       assert.equal(response.headers.get('content-length'), String(component.bytes));

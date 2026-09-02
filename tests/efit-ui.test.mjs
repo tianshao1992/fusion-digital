@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { readFile, stat } from 'node:fs/promises';
 import test from 'node:test';
 
 import { createEfitBinaryDataSource } from '../app/components/efit/data-source.ts';
@@ -9,6 +9,16 @@ const root = new URL('../', import.meta.url);
 
 async function source(path) {
   return readFile(new URL(path, root), 'utf8');
+}
+
+async function sourceExists(path) {
+  try {
+    await stat(new URL(path, root));
+    return true;
+  } catch (error) {
+    if (error?.code === 'ENOENT') return false;
+    throw error;
+  }
 }
 
 function cssRule(css, selector) {
@@ -236,7 +246,14 @@ test('all five device cards publish technical overview and model/data summaries 
     assert.doesNotMatch(`${device.deviceOverview} ${device.fileSummary}`, /授权|许可|PUBLIC|AUTHORIZED|LICEN[CS]E|GOVERNANCE/i);
   }
   assert.match(catalog.devices.find(({ id }) => id === 'exl-50u-2026-upgrade').fileSummary, /Meshopt GLB 5\.6 \/ 13\.4 MB[\s\S]*5,804[\s\S]*7 炮偏滤器拓扑/);
-  assert.match(catalog.devices.find(({ id }) => id === 'exl50u-general-assembly-20260630').fileSummary, /8 个共同原点系统导出待完成[\s\S]*当前无可加载 GLB/);
+  const formalGeneralAssembly = await sourceExists('public/models/exl50u-general-assembly-v1/model-manifest.json');
+  const generalAssemblySummary = catalog.devices.find(({ id }) => id === 'exl50u-general-assembly-20260630').fileSummary;
+  if (formalGeneralAssembly) {
+    assert.match(generalAssemblySummary, /1 个标准预览[\s\S]*20 个匿名高精度运输分片[\s\S]*摘要锁定按需加载/);
+    assert.doesNotMatch(generalAssemblySummary, /当前无可加载 GLB/);
+  } else {
+    assert.match(generalAssemblySummary, /8 个共同原点系统导出待完成[\s\S]*当前无可加载 GLB/);
+  }
   assert.equal(catalog.devices.find(({ id }) => id === 'paramak-full-device').fileSummary, '2.2 MB GLB · 17 个稳定部件');
   assert.match(catalog.devices.find(({ id }) => id === 'ehl-2-preliminary').fileSummary, /14\.2 MB Meshopt GLB[\s\S]*247 万[\s\S]*41 个法兰位姿[\s\S]*3 类诊断/);
   assert.match(catalog.devices.find(({ id }) => id === 'iter-educational-model').fileSummary, /18 个 Meshopt GLB 分片[\s\S]*98\.5 MB/);

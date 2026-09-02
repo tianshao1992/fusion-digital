@@ -1,11 +1,18 @@
-import { open, readdir, readFile, rm, stat } from 'node:fs/promises';
-import { extname, isAbsolute, relative, resolve, sep } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { createHash } from 'node:crypto';
+import { createReadStream } from 'node:fs';
+import { lstat, open, readdir, readFile, rm, stat } from 'node:fs/promises';
+import { extname, isAbsolute, join, relative, resolve, sep } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
   PUBLIC_ANONYMOUS_MODE,
   validateDeploymentBuildTarget,
 } from './build-target.mjs';
 import { precompressStaticAssets } from './precompress-static-assets.mjs';
+import {
+  EXL50U_GA_PUBLICATION_NOTICE,
+  extractExl50uGeneralAssemblyAssets,
+} from '../assets/exl50u-general-assembly-runtime-contract.mjs';
+import { assertManifestMatchesLock } from '../../deploy/aliyun-hk/verify-runtime-assets.mjs';
 
 const distUrl = new URL('../../dist/', import.meta.url);
 const distClientUrl = new URL('client/', distUrl);
@@ -27,8 +34,8 @@ const SITES_EXPANDED_LIMIT_BYTES = 256 * 1024 * 1024;
 const REQUIRED_HEADROOM_BYTES = 3 * 1024 * 1024;
 const BUILD_TARGET = process.env.FUSIONDIGITAL_BUILD_TARGET || 'sites';
 const ITER_HIGH_DETAIL_ID = 'iter-high-detail-v1';
-const ITER_HIGH_DETAIL_DESTINATION = `public/models/${ITER_HIGH_DETAIL_ID}`;
-const ITER_HIGH_DETAIL_PUBLIC_TOKEN = `/models/${ITER_HIGH_DETAIL_ID}/`;
+const EXL50U_GA_ID = 'exl50u-general-assembly-v1';
+const EXTERNAL_RUNTIME_IDS = new Set([ITER_HIGH_DETAIL_ID, EXL50U_GA_ID]);
 const OBSOLETE_RUNTIME_PACKAGES = Object.freeze([
   {
     id: 'paramak-tokamak-demo',
@@ -266,36 +273,53 @@ export function shouldEnforceSitesExpandedLimit(buildTarget = 'sites') {
   ).isSites;
 }
 
-export async function assertAppHasNoPublicIterCacheReference(applicationUrl = appUrl) {
+export async function assertAppHasNoPublicExternalCacheReference(
+  bundleId,
+  applicationUrl = appUrl,
+) {
+  if (!EXTERNAL_RUNTIME_IDS.has(bundleId)) {
+    throw new Error(`Refusing to inspect unknown external runtime bundle ${bundleId}.`);
+  }
   const appFiles = (await filesUnder(applicationUrl))
     .filter((file) => /\.[cm]?[jt]sx?$/.test(file.pathname));
   const sources = await Promise.all(appFiles.map(async (file) => ({
     file,
     source: await readFile(file, 'utf8'),
   })));
-  const publicReference = sources.find(({ source }) => source.includes(ITER_HIGH_DETAIL_PUBLIC_TOKEN));
+  const publicToken = `/models/${bundleId}/`;
+  const publicReference = sources.find(({ source }) => source.includes(publicToken));
   if (publicReference) {
     throw new Error(
-      `Refusing to prune ${ITER_HIGH_DETAIL_ID}: application source ${fileURLToPath(publicReference.file)} `
-      + `still references the internal cache URL ${ITER_HIGH_DETAIL_PUBLIC_TOKEN}`,
+      `Refusing to prune ${bundleId}: application source ${fileURLToPath(publicReference.file)} `
+      + `still references the internal cache URL ${publicToken}`,
     );
   }
 }
 
-async function assertReadableFile(fileUrl, expectedBytes) {
-  const fileStat = await stat(fileUrl);
-  if (!fileStat.isFile() || fileStat.size !== expectedBytes) {
+export async function assertAppHasNoPublicIterCacheReference(applicationUrl = appUrl) {
+  return assertAppHasNoPublicExternalCacheReference(ITER_HIGH_DETAIL_ID, applicationUrl);
+}
+
+async function sha256FileUrl(fileUrl) {
+  const hash = createHash('sha256');
+  for await (const chunk of createReadStream(fileURLToPath(fileUrl))) hash.update(chunk);
+  return hash.digest('hex');
+}
+
+async function assertReadableFile(fileUrl, expected) {
+  const fileStat = await lstat(fileUrl);
+  if (fileStat.isSymbolicLink() || !fileStat.isFile() || fileStat.size !== expected.bytes) {
     throw new Error(
       `Refusing public-anonymous build: ${fileURLToPath(fileUrl)} has ${fileStat.size} bytes; `
-      + `runtime lock requires ${expectedBytes}.`,
+      + `runtime lock requires ${expected.bytes}.`,
     );
   }
 
   const handle = await open(fileUrl, 'r');
   try {
-    if (expectedBytes > 0) {
+    if (expected.bytes > 0) {
       const probe = Buffer.allocUnsafe(1);
-      const { bytesRead } = await handle.read(probe, 0, 1, expectedBytes - 1);
+      const { bytesRead } = await handle.read(probe, 0, 1, expected.bytes - 1);
       if (bytesRead !== 1) {
         throw new Error(`could not read the final locked byte of ${fileURLToPath(fileUrl)}`);
       }
@@ -303,23 +327,121 @@ async function assertReadableFile(fileUrl, expectedBytes) {
   } finally {
     await handle.close();
   }
+  if (!/^[a-f0-9]{64}$/u.test(expected.sha256) || await sha256FileUrl(fileUrl) !== expected.sha256) {
+    throw new Error(
+      `Refusing public-anonymous build: ${fileURLToPath(fileUrl)} does not match its locked SHA-256.`,
+    );
+  }
 }
 
-export async function verifyPublicAnonymousIterCache({
+async function inspectExternalCacheTree(cacheUrl, { allowMissing = false } = {}) {
+  const root = resolve(fileURLToPath(cacheUrl));
+  let rootStat;
+  try {
+    rootStat = await lstat(root);
+  } catch (error) {
+    if (allowMissing && error?.code === 'ENOENT') return { exists: false, glbs: [] };
+    throw error;
+  }
+  if (rootStat.isSymbolicLink() || !rootStat.isDirectory()) {
+    throw new Error(`External runtime cache root must be a real directory: ${root}`);
+  }
+
+  const glbs = [];
+  const pending = [{ pathname: root, relativePath: '' }];
+  while (pending.length > 0) {
+    const current = pending.pop();
+    const entries = await readdir(current.pathname, { withFileTypes: true });
+    for (const entry of entries) {
+      const pathname = join(current.pathname, entry.name);
+      const relativePath = current.relativePath
+        ? `${current.relativePath}/${entry.name}`
+        : entry.name;
+      if (entry.isSymbolicLink()) {
+        throw new Error(`External runtime cache contains a symbolic link: ${relativePath}`);
+      }
+      const hasGlbSuffix = /\.glb$/iu.test(entry.name);
+      if (entry.isDirectory()) {
+        if (hasGlbSuffix) {
+          throw new Error(`External runtime cache GLB is not a regular file: ${relativePath}`);
+        }
+        pending.push({ pathname, relativePath });
+        continue;
+      }
+      if (!entry.isFile()) {
+        throw new Error(`External runtime cache contains a non-regular entry: ${relativePath}`);
+      }
+      if (hasGlbSuffix) {
+        glbs.push({ pathname, relativePath, fileUrl: pathToFileURL(pathname) });
+      }
+    }
+  }
+  return { exists: true, glbs };
+}
+
+async function assertActiveExlManifestMatchesLock(cacheUrl, bundle) {
+  const manifestUrl = new URL('model-manifest.json', cacheUrl);
+  let manifestInfo;
+  try {
+    manifestInfo = await lstat(manifestUrl);
+  } catch (error) {
+    if (error?.code === 'ENOENT') {
+      throw new Error('Refusing build: active EXL-50U runtime bundle is missing model-manifest.json.');
+    }
+    throw error;
+  }
+  if (manifestInfo.isSymbolicLink() || !manifestInfo.isFile() || manifestInfo.size <= 0) {
+    throw new Error('Refusing build: active EXL-50U model-manifest.json must be a non-empty regular file.');
+  }
+
+  let manifest;
+  try {
+    manifest = JSON.parse(await readFile(manifestUrl, 'utf8'));
+  } catch (error) {
+    throw new Error(`Refusing build: active EXL-50U model-manifest.json is invalid: ${error.message}`);
+  }
+  try {
+    extractExl50uGeneralAssemblyAssets(manifest);
+    assertManifestMatchesLock(manifest, bundle);
+  } catch (error) {
+    throw new Error(`Refusing build: active EXL-50U manifest does not match its anonymous runtime contract: ${error.message}`);
+  }
+
+  const noticeUrl = new URL('PUBLICATION-NOTICE.md', cacheUrl);
+  let noticeInfo;
+  try {
+    noticeInfo = await lstat(noticeUrl);
+  } catch (error) {
+    if (error?.code === 'ENOENT') {
+      throw new Error('Refusing build: active EXL-50U runtime bundle is missing PUBLICATION-NOTICE.md.');
+    }
+    throw error;
+  }
+  if (noticeInfo.isSymbolicLink() || !noticeInfo.isFile() || noticeInfo.size <= 0) {
+    throw new Error('Refusing build: active EXL-50U PUBLICATION-NOTICE.md must be a non-empty regular file.');
+  }
+  if (await readFile(noticeUrl, 'utf8') !== EXL50U_GA_PUBLICATION_NOTICE) {
+    throw new Error('Refusing build: active EXL-50U publication notice differs from the fixed anonymous public contract.');
+  }
+}
+
+export async function verifyPublicAnonymousExternalCache({
+  bundleId,
   cacheUrl,
   lockUrl = runtimeAssetLockUrl,
 }) {
   const lock = JSON.parse(await readFile(lockUrl, 'utf8'));
-  const bundle = (lock.externalBundles ?? []).find(({ id }) => id === ITER_HIGH_DETAIL_ID);
+  const bundle = (lock.externalBundles ?? []).find(({ id }) => id === bundleId);
   if (!bundle) {
-    throw new Error(`Refusing public-anonymous build: runtime lock is missing ${ITER_HIGH_DETAIL_ID}.`);
+    throw new Error(`Refusing public-anonymous build: runtime lock is missing ${bundleId}.`);
   }
   if (
-    bundle.destinationRoot !== ITER_HIGH_DETAIL_DESTINATION
+    !EXTERNAL_RUNTIME_IDS.has(bundleId)
+    || bundle.destinationRoot !== `public/models/${bundleId}`
     || bundle.fileCount !== bundle.files?.length
     || bundle.totalBytes !== bundle.files.reduce((sum, file) => sum + file.bytes, 0)
   ) {
-    throw new Error(`Refusing public-anonymous build: ${ITER_HIGH_DETAIL_ID} lock contract is invalid.`);
+    throw new Error(`Refusing public-anonymous build: ${bundleId} lock contract is invalid.`);
   }
 
   const expectedFiles = new Map();
@@ -330,73 +452,168 @@ export async function verifyPublicAnonymousIterCache({
       || file.filename.includes('/')
       || file.filename.includes('\\')
       || !Number.isSafeInteger(file.bytes)
-      || file.bytes < 0
+      || file.bytes <= 0
+      || !/^[a-f0-9]{64}$/u.test(file.sha256)
       || expectedFiles.has(file.filename)
     ) {
-      throw new Error(`Refusing public-anonymous build: ${ITER_HIGH_DETAIL_ID} contains an unsafe lock entry.`);
+      throw new Error(`Refusing public-anonymous build: ${bundleId} contains an unsafe lock entry.`);
     }
-    expectedFiles.set(file.filename, file.bytes);
+    expectedFiles.set(file.filename, file);
   }
 
-  let entries;
+  let tree;
   try {
-    entries = await readdir(cacheUrl, { withFileTypes: true });
+    tree = await inspectExternalCacheTree(cacheUrl);
   } catch (error) {
     if (error?.code === 'ENOENT') {
       throw new Error(
-        `Refusing public-anonymous build: hydrated ${ITER_HIGH_DETAIL_ID} cache is missing from dist/client.`,
+        `Refusing public-anonymous build: hydrated ${bundleId} cache is missing from dist/client.`,
       );
     }
     throw error;
   }
+  const actualGlbs = new Map(tree.glbs.map((file) => [file.relativePath, file]));
   if (
-    entries.length !== bundle.fileCount
-    || entries.some((entry) => !entry.isFile() || !expectedFiles.has(entry.name))
+    actualGlbs.size !== expectedFiles.size
+    || [...actualGlbs.keys()].some((relativePath) => !expectedFiles.has(relativePath))
+    || [...expectedFiles.keys()].some((filename) => !actualGlbs.has(filename))
   ) {
     throw new Error(
-      `Refusing public-anonymous build: ${ITER_HIGH_DETAIL_ID} must contain exactly `
-      + `${bundle.fileCount} locked files.`,
+      `Refusing public-anonymous build: ${bundleId} must contain every locked GLB and no undeclared GLB.`,
     );
   }
 
-  await Promise.all(entries.map((entry) => (
-    assertReadableFile(new URL(entry.name, cacheUrl), expectedFiles.get(entry.name))
+  await Promise.all([...expectedFiles].map(([filename, expected]) => (
+    assertReadableFile(actualGlbs.get(filename).fileUrl, expected)
   )));
 
   return { fileCount: bundle.fileCount, totalBytes: bundle.totalBytes };
 }
 
-export async function handleIterHighDetailCache({
+export async function verifyPublicAnonymousIterCache(options) {
+  return verifyPublicAnonymousExternalCache({
+    ...options,
+    bundleId: ITER_HIGH_DETAIL_ID,
+  });
+}
+
+export async function handleExternalRuntimeBundleCache({
+  bundleId,
   mode,
   clientUrl = distClientUrl,
   applicationUrl = appUrl,
   lockUrl = runtimeAssetLockUrl,
 }) {
-  const cacheUrl = new URL(`models/${ITER_HIGH_DETAIL_ID}/`, clientUrl);
+  if (!EXTERNAL_RUNTIME_IDS.has(bundleId)) {
+    throw new Error(`Refusing to process unknown external runtime bundle ${bundleId}.`);
+  }
+  const cacheUrl = new URL(`models/${bundleId}/`, clientUrl);
   const expectedCachePath = resolve(
     fileURLToPath(clientUrl),
     'models',
-    ITER_HIGH_DETAIL_ID,
+    bundleId,
   );
   if (resolve(fileURLToPath(cacheUrl)) !== expectedCachePath) {
-    throw new Error(`Refusing to process an unexpected ${ITER_HIGH_DETAIL_ID} cache target.`);
+    throw new Error(`Refusing to process an unexpected ${bundleId} cache target.`);
   }
 
-  await assertAppHasNoPublicIterCacheReference(applicationUrl);
+  await assertAppHasNoPublicExternalCacheReference(bundleId, applicationUrl);
+
+  const lock = JSON.parse(await readFile(lockUrl, 'utf8'));
+  const bundle = (lock.externalBundles ?? []).find(({ id }) => id === bundleId);
+  if (!bundle) {
+    if (bundleId !== EXL50U_GA_ID) {
+      throw new Error(`Runtime lock is missing ${bundleId}.`);
+    }
+    const tree = await inspectExternalCacheTree(cacheUrl, { allowMissing: true });
+    const glbs = tree.glbs;
+    if (mode === PUBLIC_ANONYMOUS_MODE) {
+      if (glbs.length !== 0) {
+        throw new Error(
+          `Refusing public-anonymous build: inactive ${bundleId} contains unlocked GLBs.`,
+        );
+      }
+      return { action: 'absent', bytes: 0, fileCount: 0, totalBytes: 0 };
+    }
+    let bytes = 0;
+    for (const file of glbs) {
+      bytes += (await lstat(file.fileUrl)).size;
+      await rm(file.fileUrl);
+    }
+    const after = await inspectExternalCacheTree(cacheUrl, { allowMissing: true });
+    if (after.glbs.length !== 0) {
+      throw new Error(`Refusing Sites package: inactive ${bundleId} still contains GLBs after pruning.`);
+    }
+    return { action: 'removed', bytes, fileCount: 0, totalBytes: 0 };
+  }
+
+  if (bundleId === EXL50U_GA_ID) {
+    await assertActiveExlManifestMatchesLock(cacheUrl, bundle);
+  }
 
   if (mode === PUBLIC_ANONYMOUS_MODE) {
-    const verified = await verifyPublicAnonymousIterCache({ cacheUrl, lockUrl });
+    const verified = await verifyPublicAnonymousExternalCache({ bundleId, cacheUrl, lockUrl });
     return { action: 'preserved', bytes: 0, ...verified };
   }
 
+  const tree = await inspectExternalCacheTree(cacheUrl, { allowMissing: true });
+  const expectedFilenames = new Set(bundle.files.map((file) => file.filename));
+  const undeclaredGlb = tree.glbs.find((file) => !expectedFilenames.has(file.relativePath));
+  if (undeclaredGlb) {
+    throw new Error(`Refusing Sites package: undeclared external GLB remains: ${undeclaredGlb.relativePath}`);
+  }
+
   let bytes = 0;
+  for (const file of bundle.files) {
+    const fileUrl = new URL(file.filename, cacheUrl);
+    try {
+      bytes += (await stat(fileUrl)).size;
+    } catch (error) {
+      if (error?.code !== 'ENOENT') throw error;
+    }
+    await rm(fileUrl, { force: true });
+  }
   try {
-    bytes = await byteLength(cacheUrl);
+    const after = await inspectExternalCacheTree(cacheUrl, { allowMissing: true });
+    if (after.glbs.length !== 0) {
+      throw new Error(`Refusing Sites package: external GLBs remain after pruning: ${after.glbs[0].relativePath}`);
+    }
+    const entries = await readdir(cacheUrl, { withFileTypes: true });
+    if (entries.length === 0) await rm(cacheUrl, { recursive: true });
   } catch (error) {
     if (error?.code !== 'ENOENT') throw error;
   }
-  await rm(cacheUrl, { recursive: true, force: true });
   return { action: 'removed', bytes, fileCount: 0, totalBytes: 0 };
+}
+
+export async function handleIterHighDetailCache(options) {
+  return handleExternalRuntimeBundleCache({ ...options, bundleId: ITER_HIGH_DETAIL_ID });
+}
+
+export async function handleExternalRuntimeCaches({
+  mode,
+  clientUrl = distClientUrl,
+  applicationUrl = appUrl,
+  lockUrl = runtimeAssetLockUrl,
+} = {}) {
+  const lock = JSON.parse(await readFile(lockUrl, 'utf8'));
+  const bundles = lock.externalBundles ?? [];
+  if (!bundles.some(({ id }) => id === ITER_HIGH_DETAIL_ID)) {
+    throw new Error(`Runtime lock is missing required ${ITER_HIGH_DETAIL_ID}.`);
+  }
+  if (bundles.some(({ id }) => !EXTERNAL_RUNTIME_IDS.has(id))) {
+    throw new Error('Runtime lock contains an unknown external bundle.');
+  }
+  return Promise.all([...EXTERNAL_RUNTIME_IDS].map(async (bundleId) => ({
+    bundleId,
+    ...await handleExternalRuntimeBundleCache({
+      bundleId,
+      mode,
+      clientUrl,
+      applicationUrl,
+      lockUrl,
+    }),
+  })));
 }
 
 async function assertSearchIndexIsServerEmbedded() {
@@ -482,9 +699,14 @@ export async function runPostbuildPrune({
     removed.push({ id: assetPackage.id, bytes });
   }
 
-  const iterCache = await handleIterHighDetailCache({ mode });
-  if (iterCache.action === 'removed') {
-    removed.push({ id: `${ITER_HIGH_DETAIL_ID}.client-cache`, bytes: iterCache.bytes });
+  const externalCaches = await handleExternalRuntimeCaches({ mode });
+  for (const cache of externalCaches) {
+    if (cache.action === 'removed') {
+      removed.push({
+        id: `${cache.bundleId}.client-cache`,
+        bytes: cache.bytes,
+      });
+    }
   }
 
   // The Paramak STEP remains tracked for collaborators and reproducible builds. The production
@@ -542,8 +764,10 @@ export async function runPostbuildPrune({
     );
   } else {
     console.log(
-      `[postbuild] Aliyun VM (${buildTarget}) public-anonymous runtime preserved ${iterCache.fileCount} locked ITER files `
-      + `(${iterCache.totalBytes} bytes); pruned ${removedBytes} other obsolete bytes; `
+      `[postbuild] Aliyun VM (${buildTarget}) public-anonymous runtime preserved `
+      + `${externalCaches.reduce((sum, cache) => sum + cache.fileCount, 0)} locked external files `
+      + `(${externalCaches.reduce((sum, cache) => sum + cache.totalBytes, 0)} bytes); `
+      + `pruned ${removedBytes} other obsolete bytes; `
       + `precompressed ${precompressed.fileCount} JS/CSS assets `
       + `(${precompressed.sourceBytes} -> ${precompressed.compressedBytes} bytes); `
       + `dist=${expandedBytes} bytes; Sites package limit not applicable.`,

@@ -2,12 +2,14 @@
 import { handleImageOptimization, DEFAULT_DEVICE_SIZES, DEFAULT_IMAGE_SIZES } from "vinext/server/image-optimization";
 import handler from "vinext/server/app-router-entry";
 import { ITER_HIGH_DETAIL_RELEASE_ASSETS } from "./iter-high-assets.generated";
+import { EXL50U_GENERAL_ASSEMBLY_RELEASE_ASSETS } from "./exl50u-general-assembly-assets.generated";
 
 export interface Env {
   ASSETS: Fetcher;
   DB: NonNullable<Cloudflare.Env["DB"]>;
   FUSIONDIGITAL_ANALYTICS_REPORT_SECRET?: string;
   ITER_HIGH_DETAIL_ASSET_BASE_URL?: string;
+  EXL50U_GENERAL_ASSEMBLY_ASSET_BASE_URL?: string;
   IMAGES: {
     input(stream: ReadableStream): {
       transform(options: Record<string, unknown>): {
@@ -37,8 +39,6 @@ const controlledDeviceAssets = new Map([
   ["/device-assets/exl50u-interactive/poster.webp", "/models/exl50u-interactive/poster.webp"],
 ]);
 
-const ITER_HIGH_DETAIL_RELEASE_BASE =
-  "https://github.com/tianshao1992/fusion-physics-atlas-assets/releases/download/iter-education-hd-v1";
 const controlledIterHighDetailParts = [
   "cs", "pf1", "pf2", "pf3", "pf4", "pf5", "pf6", "tf-a", "tf-b",
   "cryostat-base", "cryostat-lower", "cryostat-top", "cryostat-upper", "divertor",
@@ -85,7 +85,9 @@ function createControlledIterHighDetailAssets(
     seenDigests.add(asset.sha256);
     const filename = `${asset.partId}.${asset.sha256}.high.meshopt.glb`;
     result.set(`/device-assets/iter-high-detail/v1/${filename}`, {
-      upstreamUrl: `${ITER_HIGH_DETAIL_RELEASE_BASE}/${filename}`,
+      // Local-first delivery ignores this logical name. A remote URL is
+      // constructed only from an explicitly configured canonical mirror.
+      upstreamUrl: filename,
       filename,
       localPath: `/models/iter-high-detail-v1/${filename}`,
       bytes: asset.bytes,
@@ -96,6 +98,103 @@ function createControlledIterHighDetailAssets(
 
 const controlledIterHighDetailAssets = createControlledIterHighDetailAssets(
   ITER_HIGH_DETAIL_RELEASE_ASSETS,
+);
+
+interface Exl50uGeneralAssemblyReleaseAsset {
+  role: string;
+  filename: string;
+  sha256: string;
+  bytes: number;
+}
+
+const EXL50U_GA_ROUTE_ROOT = "/device-assets/exl50u-general-assembly/v1";
+const EXL50U_GA_LOCAL_ROOT = "/models/exl50u-general-assembly-v1";
+const EXL50U_GA_MANIFEST_PATH = `${EXL50U_GA_LOCAL_ROOT}/model-manifest.json`;
+const EXL50U_GA_PUBLICATION_NOTICE_PATH = `${EXL50U_GA_LOCAL_ROOT}/PUBLICATION-NOTICE.md`;
+const EXL50U_GA_PUBLIC_METADATA = new Map<string, string>([
+  [EXL50U_GA_MANIFEST_PATH, "application/json; charset=utf-8"],
+  [EXL50U_GA_PUBLICATION_NOTICE_PATH, "text/markdown; charset=utf-8"],
+]);
+const EXL50U_GA_MAX_BYTES = 300 * 1024 * 1024;
+const RUNTIME_ASSET_MIRROR_ORIGIN = "https://raw.githubusercontent.com";
+const RUNTIME_ASSET_MIRROR_REPOSITORY_PATH = "tianshao1992/fusion-physics-atlas-assets";
+const ITER_HIGH_DETAIL_BUNDLE_ID = "iter-high-detail-v1";
+const EXL50U_GA_BUNDLE_ID = "exl50u-general-assembly-v1";
+type RuntimeAssetBundleId = typeof ITER_HIGH_DETAIL_BUNDLE_ID | typeof EXL50U_GA_BUNDLE_ID;
+const FORBIDDEN_RUNTIME_ASSET_MIRROR_HOSTS = new Set([
+  "fusiondigital.club",
+  "www.fusiondigital.club",
+  "fusion-physics-atlas-2026.tianyuanliu1992.chatgpt.site",
+]);
+
+function isForbiddenRuntimeAssetMirrorHost(hostname: string): boolean {
+  const host = hostname.toLowerCase();
+  return host.endsWith(".")
+    || FORBIDDEN_RUNTIME_ASSET_MIRROR_HOSTS.has(host)
+    || host.endsWith(".fusiondigital.club")
+    || host === "chatgpt.site"
+    || host.endsWith(".chatgpt.site");
+}
+
+function isCanonicalRuntimeMirrorUrlText(value: string): boolean {
+  return value !== ""
+    && value === value.trim()
+    && !/[\u0000-\u001f\u007f?#]/u.test(value)
+    && !/^[a-z][a-z0-9+.-]*:\/\/[^/]*@/iu.test(value);
+}
+
+function createControlledExl50uGeneralAssemblyAssets(
+  assets: readonly Exl50uGeneralAssemblyReleaseAsset[],
+): ReadonlyMap<string, IterHighDetailProxyAsset> {
+  // Empty is the committed fail-closed state until a reviewed public 1.4
+  // manifest generates all 21 real digest entries in one change.
+  if (assets.length === 0) return new Map();
+  if (assets.length !== 21) {
+    throw new Error("EXL-50U general-assembly release contract must contain one preview and 20 shards");
+  }
+
+  const routes = new Map<string, IterHighDetailProxyAsset>();
+  const digests = new Set<string>();
+  let totalBytes = 0;
+  for (let index = 0; index < assets.length; index += 1) {
+    const asset = assets[index];
+    const expectedRole = index === 0
+      ? "preview"
+      : `anonymous-shard-${String(index).padStart(2, "0")}`;
+    const expectedFilename = index === 0
+      ? new RegExp(`^device\\.preview\\.${asset.sha256}\\.meshopt\\.glb$`, "u")
+      : new RegExp(`^anonymous-shard-${String(index).padStart(2, "0")}\\.${asset.sha256}\\.high\\.meshopt\\.glb$`, "u");
+    if (
+      asset.role !== expectedRole
+      || !/^[a-f0-9]{64}$/u.test(asset.sha256)
+      || digests.has(asset.sha256)
+      || !expectedFilename.test(asset.filename)
+      || !Number.isSafeInteger(asset.bytes)
+      || asset.bytes <= 0
+      || (index > 0 && asset.bytes >= 24 * 1024 * 1024)
+    ) {
+      throw new Error(`Invalid EXL-50U general-assembly allow-list entry: ${expectedRole}`);
+    }
+    totalBytes += asset.bytes;
+    digests.add(asset.sha256);
+    const route = `${EXL50U_GA_ROUTE_ROOT}/${asset.filename}`;
+    routes.set(route, {
+      // The local-first boundary ignores this logical name. A remote URL is
+      // constructed only after a canonical HTTPS mirror has been validated.
+      upstreamUrl: asset.filename,
+      filename: asset.filename,
+      localPath: `${EXL50U_GA_LOCAL_ROOT}/${asset.filename}`,
+      bytes: asset.bytes,
+    });
+  }
+  if (totalBytes > EXL50U_GA_MAX_BYTES) {
+    throw new Error("EXL-50U general-assembly release contract exceeds 300 MiB");
+  }
+  return routes;
+}
+
+const controlledExl50uGeneralAssemblyAssets = createControlledExl50uGeneralAssemblyAssets(
+  EXL50U_GENERAL_ASSEMBLY_RELEASE_ASSETS,
 );
 
 const controlledEfitAssets = new Map<string, string>([
@@ -297,7 +396,7 @@ export async function proxyIterHighDetailAsset(
     upstream = await upstreamFetch(asset.upstreamUrl, {
       method: request.method,
       headers: upstreamHeaders,
-      redirect: "follow",
+      redirect: "manual",
     });
   } catch {
     return iterHighDetailError(502);
@@ -371,9 +470,12 @@ export async function proxyIterHighDetailAsset(
   });
 }
 
-function normalizeIterHighDetailMirrorBase(value: string | undefined): string | null {
-  if (value === undefined || value === "") return ITER_HIGH_DETAIL_RELEASE_BASE;
-  if (value !== value.trim() || value.includes("?") || value.includes("#")) return null;
+export function normalizeImmutableAssetMirrorBase(
+  value: string | undefined,
+  expectedBundleId: RuntimeAssetBundleId,
+): string | null {
+  if (value === undefined || value === "") return null;
+  if (!isCanonicalRuntimeMirrorUrlText(value)) return null;
 
   let parsed: URL;
   try {
@@ -382,17 +484,70 @@ function normalizeIterHighDetailMirrorBase(value: string | undefined): string | 
     return null;
   }
   if (
-    (parsed.protocol !== "https:" && parsed.protocol !== "http:")
+    parsed.protocol !== "https:"
     || !parsed.hostname
+    || parsed.origin !== RUNTIME_ASSET_MIRROR_ORIGIN
     || parsed.username !== ""
     || parsed.password !== ""
     || parsed.search !== ""
     || parsed.hash !== ""
+    || isForbiddenRuntimeAssetMirrorHost(parsed.hostname)
     || /^[a-z]+:\/\/[^/]*@/i.test(value)
   ) return null;
 
   parsed.pathname = parsed.pathname.replace(/\/+$/, "");
-  return parsed.href.replace(/\/$/, "");
+  const normalized = parsed.href.replace(/\/$/, "");
+  const expectedPath = new RegExp(
+    `^/${RUNTIME_ASSET_MIRROR_REPOSITORY_PATH}/[a-f0-9]{40}/${expectedBundleId}$`,
+    "u",
+  );
+  return normalized === value.replace(/\/+$/, "") && expectedPath.test(parsed.pathname)
+    ? normalized
+    : null;
+}
+
+function validImmutableMirrorFinalResponse(
+  response: Response,
+  mirrorBase: string,
+  filename: string,
+): boolean {
+  if (!isCanonicalRuntimeMirrorUrlText(response.url)) return false;
+  let finalUrl: URL;
+  let expected: URL;
+  try {
+    finalUrl = new URL(response.url);
+    expected = new URL(`${mirrorBase}/${filename}`);
+  } catch {
+    return false;
+  }
+  return finalUrl.protocol === "https:"
+    && response.redirected === false
+    && finalUrl.username === ""
+    && finalUrl.password === ""
+    && finalUrl.search === ""
+    && finalUrl.hash === ""
+    && finalUrl.origin === expected.origin
+    && finalUrl.pathname === expected.pathname
+    && finalUrl.href === expected.href
+    && !isForbiddenRuntimeAssetMirrorHost(finalUrl.hostname);
+}
+
+async function fetchControlledImmutableMirror(
+  mirrorBase: string,
+  filename: string,
+  init: RequestInit | undefined,
+): Promise<Response> {
+  const expectedUrl = `${mirrorBase}/${filename}`;
+  const response = await fetch(expectedUrl, { ...init, redirect: "manual" });
+  if (
+    (response.status >= 300 && response.status <= 399)
+    || response.redirected
+    || !validImmutableMirrorFinalResponse(response, mirrorBase, filename)
+  ) {
+    await discardUpstreamBody(response);
+    return new Response(null, { status: 502 });
+  }
+  return response;
 }
 
 function createIterHighDetailLocalFirstFetch(
@@ -410,11 +565,36 @@ function createIterHighDetailLocalFirstFetch(
     if (localResponse.status !== 404) return localResponse;
     await discardUpstreamBody(localResponse);
 
-    const mirrorBase = normalizeIterHighDetailMirrorBase(
+    const mirrorBase = normalizeImmutableAssetMirrorBase(
       env.ITER_HIGH_DETAIL_ASSET_BASE_URL,
+      ITER_HIGH_DETAIL_BUNDLE_ID,
     );
     if (mirrorBase === null) return new Response(null, { status: 503 });
-    return fetch(`${mirrorBase}/${asset.filename}`, init);
+    return fetchControlledImmutableMirror(mirrorBase, asset.filename, init);
+  };
+}
+
+function createExl50uGeneralAssemblyLocalFirstFetch(
+  request: Request,
+  env: Env,
+  asset: IterHighDetailProxyAsset,
+): typeof fetch {
+  return async (_input, init) => {
+    if (!asset.filename || !asset.localPath) {
+      throw new Error("EXL-50U general-assembly asset is missing its controlled local path");
+    }
+
+    const localRequest = new Request(new URL(asset.localPath, request.url), init);
+    const localResponse = await env.ASSETS.fetch(localRequest);
+    if (localResponse.status !== 404) return localResponse;
+    await discardUpstreamBody(localResponse);
+
+    const mirrorBase = normalizeImmutableAssetMirrorBase(
+      env.EXL50U_GENERAL_ASSEMBLY_ASSET_BASE_URL,
+      EXL50U_GA_BUNDLE_ID,
+    );
+    if (mirrorBase === null) return new Response(null, { status: 503 });
+    return fetchControlledImmutableMirror(mirrorBase, asset.filename, init);
   };
 }
 
@@ -479,6 +659,45 @@ const worker = {
       );
     }
 
+    const exl50uGeneralAssemblyAsset = controlledExl50uGeneralAssemblyAssets.get(url.pathname);
+    if (exl50uGeneralAssemblyAsset && (request.method === "GET" || request.method === "HEAD")) {
+      return proxyIterHighDetailAsset(
+        request,
+        exl50uGeneralAssemblyAsset,
+        createExl50uGeneralAssemblyLocalFirstFetch(request, env, exl50uGeneralAssemblyAsset),
+      );
+    }
+
+    // The Sites archive retains only the reviewed public manifest and its
+    // publication notice; large GLBs are removed and served through the
+    // digest-locked proxy above. Permit exactly those two metadata paths before
+    // the private cache namespace is denied, without turning /models into a
+    // public directory-prefix bypass.
+    const exl50uGeneralAssemblyMetadataType = EXL50U_GA_PUBLIC_METADATA.get(url.pathname);
+    if (
+      exl50uGeneralAssemblyMetadataType
+      && (request.method === "GET" || request.method === "HEAD")
+    ) {
+      const manifestResponse = await env.ASSETS.fetch(new Request(
+        new URL(url.pathname, request.url),
+        { method: request.method },
+      ));
+      const headers = new Headers(manifestResponse.headers);
+      headers.set("Cache-Control", "no-store, private, max-age=0");
+      headers.set("Content-Type", exl50uGeneralAssemblyMetadataType);
+      headers.set("Referrer-Policy", "no-referrer");
+      headers.set("X-Content-Type-Options", "nosniff");
+      headers.set("Cross-Origin-Resource-Policy", "same-origin");
+      headers.set("Content-Disposition", "inline");
+      headers.delete("Content-Encoding");
+      headers.delete("Set-Cookie");
+      return new Response(request.method === "HEAD" ? null : manifestResponse.body, {
+        status: manifestResponse.status,
+        statusText: manifestResponse.statusText,
+        headers,
+      });
+    }
+
     const controlledAssetPath = controlledDeviceAssets.get(url.pathname);
     if (controlledAssetPath && (request.method === "GET" || request.method === "HEAD")) {
       const assetUrl = new URL(controlledAssetPath, request.url);
@@ -500,7 +719,9 @@ const worker = {
       url.pathname.startsWith("/device-assets/") ||
       url.pathname.startsWith("/models/exl50u-interactive/") ||
       url.pathname === "/models/iter-high-detail-v1" ||
-      url.pathname.startsWith("/models/iter-high-detail-v1/")
+      url.pathname.startsWith("/models/iter-high-detail-v1/") ||
+      url.pathname === EXL50U_GA_LOCAL_ROOT ||
+      url.pathname.startsWith(`${EXL50U_GA_LOCAL_ROOT}/`)
     ) {
       return new Response("Not found", {
         status: 404,

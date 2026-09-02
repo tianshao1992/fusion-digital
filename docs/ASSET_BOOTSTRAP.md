@@ -12,7 +12,7 @@
 | EHL-2 初步设计约半面数 Meshopt GLB、清单与公开说明 | 是 | Git | 仅为用户授权的非工程浏览器派生物；不含五个源 GLB |
 | EXL-50U EFIT v1/v2 标量、重采样轮廓、拓扑派生数据和分片 | 是 | Git | 不含原始 G-EQDSK、psi 网格或源实验档案 |
 | ITER 高清教育可视化 18 个 Meshopt GLB 分片 | 否 | HTTPS 镜像下载，或从已下载目录导入 | 约 98.5 MB；只包含经审核的运行时派生物 |
-| 原始 EXL-50U / EHL-2 / ITER CAD、STEP、B-Rep、PMI、尺寸、公差与装配元数据 | 否，且禁止补入 | 受控工程数据系统 | 不进入 Codeup、普通 Git、内网公开下载或百度网盘 |
+| 原始 EXL-50U / EHL-2 / ITER CAD、STEP、B-Rep、PMI、尺寸标注、权威尺寸表、公差与装配元数据 | 否，且禁止补入 | 受控工程数据系统 | 不进入 Codeup、普通 Git、内网公开下载或百度网盘；公开可视几何可保留近似米制尺度，但不得作为测量或工程尺寸依据 |
 | 原始 EFIT 档案、G-file、psi 网格和未脱敏实验数据 | 否，且禁止补入 | 受控实验数据系统 | 不进入 Codeup、普通 Git、内网公开下载或百度网盘 |
 
 因此，“展示当前网页所有内容”是指复现当前获准公开的网页与运行时派生物，不是把源 CAD、源 EFIT 或其他受控工程资料复制到协作仓库。
@@ -28,7 +28,7 @@ git rev-parse HEAD
 npm ci
 npm run assets:status
 npm run assets:verify:tracked
-npm run assets:hydrate
+npm run assets:hydrate -- --bundle iter-high-detail-v1 --source-dir "/reviewed/iter-high-detail-v1"
 npm run assets:verify
 npm run db:local:migrate
 npm run db:local:verify
@@ -42,7 +42,8 @@ npm run dev
 
 ## 3. 从稳定 HTTPS 镜像获取
 
-默认下载源写在资产锁文件中。团队把同一份 18 文件包上传到内网对象存储后，可为一次恢复覆盖下载根地址：
+资产锁不保存默认网络源。团队把同一份 18 文件包上传到独立静态对象存储后，必须为
+每次恢复显式设置下载根地址：
 
 ### Windows PowerShell
 
@@ -60,13 +61,18 @@ FUSION_ASSET_BASE_URL="https://download.example.internal/FusionDigital/iter-high
 npm run assets:verify
 ```
 
-镜像根地址必须满足以下条件：
+正式 Sites/HK 双端 evidence 使用的公开镜像根地址必须满足以下条件（开发机的离线恢复优先
+使用 `--source-dir`）：
 
-- 使用稳定的 `https://` 地址；浏览器登录页、临时签名链接和网盘分享页不能作为根地址；
+- 精确使用 `https://raw.githubusercontent.com/tianshao1992/fusion-physics-atlas-assets/<40位小写提交SHA>/<精确bundle-id>`；其他仓库、branch/tag、短 SHA、浏览器登录页、临时签名链接和网盘分享页不能作为根地址；
 - 根地址后直接拼接锁文件中的 18 个精确文件名即可下载，服务端不得改名或在线重新压缩；
 - 支持普通 `GET`，建议同时支持 `HEAD`、`Range`、正确的 `Content-Length` 和 `application/octet-stream` 或 `model/gltf-binary`；
 - 对协作机器和部署网络可达，证书链由组织信任；不要用 `NODE_TLS_REJECT_UNAUTHORIZED=0` 绕过证书校验；
 - URL、仓库、脚本和日志中不包含账号、口令、Cookie、访问令牌或带凭证的查询参数。
+- URL 不得包含 userinfo、query、fragment 或额外路径。Worker 使用 `redirect: manual`，
+  任何 3xx、`Response.redirected=true` 或最终 URL 与固定 raw origin/repository/full-SHA/
+  bundle/filename 不完全一致都失败。GitHub Releases 的常规 `302` 下载 URL、生产域名与
+  `*.chatgpt.site` 都不能作为该镜像。
 
 维护者更新镜像时应先从已通过 `assets:verify` 的目录生成上传区，再把文件原样上传：
 
@@ -108,7 +114,12 @@ npm run assets:verify:tracked
 npm run check
 ```
 
-运行时镜像可通过部署环境变量 `ITER_HIGH_DETAIL_ASSET_BASE_URL` 指向团队内可访问的稳定 HTTPS 根地址。未设置时使用代码中审核过的默认发布源。变量只配置根地址，客户端不能传入任意上游 URL。
+Sites 运行时镜像只能通过 `ITER_HIGH_DETAIL_ASSET_BASE_URL` 和
+`EXL50U_GENERAL_ASSEMBLY_ASSET_BASE_URL` 显式设置，且必须精确为
+`https://raw.githubusercontent.com/tianshao1992/fusion-physics-atlas-assets/<40位小写提交SHA>/<精确bundle-id>`。
+代码中没有默认网络源；未设置且本地文件不存在时 Worker 返回 `503`。客户端不能传入
+任意上游 URL；其他仓库、branch/tag/短 SHA、userinfo、query、fragment、额外路径、
+任何 3xx/已重定向响应或最终 URL 漂移都会被拒绝。GitHub Releases 常规下载 URL不能使用。
 
 ### 阿里云香港生产 / 其他自包含模式
 

@@ -98,10 +98,11 @@ git clone --branch main --single-branch ssh://git@ssh.github.com:443/tianshao199
 
 ### 3.1 补齐 ITER 18 个高清运行时分片
 
-日常联网开发可让 Worker 使用默认外部镜像；需要验证全部公开内容、准备内网部署或断网运行时执行：
+Worker 没有默认外部镜像；需要验证全部公开内容、准备内网部署或断网运行时，显式导入
+已审核目录：
 
 ```bash
-npm run assets:hydrate
+npm run assets:hydrate -- --bundle iter-high-detail-v1 --source-dir "/reviewed/iter-high-detail-v1"
 npm run assets:verify
 ```
 
@@ -158,7 +159,8 @@ ${EDITOR:-vi} .env.local
 | `DEEPSEEK_API_KEY` / `DEEPSEEK_MODEL` | 否 | DeepSeek 服务端密钥及模型 |
 | `MOONSHOT_API_KEY` / `MOONSHOT_MODEL` | 否 | Kimi/Moonshot 服务端密钥及模型 |
 | `MOONSHOT_REGION` | 否 | `cn` 或 `international`；默认 `cn` |
-| `ITER_HIGH_DETAIL_ASSET_BASE_URL` | 否 | Sites 预览/联网 Worker 的 ITER 18 片运行时镜像根地址；未设时使用审核过的默认源 |
+| `ITER_HIGH_DETAIL_ASSET_BASE_URL` | 否 | Sites 预览/联网 Worker 的 ITER 18 片显式镜像根地址；未设且本地无文件时返回 503 |
+| `EXL50U_GENERAL_ASSEMBLY_ASSET_BASE_URL` | 否 | EXL-50U 总装激活后，Sites 预览/联网 Worker 的 21 个匿名 GLB 显式镜像根地址；同样无默认源 |
 | `PORT` | 否 | `npm run start` 的端口，默认 `3000` |
 
 Sites 预览环境的供应商密钥应在 Runtime environment variables 中设置为 Secret；
@@ -168,8 +170,11 @@ Sites 预览环境的供应商密钥应在 Runtime environment variables 中设�
 
 `FUSION_ASSET_BASE_URL` 与 `FUSION_ASSET_SOURCE_DIR` 是运行 `assets:hydrate` 时的本机
 进程变量，不是网站运行时密钥；应按 3.1 节只在当前终端设置。
-`ITER_HIGH_DETAIL_ASSET_BASE_URL` 只用于 Sites 预览或其他明确允许联网的 Worker，
-且不能包含账号、口令、query 或 hash。阿里云香港生产必须把全部锁定资产打入发布包，
+`ITER_HIGH_DETAIL_ASSET_BASE_URL` 与 `EXL50U_GENERAL_ASSEMBLY_ASSET_BASE_URL` 只用于
+Sites 预览或其他明确允许联网的 Worker，且必须精确为
+`https://raw.githubusercontent.com/tianshao1992/fusion-physics-atlas-assets/<40位小写提交SHA>/<精确bundle-id>`。
+其他仓库、branch/tag/短 SHA、userinfo、query、hash、额外路径、任何 3xx 或最终 URL
+漂移都会被拒绝；不能使用 GitHub Releases、生产域名或 Sites 域名。阿里云香港生产必须把全部锁定资产打入发布包，
 不得配置运行时镜像回源。
 
 安全规则：

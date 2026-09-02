@@ -1,6 +1,13 @@
 import type { Group, Object3D } from 'three';
 import type { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import type { DeviceComponentBundle, DeviceComponentModel, DeviceWebModel } from '../deviceManifest';
+import {
+  ANONYMOUS_SHARD_REQUIRED_EXTENSIONS,
+  type DeviceAnonymousShardBundle,
+  type DeviceAnonymousShardModel,
+  type DeviceComponentBundle,
+  type DeviceComponentModel,
+  type DeviceWebModel,
+} from '../deviceManifest';
 
 type ComponentBundleLoadOptions = {
   loader: GLTFLoader;
@@ -14,6 +21,39 @@ type MonolithicModelLoadOptions = {
   loader: GLTFLoader;
   signal: AbortSignal;
   onProgress?: (loadedBytes: number, totalBytes: number) => void;
+};
+
+export type AnonymousShardLoadProgress = {
+  quality: 'preview' | 'high';
+  phase: 'download' | 'decode';
+  loadedBytes: number;
+  totalBytes: number;
+  shardIndex: number | null;
+  shardCount: number;
+};
+
+type AnonymousShardBundleLoadOptions = {
+  loader: GLTFLoader;
+  createGroup: () => Group;
+  signal: AbortSignal;
+  onProgress?: (progress: AnonymousShardLoadProgress) => void;
+};
+
+export type AnonymousDeviceModelLoadOptions = {
+  loader: GLTFLoader;
+  createGroup: () => Group;
+  signal: AbortSignal;
+  requestedQuality?: 'preview' | 'high';
+  userInitiatedHighDetail?: boolean;
+  onProgress?: (progress: AnonymousShardLoadProgress) => void;
+  onFallback?: (highDetailError: Error) => void;
+};
+
+export type AnonymousDeviceModelLoadResult = {
+  model: Object3D;
+  quality: 'preview' | 'high';
+  fallbackUsed: boolean;
+  fallbackReason?: Error;
 };
 
 export type SerialTaskGate = {
@@ -47,6 +87,29 @@ function abortError() {
   return new DOMException('Component model loading was aborted.', 'AbortError');
 }
 
+function isAbortError(error: unknown) {
+  return error instanceof DOMException && error.name === 'AbortError';
+}
+
+type EmbeddedGlbDocument = {
+  buffers?: Array<{
+    byteLength?: number;
+    uri?: string;
+    extensions?: { EXT_meshopt_compression?: { fallback?: boolean } };
+  }>;
+  bufferViews?: Array<{
+    extensions?: { EXT_meshopt_compression?: unknown };
+  }>;
+  images?: Array<{ bufferView?: number; uri?: string }>;
+  extensionsUsed?: string[];
+  extensionsRequired?: string[];
+  scene?: number;
+  scenes?: Array<{ nodes?: number[] }>;
+  nodes?: Array<{
+    extensions?: { EXT_mesh_gpu_instancing?: unknown };
+  }>;
+};
+
 function assertSelfContainedGlb(bytes: ArrayBuffer, assetLabel: string) {
   const view = new DataView(bytes);
   if (bytes.byteLength < 28
@@ -59,14 +122,7 @@ function assertSelfContainedGlb(bytes: ArrayBuffer, assetLabel: string) {
   const jsonLength = view.getUint32(12, true);
   const jsonEnd = 20 + jsonLength;
   if (jsonEnd + 8 > bytes.byteLength) throw new Error(`Reviewed model ${assetLabel} has an invalid GLB chunk table.`);
-  let document: {
-    buffers?: Array<{
-      byteLength?: number;
-      uri?: string;
-      extensions?: { EXT_meshopt_compression?: { fallback?: boolean } };
-    }>;
-    images?: Array<{ bufferView?: number; uri?: string }>;
-  };
+  let document: EmbeddedGlbDocument;
   try {
     document = JSON.parse(new TextDecoder().decode(new Uint8Array(bytes, 20, jsonLength)).trimEnd());
   } catch {
@@ -91,6 +147,7 @@ function assertSelfContainedGlb(bytes: ArrayBuffer, assetLabel: string) {
   if ((document.images ?? []).some((image) => typeof image.uri === 'string' || !Number.isSafeInteger(image.bufferView))) {
     throw new Error(`Reviewed model ${assetLabel} contains an unreviewed external image resource.`);
   }
+  return document;
 }
 
 async function sha256Hex(bytes: ArrayBuffer) {
@@ -151,6 +208,153 @@ async function readVerifiedBytes(
   if (digest !== asset.sha256.toLowerCase()) throw new Error(`Reviewed model ${assetLabel} SHA-256 mismatch.`);
   assertSelfContainedGlb(merged.buffer, assetLabel);
   return merged.buffer;
+}
+
+async function readVerifiedPreallocatedBytes(
+  asset: Pick<DeviceWebModel, 'path' | 'sha256' | 'bytes'> & { id?: string },
+  signal: AbortSignal,
+  onBytes: (loadedBytes: number) => void,
+) {
+  const assetLabel = asset.id ?? asset.path;
+  const response = await fetch(asset.path, { cache: 'force-cache', signal });
+  if (!response.ok) throw new Error(`Reviewed model ${assetLabel} returned HTTP ${response.status}.`);
+  const contentLengthHeader = response.headers.get('Content-Length');
+  const contentLength = contentLengthHeader === null ? null : Number(contentLengthHeader);
+  if (contentLength !== null && (!Number.isSafeInteger(contentLength) || contentLength !== asset.bytes)) {
+    await response.body?.cancel();
+    throw new Error(`Reviewed model ${assetLabel} declared an invalid byte length (${contentLengthHeader}/${asset.bytes}).`);
+  }
+  const target = new Uint8Array(asset.bytes);
+  let received = 0;
+  if (response.body) {
+    const reader = response.body.getReader();
+    while (true) {
+      if (signal.aborted) {
+        await reader.cancel();
+        throw abortError();
+      }
+      const { done, value } = await reader.read();
+      if (done) break;
+      if (!value || value.byteLength === 0) continue;
+      if (received + value.byteLength > target.byteLength) {
+        await reader.cancel();
+        throw new Error(`Reviewed model ${assetLabel} exceeded its reviewed byte budget.`);
+      }
+      target.set(value, received);
+      received += value.byteLength;
+      onBytes(received);
+    }
+  } else {
+    if (contentLength !== asset.bytes) {
+      throw new Error(`Reviewed model ${assetLabel} cannot be safely read within its reviewed byte budget.`);
+    }
+    const fallback = new Uint8Array(await response.arrayBuffer());
+    if (fallback.byteLength !== target.byteLength) {
+      throw new Error(`Reviewed model ${assetLabel} byte length mismatch (${fallback.byteLength}/${asset.bytes}).`);
+    }
+    target.set(fallback);
+    received = fallback.byteLength;
+    onBytes(received);
+  }
+  if (received !== target.byteLength) {
+    throw new Error(`Reviewed model ${assetLabel} byte length mismatch (${received}/${asset.bytes}).`);
+  }
+  const digest = await sha256Hex(target.buffer);
+  if (digest !== asset.sha256.toLowerCase()) throw new Error(`Reviewed model ${assetLabel} SHA-256 mismatch.`);
+  return target.buffer;
+}
+
+function assertAnonymousTransportDocument(
+  document: EmbeddedGlbDocument,
+  assetLabel: string,
+  requireInstancing: boolean,
+) {
+  const stack: unknown[] = [document];
+  while (stack.length > 0) {
+    const value = stack.pop();
+    if (Array.isArray(value)) {
+      stack.push(...value);
+      continue;
+    }
+    if (!value || typeof value !== 'object') continue;
+    for (const [key, child] of Object.entries(value as Record<string, unknown>)) {
+      if (key === 'name' || key === 'extras') {
+        throw new Error(`Anonymous visualization ${assetLabel} contains forbidden identifying metadata.`);
+      }
+      stack.push(child);
+    }
+  }
+  if (document.scene !== 0
+    || document.scenes?.length !== 1
+    || document.scenes[0]?.nodes?.length !== 1
+    || document.scenes[0].nodes[0] !== 0) {
+    throw new Error(`Anonymous visualization ${assetLabel} must contain one default scene and one anonymous root.`);
+  }
+  if (!(document.extensionsUsed ?? []).includes('EXT_meshopt_compression')
+    || !(document.extensionsRequired ?? []).includes('EXT_meshopt_compression')
+    || !(document.bufferViews ?? []).some((view) => view.extensions?.EXT_meshopt_compression !== undefined)) {
+    throw new Error(`Anonymous visualization ${assetLabel} does not contain its reviewed EXT_meshopt_compression payload.`);
+  }
+  if (requireInstancing) {
+    for (const extension of ANONYMOUS_SHARD_REQUIRED_EXTENSIONS) {
+      if (!(document.extensionsUsed ?? []).includes(extension)
+        || !(document.extensionsRequired ?? []).includes(extension)) {
+        throw new Error(`Anonymous shard ${assetLabel} does not require its reviewed ${extension} contract.`);
+      }
+    }
+    if (!(document.nodes ?? []).some((node) => node.extensions?.EXT_mesh_gpu_instancing !== undefined)) {
+      throw new Error(`Anonymous shard ${assetLabel} does not contain EXT_mesh_gpu_instancing placements.`);
+    }
+  }
+}
+
+function assertAnonymousInstancedShardGlb(bytes: ArrayBuffer, asset: DeviceAnonymousShardModel) {
+  const document = assertSelfContainedGlb(bytes, asset.id);
+  assertAnonymousTransportDocument(document, asset.id, true);
+}
+
+function assertAnonymousDecodedScene(scene: Object3D, assetLabel: string, requireInstancing: boolean) {
+  let meshCount = 0;
+  let instancedMeshCount = 0;
+  scene.traverse((node) => {
+    if ('isMesh' in node && node.isMesh === true) meshCount += 1;
+    if ('isInstancedMesh' in node && node.isInstancedMesh === true) instancedMeshCount += 1;
+  });
+  if (scene.children.length !== 1) {
+    throw new Error(`Anonymous visualization ${assetLabel} must decode to one scene root.`);
+  }
+  if (meshCount === 0) throw new Error('Anonymous visualization contains no renderable mesh.');
+  if (requireInstancing && instancedMeshCount === 0) {
+    throw new Error('Anonymous shard decoded without an EXT_mesh_gpu_instancing renderable.');
+  }
+  // Raw JSON has already proven that it contains no names or extras. Three's
+  // GLTFLoader nevertheless synthesizes runtime labels such as `mesh_0` for
+  // anonymous primitives. They are transport artifacts, not reviewed public
+  // identities, so remove them before attaching the scene to our sole wrapper.
+  scene.traverse((node) => {
+    node.name = '';
+    if (node.userData && Object.prototype.hasOwnProperty.call(node.userData, 'name')) {
+      delete node.userData.name;
+    }
+  });
+}
+
+function assertAnonymousRuntimeWrapper(scene: Object3D, rootNodeName: string, requireInstancing: boolean) {
+  const namedNodes: Object3D[] = [];
+  let meshCount = 0;
+  let instancedMeshCount = 0;
+  scene.traverse((node) => {
+    if (node.name) namedNodes.push(node);
+    if ('isMesh' in node && node.isMesh === true) meshCount += 1;
+    if ('isInstancedMesh' in node && node.isInstancedMesh === true) instancedMeshCount += 1;
+  });
+  if (namedNodes.length !== 1 || namedNodes[0] !== scene || scene.name !== rootNodeName) {
+    throw new Error(`Anonymous visualization must expose only the runtime-controlled ${rootNodeName} wrapper.`);
+  }
+  if (meshCount === 0) throw new Error('Anonymous visualization contains no renderable mesh.');
+  if (requireInstancing && instancedMeshCount === 0) {
+    throw new Error('Anonymous shard decoded without an EXT_mesh_gpu_instancing renderable.');
+  }
 }
 
 function assertStableComponentIdentity(scene: Object3D, asset: DeviceComponentModel) {
@@ -271,5 +475,147 @@ export async function loadVerifiedComponentBundle(
     signal.removeEventListener('abort', abortBundle);
     for (const scene of loadedScenes) if (scene) disposeParsedScene(scene);
     throw error;
+  }
+}
+
+/**
+ * Loads anonymous visualization shards strictly one at a time. The transfer,
+ * digest check and non-abortable GLTF decode for one shard must settle before
+ * the next shard starts, bounding peak compressed and decoded memory.
+ */
+export async function loadVerifiedAnonymousShardBundle(
+  bundle: DeviceAnonymousShardBundle,
+  options: AnonymousShardBundleLoadOptions,
+): Promise<Group> {
+  const { loader, createGroup, signal, onProgress } = options;
+  if (signal.aborted) throw abortError();
+  const group = createGroup();
+  group.name = bundle.rootNodeName;
+  const loadedScenes: Object3D[] = [];
+  let completedBytes = 0;
+  try {
+    for (const asset of bundle.shards) {
+      if (signal.aborted) throw abortError();
+      const bytes = await readVerifiedPreallocatedBytes(asset, signal, (loadedBytes) => {
+        onProgress?.({
+          quality: 'high',
+          phase: 'download',
+          loadedBytes: completedBytes + loadedBytes,
+          totalBytes: bundle.bytes,
+          shardIndex: asset.index,
+          shardCount: bundle.shards.length,
+        });
+      });
+      assertAnonymousInstancedShardGlb(bytes, asset);
+      if (signal.aborted) throw abortError();
+      onProgress?.({
+        quality: 'high',
+        phase: 'decode',
+        loadedBytes: completedBytes + asset.bytes,
+        totalBytes: bundle.bytes,
+        shardIndex: asset.index,
+        shardCount: bundle.shards.length,
+      });
+      const gltf = await loader.parseAsync(bytes, '');
+      if (signal.aborted) {
+        disposeParsedScene(gltf.scene);
+        throw abortError();
+      }
+      try {
+        // Public GLBs contain no source or synthetic names. Their single
+        // anonymous scene root remains untouched; only the in-memory wrapper
+        // below receives the controlled visualization identity.
+        assertAnonymousDecodedScene(gltf.scene, asset.id, true);
+      } catch (error) {
+        disposeParsedScene(gltf.scene);
+        throw error;
+      }
+      loadedScenes.push(gltf.scene);
+      completedBytes += asset.bytes;
+      onProgress?.({
+        quality: 'high',
+        phase: 'decode',
+        loadedBytes: completedBytes,
+        totalBytes: bundle.bytes,
+        shardIndex: asset.index,
+        shardCount: bundle.shards.length,
+      });
+    }
+    for (const scene of loadedScenes) group.add(scene);
+    assertAnonymousRuntimeWrapper(group, bundle.rootNodeName, true);
+    return group;
+  } catch (error) {
+    for (const scene of loadedScenes) disposeParsedScene(scene);
+    throw error;
+  }
+}
+
+/**
+ * Preview is the fail-safe default. High detail is entered only by an explicit
+ * user action; any non-abort high-detail failure disposes partial shards and
+ * returns to the independently verified preview.
+ */
+export async function loadAnonymousDeviceModelWithFallback(
+  preview: DeviceWebModel,
+  bundle: DeviceAnonymousShardBundle,
+  options: AnonymousDeviceModelLoadOptions,
+): Promise<AnonymousDeviceModelLoadResult> {
+  const { loader, createGroup, signal, onProgress } = options;
+  const requestedHigh = options.requestedQuality === 'high' && options.userInitiatedHighDetail === true;
+  const loadPreview = async () => {
+    const bytes = await readVerifiedPreallocatedBytes(preview, signal, (loadedBytes) => onProgress?.({
+        quality: 'preview',
+        phase: 'download',
+        loadedBytes,
+        totalBytes: preview.bytes,
+        shardIndex: null,
+        shardCount: 0,
+      }));
+    const document = assertSelfContainedGlb(bytes, preview.path);
+    assertAnonymousTransportDocument(document, preview.path, false);
+    if (signal.aborted) throw abortError();
+    const parsed = await loader.parseAsync(bytes, '');
+    if (signal.aborted) {
+      disposeParsedScene(parsed.scene);
+      throw abortError();
+    }
+    try {
+      assertAnonymousDecodedScene(parsed.scene, preview.path, false);
+    } catch (error) {
+      disposeParsedScene(parsed.scene);
+      throw error;
+    }
+    const model = createGroup();
+    model.name = bundle.rootNodeName;
+    model.add(parsed.scene);
+    assertAnonymousRuntimeWrapper(model, bundle.rootNodeName, false);
+    onProgress?.({
+      quality: 'preview',
+      phase: 'decode',
+      loadedBytes: preview.bytes,
+      totalBytes: preview.bytes,
+      shardIndex: null,
+      shardCount: 0,
+    });
+    return model;
+  };
+
+  if (!requestedHigh) {
+    return { model: await loadPreview(), quality: 'preview', fallbackUsed: false };
+  }
+  try {
+    const model = await loadVerifiedAnonymousShardBundle(bundle, {
+      loader,
+      createGroup,
+      signal,
+      onProgress,
+    });
+    return { model, quality: 'high', fallbackUsed: false };
+  } catch (error) {
+    if (signal.aborted || isAbortError(error)) throw error;
+    const fallbackReason = error instanceof Error ? error : new Error(String(error));
+    options.onFallback?.(fallbackReason);
+    const model = await loadPreview();
+    return { model, quality: 'preview', fallbackUsed: true, fallbackReason };
   }
 }
