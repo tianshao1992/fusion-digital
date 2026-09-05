@@ -289,7 +289,7 @@ test('viewer supports a verified component-only model while preserving 18-node s
 
   assert.match(viewerChoices, /const compatibilityModels = manifest\.assets\.webModel \?/,
     'the viewer must not synthesize a standard model when the manifest is component-only');
-  assert.match(viewer, /initialViewerModelChoice\(variants, shouldPreferPreview\(\)\)/);
+  assert.match(viewer, /const preferPreview = shouldPreferPreview\(\);[\s\S]*initialViewerModelChoice\(variants, preferPreview\)/);
   assert.match(viewerChoices, /preferPreviewForConstrainedDevice[\s\S]*&& preview[\s\S]*&& declaredDefault/,
     'resource hints may constrain only manifests that actually publish a preview');
   assert.match(viewer, /disabled=\{status === 'loading' && selectedModel\?\.id === asset\.id\}/,
