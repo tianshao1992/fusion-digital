@@ -25,6 +25,7 @@ import {
   validateRuntimeAssetLock,
   verifyGitManagedReleaseTree,
 } from "../deploy/aliyun-hk/verify-runtime-assets.mjs";
+import { assertSingleExactHeader } from "../deploy/aliyun-hk/verify-http-headers.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -179,6 +180,11 @@ test("Hong Kong Nginx uses safe named aliases and lossless static compression", 
   assert.match(nginx, /gzip on;/u);
   assert.match(nginx, /gzip_static on;/u);
   assert.match(nginx, /gzip_types[^;]*application\/javascript[^;]*application\/json/u);
+  assert.match(
+    nginx,
+    /map \$http_range \$fusiondigital_partial_accept_ranges \{[\s\S]*?default "";[\s\S]*?~\*\^bytes= "bytes";/u,
+  );
+  assert.doesNotMatch(nginx, /add_header Accept-Ranges "bytes"/u);
   assert.doesNotMatch(nginx, /\?<iter_high_file>/u);
   assert.match(nginx, /FUSIONDIGITAL_LOCKED_GLB_ROUTES_BEGIN/u);
   assert.match(nginx, /FUSIONDIGITAL_LOCKED_GLB_ROUTES_END/u);
@@ -266,6 +272,34 @@ test("Hong Kong Nginx renders every and only runtime-lock GLB as an exact route"
     /unsafe/u,
   );
   assert.doesNotMatch(rendered, /location ~|\$iter_high_file|\$exl50u_ga_file/u);
+  assert.match(
+    rendered,
+    /add_header Accept-Ranges \$fusiondigital_partial_accept_ranges always;/u,
+  );
+  assert.doesNotMatch(rendered, /add_header Accept-Ranges "bytes"/u);
+});
+
+test("Hong Kong response-header verifier rejects duplicate Accept-Ranges values", () => {
+  assert.equal(
+    assertSingleExactHeader("HTTP/1.1 200 OK\r\nAccept-Ranges: bytes\r\n\r\n", "Accept-Ranges", "bytes"),
+    "bytes",
+  );
+  assert.throws(
+    () => assertSingleExactHeader(
+      "HTTP/1.1 200 OK\r\nAccept-Ranges: bytes\r\nAccept-Ranges: bytes\r\n\r\n",
+      "Accept-Ranges",
+      "bytes",
+    ),
+    /must occur exactly once/u,
+  );
+  assert.throws(
+    () => assertSingleExactHeader(
+      "HTTP/2 200\r\naccept-ranges: bytes, bytes\r\n\r\n",
+      "Accept-Ranges",
+      "bytes",
+    ),
+    /must occur exactly once/u,
+  );
 });
 
 test("Hong Kong TLS rendering is deterministic and enables HTTP2", async () => {
@@ -546,6 +580,12 @@ test("Hong Kong installer verifies sidecars, EFIT, ITER, and preserves managed T
   assert.match(installer, /for \(const bundle of report\.bundles\) console\.log\(bundle\.firstRoute\)/u);
   assert.match(installer, /Content-Length: 1024/u);
   assert.match(installer, /Content-Type: model\/gltf-binary/u);
+  assert.equal(
+    (installer.match(/"\$ITER_HEADERS" Accept-Ranges bytes/gu) ?? []).length,
+    2,
+  );
+  assert.match(installer, /curl -fsS -I -o \/dev\/null -D "\$ITER_HEADERS"/u);
+  assert.doesNotMatch(installer, /grep -Eiq '\^Accept-Ranges: bytes'/u);
   assert.match(installer, /Cache-Control: public, max-age=31536000, immutable/u);
   assert.match(installer, /! grep -Eiq '\^Content-Encoding:'/u);
   assert.match(installer, /UNKNOWN_DEVICE_ASSET_STATUS[\s\S]*?= 404/u);

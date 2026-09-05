@@ -73,7 +73,7 @@ export function renderLockedGlbRoutes(files = []) {
       '        add_header X-Content-Type-Options "nosniff" always;',
       '        add_header Cross-Origin-Resource-Policy "same-origin" always;',
       '        add_header Content-Disposition "inline" always;',
-      '        add_header Accept-Ranges "bytes" always;',
+      "        add_header Accept-Ranges $fusiondigital_partial_accept_ranges always;",
       "    }",
     ].join("\n");
   });

@@ -295,6 +295,7 @@ test -f "$PENDING/deploy/aliyun-hk/server.mjs"
 test -f "$PENDING/deploy/aliyun-hk/fusiondigital.service"
 test -f "$PENDING/deploy/aliyun-hk/nginx.conf"
 test -f "$PENDING/deploy/aliyun-hk/render-nginx-config.mjs"
+test -f "$PENDING/deploy/aliyun-hk/verify-http-headers.mjs"
 test -f "$PENDING/deploy/aliyun-hk/certbot-nginx-support.mjs"
 test -f "$PENDING/deploy/aliyun-hk/direct-execution.mjs"
 test -f "$PENDING/deploy/aliyun-hk/verify-runtime-assets.mjs"
@@ -458,6 +459,13 @@ ITER_HEADERS=$(mktemp)
 while IFS= read -r RUNTIME_ROUTE; do
   test -n "$RUNTIME_ROUTE"
   : > "$ITER_HEADERS"
+  curl -fsS -I -o /dev/null -D "$ITER_HEADERS" "${ORIGIN_CURL_ARGS[@]}" \
+    -H 'Accept-Encoding: identity' \
+    "$ORIGIN_URL$RUNTIME_ROUTE"
+  grep -Eq '^HTTP/[0-9.]+ 200' "$ITER_HEADERS"
+  node "$TARGET/deploy/aliyun-hk/verify-http-headers.mjs" \
+    "$ITER_HEADERS" Accept-Ranges bytes
+  : > "$ITER_HEADERS"
   curl -fsS -D "$ITER_HEADERS" -o /dev/null "${ORIGIN_CURL_ARGS[@]}" \
     -H 'Accept-Encoding: gzip' -H 'Range: bytes=0-1023' \
     "$ORIGIN_URL$RUNTIME_ROUTE"
@@ -465,7 +473,8 @@ while IFS= read -r RUNTIME_ROUTE; do
   grep -Eiq '^Content-Range: bytes 0-1023/' "$ITER_HEADERS"
   grep -Eiq '^Content-Length: 1024' "$ITER_HEADERS"
   grep -Eiq '^Content-Type: model/gltf-binary' "$ITER_HEADERS"
-  grep -Eiq '^Accept-Ranges: bytes' "$ITER_HEADERS"
+  node "$TARGET/deploy/aliyun-hk/verify-http-headers.mjs" \
+    "$ITER_HEADERS" Accept-Ranges bytes
   grep -Eiq '^Cache-Control: public, max-age=31536000, immutable' "$ITER_HEADERS"
   grep -Eiq '^Referrer-Policy: no-referrer' "$ITER_HEADERS"
   grep -Eiq '^X-Content-Type-Options: nosniff' "$ITER_HEADERS"
