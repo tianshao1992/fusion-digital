@@ -111,9 +111,20 @@ const EXL50U_GA_ROUTE_ROOT = "/device-assets/exl50u-general-assembly/v1";
 const EXL50U_GA_LOCAL_ROOT = "/models/exl50u-general-assembly-v1";
 const EXL50U_GA_MANIFEST_PATH = `${EXL50U_GA_LOCAL_ROOT}/model-manifest.json`;
 const EXL50U_GA_PUBLICATION_NOTICE_PATH = `${EXL50U_GA_LOCAL_ROOT}/PUBLICATION-NOTICE.md`;
-const EXL50U_GA_PUBLIC_METADATA = new Map<string, string>([
-  [EXL50U_GA_MANIFEST_PATH, "application/json; charset=utf-8"],
-  [EXL50U_GA_PUBLICATION_NOTICE_PATH, "text/markdown; charset=utf-8"],
+const EXL50U_GA_REVIEW_MANIFEST_PATH = `${EXL50U_GA_ROUTE_ROOT}/model-manifest.json`;
+const EXL50U_GA_PUBLIC_METADATA = new Map<string, { localPath: string; contentType: string }>([
+  [EXL50U_GA_MANIFEST_PATH, {
+    localPath: EXL50U_GA_MANIFEST_PATH,
+    contentType: "application/json; charset=utf-8",
+  }],
+  [EXL50U_GA_REVIEW_MANIFEST_PATH, {
+    localPath: EXL50U_GA_MANIFEST_PATH,
+    contentType: "application/json; charset=utf-8",
+  }],
+  [EXL50U_GA_PUBLICATION_NOTICE_PATH, {
+    localPath: EXL50U_GA_PUBLICATION_NOTICE_PATH,
+    contentType: "text/markdown; charset=utf-8",
+  }],
 ]);
 const EXL50U_GA_MAX_BYTES = 300 * 1024 * 1024;
 const RUNTIME_ASSET_MIRROR_ORIGIN = "https://raw.githubusercontent.com";
@@ -670,21 +681,21 @@ const worker = {
 
     // The Sites archive retains only the reviewed public manifest and its
     // publication notice; large GLBs are removed and served through the
-    // digest-locked proxy above. Permit exactly those two metadata paths before
-    // the private cache namespace is denied, without turning /models into a
-    // public directory-prefix bypass.
-    const exl50uGeneralAssemblyMetadataType = EXL50U_GA_PUBLIC_METADATA.get(url.pathname);
+    // digest-locked proxy above. Permit only those metadata files (plus the
+    // review route's manifest alias) before the private cache namespace is
+    // denied, without turning /models into a public directory-prefix bypass.
+    const exl50uGeneralAssemblyMetadata = EXL50U_GA_PUBLIC_METADATA.get(url.pathname);
     if (
-      exl50uGeneralAssemblyMetadataType
+      exl50uGeneralAssemblyMetadata
       && (request.method === "GET" || request.method === "HEAD")
     ) {
       const manifestResponse = await env.ASSETS.fetch(new Request(
-        new URL(url.pathname, request.url),
+        new URL(exl50uGeneralAssemblyMetadata.localPath, request.url),
         { method: request.method },
       ));
       const headers = new Headers(manifestResponse.headers);
       headers.set("Cache-Control", "no-store, private, max-age=0");
-      headers.set("Content-Type", exl50uGeneralAssemblyMetadataType);
+      headers.set("Content-Type", exl50uGeneralAssemblyMetadata.contentType);
       headers.set("Referrer-Policy", "no-referrer");
       headers.set("X-Content-Type-Options", "nosniff");
       headers.set("Cross-Origin-Resource-Policy", "same-origin");

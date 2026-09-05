@@ -892,17 +892,26 @@ test('controlled raster previews and authorized EXL browser geometry receive def
   }
 });
 
-test('Sites Worker exposes only the exact reviewed EXL-50U general-assembly metadata paths', async () => {
+test('Sites Worker exposes only the approved EXL-50U general-assembly metadata routes', async () => {
   const manifestPath = '/models/exl50u-general-assembly-v1/model-manifest.json';
+  const reviewManifestPath = '/device-assets/exl50u-general-assembly/v1/model-manifest.json';
   const noticePath = '/models/exl50u-general-assembly-v1/PUBLICATION-NOTICE.md';
   const metadata = [
     {
       pathname: manifestPath,
+      assetPath: manifestPath,
+      payload: JSON.stringify({ schemaVersion: '1.4', id: 'exl50u-general-assembly-v1' }),
+      contentType: 'application/json; charset=utf-8',
+    },
+    {
+      pathname: reviewManifestPath,
+      assetPath: manifestPath,
       payload: JSON.stringify({ schemaVersion: '1.4', id: 'exl50u-general-assembly-v1' }),
       contentType: 'application/json; charset=utf-8',
     },
     {
       pathname: noticePath,
+      assetPath: noticePath,
       payload: '# Reviewed public visualization notice\n',
       contentType: 'text/markdown; charset=utf-8',
     },
@@ -912,7 +921,7 @@ test('Sites Worker exposes only the exact reviewed EXL-50U general-assembly meta
   const { default: worker } = await import(workerUrl.href);
   const context = { waitUntil() {}, passThroughOnException() {} };
 
-  for (const { pathname, payload, contentType } of metadata) {
+  for (const { pathname, assetPath, payload, contentType } of metadata) {
     for (const method of ['GET', 'HEAD']) {
       let assetCalls = 0;
       const response = await worker.fetch(
@@ -921,7 +930,7 @@ test('Sites Worker exposes only the exact reviewed EXL-50U general-assembly meta
           ASSETS: {
             fetch: async (request) => {
               assetCalls += 1;
-              assert.equal(new URL(request.url).pathname, pathname);
+              assert.equal(new URL(request.url).pathname, assetPath);
               assert.equal(request.method, method);
               return new Response(method === 'HEAD' ? null : payload, {
                 status: 200,
@@ -955,6 +964,7 @@ test('Sites Worker exposes only the exact reviewed EXL-50U general-assembly meta
     ['/models/exl50u-general-assembly-v1/other.json', 'GET'],
     ['/models/exl50u-general-assembly-v1/anonymous-shard-01.example.high.meshopt.glb', 'GET'],
     [manifestPath, 'POST'],
+    [reviewManifestPath, 'POST'],
     [noticePath, 'POST'],
   ]) {
     let assetCalls = 0;
