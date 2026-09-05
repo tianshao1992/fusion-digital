@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
-import { resolveCadSceneTheme } from '../app/components/device-viewer/cadSceneTheme';
+import {
+  resolveCadSceneTheme,
+  scaleCadFogDensity,
+} from '../app/components/device-viewer/cadSceneTheme';
 
 const source = (path: string) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
@@ -23,6 +26,20 @@ test('CAD scene themes provide brighter light studios for semantic and industria
     assert.ok(light.grid.opacity >= dark.grid.opacity);
     assert.notEqual(light.lights.hemisphere.ground, dark.lights.hemisphere.ground);
   }
+});
+
+test('only the large anonymous assembly scales fog by its physical source radius', () => {
+  const base = resolveCadSceneTheme('light', 'assembly-color-v1').fogDensity;
+  const assemblyRadius = 46.2315435935626;
+
+  assert.equal(scaleCadFogDensity(base, 'assembly-color-v1', 4), base);
+  assert.ok(Math.abs(
+    scaleCadFogDensity(base, 'assembly-color-v1', assemblyRadius)
+      - base * (8 / assemblyRadius),
+  ) < 1e-12);
+  assert.equal(scaleCadFogDensity(base, 'industrial-silver-v1', assemblyRadius), base);
+  assert.equal(scaleCadFogDensity(base, 'semantic', assemblyRadius), base);
+  assert.equal(scaleCadFogDensity(base, 'assembly-color-v1', Number.NaN), base);
 });
 
 test('Tokamak viewer applies theme changes in place without reloading the model', async () => {

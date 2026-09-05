@@ -216,8 +216,20 @@ test('EXL-50U total assembly receives the reviewed colour preset and deep inspec
   assert.match(source, /controls\.screenSpacePanning = closeInspection/);
   assert.match(source, /Math\.max\(0\.0005, modelRadius \* 0\.00035\)/);
   assert.match(source, /modelRadius \* \(closeInspection \? 0\.025 : 1\.2\)/);
-  assert.match(source, /controls\.addEventListener\('end', \(\) => \{[\s\S]*?preserveViewOnResize = true;[\s\S]*?cameraViewRef\.current = snapshot/,
-    'manual orbit, pan and zoom must mark the close-up view for preservation across resize');
+  assert.match(source, /sourceBox\.getBoundingSphere\(new THREE\.Sphere\(\)\)\.radius/,
+    'the assembly fog scale must use physical source bounds rather than normalized display bounds');
+  assert.match(source, /scene\.fog\.density = scaleCadFogDensity\([\s\S]*?next\.fogDensity,[\s\S]*?appearancePreset,[\s\S]*?sourceModelRadius/,
+    'the live theme path must apply the assembly-only radius-aware fog density');
+  assert.doesNotMatch(source, /preserveViewOnResize/,
+    'resize preservation must not depend on OrbitControls end events, which are not durable for every wheel path');
+  assert.match(source, /const resize = \(refit: boolean\) => \{[\s\S]*?if \(refit\) \{\s*setView\(currentPreset\);\s*\} else \{\s*camera\.updateProjectionMatrix\(\);\s*controls\.update\(\);/,
+    'ordinary viewport resize must update projection and controls without fitting the full assembly');
+  assert.match(source, /resize\(true\);\s*const restoredView/,
+    'the initial measured layout remains the sole implicit whole-model fit');
+  assert.match(source, /new ResizeObserver\(\(\) => resize\(false\)\)/,
+    'the observed viewport resize path that follows wheel zoom must preserve the live camera');
+  assert.match(source, /resizeFallback = \(\) => resize\(false\)/,
+    'the legacy window resize path must preserve the live camera too');
   assert.match(source, /const onFullscreenChange = \(\) => \{[\s\S]*?viewerRef\.current\?\.resize\(false\)[\s\S]*?addEventListener\('fullscreenchange'/,
     'fullscreen must preserve the current close-up target instead of fitting the whole assembly again');
 });

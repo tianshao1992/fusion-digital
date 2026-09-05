@@ -32,7 +32,7 @@ import {
   resolveIndustrialMaterialSpec,
   type TokamakAppearancePreset,
 } from './device-viewer/industrialAppearance';
-import { resolveCadSceneTheme } from './device-viewer/cadSceneTheme';
+import { resolveCadSceneTheme, scaleCadFogDensity } from './device-viewer/cadSceneTheme';
 import {
   ANALYTIC_PLASMA_RUNTIME_SEMANTICS,
   ANALYTIC_PLASMA_VISIBLE_BY_DEFAULT,
@@ -213,7 +213,7 @@ type ViewerApi = {
   focusWebPoint: (pointWebMetres: readonly [number, number, number]) => void;
   captureView: () => ViewSnapshot;
   applyView: (snapshot: ViewSnapshot) => void;
-  resize: (refit?: boolean) => void;
+  resize: (refit: boolean) => void;
   efitOverlay: EfitThreeOverlay | null;
   diagnosticOverlay: Ehl2DiagnosticThreeOverlay | null;
   diagnosticRuntime: Ehl2DiagnosticRuntime | null;
@@ -972,7 +972,6 @@ function TokamakCadViewerSession({
 
       const controls = new controlsModule.OrbitControls(camera, renderer.domElement);
       localControls = controls;
-      let preserveViewOnResize = false;
       controls.enableDamping = true;
       controls.dampingFactor = 0.075;
       controls.rotateSpeed = 0.62;
@@ -985,7 +984,6 @@ function TokamakCadViewerSession({
       controls.autoRotateSpeed = 0.72;
       controls.addEventListener('end', () => {
         if (disposed) return;
-        preserveViewOnResize = true;
         const snapshot = {
           position: camera.position.toArray() as [number, number, number],
           target: controls.target.toArray() as [number, number, number],
@@ -1231,6 +1229,10 @@ function TokamakCadViewerSession({
       const sourceBox = new THREE.Box3().setFromObject(model, true);
       const sourceSize = sourceBox.getSize(new THREE.Vector3());
       const sourceCenter = sourceBox.getCenter(new THREE.Vector3());
+      const sourceModelRadius = Math.max(
+        sourceBox.getBoundingSphere(new THREE.Sphere()).radius,
+        0.1,
+      );
 
       model.traverse((node) => {
         const mapped = systemByNodeName.get(node.name);
@@ -1373,7 +1375,11 @@ function TokamakCadViewerSession({
         const next = resolveCadSceneTheme(theme, appearancePreset);
         if (scene.fog instanceof THREE.FogExp2) {
           scene.fog.color.setHex(next.fogColor);
-          scene.fog.density = next.fogDensity;
+          scene.fog.density = scaleCadFogDensity(
+            next.fogDensity,
+            appearancePreset,
+            sourceModelRadius,
+          );
         }
         renderer.toneMappingExposure = next.exposure;
         renderer.setClearColor(next.clearColor, next.clearAlpha);
@@ -1409,7 +1415,6 @@ function TokamakCadViewerSession({
       let currentPreset: ViewPreset = interactionRef.current.activeView;
       const setView = (preset: ViewPreset) => {
         currentPreset = preset;
-        preserveViewOnResize = false;
         const verticalHalfFov = THREE.MathUtils.degToRad(camera.fov * 0.5);
         const horizontalHalfFov = Math.atan(Math.tan(verticalHalfFov) * Math.max(camera.aspect, 0.1));
         const limitingHalfFov = Math.max(0.08, Math.min(verticalHalfFov, horizontalHalfFov));
@@ -1785,24 +1790,26 @@ function TokamakCadViewerSession({
         camera.lookAt(targetWorld);
         camera.updateProjectionMatrix();
         controls.update();
-        preserveViewOnResize = true;
       };
 
-      const resize = (refit = false) => {
+      const resize = (refit: boolean) => {
         if (!mountRef.current) return;
         const width = Math.max(1, mountRef.current.clientWidth);
         const height = Math.max(1, mountRef.current.clientHeight);
         camera.aspect = width / height;
         renderer.setSize(width, height, false);
         localEfitOverlay?.resize(width, height);
-        if (preserveViewOnResize && !refit) {
+        if (refit) {
+          setView(currentPreset);
+        } else {
           camera.updateProjectionMatrix();
           controls.update();
-        } else {
-          setView(currentPreset);
         }
       };
-      resize();
+      // Only the first measured layout is allowed to fit the whole model. Every
+      // observer/fullscreen resize preserves the live camera, including wheel
+      // zooms for which OrbitControls does not reliably emit a durable `end`.
+      resize(true);
       const restoredView = cameraViewRef.current ?? viewSnapshotRef.current;
       if (restoredView) {
         camera.position.fromArray(restoredView.position);
@@ -1811,10 +1818,9 @@ function TokamakCadViewerSession({
         camera.lookAt(controls.target);
         camera.updateProjectionMatrix();
         controls.update();
-        preserveViewOnResize = true;
       }
-      if (typeof ResizeObserver !== 'undefined') { resizeObserver = new ResizeObserver(() => resize()); resizeObserver.observe(mount); }
-      else { resizeFallback = () => resize(); window.addEventListener('resize', resizeFallback); }
+      if (typeof ResizeObserver !== 'undefined') { resizeObserver = new ResizeObserver(() => resize(false)); resizeObserver.observe(mount); }
+      else { resizeFallback = () => resize(false); window.addEventListener('resize', resizeFallback); }
       if (typeof IntersectionObserver !== 'undefined') {
         intersectionObserver = new IntersectionObserver(([entry]) => { inViewport = entry.isIntersecting; }, { rootMargin: '120px' });
         intersectionObserver.observe(mount);
@@ -1916,7 +1922,6 @@ function TokamakCadViewerSession({
           camera.lookAt(controls.target);
           camera.updateProjectionMatrix();
           controls.update();
-          preserveViewOnResize = true;
         },
         resize,
         efitOverlay: localEfitOverlay,

@@ -44,6 +44,19 @@ export type CadSceneTheme = Readonly<{
   lights: IndustrialLightRig | SemanticLightRig;
 }>;
 
+const ASSEMBLY_FOG_REFERENCE_RADIUS_METRES = 8;
+
+export function scaleCadFogDensity(
+  fogDensity: number,
+  appearancePreset: TokamakAppearancePreset,
+  sourceModelRadius: number,
+): number {
+  if (appearancePreset !== 'assembly-color-v1'
+    || !Number.isFinite(sourceModelRadius)
+    || sourceModelRadius <= 0) return fogDensity;
+  return fogDensity * Math.min(1, ASSEMBLY_FOG_REFERENCE_RADIUS_METRES / sourceModelRadius);
+}
+
 const DARK_SEMANTIC: CadSceneTheme = {
   fogColor: 0x07110e,
   fogDensity: 0.032,
