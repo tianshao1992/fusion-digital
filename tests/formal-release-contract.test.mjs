@@ -70,6 +70,8 @@ const SHARED_PATHS = [
 ];
 
 let contract;
+let repositoryRuntimeLock;
+let repositoryReviewCandidate = false;
 let runtimeLock;
 let deviceCatalog;
 let activationContract;
@@ -289,7 +291,6 @@ function twoActiveBundleRuntimeLock() {
 }
 
 before(async () => {
-  let repositoryRuntimeLock;
   let repositoryExlManifest;
   [contract, repositoryRuntimeLock, deviceCatalog, activationContract, repositoryExlManifest] = await Promise.all([
     loadFormalReleaseContract(CONTRACT_PATH),
@@ -300,8 +301,9 @@ before(async () => {
       .then(JSON.parse, (error) => { if (error?.code === "ENOENT") return null; throw error; }),
   ]);
   runtimeLock = clone(repositoryRuntimeLock);
-  if (repositoryExlManifest?.reviewCandidate?.status === "USER_VISUAL_REVIEW_REQUIRED"
-    && repositoryExlManifest.reviewCandidate.productionEligible === false) {
+  repositoryReviewCandidate = repositoryExlManifest?.reviewCandidate?.status === "USER_VISUAL_REVIEW_REQUIRED"
+    && repositoryExlManifest.reviewCandidate.productionEligible === false;
+  if (repositoryReviewCandidate) {
     runtimeLock.externalBundles = runtimeLock.externalBundles.filter(
       (bundle) => bundle.id !== "exl50u-general-assembly-v1",
     );
@@ -692,9 +694,37 @@ test("Sites permits only inactive unrelated domain records and never production 
   }
 });
 
+test("CLI rejects a checked-in visual review candidate as a formal release", {
+  skip: WORKTREE_DIRTY ? "repository must be committed before CLI acceptance is tested" : false,
+}, async (context) => {
+  if (!repositoryReviewCandidate) {
+    context.skip("repository is not a visual review candidate");
+    return;
+  }
+  const candidatePath = join(temporaryDirectory, "review-candidate.json");
+  await writeFile(
+    candidatePath,
+    `${JSON.stringify(validEvidence(ACTUAL_HEAD, repositoryRuntimeLock))}\n`,
+    "utf8",
+  );
+  const rejected = spawnSync(process.execPath, [SCRIPT_PATH, "--evidence", candidatePath], {
+    cwd: ROOT,
+    encoding: "utf8",
+  });
+  assert.notEqual(rejected.status, 0);
+  assert.match(
+    rejected.stderr,
+    /active EXL-50U runtime lock requires the exact real-3d catalog card/u,
+  );
+});
+
 test("CLI accepts complete evidence and rejects drift", {
   skip: WORKTREE_DIRTY ? "repository must be committed before CLI acceptance is tested" : false,
-}, async () => {
+}, async (context) => {
+  if (repositoryReviewCandidate) {
+    context.skip("formal CLI acceptance is unavailable while the checked-in model is a visual review candidate");
+    return;
+  }
   const validPath = join(temporaryDirectory, "valid.json");
   const badPath = join(temporaryDirectory, "bad.json");
   const bad = validEvidence(ACTUAL_HEAD);
@@ -719,7 +749,11 @@ test("CLI accepts complete evidence and rejects drift", {
 
 test("CLI rejects internally consistent evidence for a commit other than actual HEAD", {
   skip: WORKTREE_DIRTY ? "repository must be committed before CLI acceptance is tested" : false,
-}, async () => {
+}, async (context) => {
+  if (repositoryReviewCandidate) {
+    context.skip("formal SHA precedence is tested only after the visual candidate is formally activated");
+    return;
+  }
   const oldPath = join(temporaryDirectory, "old-head.json");
   await writeFile(oldPath, `${JSON.stringify(validEvidence())}\n`, "utf8");
   const result = spawnSync(process.execPath, [SCRIPT_PATH, "--evidence", oldPath], {
