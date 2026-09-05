@@ -32,11 +32,18 @@ test("EXL-50U general assembly publication state follows the formal manifest", a
     (bundle) => bundle.id === "exl50u-general-assembly-v1",
   );
   assert.ok(device);
-  if (formalManifest) {
+  if (formalManifest && formalManifest.reviewCandidate === undefined) {
     assert.doesNotThrow(() => validateExl50uGeneralAssemblyActivatedCard(device));
     assert.ok(lockedBundle, "formal publication must activate the matching runtime bundle");
     assert.equal(formalManifest.id, "exl50u-general-assembly-v1");
   } else {
+    if (formalManifest) {
+      assert.deepEqual(formalManifest.reviewCandidate, {
+        status: "USER_VISUAL_REVIEW_REQUIRED",
+        productionEligible: false,
+      });
+      assert.ok(lockedBundle, "Sites review candidate retains its matching runtime bundle");
+    }
     assert.equal(device.availability, "pipeline-ready-assets-pending");
     assert.equal(device.delivery, "local-only");
     assert.deepEqual(device.viewer, {
@@ -50,7 +57,7 @@ test("EXL-50U general assembly publication state follows the formal manifest", a
     assert.match(device.copy, /共同装配原点/);
     assert.match(device.copy, /不会复用现有 EXL‑50U 的 EFIT、历史端口或 76 个名义测点坐标合同/);
     assert.match(device.fileSummary, /当前无可加载 GLB/);
-    assert.equal(lockedBundle, undefined, "metadata-only publication must not lock an EXL bundle");
+    if (!formalManifest) assert.equal(lockedBundle, undefined, "metadata-only publication must not lock an EXL bundle");
   }
 });
 

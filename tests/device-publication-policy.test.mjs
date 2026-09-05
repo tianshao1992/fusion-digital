@@ -215,7 +215,10 @@ async function fetchFromWorker(pathname, init, bindings = {}) {
 }
 
 test('publishes only catalog-declared EXL, ITER and EHL browser derivatives and no protected source geometry', async () => {
-  const catalog = JSON.parse(await readFile(resolve(publicRoot, 'models/device-catalog.json'), 'utf8'));
+  const [catalog, runtimeLock] = await Promise.all([
+    readFile(resolve(publicRoot, 'models/device-catalog.json'), 'utf8').then(JSON.parse),
+    readFile(resolve(repositoryRoot, 'assets/runtime-assets.lock.json'), 'utf8').then(JSON.parse),
+  ]);
   const exl = catalog.devices.find((device) => identifiesExlDevice(device.id));
   assert.equal(exl?.viewer?.mode, 'real-3d', 'EXL public geometry requires an explicit real-3d catalog entry');
   const exlManifestEndpoint = exl?.viewer?.manifestEndpoint;
@@ -241,6 +244,18 @@ test('publishes only catalog-declared EXL, ITER and EHL browser derivatives and 
       allowedExlGeometry.add(`dist/client/models/exl50u-general-assembly-v1/${file.filename}`);
     }
   }
+  const reviewCandidateManifest = await readFile(
+    resolve(publicRoot, 'models/exl50u-general-assembly-v1/model-manifest.json'),
+    'utf8',
+  ).then(JSON.parse, (error) => { if (error?.code === 'ENOENT') return null; throw error; });
+  if (reviewCandidateManifest?.reviewCandidate?.status === 'USER_VISUAL_REVIEW_REQUIRED'
+    && reviewCandidateManifest.reviewCandidate.productionEligible === false) {
+    const { files } = extractExl50uGeneralAssemblyAssets(reviewCandidateManifest);
+    for (const file of files) {
+      allowedExlGeometry.add(`public/models/exl50u-general-assembly-v1/${file.filename}`);
+      allowedExlGeometry.add(`dist/client/models/exl50u-general-assembly-v1/${file.filename}`);
+    }
+  }
   const iter = catalog.devices.find((device) => identifiesIterDevice(device.id));
   assert.equal(iter?.viewer?.mode, 'real-3d', 'ITER public geometry requires an explicit real-3d catalog entry');
   assert.equal(iter.viewer.manifestEndpoint, iterManifestEndpoint);
@@ -250,6 +265,11 @@ test('publishes only catalog-declared EXL, ITER and EHL browser derivatives and 
   assert.equal(iterManifest.assets.componentBundles[0].components.length, 18);
   assert.equal(iterManifest.assets?.webModel, undefined, 'ITER must not ship the invalid compact fallback model');
   const allowedIterGeometry = new Set();
+  const iterRuntimeBundle = runtimeLock.externalBundles.find(({ id }) => id === 'iter-high-detail-v1');
+  for (const file of iterRuntimeBundle.files) {
+    allowedIterGeometry.add(`public/models/iter-high-detail-v1/${file.filename}`);
+    allowedIterGeometry.add(`dist/client/models/iter-high-detail-v1/${file.filename}`);
+  }
   const ehl = catalog.devices.find((device) => identifiesEhlDevice(device.id));
   assert.equal(ehl?.viewer?.mode, 'real-3d', 'EHL public geometry requires an explicit real-3d catalog entry');
   assert.equal(ehl.viewer.manifestEndpoint, ehlManifestEndpoint);

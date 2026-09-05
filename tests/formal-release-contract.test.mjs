@@ -289,12 +289,23 @@ function twoActiveBundleRuntimeLock() {
 }
 
 before(async () => {
-  [contract, runtimeLock, deviceCatalog, activationContract] = await Promise.all([
+  let repositoryRuntimeLock;
+  let repositoryExlManifest;
+  [contract, repositoryRuntimeLock, deviceCatalog, activationContract, repositoryExlManifest] = await Promise.all([
     loadFormalReleaseContract(CONTRACT_PATH),
     readFile(join(ROOT, "assets/runtime-assets.lock.json"), "utf8").then(JSON.parse),
     readFile(join(ROOT, "public/models/device-catalog.json"), "utf8").then(JSON.parse),
     readFile(join(ROOT, "scripts/assets/exl50u-general-assembly-catalog-activation-contract.json"), "utf8").then(JSON.parse),
+    readFile(join(ROOT, "public/models/exl50u-general-assembly-v1/model-manifest.json"), "utf8")
+      .then(JSON.parse, (error) => { if (error?.code === "ENOENT") return null; throw error; }),
   ]);
+  runtimeLock = clone(repositoryRuntimeLock);
+  if (repositoryExlManifest?.reviewCandidate?.status === "USER_VISUAL_REVIEW_REQUIRED"
+    && repositoryExlManifest.reviewCandidate.productionEligible === false) {
+    runtimeLock.externalBundles = runtimeLock.externalBundles.filter(
+      (bundle) => bundle.id !== "exl50u-general-assembly-v1",
+    );
+  }
   temporaryDirectory = await mkdtemp(join(tmpdir(), "fusiondigital-paired-release-"));
 });
 

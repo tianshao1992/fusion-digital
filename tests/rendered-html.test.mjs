@@ -3,16 +3,6 @@ import { createHash } from 'node:crypto';
 import { readFile, readdir, stat } from 'node:fs/promises';
 import test from 'node:test';
 
-async function pathExists(url) {
-  try {
-    await stat(url);
-    return true;
-  } catch (error) {
-    if (error?.code === 'ENOENT') return false;
-    throw error;
-  }
-}
-
 async function render(pathname = '/', headers = {}) {
   const workerUrl = new URL('../dist/server/index.js', import.meta.url);
   workerUrl.searchParams.set('test', `${process.pid}-${Date.now()}-${pathname}`);
@@ -558,9 +548,12 @@ test('homepage owns the public full-device digital-prototype workspace', async (
   }
   assert.equal(catalog.securityPolicy.showDownloadActions, false);
   assert.equal(catalog.securityPolicy.sourceCadDelivered, false);
-  const formalGeneralAssembly = await pathExists(
+  const generalAssemblyManifest = await readFile(
     new URL('../public/models/exl50u-general-assembly-v1/model-manifest.json', import.meta.url),
-  );
+    'utf8',
+  ).then(JSON.parse, (error) => { if (error?.code === 'ENOENT') return null; throw error; });
+  const formalGeneralAssembly = generalAssemblyManifest !== null
+    && generalAssemblyManifest.reviewCandidate === undefined;
   assert.equal(catalog.devices.filter((device) => device.viewer.manifestEndpoint !== null).length,
     formalGeneralAssembly ? 5 : 4);
   const generalAssembly = catalog.devices.find((device) => device.id === 'exl50u-general-assembly-20260630');

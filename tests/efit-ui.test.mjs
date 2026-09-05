@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFile, stat } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
 import { createEfitBinaryDataSource } from '../app/components/efit/data-source.ts';
@@ -9,16 +9,6 @@ const root = new URL('../', import.meta.url);
 
 async function source(path) {
   return readFile(new URL(path, root), 'utf8');
-}
-
-async function sourceExists(path) {
-  try {
-    await stat(new URL(path, root));
-    return true;
-  } catch (error) {
-    if (error?.code === 'ENOENT') return false;
-    throw error;
-  }
 }
 
 function cssRule(css, selector) {
@@ -246,7 +236,13 @@ test('all five device cards publish technical overview and model/data summaries 
     assert.doesNotMatch(`${device.deviceOverview} ${device.fileSummary}`, /授权|许可|PUBLIC|AUTHORIZED|LICEN[CS]E|GOVERNANCE/i);
   }
   assert.match(catalog.devices.find(({ id }) => id === 'exl-50u-2026-upgrade').fileSummary, /Meshopt GLB 5\.6 \/ 13\.4 MB[\s\S]*5,804[\s\S]*7 炮偏滤器拓扑/);
-  const formalGeneralAssembly = await sourceExists('public/models/exl50u-general-assembly-v1/model-manifest.json');
+  const generalAssemblyManifest = await source('public/models/exl50u-general-assembly-v1/model-manifest.json')
+    .then(JSON.parse, (error) => {
+      if (error?.code === 'ENOENT') return null;
+      throw error;
+    });
+  const formalGeneralAssembly = generalAssemblyManifest !== null
+    && generalAssemblyManifest.reviewCandidate === undefined;
   const generalAssemblySummary = catalog.devices.find(({ id }) => id === 'exl50u-general-assembly-20260630').fileSummary;
   if (formalGeneralAssembly) {
     assert.match(generalAssemblySummary, /1 个标准预览[\s\S]*20 个匿名高精度运输分片[\s\S]*摘要锁定按需加载/);
