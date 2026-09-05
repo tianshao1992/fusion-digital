@@ -93,24 +93,21 @@ Set-Location $Stage
 npm ci
 npm run assets:verify:tracked
 
-# 仓库门禁要求外置 ITER 文件此时尚未进入 public；先在干净树上完成全量检查。
+# 仓库门禁要求两个外置 bundle 的 GLB 此时尚未进入 public；先在干净树上完成全量检查。
 npm run check
 
-# 香港稳定部署必须把每个已激活外置 bundle 纳入 dist；每个 bundle
-# 都显式指定独立的已审核离线目录，不存在网络默认值。
-npm run assets:hydrate -- --bundle iter-high-detail-v1 `
-  --source-dir "$Repo\public\models\iter-high-detail-v1"
-
-# 仅当版本化 lock 已包含 exl50u-general-assembly-v1 时执行；该 bundle 没有
-# 默认网络源，必须给出单独的已 QA source-dir 或显式 HTTPS base-url。
-$RuntimeLock = Get-Content "assets\runtime-assets.lock.json" -Raw | ConvertFrom-Json
-if ($RuntimeLock.externalBundles.id -contains "exl50u-general-assembly-v1") {
-  if (-not $env:FUSION_EXL50U_GA_RELEASE_SOURCE) {
-    throw "FUSION_EXL50U_GA_RELEASE_SOURCE is required for the activated EXL-50U bundle"
-  }
-  npm run assets:hydrate -- --bundle exl50u-general-assembly-v1 `
-    --source-dir $env:FUSION_EXL50U_GA_RELEASE_SOURCE
+# 香港稳定部署必须把 ITER 与 EXL-50U 总装两个外置 bundle 都纳入 dist；
+# 两个 source-dir 都必须是仓库外、已审核且与当前 lock 完全一致的独立目录。
+if (-not $env:FUSION_ITER_RELEASE_SOURCE) {
+  throw "FUSION_ITER_RELEASE_SOURCE is required for the ITER bundle"
 }
+if (-not $env:FUSION_EXL50U_GA_RELEASE_SOURCE) {
+  throw "FUSION_EXL50U_GA_RELEASE_SOURCE is required for the EXL-50U bundle"
+}
+npm run assets:hydrate -- --bundle iter-high-detail-v1 `
+  --source-dir $env:FUSION_ITER_RELEASE_SOURCE
+npm run assets:hydrate -- --bundle exl50u-general-assembly-v1 `
+  --source-dir $env:FUSION_EXL50U_GA_RELEASE_SOURCE
 npm run assets:verify
 
 $env:NEXT_PUBLIC_FUSIONDIGITAL_MODE = "public-anonymous"
@@ -151,7 +148,6 @@ Write-Host "Commit: $Sha"
 ```powershell
 npm run assets:hydrate -- --bundle iter-high-detail-v1 `
   --source-dir "D:\controlled\iter-high-detail-v1"
-# EXL 激活后另行使用其独立、已复核的离线目录：
 npm run assets:hydrate -- --bundle exl50u-general-assembly-v1 `
   --source-dir "D:\controlled\exl50u-general-assembly-v1"
 npm run assets:verify
@@ -164,28 +160,48 @@ npm run assets:verify
 `FUSION_EXL50U_GA_ASSET_SOURCE_DIR` / `FUSION_EXL50U_GA_ASSET_BASE_URL`。两个 bundle
 不能共用、猜测目录或让国内用户浏览时临时回源。
 
-### 2.1 EXL-50U 总装正式激活（当前仓库仍为 metadata-only）
+### 2.1 EXL-50U 总装从 metadata-only 到正式激活
 
-只有 21 个公开匿名 GLB（1 个 preview + 20 个高精度运输分片）全部完成 QA 后，才执行
-下列一次性激活。项目器只读取公开派生 manifest 与 GLB，不读取 STEP、BOM、PMI 或源
-装配标签；GLB JSON 必须没有任意 `name` / `extras`，唯一公开根名
-`EXL50U_GA_VISUALIZATION` 由运行时合成，不写回 GLB。正式格式固定为 Float32 POSITION、
-normalized Int8 NORMAL、Uint32 indices、Meshopt 与 GPU instancing。
+正式发布状态固定为 21 个公开匿名 GLB：1 个自动加载的 preview 与 20 个按用户意图串行
+加载的高精度运输分片。下列步骤既是首次激活流程，也是以后替换派生版本时必须原子重复的
+流程。项目器只读取公开派生 manifest 与 GLB，不读取 STEP、BOM、PMI 或源装配标签；
+GLB JSON 必须没有任意 `name` / `extras`，唯一公开根名 `EXL50U_GA_VISUALIZATION` 由
+运行时合成，不写回 GLB。正式格式固定为 Float32 POSITION、normalized Int8 NORMAL、
+Uint32 indices、Meshopt 与 GPU instancing。
 
 ```powershell
+$PrivateBuild = "D:\controlled\exl50u-ga-private-v8" # 仓库外、已存在且只保存私有输入/收据
+$Exporter = Join-Path $PrivateBuild "exporter"
+$RawManifest = Join-Path $PrivateBuild "exl50u-fdmesh-raw-20260905-r10\assembly.private.json"
+$ToolingEvidence = Join-Path $PrivateBuild "public-derivative-tooling.v8.private.json"
+$QemEvidence = Join-Path $PrivateBuild "exl50u-public-derivative-v8.qem.private.json"       # 必须不存在
+$VisualReport = Join-Path $PrivateBuild "exl50u-public-derivative-v8.visual-qa.private.json" # 必须不存在
+$Python = "C:\path\to\the-reviewed-cadquery-environment\python.exe"
+$Edge = "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
 $Reviewed = "D:\controlled\exl50u-ga-reviewed"       # 仓库外，只含已 QA 公开派生
 $Projected = "D:\controlled\exl50u-ga-release-v1"   # 必须是不存在的新目录
+
+# $Stage 是当前 clean release worktree；--node-root 必须指向它，不能复制某台开发机的脏路径。
+& $Python "$Exporter\build_public_derivative_cli.py" `
+  --manifest $RawManifest --output $Reviewed `
+  --private-qem-evidence $QemEvidence `
+  --private-visual-qa-report $VisualReport `
+  --private-tooling-evidence $ToolingEvidence `
+  --node-root $Stage --edge $Edge --visual-qa-backend swiftshader `
+  --preview-ratios "0.05,0.05" --high-ratios "0.60,0.55" `
+  --preview-max-error 0.02 --high-max-error 0.0005
 
 npm run assets:project-exl50u-general-assembly -- `
   --derivative-manifest "$Reviewed\public-derivative-manifest.json" `
   --asset-dir $Reviewed --output $Projected --as-of YYYY-MM-DD
 
-# 人工复核投影 manifest/notice 不含私有元数据后，只把这两个小文件纳入 Git。
+# 人工复核投影 manifest/notice 不含私有元数据后，把两者纳入激活提交；GLB 不进 Git。
 New-Item -ItemType Directory -Force "public\models\exl50u-general-assembly-v1" | Out-Null
 Copy-Item "$Projected\model-manifest.json" "public\models\exl50u-general-assembly-v1\model-manifest.json"
 Copy-Item "$Projected\PUBLICATION-NOTICE.md" "public\models\exl50u-general-assembly-v1\PUBLICATION-NOTICE.md"
 
 npm run assets:generate-exl50u-general-assembly-allowlist
+npm run assets:check-exl50u-general-assembly-allowlist
 $CatalogCandidate = "D:\controlled\device-catalog.exl50u-ga.activated.json" # 必须不存在
 npm run assets:activate-exl50u-general-assembly-catalog -- `
   --catalog "public\models\device-catalog.json" `
@@ -207,12 +223,14 @@ npm run assets:verify
 node --test tests/external-runtime-bundle-contract.test.mjs tests/runtime-assets.test.mjs
 ```
 
-`public/models/exl50u-general-assembly-v1/model-manifest.json` 是否存在是仓库测试的正式状态开关。
-激活提交必须在同一提交中加入该 manifest，并同步替换 catalog、生成精确 Worker 白名单、
-把 EXL bundle 写入 runtime lock；不能通过临时移走 manifest 让测试退回 metadata-only。
+`public/models/exl50u-general-assembly-v1/model-manifest.json` 是仓库测试的正式激活开关。
+正式激活或更新必须在同一提交中加入/更新 manifest、`PUBLICATION-NOTICE.md`、catalog、
+精确 Worker 白名单和 runtime lock；五者不可拆分提交，也不能通过临时移走 manifest 让
+测试退回 metadata-only。
 下列五组验收会据此进入 **active 分支**，验证 real-3d catalog、manifest endpoint、21 文件
-白名单与 runtime lock 相干；manifest 不存在时则严格要求 metadata-only、空白名单且 lock
-未激活。八系统私有转换管线由独立测试继续验证，不能替代正式匿名派生的 active 验收。
+白名单与 runtime lock 相干；仅历史 pre-activation 提交在 manifest 不存在时严格要求
+metadata-only、空白名单且 lock 未激活。八系统私有转换管线由独立测试继续验证，不能替代
+正式匿名派生的 active 验收。
 
 ```powershell
 node --test tests/external-runtime-bundle-contract.test.mjs `
@@ -226,14 +244,26 @@ GLB 并保持展开包小于 256 MiB；其运行时值
 `EXL50U_GENERAL_ASSEMBLY_ASSET_BASE_URL` 必须精确配置为
 `https://raw.githubusercontent.com/tianshao1992/fusion-physics-atlas-assets/<40位小写提交SHA>/exl50u-general-assembly-v1`；
 不得使用其他仓库、分支/tag/短 SHA、香港生产域名、Sites 域名或任何会重定向的
-Releases 下载地址。ITER Worker 对应变量是
+Releases 下载地址。ITER 与 EXL 两个根地址必须固定到**同一个资产仓库完整提交 SHA**；
+ITER Worker 对应变量是
 `ITER_HIGH_DETAIL_ASSET_BASE_URL`，EXL Worker 对应变量是
 `EXL50U_GENERAL_ASSEMBLY_ASSET_BASE_URL`。Worker 先尝试本地精确文件，再代理显式目录；
 白名单以外路径始终 404。香港构建则保留两类缓存并逐文件复核字节数与 SHA-256。
-投影后的 DeviceManifest 还必须保留匿名 `derivationEvidence`：实际选中的尝试与
-preview/high 比例、QEM 收据数量与摘要、target-miss/保留不可约几何计数，以及
-renderable/skipped 与 preview/high 零缺失覆盖对账；这些字段不得包含源路径、零件名、
-BOM、PMI 或装配树。
+投影后的 DeviceManifest 必须保留 exact v8 匿名 `derivationEvidence` 七键：`kind`、
+`selectedAttempt`、`sourceInputCleaning`、`previewVisualLod`、`highQem`、`highPartition` 与
+`coverage`。preview 固定使用 sloppy visual LOD（`selectedTargetTriangleRatio = 0.05`、
+`simplifierNormalizedErrorLimit = 0.02`），high 固定使用 QEM；两档各自保存互斥计数闭合的
+`outputCleaning`。preview 还必须携带 canonical 10-view visual QA 收据，十视角最差
+silhouette IoU 不低于 0.97、最坏 normalized depth p99 不高于 0.02。20 个 high 文件只是
+运输分片；`highPartition.geometryChunkCount` 是解码 GLB primitive/mesh 的实际几何 chunk
+总数，二者不得混同，并须与 high 三角面及零缺失 coverage 对账。
+
+完整 canonical visual report、QEM 私有收据、源 manifest、仅用于投影前交叉核验的
+`geometryAccounting`、源路径/摘要、定义或 occurrence ID 均留在仓库外受控目录；公开
+DeviceManifest 只能包含上述匿名计数和小写 64 字符 receipt SHA-256，不得投影这些私有字段。
+`sourceInputCleaning` 仅记录 exact-zero/repeated-index 清理及稳定顶点重映射的匿名计数，不含
+任何逐定义拓扑保留声明或旧版简化语义，也不得用任意 epsilon 吞掉正面积三角形。21 个 GLB
+总量仍受 300 MiB 硬门禁约束，不能按某次实际产物大小放宽。
 
 公开 GLB 和 manifest 的 `boundsMetres` 会保留用于浏览器取景的近似米制尺度。公开包排除的
 是源 CAD、PMI、尺寸标注和权威尺寸表，而不是声称可视几何没有尺度；这些近似坐标与包围盒
@@ -297,8 +327,9 @@ if ($LASTEXITCODE -ne 0) {
 必须始终调用仓库内的安装器，而不是手工覆盖 current、systemd 和 Nginx。安装器会
 核对完整提交 SHA、包 SHA-256、runtime lock、每个已激活外置 bundle 的逐文件字节数与
 SHA-256、EFIT 入口、每个 gzip sidecar 的解压字节一致性，并在已有证书时从版本化模板
-恢复 HTTPS/HTTP2 配置。metadata-only 状态会递归检查整个 `dist/client`，拒绝放在任意
-其他目录中的 EXL bundle、1.4 formal manifest 或摘要命名匿名 GLB；安装器还会把全部
+恢复 HTTPS/HTTP2 配置。对历史 pre-activation release，metadata-only 分支会递归检查
+整个 `dist/client`，拒绝放在任意其他目录中的 EXL bundle、1.4 formal manifest 或摘要
+命名匿名 GLB；当前 active release 则要求 manifest、21 个 GLB 与 lock 全部存在。安装器还会把全部
 `dist/client/**/*.glb` 与 Git/external lock 的精确 path、字节和 SHA-256 对账。Nginx 的
 所有 GLB `location =` 只能从完整校验后的 runtime lock 逐文件渲染，不能用目录或正则放宽：
 
@@ -553,6 +584,7 @@ curl -fsSI --http2 https://fusiondigital.club/
 ```bash
 curl -fsS 'https://fusiondigital.club/api/search?q=tokamak&limit=5' >/dev/null
 curl -fsSI https://fusiondigital.club/device-assets/exl50u-interactive/model-manifest.json
+curl -fsSI https://fusiondigital.club/models/exl50u-general-assembly-v1/model-manifest.json
 curl -fsSI https://fusiondigital.club/device-data/exl50u-efit/index.json
 curl -fsSI -H 'Accept-Encoding: gzip' https://fusiondigital.club/assets/<HASHED_ASSET>.js
 ```
@@ -567,18 +599,19 @@ curl -fsSI -H 'Range: bytes=0-1023' \
   'https://fusiondigital.club/device-assets/iter-high-detail/v1/cs.d1a8a1b30b9da86cd5d428012c3ce599fb16eca0b4778da3507bd26ceba78cdb.high.meshopt.glb'
 ```
 
-安装器会从 lock 对 ITER 以及已激活的 EXL-50U bundle 各选一个真实摘要路径，强制验证
+安装器会从 lock 对 ITER 与 EXL-50U 总装 bundle 各选一个真实摘要路径，强制验证
 `206`、精确 `Content-Length` / `Content-Range`、identity 编码、immutable cache 和全部
 安全头。手工复核 EXL 路径时从 lock 读取，不能填占位摘要：
 
 ```bash
-EXL_ROUTE=$(node -e 'const x=require("./assets/runtime-assets.lock.json"); console.log(x.externalBundles.find((b)=>b.id==="exl50u-general-assembly-v1")?.files[0]?.route ?? "")')
-test -z "$EXL_ROUTE" || curl -fsSI -H 'Accept-Encoding: gzip' -H 'Range: bytes=0-1023' "https://fusiondigital.club$EXL_ROUTE"
+EXL_ROUTE=$(node -e 'const x=require("./assets/runtime-assets.lock.json"); const b=x.externalBundles.find((v)=>v.id==="exl50u-general-assembly-v1"); if(!b?.files?.[0]?.route) process.exit(2); console.log(b.files[0].route)')
+curl -fsSI -H 'Accept-Encoding: gzip' -H 'Range: bytes=0-1023' "https://fusiondigital.club$EXL_ROUTE"
 curl -sS -o /dev/null -w '%{http_code}\n' \
   https://fusiondigital.club/device-assets/exl50u-general-assembly/v1/unknown.glb
 ```
 
-第一条在 bundle 尚未正式激活时为空；第二条必须始终返回 `404`。
+第一条必须返回 `206`，并包含 `Cache-Control: public, max-age=31536000, immutable`；
+第二条必须始终返回 `404`。
 
 安全边界应返回 404，即使客户端伪造平台身份头：
 

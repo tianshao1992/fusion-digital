@@ -159,7 +159,7 @@ test('general assembly catalog matches formal-manifest activation state', async 
   ]);
   const entry = catalog.devices.find(({ id }: { id: string }) => id === 'exl50u-general-assembly-20260630');
   assert.ok(entry);
-  if (formalManifest) {
+  if (formalManifest && formalManifest.reviewCandidate === undefined) {
     assert.equal(entry.availability, 'online-public-simplified');
     assert.equal(entry.delivery, 'public-static');
     assert.equal(entry.viewer.mode, 'real-3d');

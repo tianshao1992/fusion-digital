@@ -1,0 +1,37 @@
+{
+  "schemaVersion": "2.3",
+  "asOf": "2026-09-05",
+  "securityPolicy": {
+    "previewOnly": true,
+    "showDownloadActions": false,
+    "sourceCadDelivered": false,
+    "engineeringMeshDelivered": false,
+    "cacheRequestPolicy": "no-store",
+    "referrerPolicy": "no-referrer",
+    "notice": "视觉验收中的非正式生产候选。仅交付匿名公开简化派生几何，不交付原始 CAD、装配树、BOM、PMI、尺寸或任何私有验收报告。"
+  },
+  "devices": [{
+    "id": "exl50u-general-assembly-review-candidate",
+    "index": "REVIEW",
+    "title": "EXL‑50U 总装视觉验收候选",
+    "eyebrow": "VISUAL REVIEW PENDING · NON-PRODUCTION",
+    "state": "视觉验收中 · 非正式生产",
+    "tone": "restricted",
+    "facts": ["productionEligible=false", "10 视角视觉门禁尚未通过", "匿名 preview + 20 个 high 分片"],
+    "deviceOverview": "仅用于用户直接检查 EXL‑50U 总装匿名浏览器派生模型的视觉完整性。",
+    "fileSummary": "review candidate · 资产须由显式 review-candidate projector 生成",
+    "copy": "该入口不会激活正式设备目录，也不表示 canonical visual QA 已通过。完成用户视觉复核和固定门禁修复前，不得用于 fusiondigital.club 正式生产。",
+    "availability": "review-candidate",
+    "delivery": "public-static",
+    "comparisonFrame": null,
+    "statement": "USER_VISUAL_REVIEW_REQUIRED; productionEligible=false. Anonymous public derivative for visual review only; not a production release or engineering authority.",
+    "viewer": {
+      "mode": "real-3d",
+      "manifestEndpoint": "/device-assets/exl50u-general-assembly/v1/model-manifest.json",
+      "turntableManifestEndpoint": null,
+      "overlayEligible": false
+    },
+    "physicsOverlays": [],
+    "diagnosticWorkspace": null
+  }]
+}

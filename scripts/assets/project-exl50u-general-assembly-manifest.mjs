@@ -360,7 +360,7 @@ function parseGlbJson(bytes) {
   assertPackedRanges(compressedRanges, buffers[0].byteLength, binBytes, "GLB compressed BIN data");
   assertPackedRanges(fallbackRanges, buffers[1].byteLength, null, "GLB fallback layout");
 
-  const referencedBufferViews = new Set();
+  const accessorRangesByBufferView = new Map();
   for (let index = 0; index < accessors.length; index += 1) {
     const accessor = exactObjectKeys(
       accessors[index],
@@ -369,25 +369,49 @@ function parseGlbJson(bytes) {
       `GLB accessors[${index}]`,
     );
     const viewIndex = safeIndex(accessor.bufferView, bufferViews.length, `GLB accessors[${index}].bufferView`);
-    if (referencedBufferViews.has(viewIndex)) throw new Error("GLB accessors must not alias bufferViews");
-    referencedBufferViews.add(viewIndex);
     if (!COMPONENT_BYTES.has(accessor.componentType) || !TYPE_COMPONENTS.has(accessor.type)) {
       throw new Error(`GLB accessors[${index}] scalar layout is not whitelisted`);
     }
     positiveSafeInteger(accessor.count, `GLB accessors[${index}].count`);
-    if ((accessor.byteOffset ?? 0) !== 0 || ![undefined, true, false].includes(accessor.normalized)) {
+    const accessorByteOffset = nonNegativeSafeInteger(
+      accessor.byteOffset ?? 0,
+      `GLB accessors[${index}].byteOffset`,
+    );
+    if (![undefined, true, false].includes(accessor.normalized)) {
       throw new Error(`GLB accessors[${index}] offset or normalization is invalid`);
     }
     const components = TYPE_COMPONENTS.get(accessor.type);
     if (accessor.min !== undefined) finiteNumberArray(accessor.min, components, `GLB accessors[${index}].min`);
     if (accessor.max !== undefined) finiteNumberArray(accessor.max, components, `GLB accessors[${index}].max`);
     const compression = bufferViews[viewIndex].extensions.EXT_meshopt_compression;
-    if (bufferViews[viewIndex].byteLength !== accessor.count * compression.byteStride
-      || compression.count !== accessor.count) {
-      throw new Error(`GLB accessors[${index}] does not exactly occupy its Meshopt bufferView`);
+    const accessorByteLength = accessor.count * compression.byteStride;
+    if (!Number.isSafeInteger(accessorByteLength)
+      || accessorByteOffset % compression.byteStride !== 0
+      || accessorByteOffset + accessorByteLength > bufferViews[viewIndex].byteLength) {
+      throw new Error(`GLB accessors[${index}] range is invalid for its Meshopt bufferView`);
+    }
+    const ranges = accessorRangesByBufferView.get(viewIndex) ?? [];
+    ranges.push({ start: accessorByteOffset, end: accessorByteOffset + accessorByteLength });
+    accessorRangesByBufferView.set(viewIndex, ranges);
+  }
+  if (accessorRangesByBufferView.size !== bufferViews.length) throw new Error("GLB contains an unreferenced bufferView");
+  for (let viewIndex = 0; viewIndex < bufferViews.length; viewIndex += 1) {
+    const bufferView = bufferViews[viewIndex];
+    const compression = bufferView.extensions.EXT_meshopt_compression;
+    const ranges = [...accessorRangesByBufferView.get(viewIndex)].sort((left, right) => left.start - right.start);
+    if (compression.mode === "ATTRIBUTES") {
+      if (ranges.length !== 1 || ranges[0].start !== 0 || ranges[0].end !== bufferView.byteLength
+        || compression.count * compression.byteStride !== bufferView.byteLength) {
+        throw new Error(`GLB attribute bufferView[${viewIndex}] must contain exactly one complete accessor`);
+      }
+    } else if (compression.mode !== "TRIANGLES"
+      || compression.count * compression.byteStride !== bufferView.byteLength
+      || ranges[0].start !== 0
+      || ranges.at(-1).end !== bufferView.byteLength
+      || ranges.some((range, index) => index > 0 && range.start !== ranges[index - 1].end)) {
+      throw new Error(`GLB triangle bufferView[${viewIndex}] accessors must form one exact non-overlapping partition`);
     }
   }
-  if (referencedBufferViews.size !== bufferViews.length) throw new Error("GLB contains an unreferenced bufferView");
 
   const scenes = exactArray(document.scenes, 1, "GLB scenes");
   exactObjectKeys(scenes[0], ["nodes"], [], "GLB scene");
@@ -403,24 +427,32 @@ function parseGlbJson(bytes) {
   const visiting = new Set();
   const parentByChild = new Map();
   const referencedMeshes = new Set();
-  const referencedAccessors = new Set();
+  const referencedAccessors = new Map();
   let instancedNodeCount = 0;
   function claimSemanticAccessor(accessorIndex, label, expected) {
-    if (referencedAccessors.has(accessorIndex)) {
-      throw new Error(`GLB accessor is reused across public semantics: ${label}`);
+    const semanticClass = label.includes("POSITION") ? "POSITION"
+      : label.includes("NORMAL") ? "NORMAL"
+        : label.includes("indices") ? "INDICES"
+          : label.split(" ", 1)[0];
+    if (referencedAccessors.has(accessorIndex)
+      && referencedAccessors.get(accessorIndex) !== semanticClass) {
+      throw new Error(`GLB accessor is reused across incompatible public semantics: ${label}`);
     }
-    referencedAccessors.add(accessorIndex);
+    referencedAccessors.set(accessorIndex, semanticClass);
     const accessor = accessors[accessorIndex];
     const bufferView = bufferViews[accessor.bufferView];
     const compression = bufferView.extensions.EXT_meshopt_compression;
     if (
-      accessor.componentType !== expected.componentType
+      (Array.isArray(expected.componentType)
+        ? !expected.componentType.includes(accessor.componentType)
+        : accessor.componentType !== expected.componentType)
       || accessor.type !== expected.type
       || (accessor.normalized === true) !== expected.normalized
       || compression.mode !== expected.mode
       || (compression.filter ?? null) !== expected.filter
-      || compression.byteStride !== expected.byteStride
-      || (bufferView.byteStride !== undefined && bufferView.byteStride !== expected.byteStride)
+      || compression.byteStride !== (expected.byteStride ?? COMPONENT_BYTES.get(accessor.componentType))
+      || (bufferView.byteStride !== undefined
+        && bufferView.byteStride !== (expected.byteStride ?? COMPONENT_BYTES.get(accessor.componentType)))
       || (bufferView.target !== undefined && bufferView.target !== expected.target)
     ) throw new Error(`GLB ${label} storage is not the fixed anonymous public layout`);
     return accessor;
@@ -430,8 +462,15 @@ function parseGlbJson(bytes) {
     if (visiting.has(index)) throw new Error("GLB node tree contains a cycle");
     if (visited.has(index)) return;
     visiting.add(index);
-    const node = exactObjectKeys(nodes[index], [], ["children", "extensions", "matrix", "mesh"], `GLB nodes[${index}]`);
+    const node = exactObjectKeys(nodes[index], [], ["children", "extensions", "matrix", "mesh", "rotation"], `GLB nodes[${index}]`);
     if (node.matrix !== undefined) finiteNumberArray(node.matrix, 16, `GLB nodes[${index}].matrix`);
+    if (node.rotation !== undefined) {
+      finiteNumberArray(node.rotation, 4, `GLB nodes[${index}].rotation`);
+      const expectedRootRotation = [-Math.SQRT1_2, 0, 0, Math.SQRT1_2];
+      if (index !== 0 || node.rotation.some((value, axis) => Math.abs(value - expectedRootRotation[axis]) > 1e-15)) {
+        throw new Error("GLB permits only the fixed anonymous source-Z-up to public-Y-up root rotation");
+      }
+    }
     if (node.mesh !== undefined) referencedMeshes.add(safeIndex(node.mesh, meshes.length, `GLB nodes[${index}].mesh`));
     if (node.extensions !== undefined) {
       exactObjectKeys(node.extensions, ["EXT_mesh_gpu_instancing"], [], `GLB nodes[${index}].extensions`);
@@ -514,17 +553,17 @@ function parseGlbJson(bytes) {
         target: 34962,
       });
       const indices = claimSemanticAccessor(indicesIndex, "indices accessor", {
-        componentType: 5125,
+        componentType: [5123, 5125],
         type: "SCALAR",
         normalized: false,
         mode: "TRIANGLES",
         filter: null,
-        byteStride: 4,
+        byteStride: null,
         target: 34963,
       });
       if (primitive.mode !== 4) {
         throw new Error(
-          "GLB primitives must use Float32 POSITION, normalized Int8 NORMAL and Uint32 indexed triangles "
+          "GLB primitives must use Float32 POSITION, normalized Int8 NORMAL and Uint16/Uint32 indexed triangles "
             + `(got POSITION ${position?.componentType}/${position?.type}, `
             + `NORMAL ${normal?.componentType}/${normal?.type}, indices ${indices?.componentType}/${indices?.type})`,
         );
@@ -719,16 +758,23 @@ export async function inspectReviewedAnonymousGlb(pathname, options = {}) {
   }
   if (geometries.size === 0) throw new Error("GLB contains no renderable geometry");
 
+  let uniqueGeometryMeshes = 0;
   let uniqueGeometryTriangles = 0;
   let uniqueGeometryVertices = 0;
-  for (const geometry of geometries.values()) {
-    uniqueGeometryTriangles += geometry.getIndex().count / 3;
-    uniqueGeometryVertices += geometry.getAttribute("position").count;
+  // Delivery chunks are GLB primitives. Compatible chunks may deliberately
+  // share decoded bufferViews or even complete accessors, so Three.js UUID
+  // deduplication is a memory fact, not the partition/chunk accounting fact.
+  for (const mesh of document.meshes) {
+    for (const primitive of mesh.primitives) {
+      uniqueGeometryMeshes += 1;
+      uniqueGeometryTriangles += document.accessors[primitive.indices].count / 3;
+      uniqueGeometryVertices += document.accessors[primitive.attributes.POSITION].count;
+    }
   }
   return {
     bytes: bytes.byteLength,
     sha256: createHash("sha256").update(bytes).digest("hex"),
-    uniqueGeometryMeshes: geometries.size,
+    uniqueGeometryMeshes,
     uniqueGeometryTriangles,
     uniqueGeometryVertices,
     placementInstances,
@@ -787,7 +833,82 @@ function metricTotals(facts) {
   return Object.fromEntries(keys.map((key) => [key, facts.reduce((sum, fact) => sum + fact[key], 0)]));
 }
 
-export function projectDeviceManifest({ template, asOf, preview, shards, derivationEvidence }) {
+function assertSourceGeometryAccounting({ accounting, attempt, derivationEvidence, preview, shards }) {
+  const accountingKeys = [
+    "anonymousDefinitions", "anonymousOccurrences", "sourceUniqueVertices", "sourceUniqueTriangles",
+    "sourceSceneTriangles", "previewUniqueTriangles", "previewSceneTriangles", "highUniqueTriangles",
+    "highSceneTriangles", "definitionsMissingFromPreview", "definitionsMissingFromHigh",
+    "occurrencesMissingFromPreview", "occurrencesMissingFromHigh", "sourceSkippedLeafGeometry",
+  ];
+  exactObjectKeys(accounting, accountingKeys, [], "public derivative geometryAccounting");
+  exactObjectKeys(
+    accounting.sourceSkippedLeafGeometry,
+    ["totalDefinitions", "totalOccurrences"],
+    [],
+    "public derivative sourceSkippedLeafGeometry",
+  );
+  const positiveFields = [
+    "anonymousDefinitions", "anonymousOccurrences", "sourceUniqueVertices", "sourceUniqueTriangles",
+    "sourceSceneTriangles", "previewUniqueTriangles", "previewSceneTriangles", "highUniqueTriangles",
+    "highSceneTriangles",
+  ];
+  const missingFields = [
+    "definitionsMissingFromPreview", "definitionsMissingFromHigh",
+    "occurrencesMissingFromPreview", "occurrencesMissingFromHigh",
+  ];
+  for (const field of positiveFields) positiveSafeInteger(accounting[field], `geometryAccounting.${field}`);
+  for (const field of missingFields) nonNegativeSafeInteger(accounting[field], `geometryAccounting.${field}`);
+  nonNegativeSafeInteger(
+    accounting.sourceSkippedLeafGeometry.totalDefinitions,
+    "geometryAccounting.sourceSkippedLeafGeometry.totalDefinitions",
+  );
+  nonNegativeSafeInteger(
+    accounting.sourceSkippedLeafGeometry.totalOccurrences,
+    "geometryAccounting.sourceSkippedLeafGeometry.totalOccurrences",
+  );
+  const highTotals = metricTotals(shards);
+  const sourceInput = derivationEvidence.sourceInputCleaning;
+  const previewCleaning = derivationEvidence.previewVisualLod.outputCleaning;
+  const highCleaning = derivationEvidence.highQem.outputCleaning;
+  const partition = derivationEvidence.highPartition;
+  const coverage = derivationEvidence.coverage;
+  if (
+    attempt !== derivationEvidence.selectedAttempt
+    || accounting.anonymousDefinitions !== coverage.renderableDefinitions
+    || accounting.anonymousOccurrences !== coverage.renderableOccurrences
+    || accounting.sourceUniqueTriangles !== sourceInput.sourceTriangles
+    || accounting.sourceSceneTriangles < accounting.sourceUniqueTriangles
+    || accounting.previewUniqueTriangles !== preview.uniqueGeometryTriangles
+    || accounting.previewUniqueTriangles !== previewCleaning.finalTriangles
+    || accounting.previewSceneTriangles !== preview.sceneDrawTriangles
+    || accounting.highUniqueTriangles !== highTotals.uniqueGeometryTriangles
+    || accounting.highUniqueTriangles !== highCleaning.finalTriangles
+    || accounting.highSceneTriangles !== highTotals.sceneDrawTriangles
+    || missingFields.some((field) => accounting[field] !== 0)
+    || accounting.definitionsMissingFromPreview !== coverage.previewMissingDefinitions
+    || accounting.definitionsMissingFromHigh !== coverage.highMissingDefinitions
+    || accounting.occurrencesMissingFromPreview !== coverage.previewMissingOccurrences
+    || accounting.occurrencesMissingFromHigh !== coverage.highMissingOccurrences
+    || accounting.sourceSkippedLeafGeometry.totalDefinitions !== coverage.skippedDefinitions
+    || accounting.sourceSkippedLeafGeometry.totalOccurrences !== coverage.skippedOccurrences
+    || partition.finalTrianglesBeforePartition !== highTotals.uniqueGeometryTriangles
+    || partition.partitionedTriangles !== highTotals.uniqueGeometryTriangles
+    || partition.geometryChunkCount !== highTotals.uniqueGeometryMeshes
+  ) {
+    throw new Error("public derivative attempt, evidence, geometryAccounting, or independently decoded GLBs disagree");
+  }
+}
+
+export function projectDeviceManifest({
+  template,
+  asOf,
+  preview,
+  shards,
+  derivationEvidence,
+  attempt,
+  geometryAccounting,
+  reviewCandidate = false,
+}) {
   const parsedAsOf = new Date(`${asOf}T00:00:00Z`);
   if (
     !/^\d{4}-\d{2}-\d{2}$/u.test(asOf)
@@ -799,6 +920,7 @@ export function projectDeviceManifest({ template, asOf, preview, shards, derivat
   if (!object(template) || template.id !== EXL50U_GA_BUNDLE_ID || shards.length !== EXL50U_GA_SHARD_COUNT) {
     throw new Error("EXL-50U manifest template or shard count is invalid");
   }
+  const normalizedDerivationEvidence = normalizeExl50uGeneralAssemblyDerivationEvidence(derivationEvidence, { reviewCandidate });
   if (template.assets !== undefined || template.derivationEvidence !== undefined) {
     throw new Error("EXL-50U manifest template must not contain pre-populated assets or derivation evidence");
   }
@@ -881,6 +1003,13 @@ export function projectDeviceManifest({ template, asOf, preview, shards, derivat
   ) {
     throw new Error("EXL-50U high-detail transport exceeds its aggregate scene or draw-call budget");
   }
+  assertSourceGeometryAccounting({
+    accounting: geometryAccounting,
+    attempt,
+    derivationEvidence: normalizedDerivationEvidence,
+    preview,
+    shards,
+  });
   const previewAsset = {
     path: `${EXL50U_GA_ROUTE_ROOT}/${preview.filename}`,
     format: EXL50U_GA_ASSET_FORMAT,
@@ -894,7 +1023,11 @@ export function projectDeviceManifest({ template, asOf, preview, shards, derivat
   const manifest = {
     ...structuredClone(template),
     asOf,
-    derivationEvidence: normalizeExl50uGeneralAssemblyDerivationEvidence(derivationEvidence),
+    derivationEvidence: normalizedDerivationEvidence,
+    ...(reviewCandidate ? { reviewCandidate: {
+      status: "USER_VISUAL_REVIEW_REQUIRED",
+      productionEligible: false,
+    } } : {}),
     assets: {
       webModel: previewAsset,
       webModels: [{ id: "preview", label: "标准", quality: "preview", default: true, ...previewAsset }],
@@ -943,6 +1076,10 @@ function parseArguments(argv) {
   const options = {};
   for (let index = 0; index < argv.length; index += 1) {
     const token = argv[index];
+    if (token === "--review-candidate") {
+      options.reviewCandidate = true;
+      continue;
+    }
     if (!["--derivative-manifest", "--asset-dir", "--output", "--as-of"].includes(token)) {
       throw new Error(`Unknown option: ${token}`);
     }
@@ -985,6 +1122,8 @@ async function main() {
     || !object(derivative.preview)
     || !Array.isArray(derivative.high)
     || derivative.high.length !== EXL50U_GA_SHARD_COUNT
+    || ![1, 2].includes(derivative.attempt)
+    || !object(derivative.geometryAccounting)
   ) throw new Error("public derivative manifest layout is unsupported");
 
   const sourceEntries = [derivative.preview, ...derivative.high];
@@ -1025,6 +1164,9 @@ async function main() {
     preview,
     shards,
     derivationEvidence: derivative.derivationEvidence,
+    attempt: derivative.attempt,
+    geometryAccounting: derivative.geometryAccounting,
+    reviewCandidate: options.reviewCandidate === true,
   });
 
   const parent = resolve(dirname(output));
@@ -1057,7 +1199,7 @@ async function main() {
     throw error;
   }
   process.stdout.write(`${JSON.stringify({
-    status: "PROJECTED",
+    status: options.reviewCandidate === true ? "REVIEW_CANDIDATE_PROJECTED" : "PROJECTED",
     id: EXL50U_GA_BUNDLE_ID,
     fileCount: 21,
     totalBytes: preview.bytes + shards.reduce((sum, shard) => sum + shard.bytes, 0),

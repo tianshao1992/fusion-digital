@@ -20,7 +20,7 @@ export const MAX_ANONYMOUS_BUNDLE_PLACEMENT_INSTANCES = (
 );
 export const MAX_ANONYMOUS_SCENE_TRIANGLES = 30_000_000;
 export const MAX_ANONYMOUS_DRAW_CALLS = 800;
-export const ANONYMOUS_SHARD_BUNDLE_FORMAT = 'glTF 2.0 binary + EXT_meshopt_compression + EXT_mesh_gpu_instancing; POSITION Float32; NORMAL normalized Int8 (8-bit); indices Uint32';
+export const ANONYMOUS_SHARD_BUNDLE_FORMAT = 'glTF 2.0 binary + EXT_meshopt_compression + EXT_mesh_gpu_instancing; POSITION Float32; NORMAL normalized Int8 (8-bit); indices Uint16/Uint32';
 export const ANONYMOUS_SHARD_REQUIRED_EXTENSIONS = ['EXT_mesh_gpu_instancing', 'EXT_meshopt_compression'] as const;
 const EXL50U_ANONYMOUS_SHARD_PATH = /^\/device-assets\/exl50u-general-assembly\/v1\/anonymous-shard-(\d{2})\.([a-f0-9]{64})\.high\.meshopt\.glb$/;
 const EXL50U_PREVIEW_ASSET_PATH = /^\/device-assets\/exl50u-general-assembly\/v1\/device\.preview\.([a-f0-9]{64})\.meshopt\.glb$/;
@@ -133,15 +133,80 @@ export type DeviceAnonymousShardBundle = {
   shards: DeviceAnonymousShardModel[];
 };
 
+type DeviceAnonymousOutputCleaning = {
+  policy: 'stable-repeated-zero-duplicate-edge-incidence-clean-v1';
+  selectedTrianglesBeforeCleaning: number;
+  finalTriangles: number;
+  removedRepeatedIndexTriangles: number;
+  removedZeroAreaTriangles: number;
+  removedDuplicateTriangles: number;
+  removedNonmanifoldTriangles: number;
+  repairedDefinitions: number;
+  finalRepeatedIndexTriangles: 0;
+  finalZeroAreaTriangles: 0;
+  finalDuplicateTriangles: 0;
+  finalNonmanifoldEdgeCount: 0;
+};
+
+type DeviceAnonymousLodEvidence = {
+  selectedTargetTriangleRatio: number;
+  simplifierNormalizedErrorLimit: number;
+  maxAcceptedSimplifierReportedNormalizedError: number;
+  minimumTrianglesPerDefinition: number;
+  definitionsUsingMinimum: number;
+  minimumCoverage: 'stable-source-order-minimum-plus-six-axis-extrema-v1';
+  extremaCoverage: 'six-axis-first-valid-nondegenerate-incident-triangle-v1';
+  retainedSourcePositionValuesUnchanged: true;
+  allDefinitionsNonempty: true;
+  boundsMissCount: 0;
+  receiptCount: number;
+  receiptSha256: string;
+  outputCleaning: DeviceAnonymousOutputCleaning;
+};
+
 export type DeviceAnonymousDerivationEvidence = {
   kind: 'anonymous-public-derivative';
   selectedAttempt: 1 | 2;
-  selectedRatios: { preview: number; high: number };
-  qem: {
-    receiptCount: number;
-    receiptSha256: string;
+  sourceInputCleaning: {
+    policy: 'repeated-index-and-exact-zero-area-drop-stable-vertex-remap-v1';
+    definitionInputs: number;
+    sourceFaces: number;
+    sourceTriangles: number;
+    sanitizedTriangles: number;
+    removedTriangles: number;
+    affectedDefinitions: number;
+    removedUnreferencedVertices: number;
+    allDefinitionsAccounted: true;
+    allSourceFacesAccounted: true;
+  };
+  previewVisualLod: DeviceAnonymousLodEvidence & {
+    algorithm: 'meshoptimizer-simplify-sloppy';
+    visualQa: {
+      status?: 'USER_VISUAL_REVIEW_REQUIRED';
+      policy: 'canonical-10-view-silhouette-depth-1024-v1';
+      viewCount: 10;
+      silhouetteIouFloor: 0.97;
+      minimumObservedSilhouetteIou: number;
+      normalizedDepthP99Ceiling: 0.02;
+      maximumObservedNormalizedDepthP99: number;
+      receiptSha256: string;
+    };
+  };
+  highQem: DeviceAnonymousLodEvidence & {
+    algorithm: 'meshoptimizer-simplify-qem';
     targetMissCount: number;
     retainedIrreducibleCount: number;
+  };
+  highPartition: {
+    policy: 'stable-definition-triangle-chunks-v1';
+    geometryChunkCount: number;
+    splitDefinitionCount: number;
+    finalTrianglesBeforePartition: number;
+    partitionedTriangles: number;
+    missingTriangles: 0;
+    duplicateTriangles: 0;
+    missingOccurrences: 0;
+    receiptSha256: string;
   };
   coverage: {
     renderableDefinitions: number;
@@ -216,6 +281,10 @@ export type DeviceManifest = {
     analyticPlasma?: AnalyticPlasmaVisualization;
   };
   derivationEvidence?: DeviceAnonymousDerivationEvidence;
+  reviewCandidate?: {
+    status: 'USER_VISUAL_REVIEW_REQUIRED';
+    productionEligible: false;
+  };
   systems: DeviceManifestSystem[];
   generator: {
     name: string;
@@ -282,27 +351,143 @@ function hasExactRequiredExtensions(value: unknown): value is [...typeof ANONYMO
     && value.every((extension, index) => extension === ANONYMOUS_SHARD_REQUIRED_EXTENSIONS[index]);
 }
 
-function validateAnonymousDerivationEvidence(value: unknown): asserts value is DeviceAnonymousDerivationEvidence {
+function validateAnonymousDerivationEvidence(value: unknown, reviewCandidate = false): asserts value is DeviceAnonymousDerivationEvidence {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('EXL-50U 总装缺少匿名派生证据。');
   const evidence = value as Record<string, unknown>;
-  const ratios = evidence.selectedRatios as Record<string, unknown> | undefined;
-  const qem = evidence.qem as Record<string, unknown> | undefined;
+  const sourceInputCleaning = evidence.sourceInputCleaning as Record<string, unknown> | undefined;
+  const preview = evidence.previewVisualLod as Record<string, unknown> | undefined;
+  const high = evidence.highQem as Record<string, unknown> | undefined;
+  const highPartition = evidence.highPartition as Record<string, unknown> | undefined;
   const coverage = evidence.coverage as Record<string, unknown> | undefined;
   const integer = (candidate: unknown, positive = false) => Number.isSafeInteger(candidate)
     && Number(candidate) >= (positive ? 1 : 0);
-  if (!hasExactKeys(evidence, ['kind', 'selectedAttempt', 'selectedRatios', 'qem', 'coverage'])
+  const finiteUnit = (candidate: unknown, allowZero = false) => typeof candidate === 'number'
+    && Number.isFinite(candidate)
+    && candidate >= (allowZero ? 0 : Number.EPSILON)
+    && candidate <= 1;
+  const digest = (candidate: unknown) => typeof candidate === 'string' && /^[a-f0-9]{64}$/.test(candidate);
+  const sourceInputCleaningKeys = [
+    'policy', 'definitionInputs', 'sourceFaces', 'sourceTriangles', 'sanitizedTriangles', 'removedTriangles',
+    'affectedDefinitions', 'removedUnreferencedVertices', 'allDefinitionsAccounted', 'allSourceFacesAccounted',
+  ];
+  const lodKeys = [
+    'algorithm', 'selectedTargetTriangleRatio', 'simplifierNormalizedErrorLimit',
+    'maxAcceptedSimplifierReportedNormalizedError', 'minimumTrianglesPerDefinition',
+    'definitionsUsingMinimum', 'minimumCoverage', 'extremaCoverage',
+    'retainedSourcePositionValuesUnchanged', 'allDefinitionsNonempty', 'boundsMissCount',
+    'receiptCount', 'receiptSha256', 'outputCleaning',
+  ];
+  const outputCleaningKeys = [
+    'policy', 'selectedTrianglesBeforeCleaning', 'finalTriangles', 'removedRepeatedIndexTriangles',
+    'removedZeroAreaTriangles', 'removedDuplicateTriangles', 'removedNonmanifoldTriangles',
+    'repairedDefinitions', 'finalRepeatedIndexTriangles', 'finalZeroAreaTriangles',
+    'finalDuplicateTriangles', 'finalNonmanifoldEdgeCount',
+  ];
+  const validOutputCleaning = (candidate: unknown) => {
+    if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) return false;
+    const cleaning = candidate as Record<string, unknown>;
+    const removed = [
+      'removedRepeatedIndexTriangles', 'removedZeroAreaTriangles',
+      'removedDuplicateTriangles', 'removedNonmanifoldTriangles',
+    ];
+    return hasExactKeys(cleaning, outputCleaningKeys)
+      && cleaning.policy === 'stable-repeated-zero-duplicate-edge-incidence-clean-v1'
+      && integer(cleaning.selectedTrianglesBeforeCleaning, true)
+      && integer(cleaning.finalTriangles, true)
+      && [...removed, 'repairedDefinitions'].every((key) => integer(cleaning[key]))
+      && Number(cleaning.selectedTrianglesBeforeCleaning)
+        === Number(cleaning.finalTriangles) + removed.reduce((sum, key) => sum + Number(cleaning[key]), 0)
+      && cleaning.finalRepeatedIndexTriangles === 0
+      && cleaning.finalZeroAreaTriangles === 0
+      && cleaning.finalDuplicateTriangles === 0
+      && cleaning.finalNonmanifoldEdgeCount === 0;
+  };
+  const validLod = (candidate: Record<string, unknown> | undefined) => Boolean(candidate)
+    && finiteUnit(candidate?.selectedTargetTriangleRatio)
+    && finiteUnit(candidate?.simplifierNormalizedErrorLimit)
+    && finiteUnit(candidate?.maxAcceptedSimplifierReportedNormalizedError, true)
+    && Number(candidate?.maxAcceptedSimplifierReportedNormalizedError)
+      <= Number(candidate?.simplifierNormalizedErrorLimit)
+    && integer(candidate?.minimumTrianglesPerDefinition, true)
+    && integer(candidate?.definitionsUsingMinimum)
+    && candidate?.minimumCoverage === 'stable-source-order-minimum-plus-six-axis-extrema-v1'
+    && candidate?.extremaCoverage === 'six-axis-first-valid-nondegenerate-incident-triangle-v1'
+    && candidate?.retainedSourcePositionValuesUnchanged === true
+    && candidate?.allDefinitionsNonempty === true
+    && candidate?.boundsMissCount === 0
+    && integer(candidate?.receiptCount, true)
+    && digest(candidate?.receiptSha256)
+    && validOutputCleaning(candidate?.outputCleaning);
+  const previewCleaning = preview?.outputCleaning as Record<string, unknown> | undefined;
+  const highCleaning = high?.outputCleaning as Record<string, unknown> | undefined;
+  const visualQa = preview?.visualQa as Record<string, unknown> | undefined;
+  if (!hasExactKeys(evidence, [
+    'kind', 'selectedAttempt', 'sourceInputCleaning', 'previewVisualLod', 'highQem', 'highPartition', 'coverage',
+  ])
     || evidence.kind !== 'anonymous-public-derivative'
     || (evidence.selectedAttempt !== 1 && evidence.selectedAttempt !== 2)
-    || !ratios || Array.isArray(ratios) || !hasExactKeys(ratios, ['preview', 'high'])
-    || ['preview', 'high'].some((key) => typeof ratios[key] !== 'number'
-      || !Number.isFinite(ratios[key]) || Number(ratios[key]) <= 0 || Number(ratios[key]) > 1)
-    || !qem || Array.isArray(qem)
-    || !hasExactKeys(qem, ['receiptCount', 'receiptSha256', 'targetMissCount', 'retainedIrreducibleCount'])
-    || !integer(qem.receiptCount, true)
-    || typeof qem.receiptSha256 !== 'string' || !/^[a-f0-9]{64}$/.test(qem.receiptSha256)
-    || !integer(qem.targetMissCount) || !integer(qem.retainedIrreducibleCount)
-    || qem.targetMissCount !== qem.retainedIrreducibleCount
-    || Number(qem.targetMissCount) > Number(qem.receiptCount)
+    || !sourceInputCleaning || Array.isArray(sourceInputCleaning)
+    || !hasExactKeys(sourceInputCleaning, sourceInputCleaningKeys)
+    || sourceInputCleaning.policy !== 'repeated-index-and-exact-zero-area-drop-stable-vertex-remap-v1'
+    || sourceInputCleaningKeys
+      .filter((key) => !['policy', 'allDefinitionsAccounted', 'allSourceFacesAccounted'].includes(key))
+      .some((key) => !integer(sourceInputCleaning[key]))
+    || ['definitionInputs', 'sourceFaces', 'sourceTriangles', 'sanitizedTriangles']
+      .some((key) => !integer(sourceInputCleaning[key], true))
+    || sourceInputCleaning.allDefinitionsAccounted !== true
+    || sourceInputCleaning.allSourceFacesAccounted !== true
+    || Number(sourceInputCleaning.sourceTriangles)
+      !== Number(sourceInputCleaning.sanitizedTriangles) + Number(sourceInputCleaning.removedTriangles)
+    || !preview || Array.isArray(preview)
+    || !hasExactKeys(preview, [...lodKeys, 'visualQa'])
+    || preview.algorithm !== 'meshoptimizer-simplify-sloppy'
+    || !validLod(preview)
+    || preview.selectedTargetTriangleRatio !== 0.05
+    || preview.simplifierNormalizedErrorLimit !== 0.02
+    || preview.minimumTrianglesPerDefinition !== 12
+    || !visualQa || Array.isArray(visualQa)
+    || !hasExactKeys(visualQa, [
+      'policy', 'viewCount', 'silhouetteIouFloor', 'minimumObservedSilhouetteIou',
+      'normalizedDepthP99Ceiling', 'maximumObservedNormalizedDepthP99', 'receiptSha256',
+      ...(reviewCandidate ? ['status'] : []),
+    ])
+    || (reviewCandidate && visualQa.status !== 'USER_VISUAL_REVIEW_REQUIRED')
+    || visualQa.policy !== 'canonical-10-view-silhouette-depth-1024-v1'
+    || visualQa.viewCount !== 10
+    || visualQa.silhouetteIouFloor !== 0.97
+    || !finiteUnit(visualQa.minimumObservedSilhouetteIou, true)
+    || (!reviewCandidate && Number(visualQa.minimumObservedSilhouetteIou) < Number(visualQa.silhouetteIouFloor))
+    || visualQa.normalizedDepthP99Ceiling !== 0.02
+    || !finiteUnit(visualQa.maximumObservedNormalizedDepthP99, true)
+    || (!reviewCandidate && Number(visualQa.maximumObservedNormalizedDepthP99) > Number(visualQa.normalizedDepthP99Ceiling))
+    || (reviewCandidate
+      && Number(visualQa.minimumObservedSilhouetteIou) >= Number(visualQa.silhouetteIouFloor)
+      && Number(visualQa.maximumObservedNormalizedDepthP99) <= Number(visualQa.normalizedDepthP99Ceiling))
+    || !digest(visualQa.receiptSha256)
+    || !high || Array.isArray(high)
+    || !hasExactKeys(high, [...lodKeys, 'targetMissCount', 'retainedIrreducibleCount'])
+    || high.algorithm !== 'meshoptimizer-simplify-qem'
+    || !validLod(high)
+    || high.selectedTargetTriangleRatio !== (evidence.selectedAttempt === 1 ? 0.6 : 0.55)
+    || high.simplifierNormalizedErrorLimit !== 0.0005
+    || high.minimumTrianglesPerDefinition !== 12
+    || !integer(high.targetMissCount) || !integer(high.retainedIrreducibleCount)
+    || high.targetMissCount !== high.retainedIrreducibleCount
+    || Number(high.targetMissCount) > Number(high.receiptCount)
+    || !highPartition || Array.isArray(highPartition)
+    || !hasExactKeys(highPartition, [
+      'policy', 'geometryChunkCount', 'splitDefinitionCount', 'finalTrianglesBeforePartition',
+      'partitionedTriangles', 'missingTriangles', 'duplicateTriangles', 'missingOccurrences', 'receiptSha256',
+    ])
+    || highPartition.policy !== 'stable-definition-triangle-chunks-v1'
+    || !integer(highPartition.geometryChunkCount, true)
+    || !integer(highPartition.splitDefinitionCount)
+    || !integer(highPartition.finalTrianglesBeforePartition, true)
+    || !integer(highPartition.partitionedTriangles, true)
+    || highPartition.missingTriangles !== 0
+    || highPartition.duplicateTriangles !== 0
+    || highPartition.missingOccurrences !== 0
+    || !digest(highPartition.receiptSha256)
     || !coverage || Array.isArray(coverage)
     || !hasExactKeys(coverage, [
       'renderableDefinitions', 'renderableOccurrences', 'skippedDefinitions', 'skippedOccurrences',
@@ -314,9 +499,22 @@ function validateAnonymousDerivationEvidence(value: unknown): asserts value is D
     || !integer(coverage.sourceDefinitions, true) || !integer(coverage.sourceOccurrences, true)
     || Number(coverage.sourceDefinitions) !== Number(coverage.renderableDefinitions) + Number(coverage.skippedDefinitions)
     || Number(coverage.sourceOccurrences) !== Number(coverage.renderableOccurrences) + Number(coverage.skippedOccurrences)
+    || Number(sourceInputCleaning.definitionInputs) !== Number(coverage.renderableDefinitions)
+    || Number(sourceInputCleaning.affectedDefinitions) > Number(coverage.renderableDefinitions)
+    || Number(preview.receiptCount) !== Number(coverage.renderableDefinitions)
+    || Number(high.receiptCount) !== Number(coverage.renderableDefinitions)
+    || Number(preview.definitionsUsingMinimum) > Number(coverage.renderableDefinitions)
+    || Number(high.definitionsUsingMinimum) > Number(coverage.renderableDefinitions)
+    || Number(previewCleaning?.repairedDefinitions) > Number(coverage.renderableDefinitions)
+    || Number(highCleaning?.repairedDefinitions) > Number(coverage.renderableDefinitions)
+    || Number(previewCleaning?.selectedTrianglesBeforeCleaning) > Number(sourceInputCleaning.sanitizedTriangles)
+    || Number(highCleaning?.selectedTrianglesBeforeCleaning) > Number(sourceInputCleaning.sanitizedTriangles)
+    || Number(highPartition.splitDefinitionCount) > Number(coverage.renderableDefinitions)
+    || Number(highPartition.finalTrianglesBeforePartition) !== Number(highCleaning?.finalTriangles)
+    || Number(highPartition.partitionedTriangles) !== Number(highCleaning?.finalTriangles)
     || coverage.previewMissingDefinitions !== 0 || coverage.previewMissingOccurrences !== 0
     || coverage.highMissingDefinitions !== 0 || coverage.highMissingOccurrences !== 0) {
-    throw new Error('EXL-50U 总装匿名派生证据的 QEM 收据或几何覆盖对账无效。');
+    throw new Error('EXL-50U 总装匿名派生证据的清理、视觉、QEM 或几何覆盖对账无效。');
   }
 }
 
@@ -817,8 +1015,13 @@ export function parseDeviceManifest(value: unknown, options: ParseDeviceManifest
     }
   }
   if (assets.shardBundles !== undefined) {
-    validateAnonymousDerivationEvidence(manifest.derivationEvidence);
     const preview = assets.webModel as DeviceWebModel;
+    const reviewCandidate = manifest.reviewCandidate?.status === 'USER_VISUAL_REVIEW_REQUIRED'
+      && manifest.reviewCandidate.productionEligible === false;
+    if (manifest.reviewCandidate !== undefined && !reviewCandidate) {
+      throw new Error('EXL-50U 总装 review candidate 状态无效。');
+    }
+    validateAnonymousDerivationEvidence(manifest.derivationEvidence, reviewCandidate);
     const previewPathMatch = preview.path.match(EXL50U_PREVIEW_ASSET_PATH);
     if (!previewPathMatch
       || previewPathMatch[1] !== preview.sha256.toLowerCase()
@@ -836,8 +1039,22 @@ export function parseDeviceManifest(value: unknown, options: ParseDeviceManifest
       preview,
       new Set(assets.webModels?.map((asset) => asset.id) ?? ['standard']),
     );
-    if (Number(assets.shardBundles[0]?.sceneDrawTriangles) <= Number(preview.triangles ?? 0)) {
+    const anonymousBundle = assets.shardBundles[0];
+    const derivationEvidence = manifest.derivationEvidence;
+    if (Number(anonymousBundle?.sceneDrawTriangles) <= Number(preview.triangles ?? 0)) {
       throw new Error('EXL-50U 总装匿名高精度分片必须提供高于兼容 preview 的场景几何细节。');
+    }
+    if (!derivationEvidence
+      || Number(derivationEvidence.previewVisualLod.outputCleaning.finalTriangles) > Number(preview.triangles)
+      || Number(derivationEvidence.highQem.outputCleaning.finalTriangles)
+        !== Number(anonymousBundle?.uniqueGeometryTriangles)
+      || Number(derivationEvidence.highPartition.finalTrianglesBeforePartition)
+        !== Number(anonymousBundle?.uniqueGeometryTriangles)
+      || Number(derivationEvidence.highPartition.partitionedTriangles)
+        !== Number(anonymousBundle?.uniqueGeometryTriangles)
+      || Number(derivationEvidence.highPartition.geometryChunkCount)
+        !== Number(anonymousBundle?.uniqueGeometryMeshes)) {
+      throw new Error('EXL-50U 总装公开派生证据与清单几何统计不一致。');
     }
   }
   if (manifest.visualizations?.analyticPlasma !== undefined) validateAnalyticPlasma(manifest.visualizations.analyticPlasma);

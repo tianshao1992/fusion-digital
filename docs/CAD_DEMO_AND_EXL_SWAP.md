@@ -1,59 +1,111 @@
-# CAD demo and EXL-50U device-package swap
+# CAD demo and EXL-50U device-package release
 
 ## Multi-device catalog
 
-The public `/digital-prototype` route now presents one licence-aware catalog for Paramak, EXL-50U and ITER. Paramak is the only online geometry package because its generator and derivative are redistributable. Its real-time viewer supports assembly search, multi-select, visibility/isolation, selected and global opacity, and X/Y/Z clipping planes. EXL-50U uses permanently watermarked raster turntables: exterior, transparent-shell, three fixed section directions and internal-detail presets provide a three-dimensional visual inspection experience without delivering CAD, STEP, GLB, assembly hierarchy, dimensions or engineering metadata. These EXL views are pre-rendered presentations, not browser-side part selection or an engineering section tool. ITER remains metadata-only and its geometry is never requested by the public route. The browser-safe catalog is `public/models/device-catalog.json`; it contains no local path, signed URL, source CAD or restricted geometry derivative.
+The public `/digital-prototype` route uses the licence-aware catalog in
+`public/models/device-catalog.json`. Paramak, the EXL-50U 2026 upgrade, the EXL-50U integrated
+general assembly, EHL-2 and ITER are separate device packages with separate provenance and
+authority statements. The earlier state in which EXL-50U was represented only by raster
+turntables and ITER was `metadata-only` is historical; it is not the active release contract.
 
-Switch and overlay are separate capabilities. Public switching may show the metadata and authority state of every device, but overlay accepts only online packages with an approved common coordinate frame. The local controlled workbench may compare the three sources without copying their geometry into this repository or the deployment archive.
+The EXL-50U integrated general assembly is a public, anonymous, non-engineering visualization
+derivative. Its runtime package contains exactly:
 
-## One-day demonstrator boundary
+- one digest-named Meshopt preview GLB, loaded first; and
+- twenty digest-named high-detail Meshopt GLBs, loaded serially only after explicit user intent.
 
-The public CAD demo is a browser interaction and data-contract prototype, not a PLM, CAE post-processor or engineering authority. It deliberately uses the MIT-licensed Paramak model already stored in the repository. It provides:
+The twenty high-detail files are anonymous transport shards. They are not systems, parts, a BOM,
+or a source assembly tree. The package exposes no source labels, materials, PMI, dimension
+annotations, authoritative dimension tables, local paths or source CAD. Approximate metre-scale
+bounds are retained only for browser framing and must not be used for measurement or engineering
+decisions.
 
-- lazy loading with a static poster and WebGL fallback;
-- a searchable assembly tree driven by stable part IDs;
-- 3D picking, selection highlighting, hide/show, isolate, reset, wireframe and one X clipping plane;
-- a part property panel and visible public-data disclaimer;
-- browser-safe provenance, unit, coordinate-frame, access-classification and asset hashes.
+ITER is also an online public visualization derivative. Its eighteen reviewed high-detail files and
+the twenty-one EXL-50U general-assembly files are external runtime bundles; neither bundle is stored
+in the application Git repository.
 
-It does **not** contain or download ITER engineering CAD. It does not claim that the Paramak geometry represents ITER, EXL-50U or any operating device. It does not run CAE, display measured fields or make engineering/safety decisions.
+Switch and overlay remain separate capabilities. Public switching may show each device's metadata
+and authority state. Overlay is allowed only for packages with an approved common comparison frame;
+the EXL-50U general assembly is not overlay-eligible.
+
+## Demonstrator boundary
+
+The public CAD experience is a browser interaction and data-contract demonstrator, not a PLM, a CAE
+post-processor or an engineering authority. Depending on the selected approved package, it provides:
+
+- lazy loading with a preview or static fallback;
+- selection, visibility/isolation, opacity and clipping supported by that package;
+- browser-safe provenance, access classification, byte counts and SHA-256 digests; and
+- explicit source-authority and non-engineering-use notices.
+
+It does not contain or download engineering-authoritative EXL-50U, EHL-2 or ITER CAD. It does not
+claim that Paramak represents an operating device, run CAE, display unlabelled measured fields, or
+make engineering or safety decisions.
 
 ## DeviceManifest contract
 
-The authoring schema is [`public/models/device-manifest.schema.json`](../public/models/device-manifest.schema.json). The viewer loads one manifest before it loads geometry. Important fields are:
+The authoring schema is
+[`public/models/device-manifest.schema.json`](../public/models/device-manifest.schema.json). The
+viewer loads a manifest before geometry. For the EXL-50U general assembly, schema `1.4` fixes the
+following structure:
 
 | Field | Purpose |
 | --- | --- |
-| `devicePackage.kind`, `authority` | Distinguish a public demonstrator from controlled engineering data and declare authority. |
-| `access` | Classification, redistribution right and engineering-use statement. Public viewer rejects non-`PUBLIC` packages. |
-| `coordinateSystem` | Linear unit, up axis, handedness and source-to-web scale. |
-| `assets` | Browser GLB, optional source CAD/poster, byte size and SHA-256 provenance. |
-| `systems[].parts[]` | System taxonomy, stable part ID, human label, exact GLB node name and engineering tag. |
-| `generator` | Tool/version/repository/licence provenance. |
-| `disclaimer` | Human-readable applicability boundary. |
+| `devicePackage.kind`, `authority` | Declare a public simplified derivative with illustrative authority. |
+| `access` | Require `PUBLIC`, redistribution allowed and engineering use forbidden. |
+| `coordinateSystem` | Record display units and axes without claiming dimensional authority. |
+| `assets.webModel` | Declare the one preview path, bytes, SHA-256, geometry metrics and bounds. |
+| `assets.shardBundles[0]` | Declare the one high-detail bundle and its exactly twenty anonymous shards. |
+| `derivationEvidence` | Record the exact v8 seven-key evidence: selected attempt, anonymous source cleaning, sloppy preview visual LOD with `selectedTargetTriangleRatio = 0.05` and `simplifierNormalizedErrorLimit = 0.02`, high QEM, independent output cleaning, high partition and zero-missing coverage, including only the canonical visual-QA receipt rather than private source identities. |
+| `systems` | Expose only the anonymous visualization grouping required by the viewer. |
+| `generator`, `disclaimer` | Record the public projection pipeline and non-engineering-use boundary. |
 
-The JSON manifest is browser-safe metadata. It must not carry restricted dimensions, materials, sensor locations, analysis parameters, signed URLs, internal object-store keys or solver credentials.
+The manifest must not contain `assets.sourceCad`, restricted dimensions, materials, sensor locations,
+analysis parameters, signed URLs, internal object-store keys or solver credentials.
 
-## Swapping to EXL-50U
+## Activating or replacing the EXL-50U general assembly
 
-1. Export a **desensitized browser derivative** from the approved EXL-50U CAD baseline. Preserve the authoritative source in PLM/PDM; do not place it in `public/`.
-2. Clean the assembly, remove hidden/sensitive detail, assign persistent engineering part IDs, tessellate, create LODs and export GLB. Keep each selectable item as a named node.
-3. Create a new device folder and manifest, for example `/models/exl-50u-public-demo/model-manifest.json`, conforming to schema 1.1.
-4. Replace every Paramak system/part entry with the approved EXL-50U taxonomy. `parts[].nodeName` must match the GLB node name; `parts[].id` and `engineeringTag` should remain stable across geometry revisions.
-5. Set the real unit/frame conversion and recompute every asset SHA-256/byte count. Declare licence, classification and engineering-use rights explicitly.
-6. Change only the viewer's `MANIFEST_URL` (or make it a server-approved route parameter). The tree, selection, clipping and property UI do not need to be rewritten.
-7. Before deployment, verify classification, visual leakage, geometry/metadata mapping, load performance, mobile fallback, licence, and review approval.
+1. Keep the authoritative STEP/CAD, BOM, PMI and source assembly metadata in the controlled
+   engineering environment. They must never enter the application repository, public asset
+   repository, Sites archive or Hong Kong release.
+2. Export and review the anonymous public derivative. The accepted release must contain one preview
+   and twenty high-detail transport shards, with every route, byte count and SHA-256 derived from the
+   reviewed files. Its exact v8 evidence must fix sloppy `previewVisualLod` to target ratio 0.05 and
+   simplifier max error 0.02, and distinguish it from `highQem`,
+   close each tier's independent `outputCleaning`, and reconcile `highPartition` geometry chunks with
+   the decoded GLBs. The canonical ten-view gate must report silhouette IoU >= 0.97 and normalized
+   depth p99 <= 0.02. Twenty is the transport-shard count, not necessarily the geometry-chunk count.
+   Keep the complete visual report, QEM evidence, source manifest, `geometryAccounting`, source
+   paths/digests and definition/occurrence IDs outside both repositories; publish only anonymous
+   evidence and receipt SHA-256 values. The total twenty-one-file package remains capped at 300 MiB.
+3. Publish those twenty-one GLBs under
+   `exl50u-general-assembly-v1/` in an immutable asset-repository commit. The same asset commit must
+   also contain the locked `iter-high-detail-v1/` bundle used by that application release.
+4. Project only `model-manifest.json` and `PUBLICATION-NOTICE.md` into
+   `public/models/exl50u-general-assembly-v1/`; activate the catalog, generate the exact Worker
+   allow-list and refresh `assets/runtime-assets.lock.json`.
+5. Commit the manifest, notice, catalog, generated allow-list and runtime lock atomically in the same
+   application commit. Removing the manifest to fall back to the historical `metadata-only` state is
+   not a valid release shortcut.
+6. Run tracked-asset checks without hydrated GLBs, then hydrate and verify both external bundles in a
+   separate complete-asset workspace before release testing.
 
-For a controlled engineering workspace, do not use a public URL switch. Resolve the approved package server-side after authentication and authorization, issue short-lived asset URLs, log access and enforce the selected revision/baseline.
+For Hong Kong production, both external bundles are hydrated into the immutable release and served
+locally. For OpenAI Sites, neither bundle enters the static archive: the Worker fetches only exact
+allow-listed digest paths from two raw GitHub roots. Both roots must use the same 40-character asset
+commit SHA, and successful GLB responses use `Cache-Control: public, max-age=31536000, immutable`.
+Branches, tags, short SHAs, redirects and client-selected upstream URLs are rejected.
 
 ## Public versus controlled asset isolation
 
 | Public community site | Controlled engineering workspace |
 | --- | --- |
-| Open Paramak or formally approved desensitized derivative | Authoritative or engineering-reference EXL-50U CAD/CAE data |
+| Approved Paramak or desensitized visualization derivatives | Authoritative or engineering-reference EXL-50U CAD/CAE data |
 | Anonymous access; only `PUBLIC` manifests | SSO, role/project/baseline authorization and audit |
-| CDN/static GLB and public provenance | Private object store/PLM references and expiring signed delivery |
-| No internal geometry, material, sensor or CAE parameters | Native CAD, mesh, materials, boundary conditions, fields and validation evidence |
+| Digest-locked static GLB and public provenance | Private object store/PLM references and expiring delivery |
+| No source CAD, BOM, PMI, source assembly tree, materials or CAE parameters | Native CAD, mesh, materials, boundary conditions, fields and validation evidence |
 | Educational interaction only | Version-pinned engineering workflows, V&V and review gates |
 
-The same UI contract can serve both environments, but the asset resolver, access control and data store must remain separate. Never copy a controlled package into the public site's `public/` directory.
+The UI contract may serve both environments, but the asset resolver, access control and data store
+must remain separate. Never copy a controlled package into the public site's `public/` directory or
+into the external public asset repository.

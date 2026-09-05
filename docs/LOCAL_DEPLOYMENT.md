@@ -11,7 +11,11 @@
 - 本地 D1 schema，以及账户、配额、知识实体、候选审核等数据库表；
 - 配置密钥后的 OpenAI、Anthropic、DeepSeek 与 Kimi/Moonshot 调用链。
 
-Git 克隆已经包含 Paramak、EXL-50U 浏览器模型、公开 EFIT 派生数据和其余网页下载资源。ITER 高清教育可视化的 18 个运行时 GLB 分片独立分发：联网部署可由 Worker 从审核过的 HTTPS 镜像按需获取；离线/自包含部署须先运行资产 hydration。两种模式使用同一个锁文件校验字节数和 SHA-256。
+Git 克隆已经包含 Paramak、EXL-50U 2026 升级版浏览器模型、EXL-50U 总装的公开
+manifest/notice、公开 EFIT 派生数据和其余网页下载资源。ITER 高清教育可视化的 18 个
+运行时 GLB 与 EXL-50U 总装的 1 个 preview + 20 个 high 匿名 GLB 独立分发：Sites 等
+联网 Worker 从同一资产提交的两个审核目录按需获取；离线/自包含部署须先 hydrate 两个
+bundle。所有模式都使用 `assets/runtime-assets.lock.json` 校验精确文件名、字节数和 SHA-256。
 
 以下能力只在 OpenAI Sites 托管环境中成立，普通本地启动不会自动复现：
 
@@ -37,7 +41,7 @@ release 与 OpenAI Sites source 固定在同一个完整提交 SHA。生产域�
 | Node.js | `>=22.13.0` | CI 固定使用 `22.13.0`；推荐使用最新 Node 22 LTS |
 | npm | 随 Node 22 提供 | 必须使用 `npm ci` |
 | 内存 | 建议 8 GB+ | 构建包含较大的知识索引和三维资产 |
-| 可用磁盘 | 建议 3 GB+ | 源码、约 400 MB 依赖、构建物、本地 D1 状态与可选 ITER hydration |
+| 可用磁盘 | 建议 4 GB+ | 源码、约 400 MB 依赖、构建物、本地 D1 状态与可选 ITER + EXL 总装 hydration |
 
 可选：
 
@@ -89,46 +93,62 @@ git clone --branch main --single-branch ssh://git@ssh.github.com:443/tianshao199
 克隆会下载较大的公开报告、图片和适合 Git 分发的浏览器三维派生模型，仓库传输量明显高于普通前端项目。尤其不要删除以下资产后再判断网站“可运行”：
 
 - `public/data/`：站内检索和知识图谱快照；
-- `public/models/`：Paramak 与 EXL‑50U 浏览器模型，以及 ITER 运行时清单；
+- `public/models/`：Git 管理的 Paramak/EXL/EHL 浏览器资产与清单；ITER 和 EXL 总装的大型 GLB 由 runtime lock 外置，hydrate 后才出现在相应目录；
 - `public/data/exl50u-efit/`、`public/data/exl50u-efit-v2/`：公开的 EFIT 标量、轮廓、拓扑派生物和分片；
 - `public/figures/`：页面科学图；
 - `public/*.pdf`、`public/*.docx`：公开报告下载。
 
 如克隆中断，优先重新运行 `git fetch` / `git pull --ff-only`，并通过 `git status --short` 确认工作区干净。
 
-### 3.1 补齐 ITER 18 个高清运行时分片
+### 3.1 补齐 ITER 18 片与 EXL-50U 总装 21 个运行时文件
 
-Worker 没有默认外部镜像；需要验证全部公开内容、准备内网部署或断网运行时，显式导入
-已审核目录：
+Worker 没有默认外部镜像；需要验证全部公开内容、准备内网部署或断网运行时，分别显式
+导入两个已审核目录：
 
 ```bash
 npm run assets:hydrate -- --bundle iter-high-detail-v1 --source-dir "/reviewed/iter-high-detail-v1"
+npm run assets:hydrate -- --bundle exl50u-general-assembly-v1 --source-dir "/reviewed/exl50u-general-assembly-v1"
 npm run assets:verify
 ```
 
-使用内网稳定 HTTPS 根地址：
+使用审核过的 HTTPS 根地址时，两个 bundle 必须固定到资产仓库的同一个完整提交 SHA：
 
 ```powershell
 # Windows PowerShell
-$env:FUSION_ASSET_BASE_URL = "https://download.example.internal/FusionDigital/iter-high-detail-v1"
-npm run assets:hydrate
+$AssetCommit = "<40位小写资产提交SHA>"
+$env:FUSION_ASSET_BASE_URL = "https://raw.githubusercontent.com/tianshao1992/fusion-physics-atlas-assets/$AssetCommit/iter-high-detail-v1"
+$env:FUSION_EXL50U_GA_ASSET_BASE_URL = "https://raw.githubusercontent.com/tianshao1992/fusion-physics-atlas-assets/$AssetCommit/exl50u-general-assembly-v1"
+npm run assets:hydrate -- --bundle iter-high-detail-v1
+npm run assets:hydrate -- --bundle exl50u-general-assembly-v1
 npm run assets:verify
 ```
 
 ```bash
 # macOS / Linux
-FUSION_ASSET_BASE_URL="https://download.example.internal/FusionDigital/iter-high-detail-v1" npm run assets:hydrate
+ASSET_COMMIT="<40位小写资产提交SHA>"
+FUSION_ASSET_BASE_URL="https://raw.githubusercontent.com/tianshao1992/fusion-physics-atlas-assets/${ASSET_COMMIT}/iter-high-detail-v1" \
+FUSION_EXL50U_GA_ASSET_BASE_URL="https://raw.githubusercontent.com/tianshao1992/fusion-physics-atlas-assets/${ASSET_COMMIT}/exl50u-general-assembly-v1" \
+npm run assets:hydrate -- --bundle iter-high-detail-v1
+FUSION_ASSET_BASE_URL="https://raw.githubusercontent.com/tianshao1992/fusion-physics-atlas-assets/${ASSET_COMMIT}/iter-high-detail-v1" \
+FUSION_EXL50U_GA_ASSET_BASE_URL="https://raw.githubusercontent.com/tianshao1992/fusion-physics-atlas-assets/${ASSET_COMMIT}/exl50u-general-assembly-v1" \
+npm run assets:hydrate -- --bundle exl50u-general-assembly-v1
 npm run assets:verify
 ```
 
 百度网盘文件应手工下载并解压，再从本地目录导入；不要把网盘分享页或临时 URL 当作自动下载地址：
 
 ```bash
-npm run assets:hydrate -- --source-dir "/path/to/extracted/iter-high-detail-v1"
+npm run assets:hydrate -- --bundle iter-high-detail-v1 --source-dir "/path/to/extracted/iter-high-detail-v1"
+npm run assets:hydrate -- --bundle exl50u-general-assembly-v1 --source-dir "/path/to/extracted/exl50u-general-assembly-v1"
 npm run assets:verify
 ```
 
-脚本只接受 `assets/runtime-assets.lock.json` 声明的精确文件，并核对长度和 SHA-256。`public/models/iter-high-detail-v1/` 是被 Git 忽略的本机恢复目录。原始 EXL-50U / EHL-2 / ITER CAD、STEP、B-Rep、PMI 和原始 EFIT/G-file/psi 网格不是这个资产包的一部分，也不得放入 Codeup、网盘或普通内网下载区。
+脚本只接受 `assets/runtime-assets.lock.json` 声明的精确文件，并核对长度和 SHA-256。
+`public/models/iter-high-detail-v1/*.glb` 与
+`public/models/exl50u-general-assembly-v1/*.glb` 是被 Git 忽略的本机恢复内容；后一个目录中
+Git 管理的 manifest/notice 不能被删除。原始 EXL-50U / EHL-2 / ITER CAD、STEP、B-Rep、
+PMI、BOM、源装配树和原始 EFIT/G-file/psi 网格不是这些公开资产包的一部分，也不得放入
+Codeup、网盘或普通内网下载区。
 
 ## 4. 环境变量
 
@@ -160,7 +180,7 @@ ${EDITOR:-vi} .env.local
 | `MOONSHOT_API_KEY` / `MOONSHOT_MODEL` | 否 | Kimi/Moonshot 服务端密钥及模型 |
 | `MOONSHOT_REGION` | 否 | `cn` 或 `international`；默认 `cn` |
 | `ITER_HIGH_DETAIL_ASSET_BASE_URL` | 否 | Sites 预览/联网 Worker 的 ITER 18 片显式镜像根地址；未设且本地无文件时返回 503 |
-| `EXL50U_GENERAL_ASSEMBLY_ASSET_BASE_URL` | 否 | EXL-50U 总装激活后，Sites 预览/联网 Worker 的 21 个匿名 GLB 显式镜像根地址；同样无默认源 |
+| `EXL50U_GENERAL_ASSEMBLY_ASSET_BASE_URL` | 否 | Sites 预览/联网 Worker 的 EXL-50U 总装 21 个匿名 GLB 显式镜像根地址；同样无默认源 |
 | `PORT` | 否 | `npm run start` 的端口，默认 `3000` |
 
 Sites 预览环境的供应商密钥应在 Runtime environment variables 中设置为 Secret；
@@ -172,7 +192,8 @@ Sites 预览环境的供应商密钥应在 Runtime environment variables 中设�
 进程变量，不是网站运行时密钥；应按 3.1 节只在当前终端设置。
 `ITER_HIGH_DETAIL_ASSET_BASE_URL` 与 `EXL50U_GENERAL_ASSEMBLY_ASSET_BASE_URL` 只用于
 Sites 预览或其他明确允许联网的 Worker，且必须精确为
-`https://raw.githubusercontent.com/tianshao1992/fusion-physics-atlas-assets/<40位小写提交SHA>/<精确bundle-id>`。
+`https://raw.githubusercontent.com/tianshao1992/fusion-physics-atlas-assets/<40位小写提交SHA>/<精确bundle-id>`；
+两者必须使用同一个 40 位资产提交 SHA。
 其他仓库、branch/tag/短 SHA、userinfo、query、hash、额外路径、任何 3xx 或最终 URL
 漂移都会被拒绝；不能使用 GitHub Releases、生产域名或 Sites 域名。阿里云香港生产必须把全部锁定资产打入发布包，
 不得配置运行时镜像回源。
@@ -261,8 +282,9 @@ npm run check
 - [ ] `/physics`、`/engineering`、`/control`、`/diagnostics` 能打开。
 - [ ] `/search` 搜索 `EXL-50U` 能返回带来源记录。
 - [ ] `/knowledge-graph` 能加载关系图和筛选器。
-- [ ] `/digital-prototype#prototype-workspace` 能切换 Paramak、EXL‑50U 与 ITER；EXL‑50U 标准/高清模型能显示。
-- [ ] 完整资产模式下，`npm run assets:verify` 通过，ITER 可加载 18 个高清分片并显示部件选择。
+- [ ] `/digital-prototype#prototype-workspace` 能切换 Paramak、EXL‑50U、EXL‑50U 总装、EHL‑2 与 ITER；总装 preview 自动显示，用户明确选择 high 后 20 个匿名运输分片串行加载。
+- [ ] 完整资产模式下，`npm run assets:verify` 通过；ITER 可加载 18 个高清部件，EXL‑50U 总装可加载 1 preview + 20 high 且不把运输分片表述为工程系统/BOM。
+- [ ] 正式 EXL 总装 manifest 的 v8 匿名 evidence（sloppy preview `selectedTargetTriangleRatio = 0.05`、`simplifierNormalizedErrorLimit = 0.02`）与 canonical 10-view visual-QA receipt 已由发布门禁验证；本地复现不需要、也不得从公开包恢复私有 visual/QEM 报告、源 manifest、`geometryAccounting` 或源身份。
 - [ ] 未配置密钥时，“询问 FusionDigital”显示确定性检索回退，而不是白屏或泄漏配置。
 - [ ] `/account` 与 `/research-review` 在没有 Sites 身份时显示登录边界，而不是把客户端输入当作身份。
 
@@ -365,14 +387,17 @@ SIWC 是 Sites 平台能力，不是本仓库自建的本地用户名密码系�
 ### 数字样机空白、加载慢或高清模型失败
 
 - 先运行 `npm run assets:status` 和 `npm run assets:verify:tracked`，确认 Git 内资产完整；
-- ITER 高清模式还要运行 `npm run assets:hydrate` 和 `npm run assets:verify`；如用内网镜像，根地址必须能直接拼接锁文件中的精确文件名，不能是登录页或网盘分享页；
+- ITER 高清与 EXL-50U 总装都要运行各自的 `assets:hydrate -- --bundle ...`，再运行 `npm run assets:verify`；如用镜像，两个根地址必须使用同一资产提交 SHA，并能直接拼接锁文件中的精确文件名，不能是登录页或网盘分享页；
 - 使用支持 WebGL2 的当前版 Chrome、Edge、Firefox 或 Safari；
 - 关闭会拦截本地大文件请求的浏览器插件；
-- 低内存设备先切换“标准”精度；高清 EXL‑50U 文件约 13 MB，解压后的 GPU 占用远大于下载大小。
+- 低内存设备保留总装 preview；总装 preview 不超过 12 MiB，每个 high 分片小于 24 MiB，但解码后的 GPU 占用远大于下载大小，高精度必须由用户明确触发并串行加载。
 
 ### Sites 构建包超过约 256 MiB
 
-不要在已经 hydration 的工作区构建 Sites 正式同步包。应从目标 SHA 建立未 hydration 的干净 detached worktree，执行 `npm run assets:verify:tracked` 与构建；Sites 默认由 Worker 从外部镜像按需取得 ITER 18 片。不要通过删除 Git 已跟踪页面内容或进一步压缩模型来规避上限。
+不要在已经 hydration 的工作区构建 Sites 正式同步包。应从目标 SHA 建立未 hydrate 的干净
+detached worktree，执行 `npm run assets:verify:tracked` 与构建；Sites Worker 按需从同一资产
+提交取得 ITER 18 片和 EXL 总装 21 文件，摘要 URL 返回 immutable cache。不要通过删除 Git
+已跟踪页面内容或进一步压缩模型来规避上限。
 
 ### Codeup SSH 连接失败
 
@@ -409,6 +434,7 @@ npm ci: PASS / FAIL
 assets:verify:tracked: PASS / FAIL
 assets:hydrate: PASS / FAIL / intentionally skipped
 assets:verify: PASS / FAIL / intentionally skipped
+Asset repository full commit SHA shared by ITER and EXL Sites roots:
 npm run db:local:migrate: PASS / FAIL
 npm run db:local:verify: PASS / FAIL
 npm run check: PASS / FAIL
@@ -419,4 +445,8 @@ LLM provider keys configured: provider names only (never record values)
 Known deviations:
 ```
 
-复现通过的最低标准是：指定 SHA 可全新克隆、Git 内公开资产通过 `assets:verify:tracked`、需要完整/离线模式时 ITER 18 片通过 `assets:verify`、`npm ci` 和 `npm run check` 成功、开发与本地生产服务器均可打开、公开检索/图谱/数字样机通过冒烟检查，并且没有受控源 CAD、源 EFIT 或凭证混入工作区。
+复现通过的最低标准是：指定应用 SHA 可全新克隆、Git 内公开资产通过
+`assets:verify:tracked`、完整/离线模式下 ITER 18 片与 EXL-50U 总装 21 文件都通过
+`assets:verify`、Sites 两个外置根固定到同一资产提交、`npm ci` 和 `npm run check` 成功、
+开发与本地生产服务器均可打开、公开检索/图谱/数字样机通过冒烟检查，并且没有受控源
+CAD、源 EFIT 或凭证混入工作区。

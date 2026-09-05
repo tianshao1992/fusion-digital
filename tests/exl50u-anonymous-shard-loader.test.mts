@@ -196,12 +196,97 @@ function manifestCandidate() {
     derivationEvidence: {
       kind: 'anonymous-public-derivative',
       selectedAttempt: 1,
-      selectedRatios: { preview: 0.1, high: 0.4 },
-      qem: {
-        receiptCount: 40,
+      sourceInputCleaning: {
+        policy: 'repeated-index-and-exact-zero-area-drop-stable-vertex-remap-v1',
+        definitionInputs: 20,
+        sourceFaces: 22,
+        sourceTriangles: 1_000,
+        sanitizedTriangles: 990,
+        removedTriangles: 10,
+        affectedDefinitions: 2,
+        removedUnreferencedVertices: 6,
+        allDefinitionsAccounted: true,
+        allSourceFacesAccounted: true,
+      },
+      previewVisualLod: {
+        algorithm: 'meshoptimizer-simplify-sloppy',
+        selectedTargetTriangleRatio: 0.05,
+        simplifierNormalizedErrorLimit: 0.02,
+        maxAcceptedSimplifierReportedNormalizedError: 0.016,
+        minimumTrianglesPerDefinition: 12,
+        definitionsUsingMinimum: 2,
+        minimumCoverage: 'stable-source-order-minimum-plus-six-axis-extrema-v1',
+        extremaCoverage: 'six-axis-first-valid-nondegenerate-incident-triangle-v1',
+        retainedSourcePositionValuesUnchanged: true,
+        allDefinitionsNonempty: true,
+        boundsMissCount: 0,
+        receiptCount: 20,
         receiptSha256: 'b'.repeat(64),
+        outputCleaning: {
+          policy: 'stable-repeated-zero-duplicate-edge-incidence-clean-v1',
+          selectedTrianglesBeforeCleaning: 12,
+          finalTriangles: 10,
+          removedRepeatedIndexTriangles: 0,
+          removedZeroAreaTriangles: 1,
+          removedDuplicateTriangles: 1,
+          removedNonmanifoldTriangles: 0,
+          repairedDefinitions: 1,
+          finalRepeatedIndexTriangles: 0,
+          finalZeroAreaTriangles: 0,
+          finalDuplicateTriangles: 0,
+          finalNonmanifoldEdgeCount: 0,
+        },
+        visualQa: {
+          policy: 'canonical-10-view-silhouette-depth-1024-v1',
+          viewCount: 10,
+          silhouetteIouFloor: 0.97,
+          minimumObservedSilhouetteIou: 0.98,
+          normalizedDepthP99Ceiling: 0.02,
+          maximumObservedNormalizedDepthP99: 0.01,
+          receiptSha256: 'c'.repeat(64),
+        },
+      },
+      highQem: {
+        algorithm: 'meshoptimizer-simplify-qem',
+        selectedTargetTriangleRatio: 0.6,
+        simplifierNormalizedErrorLimit: 0.0005,
+        maxAcceptedSimplifierReportedNormalizedError: 0.0004,
+        minimumTrianglesPerDefinition: 12,
+        definitionsUsingMinimum: 0,
+        minimumCoverage: 'stable-source-order-minimum-plus-six-axis-extrema-v1',
+        extremaCoverage: 'six-axis-first-valid-nondegenerate-incident-triangle-v1',
+        retainedSourcePositionValuesUnchanged: true,
+        allDefinitionsNonempty: true,
+        boundsMissCount: 0,
+        receiptCount: 20,
+        receiptSha256: 'd'.repeat(64),
         targetMissCount: 2,
         retainedIrreducibleCount: 2,
+        outputCleaning: {
+          policy: 'stable-repeated-zero-duplicate-edge-incidence-clean-v1',
+          selectedTrianglesBeforeCleaning: 210,
+          finalTriangles: 200,
+          removedRepeatedIndexTriangles: 1,
+          removedZeroAreaTriangles: 2,
+          removedDuplicateTriangles: 3,
+          removedNonmanifoldTriangles: 4,
+          repairedDefinitions: 4,
+          finalRepeatedIndexTriangles: 0,
+          finalZeroAreaTriangles: 0,
+          finalDuplicateTriangles: 0,
+          finalNonmanifoldEdgeCount: 0,
+        },
+      },
+      highPartition: {
+        policy: 'stable-definition-triangle-chunks-v1',
+        geometryChunkCount: 20,
+        splitDefinitionCount: 0,
+        finalTrianglesBeforePartition: 200,
+        partitionedTriangles: 200,
+        missingTriangles: 0,
+        duplicateTriangles: 0,
+        missingOccurrences: 0,
+        receiptSha256: 'e'.repeat(64),
       },
       coverage: {
         renderableDefinitions: 20,
@@ -264,6 +349,10 @@ test('manifest 1.4 accepts only the controlled 20-shard anonymous transport cont
     representsEngineeringSystems: false,
     representsAssemblyTree: false,
   });
+  const retryCandidate = manifestCandidate();
+  retryCandidate.derivationEvidence.selectedAttempt = 2;
+  retryCandidate.derivationEvidence.highQem.selectedTargetTriangleRatio = 0.55;
+  assert.doesNotThrow(() => parseDeviceManifest(retryCandidate));
 
   const schema = JSON.parse(await readFile(new URL('../public/models/device-manifest.schema.json', import.meta.url), 'utf8'));
   assert.ok(schema.properties.schemaVersion.enum.includes('1.4'));
@@ -274,7 +363,26 @@ test('manifest 1.4 accepts only the controlled 20-shard anonymous transport cont
   assert.equal(schema.$defs.anonymousShardModel.properties.drawCalls.maximum, 800);
   assert.equal(schema.$defs.anonymousShardModel.properties.placementInstances.maximum, 250_000);
   assert.equal(schema.$defs.anonymousShardBundle.properties.placementInstances.maximum, 5_000_000);
-  assert.equal(schema.$defs.anonymousDerivationEvidence.properties.qem.properties.receiptCount.minimum, 1);
+  assert.equal(schema.$defs.anonymousDerivationEvidence.properties.previewVisualLod.properties.algorithm.const, 'meshoptimizer-simplify-sloppy');
+  assert.equal(schema.$defs.anonymousDerivationEvidence.properties.highQem.properties.algorithm.const, 'meshoptimizer-simplify-qem');
+  assert.equal(schema.$defs.anonymousDerivationEvidence.properties.previewVisualLod.properties.selectedTargetTriangleRatio.const, 0.05);
+  assert.equal(schema.$defs.anonymousDerivationEvidence.properties.previewVisualLod.properties.simplifierNormalizedErrorLimit.const, 0.02);
+  assert.equal(schema.$defs.anonymousDerivationEvidence.properties.previewVisualLod.properties.minimumTrianglesPerDefinition.const, 12);
+  assert.deepEqual(schema.$defs.anonymousDerivationEvidence.properties.highQem.properties.selectedTargetTriangleRatio.enum, [0.6, 0.55]);
+  assert.equal(schema.$defs.anonymousDerivationEvidence.properties.highQem.properties.simplifierNormalizedErrorLimit.const, 0.0005);
+  assert.equal(schema.$defs.anonymousDerivationEvidence.properties.highQem.properties.minimumTrianglesPerDefinition.const, 12);
+  assert.equal(schema.$defs.anonymousDerivationEvidence.properties.highQem.properties.receiptCount.minimum, 1);
+  assert.equal(
+    schema.$defs.anonymousDerivationEvidence.properties.sourceInputCleaning.properties.policy.const,
+    'repeated-index-and-exact-zero-area-drop-stable-vertex-remap-v1',
+  );
+  for (const key of ['sourceFaces', 'sourceTriangles', 'sanitizedTriangles']) {
+    assert.equal(schema.$defs.anonymousDerivationEvidence.properties.sourceInputCleaning.properties[key].minimum, 1);
+  }
+  assert.equal(schema.$defs.anonymousDerivationEvidence.properties.previewVisualLod.properties.visualQa.properties.viewCount.const, 10);
+  assert.equal(schema.$defs.anonymousDerivationEvidence.properties.previewVisualLod.properties.visualQa.properties.silhouetteIouFloor.const, 0.97);
+  assert.equal(schema.$defs.anonymousDerivationEvidence.properties.previewVisualLod.properties.visualQa.properties.normalizedDepthP99Ceiling.const, 0.02);
+  assert.equal(schema.$defs.anonymousDerivationEvidence.properties.highPartition.properties.policy.const, 'stable-definition-triangle-chunks-v1');
   assert.equal(schema.$defs.componentBundle.properties.delivery.const, 'components', 'ITER 1.3 component contract remains exact');
   const shardConditional = schema.allOf.find((entry: { then?: { properties?: { access?: unknown } } }) => entry.then?.properties?.access);
   const shardAccessPolicy = shardConditional?.then?.properties?.access as {
@@ -310,7 +418,45 @@ test('manifest 1.4 fails closed on identity, semantics, ordering, digest, budget
     },
     (candidate) => { candidate.derivationEvidence.coverage.previewMissingDefinitions = 1; },
     (candidate) => { candidate.derivationEvidence.coverage.sourceOccurrences += 1; },
-    (candidate) => { candidate.derivationEvidence.qem.retainedIrreducibleCount += 1; },
+    (candidate) => { candidate.derivationEvidence.highQem.retainedIrreducibleCount += 1; },
+    (candidate) => { candidate.derivationEvidence.sourceInputCleaning.sanitizedTriangles += 1; },
+    (candidate) => { candidate.derivationEvidence.sourceInputCleaning.affectedDefinitions = 21; },
+    (candidate) => { candidate.derivationEvidence.sourceInputCleaning.allSourceFacesAccounted = false; },
+    (candidate) => {
+      Object.assign(candidate.derivationEvidence.sourceInputCleaning, {
+        sourceFaces: 0,
+        sourceTriangles: 0,
+        sanitizedTriangles: 0,
+        removedTriangles: 0,
+      });
+    },
+    (candidate) => { candidate.derivationEvidence.previewVisualLod.algorithm = 'meshoptimizer-simplify-qem' as never; },
+    (candidate) => { candidate.derivationEvidence.highQem.algorithm = 'meshoptimizer-simplify-sloppy' as never; },
+    (candidate) => { candidate.derivationEvidence.previewVisualLod.selectedTargetTriangleRatio = 0.03; },
+    (candidate) => { candidate.derivationEvidence.previewVisualLod.simplifierNormalizedErrorLimit = 0.04; },
+    (candidate) => { candidate.derivationEvidence.previewVisualLod.minimumTrianglesPerDefinition = 11; },
+    (candidate) => { candidate.derivationEvidence.highQem.selectedTargetTriangleRatio = 0.55; },
+    (candidate) => { candidate.derivationEvidence.highQem.simplifierNormalizedErrorLimit = 0.0004; },
+    (candidate) => { candidate.derivationEvidence.highQem.minimumTrianglesPerDefinition = 11; },
+    (candidate) => { candidate.derivationEvidence.selectedAttempt = 2; },
+    (candidate) => {
+      candidate.derivationEvidence.previewVisualLod.maxAcceptedSimplifierReportedNormalizedError = 0.021;
+    },
+    (candidate) => { candidate.derivationEvidence.previewVisualLod.visualQa.minimumObservedSilhouetteIou = 0.969; },
+    (candidate) => { candidate.derivationEvidence.previewVisualLod.visualQa.maximumObservedNormalizedDepthP99 = 0.021; },
+    (candidate) => { candidate.derivationEvidence.highQem.outputCleaning.removedDuplicateTriangles += 1; },
+    (candidate) => { candidate.derivationEvidence.highQem.outputCleaning.finalNonmanifoldEdgeCount = 1 as never; },
+    (candidate) => { candidate.derivationEvidence.previewVisualLod.receiptCount = 19; },
+    (candidate) => { candidate.derivationEvidence.highQem.definitionsUsingMinimum = 21; },
+    (candidate) => { candidate.derivationEvidence.previewVisualLod.outputCleaning.repairedDefinitions = 21; },
+    (candidate) => { candidate.derivationEvidence.highPartition.partitionedTriangles -= 1; },
+    (candidate) => { candidate.derivationEvidence.highPartition.geometryChunkCount += 1; },
+    (candidate) => {
+      (candidate.derivationEvidence as unknown as Record<string, unknown>).selectedRatios = { preview: 0.05, high: 0.6 };
+    },
+    (candidate) => {
+      (candidate.derivationEvidence.previewVisualLod.visualQa as unknown as Record<string, unknown>).definitionId = 'private-definition';
+    },
     (candidate) => { candidate.assets.shardBundles[0].sceneDrawTriangles = 30_000_001; },
     (candidate) => { candidate.assets.shardBundles[0].drawCalls = 801; },
   ];

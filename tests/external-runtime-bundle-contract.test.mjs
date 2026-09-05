@@ -33,6 +33,7 @@ import {
 } from "../scripts/deployment/prune-obsolete-runtime-assets.mjs";
 import {
   assertExlReleaseTreeContainsOnlyLockedArtifacts,
+  assertExlProductionEligibleManifest,
   assertMetadataOnlyExlDirectoryEmpty,
   assertManifestMatchesLock,
   validateExl50uGeneralAssemblyActivatedCard as validateInstallerActivatedCard,
@@ -96,19 +97,104 @@ function fixtureDerivationEvidence() {
   return {
     kind: "anonymous-public-derivative",
     selectedAttempt: 1,
-    selectedRatios: { preview: 0.1, high: 0.4 },
-    qem: {
-      receiptCount: 42,
-      receiptSha256: digest("TEST QEM RECEIPTS"),
+    sourceInputCleaning: {
+      policy: "repeated-index-and-exact-zero-area-drop-stable-vertex-remap-v1",
+      definitionInputs: 20,
+      sourceFaces: 24,
+      sourceTriangles: 1_000,
+      sanitizedTriangles: 990,
+      removedTriangles: 10,
+      affectedDefinitions: 2,
+      removedUnreferencedVertices: 6,
+      allDefinitionsAccounted: true,
+      allSourceFacesAccounted: true,
+    },
+    previewVisualLod: {
+      algorithm: "meshoptimizer-simplify-sloppy",
+      selectedTargetTriangleRatio: 0.05,
+      simplifierNormalizedErrorLimit: 0.02,
+      maxAcceptedSimplifierReportedNormalizedError: 0.016,
+      minimumTrianglesPerDefinition: 12,
+      definitionsUsingMinimum: 2,
+      minimumCoverage: "stable-source-order-minimum-plus-six-axis-extrema-v1",
+      extremaCoverage: "six-axis-first-valid-nondegenerate-incident-triangle-v1",
+      retainedSourcePositionValuesUnchanged: true,
+      allDefinitionsNonempty: true,
+      boundsMissCount: 0,
+      receiptCount: 20,
+      receiptSha256: digest("TEST PREVIEW RECEIPTS"),
+      outputCleaning: {
+        policy: "stable-repeated-zero-duplicate-edge-incidence-clean-v1",
+        selectedTrianglesBeforeCleaning: 5,
+        finalTriangles: 4,
+        removedRepeatedIndexTriangles: 0,
+        removedZeroAreaTriangles: 1,
+        removedDuplicateTriangles: 0,
+        removedNonmanifoldTriangles: 0,
+        repairedDefinitions: 1,
+        finalRepeatedIndexTriangles: 0,
+        finalZeroAreaTriangles: 0,
+        finalDuplicateTriangles: 0,
+        finalNonmanifoldEdgeCount: 0,
+      },
+      visualQa: {
+        policy: "canonical-10-view-silhouette-depth-1024-v1",
+        viewCount: 10,
+        silhouetteIouFloor: 0.97,
+        minimumObservedSilhouetteIou: 0.98,
+        normalizedDepthP99Ceiling: 0.02,
+        maximumObservedNormalizedDepthP99: 0.01,
+        receiptSha256: digest("TEST VISUAL QA RECEIPT"),
+      },
+    },
+    highQem: {
+      algorithm: "meshoptimizer-simplify-qem",
+      selectedTargetTriangleRatio: 0.6,
+      simplifierNormalizedErrorLimit: 0.0005,
+      maxAcceptedSimplifierReportedNormalizedError: 0.0004,
+      minimumTrianglesPerDefinition: 12,
+      definitionsUsingMinimum: 0,
+      minimumCoverage: "stable-source-order-minimum-plus-six-axis-extrema-v1",
+      extremaCoverage: "six-axis-first-valid-nondegenerate-incident-triangle-v1",
+      retainedSourcePositionValuesUnchanged: true,
+      allDefinitionsNonempty: true,
+      boundsMissCount: 0,
+      receiptCount: 20,
+      receiptSha256: digest("TEST HIGH QEM RECEIPTS"),
       targetMissCount: 2,
       retainedIrreducibleCount: 2,
+      outputCleaning: {
+        policy: "stable-repeated-zero-duplicate-edge-incidence-clean-v1",
+        selectedTrianglesBeforeCleaning: 300,
+        finalTriangles: 290,
+        removedRepeatedIndexTriangles: 1,
+        removedZeroAreaTriangles: 2,
+        removedDuplicateTriangles: 3,
+        removedNonmanifoldTriangles: 4,
+        repairedDefinitions: 4,
+        finalRepeatedIndexTriangles: 0,
+        finalZeroAreaTriangles: 0,
+        finalDuplicateTriangles: 0,
+        finalNonmanifoldEdgeCount: 0,
+      },
+    },
+    highPartition: {
+      policy: "stable-definition-triangle-chunks-v1",
+      geometryChunkCount: 20,
+      splitDefinitionCount: 0,
+      finalTrianglesBeforePartition: 290,
+      partitionedTriangles: 290,
+      missingTriangles: 0,
+      duplicateTriangles: 0,
+      missingOccurrences: 0,
+      receiptSha256: digest("TEST HIGH PARTITION RECEIPT"),
     },
     coverage: {
-      renderableDefinitions: 21,
+      renderableDefinitions: 20,
       renderableOccurrences: 42,
       skippedDefinitions: 3,
       skippedOccurrences: 5,
-      sourceDefinitions: 24,
+      sourceDefinitions: 23,
       sourceOccurrences: 47,
       previewMissingDefinitions: 0,
       previewMissingOccurrences: 0,
@@ -118,16 +204,96 @@ function fixtureDerivationEvidence() {
   };
 }
 
-async function fixtureManifest() {
-  const template = JSON.parse(await readFile(TEMPLATE_PATH, "utf8"));
-  return projectDeviceManifest({
+function invalidSourceInputCleaningEvidence() {
+  const vacuous = fixtureDerivationEvidence();
+  Object.assign(vacuous.sourceInputCleaning, {
+    sourceFaces: 0,
+    sourceTriangles: 0,
+    sanitizedTriangles: 0,
+    removedTriangles: 0,
+  });
+  const unbalanced = fixtureDerivationEvidence();
+  unbalanced.sourceInputCleaning.sanitizedTriangles += 1;
+  const tooManyAffectedDefinitions = fixtureDerivationEvidence();
+  tooManyAffectedDefinitions.sourceInputCleaning.affectedDefinitions = 21;
+  return [
+    ["vacuous positive counts", vacuous],
+    ["source cleaning arithmetic does not close", unbalanced],
+    ["affected definitions exceed renderable definitions", tooManyAffectedDefinitions],
+  ];
+}
+
+function fixtureGeometryAccounting(preview, shards) {
+  return {
+    anonymousDefinitions: 20,
+    anonymousOccurrences: 42,
+    sourceUniqueVertices: 3_000,
+    sourceUniqueTriangles: 1_000,
+    sourceSceneTriangles: 2_000,
+    previewUniqueTriangles: preview.uniqueGeometryTriangles,
+    previewSceneTriangles: preview.sceneDrawTriangles,
+    highUniqueTriangles: shards.reduce((sum, shard) => sum + shard.uniqueGeometryTriangles, 0),
+    highSceneTriangles: shards.reduce((sum, shard) => sum + shard.sceneDrawTriangles, 0),
+    definitionsMissingFromPreview: 0,
+    definitionsMissingFromHigh: 0,
+    occurrencesMissingFromPreview: 0,
+    occurrencesMissingFromHigh: 0,
+    sourceSkippedLeafGeometry: { totalDefinitions: 3, totalOccurrences: 5 },
+  };
+}
+
+function fixtureProjectionOptions(template, overrides = {}) {
+  const preview = overrides.preview ?? fixtureFact(0, "preview");
+  const shards = overrides.shards
+    ?? Array.from({ length: 20 }, (_value, index) => fixtureFact(index + 1, "high"));
+  const derivationEvidence = overrides.derivationEvidence ?? fixtureDerivationEvidence();
+  return {
     template,
     asOf: "2026-09-02",
-    preview: fixtureFact(0, "preview"),
-    shards: Array.from({ length: 20 }, (_value, index) => fixtureFact(index + 1, "high")),
-    derivationEvidence: fixtureDerivationEvidence(),
-  });
+    preview,
+    shards,
+    derivationEvidence,
+    attempt: overrides.attempt ?? derivationEvidence.selectedAttempt,
+    geometryAccounting: overrides.geometryAccounting ?? fixtureGeometryAccounting(preview, shards),
+  };
 }
+
+async function fixtureManifest() {
+  const template = JSON.parse(await readFile(TEMPLATE_PATH, "utf8"));
+  return projectDeviceManifest(fixtureProjectionOptions(template));
+}
+
+test("explicit review-candidate projection accepts only the eight-key visual status", async () => {
+  const template = JSON.parse(await readFile(TEMPLATE_PATH, "utf8"));
+  const evidence = fixtureDerivationEvidence();
+  evidence.previewVisualLod.visualQa = {
+    ...evidence.previewVisualLod.visualQa,
+    status: "USER_VISUAL_REVIEW_REQUIRED",
+    minimumObservedSilhouetteIou: 0.9,
+  };
+  assert.throws(
+    () => projectDeviceManifest(fixtureProjectionOptions(template, { derivationEvidence: evidence })),
+    /incomplete or inconsistent/u,
+  );
+  const manifest = projectDeviceManifest({
+    ...fixtureProjectionOptions(template, { derivationEvidence: evidence }),
+    reviewCandidate: true,
+  });
+  assert.deepEqual(manifest.reviewCandidate, {
+    status: "USER_VISUAL_REVIEW_REQUIRED",
+    productionEligible: false,
+  });
+  assert.equal(extractExl50uGeneralAssemblyAssets(manifest).files.length, 21);
+  const allowlist = parseExl50uGeneralAssemblyAllowlist(
+    renderExl50uGeneralAssemblyAllowlist(manifest),
+  );
+  assert.equal(allowlist.length, 21);
+  assert.deepEqual(
+    allowlist.map(({ role, filename, sha256, bytes }) => ({ role, filename, sha256, bytes })),
+    extractExl50uGeneralAssemblyAssets(manifest).files
+      .map(({ role, filename, sha256, bytes }) => ({ role, filename, sha256, bytes })),
+  );
+});
 
 function canonicalBundleDigest(files) {
   const hash = createHash("sha256");
@@ -436,6 +602,32 @@ test("formal EXL-50U projection and checked-in catalog state remain coherent", a
     () => extractExl50uGeneralAssemblyAssets(missingCoverage),
     /derivation evidence/u,
   );
+  const unaccountedCleaning = structuredClone(manifest);
+  unaccountedCleaning.derivationEvidence.sourceInputCleaning.sanitizedTriangles += 1;
+  assert.throws(
+    () => extractExl50uGeneralAssemblyAssets(unaccountedCleaning),
+    /derivation evidence/u,
+  );
+  const unaccountedOutputCleaning = structuredClone(manifest);
+  unaccountedOutputCleaning.derivationEvidence.highQem.outputCleaning.removedDuplicateTriangles += 1;
+  assert.throws(
+    () => extractExl50uGeneralAssemblyAssets(unaccountedOutputCleaning),
+    /derivation evidence/u,
+  );
+  const incompleteDefinitionAccounting = structuredClone(manifest);
+  incompleteDefinitionAccounting.derivationEvidence.sourceInputCleaning.allDefinitionsAccounted = false;
+  assert.throws(
+    () => extractExl50uGeneralAssemblyAssets(incompleteDefinitionAccounting),
+    /derivation evidence/u,
+  );
+  const template = JSON.parse(await readFile(TEMPLATE_PATH, "utf8"));
+  for (const [label, derivationEvidence] of invalidSourceInputCleaningEvidence()) {
+    assert.throws(
+      () => projectDeviceManifest(fixtureProjectionOptions(template, { derivationEvidence })),
+      /derivation evidence/u,
+      label,
+    );
+  }
   const overTriangleBudget = structuredClone(manifest);
   overTriangleBudget.assets.shardBundles[0].sceneDrawTriangles = 30_000_001;
   assert.throws(
@@ -446,7 +638,7 @@ test("formal EXL-50U projection and checked-in catalog state remain coherent", a
   const card = catalog.devices.find((device) => device.id === "exl50u-general-assembly-20260630");
   const lockedBundle = lock.externalBundles.find((bundle) => bundle.id === EXL50U_GA_BUNDLE_ID);
   const allowlist = parseExl50uGeneralAssemblyAllowlist(allowlistSource);
-  if (formalManifest) {
+  if (formalManifest && formalManifest.reviewCandidate === undefined) {
     const formalAssets = extractExl50uGeneralAssemblyAssets(formalManifest);
     assert.doesNotThrow(() => validateExl50uGeneralAssemblyActivatedCard(card));
     assert.ok(lockedBundle, "an activated formal manifest must have a locked external bundle");
@@ -455,11 +647,132 @@ test("formal EXL-50U projection and checked-in catalog state remain coherent", a
       allowlist,
       formalAssets.files.map(({ role, filename, sha256, bytes }) => ({ role, filename, sha256, bytes })),
     );
+  } else if (formalManifest) {
+    assert.deepEqual(formalManifest.reviewCandidate, {
+      status: "USER_VISUAL_REVIEW_REQUIRED",
+      productionEligible: false,
+    });
+    assert.equal(card.viewer.mode, "metadata-only");
+    assert.equal(card.viewer.manifestEndpoint, null);
+    const candidateAssets = extractExl50uGeneralAssemblyAssets(formalManifest);
+    if (lockedBundle) assert.doesNotThrow(() => assertManifestMatchesLock(formalManifest, lockedBundle));
+    assert.throws(
+      () => assertExlProductionEligibleManifest(formalManifest),
+      /productionEligible=false review candidates/u,
+    );
+    if (allowlist.length > 0) {
+      assert.deepEqual(
+        allowlist,
+        candidateAssets.files.map(({ role, filename, sha256, bytes }) => ({ role, filename, sha256, bytes })),
+      );
+    }
   } else {
     assert.equal(card.viewer.mode, "metadata-only");
     assert.equal(card.viewer.manifestEndpoint, null);
     assert.equal(lockedBundle, undefined);
     assert.deepEqual(allowlist, []);
+  }
+});
+
+test("EXL v8 public evidence rejects aliases, mixed algorithms, bad accounting, failed visual QA and private fields", async () => {
+  const manifest = await fixtureManifest();
+  assert.equal(Object.hasOwn(manifest, "geometryAccounting"), false);
+  const evidenceMutations = [
+    ["preview algorithm alias", (candidate) => { candidate.previewVisualLod.algorithm = "meshoptimizer-simplify-qem"; }],
+    ["high algorithm alias", (candidate) => { candidate.highQem.algorithm = "meshoptimizer-simplify-sloppy"; }],
+    ["old top-level alias", (candidate) => { candidate.selectedRatios = { preview: 0.05, high: 0.6 }; }],
+    ["preview target ratio drift", (candidate) => { candidate.previewVisualLod.selectedTargetTriangleRatio = 0.03; }],
+    ["preview error limit drift", (candidate) => { candidate.previewVisualLod.simplifierNormalizedErrorLimit = 0.04; }],
+    ["preview minimum triangle drift", (candidate) => { candidate.previewVisualLod.minimumTrianglesPerDefinition = 11; }],
+    ["high target ratio drift", (candidate) => { candidate.highQem.selectedTargetTriangleRatio = 0.55; }],
+    ["high error limit drift", (candidate) => { candidate.highQem.simplifierNormalizedErrorLimit = 0.0004; }],
+    ["high minimum triangle drift", (candidate) => { candidate.highQem.minimumTrianglesPerDefinition = 11; }],
+    ["attempt-to-ratio mismatch", (candidate) => { candidate.selectedAttempt = 2; }],
+    ["preview error over accepted limit", (candidate) => {
+      candidate.previewVisualLod.maxAcceptedSimplifierReportedNormalizedError = 0.021;
+    }],
+    ["silhouette below floor", (candidate) => {
+      candidate.previewVisualLod.visualQa.minimumObservedSilhouetteIou = 0.969;
+    }],
+    ["depth above ceiling", (candidate) => {
+      candidate.previewVisualLod.visualQa.maximumObservedNormalizedDepthP99 = 0.021;
+    }],
+    ["mutually exclusive cleanup does not close", (candidate) => {
+      candidate.highQem.outputCleaning.removedDuplicateTriangles += 1;
+    }],
+    ["nonmanifold terminal count", (candidate) => {
+      candidate.highQem.outputCleaning.finalNonmanifoldEdgeCount = 1;
+    }],
+    ["preview receipt count", (candidate) => { candidate.previewVisualLod.receiptCount -= 1; }],
+    ["minimum definitions overflow", (candidate) => { candidate.highQem.definitionsUsingMinimum = 21; }],
+    ["repaired definitions overflow", (candidate) => {
+      candidate.previewVisualLod.outputCleaning.repairedDefinitions = 21;
+    }],
+    ["partition triangle drift", (candidate) => { candidate.highPartition.partitionedTriangles -= 1; }],
+    ["private definition id", (candidate) => { candidate.previewVisualLod.visualQa.definitionId = "D00148"; }],
+    ["private source digest", (candidate) => { candidate.sourceInputCleaning.sourceManifestSha256 = "f".repeat(64); }],
+  ];
+  for (const [label, mutate] of evidenceMutations) {
+    const candidate = structuredClone(manifest);
+    mutate(candidate.derivationEvidence);
+    assert.throws(
+      () => extractExl50uGeneralAssemblyAssets(candidate),
+      /derivation evidence|file set/u,
+      label,
+    );
+  }
+
+  const highEvidenceDrift = structuredClone(manifest);
+  highEvidenceDrift.derivationEvidence.highQem.outputCleaning.selectedTrianglesBeforeCleaning += 1;
+  highEvidenceDrift.derivationEvidence.highQem.outputCleaning.finalTriangles += 1;
+  highEvidenceDrift.derivationEvidence.highPartition.finalTrianglesBeforePartition += 1;
+  highEvidenceDrift.derivationEvidence.highPartition.partitionedTriangles += 1;
+  assert.throws(
+    () => extractExl50uGeneralAssemblyAssets(highEvidenceDrift),
+    /file set/u,
+    "internally balanced evidence must still match published high GLB metrics",
+  );
+
+  const chunkDrift = structuredClone(manifest);
+  chunkDrift.derivationEvidence.highPartition.geometryChunkCount += 1;
+  assert.throws(
+    () => extractExl50uGeneralAssemblyAssets(chunkDrift),
+    /file set/u,
+    "partition chunk count must match published high unique mesh totals",
+  );
+});
+
+test("projector reconciles v8 attempt and geometryAccounting with independently inspected facts", async () => {
+  const template = JSON.parse(await readFile(TEMPLATE_PATH, "utf8"));
+  const retryEvidence = fixtureDerivationEvidence();
+  retryEvidence.selectedAttempt = 2;
+  retryEvidence.highQem.selectedTargetTriangleRatio = 0.55;
+  assert.doesNotThrow(() => projectDeviceManifest(fixtureProjectionOptions(template, {
+    derivationEvidence: retryEvidence,
+    attempt: 2,
+  })));
+  const mutations = [
+    ["attempt", (candidate) => { candidate.attempt = 2; }],
+    ["preview unique triangles", (candidate) => { candidate.geometryAccounting.previewUniqueTriangles += 1; }],
+    ["preview scene triangles", (candidate) => { candidate.geometryAccounting.previewSceneTriangles += 1; }],
+    ["high unique triangles", (candidate) => { candidate.geometryAccounting.highUniqueTriangles += 1; }],
+    ["high scene triangles", (candidate) => { candidate.geometryAccounting.highSceneTriangles += 1; }],
+    ["anonymous definition coverage", (candidate) => { candidate.geometryAccounting.anonymousDefinitions += 1; }],
+    ["skipped occurrence coverage", (candidate) => {
+      candidate.geometryAccounting.sourceSkippedLeafGeometry.totalOccurrences += 1;
+    }],
+    ["private accounting field", (candidate) => {
+      candidate.geometryAccounting.sourceManifestSha256 = "f".repeat(64);
+    }],
+  ];
+  for (const [label, mutate] of mutations) {
+    const candidate = fixtureProjectionOptions(template);
+    mutate(candidate);
+    assert.throws(
+      () => projectDeviceManifest(candidate),
+      /attempt|geometryAccounting|decoded GLBs/u,
+      label,
+    );
   }
 });
 
@@ -519,13 +832,10 @@ test("EXL publication policy stays PUBLIC and redistributable across projection,
   const metadataCatalog = metadataOnlyCatalogFixture(catalog);
   const privateTemplate = structuredClone(template);
   privateTemplate.privateSourceCad = "D:/private/source.stp";
-  assert.throws(() => projectDeviceManifest({
-    template: privateTemplate,
-    asOf: "2026-09-02",
-    preview: fixtureFact(0, "preview"),
-    shards: Array.from({ length: 20 }, (_value, index) => fixtureFact(index + 1, "high")),
-    derivationEvidence: fixtureDerivationEvidence(),
-  }), /exactly match/u);
+  assert.throws(
+    () => projectDeviceManifest(fixtureProjectionOptions(privateTemplate)),
+    /exactly match/u,
+  );
   const privateManifest = await fixtureManifest();
   privateManifest.privateSourceCad = "D:/private/source.stp";
   assert.throws(() => extractExl50uGeneralAssemblyAssets(privateManifest), /public boundary/u);
@@ -556,13 +866,11 @@ test("EXL publication policy stays PUBLIC and redistributable across projection,
   ]) {
     const unsafeTemplate = structuredClone(template);
     mutateManifest(unsafeTemplate);
-    assert.throws(() => projectDeviceManifest({
-      template: unsafeTemplate,
-      asOf: "2026-09-02",
-      preview: fixtureFact(0, "preview"),
-      shards: Array.from({ length: 20 }, (_value, index) => fixtureFact(index + 1, "high")),
-      derivationEvidence: fixtureDerivationEvidence(),
-    }), /public|redistributable|template/u, `${label}: projector`);
+    assert.throws(
+      () => projectDeviceManifest(fixtureProjectionOptions(unsafeTemplate)),
+      /public|redistributable|template/u,
+      `${label}: projector`,
+    );
 
     const manifest = await fixtureManifest();
     const bundle = exlFixtureBundle(manifest);
@@ -737,13 +1045,7 @@ test("matrix-aware resident bytes participate in the 20-shard aggregate budget",
     };
   });
   assert.throws(
-    () => projectDeviceManifest({
-      template,
-      asOf: "2026-09-02",
-      preview: fixtureFact(0, "preview"),
-      shards,
-      derivationEvidence: fixtureDerivationEvidence(),
-    }),
+    () => projectDeviceManifest(fixtureProjectionOptions(template, { shards })),
     /aggregate decoded byte budget/u,
   );
 });
@@ -868,6 +1170,15 @@ test("runtime lock and formal manifest couple the optional EXL bundle without pr
   );
   assert.doesNotThrow(() => validateRuntimeAssetLock(candidateLock));
   assert.doesNotThrow(() => assertManifestMatchesLock(manifest, exlBundle));
+  for (const [label, derivationEvidence] of invalidSourceInputCleaningEvidence()) {
+    const invalidManifest = structuredClone(manifest);
+    invalidManifest.derivationEvidence = derivationEvidence;
+    assert.throws(
+      () => assertManifestMatchesLock(invalidManifest, exlBundle),
+      /derivation evidence/u,
+      label,
+    );
+  }
   const wrongNotice = structuredClone(candidateLock);
   wrongNotice.externalBundles[1].licensePath = "public/models/exl50u-general-assembly-v1/other.md";
   assert.throws(() => validateRuntimeAssetLock(wrongNotice), /identity/u);

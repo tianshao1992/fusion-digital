@@ -93,6 +93,15 @@
       "additionalProperties": false
     },
     "derivationEvidence": { "$ref": "#/$defs/anonymousDerivationEvidence" },
+    "reviewCandidate": {
+      "type": "object",
+      "required": ["status", "productionEligible"],
+      "properties": {
+        "status": { "const": "USER_VISUAL_REVIEW_REQUIRED" },
+        "productionEligible": { "const": false }
+      },
+      "additionalProperties": false
+    },
     "systems": {
       "type": "array",
       "minItems": 1,
@@ -216,27 +225,126 @@
   "$defs": {
     "anonymousDerivationEvidence": {
       "type": "object",
-      "required": ["kind", "selectedAttempt", "selectedRatios", "qem", "coverage"],
+      "required": [
+        "kind", "selectedAttempt", "sourceInputCleaning", "previewVisualLod", "highQem", "highPartition", "coverage"
+      ],
       "properties": {
         "kind": { "const": "anonymous-public-derivative" },
         "selectedAttempt": { "type": "integer", "minimum": 1, "maximum": 2 },
-        "selectedRatios": {
+        "sourceInputCleaning": {
           "type": "object",
-          "required": ["preview", "high"],
+          "required": [
+            "policy", "definitionInputs", "sourceFaces", "sourceTriangles", "sanitizedTriangles", "removedTriangles",
+            "affectedDefinitions", "removedUnreferencedVertices", "allDefinitionsAccounted", "allSourceFacesAccounted"
+          ],
           "properties": {
-            "preview": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
-            "high": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 }
+            "policy": { "const": "repeated-index-and-exact-zero-area-drop-stable-vertex-remap-v1" },
+            "definitionInputs": { "type": "integer", "minimum": 1 },
+            "sourceFaces": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Input face count only; it does not claim that source face or component boundaries survive either visual LOD."
+            },
+            "sourceTriangles": { "type": "integer", "minimum": 1 },
+            "sanitizedTriangles": { "type": "integer", "minimum": 1 },
+            "removedTriangles": { "type": "integer", "minimum": 0 },
+            "affectedDefinitions": { "type": "integer", "minimum": 0 },
+            "removedUnreferencedVertices": { "type": "integer", "minimum": 0 },
+            "allDefinitionsAccounted": { "const": true },
+            "allSourceFacesAccounted": { "const": true }
           },
           "additionalProperties": false
         },
-        "qem": {
+        "previewVisualLod": {
           "type": "object",
-          "required": ["receiptCount", "receiptSha256", "targetMissCount", "retainedIrreducibleCount"],
+          "required": [
+            "algorithm", "selectedTargetTriangleRatio", "simplifierNormalizedErrorLimit",
+            "maxAcceptedSimplifierReportedNormalizedError", "minimumTrianglesPerDefinition",
+            "definitionsUsingMinimum", "minimumCoverage", "extremaCoverage",
+            "retainedSourcePositionValuesUnchanged", "allDefinitionsNonempty", "boundsMissCount",
+            "receiptCount", "receiptSha256", "outputCleaning", "visualQa"
+          ],
           "properties": {
+            "algorithm": { "const": "meshoptimizer-simplify-sloppy" },
+            "selectedTargetTriangleRatio": { "const": 0.05 },
+            "simplifierNormalizedErrorLimit": { "const": 0.02 },
+            "maxAcceptedSimplifierReportedNormalizedError": { "type": "number", "minimum": 0, "maximum": 1 },
+            "minimumTrianglesPerDefinition": { "const": 12 },
+            "definitionsUsingMinimum": { "type": "integer", "minimum": 0 },
+            "minimumCoverage": { "const": "stable-source-order-minimum-plus-six-axis-extrema-v1" },
+            "extremaCoverage": { "const": "six-axis-first-valid-nondegenerate-incident-triangle-v1" },
+            "retainedSourcePositionValuesUnchanged": { "const": true },
+            "allDefinitionsNonempty": { "const": true },
+            "boundsMissCount": { "const": 0 },
+            "receiptCount": { "type": "integer", "minimum": 1 },
+            "receiptSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+            "outputCleaning": { "$ref": "#/$defs/anonymousOutputCleaning" },
+            "visualQa": {
+              "type": "object",
+              "required": [
+                "policy", "viewCount", "silhouetteIouFloor", "minimumObservedSilhouetteIou",
+                "normalizedDepthP99Ceiling", "maximumObservedNormalizedDepthP99", "receiptSha256"
+              ],
+              "properties": {
+                "policy": { "const": "canonical-10-view-silhouette-depth-1024-v1" },
+                "viewCount": { "const": 10 },
+                "silhouetteIouFloor": { "const": 0.97 },
+                "minimumObservedSilhouetteIou": { "type": "number", "minimum": 0, "maximum": 1 },
+                "normalizedDepthP99Ceiling": { "const": 0.02 },
+                "maximumObservedNormalizedDepthP99": { "type": "number", "minimum": 0 },
+                "receiptSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+                "status": { "const": "USER_VISUAL_REVIEW_REQUIRED" }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "highQem": {
+          "type": "object",
+          "required": [
+            "algorithm", "selectedTargetTriangleRatio", "simplifierNormalizedErrorLimit",
+            "maxAcceptedSimplifierReportedNormalizedError", "minimumTrianglesPerDefinition",
+            "definitionsUsingMinimum", "minimumCoverage", "extremaCoverage",
+            "retainedSourcePositionValuesUnchanged", "allDefinitionsNonempty", "boundsMissCount",
+            "receiptCount", "receiptSha256", "targetMissCount", "retainedIrreducibleCount", "outputCleaning"
+          ],
+          "properties": {
+            "algorithm": { "const": "meshoptimizer-simplify-qem" },
+            "selectedTargetTriangleRatio": { "enum": [0.6, 0.55] },
+            "simplifierNormalizedErrorLimit": { "const": 0.0005 },
+            "maxAcceptedSimplifierReportedNormalizedError": { "type": "number", "minimum": 0, "maximum": 1 },
+            "minimumTrianglesPerDefinition": { "const": 12 },
+            "definitionsUsingMinimum": { "type": "integer", "minimum": 0 },
+            "minimumCoverage": { "const": "stable-source-order-minimum-plus-six-axis-extrema-v1" },
+            "extremaCoverage": { "const": "six-axis-first-valid-nondegenerate-incident-triangle-v1" },
+            "retainedSourcePositionValuesUnchanged": { "const": true },
+            "allDefinitionsNonempty": { "const": true },
+            "boundsMissCount": { "const": 0 },
             "receiptCount": { "type": "integer", "minimum": 1 },
             "receiptSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
             "targetMissCount": { "type": "integer", "minimum": 0 },
-            "retainedIrreducibleCount": { "type": "integer", "minimum": 0 }
+            "retainedIrreducibleCount": { "type": "integer", "minimum": 0 },
+            "outputCleaning": { "$ref": "#/$defs/anonymousOutputCleaning" }
+          },
+          "additionalProperties": false
+        },
+        "highPartition": {
+          "type": "object",
+          "required": [
+            "policy", "geometryChunkCount", "splitDefinitionCount", "finalTrianglesBeforePartition",
+            "partitionedTriangles", "missingTriangles", "duplicateTriangles", "missingOccurrences", "receiptSha256"
+          ],
+          "properties": {
+            "policy": { "const": "stable-definition-triangle-chunks-v1" },
+            "geometryChunkCount": { "type": "integer", "minimum": 1 },
+            "splitDefinitionCount": { "type": "integer", "minimum": 0 },
+            "finalTrianglesBeforePartition": { "type": "integer", "minimum": 1 },
+            "partitionedTriangles": { "type": "integer", "minimum": 1 },
+            "missingTriangles": { "const": 0 },
+            "duplicateTriangles": { "const": 0 },
+            "missingOccurrences": { "const": 0 },
+            "receiptSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
           },
           "additionalProperties": false
         },
@@ -261,6 +369,30 @@
           },
           "additionalProperties": false
         }
+      },
+      "additionalProperties": false
+    },
+    "anonymousOutputCleaning": {
+      "type": "object",
+      "required": [
+        "policy", "selectedTrianglesBeforeCleaning", "finalTriangles", "removedRepeatedIndexTriangles",
+        "removedZeroAreaTriangles", "removedDuplicateTriangles", "removedNonmanifoldTriangles",
+        "repairedDefinitions", "finalRepeatedIndexTriangles", "finalZeroAreaTriangles",
+        "finalDuplicateTriangles", "finalNonmanifoldEdgeCount"
+      ],
+      "properties": {
+        "policy": { "const": "stable-repeated-zero-duplicate-edge-incidence-clean-v1" },
+        "selectedTrianglesBeforeCleaning": { "type": "integer", "minimum": 1 },
+        "finalTriangles": { "type": "integer", "minimum": 1 },
+        "removedRepeatedIndexTriangles": { "type": "integer", "minimum": 0 },
+        "removedZeroAreaTriangles": { "type": "integer", "minimum": 0 },
+        "removedDuplicateTriangles": { "type": "integer", "minimum": 0 },
+        "removedNonmanifoldTriangles": { "type": "integer", "minimum": 0 },
+        "repairedDefinitions": { "type": "integer", "minimum": 0 },
+        "finalRepeatedIndexTriangles": { "const": 0 },
+        "finalZeroAreaTriangles": { "const": 0 },
+        "finalDuplicateTriangles": { "const": 0 },
+        "finalNonmanifoldEdgeCount": { "const": 0 }
       },
       "additionalProperties": false
     },
@@ -390,7 +522,7 @@
         "label": { "type": "string", "minLength": 1 },
         "quality": { "const": "high" },
         "delivery": { "const": "shards" },
-        "format": { "const": "glTF 2.0 binary + EXT_meshopt_compression + EXT_mesh_gpu_instancing; POSITION Float32; NORMAL normalized Int8 (8-bit); indices Uint32" },
+        "format": { "const": "glTF 2.0 binary + EXT_meshopt_compression + EXT_mesh_gpu_instancing; POSITION Float32; NORMAL normalized Int8 (8-bit); indices Uint16/Uint32" },
         "rootNodeName": { "const": "EXL50U_GA_VISUALIZATION" },
         "extensionsRequired": {
           "type": "array",

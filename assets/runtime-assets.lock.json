@@ -8,9 +8,9 @@
       "public/models/iter-high-detail-v1/",
       "public/models/exl50u-general-assembly-v1/*.glb"
     ],
-    "fileCount": 424,
-    "totalBytes": 261010153,
-    "treeSha256": "f4d409ded3043de62626bb04dc3eb3004be2ed61e3f440aac0ba1d87d3e5ad3e",
+    "fileCount": 427,
+    "totalBytes": 261050518,
+    "treeSha256": "e20cf1b948dc460bc8adeed8caa096b3ddd2883ff937c689b709807fb67de3c2",
     "files": [
       {
         "path": "public/FusionDigital-technical-roadmap-2026-08-15.docx",
@@ -1614,8 +1614,8 @@
       },
       {
         "path": "public/models/device-manifest.schema.json",
-        "bytes": 21439,
-        "sha256": "1bd5cc2039cc8cbfe4fbef7a8b816b540c318503cd2b49ecd17febfff35f70fb"
+        "bytes": 29046,
+        "sha256": "08267818a874887cbdfcd5be13ccf8f1b32005641f78cffc95ae4d53aa26bc57"
       },
       {
         "path": "public/models/ehl2-preliminary-v1/PUBLICATION-NOTICE.md",
@@ -1646,6 +1646,21 @@
         "path": "public/models/exl50u-diagview2-v1/manifest.json",
         "bytes": 3201,
         "sha256": "0bcc9a19ce93dc476b8bfc42aeb3c033842d3c56474b7fab1fdc7f0aaacdc954"
+      },
+      {
+        "path": "public/models/exl50u-general-assembly-review-candidate.json",
+        "bytes": 1837,
+        "sha256": "1788df5b0983e7db95eb80ea33bb4443407e471bd013871565f8a6293ed09391"
+      },
+      {
+        "path": "public/models/exl50u-general-assembly-v1/PUBLICATION-NOTICE.md",
+        "bytes": 548,
+        "sha256": "f201625b48b586c0eeb477c55b07838bafe77d06cd504499993b3307ab72b5b4"
+      },
+      {
+        "path": "public/models/exl50u-general-assembly-v1/model-manifest.json",
+        "bytes": 30373,
+        "sha256": "f0ceabf01928415194205a77e7c02064f9358bd5f2ce875587e3569cddb132ca"
       },
       {
         "path": "public/models/exl50u-interactive/exl50u-interactive-high.meshopt.glb",
@@ -2297,6 +2312,175 @@
           "route": "/device-assets/iter-high-detail/v1/vv4.99bd85facbc174b9cd3f1385e3204c082920bb87adb50cbbb174dece0ae6afda.high.meshopt.glb",
           "bytes": 10302684,
           "sha256": "99bd85facbc174b9cd3f1385e3204c082920bb87adb50cbbb174dece0ae6afda"
+        }
+      ]
+    },
+    {
+      "id": "exl50u-general-assembly-v1",
+      "title": "EXL-50U integrated-assembly anonymous browser visualization derivative",
+      "classification": "PUBLIC",
+      "redistributionAllowed": true,
+      "engineeringUseAllowed": false,
+      "sourceCadIncluded": false,
+      "licensePath": "public/models/exl50u-general-assembly-v1/PUBLICATION-NOTICE.md",
+      "destinationRoot": "public/models/exl50u-general-assembly-v1",
+      "stageDirectoryName": "exl50u-general-assembly-v1",
+      "routeRoot": "/device-assets/exl50u-general-assembly/v1",
+      "acquisition": {
+        "defaultBaseUrl": null,
+        "baseUrlEnv": "FUSION_EXL50U_GA_ASSET_BASE_URL",
+        "sourceDirEnv": "FUSION_EXL50U_GA_ASSET_SOURCE_DIR"
+      },
+      "fileCount": 21,
+      "totalBytes": 67787548,
+      "aggregateSha256": "ddba24c5e8dfb9fc217cc70b8432b86838e934612fa17704623d00a7fedf847e",
+      "files": [
+        {
+          "role": "preview",
+          "filename": "device.preview.c74e63a34eaef550ce91f8f151eb1cafca64a0de61826713a6b1116910ac6e4b.meshopt.glb",
+          "route": "/device-assets/exl50u-general-assembly/v1/device.preview.c74e63a34eaef550ce91f8f151eb1cafca64a0de61826713a6b1116910ac6e4b.meshopt.glb",
+          "sha256": "c74e63a34eaef550ce91f8f151eb1cafca64a0de61826713a6b1116910ac6e4b",
+          "bytes": 7464164
+        },
+        {
+          "role": "anonymous-shard-01",
+          "filename": "anonymous-shard-01.0870715693b1c97b680f11b3d68f483337f895e9bd164ae137db90449132a31d.high.meshopt.glb",
+          "route": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-01.0870715693b1c97b680f11b3d68f483337f895e9bd164ae137db90449132a31d.high.meshopt.glb",
+          "sha256": "0870715693b1c97b680f11b3d68f483337f895e9bd164ae137db90449132a31d",
+          "bytes": 2473852
+        },
+        {
+          "role": "anonymous-shard-02",
+          "filename": "anonymous-shard-02.d71e42df290c20e9ec171b8b57ed130b82363edf608ec85c7acf91b4994dc4b5.high.meshopt.glb",
+          "route": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-02.d71e42df290c20e9ec171b8b57ed130b82363edf608ec85c7acf91b4994dc4b5.high.meshopt.glb",
+          "sha256": "d71e42df290c20e9ec171b8b57ed130b82363edf608ec85c7acf91b4994dc4b5",
+          "bytes": 2331056
+        },
+        {
+          "role": "anonymous-shard-03",
+          "filename": "anonymous-shard-03.bea51160e97f06f5f86d699f4933f810cab5994dc81d58d8b0cd79bffa0038de.high.meshopt.glb",
+          "route": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-03.bea51160e97f06f5f86d699f4933f810cab5994dc81d58d8b0cd79bffa0038de.high.meshopt.glb",
+          "sha256": "bea51160e97f06f5f86d699f4933f810cab5994dc81d58d8b0cd79bffa0038de",
+          "bytes": 2064940
+        },
+        {
+          "role": "anonymous-shard-04",
+          "filename": "anonymous-shard-04.6c5951cb3f78c6902867697f961aef5b57b49e1be3db21fc4e9e7b4d3261f399.high.meshopt.glb",
+          "route": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-04.6c5951cb3f78c6902867697f961aef5b57b49e1be3db21fc4e9e7b4d3261f399.high.meshopt.glb",
+          "sha256": "6c5951cb3f78c6902867697f961aef5b57b49e1be3db21fc4e9e7b4d3261f399",
+          "bytes": 2256504
+        },
+        {
+          "role": "anonymous-shard-05",
+          "filename": "anonymous-shard-05.2efc0698087e1511f475048fa61b98bb3ca6a0b637c09527e775ec99d22f1b87.high.meshopt.glb",
+          "route": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-05.2efc0698087e1511f475048fa61b98bb3ca6a0b637c09527e775ec99d22f1b87.high.meshopt.glb",
+          "sha256": "2efc0698087e1511f475048fa61b98bb3ca6a0b637c09527e775ec99d22f1b87",
+          "bytes": 2400648
+        },
+        {
+          "role": "anonymous-shard-06",
+          "filename": "anonymous-shard-06.51912bcbaedced04600bedd85dcafb815267552840a75fa8caf70eb77d1d5a88.high.meshopt.glb",
+          "route": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-06.51912bcbaedced04600bedd85dcafb815267552840a75fa8caf70eb77d1d5a88.high.meshopt.glb",
+          "sha256": "51912bcbaedced04600bedd85dcafb815267552840a75fa8caf70eb77d1d5a88",
+          "bytes": 2431288
+        },
+        {
+          "role": "anonymous-shard-07",
+          "filename": "anonymous-shard-07.5c94f8d6814569ca39bb35c74b090e8b03d30b729003f94c37987cfdc4ab27b8.high.meshopt.glb",
+          "route": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-07.5c94f8d6814569ca39bb35c74b090e8b03d30b729003f94c37987cfdc4ab27b8.high.meshopt.glb",
+          "sha256": "5c94f8d6814569ca39bb35c74b090e8b03d30b729003f94c37987cfdc4ab27b8",
+          "bytes": 2268780
+        },
+        {
+          "role": "anonymous-shard-08",
+          "filename": "anonymous-shard-08.ccd198ef66602c4dcea788be14ad312f194a0248cccb0f4156f29f0b69568bcf.high.meshopt.glb",
+          "route": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-08.ccd198ef66602c4dcea788be14ad312f194a0248cccb0f4156f29f0b69568bcf.high.meshopt.glb",
+          "sha256": "ccd198ef66602c4dcea788be14ad312f194a0248cccb0f4156f29f0b69568bcf",
+          "bytes": 1995572
+        },
+        {
+          "role": "anonymous-shard-09",
+          "filename": "anonymous-shard-09.4cb3105337d55e8fcd0a9cd41f73ff0dd860ec35dd903398b42777547eb5e915.high.meshopt.glb",
+          "route": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-09.4cb3105337d55e8fcd0a9cd41f73ff0dd860ec35dd903398b42777547eb5e915.high.meshopt.glb",
+          "sha256": "4cb3105337d55e8fcd0a9cd41f73ff0dd860ec35dd903398b42777547eb5e915",
+          "bytes": 2332388
+        },
+        {
+          "role": "anonymous-shard-10",
+          "filename": "anonymous-shard-10.b41834c480e7a545ef4c9c1b7ef4d8a72d2f17100eed0c8e1a65fdfd145c132e.high.meshopt.glb",
+          "route": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-10.b41834c480e7a545ef4c9c1b7ef4d8a72d2f17100eed0c8e1a65fdfd145c132e.high.meshopt.glb",
+          "sha256": "b41834c480e7a545ef4c9c1b7ef4d8a72d2f17100eed0c8e1a65fdfd145c132e",
+          "bytes": 1849796
+        },
+        {
+          "role": "anonymous-shard-11",
+          "filename": "anonymous-shard-11.46a079858c52a18185e3658265d99e781ee30c6a6f21967fe76db082a26a7bda.high.meshopt.glb",
+          "route": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-11.46a079858c52a18185e3658265d99e781ee30c6a6f21967fe76db082a26a7bda.high.meshopt.glb",
+          "sha256": "46a079858c52a18185e3658265d99e781ee30c6a6f21967fe76db082a26a7bda",
+          "bytes": 2068236
+        },
+        {
+          "role": "anonymous-shard-12",
+          "filename": "anonymous-shard-12.87b3373e9326a4ae5b64985b6f8ec9fb6e8a05dfc8d0d5355196cd457e4fb4b0.high.meshopt.glb",
+          "route": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-12.87b3373e9326a4ae5b64985b6f8ec9fb6e8a05dfc8d0d5355196cd457e4fb4b0.high.meshopt.glb",
+          "sha256": "87b3373e9326a4ae5b64985b6f8ec9fb6e8a05dfc8d0d5355196cd457e4fb4b0",
+          "bytes": 2241972
+        },
+        {
+          "role": "anonymous-shard-13",
+          "filename": "anonymous-shard-13.625505d79e73f6d25b72a6f0e0f166eadafa314b3894b62c3e9c8f56e06b1281.high.meshopt.glb",
+          "route": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-13.625505d79e73f6d25b72a6f0e0f166eadafa314b3894b62c3e9c8f56e06b1281.high.meshopt.glb",
+          "sha256": "625505d79e73f6d25b72a6f0e0f166eadafa314b3894b62c3e9c8f56e06b1281",
+          "bytes": 2554792
+        },
+        {
+          "role": "anonymous-shard-14",
+          "filename": "anonymous-shard-14.e0774d7335c1ffbfccc2c70c46fc768aa5b258fbf06c405dafecdebaeb623a3d.high.meshopt.glb",
+          "route": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-14.e0774d7335c1ffbfccc2c70c46fc768aa5b258fbf06c405dafecdebaeb623a3d.high.meshopt.glb",
+          "sha256": "e0774d7335c1ffbfccc2c70c46fc768aa5b258fbf06c405dafecdebaeb623a3d",
+          "bytes": 2371812
+        },
+        {
+          "role": "anonymous-shard-15",
+          "filename": "anonymous-shard-15.42d14bc49376b1ab84dc42f67a2705b5aa083d3e4c92a71738944fec1e45b783.high.meshopt.glb",
+          "route": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-15.42d14bc49376b1ab84dc42f67a2705b5aa083d3e4c92a71738944fec1e45b783.high.meshopt.glb",
+          "sha256": "42d14bc49376b1ab84dc42f67a2705b5aa083d3e4c92a71738944fec1e45b783",
+          "bytes": 1887636
+        },
+        {
+          "role": "anonymous-shard-16",
+          "filename": "anonymous-shard-16.d93f48104169d7bbd25ef46957b8ea4316c668f6425941f24084e7268b5ad6f6.high.meshopt.glb",
+          "route": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-16.d93f48104169d7bbd25ef46957b8ea4316c668f6425941f24084e7268b5ad6f6.high.meshopt.glb",
+          "sha256": "d93f48104169d7bbd25ef46957b8ea4316c668f6425941f24084e7268b5ad6f6",
+          "bytes": 2170932
+        },
+        {
+          "role": "anonymous-shard-17",
+          "filename": "anonymous-shard-17.226545cc43288c910b7dc98a52a0cdfe0c071e3727f95ca5ceb81f989d654706.high.meshopt.glb",
+          "route": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-17.226545cc43288c910b7dc98a52a0cdfe0c071e3727f95ca5ceb81f989d654706.high.meshopt.glb",
+          "sha256": "226545cc43288c910b7dc98a52a0cdfe0c071e3727f95ca5ceb81f989d654706",
+          "bytes": 2137644
+        },
+        {
+          "role": "anonymous-shard-18",
+          "filename": "anonymous-shard-18.f490b09fd148f14d00bce4f8c79df3d1a720c346d26c41c64a5c87b7e02fcca4.high.meshopt.glb",
+          "route": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-18.f490b09fd148f14d00bce4f8c79df3d1a720c346d26c41c64a5c87b7e02fcca4.high.meshopt.glb",
+          "sha256": "f490b09fd148f14d00bce4f8c79df3d1a720c346d26c41c64a5c87b7e02fcca4",
+          "bytes": 2321676
+        },
+        {
+          "role": "anonymous-shard-19",
+          "filename": "anonymous-shard-19.b47d38e445dc920165b22016849ddb3ff59ac978deff93623289f3be01abdcbe.high.meshopt.glb",
+          "route": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-19.b47d38e445dc920165b22016849ddb3ff59ac978deff93623289f3be01abdcbe.high.meshopt.glb",
+          "sha256": "b47d38e445dc920165b22016849ddb3ff59ac978deff93623289f3be01abdcbe",
+          "bytes": 7056420
+        },
+        {
+          "role": "anonymous-shard-20",
+          "filename": "anonymous-shard-20.6345b7eb06d4e8328052707005f14acdfa1c4b0f323f0f5142c095ae8e8eb454.high.meshopt.glb",
+          "route": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-20.6345b7eb06d4e8328052707005f14acdfa1c4b0f323f0f5142c095ae8e8eb454.high.meshopt.glb",
+          "sha256": "6345b7eb06d4e8328052707005f14acdfa1c4b0f323f0f5142c095ae8e8eb454",
+          "bytes": 13107440
         }
       ]
     }

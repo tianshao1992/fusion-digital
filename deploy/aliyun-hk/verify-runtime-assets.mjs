@@ -13,7 +13,7 @@ const ITER_ID = "iter-high-detail-v1";
 const EXL_ID = "exl50u-general-assembly-v1";
 const EXL_DEVICE_ID = "exl50u-general-assembly-20260630";
 const EXL_MANIFEST_ENDPOINT = "/models/exl50u-general-assembly-v1/model-manifest.json";
-const EXL_ASSET_FORMAT = "glTF 2.0 binary + EXT_meshopt_compression + EXT_mesh_gpu_instancing; POSITION Float32; NORMAL normalized Int8 (8-bit); indices Uint32";
+const EXL_ASSET_FORMAT = "glTF 2.0 binary + EXT_meshopt_compression + EXT_mesh_gpu_instancing; POSITION Float32; NORMAL normalized Int8 (8-bit); indices Uint16/Uint32";
 const EXL_FILE_COUNT = 21;
 const EXL_SHARD_COUNT = 20;
 const EXL_MAX_TOTAL_BYTES = 300 * 1024 * 1024;
@@ -248,37 +248,137 @@ function validBounds(value) {
     && value.min.every((coordinate, axis) => coordinate < value.max[axis]);
 }
 
-function assertExlDerivationEvidence(value) {
-  const evidenceKeys = ["kind", "selectedAttempt", "selectedRatios", "qem", "coverage"];
-  const ratioKeys = ["preview", "high"];
-  const qemKeys = ["receiptCount", "receiptSha256", "targetMissCount", "retainedIrreducibleCount"];
+function assertExlDerivationEvidence(value, { reviewCandidate = false } = {}) {
+  const evidenceKeys = [
+    "kind", "selectedAttempt", "sourceInputCleaning", "previewVisualLod", "highQem", "highPartition", "coverage",
+  ];
+  const sourceInputCleaningKeys = [
+    "policy", "definitionInputs", "sourceFaces", "sourceTriangles", "sanitizedTriangles", "removedTriangles",
+    "affectedDefinitions", "removedUnreferencedVertices", "allDefinitionsAccounted", "allSourceFacesAccounted",
+  ];
+  const lodKeys = [
+    "algorithm", "selectedTargetTriangleRatio", "simplifierNormalizedErrorLimit",
+    "maxAcceptedSimplifierReportedNormalizedError", "minimumTrianglesPerDefinition",
+    "definitionsUsingMinimum", "minimumCoverage", "extremaCoverage",
+    "retainedSourcePositionValuesUnchanged", "allDefinitionsNonempty", "boundsMissCount",
+    "receiptCount", "receiptSha256", "outputCleaning",
+  ];
+  const outputCleaningKeys = [
+    "policy", "selectedTrianglesBeforeCleaning", "finalTriangles", "removedRepeatedIndexTriangles",
+    "removedZeroAreaTriangles", "removedDuplicateTriangles", "removedNonmanifoldTriangles",
+    "repairedDefinitions", "finalRepeatedIndexTriangles", "finalZeroAreaTriangles",
+    "finalDuplicateTriangles", "finalNonmanifoldEdgeCount",
+  ];
   const coverageKeys = [
     "renderableDefinitions", "renderableOccurrences", "skippedDefinitions", "skippedOccurrences",
     "sourceDefinitions", "sourceOccurrences", "previewMissingDefinitions",
     "previewMissingOccurrences", "highMissingDefinitions", "highMissingOccurrences",
   ];
-  const ratios = value?.selectedRatios;
-  const qem = value?.qem;
+  const sourceInputCleaning = value?.sourceInputCleaning;
+  const preview = value?.previewVisualLod;
+  const high = value?.highQem;
+  const highPartition = value?.highPartition;
   const coverage = value?.coverage;
+  const previewCleaning = preview?.outputCleaning;
+  const highCleaning = high?.outputCleaning;
+  const visualQa = preview?.visualQa;
+  const finiteUnit = (candidate, allowZero = false) => typeof candidate === "number"
+    && Number.isFinite(candidate)
+    && candidate >= (allowZero ? 0 : Number.EPSILON)
+    && candidate <= 1;
+  const validOutputCleaning = (cleaning) => {
+    const removed = [
+      "removedRepeatedIndexTriangles", "removedZeroAreaTriangles",
+      "removedDuplicateTriangles", "removedNonmanifoldTriangles",
+    ];
+    return hasExactKeys(cleaning, outputCleaningKeys)
+      && cleaning.policy === "stable-repeated-zero-duplicate-edge-incidence-clean-v1"
+      && positiveSafeInteger(cleaning.selectedTrianglesBeforeCleaning)
+      && positiveSafeInteger(cleaning.finalTriangles)
+      && [...removed, "repairedDefinitions"].every((key) => nonNegativeSafeInteger(cleaning[key]))
+      && cleaning.selectedTrianglesBeforeCleaning
+        === cleaning.finalTriangles + removed.reduce((sum, key) => sum + cleaning[key], 0)
+      && cleaning.finalRepeatedIndexTriangles === 0
+      && cleaning.finalZeroAreaTriangles === 0
+      && cleaning.finalDuplicateTriangles === 0
+      && cleaning.finalNonmanifoldEdgeCount === 0;
+  };
+  const validLod = (lod) => object(lod)
+    && finiteUnit(lod.selectedTargetTriangleRatio)
+    && finiteUnit(lod.simplifierNormalizedErrorLimit)
+    && finiteUnit(lod.maxAcceptedSimplifierReportedNormalizedError, true)
+    && lod.maxAcceptedSimplifierReportedNormalizedError <= lod.simplifierNormalizedErrorLimit
+    && positiveSafeInteger(lod.minimumTrianglesPerDefinition)
+    && nonNegativeSafeInteger(lod.definitionsUsingMinimum)
+    && lod.minimumCoverage === "stable-source-order-minimum-plus-six-axis-extrema-v1"
+    && lod.extremaCoverage === "six-axis-first-valid-nondegenerate-incident-triangle-v1"
+    && lod.retainedSourcePositionValuesUnchanged === true
+    && lod.allDefinitionsNonempty === true
+    && lod.boundsMissCount === 0
+    && positiveSafeInteger(lod.receiptCount)
+    && SHA256.test(lod.receiptSha256)
+    && validOutputCleaning(lod.outputCleaning);
   if (
     !hasExactKeys(value, evidenceKeys)
     || value.kind !== "anonymous-public-derivative"
     || ![1, 2].includes(value.selectedAttempt)
-    || !hasExactKeys(ratios, ratioKeys)
-    || ratioKeys.some((key) => (
-      typeof ratios[key] !== "number"
-      || !Number.isFinite(ratios[key])
-      || ratios[key] <= 0
-      || ratios[key] > 1
-    ))
-    || !hasExactKeys(qem, qemKeys)
-    || !positiveSafeInteger(qem.receiptCount)
-    || typeof qem.receiptSha256 !== "string"
-    || !SHA256.test(qem.receiptSha256)
-    || !nonNegativeSafeInteger(qem.targetMissCount)
-    || !nonNegativeSafeInteger(qem.retainedIrreducibleCount)
-    || qem.targetMissCount !== qem.retainedIrreducibleCount
-    || qem.targetMissCount > qem.receiptCount
+    || !hasExactKeys(sourceInputCleaning, sourceInputCleaningKeys)
+    || sourceInputCleaning.policy !== "repeated-index-and-exact-zero-area-drop-stable-vertex-remap-v1"
+    || sourceInputCleaningKeys.filter((key) => !["policy", "allDefinitionsAccounted", "allSourceFacesAccounted"].includes(key))
+      .some((key) => !nonNegativeSafeInteger(sourceInputCleaning[key]))
+    || ["definitionInputs", "sourceFaces", "sourceTriangles", "sanitizedTriangles"]
+      .some((key) => !positiveSafeInteger(sourceInputCleaning[key]))
+    || sourceInputCleaning.allDefinitionsAccounted !== true
+    || sourceInputCleaning.allSourceFacesAccounted !== true
+    || sourceInputCleaning.sourceTriangles
+      !== sourceInputCleaning.sanitizedTriangles + sourceInputCleaning.removedTriangles
+    || !hasExactKeys(preview, [...lodKeys, "visualQa"])
+    || preview.algorithm !== "meshoptimizer-simplify-sloppy"
+    || !validLod(preview)
+    || preview.selectedTargetTriangleRatio !== 0.05
+    || preview.simplifierNormalizedErrorLimit !== 0.02
+    || preview.minimumTrianglesPerDefinition !== 12
+    || !hasExactKeys(visualQa, [
+      "policy", "viewCount", "silhouetteIouFloor", "minimumObservedSilhouetteIou",
+      "normalizedDepthP99Ceiling", "maximumObservedNormalizedDepthP99", "receiptSha256",
+      ...(reviewCandidate ? ["status"] : []),
+    ])
+    || (reviewCandidate && visualQa.status !== "USER_VISUAL_REVIEW_REQUIRED")
+    || visualQa.policy !== "canonical-10-view-silhouette-depth-1024-v1"
+    || visualQa.viewCount !== 10
+    || visualQa.silhouetteIouFloor !== 0.97
+    || !finiteUnit(visualQa.minimumObservedSilhouetteIou, true)
+    || (!reviewCandidate && visualQa.minimumObservedSilhouetteIou < visualQa.silhouetteIouFloor)
+    || visualQa.normalizedDepthP99Ceiling !== 0.02
+    || !finiteUnit(visualQa.maximumObservedNormalizedDepthP99, true)
+    || (!reviewCandidate && visualQa.maximumObservedNormalizedDepthP99 > visualQa.normalizedDepthP99Ceiling)
+    || (reviewCandidate
+      && visualQa.minimumObservedSilhouetteIou >= visualQa.silhouetteIouFloor
+      && visualQa.maximumObservedNormalizedDepthP99 <= visualQa.normalizedDepthP99Ceiling)
+    || !SHA256.test(visualQa.receiptSha256)
+    || !hasExactKeys(high, [...lodKeys, "targetMissCount", "retainedIrreducibleCount"])
+    || high.algorithm !== "meshoptimizer-simplify-qem"
+    || !validLod(high)
+    || high.selectedTargetTriangleRatio !== (value.selectedAttempt === 1 ? 0.6 : 0.55)
+    || high.simplifierNormalizedErrorLimit !== 0.0005
+    || high.minimumTrianglesPerDefinition !== 12
+    || !nonNegativeSafeInteger(high.targetMissCount)
+    || !nonNegativeSafeInteger(high.retainedIrreducibleCount)
+    || high.targetMissCount !== high.retainedIrreducibleCount
+    || high.targetMissCount > high.receiptCount
+    || !hasExactKeys(highPartition, [
+      "policy", "geometryChunkCount", "splitDefinitionCount", "finalTrianglesBeforePartition",
+      "partitionedTriangles", "missingTriangles", "duplicateTriangles", "missingOccurrences", "receiptSha256",
+    ])
+    || highPartition.policy !== "stable-definition-triangle-chunks-v1"
+    || !positiveSafeInteger(highPartition.geometryChunkCount)
+    || !nonNegativeSafeInteger(highPartition.splitDefinitionCount)
+    || !positiveSafeInteger(highPartition.finalTrianglesBeforePartition)
+    || !positiveSafeInteger(highPartition.partitionedTriangles)
+    || highPartition.missingTriangles !== 0
+    || highPartition.duplicateTriangles !== 0
+    || highPartition.missingOccurrences !== 0
+    || !SHA256.test(highPartition.receiptSha256)
     || !hasExactKeys(coverage, coverageKeys)
     || !positiveSafeInteger(coverage.renderableDefinitions)
     || !positiveSafeInteger(coverage.renderableOccurrences)
@@ -288,6 +388,19 @@ function assertExlDerivationEvidence(value) {
     || !positiveSafeInteger(coverage.sourceOccurrences)
     || coverage.sourceDefinitions !== coverage.renderableDefinitions + coverage.skippedDefinitions
     || coverage.sourceOccurrences !== coverage.renderableOccurrences + coverage.skippedOccurrences
+    || sourceInputCleaning.definitionInputs !== coverage.renderableDefinitions
+    || sourceInputCleaning.affectedDefinitions > coverage.renderableDefinitions
+    || preview.receiptCount !== coverage.renderableDefinitions
+    || high.receiptCount !== coverage.renderableDefinitions
+    || preview.definitionsUsingMinimum > coverage.renderableDefinitions
+    || high.definitionsUsingMinimum > coverage.renderableDefinitions
+    || previewCleaning.repairedDefinitions > coverage.renderableDefinitions
+    || highCleaning.repairedDefinitions > coverage.renderableDefinitions
+    || previewCleaning.selectedTrianglesBeforeCleaning > sourceInputCleaning.sanitizedTriangles
+    || highCleaning.selectedTrianglesBeforeCleaning > sourceInputCleaning.sanitizedTriangles
+    || highPartition.splitDefinitionCount > coverage.renderableDefinitions
+    || highPartition.finalTrianglesBeforePartition !== highCleaning.finalTriangles
+    || highPartition.partitionedTriangles !== highCleaning.finalTriangles
     || coverage.previewMissingDefinitions !== 0
     || coverage.previewMissingOccurrences !== 0
     || coverage.highMissingDefinitions !== 0
@@ -295,6 +408,7 @@ function assertExlDerivationEvidence(value) {
   ) {
     throw new Error("published EXL-50U derivation evidence is incomplete, inconsistent, or contains undeclared metadata");
   }
+  return value;
 }
 
 function normalizedExlManifestAsset(asset, role, routePattern, digestIndex) {
@@ -550,7 +664,15 @@ export function validateRuntimeAssetBundle(bundle) {
 }
 
 function manifestAssets(manifest) {
-  exactKeys(manifest, EXL_MANIFEST_KEYS, "published EXL-50U manifest");
+  const reviewCandidate = object(manifest?.reviewCandidate)
+    && hasExactKeys(manifest.reviewCandidate, ["status", "productionEligible"])
+    && manifest.reviewCandidate.status === "USER_VISUAL_REVIEW_REQUIRED"
+    && manifest.reviewCandidate.productionEligible === false;
+  exactKeys(
+    manifest,
+    [...EXL_MANIFEST_KEYS, ...(reviewCandidate ? ["reviewCandidate"] : [])],
+    "published EXL-50U manifest",
+  );
   exactKeys(manifest.assets, ["webModel", "webModels", "shardBundles"], "published EXL-50U manifest assets");
   if (
     Object.entries(EXL_FIXED_MANIFEST_FIELDS)
@@ -577,7 +699,7 @@ function manifestAssets(manifest) {
     || !Array.isArray(manifest.assets?.shardBundles)
     || manifest.assets.shardBundles.length !== 1
   ) throw new Error("published EXL-50U manifest identity or public boundary is invalid");
-  assertExlDerivationEvidence(manifest.derivationEvidence);
+  const derivationEvidence = assertExlDerivationEvidence(manifest.derivationEvidence, { reviewCandidate });
 
   const bundle = manifest.assets.shardBundles[0];
   const grouping = bundle?.grouping;
@@ -664,6 +786,16 @@ function manifestAssets(manifest) {
     || unionMin.some((coordinate, axis) => coordinate !== bundle.boundsMetres.min[axis])
     || unionMax.some((coordinate, axis) => coordinate !== bundle.boundsMetres.max[axis])
     || manifest.assets.webModel.triangles > EXL_MAX_SCENE_TRIANGLES
+    || derivationEvidence.previewVisualLod.outputCleaning.finalTriangles
+      > manifest.assets.webModel.triangles
+    || derivationEvidence.highQem.outputCleaning.finalTriangles
+      !== metricTotals.uniqueGeometryTriangles
+    || derivationEvidence.highPartition.finalTrianglesBeforePartition
+      !== metricTotals.uniqueGeometryTriangles
+    || derivationEvidence.highPartition.partitionedTriangles
+      !== metricTotals.uniqueGeometryTriangles
+    || derivationEvidence.highPartition.geometryChunkCount
+      !== metricTotals.uniqueGeometryMeshes
     || totalBytes > EXL_MAX_TOTAL_BYTES
   ) throw new Error("published EXL-50U manifest file set, totals, or digest uniqueness is invalid");
   return files;
@@ -679,6 +811,13 @@ export function assertManifestMatchesLock(manifest, bundle) {
       }
     }
   }
+}
+
+export function assertExlProductionEligibleManifest(manifest) {
+  if (manifest?.reviewCandidate !== undefined) {
+    throw new Error("Hong Kong production activation rejects productionEligible=false review candidates");
+  }
+  return manifest;
 }
 
 async function verifyDirectory(releaseRoot, bundle) {
@@ -927,7 +1066,8 @@ export async function verifyAliyunRuntimeAssetsRelease(root) {
   } else {
     if (!exlBundle) throw new Error("active EXL-50U catalog requires its locked external bundle");
     await assertExlReleaseTreeContainsOnlyLockedArtifacts(releaseRoot, exlBundle, lock);
-    assertManifestMatchesLock(await json(exlManifestPath, "built EXL-50U manifest"), exlBundle);
+    const exlManifest = await json(exlManifestPath, "built EXL-50U manifest");
+    assertManifestMatchesLock(assertExlProductionEligibleManifest(exlManifest), exlBundle);
   }
   const verified = [];
   for (const bundle of bundles) {

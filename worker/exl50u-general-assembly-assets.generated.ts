@@ -1,4 +1,26 @@
 // Generated from the reviewed public EXL-50U 1.4 manifest by
 // scripts/assets/exl50u-general-assembly-runtime-contract.mjs.
 // Never hand-edit hashes. An empty array keeps the metadata-only card fail-closed.
-export const EXL50U_GENERAL_ASSEMBLY_RELEASE_ASSETS = [] as const;
+export const EXL50U_GENERAL_ASSEMBLY_RELEASE_ASSETS = [
+  { role: "preview", filename: "device.preview.c74e63a34eaef550ce91f8f151eb1cafca64a0de61826713a6b1116910ac6e4b.meshopt.glb", sha256: "c74e63a34eaef550ce91f8f151eb1cafca64a0de61826713a6b1116910ac6e4b", bytes: 7464164 },
+  { role: "anonymous-shard-01", filename: "anonymous-shard-01.0870715693b1c97b680f11b3d68f483337f895e9bd164ae137db90449132a31d.high.meshopt.glb", sha256: "0870715693b1c97b680f11b3d68f483337f895e9bd164ae137db90449132a31d", bytes: 2473852 },
+  { role: "anonymous-shard-02", filename: "anonymous-shard-02.d71e42df290c20e9ec171b8b57ed130b82363edf608ec85c7acf91b4994dc4b5.high.meshopt.glb", sha256: "d71e42df290c20e9ec171b8b57ed130b82363edf608ec85c7acf91b4994dc4b5", bytes: 2331056 },
+  { role: "anonymous-shard-03", filename: "anonymous-shard-03.bea51160e97f06f5f86d699f4933f810cab5994dc81d58d8b0cd79bffa0038de.high.meshopt.glb", sha256: "bea51160e97f06f5f86d699f4933f810cab5994dc81d58d8b0cd79bffa0038de", bytes: 2064940 },
+  { role: "anonymous-shard-04", filename: "anonymous-shard-04.6c5951cb3f78c6902867697f961aef5b57b49e1be3db21fc4e9e7b4d3261f399.high.meshopt.glb", sha256: "6c5951cb3f78c6902867697f961aef5b57b49e1be3db21fc4e9e7b4d3261f399", bytes: 2256504 },
+  { role: "anonymous-shard-05", filename: "anonymous-shard-05.2efc0698087e1511f475048fa61b98bb3ca6a0b637c09527e775ec99d22f1b87.high.meshopt.glb", sha256: "2efc0698087e1511f475048fa61b98bb3ca6a0b637c09527e775ec99d22f1b87", bytes: 2400648 },
+  { role: "anonymous-shard-06", filename: "anonymous-shard-06.51912bcbaedced04600bedd85dcafb815267552840a75fa8caf70eb77d1d5a88.high.meshopt.glb", sha256: "51912bcbaedced04600bedd85dcafb815267552840a75fa8caf70eb77d1d5a88", bytes: 2431288 },
+  { role: "anonymous-shard-07", filename: "anonymous-shard-07.5c94f8d6814569ca39bb35c74b090e8b03d30b729003f94c37987cfdc4ab27b8.high.meshopt.glb", sha256: "5c94f8d6814569ca39bb35c74b090e8b03d30b729003f94c37987cfdc4ab27b8", bytes: 2268780 },
+  { role: "anonymous-shard-08", filename: "anonymous-shard-08.ccd198ef66602c4dcea788be14ad312f194a0248cccb0f4156f29f0b69568bcf.high.meshopt.glb", sha256: "ccd198ef66602c4dcea788be14ad312f194a0248cccb0f4156f29f0b69568bcf", bytes: 1995572 },
+  { role: "anonymous-shard-09", filename: "anonymous-shard-09.4cb3105337d55e8fcd0a9cd41f73ff0dd860ec35dd903398b42777547eb5e915.high.meshopt.glb", sha256: "4cb3105337d55e8fcd0a9cd41f73ff0dd860ec35dd903398b42777547eb5e915", bytes: 2332388 },
+  { role: "anonymous-shard-10", filename: "anonymous-shard-10.b41834c480e7a545ef4c9c1b7ef4d8a72d2f17100eed0c8e1a65fdfd145c132e.high.meshopt.glb", sha256: "b41834c480e7a545ef4c9c1b7ef4d8a72d2f17100eed0c8e1a65fdfd145c132e", bytes: 1849796 },
+  { role: "anonymous-shard-11", filename: "anonymous-shard-11.46a079858c52a18185e3658265d99e781ee30c6a6f21967fe76db082a26a7bda.high.meshopt.glb", sha256: "46a079858c52a18185e3658265d99e781ee30c6a6f21967fe76db082a26a7bda", bytes: 2068236 },
+  { role: "anonymous-shard-12", filename: "anonymous-shard-12.87b3373e9326a4ae5b64985b6f8ec9fb6e8a05dfc8d0d5355196cd457e4fb4b0.high.meshopt.glb", sha256: "87b3373e9326a4ae5b64985b6f8ec9fb6e8a05dfc8d0d5355196cd457e4fb4b0", bytes: 2241972 },
+  { role: "anonymous-shard-13", filename: "anonymous-shard-13.625505d79e73f6d25b72a6f0e0f166eadafa314b3894b62c3e9c8f56e06b1281.high.meshopt.glb", sha256: "625505d79e73f6d25b72a6f0e0f166eadafa314b3894b62c3e9c8f56e06b1281", bytes: 2554792 },
+  { role: "anonymous-shard-14", filename: "anonymous-shard-14.e0774d7335c1ffbfccc2c70c46fc768aa5b258fbf06c405dafecdebaeb623a3d.high.meshopt.glb", sha256: "e0774d7335c1ffbfccc2c70c46fc768aa5b258fbf06c405dafecdebaeb623a3d", bytes: 2371812 },
+  { role: "anonymous-shard-15", filename: "anonymous-shard-15.42d14bc49376b1ab84dc42f67a2705b5aa083d3e4c92a71738944fec1e45b783.high.meshopt.glb", sha256: "42d14bc49376b1ab84dc42f67a2705b5aa083d3e4c92a71738944fec1e45b783", bytes: 1887636 },
+  { role: "anonymous-shard-16", filename: "anonymous-shard-16.d93f48104169d7bbd25ef46957b8ea4316c668f6425941f24084e7268b5ad6f6.high.meshopt.glb", sha256: "d93f48104169d7bbd25ef46957b8ea4316c668f6425941f24084e7268b5ad6f6", bytes: 2170932 },
+  { role: "anonymous-shard-17", filename: "anonymous-shard-17.226545cc43288c910b7dc98a52a0cdfe0c071e3727f95ca5ceb81f989d654706.high.meshopt.glb", sha256: "226545cc43288c910b7dc98a52a0cdfe0c071e3727f95ca5ceb81f989d654706", bytes: 2137644 },
+  { role: "anonymous-shard-18", filename: "anonymous-shard-18.f490b09fd148f14d00bce4f8c79df3d1a720c346d26c41c64a5c87b7e02fcca4.high.meshopt.glb", sha256: "f490b09fd148f14d00bce4f8c79df3d1a720c346d26c41c64a5c87b7e02fcca4", bytes: 2321676 },
+  { role: "anonymous-shard-19", filename: "anonymous-shard-19.b47d38e445dc920165b22016849ddb3ff59ac978deff93623289f3be01abdcbe.high.meshopt.glb", sha256: "b47d38e445dc920165b22016849ddb3ff59ac978deff93623289f3be01abdcbe", bytes: 7056420 },
+  { role: "anonymous-shard-20", filename: "anonymous-shard-20.6345b7eb06d4e8328052707005f14acdfa1c4b0f323f0f5142c095ae8e8eb454.high.meshopt.glb", sha256: "6345b7eb06d4e8328052707005f14acdfa1c4b0f323f0f5142c095ae8e8eb454", bytes: 13107440 },
+] as const;
