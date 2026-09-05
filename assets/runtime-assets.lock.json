@@ -8,9 +8,9 @@
       "public/models/iter-high-detail-v1/",
       "public/models/exl50u-general-assembly-v1/*.glb"
     ],
-    "fileCount": 426,
-    "totalBytes": 261048480,
-    "treeSha256": "80c300b3b682f98d6b8f4326bffdfc28cfe528dcdf853c2c4fe1b82d07063084",
+    "fileCount": 429,
+    "totalBytes": 261056293,
+    "treeSha256": "9f060bbf35141a39a26cf7b5a83849f9f6945551343aa523c5ef253061406b6f",
     "files": [
       {
         "path": "public/FusionDigital-technical-roadmap-2026-08-15.docx",
@@ -2121,6 +2121,21 @@
         "path": "public/models/paramak-tokamak-demo/paramak-tokamak-demo.step",
         "bytes": 3121474,
         "sha256": "1bb205e32b6506705a33cdc0f01ef01924ef0c11b9eca0e5d74a12ab2bac9492"
+      },
+      {
+        "path": "public/schemas/blender-publish-job.v1.schema.json",
+        "bytes": 2272,
+        "sha256": "5bfa1d8b9de8b1531f3a4c7508bc76be720752eb40ab17cfd3d50c24dc90f6bf"
+      },
+      {
+        "path": "public/schemas/openusd-compose-job.v1.schema.json",
+        "bytes": 1977,
+        "sha256": "0b279f40d603787a8defa6d292f46150d4d72b1be0649b7f0c3c7ac6f441a04d"
+      },
+      {
+        "path": "public/schemas/visualization-artifact.v2.schema.json",
+        "bytes": 3564,
+        "sha256": "64281e21f8bb4e6c99be3e0cc4f043c630262358086347c168b5527ea039ba26"
       },
       {
         "path": "public/tokamak-engineering-simulation-report.docx",
