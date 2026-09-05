@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fusiondigital.club/schemas/blender-publish-job.v1.schema.json",
+  "title": "FusionDigital Blender Publish Job v1",
+  "type": "object",
+  "required": ["schema", "jobId", "artifactId", "label", "source", "outputRoot", "authority", "classification", "clientDownloadAllowed", "coordinates", "sourceRecord", "deliveries", "options"],
+  "properties": {
+    "schema": { "const": "fusiondigital.blender-publish-job.v1" },
+    "jobId": { "type": "string", "minLength": 1 },
+    "artifactId": { "type": "string", "minLength": 1 },
+    "label": { "type": "string", "minLength": 1 },
+    "source": {
+      "type": "object",
+      "required": ["path", "sha256", "format"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-fA-F]{64}$" },
+        "format": { "enum": ["glb", "gltf", "obj", "ply", "stl", "usd", "usda", "usdc"] }
+      },
+      "additionalProperties": false
+    },
+    "outputRoot": { "type": "string", "minLength": 1 },
+    "authority": { "enum": ["raw", "calibrated", "reconstructed", "simulated", "synthetic"] },
+    "classification": { "enum": ["public", "internal", "restricted"] },
+    "clientDownloadAllowed": { "type": "boolean" },
+    "coordinates": { "$ref": "visualization-artifact.v2.schema.json#/$defs/coordinates" },
+    "sourceRecord": { "$ref": "visualization-artifact.v2.schema.json#/$defs/sourceRecord" },
+    "deliveries": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["profile", "format", "path"],
+        "properties": {
+          "profile": { "enum": ["web-mesh", "openusd"] },
+          "format": { "enum": ["glb", "usd", "usda", "usdc"] },
+          "path": { "type": "string", "minLength": 1 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "options": {
+      "type": "object",
+      "properties": {
+        "requireStableIds": { "type": "boolean" },
+        "applyModifiers": { "type": "boolean" },
+        "exportMaterials": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "stableIdMap": { "type": "string", "minLength": 1 }
+  },
+  "additionalProperties": false
+}

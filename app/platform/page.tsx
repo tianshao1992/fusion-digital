@@ -5,6 +5,7 @@ import SiteNav from '../components/SiteNav';
 import StaticLocaleContent from '../components/StaticLocaleContent';
 import { DEFAULT_LOCALE, LOCALE_COOKIE_NAME, resolveLocale } from '../i18n/config';
 import './platform.css';
+import VisualizationRoutePlanner from './VisualizationRoutePlanner';
 
 export async function generateMetadata():Promise<Metadata>{const store=await cookies();const en=(resolveLocale(store.get(LOCALE_COOKIE_NAME)?.value)??DEFAULT_LOCALE)==='en';return{title:en?'Platform Architecture and Technical Roadmap':'平台架构与技术路线',description:en?'FusionDigital system boundaries, unified data and simulation contracts, technology choices and staged delivery roadmap.':'FusionDigital 当前系统边界、统一数据与仿真合同、技术栈选型及分阶段建设路线。'};}
 
@@ -41,7 +42,7 @@ const stack = [
   ['服务与大数组', 'gRPC / Protobuf · Arrow Flight', '内部强类型调用；大型列式数据流'],
   ['主数据', 'PostgreSQL · JSONB · FTS · pgvector', '统一目录、知识、血缘、权限和任务元数据'],
   ['科学文件', 'MDSplus · Zarr / HDF5 · Parquet · Arrow', '原始、Canonical、Curated、Serving 四层'],
-  ['三维与场结果', 'Three.js · glTF/meshopt · vtk.js · XDMF/HDF5', '几何与科学场分工；超大场结果服务端渲染'],
+  ['三维与场结果', 'Three.js · Blender/OpenUSD · ParaView/trame', '开放格式统一上下文；超大场结果服务端渲染；Omniverse 仅作可选适配'],
   ['计算与编排', 'Docker · Kubernetes Jobs · Argo · Slurm Adapter', '容器化模型与既有 HPC 并存'],
   ['事件', 'NATS JetStream · CloudEvents', '事件只传引用与哈希，不传大型数组'],
   ['模型与智能体', 'Responses API · AI Gateway · MLflow · ONNX/FMU', '受控工具调用、模型卡、适用域与回退'],
@@ -70,7 +71,7 @@ const storageRolesEn = [
   ['MDSplus','Authoritative source for experimental shots and signals','Connected through a read-only gateway; never directly from the browser'],['NAS','Landing, archive and backup source for raw files','Neither a Web API nor a cross-system master catalogue'],['S3 object storage','Large immutable assets, derived data, models and results','MinIO / Ceph internally; public copies may be projected to R2'],['PostgreSQL','Catalogue, authorization, lineage, jobs, knowledge and review','Private-platform metadata authority; begin with FTS + pgvector'],['D1','Public-site accounts, quotas, audit and publication projection','No scientific arrays, CAD, CAE or long-running job state'],['PLM / PDM','CAD, materials, configuration baselines and engineering approvals','Authoritative STEP / Parasolid sources never enter the public site'],
 ] as const;
 const stackEn = [
-  ['Public experience','React 19 · vinext · Cloudflare Worker · D1','Retain the current stack for public content and short requests'],['Domain API','Python FastAPI · Pydantic · OpenAPI 3.1','Start as a modular monolith; split only when load requires it'],['Services and large arrays','gRPC / Protobuf · Arrow Flight','Strongly typed internal calls and large columnar data streams'],['Master data','PostgreSQL · JSONB · FTS · pgvector','Unified catalogue, knowledge, lineage, authorization and job metadata'],['Scientific files','MDSplus · Zarr / HDF5 · Parquet · Arrow','Raw, Canonical, Curated and Serving layers'],['3D and field results','Three.js · glTF/meshopt · vtk.js · XDMF/HDF5','Separate geometry from scientific fields; render very large fields server-side'],['Compute orchestration','Docker · Kubernetes Jobs · Argo · Slurm Adapter','Containerized models coexist with established HPC'],['Events','NATS JetStream · CloudEvents','Events carry references and hashes, never large arrays'],['Models and agents','Responses API · AI Gateway · MLflow · ONNX/FMU','Governed tool use, model cards, applicability domains and fallback'],['Observability and security','OpenTelemetry · Prometheus/Grafana · OIDC · Vault/KMS','End-to-end tracing, short-lived credentials and least privilege'],
+  ['Public experience','React 19 · vinext · Cloudflare Worker · D1','Retain the current stack for public content and short requests'],['Domain API','Python FastAPI · Pydantic · OpenAPI 3.1','Start as a modular monolith; split only when load requires it'],['Services and large arrays','gRPC / Protobuf · Arrow Flight','Strongly typed internal calls and large columnar data streams'],['Master data','PostgreSQL · JSONB · FTS · pgvector','Unified catalogue, knowledge, lineage, authorization and job metadata'],['Scientific files','MDSplus · Zarr / HDF5 · Parquet · Arrow','Raw, Canonical, Curated and Serving layers'],['3D and field results','Three.js · Blender/OpenUSD · ParaView/trame','Open contracts share context; oversized fields render server-side; Omniverse stays optional'],['Compute orchestration','Docker · Kubernetes Jobs · Argo · Slurm Adapter','Containerized models coexist with established HPC'],['Events','NATS JetStream · CloudEvents','Events carry references and hashes, never large arrays'],['Models and agents','Responses API · AI Gateway · MLflow · ONNX/FMU','Governed tool use, model cards, applicability domains and fallback'],['Observability and security','OpenTelemetry · Prometheus/Grafana · OIDC · Vault/KMS','End-to-end tracing, short-lived credentials and least privilege'],
 ] as const;
 const roadmapEn = [
   ['P0','4–6 weeks','Debt reduction and contract freeze','Unify IDs, units, coordinates, time and RunManifest; establish a golden path with shot 18303, one CAD assembly and one simulation job.'],['P1','8–12 weeks','Data foundation','PostgreSQL, object storage, MDSplus/NAS/CAD/document adapters, catalogue, lineage, authorization and recovery exercises.'],['P2','10–14 weeks','Simulation and 3D','Unify MEQ/FGE, DINA and EFIT under SimulationRun; Kubernetes/Slurm scheduling; ResultManifest and vtk.js field results.'],['P3','10–14 weeks','Diagnostics and shadow state','Shot events, time synchronization, quality flags, state estimation, historical replay and missing/out-of-order/delay injection.'],['P4','12–18 weeks','SIL / HIL / shadow control','Co-simulation, signed parameter packages, fault fallback, latency validation and dual approval; keep real-time protection independent.'],['P5','8–12 weeks','Agent platform','AI Gateway, Tool Broker, RAG, offline job recommendations, candidate publication and authorization/prompt-injection red-team tests.'],
@@ -89,7 +90,7 @@ function PlatformContent({en}:{en:boolean}) {
       <p>PLATFORM ARCHITECTURE / 2026</p>
       <h1>{en?'From a public prototype to a reproducible scientific and engineering platform':'从公开原型，走向可复现的科学与工程平台'}</h1>
       <div>{en?'Retain the current site as the public experience and publication-projection layer. Experimental data, engineering assets, scientific computing and control capabilities belong in separate intranet and real-time domains connected through versioned contracts.':'现有网站保留为公开体验和发布投影层；实验数据、工程资产、科学计算与控制能力进入独立的内网平台和实时域，通过版本化合同连接。'}</div>
-      <nav aria-label={en?'Platform architecture contents':'平台架构页目录'}><a href="#current">{en?'Current baseline':'当前状态'}</a><a href="#architecture">{en?'Target architecture':'目标架构'}</a><a href="#contracts">{en?'Unified contracts':'统一合同'}</a><a href="#stack">{en?'Technology stack':'技术栈'}</a><a href="#roadmap">{en?'Delivery roadmap':'建设路线'}</a></nav>
+      <nav aria-label={en?'Platform architecture contents':'平台架构页目录'}><a href="#current">{en?'Current baseline':'当前状态'}</a><a href="#architecture">{en?'Target architecture':'目标架构'}</a><a href="#contracts">{en?'Unified contracts':'统一合同'}</a><a href="#stack">{en?'Technology stack':'技术栈'}</a><a href="#visualization">{en?'Visualization fabric':'可视化平台'}</a><a href="#roadmap">{en?'Delivery roadmap':'建设路线'}</a></nav>
       <a className="platformDownload" href="/FusionDigital-technical-roadmap-2026-08-15.docx">{en?'Download the full technical roadmap (Chinese)':'下载完整技术路线报告'}</a>
     </header>
 
@@ -126,8 +127,10 @@ function PlatformContent({en}:{en:boolean}) {
       </div>
     </section>
 
+    <VisualizationRoutePlanner en={en} />
+
     <section className="platformRoadmap" id="roadmap" aria-labelledby="platform-roadmap-title">
-      <div className="platformSectionHead"><p>05 / DELIVERY ROADMAP</p><h2 id="platform-roadmap-title">{en?'Data and contracts first; simulation, diagnostics and control next':'先数据与合同，再仿真、诊断和控制'}</h2><span>{en?'Durations assume an 8–10 person core team. Safety-critical closed-loop work requires an independent facility safety process.':'工期按 8–10 人核心团队估算；安全关键闭环需要独立装置安全流程。'}</span></div>
+      <div className="platformSectionHead"><p>06 / DELIVERY ROADMAP</p><h2 id="platform-roadmap-title">{en?'Data and contracts first; simulation, diagnostics and control next':'先数据与合同，再仿真、诊断和控制'}</h2><span>{en?'Durations assume an 8–10 person core team. Safety-critical closed-loop work requires an independent facility safety process.':'工期按 8–10 人核心团队估算；安全关键闭环需要独立装置安全流程。'}</span></div>
       <ol>{roadmapRows.map(([id, period, title, copy]) => <li key={id}><span>{id}</span><time>{period}</time><h3>{title}</h3><p>{copy}</p></li>)}</ol>
       <aside className="platformFirst90"><p>{en?'Next 90 days':'未来 90 天'}</p><div><b>{en?'Freeze core contracts':'冻结核心合同'}</b><b>{en?'Establish shot 18303 as a golden shot':'建立 18303 黄金炮'}</b><b>{en?'MDSplus read-only gateway':'MDSplus 只读网关'}</b><b>MEQ / DINA Run API</b><b>{en?'CAD–EFIT coordinate registration':'CAD–EFIT 坐标注册'}</b><b>{en?'Publication and VVUQ gates':'发布与 VVUQ 门禁'}</b></div></aside>
     </section>

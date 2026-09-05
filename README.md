@@ -7,6 +7,8 @@
 <p align="center"><strong>聚变数字孪生知识与协作平台</strong></p>
 <p align="center">Fusion Digital Twin Research Atlas &amp; Collaboration Portal</p>
 
+> **开放可视化平台 V1：** 当前仓库已加入版本化制品/上下文合同、Three.js / vtk.js / ParaView 确定性分流、Blender headless 发布任务和 OpenUSD 场景组合。Omniverse 保持为可关闭的适配器，不成为平台依赖。架构、真实性边界和后续验收门见 [开放可视化平台文档](docs/VISUALIZATION_PLATFORM.md)。
+
 <p align="center">
   <a href="https://www.fusiondigital.club/"><img alt="Website" src="https://img.shields.io/badge/Website-fusiondigital.club-20BFA9?logo=googlechrome&amp;logoColor=white" /></a>
   <a href="https://codeup.aliyun.com/fiatlux/DT/FusionDigital"><img alt="Codeup" src="https://img.shields.io/badge/Codeup-Aliyun-FF6A00?logo=alibabacloud&amp;logoColor=white" /></a>

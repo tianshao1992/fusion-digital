@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fusiondigital.club/schemas/openusd-compose-job.v1.schema.json",
+  "title": "FusionDigital OpenUSD Compose Job v1",
+  "type": "object",
+  "required": ["schema", "jobId", "output", "assets"],
+  "properties": {
+    "schema": { "const": "fusiondigital.openusd-compose-job.v1" },
+    "jobId": { "type": "string", "minLength": 1 },
+    "output": {
+      "type": "object",
+      "required": ["path", "rootPrim", "metersPerUnit", "upAxis"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "rootPrim": { "type": "string", "pattern": "^/[A-Za-z_][A-Za-z0-9_]*$" },
+        "metersPerUnit": { "type": "number", "exclusiveMinimum": 0 },
+        "upAxis": { "enum": ["Y", "Z"] }
+      },
+      "additionalProperties": false
+    },
+    "assets": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["artifactId", "artifactManifest", "layer", "primPath"],
+        "properties": {
+          "artifactId": { "type": "string", "minLength": 1 },
+          "artifactManifest": { "type": "string", "minLength": 1 },
+          "layer": { "type": "string", "minLength": 1 },
+          "primPath": { "type": "string", "pattern": "^/[A-Za-z_][A-Za-z0-9_]*(?:/[A-Za-z_][A-Za-z0-9_]*)+$" },
+          "transform": {
+            "type": "object",
+            "properties": {
+              "translate": { "$ref": "#/$defs/vector3" },
+              "rotateXYZ": { "$ref": "#/$defs/vector3" },
+              "scale": { "$ref": "#/$defs/vector3" }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "$defs": {
+    "vector3": {
+      "type": "array",
+      "prefixItems": [{ "type": "number" }, { "type": "number" }, { "type": "number" }],
+      "items": false,
+      "minItems": 3,
+      "maxItems": 3
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,23 @@
+{
+  "schema": "fusiondigital.openusd-compose-job.v1",
+  "jobId": "example-plant-stage",
+  "output": {
+    "path": "build/example-plant.usda",
+    "rootPrim": "/FusionPlant",
+    "metersPerUnit": 1,
+    "upAxis": "Z"
+  },
+  "assets": [
+    {
+      "artifactId": "design.example-device",
+      "artifactManifest": "artifacts/example-device/visualization-artifact.v2.json",
+      "layer": "artifacts/example-device/usd/example-device.usdc",
+      "primPath": "/FusionPlant/ExampleDevice",
+      "transform": {
+        "translate": [0, 0, 0],
+        "rotateXYZ": [0, 0, 0],
+        "scale": [1, 1, 1]
+      }
+    }
+  ]
+}
