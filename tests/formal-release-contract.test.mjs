@@ -219,16 +219,41 @@ function clone(value) {
 }
 
 function catalogForLock(lock) {
-  if (!lock.externalBundles.some((bundle) => bundle.id === "exl50u-general-assembly-v1")) {
-    return deviceCatalog;
-  }
   const catalog = clone(deviceCatalog);
+  if (!lock.externalBundles.some((bundle) => bundle.id === "exl50u-general-assembly-v1")) {
+    catalog.devices = catalog.devices.map((device) => (
+      device.id === "exl50u-general-assembly-20260630"
+        ? {
+            ...device,
+            eyebrow: "PIPELINE · ASSETS PENDING",
+            state: "总装派生准备中",
+            tone: "restricted",
+            availability: "pipeline-ready-assets-pending",
+            delivery: "local-only",
+            viewer: {
+              ...device.viewer,
+              mode: "metadata-only",
+              manifestEndpoint: null,
+            },
+          }
+        : device
+    ));
+    return catalog;
+  }
   catalog.devices = catalog.devices.map((device) => (
     device.id === "exl50u-general-assembly-20260630"
       ? clone(activationContract.replacement)
       : device
   ));
   return catalog;
+}
+
+function metadataOnlyRuntimeLock(lock = runtimeLock) {
+  const metadataLock = clone(lock);
+  metadataLock.externalBundles = metadataLock.externalBundles.filter(
+    (bundle) => bundle.id !== "exl50u-general-assembly-v1",
+  );
+  return metadataLock;
 }
 
 function failure(evidence, pattern, lock = runtimeLock, catalog = catalogForLock(lock)) {
@@ -460,13 +485,15 @@ test("pair evidence accepts every path for ITER and an activated EXL bundle", ()
 });
 
 test("EXL manifest pair evidence is conditional on runtime-lock activation", () => {
-  const metadataEvidence = validEvidence();
+  const metadataLock = metadataOnlyRuntimeLock();
+  const metadataCatalog = catalogForLock(metadataLock);
+  const metadataEvidence = validEvidence(SHA, metadataLock);
   assert.equal(
     metadataEvidence.sharedContent.entries.some(({ path }) => EXL_GENERAL_ASSEMBLY_SHARED_PATHS.includes(path)),
     false,
   );
   assert.equal(
-    verifyFormalReleaseEvidence(contract, metadataEvidence, runtimeLock, deviceCatalog).ok,
+    verifyFormalReleaseEvidence(contract, metadataEvidence, metadataLock, metadataCatalog).ok,
     true,
   );
 
@@ -601,16 +628,18 @@ test("formal verification performs complete runtime-lock validation", () => {
 
 test("formal verification binds EXL runtime-lock activation to the catalog state", () => {
   const active = twoActiveBundleRuntimeLock();
+  const metadataLock = metadataOnlyRuntimeLock();
+  const metadataCatalog = catalogForLock(metadataLock);
   failure(
     validEvidence(SHA, active),
     /active EXL-50U runtime lock requires the exact real-3d catalog card/u,
     active,
-    deviceCatalog,
+    metadataCatalog,
   );
   failure(
-    validEvidence(),
+    validEvidence(SHA, metadataLock),
     /metadata-only EXL-50U runtime lock requires the exact pending catalog state/u,
-    runtimeLock,
+    metadataLock,
     catalogForLock(active),
   );
   const activeWithPrivateExtra = catalogForLock(active);
@@ -622,13 +651,13 @@ test("formal verification binds EXL runtime-lock activation to the catalog state
     active,
     activeWithPrivateExtra,
   );
-  const metadataWithPrivateExtra = clone(deviceCatalog);
+  const metadataWithPrivateExtra = clone(metadataCatalog);
   metadataWithPrivateExtra.devices.find(({ id }) => id === "exl50u-general-assembly-20260630")
     .privateSourceCad = "D:/private/source.stp";
   failure(
-    validEvidence(),
+    validEvidence(SHA, metadataLock),
     /missing or unknown fields/u,
-    runtimeLock,
+    metadataLock,
     metadataWithPrivateExtra,
   );
 });
