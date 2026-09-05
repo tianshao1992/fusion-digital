@@ -353,7 +353,7 @@ curl.exe -fsS "https://fusiondigital.club/api/search?q=tokamak&limit=5" | Out-Nu
 - Sites 部署不得修改 DNS；若其正式同步部署失败，应按第 3 节处理香港 release，不能
   通过生产域名切换来掩盖失败。
 - Sites 不 hydrate `iter-high-detail-v1` 或 `exl50u-general-assembly-v1`；Worker 只接受
-  由版本化 manifest 生成的精确 21 文件 EXL 白名单，先查本地精确路径，再使用单独配置
+  由版本化 manifest 生成的精确 20 文件 EXL high-only 白名单，先查本地精确路径，再使用单独配置
   的固定提交 raw base URL（ITER 为 `ITER_HIGH_DETAIL_ASSET_BASE_URL`，EXL 为
   `EXL50U_GENERAL_ASSEMBLY_ASSET_BASE_URL`）。两个 bundle 都没有默认网络源。base URL
   必须精确为 `https://raw.githubusercontent.com/tianshao1992/fusion-physics-atlas-assets/`

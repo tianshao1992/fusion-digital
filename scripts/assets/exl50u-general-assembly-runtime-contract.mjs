@@ -22,7 +22,7 @@ export const EXL50U_GA_ROUTE_ROOT = "/device-assets/exl50u-general-assembly/v1";
 export const EXL50U_GA_PUBLICATION_NOTICE = [
   "# EXL-50U general-assembly public visualization derivative",
   "",
-  "This package contains only anonymous, simplified browser visualization derivatives. It contains no source CAD, PMI, dimension annotations, authoritative dimension tables, BOM, source assembly tree or engineering authority. Browser geometry retains an approximate metre-scale envelope for appearance visualization, but it is not a dimensional authority and must not be used for measurement or engineering dimensions. The 20 high-detail files are transport shards, not engineering systems.",
+  "This package contains only 20 anonymous, simplified high-detail browser visualization transport shards; no standard preview or runtime fallback is published. It contains no source CAD, PMI, dimension annotations, authoritative dimension tables, BOM, source assembly tree or engineering authority. Browser geometry retains an approximate metre-scale envelope for appearance visualization, but it is not a dimensional authority and must not be used for measurement or engineering dimensions. The 20 files are transport shards, not engineering systems.",
   "",
 ].join("\n");
 export const EXL50U_GA_MANIFEST_PATH = resolve(
@@ -39,7 +39,7 @@ export const EXL50U_GA_ALLOWLIST_PATH = resolve(
   REPO_ROOT,
   "worker/exl50u-general-assembly-assets.generated.ts",
 );
-export const EXL50U_GA_FILE_COUNT = 21;
+export const EXL50U_GA_FILE_COUNT = 20;
 export const EXL50U_GA_SHARD_COUNT = 20;
 export const EXL50U_GA_MAX_TOTAL_BYTES = 300 * 1024 * 1024;
 export const EXL50U_GA_MAX_SHARD_BYTES = 24 * 1024 * 1024;
@@ -52,7 +52,6 @@ export const EXL50U_GA_MAX_BUNDLE_PLACEMENT_INSTANCES = (
   EXL50U_GA_SHARD_COUNT * EXL50U_GA_MAX_PLACEMENT_INSTANCES_PER_SHARD
 );
 export const EXL50U_GA_MAX_SCENE_TRIANGLES = 35_000_000;
-const EXL50U_GA_MAX_PREVIEW_TRIANGLES = 30_000_000;
 export const EXL50U_GA_MAX_DRAW_CALLS = 800;
 export const EXL50U_GA_MIN_HIGH_TRIANGLE_RETENTION = 0.98;
 export const EXL50U_GA_ASSET_FORMAT = "glTF 2.0 binary + EXT_meshopt_compression + EXT_mesh_gpu_instancing; POSITION Float32; NORMAL normalized Int8 (8-bit); indices Uint16/Uint32";
@@ -66,10 +65,6 @@ const SHARD_METRICS = [
   "sceneDrawTriangles",
   "decodedGpuBytes",
 ];
-const WEB_MODEL_KEYS = [
-  "path", "format", "sha256", "bytes", "triangles", "vertices", "decodedGpuBytes", "boundsMetres",
-];
-const WEB_MODEL_VARIANT_KEYS = ["id", "label", "quality", "default", ...WEB_MODEL_KEYS];
 const SHARD_BUNDLE_KEYS = [
   "id", "label", "quality", "delivery", "format", "rootNodeName", "extensionsRequired", "grouping",
   "bytes", ...SHARD_METRICS, "boundsMetres", "shards",
@@ -84,11 +79,6 @@ const GROUPING_KEYS = [
   "representsEngineeringSystems", "representsAssemblyTree",
 ];
 
-const PREVIEW_ROUTE = new RegExp(
-  `^${EXL50U_GA_ROUTE_ROOT.replaceAll("/", "\\/")}\\/`
-    + "(device\\.preview\\.([a-f0-9]{64})\\.meshopt\\.glb)$",
-  "u",
-);
 const SHARD_ROUTE = new RegExp(
   `^${EXL50U_GA_ROUTE_ROOT.replaceAll("/", "\\/")}\\/`
     + "(anonymous-shard-(0[1-9]|1[0-9]|20)\\.([a-f0-9]{64})\\.high\\.meshopt\\.glb)$",
@@ -320,7 +310,7 @@ function normalizedAsset(asset, role, routePattern, digestIndex) {
 }
 
 /**
- * Convert a reviewed public 1.4 manifest into the only 21 files that may be
+ * Convert a reviewed public 1.5 manifest into the only 20 files that may be
  * hydrated or proxied. This function deliberately accepts metadata, not CAD
  * or a directory scan, so undeclared files can never enter the allow-list.
  */
@@ -333,31 +323,14 @@ export function extractExl50uGeneralAssemblyAssets(manifest) {
     !object(manifest)
     || !exactKeys(manifest, [...PROJECTED_MANIFEST_KEYS, ...(reviewCandidate ? ["reviewCandidate"] : [])])
     || Object.entries(FIXED_TEMPLATE).some(([key, value]) => !isDeepStrictEqual(manifest[key], value))
-    || manifest.schemaVersion !== "1.4"
+    || manifest.schemaVersion !== "1.5"
     || manifest.id !== EXL50U_GA_BUNDLE_ID
     || manifest.access?.classification !== "PUBLIC"
     || manifest.access?.redistributionAllowed !== true
     || manifest.access?.engineeringUseAllowed !== false
     || !object(manifest.assets)
-    || !exactKeys(manifest.assets, ["webModel", "webModels", "shardBundles"])
-    || !exactKeys(manifest.assets.webModel, WEB_MODEL_KEYS)
-    || !Array.isArray(manifest.assets.webModels)
-    || manifest.assets.webModels.length !== 1
-    || !exactKeys(manifest.assets.webModels[0], WEB_MODEL_VARIANT_KEYS)
-    || manifest.assets.webModels[0].id !== "preview"
-    || manifest.assets.webModels[0].quality !== "preview"
-    || manifest.assets.webModels[0].default !== true
-    || WEB_MODEL_KEYS.filter((key) => key !== "boundsMetres")
-      .some((key) => manifest.assets.webModels[0][key] !== manifest.assets.webModel[key])
-    || JSON.stringify(manifest.assets.webModels[0].boundsMetres)
-      !== JSON.stringify(manifest.assets.webModel.boundsMetres)
+    || !exactKeys(manifest.assets, ["shardBundles"])
     || !object(manifest.derivationEvidence)
-    || manifest.assets.webModel?.format !== EXL50U_GA_ASSET_FORMAT
-    || !positiveSafeInteger(manifest.assets.webModel?.triangles)
-    || !positiveSafeInteger(manifest.assets.webModel?.vertices)
-    || !positiveSafeInteger(manifest.assets.webModel?.decodedGpuBytes)
-    || manifest.assets.webModel.decodedGpuBytes > EXL50U_GA_MAX_PREVIEW_DECODED_BYTES
-    || !validBounds(manifest.assets.webModel?.boundsMetres)
   ) {
     throw new Error("EXL-50U general-assembly manifest identity or public boundary is invalid");
   }
@@ -402,10 +375,7 @@ export function extractExl50uGeneralAssemblyAssets(manifest) {
     throw new Error("EXL-50U general-assembly shard bundle is not an anonymous visualization contract");
   }
 
-  const files = [normalizedAsset(manifest.assets.webModel, "preview", PREVIEW_ROUTE, 2)];
-  if (files[0].bytes > EXL50U_GA_MAX_PREVIEW_BYTES) {
-    throw new Error("EXL-50U general-assembly preview exceeds the strict byte budget");
-  }
+  const files = [];
   const metricTotals = Object.fromEntries(SHARD_METRICS.map((field) => [field, 0]));
   const unionMin = [Infinity, Infinity, Infinity];
   const unionMax = [-Infinity, -Infinity, -Infinity];
@@ -446,7 +416,7 @@ export function extractExl50uGeneralAssemblyAssets(manifest) {
   }
 
   const totalBytes = files.reduce((sum, file) => sum + file.bytes, 0);
-  const shardBytes = files.slice(1).reduce((sum, file) => sum + file.bytes, 0);
+  const shardBytes = totalBytes;
   if (
     files.length !== EXL50U_GA_FILE_COUNT
     || new Set(files.map((file) => file.filename)).size !== files.length
@@ -456,9 +426,6 @@ export function extractExl50uGeneralAssemblyAssets(manifest) {
     || SHARD_METRICS.some((field) => metricTotals[field] !== shardBundle[field])
     || unionMin.some((coordinate, axis) => coordinate !== shardBundle.boundsMetres.min[axis])
     || unionMax.some((coordinate, axis) => coordinate !== shardBundle.boundsMetres.max[axis])
-    || manifest.assets.webModel.triangles > EXL50U_GA_MAX_PREVIEW_TRIANGLES
-    || derivationEvidence.previewVisualLod.outputCleaning.finalTriangles
-      > manifest.assets.webModel.triangles
     || derivationEvidence.highQem.outputCleaning.finalTriangles
       !== metricTotals.uniqueGeometryTriangles
     || derivationEvidence.highPartition.finalTrianglesBeforePartition
@@ -481,7 +448,7 @@ export function renderExl50uGeneralAssemblyAllowlist(manifest) {
       + `sha256: ${JSON.stringify(file.sha256)}, bytes: ${file.bytes} },`
   ));
   return [
-    "// Generated from the reviewed public EXL-50U 1.4 manifest by",
+    "// Generated from the reviewed public EXL-50U 1.5 manifest by",
     "// scripts/assets/exl50u-general-assembly-runtime-contract.mjs.",
     "// Never hand-edit hashes. An empty array keeps the metadata-only card fail-closed.",
     "export const EXL50U_GENERAL_ASSEMBLY_RELEASE_ASSETS = [",

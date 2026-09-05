@@ -60,6 +60,15 @@ test("Hong Kong verifier accepts the exact real postbuild Git-asset projection",
     false,
     "the retired non-production review catalog must not remain in gitAssets",
   );
+  const generalAssembly = lock.externalBundles.find(({ id }) => id === "exl50u-general-assembly-v1");
+  assert.ok(generalAssembly, "the active EXL-50U total assembly must remain runtime-locked");
+  assert.equal(generalAssembly.fileCount, 20);
+  assert.equal(generalAssembly.totalBytes, 270_978_652);
+  assert.equal(generalAssembly.files.length, 20);
+  assert.ok(generalAssembly.files.every(({ role, filename }) => (
+    /^anonymous-shard-(?:0[1-9]|1[0-9]|20)$/u.test(role)
+    && /^anonymous-shard-(?:0[1-9]|1[0-9]|20)\.[a-f0-9]{64}\.high\.meshopt\.glb$/u.test(filename)
+  )), "the runtime lock must expose only the 20 high-detail shards");
 
   for (const rule of POSTBUILD_PRUNED_GIT_ASSET_RULES) {
     const lockedMatches = lock.gitAssets.files.filter(({ path }) => (
@@ -213,7 +222,7 @@ test("Hong Kong Nginx uses safe named aliases and lossless static compression", 
 
 test("Hong Kong Nginx exposes EXL assets only as exact runtime-lock locations", () => {
   const sha256 = "a".repeat(64);
-  const filename = `device.preview.${sha256}.meshopt.glb`;
+  const filename = `anonymous-shard-01.${sha256}.high.meshopt.glb`;
   const rendered = renderExl50uLockedRoutes([{
     filename,
     route: `/device-assets/exl50u-general-assembly/v1/${filename}`,

@@ -22,6 +22,7 @@ import { MeshoptDecoder } from "meshoptimizer";
 import {
   EXL50U_GA_BUNDLE_ID,
   EXL50U_GA_ASSET_FORMAT,
+  EXL50U_GA_FILE_COUNT,
   EXL50U_GA_MAX_BUNDLE_DECODED_BYTES,
   EXL50U_GA_MAX_BUNDLE_PLACEMENT_INSTANCES,
   EXL50U_GA_MAX_DRAW_CALLS,
@@ -1010,16 +1011,6 @@ export function projectDeviceManifest({
     preview,
     shards,
   });
-  const previewAsset = {
-    path: `${EXL50U_GA_ROUTE_ROOT}/${preview.filename}`,
-    format: EXL50U_GA_ASSET_FORMAT,
-    sha256: preview.sha256,
-    bytes: preview.bytes,
-    triangles: preview.sceneDrawTriangles,
-    vertices: preview.uniqueGeometryVertices,
-    decodedGpuBytes: preview.decodedGpuBytes,
-    boundsMetres: preview.boundsMetres,
-  };
   const manifest = {
     ...structuredClone(template),
     asOf,
@@ -1029,8 +1020,6 @@ export function projectDeviceManifest({
       productionEligible: false,
     } } : {}),
     assets: {
-      webModel: previewAsset,
-      webModels: [{ id: "preview", label: "标准", quality: "preview", default: true, ...previewAsset }],
       shardBundles: [{
         id: "anonymous-high",
         label: "高清（20 个匿名运输分片）",
@@ -1154,8 +1143,8 @@ async function main() {
     ...fact,
     filename: `anonymous-shard-${String(offset + 1).padStart(2, "0")}.${fact.sha256}.high.meshopt.glb`,
   }));
-  if (preview.bytes + shards.reduce((sum, shard) => sum + shard.bytes, 0) > EXL50U_GA_MAX_TOTAL_BYTES) {
-    throw new Error("reviewed EXL-50U public derivative exceeds 300 MiB");
+  if (shards.reduce((sum, shard) => sum + shard.bytes, 0) > EXL50U_GA_MAX_TOTAL_BYTES) {
+    throw new Error("reviewed EXL-50U high-detail public delivery exceeds 300 MiB");
   }
   const template = JSON.parse(await readFile(TEMPLATE_PATH, "utf8"));
   const manifest = projectDeviceManifest({
@@ -1173,7 +1162,7 @@ async function main() {
   await mkdir(parent, { recursive: true });
   const temporary = await mkdtemp(join(parent, `.${basename(output)}.partial-`));
   try {
-    for (const asset of [preview, ...shards]) {
+    for (const asset of shards) {
       const destination = join(temporary, asset.filename);
       await copyFile(asset.source, destination);
       const copiedBytes = await readFile(destination);
@@ -1201,8 +1190,8 @@ async function main() {
   process.stdout.write(`${JSON.stringify({
     status: options.reviewCandidate === true ? "REVIEW_CANDIDATE_PROJECTED" : "PROJECTED",
     id: EXL50U_GA_BUNDLE_ID,
-    fileCount: 21,
-    totalBytes: preview.bytes + shards.reduce((sum, shard) => sum + shard.bytes, 0),
+    fileCount: EXL50U_GA_FILE_COUNT,
+    totalBytes: shards.reduce((sum, shard) => sum + shard.bytes, 0),
   })}\n`);
 }
 

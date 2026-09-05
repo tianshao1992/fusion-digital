@@ -284,11 +284,11 @@ test("explicit review-candidate projection accepts only the eight-key visual sta
     status: "USER_VISUAL_REVIEW_REQUIRED",
     productionEligible: false,
   });
-  assert.equal(extractExl50uGeneralAssemblyAssets(manifest).files.length, 21);
+  assert.equal(extractExl50uGeneralAssemblyAssets(manifest).files.length, 20);
   const allowlist = parseExl50uGeneralAssemblyAllowlist(
     renderExl50uGeneralAssemblyAllowlist(manifest),
   );
-  assert.equal(allowlist.length, 21);
+  assert.equal(allowlist.length, 20);
   assert.deepEqual(
     allowlist.map(({ role, filename, sha256, bytes }) => ({ role, filename, sha256, bytes })),
     extractExl50uGeneralAssemblyAssets(manifest).files
@@ -564,8 +564,11 @@ test("formal EXL-50U projection and checked-in catalog state remain coherent", a
     readFile(join(ROOT, "worker/exl50u-general-assembly-assets.generated.ts"), "utf8"),
   ]);
   const extracted = extractExl50uGeneralAssemblyAssets(manifest);
-  assert.equal(extracted.files.length, 21);
-  assert.equal(extracted.files[0].role, "preview");
+  assert.equal(extracted.files.length, 20);
+  assert.ok(extracted.files.every(({ role }) => /^anonymous-shard-(?:0[1-9]|1[0-9]|20)$/u.test(role)));
+  assert.equal(manifest.schemaVersion, "1.5");
+  assert.equal(manifest.assets.webModel, undefined);
+  assert.equal(manifest.assets.webModels, undefined);
   assert.equal(manifest.assets.shardBundles[0].rootNodeName, "EXL50U_GA_VISUALIZATION");
   assert.deepEqual(manifest.derivationEvidence, fixtureDerivationEvidence());
   assert.equal(
@@ -576,10 +579,10 @@ test("formal EXL-50U projection and checked-in catalog state remain coherent", a
     parseExl50uGeneralAssemblyAllowlist(renderExl50uGeneralAssemblyAllowlist(manifest)),
     extracted.files.map(({ role, filename, sha256, bytes }) => ({ role, filename, sha256, bytes })),
   );
-  const oversizedPreview = structuredClone(manifest);
-  oversizedPreview.assets.webModel.decodedGpuBytes = 192 * 1024 * 1024 + 1;
+  const forbiddenPreview = structuredClone(manifest);
+  forbiddenPreview.assets.webModel = fixtureFact(0, "preview");
   assert.throws(
-    () => extractExl50uGeneralAssemblyAssets(oversizedPreview),
+    () => extractExl50uGeneralAssemblyAssets(forbiddenPreview),
     /public boundary/u,
   );
   const expensiveShard = structuredClone(manifest);
@@ -641,6 +644,11 @@ test("formal EXL-50U projection and checked-in catalog state remain coherent", a
   const allowlist = parseExl50uGeneralAssemblyAllowlist(allowlistSource);
   if (formalManifest && formalManifest.reviewCandidate === undefined) {
     const formalAssets = extractExl50uGeneralAssemblyAssets(formalManifest);
+    assert.equal(formalAssets.files.length, 20);
+    assert.equal(formalAssets.totalBytes, 270_978_652);
+    assert.equal(formalManifest.assets.shardBundles[0].bytes, 270_978_652);
+    assert.equal(formalManifest.assets.webModel, undefined);
+    assert.equal(formalManifest.assets.webModels, undefined);
     assert.doesNotThrow(() => validateExl50uGeneralAssemblyActivatedCard(card));
     assert.ok(lockedBundle, "an activated formal manifest must have a locked external bundle");
     assert.doesNotThrow(() => assertManifestMatchesLock(formalManifest, lockedBundle));
@@ -1244,20 +1252,18 @@ test("projector rejects every non-whitelisted GLB container field and redundant 
 
 test("runtime lock and formal manifest couple the optional EXL bundle without production placeholder hashes", async () => {
   const [manifest, currentLock] = await Promise.all([
-    fixtureManifest(),
+    readFile(FORMAL_MANIFEST_PATH, "utf8").then(JSON.parse),
     readFile(join(ROOT, "assets/runtime-assets.lock.json"), "utf8").then(JSON.parse),
   ]);
-  const exlBundle = exlFixtureBundle(manifest);
-  const candidateLock = structuredClone(currentLock);
-  candidateLock.externalBundles = candidateLock.externalBundles.filter(
-    (bundle) => bundle.id !== EXL50U_GA_BUNDLE_ID,
-  );
-  candidateLock.externalBundles.push(exlBundle);
+  const exlBundle = currentLock.externalBundles.find(({ id }) => id === EXL50U_GA_BUNDLE_ID);
+  assert.ok(exlBundle);
   assert.deepEqual(
-    candidateLock.externalBundles.map((bundle) => bundle.id),
+    currentLock.externalBundles.map((bundle) => bundle.id),
     ["iter-high-detail-v1", EXL50U_GA_BUNDLE_ID],
   );
-  assert.doesNotThrow(() => validateRuntimeAssetLock(candidateLock));
+  assert.equal(exlBundle.fileCount, 20);
+  assert.equal(exlBundle.totalBytes, 270_978_652);
+  assert.doesNotThrow(() => validateRuntimeAssetLock(currentLock));
   assert.doesNotThrow(() => assertManifestMatchesLock(manifest, exlBundle));
   for (const [label, derivationEvidence] of invalidSourceInputCleaningEvidence()) {
     const invalidManifest = structuredClone(manifest);
@@ -1268,7 +1274,7 @@ test("runtime lock and formal manifest couple the optional EXL bundle without pr
       label,
     );
   }
-  const wrongNotice = structuredClone(candidateLock);
+  const wrongNotice = structuredClone(currentLock);
   wrongNotice.externalBundles[1].licensePath = "public/models/exl50u-general-assembly-v1/other.md";
   assert.throws(() => validateRuntimeAssetLock(wrongNotice), /identity/u);
   const tampered = structuredClone(manifest);
@@ -1300,7 +1306,7 @@ test("metadata-only Hong Kong release rejects every stray EXL package entry", as
     await rm(join(strayDirectory, strayAsset));
 
     await writeFile(join(strayDirectory, "exl-copy.json"), JSON.stringify({
-      schemaVersion: "1.4",
+      schemaVersion: "1.5",
       id: EXL50U_GA_BUNDLE_ID,
     }));
     await assert.rejects(assertMetadataOnlyExlDirectoryEmpty(scratch), /stray formal manifest/u);
@@ -1386,10 +1392,9 @@ test("postbuild preserves and verifies both Aliyun caches but removes only GLBs 
     await mkdir(exlDirectory, { recursive: true });
     await writeFile(join(iterDirectory, iterFixture.filename), iterFixture.body);
     for (let index = 0; index < exlBundle.files.length; index += 1) {
-      const role = index === 0 ? "preview" : "high";
       await writeFile(
         join(exlDirectory, exlBundle.files[index].filename),
-        `TEST FIXTURE ONLY ${role} ${index}`,
+        `TEST FIXTURE ONLY high ${index + 1}`,
       );
     }
     await writeFile(join(exlDirectory, "model-manifest.json"), JSON.stringify(exlManifest));

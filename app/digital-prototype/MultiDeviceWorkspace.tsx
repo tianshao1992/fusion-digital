@@ -67,11 +67,16 @@ function DeviceViewer({
     showDownloadActions={false}
     showFootnotes={false}
     securityNotice={device.statement}
-    appearancePreset={device.id === 'exl-50u-2026-upgrade'
+    appearancePreset={device.id === 'exl50u-general-assembly-20260630'
+      ? 'assembly-color-v1'
+      : device.id === 'exl-50u-2026-upgrade'
       || device.id === 'iter-educational-model'
       || device.id === 'ehl-2-preliminary'
       ? 'industrial-silver-v1'
       : 'semantic'}
+    cameraProfile={device.id === 'exl50u-general-assembly-20260630'
+      ? 'close-inspection'
+      : 'default'}
     defaultClipping={defaultCoreSection}
     defaultClipAxis={defaultCoreSection ? 'z' : 'x'}
     defaultClipOffset={efitOverlay ? 0.08 : 0}

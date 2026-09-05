@@ -1,12 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://fusiondigital.example/schemas/device-manifest-1.4.json",
+  "$id": "https://fusiondigital.example/schemas/device-manifest-1.5.json",
   "title": "FusionDigital browser-safe device package manifest",
   "description": "Public metadata contract for a derived 3D asset. Authoritative CAD/CAE files remain in the controlled engineering data zone.",
   "type": "object",
   "required": ["schemaVersion", "id", "title", "asOf", "devicePackage", "access", "coordinateSystem", "assets", "systems", "generator", "disclaimer"],
   "properties": {
-    "schemaVersion": { "enum": ["1.1", "1.2", "1.3", "1.4"] },
+    "schemaVersion": { "enum": ["1.1", "1.2", "1.3", "1.4", "1.5"] },
     "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]+$" },
     "title": { "type": "string", "minLength": 1 },
     "asOf": { "type": "string", "format": "date" },
@@ -150,7 +150,7 @@
     },
     {
       "if": { "required": ["visualizations"] },
-      "then": { "properties": { "schemaVersion": { "enum": ["1.2", "1.3", "1.4"] } } }
+      "then": { "properties": { "schemaVersion": { "enum": ["1.2", "1.3", "1.4", "1.5"] } } }
     },
     {
       "if": {
@@ -169,7 +169,7 @@
       "then": {
         "required": ["derivationEvidence"],
         "properties": {
-          "schemaVersion": { "const": "1.4" },
+          "schemaVersion": { "enum": ["1.4", "1.5"] },
           "id": { "const": "exl50u-general-assembly-v1" },
           "access": {
             "properties": {
@@ -179,7 +179,24 @@
             }
           },
           "assets": {
-            "required": ["webModel"],
+            "properties": {
+              "componentBundles": false,
+              "sourceCad": false
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "schemaVersion": { "const": "1.4" } },
+        "required": ["schemaVersion"]
+      },
+      "then": {
+        "properties": {
+          "id": { "const": "exl50u-general-assembly-v1" },
+          "assets": {
+            "required": ["webModel", "shardBundles"],
             "properties": {
               "webModel": {
                 "allOf": [
@@ -200,23 +217,37 @@
                 "items": {
                   "properties": { "quality": { "const": "preview" } }
                 }
-              },
-              "componentBundles": false,
-              "sourceCad": false
+              }
             }
-          }
+          },
+          "derivationEvidence": { "$ref": "#/$defs/anonymousDerivationEvidence" }
         }
       }
     },
     {
       "if": {
-        "properties": { "schemaVersion": { "const": "1.4" } },
+        "properties": { "schemaVersion": { "const": "1.5" } },
         "required": ["schemaVersion"]
       },
       "then": {
         "properties": {
           "id": { "const": "exl50u-general-assembly-v1" },
-          "assets": { "required": ["webModel", "shardBundles"] },
+          "assets": {
+            "required": ["shardBundles"],
+            "maxProperties": 1,
+            "properties": {
+              "webModel": false,
+              "webModels": false,
+              "componentBundles": false,
+              "sourceCad": false,
+              "poster": false,
+              "shardBundles": {
+                "items": {
+                  "properties": { "bytes": { "const": 270978652 } }
+                }
+              }
+            }
+          },
           "derivationEvidence": { "$ref": "#/$defs/anonymousDerivationEvidence" }
         }
       }

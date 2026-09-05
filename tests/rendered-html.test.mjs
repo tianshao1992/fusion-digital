@@ -270,7 +270,7 @@ test('ships a closed, public DeviceManifest for the CAD viewer', async () => {
   assert.equal(manifest.schemaVersion, '1.1');
   assert.equal(manifest.access.classification, 'PUBLIC');
   assert.equal(manifest.access.redistributionAllowed, true);
-  assert.deepEqual(schema.properties.schemaVersion.enum, ['1.1', '1.2', '1.3', '1.4']);
+  assert.deepEqual(schema.properties.schemaVersion.enum, ['1.1', '1.2', '1.3', '1.4', '1.5']);
   const parts = manifest.systems.flatMap((system) => system.parts);
   assert.equal(parts.length, 17);
   assert.equal(new Set(parts.map((part) => part.id)).size, parts.length);

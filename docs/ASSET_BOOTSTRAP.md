@@ -10,7 +10,7 @@
 | Paramak 浏览器 GLB、公开 STEP、清单与许可证 | 是 | Git | 仅按其随附许可证使用 |
 | EXL-50U 2026 升级版标准/高清浏览器 GLB、清单与海报 | 是 | Git | 经审核的较小型非工程可视化派生物；不等于总装包 |
 | EXL-50U 总装 manifest、公开说明、catalog 激活记录、Worker 白名单与摘要锁 | 是 | Git | 五项必须在同一应用提交中保持一致；不含总装 GLB |
-| EXL-50U 总装 1 个 preview + 20 个 high 匿名 Meshopt GLB | 否 | 固定提交的 HTTPS 镜像，或从已审核目录导入 | 总量不超过 300 MiB；20 个 high 文件仅是运输分片，不表达 BOM、工程系统或源装配树 |
+| EXL-50U 总装 20 个 high-only 匿名 Meshopt GLB | 否 | 固定提交的 HTTPS 镜像，或从已审核目录导入 | 270,978,652 B（271.0 MB），总量不超过 300 MiB；运输分片不表达 BOM、工程系统或源装配树；无标准 preview/fallback |
 | EHL-2 初步设计约半面数 Meshopt GLB、清单与公开说明 | 是 | Git | 仅为用户授权的非工程浏览器派生物；不含五个源 GLB |
 | EXL-50U EFIT v1/v2 标量、重采样轮廓、拓扑派生数据和分片 | 是 | Git | 不含原始 G-EQDSK、psi 网格或源实验档案 |
 | ITER 高清教育可视化 18 个 Meshopt GLB 分片 | 否 | HTTPS 镜像下载，或从已下载目录导入 | 约 98.5 MB；只包含经审核的运行时派生物 |
@@ -45,7 +45,7 @@ npm run dev
 
 ## 3. 从稳定 HTTPS 镜像获取
 
-资产锁不保存默认网络源。ITER 18 文件与 EXL-50U 总装 21 文件上传到审核过的静态资产
+资产锁不保存默认网络源。ITER 18 文件与 EXL-50U 总装 20 个 high 文件上传到审核过的静态资产
 仓库后，必须为每次恢复分别设置根地址。正式 Sites 双 bundle 必须固定到该资产仓库的同
 一个 40 位完整提交 SHA：
 
@@ -79,7 +79,7 @@ npm run assets:verify
 使用 `--source-dir`）：
 
 - 精确使用 `https://raw.githubusercontent.com/tianshao1992/fusion-physics-atlas-assets/<40位小写提交SHA>/<精确bundle-id>`；其他仓库、branch/tag、短 SHA、浏览器登录页、临时签名链接和网盘分享页不能作为根地址；
-- 两个根地址后分别直接拼接锁文件中的 18 个 ITER 文件名和 21 个 EXL 文件名即可下载，服务端不得改名或在线重新压缩；
+- 两个根地址后分别直接拼接锁文件中的 18 个 ITER 文件名和 20 个 EXL high 文件名即可下载，服务端不得改名或在线重新压缩；
 - 支持普通 `GET`，建议同时支持 `HEAD`、`Range`、正确的 `Content-Length` 和 `application/octet-stream` 或 `model/gltf-binary`；
 - 对协作机器和部署网络可达，证书链由组织信任；不要用 `NODE_TLS_REJECT_UNAUTHORIZED=0` 绕过证书校验；
 - URL、仓库、脚本和日志中不包含账号、口令、Cookie、访问令牌或带凭证的查询参数。
@@ -125,7 +125,7 @@ npm run assets:verify
 
 ### Sites 预览模式（非生产）
 
-OpenAI Sites 的静态发布包有约 256 MiB 上限。ITER 18 片与 EXL-50U 总装 1 preview + 20 high
+OpenAI Sites 的静态发布包有约 256 MiB 上限。ITER 18 片与 EXL-50U 总装 20 个 high-only 文件
 都不进入 Git/Sites 静态归档。Sites Worker 只接受两个清单中的精确摘要路径，并从同一资产
 提交的两个目录按需取回不可变文件。发布 Sites 预览时使用未 hydrate 的干净克隆，保持
 `public/models/iter-high-detail-v1/` 中无 GLB、`public/models/exl50u-general-assembly-v1/`
@@ -149,7 +149,7 @@ Sites 运行时镜像只能通过 `ITER_HIGH_DETAIL_ASSET_BASE_URL` 和
 
 阿里云香港生产或需要断开公网仍能展示完整三维资产时，先在部署工作区分别 hydrate
 ITER 与 EXL-50U 总装，再运行 `assets:verify` 和构建。香港生产必须本地包含并校验全部
-18 个 ITER 分片与 21 个 EXL 文件；安装器在缺失或哈希不符时硬失败，运行时不得回源
+18 个 ITER 分片与 20 个 EXL high 文件；安装器在缺失或哈希不符时硬失败，运行时不得回源
 GitHub 或其他外部镜像。
 只有其他明确允许联网的 Worker 目标才能采用 local-first，并在本地不存在时回退到
 受控外部镜像。下面示例是香港 `public-anonymous` 生产目标；实际打包、manifest 和
@@ -212,7 +212,7 @@ Codeup 支持 Git LFS，但当前恢复合同不依赖 LFS。不要在个人分�
 外置资产只能由获授权的维护者更新。一次更新应同时完成：
 
 1. 从受控源生成新的**浏览器运行时派生物**，在受控环境完成几何、授权和非工程用途审查；原始 CAD/STEP、BOM、PMI 与源装配标签不得进入公开候选；
-2. 把 ITER 18 文件与 EXL 21 文件原样发布到同一个资产仓库提交，并完成无缓存冷下载、字节数和 SHA-256 校验；
+2. 把 ITER 18 文件与 EXL 20 个 high 文件原样发布到同一个资产仓库提交，并完成无缓存冷下载、字节数和 SHA-256 校验；active EXL 不发布标准 preview 或降级回退，私有派生流程仍可生成 preview 作为视觉 QA 输入；
 3. 对 EXL 总装先验证 exact v8 `derivationEvidence` 七键：`sourceInputCleaning`、sloppy
    `previewVisualLod`（`selectedTargetTriangleRatio = 0.03`、
    `simplifierNormalizedErrorLimit = 0.02`）、按 `selectedAttempt` 固定为 `0.70/0.65` 的 QEM `highQem`、两份独立 `outputCleaning`、`highPartition` 与
@@ -248,7 +248,7 @@ Codeup 支持 Git LFS，但当前恢复合同不依赖 LFS。不要在个人分�
 
 ### 本地完整校验通过，但 ITER / EXL 外置几何仍加载失败
 
-确认是在 hydration 后构建/启动，且自包含部署产物保留 ITER 18 文件与 EXL 21 文件。
+确认是在 hydration 后构建/启动，且自包含部署产物保留 ITER 18 文件与 EXL 20 个 high 文件。
 检查反向代理是否允许 GLB、Range 请求和单文件不超过 24 MiB 的响应。公网镜像模式还要
 确认部署环境能访问两个固定 SHA 根地址，而不只是开发电脑能访问。
 
@@ -280,7 +280,7 @@ assets:hydrate: PASS / FAIL / intentionally skipped
 assets:verify: PASS / FAIL / intentionally skipped
 Asset repository full commit SHA (shared by both Sites bundle URLs):
 ITER 18-shard total bytes and verification result:
-EXL-50U general assembly 1-preview + 20-high total bytes and verification result:
+EXL-50U general assembly high-only 20-file total bytes (270,978,652 B / 271.0 MB) and verification result:
 npm run check: PASS / FAIL
 Deployment mode: Sites external / internal self-contained
 Smoke test: Paramak / EXL-50U / EFIT / ITER high-detail / EHL-2 preliminary derivative
@@ -288,6 +288,6 @@ Known deviations:
 ```
 
 验收“所有当前网页内容”的最低标准是：目标应用提交可克隆、Git 内公开资产通过校验、
-ITER 18 分片与 EXL-50U 总装 21 文件在完整模式下都通过校验、Sites 两个根地址固定到同一
+ITER 18 分片与 EXL-50U 总装 20 个 high 文件在完整模式下都通过校验、Sites 两个根地址固定到同一
 资产提交、构建与关键页面测试通过，并且没有任何受控源 CAD、源 EFIT、凭证或私密下载
 地址进入应用仓库和公开分发包。

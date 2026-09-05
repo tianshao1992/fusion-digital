@@ -33,8 +33,8 @@ DeviceManifest 1.4 必须满足：
 - `access.redistributionAllowed = true`；
 - `access.engineeringUseAllowed = false`；
 - `access.statement` 明确包含用户授权、公开、简化派生物的含义；
-- `assets.webModel` 只声明 1 个 digest-named preview GLB，具有实际字节数、SHA-256、几何/GPU 指标与近似米制包围盒；
-- `assets.shardBundles[0]` 只声明 20 个顺序固定、digest-named 的 high GLB；它们是匿名运输分片，不表达工程系统、BOM 或源装配树；
+- active 公开资产不声明标准 preview 或降级回退；
+- `assets.shardBundles[0]` 只声明 20 个顺序固定、digest-named 的 high GLB，总计 270,978,652 B（271.0 MB）；它们是匿名运输分片，不表达工程系统、BOM 或源装配树；
 - 不存在 `assets.sourceCad`；
 - `disclaimer` 明确其不是工程权威模型，不可用于制造、尺寸校核、CAE 或安全决策；
 - `derivationEvidence` 必须是 exact v8 七键：`kind`、`selectedAttempt`、
@@ -47,7 +47,7 @@ DeviceManifest 1.4 必须满足：
   depth p99 <= 0.02；公开对象只保存匿名指标和 receipt SHA-256，不保存完整私有报告；
 - `sourceInputCleaning` 绑定 source face/triangle 匿名计数，但不包含逐定义拓扑保留声明或
   任何旧版简化语义；不得用任意面积容差删除正面积三角形；
-- 21 个文件的路径、数量、顺序、字节数、SHA-256、三角面、draw call、placement 与解码预算均受门禁限制；
+- 20 个 active high 文件的路径、数量、顺序、字节数、SHA-256、三角面、draw call、placement 与解码预算均受门禁限制；
 - EXL 不参与几何叠加比较，页面始终传入 `showDownloadActions=false`。
 
 ITER 的 18 个经审核高精度文件同样是已激活的公开外置运行时 bundle，而不是
@@ -83,40 +83,40 @@ CDN/WAF 可以对异常高频请求、枚举和热链设置速率限制并记录
 
 发布门禁必须自动验证：
 
-1. EXL 总装只允许正式 manifest/lock 声明的 1 个 preview + 20 个 high 匿名 GLB；其他 EXL 几何、STEP/STP、PPT/PPTX、压缩包和私有路径全部失败。
+1. EXL 总装只允许正式 manifest/lock 声明的 20 个 high 匿名 GLB；标准 preview、其他 EXL 几何、STEP/STP、PPT/PPTX、压缩包和私有路径全部失败。
 2. ITER 只允许 lock 中 18 个摘要命名的公开派生 GLB；ITER/EXL 的任何源 CAD 或未声明几何全部失败。
 3. EXL 清单的授权、派生类型、非工程用途和免责声明字段完整；不得包含 `sourceCad`。运行时
    必须拒绝 v8 七键以外的旧别名或额外键，并核验 source triangle 算术、两档互斥
    `outputCleaning` 算术、每档 `receiptCount == renderableDefinitions`、attempt/ratio 映射、
-   preview/high 的真实 GLB unique triangles、high primitive/mesh chunk 数及 coverage 零缺失；
-   preview sloppy 与 high QEM 算法不可互换。
+   high 的真实 GLB unique triangles、primitive/mesh chunk 数及 coverage 零缺失；派生证据中的
+   preview sloppy 收据仅用于受控 QA，不得成为 active 浏览器资产或失败回退，且不可与 high QEM 算法互换。
 4. 所有 GLB 路径同源且规范化，真实文件字节数和 SHA-256 与 manifest/runtime lock 一致，并低于公开交付预算。
 5. catalog 保持 `showDownloadActions=false`、EXL `overlayEligible=false`；服务端 HTML 不出现 GLB/STEP 下载链接或本地路径。
 6. 摘要 GLB 的 GET/HEAD/Range 返回 identity 编码、正确长度/范围与 immutable cache；未知 viewer mode、未知路径、重定向或缺字段条目必须 fail closed，并使用 `no-store` 错误响应。
-7. 香港构建后的 `dist/` 必须含并复核 ITER 18 + EXL 21；Sites 构建后的 `dist/` 必须不含两类外置 GLB，并由精确 Worker 白名单按需代理。
+7. 香港构建后的 `dist/` 必须含并复核 ITER 18 + EXL 20；Sites 构建后的 `dist/` 必须不含两类外置 GLB，并由精确 Worker 白名单按需代理。
 8. Sites 的 `ITER_HIGH_DETAIL_ASSET_BASE_URL` 与 `EXL50U_GENERAL_ASSEMBLY_ASSET_BASE_URL` 必须固定到同一资产仓库的同一 40 位完整提交 SHA；branch、tag、短 SHA、3xx 与客户端指定上游全部拒绝。
 9. EXL manifest、notice、catalog、生成 allow-list 与 runtime lock 必须在同一应用提交中相干。
 
-## 7. Preview + 20 个 high 匿名分片发布合同
+## 7. High-only 20 个匿名分片发布合同
 
-EXL-50U 总装浏览器派生包的 preview 与 high 属于同一份公开授权和同一 DeviceManifest
-的原子交付，不得通过第二份清单、隐藏 URL 或目录枚举绕过发布门禁：
+EXL-50U 总装浏览器派生包仅把 high 作为同一份公开授权和同一 DeviceManifest 的原子交付，
+不得通过标准 preview、第二份清单、隐藏 URL 或目录枚举绕过发布门禁：
 
-- preview 必须是唯一默认资产，不超过 12 MiB、解码预算不超过 192 MiB；能力足够的桌面客户端先自动加载它，窄屏、省流量或低内存客户端由用户显式启动，不在首屏并发拉取 high；
-- high 必须精确拆为 `anonymous-shard-01` 至 `anonymous-shard-20`，每片小于 24 MiB、解码预算不超过 96 MiB，并只在用户明确选择高精度后串行加载；
+- active 发布不含标准 preview，也不允许在 high 失败后降级回退；旧 preview 摘要路径必须返回 404；
+- high 必须精确拆为 `anonymous-shard-01` 至 `anonymous-shard-20`，总计 270,978,652 B（271.0 MB），每片小于 24 MiB、解码预算不超过 96 MiB，并始终串行加载；能力足够的桌面客户端可以自动启动，窄屏、省流量或低内存客户端必须由用户显式启动；任一下载、摘要、解码或聚合检查失败都必须 fail closed；
 - 20 是 high 运输 shard 文件数；`highPartition.geometryChunkCount` 是 20 文件中解码得到的
   primitive/mesh 几何 chunk 总数，必须与实际 GLB、partition triangles 对账，不能固定写成 20；
-- 21 个 GLB 总量不超过 300 MiB；high 聚合解码预算不超过 1.5 GiB，场景三角面不超过 3500 万、draw call 不超过 800；无法证明预算时必须 fail closed；
+- 20 个 high GLB 总量不超过 300 MiB；high 聚合解码预算不超过 1.5 GiB，场景三角面不超过 3500 万、draw call 不超过 800；无法证明预算时必须 fail closed；
 - GLB 固定使用 Float32 POSITION、normalized Int8 NORMAL、Uint32 indices、`EXT_meshopt_compression` 与 `EXT_mesh_gpu_instancing`；
 - 公开 GLB JSON 不得含 `name` / `extras`；唯一公开根名 `EXL50U_GA_VISUALIZATION` 由运行时合成，20 个编号只表示运输顺序；
-- manifest 和界面必须继续说明 preview/high 均为非工程可视化派生，不可用于制造、尺寸校核、CAE、安全决策或配置控制；
-- `/device-assets/exl50u-general-assembly/v1/` 只允许 21 条摘要锁定路径。GET、HEAD 与 Range/206 必须经过 Worker 或香港精确 Nginx location；未知、编码、遍历及旧目录枚举路径必须返回 404；
+- manifest 和界面必须继续说明 high 是非工程可视化派生，不可用于制造、尺寸校核、CAE、安全决策或配置控制；
+- `/device-assets/exl50u-general-assembly/v1/` 只允许 20 条摘要锁定 high 路径。GET、HEAD 与 Range/206 必须经过 Worker 或香港精确 Nginx location；未知、旧 preview、编码、遍历及旧目录枚举路径必须返回 404；
 - SSR HTML 不得直出任一 GLB URL、下载属性或模型下载链接。浏览器运行时从 manifest 选择资产不改变“已发送数据可被技术性保存”的既有边界。
 - canonical visual QA 完整报告、QEM 私有证据、源 manifest、仅供投影器交叉核验的
   `geometryAccounting`、源路径/摘要和 definition/occurrence ID 必须留在仓库外受控边界；
   不得进入应用 Git、资产仓库、公开 DeviceManifest、notice 或浏览器响应。
 
-自动回归至少验证：同一 1.4 manifest 原子声明、21 个固定路径和唯一角色、bytes/hash/GLB
+自动回归至少验证：同一版本化 manifest 原子声明、20 个固定 high 路径和唯一角色、bytes/hash/GLB
 header、匿名分组、v8 exact-key/算法互斥、source/output-cleaning 算术、canonical visual QA、
 partition/GLB/coverage 交叉闭合、Meshopt/GPU instancing required extensions、GPU/场景预算、
 manifest/lock/allow-list 对账、Worker 与香港 GET/HEAD/Range 响应头、旧路径和恶意路径 404、

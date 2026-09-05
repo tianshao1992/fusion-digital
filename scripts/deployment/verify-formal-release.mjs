@@ -91,7 +91,7 @@ const FIXED = Object.freeze({
         catalogDeviceId: "exl50u-general-assembly-20260630",
         manifestEndpoint: "/models/exl50u-general-assembly-v1/model-manifest.json",
         routeRoot: "/device-assets/exl50u-general-assembly/v1",
-        fileCount: 21,
+        fileCount: 20,
         shardCount: 20,
         maxTotalBytes: 314_572_800,
         runtimeSynthesizedRoot: "EXL50U_GA_VISUALIZATION",

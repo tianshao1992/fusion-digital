@@ -264,54 +264,14 @@ function failure(evidence, pattern, lock = runtimeLock, catalog = catalogForLock
 }
 
 function twoActiveBundleRuntimeLock() {
-  const files = Array.from({ length: 21 }, (_value, index) => {
-    const role = index === 0 ? "preview" : `anonymous-shard-${String(index).padStart(2, "0")}`;
-    const sha256 = createHash("sha256").update(`EXL ACTIVE PAIR FIXTURE ${index}`, "utf8").digest("hex");
-    const filename = index === 0
-      ? `device.preview.${sha256}.meshopt.glb`
-      : `anonymous-shard-${String(index).padStart(2, "0")}.${sha256}.high.meshopt.glb`;
-    return {
-      role,
-      filename,
-      route: `/device-assets/exl50u-general-assembly/v1/${filename}`,
-      bytes: 4_096 + index,
-      sha256,
-    };
-  });
-  const aggregate = createHash("sha256");
-  for (const file of [...files].sort((left, right) => left.filename.localeCompare(right.filename, "en"))) {
-    aggregate.update(`${file.filename}\0${file.bytes}\0${file.sha256}\n`, "utf8");
-  }
-  const exlBundle = {
-    id: "exl50u-general-assembly-v1",
-    title: "EXL-50U integrated-assembly anonymous browser visualization derivative",
-    classification: "PUBLIC",
-    redistributionAllowed: true,
-    engineeringUseAllowed: false,
-    sourceCadIncluded: false,
-    licensePath: "public/models/exl50u-general-assembly-v1/PUBLICATION-NOTICE.md",
-    destinationRoot: "public/models/exl50u-general-assembly-v1",
-    stageDirectoryName: "exl50u-general-assembly-v1",
-    routeRoot: "/device-assets/exl50u-general-assembly/v1",
-    acquisition: {
-      defaultBaseUrl: null,
-      baseUrlEnv: "FUSION_EXL50U_GA_ASSET_BASE_URL",
-      sourceDirEnv: "FUSION_EXL50U_GA_ASSET_SOURCE_DIR",
-    },
-    fileCount: files.length,
-    totalBytes: files.reduce((sum, file) => sum + file.bytes, 0),
-    aggregateSha256: aggregate.digest("hex"),
-    files,
-  };
   const lock = clone(runtimeLock);
-  lock.externalBundles = lock.externalBundles.filter(
-    (bundle) => bundle.id !== "exl50u-general-assembly-v1",
-  );
-  lock.externalBundles.push(exlBundle);
   assert.deepEqual(
     lock.externalBundles.map((bundle) => bundle.id),
     ["iter-high-detail-v1", "exl50u-general-assembly-v1"],
   );
+  const exlBundle = lock.externalBundles[1];
+  assert.equal(exlBundle.fileCount, 20);
+  assert.equal(exlBundle.totalBytes, 270_978_652);
   return lock;
 }
 
@@ -449,7 +409,7 @@ test("fixed contract rejects EIP, Sites identity, and policy drift", () => {
     (value) => { value.externalRuntimeAssets.sites.hydrated = true; },
     (value) => { value.externalRuntimeAssets.sites.mirror.repositoryPath = "other/assets"; },
     (value) => { value.externalRuntimeAssets.sites.mirror.requireNoRedirects = false; },
-    (value) => { value.externalRuntimeAssets.bundles[1].fileCount = 20; },
+    (value) => { value.externalRuntimeAssets.bundles[1].fileCount = 19; },
     (value) => { value.sharedContent.conditionalPaths[0].bundleId = "other-bundle"; },
   ]) {
     const changed = clone(contract);
@@ -471,7 +431,7 @@ test("pair evidence accepts every path for ITER and an activated EXL bundle", ()
   const evidence = validEvidence(SHA, lock);
   assert.deepEqual(
     evidence.externalRuntimeAssets.bundles.map(({ id, entries }) => [id, entries.length]),
-    [["iter-high-detail-v1", 18], ["exl50u-general-assembly-v1", 21]],
+    [["iter-high-detail-v1", 18], ["exl50u-general-assembly-v1", 20]],
   );
   assert.deepEqual(
     evidence.sharedContent.entries.slice(-2).map(({ path }) => path),
@@ -531,8 +491,8 @@ test("pair evidence fails closed when the second active bundle is omitted or los
   failure(missingBundle, /exactly 2 active locked bundles/u, lock);
 
   const forgedFallback = validEvidence(SHA, lock);
-  forgedFallback.externalRuntimeAssets.bundles[1].entries[20].sites.upstream_url =
-    `https://fusiondigital.club/${lock.externalBundles[1].files[20].filename}`;
+  forgedFallback.externalRuntimeAssets.bundles[1].entries[19].sites.upstream_url =
+    `https://fusiondigital.club/${lock.externalBundles[1].files[19].filename}`;
   failure(forgedFallback, /independent HTTPS fallback/u, lock);
 
   const missingRange = validEvidence(SHA, lock);

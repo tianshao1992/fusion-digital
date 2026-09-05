@@ -11,8 +11,12 @@ turntables and ITER was `metadata-only` is historical; it is not the active rele
 The EXL-50U integrated general assembly is a public, anonymous, non-engineering visualization
 derivative. Its runtime package contains exactly:
 
-- one digest-named Meshopt preview GLB, loaded first; and
-- twenty digest-named high-detail Meshopt GLBs, loaded serially only after explicit user intent.
+- twenty digest-named high-detail Meshopt GLBs, totalling 270,978,652 bytes (271.0 MB), loaded serially.
+
+There is no active standard preview or downgrade fallback. Capable desktop clients may start the
+high-detail load automatically; narrow-screen, data-saving or low-memory clients require explicit
+user action. Any shard download, digest, decode or aggregate failure fails closed. The private
+derivation workflow may still generate a preview as visual-QA input, but that preview is not published.
 
 The twenty high-detail files are anonymous transport shards. They are not systems, parts, a BOM,
 or a source assembly tree. The package exposes no source labels, materials, PMI, dimension
@@ -54,7 +58,7 @@ following structure:
 | `devicePackage.kind`, `authority` | Declare a public simplified derivative with illustrative authority. |
 | `access` | Require `PUBLIC`, redistribution allowed and engineering use forbidden. |
 | `coordinateSystem` | Record display units and axes without claiming dimensional authority. |
-| `assets.webModel` | Declare the one preview path, bytes, SHA-256, geometry metrics and bounds. |
+| `assets.webModel` | Not present for the active EXL general-assembly release; no standard preview or fallback is published. |
 | `assets.shardBundles[0]` | Declare the one high-detail bundle and its exactly twenty anonymous shards. |
 | `derivationEvidence` | Record the exact v8 seven-key evidence: selected attempt, anonymous source cleaning, sloppy preview visual LOD with `selectedTargetTriangleRatio = 0.03` and `simplifierNormalizedErrorLimit = 0.02`, high QEM fixed to attempt ratios `0.70/0.65`, independent output cleaning, high partition and zero-missing coverage, including only the canonical visual-QA receipt rather than private source identities. |
 | `systems` | Expose only the anonymous visualization grouping required by the viewer. |
@@ -68,9 +72,10 @@ analysis parameters, signed URLs, internal object-store keys or solver credentia
 1. Keep the authoritative STEP/CAD, BOM, PMI and source assembly metadata in the controlled
    engineering environment. They must never enter the application repository, public asset
    repository, Sites archive or Hong Kong release.
-2. Export and review the anonymous public derivative. The accepted release must contain one preview
-   and twenty high-detail transport shards, with every route, byte count and SHA-256 derived from the
-   reviewed files. Its exact v8 evidence must fix sloppy `previewVisualLod` to target ratio 0.03 and
+2. Export and review the anonymous public derivative. The accepted release must contain twenty
+   high-detail transport shards only, with every route, byte count and SHA-256 derived from the
+   reviewed files. The private derivation workflow may retain a non-published preview for visual QA.
+   Its exact v8 evidence must fix sloppy `previewVisualLod` to target ratio 0.03 and
    simplifier max error 0.02, and distinguish it from `highQem` fixed to attempt ratios 0.70/0.65,
    close each tier's independent `outputCleaning`, and reconcile `highPartition` geometry chunks with
    the decoded GLBs. High QEM must retain at least

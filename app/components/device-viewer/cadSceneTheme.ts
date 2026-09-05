@@ -120,7 +120,7 @@ export function resolveCadSceneTheme(
   theme: ResolvedTheme,
   appearancePreset: TokamakAppearancePreset,
 ): CadSceneTheme {
-  if (appearancePreset === 'industrial-silver-v1') {
+  if (appearancePreset === 'industrial-silver-v1' || appearancePreset === 'assembly-color-v1') {
     return theme === 'light' ? LIGHT_INDUSTRIAL : DARK_INDUSTRIAL;
   }
   return theme === 'light' ? LIGHT_SEMANTIC : DARK_SEMANTIC;

@@ -527,7 +527,7 @@ function validateAnonymousDerivationEvidence(value: unknown, reviewCandidate = f
 
 function validateAnonymousShardBundles(
   value: unknown,
-  preview: DeviceWebModel,
+  preview: DeviceWebModel | undefined,
   reservedViewerChoiceIds: Set<string>,
 ) {
   if (!Array.isArray(value) || value.length !== 1) {
@@ -573,7 +573,7 @@ function validateAnonymousShardBundles(
     || grouping.representsEngineeringSystems !== false
     || grouping.representsAssemblyTree !== false
     || !Number.isSafeInteger(bundle.bytes) || Number(bundle.bytes) <= 0
-    || Number(bundle.bytes) + preview.bytes > MAX_ANONYMOUS_DELIVERY_BYTES
+    || Number(bundle.bytes) + (preview?.bytes ?? 0) > MAX_ANONYMOUS_DELIVERY_BYTES
     || positiveBundleMetrics.some((field) => !Number.isSafeInteger(bundle[field]) || Number(bundle[field]) <= 0)
     || Number(bundle.decodedGpuBytes) > MAX_ANONYMOUS_BUNDLE_DECODED_BYTES
     || Number(bundle.placementInstances) > MAX_ANONYMOUS_BUNDLE_PLACEMENT_INSTANCES
@@ -926,7 +926,7 @@ export function parseDeviceManifest(value: unknown, options: ParseDeviceManifest
   if (!value || typeof value !== 'object') throw new Error('装置清单不是有效的 JSON 对象。');
   const manifest = value as Partial<DeviceManifest>;
   if (!manifest.id || !manifest.title || !manifest.schemaVersion) throw new Error('装置清单缺少 id、title 或 schemaVersion。');
-  if (!['1.1', '1.2', '1.3', '1.4'].includes(manifest.schemaVersion)) throw new Error(`不支持的装置清单版本：${manifest.schemaVersion}。`);
+  if (!['1.1', '1.2', '1.3', '1.4', '1.5'].includes(manifest.schemaVersion)) throw new Error(`不支持的装置清单版本：${manifest.schemaVersion}。`);
   if (manifest.schemaVersion === '1.1'
     && (manifest.assets?.componentBundles !== undefined
       || manifest.assets?.shardBundles !== undefined
@@ -968,18 +968,29 @@ export function parseDeviceManifest(value: unknown, options: ParseDeviceManifest
     throw new Error('仅分片的高精度装置清单必须使用 1.3 版本。');
   }
   if (assets.shardBundles !== undefined
-    && (manifest.schemaVersion !== '1.4'
+    && (!['1.4', '1.5'].includes(manifest.schemaVersion)
       || manifest.id !== EXL50U_GA_MANIFEST_ID
-      || !hasWebModel
       || assets.componentBundles !== undefined
       || assets.sourceCad !== undefined
       || manifest.access.classification !== 'PUBLIC'
       || manifest.access.redistributionAllowed !== true
       || manifest.access.engineeringUseAllowed !== false)) {
-    throw new Error('匿名 shardBundles 仅允许 EXL-50U 总装 1.4 公开非工程预览合同。');
+    throw new Error('匿名 shardBundles 仅允许 EXL-50U 总装 1.4/1.5 公开非工程合同。');
   }
-  if (manifest.schemaVersion === '1.4' && assets.shardBundles === undefined) {
-    throw new Error('装置清单 1.4 仅用于受控的 EXL-50U 总装匿名分片合同。');
+  if (['1.4', '1.5'].includes(manifest.schemaVersion) && assets.shardBundles === undefined) {
+    throw new Error(`装置清单 ${manifest.schemaVersion} 仅用于受控的 EXL-50U 总装匿名分片合同。`);
+  }
+  if (manifest.schemaVersion === '1.4' && !hasWebModel) {
+    throw new Error('EXL-50U 总装 1.4 兼容合同必须声明 preview webModel。');
+  }
+  if (manifest.schemaVersion === '1.5'
+    && (hasWebModel
+      || assets.webModels !== undefined
+      || assets.componentBundles !== undefined
+      || assets.sourceCad !== undefined
+      || assets.poster !== undefined
+      || Object.keys(assets).length !== 1)) {
+    throw new Error('EXL-50U 总装 1.5 只允许声明高精度 shardBundles，不发布标准 preview 或 fallback。');
   }
   if (assets.webModels !== undefined) {
     if (!hasWebModel) throw new Error('webModels 需要兼容 webModel 资产。');
@@ -1022,37 +1033,43 @@ export function parseDeviceManifest(value: unknown, options: ParseDeviceManifest
     }
   }
   if (assets.shardBundles !== undefined) {
-    const preview = assets.webModel as DeviceWebModel;
+    const preview = manifest.schemaVersion === '1.4'
+      ? assets.webModel as DeviceWebModel
+      : undefined;
     const reviewCandidate = manifest.reviewCandidate?.status === 'USER_VISUAL_REVIEW_REQUIRED'
       && manifest.reviewCandidate.productionEligible === false;
     if (manifest.reviewCandidate !== undefined && !reviewCandidate) {
       throw new Error('EXL-50U 总装 review candidate 状态无效。');
     }
     validateAnonymousDerivationEvidence(manifest.derivationEvidence, reviewCandidate);
-    const previewPathMatch = preview.path.match(EXL50U_PREVIEW_ASSET_PATH);
-    if (!previewPathMatch
-      || previewPathMatch[1] !== preview.sha256.toLowerCase()
-      || preview.bytes > MAX_ANONYMOUS_PREVIEW_BYTES
-      || !Number.isSafeInteger(preview.triangles) || Number(preview.triangles) <= 0
-      || !Number.isSafeInteger(preview.vertices) || Number(preview.vertices) <= 0
-      || !Number.isSafeInteger(preview.decodedGpuBytes) || Number(preview.decodedGpuBytes) <= 0
-      || Number(preview.decodedGpuBytes) > MAX_ANONYMOUS_PREVIEW_DECODED_BYTES
-      || Number(preview.triangles) > MAX_ANONYMOUS_PREVIEW_TRIANGLES
-      || !isBoundsMetres(preview.boundsMetres)) {
-      throw new Error('EXL-50U 总装 preview 必须使用摘要锁定路径并满足压缩、解码与几何预算。');
+    if (preview) {
+      const previewPathMatch = preview.path.match(EXL50U_PREVIEW_ASSET_PATH);
+      if (!previewPathMatch
+        || previewPathMatch[1] !== preview.sha256.toLowerCase()
+        || preview.bytes > MAX_ANONYMOUS_PREVIEW_BYTES
+        || !Number.isSafeInteger(preview.triangles) || Number(preview.triangles) <= 0
+        || !Number.isSafeInteger(preview.vertices) || Number(preview.vertices) <= 0
+        || !Number.isSafeInteger(preview.decodedGpuBytes) || Number(preview.decodedGpuBytes) <= 0
+        || Number(preview.decodedGpuBytes) > MAX_ANONYMOUS_PREVIEW_DECODED_BYTES
+        || Number(preview.triangles) > MAX_ANONYMOUS_PREVIEW_TRIANGLES
+        || !isBoundsMetres(preview.boundsMetres)) {
+        throw new Error('EXL-50U 总装 preview 必须使用摘要锁定路径并满足压缩、解码与几何预算。');
+      }
     }
     validateAnonymousShardBundles(
       assets.shardBundles,
       preview,
-      new Set(assets.webModels?.map((asset) => asset.id) ?? ['standard']),
+      new Set(assets.webModels?.map((asset) => asset.id) ?? (preview ? ['standard'] : [])),
     );
     const anonymousBundle = assets.shardBundles[0];
     const derivationEvidence = manifest.derivationEvidence;
-    if (Number(anonymousBundle?.sceneDrawTriangles) <= Number(preview.triangles ?? 0)) {
-      throw new Error('EXL-50U 总装匿名高精度分片必须提供高于兼容 preview 的场景几何细节。');
+    if (Number(anonymousBundle?.sceneDrawTriangles)
+      <= Number(derivationEvidence?.previewVisualLod.outputCleaning.finalTriangles ?? 0)) {
+      throw new Error('EXL-50U 总装匿名高精度分片必须提供高于派生 QA preview 的场景几何细节。');
     }
     if (!derivationEvidence
-      || Number(derivationEvidence.previewVisualLod.outputCleaning.finalTriangles) > Number(preview.triangles)
+      || (preview
+        && Number(derivationEvidence.previewVisualLod.outputCleaning.finalTriangles) > Number(preview.triangles))
       || Number(derivationEvidence.highQem.outputCleaning.finalTriangles)
         !== Number(anonymousBundle?.uniqueGeometryTriangles)
       || Number(derivationEvidence.highPartition.finalTrianglesBeforePartition)

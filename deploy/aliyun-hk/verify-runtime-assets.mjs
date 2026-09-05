@@ -15,23 +15,20 @@ const EXL_ID = "exl50u-general-assembly-v1";
 const EXL_DEVICE_ID = "exl50u-general-assembly-20260630";
 const EXL_MANIFEST_ENDPOINT = "/models/exl50u-general-assembly-v1/model-manifest.json";
 const EXL_ASSET_FORMAT = "glTF 2.0 binary + EXT_meshopt_compression + EXT_mesh_gpu_instancing; POSITION Float32; NORMAL normalized Int8 (8-bit); indices Uint16/Uint32";
-const EXL_FILE_COUNT = 21;
+const EXL_FILE_COUNT = 20;
 const EXL_SHARD_COUNT = 20;
 const EXL_MAX_TOTAL_BYTES = 300 * 1024 * 1024;
 const EXL_MAX_SHARD_BYTES = 24 * 1024 * 1024;
-const EXL_MAX_PREVIEW_BYTES = 12 * 1024 * 1024;
-const EXL_MAX_PREVIEW_DECODED_BYTES = 192 * 1024 * 1024;
 const EXL_MAX_SHARD_DECODED_BYTES = 96 * 1024 * 1024;
 const EXL_MAX_BUNDLE_DECODED_BYTES = 1_536 * 1024 * 1024;
 const EXL_MAX_PLACEMENT_INSTANCES_PER_SHARD = 250_000;
 const EXL_MAX_SCENE_TRIANGLES = 35_000_000;
-const EXL_MAX_PREVIEW_TRIANGLES = 30_000_000;
 const EXL_MAX_DRAW_CALLS = 800;
 const EXL_MIN_HIGH_TRIANGLE_RETENTION = 0.98;
 const EXL_PUBLICATION_NOTICE = [
   "# EXL-50U general-assembly public visualization derivative",
   "",
-  "This package contains only anonymous, simplified browser visualization derivatives. It contains no source CAD, PMI, dimension annotations, authoritative dimension tables, BOM, source assembly tree or engineering authority. Browser geometry retains an approximate metre-scale envelope for appearance visualization, but it is not a dimensional authority and must not be used for measurement or engineering dimensions. The 20 high-detail files are transport shards, not engineering systems.",
+  "This package contains only 20 anonymous, simplified high-detail browser visualization transport shards; no standard preview or runtime fallback is published. It contains no source CAD, PMI, dimension annotations, authoritative dimension tables, BOM, source assembly tree or engineering authority. Browser geometry retains an approximate metre-scale envelope for appearance visualization, but it is not a dimensional authority and must not be used for measurement or engineering dimensions. The 20 files are transport shards, not engineering systems.",
   "",
 ].join("\n");
 const SHA256 = /^[a-f0-9]{64}$/u;
@@ -62,10 +59,6 @@ const EXL_SHARD_METRICS = [
   "uniqueGeometryMeshes", "uniqueGeometryTriangles", "uniqueGeometryVertices",
   "placementInstances", "drawCalls", "sceneDrawTriangles", "decodedGpuBytes",
 ];
-const EXL_WEB_MODEL_KEYS = [
-  "path", "format", "sha256", "bytes", "triangles", "vertices", "decodedGpuBytes", "boundsMetres",
-];
-const EXL_WEB_MODEL_VARIANT_KEYS = ["id", "label", "quality", "default", ...EXL_WEB_MODEL_KEYS];
 const EXL_SHARD_BUNDLE_KEYS = [
   "id", "label", "quality", "delivery", "format", "rootNodeName", "extensionsRequired", "grouping",
   "bytes", ...EXL_SHARD_METRICS, "boundsMetres", "shards",
@@ -79,7 +72,6 @@ const EXL_GROUPING_KEYS = [
   "kind", "engineeringSemantic", "engineeringUseAllowed", "representsBom",
   "representsEngineeringSystems", "representsAssemblyTree",
 ];
-const EXL_PREVIEW_ROUTE = /^\/device-assets\/exl50u-general-assembly\/v1\/(device\.preview\.([a-f0-9]{64})\.meshopt\.glb)$/u;
 const EXL_SHARD_ROUTE = /^\/device-assets\/exl50u-general-assembly\/v1\/(anonymous-shard-(0[1-9]|1[0-9]|20)\.([a-f0-9]{64})\.high\.meshopt\.glb)$/u;
 
 // Keep the installer self-contained: the production archive intentionally does
@@ -87,7 +79,7 @@ const EXL_SHARD_ROUTE = /^\/device-assets\/exl50u-general-assembly\/v1\/(anonymo
 // projector template and make private metadata impossible to smuggle into an
 // otherwise digest-correct manifest.
 const EXL_FIXED_MANIFEST_FIELDS = Object.freeze({
-  schemaVersion: "1.4",
+  schemaVersion: "1.5",
   id: EXL_ID,
   title: "EXL-50U integrated general-assembly visualization",
   devicePackage: {
@@ -99,6 +91,7 @@ const EXL_FIXED_MANIFEST_FIELDS = Object.freeze({
       "the original CAD, assembly tree, PMI, dimension annotations, authoritative dimension tables and BOM are excluded",
       "the public visualization geometry retains an approximate metre-scale envelope but is not a dimensional authority",
       "all routes, byte lengths and SHA-256 digests are generated from reviewed GLBs",
+      "the only active browser assets are 20 high-detail anonymous transport shards; no standard preview or fallback asset is published",
       "the 20 high-detail groups are anonymous transport shards and not engineering systems",
     ],
   },
@@ -152,14 +145,14 @@ const EXL_FIXED_ACTIVE_CARD = Object.freeze({
   state: "匿名总装实时三维",
   tone: "controlled",
   facts: [
-    "能力足够时自动加载标准预览（11.0 MB）",
-    "20 个按需匿名高精度运输分片（271.0 MB）",
-    "总包 282.0 MB · Meshopt + GPU instancing",
+    "能力足够的桌面客户端可自动加载高精度模型",
+    "20 个匿名高精度运输分片（270,978,652 B / 271.0 MB）",
+    "仅保留高精度 · Meshopt + GPU instancing",
     "仅用于非工程外观展示",
   ],
-  deviceOverview: "EXL‑50U 装置集成总装的公开匿名数字样机，用于整机外观、旋转缩放、透明度、剖切与多级细节浏览。",
-  fileSummary: "1 个标准预览（11.0 MB） · 20 个匿名高精度运输分片（271.0 MB） · 总包 282.0 MB · 摘要锁定按需加载",
-  copy: "加载经授权、脱敏、简化和逐文件复核的公开匿名总装可视化派生。能力足够的桌面客户端自动加载标准预览；窄屏、省流量或低内存客户端由用户显式启动；高精度由用户点击后串行加载 20 个运输分片。公开根和运输分片不表达 BOM、工程系统、源装配树、材料、PMI、尺寸标注、权威尺寸表或配置权威；可视几何保留近似米制尺度，仅用于外观展示，不能作为测量或工程尺寸依据；原始 STEP 与工程 CAD 不会由网站下发。",
+  deviceOverview: "EXL‑50U 装置集成总装的公开匿名高精度数字样机，用于整机外观、旋转缩放、透明度与剖切浏览。",
+  fileSummary: "20 个匿名高精度运输分片 · 270,978,652 B（271.0 MB）· 摘要锁定串行加载 · 无标准预览或回退",
+  copy: "加载经授权、脱敏、简化和逐文件复核的公开匿名总装高精度可视化派生。能力足够的桌面客户端可以自动串行加载 20 个高精度运输分片；窄屏、省流量或低内存客户端必须由用户显式启动。当前发布不提供标准预览或降级回退，任一分片下载、完整性或解码失败均关闭本次模型加载。公开根和运输分片不表达 BOM、工程系统、源装配树、材料、PMI、尺寸标注、权威尺寸表或配置权威；可视几何保留近似米制尺度，仅用于外观展示，不能作为测量或工程尺寸依据；原始 STEP 与工程 CAD 不会由网站下发。",
   availability: "online-public-simplified",
   delivery: "public-static",
   comparisonFrame: null,
@@ -196,7 +189,8 @@ const EXPECTED = Object.freeze({
     destinationRoot: "public/models/exl50u-general-assembly-v1",
     stageDirectoryName: "exl50u-general-assembly-v1",
     routeRoot: "/device-assets/exl50u-general-assembly/v1",
-    fileCount: 21,
+    fileCount: 20,
+    totalBytes: 270_978_652,
     maxTotalBytes: 300 * 1024 * 1024,
     baseUrlEnv: "FUSION_EXL50U_GA_ASSET_BASE_URL",
     sourceDirEnv: "FUSION_EXL50U_GA_ASSET_SOURCE_DIR",
@@ -613,18 +607,15 @@ function validateBundle(bundle, expected) {
       || seenDigests.has(sha256)
     ) throw new Error(`${expected.id}.files[${offset}] is not digest-locked and unique`);
     if (expected.id === EXL_ID) {
-      const suffix = String(offset).padStart(2, "0");
-      const pattern = offset === 0
-        ? /^device\.preview\.[a-f0-9]{64}\.meshopt\.glb$/u
-        : new RegExp(`^anonymous-shard-${suffix}\\.[a-f0-9]{64}\\.high\\.meshopt\\.glb$`, "u");
-      const expectedRole = offset === 0 ? "preview" : `anonymous-shard-${suffix}`;
+      const suffix = String(offset + 1).padStart(2, "0");
+      const pattern = new RegExp(`^anonymous-shard-${suffix}\\.[a-f0-9]{64}\\.high\\.meshopt\\.glb$`, "u");
+      const expectedRole = `anonymous-shard-${suffix}`;
       if (
         file.role !== expectedRole
         || !pattern.test(filename)
-        || (offset === 0 && bytes > 12 * 1024 * 1024)
-        || (offset > 0 && bytes >= 24 * 1024 * 1024)
+        || bytes >= 24 * 1024 * 1024
       ) {
-        throw new Error(`${expected.id}.files[${offset}] violates the preview/shard contract`);
+        throw new Error(`${expected.id}.files[${offset}] violates the high-detail shard contract`);
       }
     } else {
       const expectedPart = ITER_PARTS[offset];
@@ -681,29 +672,11 @@ function manifestAssets(manifest) {
     [...EXL_MANIFEST_KEYS, ...(reviewCandidate ? ["reviewCandidate"] : [])],
     "published EXL-50U manifest",
   );
-  exactKeys(manifest.assets, ["webModel", "webModels", "shardBundles"], "published EXL-50U manifest assets");
+  exactKeys(manifest.assets, ["shardBundles"], "published EXL-50U manifest assets");
   if (
     Object.entries(EXL_FIXED_MANIFEST_FIELDS)
       .some(([key, value]) => !isDeepStrictEqual(manifest[key], value))
     || !realDate(manifest.asOf)
-    || manifest.assets?.sourceCad !== undefined
-    || !hasExactKeys(manifest.assets?.webModel, EXL_WEB_MODEL_KEYS)
-    || !Array.isArray(manifest.assets?.webModels)
-    || manifest.assets.webModels.length !== 1
-    || !hasExactKeys(manifest.assets.webModels[0], EXL_WEB_MODEL_VARIANT_KEYS)
-    || manifest.assets.webModels[0].id !== "preview"
-    || manifest.assets.webModels[0].quality !== "preview"
-    || manifest.assets.webModels[0].default !== true
-    || EXL_WEB_MODEL_KEYS.filter((key) => key !== "boundsMetres")
-      .some((key) => manifest.assets.webModels[0][key] !== manifest.assets.webModel[key])
-    || JSON.stringify(manifest.assets.webModels[0].boundsMetres)
-      !== JSON.stringify(manifest.assets.webModel.boundsMetres)
-    || manifest.assets.webModel.format !== EXL_ASSET_FORMAT
-    || !positiveSafeInteger(manifest.assets.webModel.triangles)
-    || !positiveSafeInteger(manifest.assets.webModel.vertices)
-    || !positiveSafeInteger(manifest.assets.webModel.decodedGpuBytes)
-    || manifest.assets.webModel.decodedGpuBytes > EXL_MAX_PREVIEW_DECODED_BYTES
-    || !validBounds(manifest.assets.webModel.boundsMetres)
     || !Array.isArray(manifest.assets?.shardBundles)
     || manifest.assets.shardBundles.length !== 1
   ) throw new Error("published EXL-50U manifest identity or public boundary is invalid");
@@ -736,15 +709,7 @@ function manifestAssets(manifest) {
     || !validBounds(bundle.boundsMetres)
   ) throw new Error("published EXL-50U manifest is not an anonymous 20-shard contract");
 
-  const files = [normalizedExlManifestAsset(
-    manifest.assets.webModel,
-    "preview",
-    EXL_PREVIEW_ROUTE,
-    2,
-  )];
-  if (files[0].bytes > EXL_MAX_PREVIEW_BYTES) {
-    throw new Error("published EXL-50U preview exceeds the strict byte budget");
-  }
+  const files = [];
   const metricTotals = Object.fromEntries(EXL_SHARD_METRICS.map((field) => [field, 0]));
   const unionMin = [Infinity, Infinity, Infinity];
   const unionMax = [-Infinity, -Infinity, -Infinity];
@@ -783,7 +748,7 @@ function manifestAssets(manifest) {
   }
 
   const totalBytes = files.reduce((sum, file) => sum + file.bytes, 0);
-  const shardBytes = files.slice(1).reduce((sum, file) => sum + file.bytes, 0);
+  const shardBytes = totalBytes;
   if (
     files.length !== EXL_FILE_COUNT
     || new Set(files.map((file) => file.filename)).size !== files.length
@@ -793,9 +758,6 @@ function manifestAssets(manifest) {
     || EXL_SHARD_METRICS.some((field) => metricTotals[field] !== bundle[field])
     || unionMin.some((coordinate, axis) => coordinate !== bundle.boundsMetres.min[axis])
     || unionMax.some((coordinate, axis) => coordinate !== bundle.boundsMetres.max[axis])
-    || manifest.assets.webModel.triangles > EXL_MAX_PREVIEW_TRIANGLES
-    || derivationEvidence.previewVisualLod.outputCleaning.finalTriangles
-      > manifest.assets.webModel.triangles
     || derivationEvidence.highQem.outputCleaning.finalTriangles
       !== metricTotals.uniqueGeometryTriangles
     || derivationEvidence.highPartition.finalTrianglesBeforePartition

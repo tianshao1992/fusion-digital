@@ -343,7 +343,8 @@ test('public device catalog is fail-closed and authorizes only bounded, verifiab
           (bundle) => bundle.id === 'exl50u-general-assembly-v1',
         );
         assert.ok(lockedBundle, 'active EXL-50U general assembly requires its external runtime lock');
-        assert.equal(lockedBundle.fileCount, 21);
+        assert.equal(lockedBundle.fileCount, 20);
+        assert.equal(lockedBundle.totalBytes, 270_978_652);
         assert.equal(lockedBundle.totalBytes, totalBytes);
         assert.deepEqual(
           lockedBundle.files.map(({ role, filename, route, sha256, bytes }) => (
@@ -382,17 +383,21 @@ test('public device catalog is fail-closed and authorizes only bounded, verifiab
 
       if (isExlGeneralAssembly) {
         const { files, totalBytes } = extractExl50uGeneralAssemblyAssets(manifest);
-        assert.equal(manifest.schemaVersion, '1.4');
+        assert.equal(manifest.schemaVersion, '1.5');
         assert.equal(manifest.devicePackage?.kind, 'public-simplified-derivative');
         assert.equal(manifest.devicePackage?.authority, 'illustrative');
         assert.equal(manifest.assets.sourceCad, undefined);
-        assert.equal(manifest.assets.webModels.length, 1);
+        assert.equal(manifest.assets.webModel, undefined, 'schema 1.5 must not publish a standard preview/fallback');
+        assert.equal(manifest.assets.webModels, undefined, 'schema 1.5 must expose no preview LOD list');
+        assert.equal(manifest.assets.poster, undefined);
+        assert.deepEqual(Object.keys(manifest.assets), ['shardBundles']);
         assert.equal(manifest.assets.shardBundles.length, 1);
-        assert.equal(files.length, 21);
-        assert.ok(totalBytes <= 300 * 1024 * 1024);
-        assert.ok(files[0].bytes <= 12 * 1024 * 1024);
-        assert.ok(files.slice(1).every((file) => file.bytes < 24 * 1024 * 1024));
+        assert.equal(files.length, 20);
+        assert.equal(totalBytes, 270_978_652);
+        assert.ok(files.every((file) => file.bytes < 24 * 1024 * 1024));
+        assert.ok(files.every((file, index) => file.role === `anonymous-shard-${String(index + 1).padStart(2, '0')}`));
         const shardBundle = manifest.assets.shardBundles[0];
+        assert.equal(shardBundle.bytes, 270_978_652);
         assert.equal(shardBundle.shards.length, 20);
         assert.deepEqual(shardBundle.grouping, {
           kind: 'anonymous-transport',
@@ -412,7 +417,7 @@ test('public device catalog is fail-closed and authorizes only bounded, verifiab
           if (hasGeometryOrSourceExtension(value)) {
             assert.match(
               value,
-              /^\/device-assets\/exl50u-general-assembly\/v1\/(?:device\.preview|anonymous-shard-(?:0[1-9]|1[0-9]|20))\.[a-f0-9]{64}(?:\.high)?\.meshopt\.glb$/,
+              /^\/device-assets\/exl50u-general-assembly\/v1\/anonymous-shard-(?:0[1-9]|1[0-9]|20)\.[a-f0-9]{64}\.high\.meshopt\.glb$/,
               `EXL-50U general assembly exposes an undeclared geometry/source path: ${value}`,
             );
           }
@@ -900,13 +905,13 @@ test('Sites Worker exposes only the approved EXL-50U general-assembly metadata r
     {
       pathname: manifestPath,
       assetPath: manifestPath,
-      payload: JSON.stringify({ schemaVersion: '1.4', id: 'exl50u-general-assembly-v1' }),
+      payload: JSON.stringify({ schemaVersion: '1.5', id: 'exl50u-general-assembly-v1' }),
       contentType: 'application/json; charset=utf-8',
     },
     {
       pathname: reviewManifestPath,
       assetPath: manifestPath,
-      payload: JSON.stringify({ schemaVersion: '1.4', id: 'exl50u-general-assembly-v1' }),
+      payload: JSON.stringify({ schemaVersion: '1.5', id: 'exl50u-general-assembly-v1' }),
       contentType: 'application/json; charset=utf-8',
     },
     {
@@ -963,6 +968,7 @@ test('Sites Worker exposes only the approved EXL-50U general-assembly metadata r
     ['/models/exl50u-general-assembly-v1', 'GET'],
     ['/models/exl50u-general-assembly-v1/other.json', 'GET'],
     ['/models/exl50u-general-assembly-v1/anonymous-shard-01.example.high.meshopt.glb', 'GET'],
+    [`/device-assets/exl50u-general-assembly/v1/device.preview.${'a'.repeat(64)}.meshopt.glb`, 'GET'],
     [manifestPath, 'POST'],
     [reviewManifestPath, 'POST'],
     [noticePath, 'POST'],
@@ -1605,7 +1611,7 @@ test('Paramak interaction controls remain public-only and expose consistent acce
     'EXL turntable viewer must remain raster-only and must not import geometry loaders');
 });
 
-test('EXL, ITER and EHL use lifecycle-safe industrial silver appearance without changing Paramak semantics', async () => {
+test('EXL, ITER and EHL use lifecycle-safe presentation appearances without changing Paramak semantics', async () => {
   const source = await readFile(resolve(repositoryRoot, 'app/components/TokamakCadViewer.tsx'), 'utf8');
   const workspace = await readFile(resolve(repositoryRoot, 'app/digital-prototype/MultiDeviceWorkspace.tsx'), 'utf8');
   const appearanceSource = await readFile(resolve(repositoryRoot, 'app/components/device-viewer/industrialAppearance.ts'), 'utf8');
@@ -1614,7 +1620,10 @@ test('EXL, ITER and EHL use lifecycle-safe industrial silver appearance without 
   const ehlManifest = JSON.parse(await readFile(resolve(publicRoot, 'models/ehl2-preliminary-v1/model-manifest.json'), 'utf8'));
   const appearance = await import('../app/components/device-viewer/industrialAppearance.ts');
 
-  assert.match(workspace, /appearancePreset=\{device\.id === ['"]exl-50u-2026-upgrade['"][\s\S]{0,220}device\.id === ['"]iter-educational-model['"][\s\S]{0,220}device\.id === ['"]ehl-2-preliminary['"][\s\S]{0,120}\? ['"]industrial-silver-v1['"][\s\S]{0,80}: ['"]semantic['"]\}/);
+  assert.match(workspace, /appearancePreset=\{device\.id === ['"]exl50u-general-assembly-20260630['"][\s\S]{0,80}\? ['"]assembly-color-v1['"]/,
+    'the EXL-50U total assembly must use its reviewed presentation palette');
+  assert.match(workspace, /: device\.id === ['"]exl-50u-2026-upgrade['"][\s\S]{0,220}device\.id === ['"]iter-educational-model['"][\s\S]{0,220}device\.id === ['"]ehl-2-preliminary['"][\s\S]{0,120}\? ['"]industrial-silver-v1['"][\s\S]{0,80}: ['"]semantic['"]\}/,
+    'the existing EXL, ITER and EHL devices must retain industrial silver');
   assert.match(source, /RoomEnvironment\.js/);
   assert.match(source, /new THREE\.PMREMGenerator\(renderer\)/);
   assert.match(source, /scene\.environment = localEnvironmentTarget\.texture/);
@@ -1626,8 +1635,8 @@ test('EXL, ITER and EHL use lifecycle-safe industrial silver appearance without 
   assert.match(source, /originalMaterials\.forEach\(\(material, mesh\) => \{ mesh\.material = baseMaterialByMesh\.get\(mesh\) \?\? material; \}\)/);
   assert.match(appearanceSource, /presentation-only appearance codes/);
   assert.match(source, /t\(['"]viewer\.appearanceDisclaimer['"]\)/);
-  assert.match(messagesSource, /不代表真实材料、涂层、表面状态或温度场/);
-  assert.match(messagesSource, /do not represent real materials, coatings, surface condition or temperature/i);
+  assert.match(messagesSource, /不代表真实材料、工程系统、涂层、表面状态或温度场/);
+  assert.match(messagesSource, /do not represent real materials, engineering systems, coatings, surface condition or temperature/i);
   assert.match(workspace, /showFootnotes=\{false\}/,
     'the compact digital-prototype workbench must suppress long-form viewer footnotes');
 
@@ -1658,7 +1667,7 @@ test('EXL, ITER and EHL viewers open and reset to an active Z section through th
     'the non-zero default offset must be converted into a real model-space clipping plane');
   assert.match(source, /setClipping\(defaultInteraction\.clipping,\s*defaultInteraction\.clipAxis,\s*defaultInteraction\.clipOffset\)/,
     'reset must restore the EXL section instead of turning clipping off');
-  assert.match(source, /key=\{`\$\{sessionViewerId\}:\$\{sessionManifestUrl\}:\$\{sessionAppearancePreset\}`\}/,
+  assert.match(source, /key=\{`\$\{sessionViewerId\}:\$\{sessionManifestUrl\}:\$\{sessionAppearancePreset\}:\$\{sessionCameraProfile\}`\}/,
     'switching devices must create a fresh viewer session with the correct device defaults');
 });
 

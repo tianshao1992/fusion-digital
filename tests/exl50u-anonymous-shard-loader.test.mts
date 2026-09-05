@@ -8,8 +8,6 @@ import {
   EXL50U_ANONYMOUS_SHARD_COUNT,
   EXL50U_GA_VISUALIZATION_ROOT,
   MAX_ANONYMOUS_DELIVERY_BYTES,
-  MAX_ANONYMOUS_PREVIEW_BYTES,
-  MAX_ANONYMOUS_PREVIEW_DECODED_BYTES,
   MAX_ANONYMOUS_SHARD_PLACEMENT_INSTANCES,
   parseDeviceManifest,
   type DeviceAnonymousShardBundle,
@@ -173,10 +171,9 @@ function shardBundle(shards = Array.from({ length: EXL50U_ANONYMOUS_SHARD_COUNT 
 }
 
 function manifestCandidate() {
-  const preview = previewAsset();
   return {
     $schema: '/models/device-manifest.schema.json',
-    schemaVersion: '1.4',
+    schemaVersion: '1.5',
     id: 'exl50u-general-assembly-v1',
     title: 'EXL-50U integrated assembly anonymous browser visualization derivative',
     asOf: '2026-09-02',
@@ -301,7 +298,7 @@ function manifestCandidate() {
         highMissingOccurrences: 0,
       },
     },
-    assets: { webModel: preview, shardBundles: [shardBundle()] },
+    assets: { shardBundles: [shardBundle()] },
     systems: [{
       id: 'visualization',
       title: '总装外观',
@@ -333,12 +330,14 @@ function manifestCandidate() {
   };
 }
 
-test('manifest 1.4 accepts only the controlled 20-shard anonymous transport contract', async () => {
+test('manifest 1.5 accepts only the controlled high-only 20-shard anonymous transport contract', async () => {
   const candidate = manifestCandidate();
   const parsed = parseDeviceManifest(candidate, {
     manifestUrl: '/models/exl50u-general-assembly-v1/model-manifest.json',
   });
-  assert.equal(parsed.schemaVersion, '1.4');
+  assert.equal(parsed.schemaVersion, '1.5');
+  assert.equal(parsed.assets.webModel, undefined);
+  assert.equal(parsed.assets.webModels, undefined);
   assert.equal(parsed.assets.shardBundles?.[0]?.shards.length, 20);
   assert.equal(parsed.assets.shardBundles?.[0]?.rootNodeName, EXL50U_GA_VISUALIZATION_ROOT);
   assert.deepEqual(parsed.assets.shardBundles?.[0]?.grouping, {
@@ -355,7 +354,7 @@ test('manifest 1.4 accepts only the controlled 20-shard anonymous transport cont
   assert.doesNotThrow(() => parseDeviceManifest(retryCandidate));
 
   const schema = JSON.parse(await readFile(new URL('../public/models/device-manifest.schema.json', import.meta.url), 'utf8'));
-  assert.ok(schema.properties.schemaVersion.enum.includes('1.4'));
+  assert.ok(schema.properties.schemaVersion.enum.includes('1.5'));
   assert.equal(schema.$defs.anonymousShardBundle.properties.shards.minItems, 20);
   assert.equal(schema.$defs.anonymousShardBundle.properties.sceneDrawTriangles.maximum, 35_000_000);
   assert.equal(schema.$defs.anonymousShardBundle.properties.drawCalls.maximum, 800);
@@ -393,7 +392,7 @@ test('manifest 1.4 accepts only the controlled 20-shard anonymous transport cont
   assert.equal(shardAccessPolicy?.properties?.engineeringUseAllowed?.const, false);
 });
 
-test('manifest 1.4 rejects the r6-scale high QEM aggregate triangle collapse', () => {
+test('manifest 1.5 rejects the r6-scale high QEM aggregate triangle collapse', () => {
   const candidate = manifestCandidate();
   Object.assign(candidate.derivationEvidence.sourceInputCleaning, {
     sourceFaces: 37_387_145,
@@ -412,7 +411,7 @@ test('manifest 1.4 rejects the r6-scale high QEM aggregate triangle collapse', (
   assert.throws(() => parseDeviceManifest(candidate), /EXL-50U.*\u6d3e\u751f\u8bc1\u636e/u);
 });
 
-test('manifest 1.4 permits 35 million high scene triangles but rejects any excess', () => {
+test('manifest 1.5 permits 35 million high scene triangles but rejects any excess', () => {
   const withHighSceneTriangles = (total: number) => {
     const candidate = manifestCandidate();
     const shards = candidate.assets.shardBundles[0].shards;
@@ -429,9 +428,9 @@ test('manifest 1.4 permits 35 million high scene triangles but rejects any exces
   assert.throws(() => parseDeviceManifest(withHighSceneTriangles(35_000_001)), /\u533f\u540d\u5206\u7247\u5305/u);
 });
 
-test('manifest 1.4 fails closed on identity, semantics, ordering, digest, budget and extension drift', () => {
+test('manifest 1.5 fails closed on preview/fallback reintroduction, identity, semantics, ordering, digest, budget and extension drift', () => {
   const mutations: Array<(candidate: ReturnType<typeof manifestCandidate>) => void> = [
-    (candidate) => { candidate.schemaVersion = '1.3'; },
+    (candidate) => { candidate.schemaVersion = '1.4'; },
     (candidate) => { candidate.id = 'another-device'; },
     (candidate) => { candidate.access.classification = 'INTERNAL'; },
     (candidate) => { candidate.access.redistributionAllowed = false; },
@@ -444,8 +443,9 @@ test('manifest 1.4 fails closed on identity, semantics, ordering, digest, budget
     (candidate) => { candidate.assets.shardBundles[0].shards[0].index = 2; },
     (candidate) => { candidate.assets.shardBundles[0].shards[0].path = candidate.assets.shardBundles[0].shards[0].path.replace(/[a-f0-9]{64}/, 'f'.repeat(64)); },
     (candidate) => { candidate.assets.shardBundles[0].bytes += 1; },
-    (candidate) => { candidate.assets.webModel.bytes = MAX_ANONYMOUS_PREVIEW_BYTES + 1; },
-    (candidate) => { candidate.assets.webModel.decodedGpuBytes = MAX_ANONYMOUS_PREVIEW_DECODED_BYTES + 1; },
+    (candidate) => { (candidate.assets as Record<string, unknown>).webModel = previewAsset(); },
+    (candidate) => { (candidate.assets as Record<string, unknown>).webModels = [{ ...previewAsset(), id: 'preview', label: 'Preview', quality: 'preview', default: true }]; },
+    (candidate) => { (candidate.assets as Record<string, unknown>).poster = { path: '/models/preview.png', sha256: 'a'.repeat(64), bytes: 1 }; },
     (candidate) => {
       const shard = candidate.assets.shardBundles[0].shards[0];
       const increase = MAX_ANONYMOUS_SHARD_PLACEMENT_INSTANCES + 1 - shard.placementInstances;
@@ -505,11 +505,14 @@ test('manifest 1.4 fails closed on identity, semantics, ordering, digest, budget
   }
 
   const oversized = manifestCandidate();
-  oversized.assets.webModel.bytes = MAX_ANONYMOUS_DELIVERY_BYTES;
+  const firstShard = oversized.assets.shardBundles[0].shards[0];
+  const increase = MAX_ANONYMOUS_DELIVERY_BYTES + 1 - oversized.assets.shardBundles[0].bytes;
+  firstShard.bytes += increase;
+  oversized.assets.shardBundles[0].bytes += increase;
   assert.throws(() => parseDeviceManifest(oversized), /预算|合同/);
 
   const sourceCad = manifestCandidate() as ReturnType<typeof manifestCandidate> & { assets: Record<string, unknown> };
-  sourceCad.assets.sourceCad = { ...sourceCad.assets.webModel };
+  sourceCad.assets.sourceCad = previewAsset();
   assert.throws(() => parseDeviceManifest(sourceCad), /仅允许/);
 });
 
@@ -555,7 +558,40 @@ test('anonymous shard loader preallocates verified bytes and serializes all 20 d
   }
 });
 
-test('anonymous device loader defaults to preview and falls back after a high-detail integrity failure', async () => {
+test('high-only shard failure disposes completed geometry and never requests a preview fallback', async () => {
+  const bundle = shardBundle();
+  const counters = { geometry: 0, material: 0 };
+  const requested: string[] = [];
+  const originalFetch = globalThis.fetch;
+  try {
+    globalThis.fetch = (async (input) => {
+      const path = String(input);
+      requested.push(path);
+      const asset = bundle.shards.find((candidate) => candidate.path === path)!;
+      const bytes = glbBytes(asset.index, true);
+      if (asset.index === 2) bytes[bytes.length - 1] ^= 0xff;
+      return response(bytes);
+    }) as typeof fetch;
+    await assert.rejects(
+      loadVerifiedAnonymousShardBundle(bundle, {
+        loader: {
+          parseAsync: async () => ({ scene: renderableScene(true, counters) }),
+        } as never,
+        createGroup: () => new FakeNode() as never,
+        signal: new AbortController().signal,
+      }),
+      /SHA-256 mismatch/,
+    );
+    assert.deepEqual(requested, bundle.shards.slice(0, 2).map(({ path }) => path));
+    assert.ok(requested.every((path) => !path.includes('device.preview.')),
+      'schema 1.5 failure must remain fail-closed instead of downloading a deleted standard asset');
+    assert.deepEqual(counters, { geometry: 1, material: 1 });
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('legacy 1.4 anonymous device loader defaults to preview and falls back after a high-detail integrity failure', async () => {
   const previewBytes = glbBytes(0, false);
   const preview = previewAsset(previewBytes);
   const bundle = shardBundle();
@@ -608,7 +644,7 @@ test('anonymous device loader defaults to preview and falls back after a high-de
   }
 });
 
-test('high-detail fallback disposes every completed shard before loading preview', async () => {
+test('legacy 1.4 high-detail fallback disposes every completed shard before loading preview', async () => {
   const previewBytes = glbBytes(0, false);
   const preview = previewAsset(previewBytes);
   const bundle = shardBundle();

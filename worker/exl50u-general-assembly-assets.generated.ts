@@ -1,8 +1,7 @@
-// Generated from the reviewed public EXL-50U 1.4 manifest by
+// Generated from the reviewed public EXL-50U 1.5 manifest by
 // scripts/assets/exl50u-general-assembly-runtime-contract.mjs.
 // Never hand-edit hashes. An empty array keeps the metadata-only card fail-closed.
 export const EXL50U_GENERAL_ASSEMBLY_RELEASE_ASSETS = [
-  { role: "preview", filename: "device.preview.477c107984d52e89cfa1268625ee2edda114c057ad70e52d778e1d6ef2d3d8bc.meshopt.glb", sha256: "477c107984d52e89cfa1268625ee2edda114c057ad70e52d778e1d6ef2d3d8bc", bytes: 11026020 },
   { role: "anonymous-shard-01", filename: "anonymous-shard-01.edcf378c85545bb543842c9782b50b3edb465fb8acf2583d33bb006490717e80.high.meshopt.glb", sha256: "edcf378c85545bb543842c9782b50b3edb465fb8acf2583d33bb006490717e80", bytes: 13524992 },
   { role: "anonymous-shard-02", filename: "anonymous-shard-02.38b177040bb2797df50349297dab83268e11cc7893d085f355fffb2e30c35968.high.meshopt.glb", sha256: "38b177040bb2797df50349297dab83268e11cc7893d085f355fffb2e30c35968", bytes: 13943980 },
   { role: "anonymous-shard-03", filename: "anonymous-shard-03.9bf88fa22b35e96220631ed6460c443a926b1e58db7c9b409ffee6bcd9504c19.high.meshopt.glb", sha256: "9bf88fa22b35e96220631ed6460c443a926b1e58db7c9b409ffee6bcd9504c19", bytes: 13544444 },

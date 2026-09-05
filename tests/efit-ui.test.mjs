@@ -245,7 +245,7 @@ test('all five device cards publish technical overview and model/data summaries 
     && generalAssemblyManifest.reviewCandidate === undefined;
   const generalAssemblySummary = catalog.devices.find(({ id }) => id === 'exl50u-general-assembly-20260630').fileSummary;
   if (formalGeneralAssembly) {
-    assert.match(generalAssemblySummary, /1 个标准预览[\s\S]*20 个匿名高精度运输分片[\s\S]*摘要锁定按需加载/);
+    assert.match(generalAssemblySummary, /20 个匿名高精度运输分片[\s\S]*270,978,652 B（271\.0 MB）[\s\S]*摘要锁定串行加载[\s\S]*无标准预览或回退/);
     assert.doesNotMatch(generalAssemblySummary, /当前无可加载 GLB/);
   } else {
     assert.match(generalAssemblySummary, /8 个共同原点系统导出待完成[\s\S]*当前无可加载 GLB/);

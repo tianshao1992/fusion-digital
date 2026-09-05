@@ -157,11 +157,11 @@ function isCanonicalRuntimeMirrorUrlText(value: string): boolean {
 function createControlledExl50uGeneralAssemblyAssets(
   assets: readonly Exl50uGeneralAssemblyReleaseAsset[],
 ): ReadonlyMap<string, IterHighDetailProxyAsset> {
-  // Empty is the committed fail-closed state until a reviewed public 1.4
-  // manifest generates all 21 real digest entries in one change.
+  // Empty is the committed fail-closed state until a reviewed public 1.5
+  // manifest generates all 20 high-detail digest entries in one change.
   if (assets.length === 0) return new Map();
-  if (assets.length !== 21) {
-    throw new Error("EXL-50U general-assembly release contract must contain one preview and 20 shards");
+  if (assets.length !== 20) {
+    throw new Error("EXL-50U general-assembly release contract must contain exactly 20 high-detail shards");
   }
 
   const routes = new Map<string, IterHighDetailProxyAsset>();
@@ -169,12 +169,12 @@ function createControlledExl50uGeneralAssemblyAssets(
   let totalBytes = 0;
   for (let index = 0; index < assets.length; index += 1) {
     const asset = assets[index];
-    const expectedRole = index === 0
-      ? "preview"
-      : `anonymous-shard-${String(index).padStart(2, "0")}`;
-    const expectedFilename = index === 0
-      ? new RegExp(`^device\\.preview\\.${asset.sha256}\\.meshopt\\.glb$`, "u")
-      : new RegExp(`^anonymous-shard-${String(index).padStart(2, "0")}\\.${asset.sha256}\\.high\\.meshopt\\.glb$`, "u");
+    const shardIndex = index + 1;
+    const expectedRole = `anonymous-shard-${String(shardIndex).padStart(2, "0")}`;
+    const expectedFilename = new RegExp(
+      `^anonymous-shard-${String(shardIndex).padStart(2, "0")}\\.${asset.sha256}\\.high\\.meshopt\\.glb$`,
+      "u",
+    );
     if (
       asset.role !== expectedRole
       || !/^[a-f0-9]{64}$/u.test(asset.sha256)
@@ -182,7 +182,7 @@ function createControlledExl50uGeneralAssemblyAssets(
       || !expectedFilename.test(asset.filename)
       || !Number.isSafeInteger(asset.bytes)
       || asset.bytes <= 0
-      || (index > 0 && asset.bytes >= 24 * 1024 * 1024)
+      || asset.bytes >= 24 * 1024 * 1024
     ) {
       throw new Error(`Invalid EXL-50U general-assembly allow-list entry: ${expectedRole}`);
     }

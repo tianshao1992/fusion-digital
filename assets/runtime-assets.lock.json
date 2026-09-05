@@ -9,8 +9,8 @@
       "public/models/exl50u-general-assembly-v1/*.glb"
     ],
     "fileCount": 426,
-    "totalBytes": 261049027,
-    "treeSha256": "319959fbd698d17be35569bd16c6e6b47c6cb1d2ad25eda79cd6725d6149d2ec",
+    "totalBytes": 261048480,
+    "treeSha256": "80c300b3b682f98d6b8f4326bffdfc28cfe528dcdf853c2c4fe1b82d07063084",
     "files": [
       {
         "path": "public/FusionDigital-technical-roadmap-2026-08-15.docx",
@@ -1609,13 +1609,13 @@
       },
       {
         "path": "public/models/device-catalog.json",
-        "bytes": 14164,
-        "sha256": "d682548ce4f256bbaf240bb87813d61d3f037d703b78fcdb8f8197a6b62a2fa8"
+        "bytes": 14278,
+        "sha256": "afae519b993ae6386fcc2a8bda0b5b067e3b3d35024eabffa0ac61c8f926f160"
       },
       {
         "path": "public/models/device-manifest.schema.json",
-        "bytes": 29046,
-        "sha256": "e11c340502c895be4b2e4804d7497f4db995e38acae7bf3e88af22a50f09f88e"
+        "bytes": 29915,
+        "sha256": "8b8b9cc90b23e823fe4ff0b0b95a171cff1e94322bfcb65c00bb28e15937b54d"
       },
       {
         "path": "public/models/ehl2-preliminary-v1/PUBLICATION-NOTICE.md",
@@ -1649,13 +1649,13 @@
       },
       {
         "path": "public/models/exl50u-general-assembly-v1/PUBLICATION-NOTICE.md",
-        "bytes": 548,
-        "sha256": "f201625b48b586c0eeb477c55b07838bafe77d06cd504499993b3307ab72b5b4"
+        "bytes": 610,
+        "sha256": "57ffd5d2c3c1542f0ae48493b283e204c1d51d3244a7b6584be4c5fb5252e019"
       },
       {
         "path": "public/models/exl50u-general-assembly-v1/model-manifest.json",
-        "bytes": 30328,
-        "sha256": "679d0ec59080774b831a926077f1431e3ee5ed9af0e1d288c17d2a656de9e77d"
+        "bytes": 28736,
+        "sha256": "3fbc2e36f04b508cbfeea08edb79551d13624db4b77eb2088240619bf642145e"
       },
       {
         "path": "public/models/exl50u-interactive/exl50u-interactive-high.meshopt.glb",
@@ -2326,17 +2326,10 @@
         "baseUrlEnv": "FUSION_EXL50U_GA_ASSET_BASE_URL",
         "sourceDirEnv": "FUSION_EXL50U_GA_ASSET_SOURCE_DIR"
       },
-      "fileCount": 21,
-      "totalBytes": 282004672,
-      "aggregateSha256": "8115cae1f39cebad90d542bccbdaa5c969afd36f0d8fcdba847f532b1a896346",
+      "fileCount": 20,
+      "totalBytes": 270978652,
+      "aggregateSha256": "6fe832dd58d8f18845f251937a5d82435f75783484cc01a72f255e8461f6d86b",
       "files": [
-        {
-          "role": "preview",
-          "filename": "device.preview.477c107984d52e89cfa1268625ee2edda114c057ad70e52d778e1d6ef2d3d8bc.meshopt.glb",
-          "route": "/device-assets/exl50u-general-assembly/v1/device.preview.477c107984d52e89cfa1268625ee2edda114c057ad70e52d778e1d6ef2d3d8bc.meshopt.glb",
-          "sha256": "477c107984d52e89cfa1268625ee2edda114c057ad70e52d778e1d6ef2d3d8bc",
-          "bytes": 11026020
-        },
         {
           "role": "anonymous-shard-01",
           "filename": "anonymous-shard-01.edcf378c85545bb543842c9782b50b3edb465fb8acf2583d33bb006490717e80.high.meshopt.glb",

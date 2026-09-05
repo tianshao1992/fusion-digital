@@ -13,7 +13,7 @@
 
 Git 克隆已经包含 Paramak、EXL-50U 2026 升级版浏览器模型、EXL-50U 总装的公开
 manifest/notice、公开 EFIT 派生数据和其余网页下载资源。ITER 高清教育可视化的 18 个
-运行时 GLB 与 EXL-50U 总装的 1 个 preview + 20 个 high 匿名 GLB 独立分发：Sites 等
+运行时 GLB 与 EXL-50U 总装的 20 个 high-only 匿名 GLB（270,978,652 B / 271.0 MB）独立分发：Sites 等
 联网 Worker 从同一资产提交的两个审核目录按需获取；离线/自包含部署须先 hydrate 两个
 bundle。所有模式都使用 `assets/runtime-assets.lock.json` 校验精确文件名、字节数和 SHA-256。
 
@@ -100,7 +100,7 @@ git clone --branch main --single-branch ssh://git@ssh.github.com:443/tianshao199
 
 如克隆中断，优先重新运行 `git fetch` / `git pull --ff-only`，并通过 `git status --short` 确认工作区干净。
 
-### 3.1 补齐 ITER 18 片与 EXL-50U 总装 21 个运行时文件
+### 3.1 补齐 ITER 18 片与 EXL-50U 总装 20 个运行时文件
 
 Worker 没有默认外部镜像；需要验证全部公开内容、准备内网部署或断网运行时，分别显式
 导入两个已审核目录：
@@ -180,7 +180,7 @@ ${EDITOR:-vi} .env.local
 | `MOONSHOT_API_KEY` / `MOONSHOT_MODEL` | 否 | Kimi/Moonshot 服务端密钥及模型 |
 | `MOONSHOT_REGION` | 否 | `cn` 或 `international`；默认 `cn` |
 | `ITER_HIGH_DETAIL_ASSET_BASE_URL` | 否 | Sites 预览/联网 Worker 的 ITER 18 片显式镜像根地址；未设且本地无文件时返回 503 |
-| `EXL50U_GENERAL_ASSEMBLY_ASSET_BASE_URL` | 否 | Sites 预览/联网 Worker 的 EXL-50U 总装 21 个匿名 GLB 显式镜像根地址；同样无默认源 |
+| `EXL50U_GENERAL_ASSEMBLY_ASSET_BASE_URL` | 否 | Sites 预览/联网 Worker 的 EXL-50U 总装 20 个 high-only 匿名 GLB 显式镜像根地址；同样无默认源 |
 | `PORT` | 否 | `npm run start` 的端口，默认 `3000` |
 
 Sites 预览环境的供应商密钥应在 Runtime environment variables 中设置为 Secret；
@@ -282,8 +282,8 @@ npm run check
 - [ ] `/physics`、`/engineering`、`/control`、`/diagnostics` 能打开。
 - [ ] `/search` 搜索 `EXL-50U` 能返回带来源记录。
 - [ ] `/knowledge-graph` 能加载关系图和筛选器。
-- [ ] `/digital-prototype#prototype-workspace` 能切换 Paramak、EXL‑50U、EXL‑50U 总装、EHL‑2 与 ITER；总装 preview 在能力足够的桌面客户端自动显示，窄屏/省流量/低内存客户端保留显式启动，用户明确选择 high 后 20 个匿名运输分片串行加载。
-- [ ] 完整资产模式下，`npm run assets:verify` 通过；ITER 可加载 18 个高清部件，EXL‑50U 总装可加载 1 preview + 20 high 且不把运输分片表述为工程系统/BOM。
+- [ ] `/digital-prototype#prototype-workspace` 能切换 Paramak、EXL‑50U、EXL‑50U 总装、EHL‑2 与 ITER；总装在能力足够的桌面客户端可自动串行加载 20 个 high 匿名运输分片，窄屏/省流量/低内存客户端必须显式启动；不存在标准 preview 或失败回退。
+- [ ] 完整资产模式下，`npm run assets:verify` 通过；ITER 可加载 18 个高清部件，EXL‑50U 总装可加载 20 个 high 且不把运输分片表述为工程系统/BOM；任一 high 分片失败时 fail closed。
 - [ ] 正式 EXL 总装 manifest 的 v8 匿名 evidence（sloppy preview `selectedTargetTriangleRatio = 0.03`、`simplifierNormalizedErrorLimit = 0.02`；high QEM 两次尝试 `0.70/0.65`）与 canonical 10-view visual-QA receipt 已由发布门禁验证；high 聚合三角形达到 `floor(0.98 * selectedTargetTriangleRatio * sourceInputCleaning.sanitizedTriangles)`，该下限不用于 sloppy preview；本地复现不需要、也不得从公开包恢复私有 visual/QEM 报告、源 manifest、`geometryAccounting` 或源身份。
 - [ ] 未配置密钥时，“询问 FusionDigital”显示确定性检索回退，而不是白屏或泄漏配置。
 - [ ] `/account` 与 `/research-review` 在没有 Sites 身份时显示登录边界，而不是把客户端输入当作身份。
@@ -390,13 +390,13 @@ SIWC 是 Sites 平台能力，不是本仓库自建的本地用户名密码系�
 - ITER 高清与 EXL-50U 总装都要运行各自的 `assets:hydrate -- --bundle ...`，再运行 `npm run assets:verify`；如用镜像，两个根地址必须使用同一资产提交 SHA，并能直接拼接锁文件中的精确文件名，不能是登录页或网盘分享页；
 - 使用支持 WebGL2 的当前版 Chrome、Edge、Firefox 或 Safari；
 - 关闭会拦截本地大文件请求的浏览器插件；
-- 低内存设备保留总装 preview；总装 preview 不超过 12 MiB，每个 high 分片小于 24 MiB，但解码后的 GPU 占用远大于下载大小，高精度必须由用户明确触发并串行加载。
+- active 总装不提供 preview 或降级回退；每个 high 分片小于 24 MiB，但解码后的 GPU 占用远大于下载大小，因此窄屏、省流量或低内存设备必须由用户显式启动并串行加载，任一分片失败时 fail closed。私有派生流程可以继续生成 preview 作为视觉 QA 输入，但不得将其发布为浏览器资产。
 
 ### Sites 构建包超过约 256 MiB
 
 不要在已经 hydration 的工作区构建 Sites 正式同步包。应从目标 SHA 建立未 hydrate 的干净
 detached worktree，执行 `npm run assets:verify:tracked` 与构建；Sites Worker 按需从同一资产
-提交取得 ITER 18 片和 EXL 总装 21 文件，摘要 URL 返回 immutable cache。不要通过删除 Git
+提交取得 ITER 18 片和 EXL 总装 20 个 high 文件，摘要 URL 返回 immutable cache。不要通过删除 Git
 已跟踪页面内容或进一步压缩模型来规避上限。
 
 ### Codeup SSH 连接失败
@@ -446,7 +446,7 @@ Known deviations:
 ```
 
 复现通过的最低标准是：指定应用 SHA 可全新克隆、Git 内公开资产通过
-`assets:verify:tracked`、完整/离线模式下 ITER 18 片与 EXL-50U 总装 21 文件都通过
+`assets:verify:tracked`、完整/离线模式下 ITER 18 片与 EXL-50U 总装 20 个 high 文件都通过
 `assets:verify`、Sites 两个外置根固定到同一资产提交、`npm ci` 和 `npm run check` 成功、
 开发与本地生产服务器均可打开、公开检索/图谱/数字样机通过冒烟检查，并且没有受控源
 CAD、源 EFIT 或凭证混入工作区。

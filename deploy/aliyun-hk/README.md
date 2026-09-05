@@ -162,9 +162,10 @@ npm run assets:verify
 
 ### 2.1 EXL-50U 总装从 metadata-only 到正式激活
 
-正式发布状态固定为 21 个公开匿名 GLB：1 个在能力足够的桌面客户端自动加载、在窄屏/
-省流量/低内存客户端由用户显式启动的 preview，以及 20 个按用户意图串行加载的高精度
-运输分片。下列步骤既是首次激活流程，也是以后替换派生版本时必须原子重复的
+正式发布状态固定为 20 个公开匿名 high GLB，总计 270,978,652 B（271.0 MB）。能力足够的
+桌面客户端可以自动串行加载；窄屏、省流量或低内存客户端必须由用户显式启动。active
+发布不包含标准 preview 或降级回退，任一分片下载、摘要、解码或聚合检查失败都必须
+fail closed。下列步骤既是首次激活流程，也是以后替换派生版本时必须原子重复的
 流程。项目器只读取公开派生 manifest 与 GLB，不读取 STEP、BOM、PMI 或源装配标签；
 GLB JSON 必须没有任意 `name` / `extras`，唯一公开根名 `EXL50U_GA_VISUALIZATION` 由
 运行时合成，不写回 GLB。正式格式固定为 Float32 POSITION、normalized Int8 NORMAL、
@@ -233,7 +234,7 @@ node --test tests/external-runtime-bundle-contract.test.mjs tests/runtime-assets
 正式激活或更新必须在同一提交中加入/更新 manifest、`PUBLICATION-NOTICE.md`、catalog、
 精确 Worker 白名单和 runtime lock；五者不可拆分提交，也不能通过临时移走 manifest 让
 测试退回 metadata-only。
-下列五组验收会据此进入 **active 分支**，验证 real-3d catalog、manifest endpoint、21 文件
+下列五组验收会据此进入 **active 分支**，验证 real-3d catalog、manifest endpoint、20 个 high 文件
 白名单与 runtime lock 相干；仅历史 pre-activation 提交在 manifest 不存在时严格要求
 metadata-only、空白名单且 lock 未激活。八系统私有转换管线由独立测试继续验证，不能替代
 正式匿名派生的 active 验收。
@@ -257,14 +258,15 @@ ITER Worker 对应变量是
 白名单以外路径始终 404。香港构建则保留两类缓存并逐文件复核字节数与 SHA-256。
 投影后的 DeviceManifest 必须保留 exact v8 匿名 `derivationEvidence` 七键：`kind`、
 `selectedAttempt`、`sourceInputCleaning`、`previewVisualLod`、`highQem`、`highPartition` 与
-`coverage`。preview 固定使用 sloppy visual LOD（`selectedTargetTriangleRatio = 0.03`、
-`simplifierNormalizedErrorLimit = 0.02`）；最近一次受控预检的 preview 为 11,026,020 B，须继续低于 12 MiB
-硬上限。high 固定使用 QEM 与 `0.70/0.65` 两次尝试；2026-09-05 正式派生的 21 个 GLB
-实测总量为 282.0 MB（preview 11.0 MB、high 271.0 MB），后续版本仍以新派生物的实测值为准；两档各自保存互斥计数闭合的
+`coverage`。`previewVisualLod` 中的 sloppy visual LOD（`selectedTargetTriangleRatio = 0.03`、
+`simplifierNormalizedErrorLimit = 0.02`）仅保留为受控派生 QA 收据，不进入 active 浏览器资产，
+也不得作为 high 失败回退。high 固定使用 QEM 与 `0.70/0.65` 两次尝试；2026-09-05 正式
+high 派生的 20 个 GLB 实测总量为 270,978,652 B（271.0 MB），后续版本仍以新派生物的
+实测值为准；两档派生证据各自保存互斥计数闭合的
 `outputCleaning`。high 还必须满足
 `highQem.outputCleaning.finalTriangles >= floor(0.98 * selectedTargetTriangleRatio * sourceInputCleaning.sanitizedTriangles)`，
 用于阻断 r6 一类发布尺度的 high 聚合坍缩；逐 definition 的 98% 目标保留由私有 v9 exporter
-在生成阶段另行强制，不能由这条公开聚合指标替代。preview 还必须携带 canonical 10-view visual QA 收据，十视角最差
+在生成阶段另行强制，不能由这条公开聚合指标替代。私有 preview QA 还必须携带 canonical 10-view visual QA 收据，十视角最差
 silhouette IoU 不低于 0.97、最坏 normalized depth p99 不高于 0.02。20 个 high 文件只是
 运输分片；`highPartition.geometryChunkCount` 是解码 GLB primitive/mesh 的实际几何 chunk
 总数，二者不得混同，并须与 high 三角面及零缺失 coverage 对账。
@@ -273,7 +275,7 @@ silhouette IoU 不低于 0.97、最坏 normalized depth p99 不高于 0.02。20 
 `geometryAccounting`、源路径/摘要、定义或 occurrence ID 均留在仓库外受控目录；公开
 DeviceManifest 只能包含上述匿名计数和小写 64 字符 receipt SHA-256，不得投影这些私有字段。
 `sourceInputCleaning` 仅记录 exact-zero/repeated-index 清理及稳定顶点重映射的匿名计数，不含
-任何逐定义拓扑保留声明或旧版简化语义，也不得用任意 epsilon 吞掉正面积三角形。21 个 GLB
+任何逐定义拓扑保留声明或旧版简化语义，也不得用任意 epsilon 吞掉正面积三角形。20 个 high GLB
 总量仍受 300 MiB 硬门禁约束，不能按某次实际产物大小放宽。
 
 公开 GLB 和 manifest 的 `boundsMetres` 会保留用于浏览器取景的近似米制尺度。公开包排除的
@@ -340,7 +342,7 @@ if ($LASTEXITCODE -ne 0) {
 SHA-256、EFIT 入口、每个 gzip sidecar 的解压字节一致性，并在已有证书时从版本化模板
 恢复 HTTPS/HTTP2 配置。对历史 pre-activation release，metadata-only 分支会递归检查
 整个 `dist/client`，拒绝放在任意其他目录中的 EXL bundle、1.4 formal manifest 或摘要
-命名匿名 GLB；当前 active release 则要求 manifest、21 个 GLB 与 lock 全部存在。安装器还会把全部
+命名匿名 GLB；当前 active release 则要求 manifest、20 个 high GLB 与 lock 全部存在，且旧 preview 路径必须为 404。安装器还会把全部
 `dist/client/**/*.glb` 与 Git/external lock 的精确 path、字节和 SHA-256 对账。Nginx 的
 所有 GLB `location =` 只能从完整校验后的 runtime lock 逐文件渲染，不能用目录或正则放宽：
 

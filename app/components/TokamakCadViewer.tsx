@@ -26,6 +26,8 @@ import type {
 import type { Ehl2DiagnosticRuntime } from './device-viewer/ehl2DiagnosticRuntime';
 import {
   INDUSTRIAL_STUDIO,
+  INDUSTRIAL_MATERIAL_SPECS,
+  resolveAnonymousAssemblyMaterialPreset,
   resolveIndustrialMaterialPreset,
   resolveIndustrialMaterialSpec,
   type TokamakAppearancePreset,
@@ -39,6 +41,7 @@ import {
 import {
   createSerialTaskGate,
   loadAnonymousDeviceModelWithFallback,
+  loadVerifiedAnonymousShardBundle,
   loadVerifiedComponentBundle,
   loadVerifiedMonolithicModel,
   type AnonymousShardLoadProgress,
@@ -91,6 +94,7 @@ export type TokamakCadViewerProps = {
   defaultClipAxis?: 'x' | 'y' | 'z';
   defaultClipOffset?: number;
   appearancePreset?: TokamakAppearancePreset;
+  cameraProfile?: 'default' | 'close-inspection';
   efitFrame?: EfitFrame | EfitRenderableFrame | null;
   efitStore?: EfitStore | EfitStoreLike | null;
   efitAlignment?: EfitAlignmentContract;
@@ -440,8 +444,9 @@ export default function TokamakCadViewer(props: TokamakCadViewerProps = {}) {
   const sessionViewerId = props.viewerId ?? 'paramak-tokamak-demo';
   const sessionManifestUrl = props.manifestUrl ?? DEFAULT_MANIFEST_URL;
   const sessionAppearancePreset = props.appearancePreset ?? 'semantic';
+  const sessionCameraProfile = props.cameraProfile ?? 'default';
   return <TokamakCadViewerSession
-    key={`${sessionViewerId}:${sessionManifestUrl}:${sessionAppearancePreset}`}
+    key={`${sessionViewerId}:${sessionManifestUrl}:${sessionAppearancePreset}:${sessionCameraProfile}`}
     {...props}
   />;
 }
@@ -458,6 +463,7 @@ function TokamakCadViewerSession({
   defaultClipAxis = 'x',
   defaultClipOffset = 0,
   appearancePreset = 'semantic',
+  cameraProfile = 'default',
   efitFrame = null,
   efitStore = null,
   efitAlignment,
@@ -795,6 +801,10 @@ function TokamakCadViewerSession({
         const preferPreview = shouldPreferPreview();
         const initialChoice = initialViewerModelChoice(variants, preferPreview);
         if (!initialChoice.model) throw new Error(i18nRef.current.t('viewer.errorManifest'));
+        const autoLoadAnonymousModel = initialChoice.anonymousHighOnly && !preferPreview;
+        if (initialChoice.anonymousHighOnly && autoLoadAnonymousModel) {
+          anonymousHighDetailIntentRef.current = true;
+        }
         setManifest(loadedManifest);
         setAnonymousShardProgress(null);
         setLoadedQuality(null);
@@ -808,7 +818,7 @@ function TokamakCadViewerSession({
             ? current
             : initialChoice.model?.id ?? null);
         }
-        if (initialChoice.anonymousHighDetailRequiresExplicitAction && !preferPreview) {
+        if (autoLoadAnonymousModel) {
           setErrorMessage('');
           setProgress(0);
           setActivated(true);
@@ -905,7 +915,8 @@ function TokamakCadViewerSession({
       if ((import.meta as ImportMeta & { env: { SSR: boolean } }).env.SSR) return;
       if (!supportsWebGL2()) throw new Error(i18nRef.current.t('viewer.errorWebgl2'));
 
-      const environmentModulePromise = appearancePreset === 'industrial-silver-v1'
+      const environmentModulePromise = (appearancePreset === 'industrial-silver-v1'
+        || appearancePreset === 'assembly-color-v1')
         ? import('three/examples/jsm/environments/RoomEnvironment.js')
         : Promise.resolve(null);
       const diagnosticOverlayModulePromise = diagnosticOverlaySession
@@ -930,7 +941,9 @@ function TokamakCadViewerSession({
       const loadedModel = selectedModel;
 
       const mount = mountRef.current;
-      const industrialAppearance = appearancePreset === 'industrial-silver-v1';
+      const industrialAppearance = appearancePreset === 'industrial-silver-v1'
+        || appearancePreset === 'assembly-color-v1';
+      const closeInspection = cameraProfile === 'close-inspection';
       const initialSceneTheme = resolveCadSceneTheme(visualThemeRef.current, appearancePreset);
       const scene = new THREE.Scene();
       localScene = scene;
@@ -962,8 +975,10 @@ function TokamakCadViewerSession({
       controls.enableDamping = true;
       controls.dampingFactor = 0.075;
       controls.rotateSpeed = 0.62;
-      controls.zoomSpeed = 0.72;
-      controls.panSpeed = 0.55;
+      controls.zoomSpeed = closeInspection ? 1.08 : 0.72;
+      controls.panSpeed = closeInspection ? 0.82 : 0.55;
+      controls.zoomToCursor = closeInspection;
+      controls.screenSpacePanning = closeInspection;
       controls.minDistance = 4.2;
       controls.maxDistance = 15;
       controls.autoRotateSpeed = 0.72;
@@ -1055,16 +1070,21 @@ function TokamakCadViewerSession({
           default: return new THREE.MeshStandardMaterial({ color: 0x7f958d, emissive: 0x10231d, emissiveIntensity: 0.18, roughness: 0.46, metalness: 0.78 });
         }
       };
-      const materialForSystem = (system: DeviceManifest['systems'][number] | undefined) => {
+      const materialForSystem = (
+        system: DeviceManifest['systems'][number] | undefined,
+        anonymousAssemblyPreset?: keyof typeof INDUSTRIAL_MATERIAL_SPECS,
+      ) => {
         const category = system?.category ?? 'structure';
         const appearanceKey = industrialAppearance
-          ? `industrial:${resolveIndustrialMaterialPreset(system?.id ?? '', category)}`
+          ? `industrial:${anonymousAssemblyPreset ?? resolveIndustrialMaterialPreset(system?.id ?? '', category)}`
           : `semantic:${category}`;
         const existing = materialByAppearanceKey.get(appearanceKey);
         if (existing) return existing;
         let material: MeshStandardMaterial;
         if (industrialAppearance) {
-          const spec = resolveIndustrialMaterialSpec(system?.id ?? '', category);
+          const spec = anonymousAssemblyPreset
+            ? INDUSTRIAL_MATERIAL_SPECS[anonymousAssemblyPreset]
+            : resolveIndustrialMaterialSpec(system?.id ?? '', category);
           const common = {
             color: spec.color,
             emissive: spec.emissive ?? 0x000000,
@@ -1120,7 +1140,23 @@ function TokamakCadViewerSession({
           const anonymousBundle = loadedManifest.assets.shardBundles?.[0];
           if (anonymousBundle) {
             const preview = loadedManifest.assets.webModel;
-            if (!preview) throw new Error(i18nRef.current.t('viewer.errorModelNotReady'));
+            const reportAnonymousProgress = (nextProgress: AnonymousShardLoadProgress) => {
+              if (disposed || nextProgress.totalBytes <= 0) return;
+              setAnonymousShardProgress(nextProgress);
+              setProgress(Math.min(99, Math.round((nextProgress.loadedBytes / nextProgress.totalBytes) * 100)));
+            };
+            if (!preview) {
+              if (!isAnonymousShardChoice(loadedModel) || loadedModel.id !== anonymousBundle.id) {
+                throw new Error(i18nRef.current.t('viewer.errorModelNotReady'));
+              }
+              resolvedLoadQuality = 'high';
+              return loadVerifiedAnonymousShardBundle(anonymousBundle, {
+                loader,
+                createGroup: () => new THREE.Group(),
+                signal: modelLoadController.signal,
+                onProgress: reportAnonymousProgress,
+              });
+            }
             const userInitiatedHighDetail = isAnonymousShardChoice(loadedModel)
               && anonymousHighDetailIntentRef.current;
             const result = await loadAnonymousDeviceModelWithFallback(preview, anonymousBundle, {
@@ -1131,11 +1167,7 @@ function TokamakCadViewerSession({
                 ? requestedAnonymousQuality(loadedModel, userInitiatedHighDetail)
                 : 'preview',
               userInitiatedHighDetail,
-              onProgress: (nextProgress) => {
-                if (disposed || nextProgress.totalBytes <= 0) return;
-                setAnonymousShardProgress(nextProgress);
-                setProgress(Math.min(99, Math.round((nextProgress.loadedBytes / nextProgress.totalBytes) * 100)));
-              },
+              onProgress: reportAnonymousProgress,
               onFallback: (error) => {
                 anonymousFallbackReason = error;
               },
@@ -1193,6 +1225,10 @@ function TokamakCadViewerSession({
       let meshes = 0;
       let triangles = 0;
       let drawVertices = 0;
+      model.updateWorldMatrix(true, true);
+      const sourceBox = new THREE.Box3().setFromObject(model, true);
+      const sourceSize = sourceBox.getSize(new THREE.Vector3());
+      const sourceCenter = sourceBox.getCenter(new THREE.Vector3());
 
       model.traverse((node) => {
         const mapped = systemByNodeName.get(node.name);
@@ -1212,7 +1248,20 @@ function TokamakCadViewerSession({
         });
         const inheritedPartId = partIdByNode.get(mesh);
         const system = inheritedPartId ? systemByPartId.get(inheritedPartId) : undefined;
-        const replacement = materialForSystem(system);
+        let anonymousAssemblyPreset: keyof typeof INDUSTRIAL_MATERIAL_SPECS | undefined;
+        if (appearancePreset === 'assembly-color-v1' && anonymousTransport) {
+          const meshBox = new THREE.Box3().setFromObject(mesh, true);
+          const meshSize = meshBox.getSize(new THREE.Vector3());
+          const meshCentre = meshBox.getCenter(new THREE.Vector3());
+          anonymousAssemblyPreset = resolveAnonymousAssemblyMaterialPreset({
+            size: meshSize.toArray() as [number, number, number],
+            centre: meshCentre.toArray() as [number, number, number],
+            assemblySize: sourceSize.toArray() as [number, number, number],
+            assemblyCentre: sourceCenter.toArray() as [number, number, number],
+            ordinal: meshes,
+          });
+        }
+        const replacement = materialForSystem(system, anonymousAssemblyPreset);
         mesh.material = replacement;
         originalMaterials.set(mesh, replacement);
         const positionCount = mesh.geometry.attributes.position?.count ?? 0;
@@ -1250,9 +1299,6 @@ function TokamakCadViewerSession({
         disposableMaterials.delete(material);
       });
 
-      const sourceBox = new THREE.Box3().setFromObject(model);
-      const sourceSize = sourceBox.getSize(new THREE.Vector3());
-      const sourceCenter = sourceBox.getCenter(new THREE.Vector3());
       const longestSide = Math.max(sourceSize.x, sourceSize.y, sourceSize.z) || 1;
       const displayScale = 6.1 / longestSide;
       model.scale.setScalar(displayScale);
@@ -1367,9 +1413,11 @@ function TokamakCadViewerSession({
         const horizontalHalfFov = Math.atan(Math.tan(verticalHalfFov) * Math.max(camera.aspect, 0.1));
         const limitingHalfFov = Math.max(0.08, Math.min(verticalHalfFov, horizontalHalfFov));
         const distance = (modelRadius / Math.sin(limitingHalfFov)) * 1.45;
-        camera.near = Math.max(0.01, modelRadius * 0.005);
+        camera.near = closeInspection
+          ? Math.max(0.0005, modelRadius * 0.00035)
+          : Math.max(0.01, modelRadius * 0.005);
         camera.far = Math.max(distance * 4.5 + modelRadius * 2, modelRadius * 24);
-        controls.minDistance = modelRadius * 1.2;
+        controls.minDistance = modelRadius * (closeInspection ? 0.025 : 1.2);
         controls.maxDistance = distance * 3.8;
         camera.up.set(0, 1, 0);
         const direction = new THREE.Vector3(0.92, 0.58, 1).normalize();
@@ -1921,7 +1969,7 @@ function TokamakCadViewerSession({
     });
 
     return () => { disposed = true; releaseResources(); viewerRef.current = null; };
-  }, [activated, appearancePreset, availableModels, diagnosticOverlaySession, ehl2Session, manifest, modelAttempt, selectedModel, viewerId, wireframeAllowed]);
+  }, [activated, appearancePreset, availableModels, cameraProfile, diagnosticOverlaySession, ehl2Session, manifest, modelAttempt, selectedModel, viewerId, wireframeAllowed]);
 
   useEffect(() => {
     const overlay = viewerRef.current?.efitOverlay;
@@ -1951,7 +1999,8 @@ function TokamakCadViewerSession({
   useEffect(() => {
     const onFullscreenChange = () => {
       setFullscreen(document.fullscreenElement === fullscreenRef.current);
-      requestAnimationFrame(() => requestAnimationFrame(() => viewerRef.current?.resize(true)));
+      // Fullscreen changes the viewport, not the user's inspection target.
+      requestAnimationFrame(() => requestAnimationFrame(() => viewerRef.current?.resize(false)));
     };
     document.addEventListener('fullscreenchange', onFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
@@ -2242,7 +2291,7 @@ function TokamakCadViewerSession({
       </div>
 
       {showFootnotes && <div className="tokamakCadFootnotes">
-        <p><b>{t('viewer.footnoteScience')}</b>{applicabilityStatement}{appearancePreset === 'industrial-silver-v1' && ` ${t('viewer.appearanceDisclaimer')}`}</p>
+        <p><b>{t('viewer.footnoteScience')}</b>{applicabilityStatement}{appearancePreset !== 'semantic' && ` ${t('viewer.appearanceDisclaimer')}`}</p>
         <p><b>{t('viewer.footnoteDelivery')}</b>{securityNotice ? content(securityNotice) : t('viewer.deliveryDisclaimer')}<a href={manifestUrl}>{t('viewer.viewManifest')}</a><a href="/models/device-manifest.schema.json">{t('viewer.viewSchema')}</a>{isParamakPackage && <a href="https://github.com/fusion-energy/paramak/tree/0.9.11" target="_blank" rel="noreferrer">Paramak 0.9.11</a>}<a href="/licenses/THREE-LICENSE.txt">{t('viewer.threeLicense')}</a>{showDownloadActions && <><a href={sourceCadPath} download>{t('viewer.downloadStep')}</a><a href={webModelPath} download>{t('viewer.downloadGlb')}</a></>}</p>
       </div>}
     </section>

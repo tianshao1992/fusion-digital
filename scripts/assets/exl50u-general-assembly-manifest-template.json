@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "1.4",
+  "schemaVersion": "1.5",
   "id": "exl50u-general-assembly-v1",
   "title": "EXL-50U integrated general-assembly visualization",
   "devicePackage": {
@@ -11,6 +11,7 @@
       "the original CAD, assembly tree, PMI, dimension annotations, authoritative dimension tables and BOM are excluded",
       "the public visualization geometry retains an approximate metre-scale envelope but is not a dimensional authority",
       "all routes, byte lengths and SHA-256 digests are generated from reviewed GLBs",
+      "the only active browser assets are 20 high-detail anonymous transport shards; no standard preview or fallback asset is published",
       "the 20 high-detail groups are anonymous transport shards and not engineering systems"
     ]
   },

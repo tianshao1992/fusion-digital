@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "1.4",
+  "schemaVersion": "1.5",
   "id": "exl50u-general-assembly-v1",
   "title": "EXL-50U integrated general-assembly visualization",
   "devicePackage": {
@@ -11,6 +11,7 @@
       "the original CAD, assembly tree, PMI, dimension annotations, authoritative dimension tables and BOM are excluded",
       "the public visualization geometry retains an approximate metre-scale envelope but is not a dimensional authority",
       "all routes, byte lengths and SHA-256 digests are generated from reviewed GLBs",
+      "the only active browser assets are 20 high-detail anonymous transport shards; no standard preview or fallback asset is published",
       "the 20 high-detail groups are anonymous transport shards and not engineering systems"
     ]
   },
@@ -168,54 +169,6 @@
     }
   },
   "assets": {
-    "webModel": {
-      "path": "/device-assets/exl50u-general-assembly/v1/device.preview.477c107984d52e89cfa1268625ee2edda114c057ad70e52d778e1d6ef2d3d8bc.meshopt.glb",
-      "format": "glTF 2.0 binary + EXT_meshopt_compression + EXT_mesh_gpu_instancing; POSITION Float32; NORMAL normalized Int8 (8-bit); indices Uint16/Uint32",
-      "sha256": "477c107984d52e89cfa1268625ee2edda114c057ad70e52d778e1d6ef2d3d8bc",
-      "bytes": 11026020,
-      "triangles": 3741903,
-      "vertices": 747473,
-      "decodedGpuBytes": 26451018,
-      "boundsMetres": {
-        "min": [
-          -69,
-          -5.464649677276615,
-          -15.050000190734865
-        ],
-        "max": [
-          17.247529983520508,
-          8.845350265502933,
-          15.049999237060549
-        ]
-      }
-    },
-    "webModels": [
-      {
-        "id": "preview",
-        "label": "标准",
-        "quality": "preview",
-        "default": true,
-        "path": "/device-assets/exl50u-general-assembly/v1/device.preview.477c107984d52e89cfa1268625ee2edda114c057ad70e52d778e1d6ef2d3d8bc.meshopt.glb",
-        "format": "glTF 2.0 binary + EXT_meshopt_compression + EXT_mesh_gpu_instancing; POSITION Float32; NORMAL normalized Int8 (8-bit); indices Uint16/Uint32",
-        "sha256": "477c107984d52e89cfa1268625ee2edda114c057ad70e52d778e1d6ef2d3d8bc",
-        "bytes": 11026020,
-        "triangles": 3741903,
-        "vertices": 747473,
-        "decodedGpuBytes": 26451018,
-        "boundsMetres": {
-          "min": [
-            -69,
-            -5.464649677276615,
-            -15.050000190734865
-          ],
-          "max": [
-            17.247529983520508,
-            8.845350265502933,
-            15.049999237060549
-          ]
-        }
-      }
-    ],
     "shardBundles": [
       {
         "id": "anonymous-high",

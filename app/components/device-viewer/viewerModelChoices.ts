@@ -13,6 +13,7 @@ export type InitialViewerModelChoice = {
   declaredDefault: ViewerModelChoice | null;
   autoPreviewApplied: boolean;
   anonymousHighDetailRequiresExplicitAction: boolean;
+  anonymousHighOnly: boolean;
 };
 
 /**
@@ -50,10 +51,10 @@ export function isAnonymousVisualizationManifest(manifest: DeviceManifest | null
 
 /**
  * Existing device packages keep their declared/default and constrained-device
- * behaviour. A manifest with anonymous shards is deliberately different:
- * preview is always the initial choice, independent of device capability or a
- * mistakenly ambitious authoring default. High detail can only be reached by
- * a later user action in the viewer.
+ * behaviour. Legacy anonymous packages with a preview still start at that
+ * preview and require an explicit high-detail action. A reviewed high-only
+ * anonymous package starts its sole shard bundle automatically on capable
+ * desktops, while constrained devices keep the same explicit launch gate.
  */
 export function initialViewerModelChoice(
   choices: readonly ViewerModelChoice[],
@@ -64,13 +65,15 @@ export function initialViewerModelChoice(
     ?? preview
     ?? choices[0]
     ?? null;
-  const anonymousHighDetailRequiresExplicitAction = choices.some(isAnonymousShardChoice);
-  if (anonymousHighDetailRequiresExplicitAction) {
+  const anonymousShard = choices.find(isAnonymousShardChoice) ?? null;
+  const anonymousHighOnly = Boolean(anonymousShard && !preview);
+  if (anonymousShard) {
     return {
-      model: preview,
+      model: preview ?? anonymousShard,
       declaredDefault,
       autoPreviewApplied: false,
-      anonymousHighDetailRequiresExplicitAction: true,
+      anonymousHighDetailRequiresExplicitAction: Boolean(preview || preferPreviewForConstrainedDevice),
+      anonymousHighOnly,
     };
   }
   const autoPreviewApplied = Boolean(
@@ -84,6 +87,7 @@ export function initialViewerModelChoice(
     declaredDefault,
     autoPreviewApplied,
     anonymousHighDetailRequiresExplicitAction: false,
+    anonymousHighOnly: false,
   };
 }
 
