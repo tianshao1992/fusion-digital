@@ -1,6 +1,6 @@
 {
   "schemaVersion": "2.3",
-  "asOf": "2026-09-01",
+  "asOf": "2026-09-05",
   "securityPolicy": {
     "previewOnly": true,
     "showDownloadActions": false,
@@ -18,7 +18,11 @@
       "eyebrow": "PUBLIC · REAL-TIME 3D",
       "state": "实时三维可交互",
       "tone": "online",
-      "facts": ["MIT 公开许可", "17 个稳定部件", "2.2 MB 浏览器模型"],
+      "facts": [
+        "MIT 公开许可",
+        "17 个稳定部件",
+        "2.2 MB 浏览器模型"
+      ],
       "deviceOverview": "通用参数化 Tokamak 演示装配，用于验证装配树、部件交互与剖切浏览。",
       "fileSummary": "2.2 MB GLB · 17 个稳定部件",
       "copy": "参数化 360° 主体示意，用于验证装配树、剖切、显隐和后续多装置比较。它不代表任何真实装置的工程权威模型。",
@@ -42,7 +46,13 @@
       "eyebrow": "AUTHORIZED · REAL-TIME 3D",
       "state": "简化派生实时三维",
       "tone": "controlled",
-      "facts": ["用户授权公开展示", "12 个主要系统组件", "84 个历史设计端口 · Camera / Array / Laser", "76 个公开授权名义测点 · 本地非权威草稿", "10 炮 / 5,804 帧 EFIT · 18303 + 6 炮偏滤器拓扑"],
+      "facts": [
+        "用户授权公开展示",
+        "12 个主要系统组件",
+        "84 个历史设计端口 · Camera / Array / Laser",
+        "76 个公开授权名义测点 · 本地非权威草稿",
+        "10 炮 / 5,804 帧 EFIT · 18303 + 6 炮偏滤器拓扑"
+      ],
       "deviceOverview": "紧凑球形托卡马克 EXL‑50U 2026 升级样机，联动三维装配、EFIT 磁面与放电时序，并在同一简化装置模型上叠加 84 个经米制审阅修正的历史设计端口与 76 个名义主机测点；测点前端修改仅保存为非权威本地草稿。",
       "fileSummary": "标准 / 高清 Meshopt GLB 5.6 / 13.4 MB · 12 个系统 · 84 个历史设计端口 · 76 个名义测点 · 不加载测点 OBJ/STL · 10 炮 5,804 帧 EFIT · 7 炮偏滤器拓扑",
       "copy": "公开加载经授权、脱敏和轻量化的简化派生几何；标准与高清两档均采用细化曲面离散、锐边法线与 Meshopt 传输压缩。原装配合并为 12 个主要系统组件，支持组件选择、显隐、隔离、透明度与 X/Y/Z 剖切；76 个公开授权名义测点仅以标记层叠加到原有三维结构，不加载或交付重复的测点 OBJ/STL，前端编辑仅形成非权威本地草稿。十炮 EFIT 可联动播放轴对称磁面、LCFS、磁轴和放电时序。18303 显示经离线校验的 v1 主/次 X 点、开放分离支及 limiter 交点代理；新增六炮按帧显示经有界校验的 topology graph v2，包括边界/近边界 X 点、已解析分离支及 canonical limiter 交点。未解析臂与未经审查的开放区域只显示线框，不生成 SOL 或偏滤器体积。原始 CAD、STEP、完整磁通网格和工程权威模型不会由网站下发。",
@@ -78,7 +88,15 @@
         "portDatasetEndpoint": "/models/exl50u-diagview2-v1/diagview2-ports.json",
         "sensorDatasetEndpoint": "/models/exl50u-sensor-points-v1/sensor-points.json",
         "sensorManifestEndpoint": "/models/exl50u-sensor-points-v1/manifest.json",
-        "capabilities": ["camera", "array", "laser", "reviewed-port-poses", "browser-overlay", "host-sensor-points", "sensor-point-draft-management"],
+        "capabilities": [
+          "camera",
+          "array",
+          "laser",
+          "reviewed-port-poses",
+          "browser-overlay",
+          "host-sensor-points",
+          "sensor-point-draft-management"
+        ],
         "statement": "Browser visualization of 84 historical EXL-50U design port records after reviewed metre-unit correction and repair of the S2 coordinate formula, plus 76 user-authorized public nominal host sensor points rendered as markers on the existing authorized public simplified CAD derivative. It supports Camera, Array and Laser design geometry, browser overlays, and non-authoritative browser-local sensor-point drafts. The sensor layer loads no OBJ or STL geometry. It is not measured or as-installed survey data, a calibrated diagnostic or optical model, validated engineering clear-aperture analysis, manufacturing authority, or an experimental diagnostic result."
       }
     },
@@ -86,20 +104,25 @@
       "id": "exl50u-general-assembly-20260630",
       "index": "03",
       "title": "EXL‑50U 总装（2026‑06‑30）",
-      "eyebrow": "PIPELINE · ASSETS PENDING",
-      "state": "总装派生准备中",
-      "tone": "restricted",
-      "facts": ["8 个公开通用系统", "预览目标上限 70 万三角面 · 12 MB", "高清目标上限 448 万三角面 · 48 MB", "共同原点与视觉复核未完成"],
-      "deviceOverview": "面向 EXL‑50U 装置集成总装的独立数字样机入口，覆盖主机、加热、辅助、电源、控制、基础设施、测量参考与诊断八个通用系统。",
-      "fileSummary": "转换与验收管线已就绪 · 8 个共同原点系统导出待完成 · 当前无可加载 GLB",
-      "copy": "已建立与现有 EXL‑50U、EHL‑2 浏览器模型一致的系统级 STEP、一次受控 QEM、Float32 位置、Int8 法线和 Meshopt 压缩方案。当前仅展示公开元数据与交付状态；必须先从权威 CAD 环境导出八个保持共同装配原点和世界位姿的系统文件，再通过 preview/high 双 LOD、运行时几何、共同原点和并排视觉复核，才会开放三维资产。不会复用现有 EXL‑50U 的 EFIT、历史端口或 76 个名义测点坐标合同。原始 STEP、私有装配标签、BOM、PMI、图纸、作者信息和工程权威模型均不由网站下发。",
-      "availability": "pipeline-ready-assets-pending",
-      "delivery": "local-only",
+      "eyebrow": "AUTHORIZED · REAL-TIME 3D",
+      "state": "匿名总装实时三维",
+      "tone": "controlled",
+      "facts": [
+        "能力足够时自动加载标准预览（11.0 MB）",
+        "20 个按需匿名高精度运输分片（271.0 MB）",
+        "总包 282.0 MB · Meshopt + GPU instancing",
+        "仅用于非工程外观展示"
+      ],
+      "deviceOverview": "EXL‑50U 装置集成总装的公开匿名数字样机，用于整机外观、旋转缩放、透明度、剖切与多级细节浏览。",
+      "fileSummary": "1 个标准预览（11.0 MB） · 20 个匿名高精度运输分片（271.0 MB） · 总包 282.0 MB · 摘要锁定按需加载",
+      "copy": "加载经授权、脱敏、简化和逐文件复核的公开匿名总装可视化派生。能力足够的桌面客户端自动加载标准预览；窄屏、省流量或低内存客户端由用户显式启动；高精度由用户点击后串行加载 20 个运输分片。公开根和运输分片不表达 BOM、工程系统、源装配树、材料、PMI、尺寸标注、权威尺寸表或配置权威；可视几何保留近似米制尺度，仅用于外观展示，不能作为测量或工程尺寸依据；原始 STEP 与工程 CAD 不会由网站下发。",
+      "availability": "online-public-simplified",
+      "delivery": "public-static",
       "comparisonFrame": null,
-      "statement": "Conversion contract and public metadata only. No browser assembly geometry is published until all eight common-origin exports, both LOD runtime QA results, and the visual/common-origin review receipt pass.",
+      "statement": "User-authorized anonymous public visualization derivative for interactive browser preview. Transport shards have no engineering-system meaning, and source CAD or engineering authority is not published.",
       "viewer": {
-        "mode": "metadata-only",
-        "manifestEndpoint": null,
+        "mode": "real-3d",
+        "manifestEndpoint": "/models/exl50u-general-assembly-v1/model-manifest.json",
         "turntableManifestEndpoint": null,
         "overlayEligible": false
       },
@@ -113,7 +136,12 @@
       "eyebrow": "AUTHORIZED · PRELIMINARY 3D",
       "state": "约半面数浏览器派生",
       "tone": "controlled",
-      "facts": ["用户授权公开简化展示", "6 个稳定部件", "约 247 万三角面 · 14.2 MB Meshopt", "保留源模型约 50% 面数"],
+      "facts": [
+        "用户授权公开简化展示",
+        "6 个稳定部件",
+        "约 247 万三角面 · 14.2 MB Meshopt",
+        "保留源模型约 50% 面数"
+      ],
       "deviceOverview": "来自 2026-08-12 初步 CAD 基线的 EHL‑2 装配样机，并复现 DiagView2 的端口、相机、阵列、激光与 CAD 视线分析工作流。",
       "fileSummary": "14.2 MB Meshopt GLB · 6 个部件 · 约 247 万三角面 · 41 个法兰位姿 · 3 类诊断",
       "copy": "加载由 2026-08-12 EHL‑2 初步 CAD 基线生成的浏览器可视化派生模型。六个部件保持共同装配原点，几何面数约为源 GLB 的 50%，只采用一次受控 QEM 简化；位置保留 Float32，法线使用 Int8，并通过 Meshopt 降低传输体积，不再进行激进减面。该模型用于方案沟通、装配浏览、显隐、隔离、透明度和剖切，不代表 as-built 构型、尺寸计量、制造依据或工程 CAE 权威模型。源 GLB 不由网站下发。",
@@ -136,7 +164,17 @@
         "sourceLabel": "DiagView2 geometry-analysis engine and reviewed EHL-2 flange dataset",
         "sourceRevision": "868d74d5e0e6c9abaec0eb623bcdd13ead771c79",
         "portDatasetEndpoint": "/models/ehl2-preliminary-v1/diagview2-ports.json",
-        "capabilities": ["camera", "array", "laser", "cad-first-hit", "render-slicing", "geometry-io", "design-report", "optical-view-capture", "virtual-forward-model"],
+        "capabilities": [
+          "camera",
+          "array",
+          "laser",
+          "cad-first-hit",
+          "render-slicing",
+          "geometry-io",
+          "design-report",
+          "optical-view-capture",
+          "virtual-forward-model"
+        ],
         "statement": "Browser reproduction of the DiagView2 geometry-analysis workflow using a reviewed 41-flange EHL-2 design dataset and the authorized simplified CAD derivative. It supports straight-line camera, array and laser design geometry, browser-mesh first-hit analysis, render-only slicing, versioned geometry files and reports. It is not an as-installed survey, calibrated optical model, validated engineering clear-aperture analysis, manufacturing authority, or experimental diagnostic result."
       }
     },
@@ -147,7 +185,12 @@
       "eyebrow": "AUTHORIZED · REAL-TIME 3D",
       "state": "高精度分片三维",
       "tone": "controlled",
-      "facts": ["项目方授权公开展示", "18 个稳定部件", "约 100 MB 分片高精度", "ITER 名义设计参数等离子体代理"],
+      "facts": [
+        "项目方授权公开展示",
+        "18 个稳定部件",
+        "约 100 MB 分片高精度",
+        "ITER 名义设计参数等离子体代理"
+      ],
       "deviceOverview": "ITER 教育高精度可视化样机，分片呈现中央螺线管、PF / TF 线圈、真空室、低温恒温器与偏滤器。",
       "fileSummary": "18 个 Meshopt GLB 分片 · 98.5 MB · CS / PF / TF / 真空室 / 低温恒温器 / 偏滤器",
       "copy": "加载经项目方授权、脱敏和细节审查的 18 部件高精度可视化派生模型，支持选择、显隐、隔离、透明度与剖切。标准压缩预览已移除，工作台仅加载约 100 MB 的 18 文件高精度分片。默认 Z 剖切内的等离子体和同心磁通带采用公开名义设计参数生成的 Miller 风格解析几何，仅用于教育展示，不是 EFIT、真实 ψ、LCFS 或工程平衡。源 STEP、B-Rep、工程尺寸与工程权威模型不公开。",

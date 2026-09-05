@@ -162,20 +162,21 @@ npm run assets:verify
 
 ### 2.1 EXL-50U 总装从 metadata-only 到正式激活
 
-正式发布状态固定为 21 个公开匿名 GLB：1 个自动加载的 preview 与 20 个按用户意图串行
-加载的高精度运输分片。下列步骤既是首次激活流程，也是以后替换派生版本时必须原子重复的
+正式发布状态固定为 21 个公开匿名 GLB：1 个在能力足够的桌面客户端自动加载、在窄屏/
+省流量/低内存客户端由用户显式启动的 preview，以及 20 个按用户意图串行加载的高精度
+运输分片。下列步骤既是首次激活流程，也是以后替换派生版本时必须原子重复的
 流程。项目器只读取公开派生 manifest 与 GLB，不读取 STEP、BOM、PMI 或源装配标签；
 GLB JSON 必须没有任意 `name` / `extras`，唯一公开根名 `EXL50U_GA_VISUALIZATION` 由
 运行时合成，不写回 GLB。正式格式固定为 Float32 POSITION、normalized Int8 NORMAL、
 Uint32 indices、Meshopt 与 GPU instancing。
 
 ```powershell
-$PrivateBuild = "D:\controlled\exl50u-ga-private-v8" # 仓库外、已存在且只保存私有输入/收据
+$PrivateBuild = "D:\controlled\exl50u-ga-private-v9" # 仓库外、已存在且只保存私有输入/收据
 $Exporter = Join-Path $PrivateBuild "exporter"
 $RawManifest = Join-Path $PrivateBuild "exl50u-fdmesh-raw-20260905-r10\assembly.private.json"
-$ToolingEvidence = Join-Path $PrivateBuild "public-derivative-tooling.v8.private.json"
-$QemEvidence = Join-Path $PrivateBuild "exl50u-public-derivative-v8.qem.private.json"       # 必须不存在
-$VisualReport = Join-Path $PrivateBuild "exl50u-public-derivative-v8.visual-qa.private.json" # 必须不存在
+$ToolingEvidence = Join-Path $PrivateBuild "public-derivative-tooling.v9.private.json"
+$QemEvidence = Join-Path $PrivateBuild "exl50u-public-derivative-v9.qem.private.json"       # 必须不存在
+$VisualReport = Join-Path $PrivateBuild "exl50u-public-derivative-v9.visual-qa.private.json" # 必须不存在
 $Python = "C:\path\to\the-reviewed-cadquery-environment\python.exe"
 $Edge = "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
 $Reviewed = "D:\controlled\exl50u-ga-reviewed"       # 仓库外，只含已 QA 公开派生
@@ -188,7 +189,7 @@ $Projected = "D:\controlled\exl50u-ga-release-v1"   # 必须是不存在的新�
   --private-visual-qa-report $VisualReport `
   --private-tooling-evidence $ToolingEvidence `
   --node-root $Stage --edge $Edge --visual-qa-backend swiftshader `
-  --preview-ratios "0.05,0.05" --high-ratios "0.60,0.55" `
+  --preview-ratios "0.03,0.03" --high-ratios "0.70,0.65" `
   --preview-max-error 0.02 --high-max-error 0.0005
 
 npm run assets:project-exl50u-general-assembly -- `
@@ -223,6 +224,11 @@ npm run assets:verify
 node --test tests/external-runtime-bundle-contract.test.mjs tests/runtime-assets.test.mjs
 ```
 
+这里的私有 exporter/tooling 必须是 v9：它逐三角形处理无法生成有限法线的极小 sliver，
+并对每个 high definition 执行目标保留门禁，禁止因为单个退化面把整件替换成最低覆盖几何。
+公开 `derivationEvidence` 仍使用兼容的 exact v8 七键匿名结构；私有工具版本和公开证据结构
+是两个不同的版本轴，不能因为公开结构仍为 v8 而复用旧 exporter 或旧 tooling receipt。
+
 `public/models/exl50u-general-assembly-v1/model-manifest.json` 是仓库测试的正式激活开关。
 正式激活或更新必须在同一提交中加入/更新 manifest、`PUBLICATION-NOTICE.md`、catalog、
 精确 Worker 白名单和 runtime lock；五者不可拆分提交，也不能通过临时移走 manifest 让
@@ -251,9 +257,14 @@ ITER Worker 对应变量是
 白名单以外路径始终 404。香港构建则保留两类缓存并逐文件复核字节数与 SHA-256。
 投影后的 DeviceManifest 必须保留 exact v8 匿名 `derivationEvidence` 七键：`kind`、
 `selectedAttempt`、`sourceInputCleaning`、`previewVisualLod`、`highQem`、`highPartition` 与
-`coverage`。preview 固定使用 sloppy visual LOD（`selectedTargetTriangleRatio = 0.05`、
-`simplifierNormalizedErrorLimit = 0.02`），high 固定使用 QEM；两档各自保存互斥计数闭合的
-`outputCleaning`。preview 还必须携带 canonical 10-view visual QA 收据，十视角最差
+`coverage`。preview 固定使用 sloppy visual LOD（`selectedTargetTriangleRatio = 0.03`、
+`simplifierNormalizedErrorLimit = 0.02`）；最近一次受控预检的 preview 为 11,026,020 B，须继续低于 12 MiB
+硬上限。high 固定使用 QEM 与 `0.70/0.65` 两次尝试；2026-09-05 正式派生的 21 个 GLB
+实测总量为 282.0 MB（preview 11.0 MB、high 271.0 MB），后续版本仍以新派生物的实测值为准；两档各自保存互斥计数闭合的
+`outputCleaning`。high 还必须满足
+`highQem.outputCleaning.finalTriangles >= floor(0.98 * selectedTargetTriangleRatio * sourceInputCleaning.sanitizedTriangles)`，
+用于阻断 r6 一类发布尺度的 high 聚合坍缩；逐 definition 的 98% 目标保留由私有 v9 exporter
+在生成阶段另行强制，不能由这条公开聚合指标替代。preview 还必须携带 canonical 10-view visual QA 收据，十视角最差
 silhouette IoU 不低于 0.97、最坏 normalized depth p99 不高于 0.02。20 个 high 文件只是
 运输分片；`highPartition.geometryChunkCount` 是解码 GLB primitive/mesh 的实际几何 chunk
 总数，二者不得混同，并须与 high 三角面及零缺失 coverage 对账。

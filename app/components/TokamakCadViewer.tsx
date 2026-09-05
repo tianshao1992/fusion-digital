@@ -530,7 +530,8 @@ function TokamakCadViewerSession({
     clipOffset: initialDiagnosticViewerState?.clipOffset ?? defaultInteraction.clipOffset,
   });
   const [activated, setActivated] = useState(false);
-  const [attempt, setAttempt] = useState(0);
+  const [manifestAttempt, setManifestAttempt] = useState(0);
+  const [modelAttempt, setModelAttempt] = useState(0);
   const [status, setStatus] = useState<ViewerStatus>('idle');
   const [progress, setProgress] = useState(0);
   const [anonymousShardProgress, setAnonymousShardProgress] = useState<AnonymousShardLoadProgress | null>(null);
@@ -772,8 +773,14 @@ function TokamakCadViewerSession({
     setLoadedQuality(null);
     setStatus('loading');
     if (!activated) setActivated(true);
-    if (activated || status === 'error') setAttempt((value) => value + 1);
-  }, [activated, ehl2Session, status]);
+    if (activated || status === 'error') {
+      if (manifest && isAnonymousVisualizationManifest(manifest)) {
+        setModelAttempt((value) => value + 1);
+      } else {
+        setManifestAttempt((value) => value + 1);
+      }
+    }
+  }, [activated, ehl2Session, manifest, status]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -785,7 +792,8 @@ function TokamakCadViewerSession({
         if (!loadedManifest.access.redistributionAllowed) throw new Error(i18nRef.current.t('viewer.errorRedistribution'));
         if (controller.signal.aborted) return;
         const variants = viewerModelChoices(loadedManifest);
-        const initialChoice = initialViewerModelChoice(variants, shouldPreferPreview());
+        const preferPreview = shouldPreferPreview();
+        const initialChoice = initialViewerModelChoice(variants, preferPreview);
         if (!initialChoice.model) throw new Error(i18nRef.current.t('viewer.errorManifest'));
         setManifest(loadedManifest);
         setAnonymousShardProgress(null);
@@ -800,6 +808,12 @@ function TokamakCadViewerSession({
             ? current
             : initialChoice.model?.id ?? null);
         }
+        if (initialChoice.anonymousHighDetailRequiresExplicitAction && !preferPreview) {
+          setErrorMessage('');
+          setProgress(0);
+          setActivated(true);
+          setStatus('loading');
+        }
         setLodNotice(initialChoice.autoPreviewApplied
           ? i18nRef.current.t('viewer.autoPreview')
           : '');
@@ -810,7 +824,7 @@ function TokamakCadViewerSession({
         setErrorMessage(error instanceof Error ? i18nRef.current.content(error.message) : i18nRef.current.t('viewer.errorManifest'));
       });
     return () => controller.abort();
-  }, [attempt, manifestUrl]);
+  }, [manifestAttempt, manifestUrl]);
 
   useEffect(() => {
     if (!activated || !mountRef.current || !manifest || !selectedModel) return;
@@ -1907,7 +1921,7 @@ function TokamakCadViewerSession({
     });
 
     return () => { disposed = true; releaseResources(); viewerRef.current = null; };
-  }, [activated, appearancePreset, attempt, availableModels, diagnosticOverlaySession, ehl2Session, manifest, selectedModel, viewerId, wireframeAllowed]);
+  }, [activated, appearancePreset, availableModels, diagnosticOverlaySession, ehl2Session, manifest, modelAttempt, selectedModel, viewerId, wireframeAllowed]);
 
   useEffect(() => {
     const overlay = viewerRef.current?.efitOverlay;
@@ -2081,7 +2095,7 @@ function TokamakCadViewerSession({
     setAnonymousShardProgress(null);
     setLoadedQuality(null);
     if (activated) setStatus('loading');
-    if (retryAnonymousHigh) setAttempt((value) => value + 1);
+    if (retryAnonymousHigh) setModelAttempt((value) => value + 1);
     else setSelectedModelId(next.id);
   };
   const ready = status === 'ready';
@@ -2137,7 +2151,7 @@ function TokamakCadViewerSession({
               {availableModels.map((asset) => <button
                 type="button"
                 key={asset.id}
-                className={presentationModel?.id === asset.id ? 'active' : ''}
+                className={`${presentationModel?.id === asset.id ? 'active ' : ''}${isAnonymousShardChoice(asset) ? 'tokamakCadLodHighAction' : ''}`.trim()}
                 aria-pressed={presentationModel?.id === asset.id}
                 disabled={status === 'loading' && selectedModel?.id === asset.id}
                 onClick={() => selectModel(asset.id)}

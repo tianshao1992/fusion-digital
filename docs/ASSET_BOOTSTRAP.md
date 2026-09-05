@@ -214,10 +214,11 @@ Codeup 支持 Git LFS，但当前恢复合同不依赖 LFS。不要在个人分�
 1. 从受控源生成新的**浏览器运行时派生物**，在受控环境完成几何、授权和非工程用途审查；原始 CAD/STEP、BOM、PMI 与源装配标签不得进入公开候选；
 2. 把 ITER 18 文件与 EXL 21 文件原样发布到同一个资产仓库提交，并完成无缓存冷下载、字节数和 SHA-256 校验；
 3. 对 EXL 总装先验证 exact v8 `derivationEvidence` 七键：`sourceInputCleaning`、sloppy
-   `previewVisualLod`（`selectedTargetTriangleRatio = 0.05`、
-   `simplifierNormalizedErrorLimit = 0.02`）、QEM `highQem` 的两份独立 `outputCleaning`、`highPartition` 与
+   `previewVisualLod`（`selectedTargetTriangleRatio = 0.03`、
+   `simplifierNormalizedErrorLimit = 0.02`）、按 `selectedAttempt` 固定为 `0.70/0.65` 的 QEM `highQem`、两份独立 `outputCleaning`、`highPartition` 与
    `coverage` 必须互相闭合；canonical 10-view visual QA 必须达到 silhouette IoU >= 0.97、
-   normalized depth p99 <= 0.02。完整 visual report、QEM 收据、源 manifest、
+   normalized depth p99 <= 0.02；high 聚合三角形必须达到
+   `floor(0.98 * selectedTargetTriangleRatio * sourceInputCleaning.sanitizedTriangles)`，该下限不用于 sloppy preview。完整 visual report、QEM 收据、源 manifest、
    `geometryAccounting`、源路径/摘要和 definition/occurrence ID 留在仓库外，只把匿名计数和
    receipt SHA-256 投影到 DeviceManifest；随后投影 manifest/notice、激活 catalog、生成精确
    Worker 白名单并刷新 runtime lock，这五项必须位于同一个应用提交；

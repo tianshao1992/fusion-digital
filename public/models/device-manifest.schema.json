@@ -266,7 +266,7 @@
           ],
           "properties": {
             "algorithm": { "const": "meshoptimizer-simplify-sloppy" },
-            "selectedTargetTriangleRatio": { "const": 0.05 },
+            "selectedTargetTriangleRatio": { "const": 0.03 },
             "simplifierNormalizedErrorLimit": { "const": 0.02 },
             "maxAcceptedSimplifierReportedNormalizedError": { "type": "number", "minimum": 0, "maximum": 1 },
             "minimumTrianglesPerDefinition": { "const": 12 },
@@ -311,7 +311,7 @@
           ],
           "properties": {
             "algorithm": { "const": "meshoptimizer-simplify-qem" },
-            "selectedTargetTriangleRatio": { "enum": [0.6, 0.55] },
+            "selectedTargetTriangleRatio": { "enum": [0.7, 0.65] },
             "simplifierNormalizedErrorLimit": { "const": 0.0005 },
             "maxAcceptedSimplifierReportedNormalizedError": { "type": "number", "minimum": 0, "maximum": 1 },
             "minimumTrianglesPerDefinition": { "const": 12 },
@@ -503,7 +503,7 @@
         "uniqueGeometryVertices": { "type": "integer", "minimum": 1 },
         "placementInstances": { "type": "integer", "minimum": 1, "maximum": 250000 },
         "drawCalls": { "type": "integer", "minimum": 1, "maximum": 800 },
-        "sceneDrawTriangles": { "type": "integer", "minimum": 1, "maximum": 30000000 },
+        "sceneDrawTriangles": { "type": "integer", "minimum": 1, "maximum": 35000000 },
         "decodedGpuBytes": { "type": "integer", "minimum": 1, "maximum": 100663296 },
         "boundsMetres": { "$ref": "#/$defs/boundsMetres" }
       },
@@ -556,7 +556,7 @@
         "uniqueGeometryVertices": { "type": "integer", "minimum": 1 },
         "placementInstances": { "type": "integer", "minimum": 1, "maximum": 5000000 },
         "drawCalls": { "type": "integer", "minimum": 1, "maximum": 800 },
-        "sceneDrawTriangles": { "type": "integer", "minimum": 1, "maximum": 30000000 },
+        "sceneDrawTriangles": { "type": "integer", "minimum": 1, "maximum": 35000000 },
         "decodedGpuBytes": { "type": "integer", "minimum": 1, "maximum": 1610612736 },
         "boundsMetres": { "$ref": "#/$defs/boundsMetres" },
         "shards": {

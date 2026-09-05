@@ -23,8 +23,10 @@ const EXL_MAX_PREVIEW_DECODED_BYTES = 192 * 1024 * 1024;
 const EXL_MAX_SHARD_DECODED_BYTES = 96 * 1024 * 1024;
 const EXL_MAX_BUNDLE_DECODED_BYTES = 1_536 * 1024 * 1024;
 const EXL_MAX_PLACEMENT_INSTANCES_PER_SHARD = 250_000;
-const EXL_MAX_SCENE_TRIANGLES = 30_000_000;
+const EXL_MAX_SCENE_TRIANGLES = 35_000_000;
+const EXL_MAX_PREVIEW_TRIANGLES = 30_000_000;
 const EXL_MAX_DRAW_CALLS = 800;
+const EXL_MIN_HIGH_TRIANGLE_RETENTION = 0.98;
 const EXL_PUBLICATION_NOTICE = [
   "# EXL-50U general-assembly public visualization derivative",
   "",
@@ -149,14 +151,14 @@ const EXL_FIXED_ACTIVE_CARD = Object.freeze({
   state: "匿名总装实时三维",
   tone: "controlled",
   facts: [
-    "1 个自动加载标准预览",
-    "20 个按需匿名高精度运输分片",
-    "Meshopt + GPU instancing",
+    "能力足够时自动加载标准预览（11.0 MB）",
+    "20 个按需匿名高精度运输分片（271.0 MB）",
+    "总包 282.0 MB · Meshopt + GPU instancing",
     "仅用于非工程外观展示",
   ],
   deviceOverview: "EXL‑50U 装置集成总装的公开匿名数字样机，用于整机外观、旋转缩放、透明度、剖切与多级细节浏览。",
-  fileSummary: "1 个标准预览 · 20 个匿名高精度运输分片 · 摘要锁定按需加载",
-  copy: "加载经授权、脱敏、简化和逐文件复核的公开匿名总装可视化派生。标准预览自动加载；高精度由用户点击后串行加载 20 个运输分片。公开根和运输分片不表达 BOM、工程系统、源装配树、材料、PMI、尺寸标注、权威尺寸表或配置权威；可视几何保留近似米制尺度，仅用于外观展示，不能作为测量或工程尺寸依据；原始 STEP 与工程 CAD 不会由网站下发。",
+  fileSummary: "1 个标准预览（11.0 MB） · 20 个匿名高精度运输分片（271.0 MB） · 总包 282.0 MB · 摘要锁定按需加载",
+  copy: "加载经授权、脱敏、简化和逐文件复核的公开匿名总装可视化派生。能力足够的桌面客户端自动加载标准预览；窄屏、省流量或低内存客户端由用户显式启动；高精度由用户点击后串行加载 20 个运输分片。公开根和运输分片不表达 BOM、工程系统、源装配树、材料、PMI、尺寸标注、权威尺寸表或配置权威；可视几何保留近似米制尺度，仅用于外观展示，不能作为测量或工程尺寸依据；原始 STEP 与工程 CAD 不会由网站下发。",
   availability: "online-public-simplified",
   delivery: "public-static",
   comparisonFrame: null,
@@ -335,7 +337,7 @@ function assertExlDerivationEvidence(value, { reviewCandidate = false } = {}) {
     || !hasExactKeys(preview, [...lodKeys, "visualQa"])
     || preview.algorithm !== "meshoptimizer-simplify-sloppy"
     || !validLod(preview)
-    || preview.selectedTargetTriangleRatio !== 0.05
+    || preview.selectedTargetTriangleRatio !== 0.03
     || preview.simplifierNormalizedErrorLimit !== 0.02
     || preview.minimumTrianglesPerDefinition !== 12
     || !hasExactKeys(visualQa, [
@@ -359,9 +361,14 @@ function assertExlDerivationEvidence(value, { reviewCandidate = false } = {}) {
     || !hasExactKeys(high, [...lodKeys, "targetMissCount", "retainedIrreducibleCount"])
     || high.algorithm !== "meshoptimizer-simplify-qem"
     || !validLod(high)
-    || high.selectedTargetTriangleRatio !== (value.selectedAttempt === 1 ? 0.6 : 0.55)
+    || high.selectedTargetTriangleRatio !== (value.selectedAttempt === 1 ? 0.7 : 0.65)
     || high.simplifierNormalizedErrorLimit !== 0.0005
     || high.minimumTrianglesPerDefinition !== 12
+    || highCleaning.finalTriangles < Math.floor(
+      EXL_MIN_HIGH_TRIANGLE_RETENTION
+        * high.selectedTargetTriangleRatio
+        * sourceInputCleaning.sanitizedTriangles,
+    )
     || !nonNegativeSafeInteger(high.targetMissCount)
     || !nonNegativeSafeInteger(high.retainedIrreducibleCount)
     || high.targetMissCount !== high.retainedIrreducibleCount
@@ -785,7 +792,7 @@ function manifestAssets(manifest) {
     || EXL_SHARD_METRICS.some((field) => metricTotals[field] !== bundle[field])
     || unionMin.some((coordinate, axis) => coordinate !== bundle.boundsMetres.min[axis])
     || unionMax.some((coordinate, axis) => coordinate !== bundle.boundsMetres.max[axis])
-    || manifest.assets.webModel.triangles > EXL_MAX_SCENE_TRIANGLES
+    || manifest.assets.webModel.triangles > EXL_MAX_PREVIEW_TRIANGLES
     || derivationEvidence.previewVisualLod.outputCleaning.finalTriangles
       > manifest.assets.webModel.triangles
     || derivationEvidence.highQem.outputCleaning.finalTriangles

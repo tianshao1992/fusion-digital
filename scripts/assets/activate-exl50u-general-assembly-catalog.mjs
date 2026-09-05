@@ -34,6 +34,25 @@ function textLeaves(value, output = []) {
   return output;
 }
 
+function containsProductionEligibleFalse(value) {
+  if (Array.isArray(value)) return value.some(containsProductionEligibleFalse);
+  if (!object(value)) return false;
+  return (
+    (Object.hasOwn(value, "productionEligible") && value.productionEligible === false)
+    || Object.values(value).some(containsProductionEligibleFalse)
+  );
+}
+
+function assertProductionEligibleManifest(manifest) {
+  if (
+    (object(manifest) && Object.hasOwn(manifest, "reviewCandidate"))
+    || manifest?.derivationEvidence?.previewVisualLod?.visualQa?.status === "USER_VISUAL_REVIEW_REQUIRED"
+    || containsProductionEligibleFalse(manifest)
+  ) {
+    throw new Error("EXL-50U catalog activation rejects review candidates and productionEligible=false manifests");
+  }
+}
+
 export function validateExl50uGeneralAssemblyActivatedCard(card) {
   const stale = textLeaves(card).find((value) => FORBIDDEN_ACTIVATION_COPY.some((pattern) => pattern.test(value)));
   if (stale) throw new Error(`EXL-50U catalog activation retains stale pipeline copy: ${stale}`);
@@ -59,6 +78,7 @@ export function validateExl50uGeneralAssemblyActivatedCard(card) {
 }
 
 export function activateExl50uGeneralAssemblyCatalog({ catalog, manifest, activationContract }) {
+  assertProductionEligibleManifest(manifest);
   if (
     manifest?.access?.classification !== "PUBLIC"
     || manifest?.access?.redistributionAllowed !== true

@@ -56,7 +56,7 @@ following structure:
 | `coordinateSystem` | Record display units and axes without claiming dimensional authority. |
 | `assets.webModel` | Declare the one preview path, bytes, SHA-256, geometry metrics and bounds. |
 | `assets.shardBundles[0]` | Declare the one high-detail bundle and its exactly twenty anonymous shards. |
-| `derivationEvidence` | Record the exact v8 seven-key evidence: selected attempt, anonymous source cleaning, sloppy preview visual LOD with `selectedTargetTriangleRatio = 0.05` and `simplifierNormalizedErrorLimit = 0.02`, high QEM, independent output cleaning, high partition and zero-missing coverage, including only the canonical visual-QA receipt rather than private source identities. |
+| `derivationEvidence` | Record the exact v8 seven-key evidence: selected attempt, anonymous source cleaning, sloppy preview visual LOD with `selectedTargetTriangleRatio = 0.03` and `simplifierNormalizedErrorLimit = 0.02`, high QEM fixed to attempt ratios `0.70/0.65`, independent output cleaning, high partition and zero-missing coverage, including only the canonical visual-QA receipt rather than private source identities. |
 | `systems` | Expose only the anonymous visualization grouping required by the viewer. |
 | `generator`, `disclaimer` | Record the public projection pipeline and non-engineering-use boundary. |
 
@@ -70,10 +70,12 @@ analysis parameters, signed URLs, internal object-store keys or solver credentia
    repository, Sites archive or Hong Kong release.
 2. Export and review the anonymous public derivative. The accepted release must contain one preview
    and twenty high-detail transport shards, with every route, byte count and SHA-256 derived from the
-   reviewed files. Its exact v8 evidence must fix sloppy `previewVisualLod` to target ratio 0.05 and
-   simplifier max error 0.02, and distinguish it from `highQem`,
+   reviewed files. Its exact v8 evidence must fix sloppy `previewVisualLod` to target ratio 0.03 and
+   simplifier max error 0.02, and distinguish it from `highQem` fixed to attempt ratios 0.70/0.65,
    close each tier's independent `outputCleaning`, and reconcile `highPartition` geometry chunks with
-   the decoded GLBs. The canonical ten-view gate must report silhouette IoU >= 0.97 and normalized
+   the decoded GLBs. High QEM must retain at least
+   `floor(0.98 * selectedTargetTriangleRatio * sourceInputCleaning.sanitizedTriangles)` aggregate
+   triangles; this floor does not apply to the sloppy preview. The canonical ten-view gate must report silhouette IoU >= 0.97 and normalized
    depth p99 <= 0.02. Twenty is the transport-shard count, not necessarily the geometry-chunk count.
    Keep the complete visual report, QEM evidence, source manifest, `geometryAccounting`, source
    paths/digests and definition/occurrence IDs outside both repositories; publish only anonymous

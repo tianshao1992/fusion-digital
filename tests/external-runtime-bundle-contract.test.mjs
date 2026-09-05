@@ -16,6 +16,7 @@ import {
   EXL50U_GA_PUBLICATION_NOTICE,
   EXL50U_GA_ROUTE_ROOT,
   extractExl50uGeneralAssemblyAssets,
+  normalizeExl50uGeneralAssemblyDerivationEvidence,
   parseExl50uGeneralAssemblyAllowlist,
   renderExl50uGeneralAssemblyAllowlist,
 } from "../scripts/assets/exl50u-general-assembly-runtime-contract.mjs";
@@ -101,8 +102,8 @@ function fixtureDerivationEvidence() {
       policy: "repeated-index-and-exact-zero-area-drop-stable-vertex-remap-v1",
       definitionInputs: 20,
       sourceFaces: 24,
-      sourceTriangles: 1_000,
-      sanitizedTriangles: 990,
+      sourceTriangles: 430,
+      sanitizedTriangles: 420,
       removedTriangles: 10,
       affectedDefinitions: 2,
       removedUnreferencedVertices: 6,
@@ -111,7 +112,7 @@ function fixtureDerivationEvidence() {
     },
     previewVisualLod: {
       algorithm: "meshoptimizer-simplify-sloppy",
-      selectedTargetTriangleRatio: 0.05,
+      selectedTargetTriangleRatio: 0.03,
       simplifierNormalizedErrorLimit: 0.02,
       maxAcceptedSimplifierReportedNormalizedError: 0.016,
       minimumTrianglesPerDefinition: 12,
@@ -149,7 +150,7 @@ function fixtureDerivationEvidence() {
     },
     highQem: {
       algorithm: "meshoptimizer-simplify-qem",
-      selectedTargetTriangleRatio: 0.6,
+      selectedTargetTriangleRatio: 0.7,
       simplifierNormalizedErrorLimit: 0.0005,
       maxAcceptedSimplifierReportedNormalizedError: 0.0004,
       minimumTrianglesPerDefinition: 12,
@@ -228,7 +229,7 @@ function fixtureGeometryAccounting(preview, shards) {
     anonymousDefinitions: 20,
     anonymousOccurrences: 42,
     sourceUniqueVertices: 3_000,
-    sourceUniqueTriangles: 1_000,
+    sourceUniqueTriangles: 430,
     sourceSceneTriangles: 2_000,
     previewUniqueTriangles: preview.uniqueGeometryTriangles,
     previewSceneTriangles: preview.sceneDrawTriangles,
@@ -629,7 +630,7 @@ test("formal EXL-50U projection and checked-in catalog state remain coherent", a
     );
   }
   const overTriangleBudget = structuredClone(manifest);
-  overTriangleBudget.assets.shardBundles[0].sceneDrawTriangles = 30_000_001;
+  overTriangleBudget.assets.shardBundles[0].sceneDrawTriangles = 35_000_001;
   assert.throws(
     () => extractExl50uGeneralAssemblyAssets(overTriangleBudget),
     /anonymous visualization contract/u,
@@ -680,11 +681,11 @@ test("EXL v8 public evidence rejects aliases, mixed algorithms, bad accounting, 
   const evidenceMutations = [
     ["preview algorithm alias", (candidate) => { candidate.previewVisualLod.algorithm = "meshoptimizer-simplify-qem"; }],
     ["high algorithm alias", (candidate) => { candidate.highQem.algorithm = "meshoptimizer-simplify-sloppy"; }],
-    ["old top-level alias", (candidate) => { candidate.selectedRatios = { preview: 0.05, high: 0.6 }; }],
-    ["preview target ratio drift", (candidate) => { candidate.previewVisualLod.selectedTargetTriangleRatio = 0.03; }],
+    ["old top-level alias", (candidate) => { candidate.selectedRatios = { preview: 0.03, high: 0.6 }; }],
+    ["preview target ratio drift", (candidate) => { candidate.previewVisualLod.selectedTargetTriangleRatio = 0.05; }],
     ["preview error limit drift", (candidate) => { candidate.previewVisualLod.simplifierNormalizedErrorLimit = 0.04; }],
     ["preview minimum triangle drift", (candidate) => { candidate.previewVisualLod.minimumTrianglesPerDefinition = 11; }],
-    ["high target ratio drift", (candidate) => { candidate.highQem.selectedTargetTriangleRatio = 0.55; }],
+    ["high target ratio drift", (candidate) => { candidate.highQem.selectedTargetTriangleRatio = 0.6; }],
     ["high error limit drift", (candidate) => { candidate.highQem.simplifierNormalizedErrorLimit = 0.0004; }],
     ["high minimum triangle drift", (candidate) => { candidate.highQem.minimumTrianglesPerDefinition = 11; }],
     ["attempt-to-ratio mismatch", (candidate) => { candidate.selectedAttempt = 2; }],
@@ -742,11 +743,60 @@ test("EXL v8 public evidence rejects aliases, mixed algorithms, bad accounting, 
   );
 });
 
+test("EXL high QEM evidence rejects the r6-scale aggregate triangle collapse", async () => {
+  const evidence = fixtureDerivationEvidence();
+  Object.assign(evidence.sourceInputCleaning, {
+    sourceTriangles: 37_387_145,
+    sanitizedTriangles: 37_387_135,
+  });
+  Object.assign(evidence.highQem.outputCleaning, {
+    selectedTrianglesBeforeCleaning: 5_835_354,
+    finalTriangles: 5_835_344,
+  });
+  Object.assign(evidence.highPartition, {
+    finalTrianglesBeforePartition: 5_835_344,
+    partitionedTriangles: 5_835_344,
+  });
+  assert.throws(
+    () => normalizeExl50uGeneralAssemblyDerivationEvidence(evidence),
+    /derivation evidence/u,
+  );
+  const manifest = await fixtureManifest();
+  manifest.derivationEvidence = evidence;
+  assert.throws(
+    () => assertManifestMatchesLock(manifest, exlFixtureBundle(manifest)),
+    /derivation evidence/u,
+  );
+});
+
+test("EXL runtime and Hong Kong contracts permit 35 million high scene triangles but reject any excess", async () => {
+  const withHighSceneTriangles = async (total) => {
+    const manifest = await fixtureManifest();
+    const shards = manifest.assets.shardBundles[0].shards;
+    const quotient = Math.floor(total / shards.length);
+    const remainder = total % shards.length;
+    shards.forEach((entry, index) => {
+      entry.sceneDrawTriangles = quotient + (index < remainder ? 1 : 0);
+    });
+    manifest.assets.shardBundles[0].sceneDrawTriangles = total;
+    return manifest;
+  };
+
+  const accepted = await withHighSceneTriangles(35_000_000);
+  const lockBundle = exlFixtureBundle(accepted);
+  assert.doesNotThrow(() => extractExl50uGeneralAssemblyAssets(accepted));
+  assert.doesNotThrow(() => assertManifestMatchesLock(accepted, lockBundle));
+
+  const rejected = await withHighSceneTriangles(35_000_001);
+  assert.throws(() => extractExl50uGeneralAssemblyAssets(rejected), /anonymous visualization contract/u);
+  assert.throws(() => assertManifestMatchesLock(rejected, lockBundle), /20-shard contract/u);
+});
+
 test("projector reconciles v8 attempt and geometryAccounting with independently inspected facts", async () => {
   const template = JSON.parse(await readFile(TEMPLATE_PATH, "utf8"));
   const retryEvidence = fixtureDerivationEvidence();
   retryEvidence.selectedAttempt = 2;
-  retryEvidence.highQem.selectedTargetTriangleRatio = 0.55;
+  retryEvidence.highQem.selectedTargetTriangleRatio = 0.65;
   assert.doesNotThrow(() => projectDeviceManifest(fixtureProjectionOptions(template, {
     derivationEvidence: retryEvidence,
     attempt: 2,
@@ -774,6 +824,45 @@ test("projector reconciles v8 attempt and geometryAccounting with independently 
       label,
     );
   }
+});
+
+test("catalog activation rejects every review-candidate production-ineligibility signal", async () => {
+  const [checkedInCatalog, template, activationContract] = await Promise.all([
+    readFile(join(ROOT, "public/models/device-catalog.json"), "utf8").then(JSON.parse),
+    readFile(TEMPLATE_PATH, "utf8").then(JSON.parse),
+    readFile(ACTIVATION_CONTRACT_PATH, "utf8").then(JSON.parse),
+  ]);
+  const catalog = metadataOnlyCatalogFixture(checkedInCatalog);
+  const evidence = fixtureDerivationEvidence();
+  evidence.previewVisualLod.visualQa = {
+    ...evidence.previewVisualLod.visualQa,
+    status: "USER_VISUAL_REVIEW_REQUIRED",
+    minimumObservedSilhouetteIou: 0.9,
+  };
+  const reviewManifest = projectDeviceManifest({
+    ...fixtureProjectionOptions(template, { derivationEvidence: evidence }),
+    reviewCandidate: true,
+  });
+  const statusOnly = structuredClone(reviewManifest);
+  delete statusOnly.reviewCandidate;
+  const eligibilityOnly = structuredClone(statusOnly);
+  delete eligibilityOnly.derivationEvidence.previewVisualLod.visualQa.status;
+  eligibilityOnly.productionEligible = false;
+
+  for (const [label, manifest] of [
+    ["reviewCandidate", reviewManifest],
+    ["visualQa review status", statusOnly],
+    ["productionEligible=false", eligibilityOnly],
+  ]) {
+    assert.throws(
+      () => activateExl50uGeneralAssemblyCatalog({ catalog, manifest, activationContract }),
+      /rejects review candidates and productionEligible=false manifests/u,
+      label,
+    );
+  }
+  const card = catalog.devices.find((device) => device.id === "exl50u-general-assembly-20260630");
+  assert.equal(card.viewer.mode, "metadata-only");
+  assert.equal(card.viewer.manifestEndpoint, null);
 });
 
 test("catalog activation replaces every stale pipeline claim with the reviewed anonymous real-3d contract", async () => {

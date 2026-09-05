@@ -200,8 +200,8 @@ function manifestCandidate() {
         policy: 'repeated-index-and-exact-zero-area-drop-stable-vertex-remap-v1',
         definitionInputs: 20,
         sourceFaces: 22,
-        sourceTriangles: 1_000,
-        sanitizedTriangles: 990,
+        sourceTriangles: 290,
+        sanitizedTriangles: 280,
         removedTriangles: 10,
         affectedDefinitions: 2,
         removedUnreferencedVertices: 6,
@@ -210,7 +210,7 @@ function manifestCandidate() {
       },
       previewVisualLod: {
         algorithm: 'meshoptimizer-simplify-sloppy',
-        selectedTargetTriangleRatio: 0.05,
+        selectedTargetTriangleRatio: 0.03,
         simplifierNormalizedErrorLimit: 0.02,
         maxAcceptedSimplifierReportedNormalizedError: 0.016,
         minimumTrianglesPerDefinition: 12,
@@ -248,7 +248,7 @@ function manifestCandidate() {
       },
       highQem: {
         algorithm: 'meshoptimizer-simplify-qem',
-        selectedTargetTriangleRatio: 0.6,
+        selectedTargetTriangleRatio: 0.7,
         simplifierNormalizedErrorLimit: 0.0005,
         maxAcceptedSimplifierReportedNormalizedError: 0.0004,
         minimumTrianglesPerDefinition: 12,
@@ -351,24 +351,24 @@ test('manifest 1.4 accepts only the controlled 20-shard anonymous transport cont
   });
   const retryCandidate = manifestCandidate();
   retryCandidate.derivationEvidence.selectedAttempt = 2;
-  retryCandidate.derivationEvidence.highQem.selectedTargetTriangleRatio = 0.55;
+  retryCandidate.derivationEvidence.highQem.selectedTargetTriangleRatio = 0.65;
   assert.doesNotThrow(() => parseDeviceManifest(retryCandidate));
 
   const schema = JSON.parse(await readFile(new URL('../public/models/device-manifest.schema.json', import.meta.url), 'utf8'));
   assert.ok(schema.properties.schemaVersion.enum.includes('1.4'));
   assert.equal(schema.$defs.anonymousShardBundle.properties.shards.minItems, 20);
-  assert.equal(schema.$defs.anonymousShardBundle.properties.sceneDrawTriangles.maximum, 30_000_000);
+  assert.equal(schema.$defs.anonymousShardBundle.properties.sceneDrawTriangles.maximum, 35_000_000);
   assert.equal(schema.$defs.anonymousShardBundle.properties.drawCalls.maximum, 800);
-  assert.equal(schema.$defs.anonymousShardModel.properties.sceneDrawTriangles.maximum, 30_000_000);
+  assert.equal(schema.$defs.anonymousShardModel.properties.sceneDrawTriangles.maximum, 35_000_000);
   assert.equal(schema.$defs.anonymousShardModel.properties.drawCalls.maximum, 800);
   assert.equal(schema.$defs.anonymousShardModel.properties.placementInstances.maximum, 250_000);
   assert.equal(schema.$defs.anonymousShardBundle.properties.placementInstances.maximum, 5_000_000);
   assert.equal(schema.$defs.anonymousDerivationEvidence.properties.previewVisualLod.properties.algorithm.const, 'meshoptimizer-simplify-sloppy');
   assert.equal(schema.$defs.anonymousDerivationEvidence.properties.highQem.properties.algorithm.const, 'meshoptimizer-simplify-qem');
-  assert.equal(schema.$defs.anonymousDerivationEvidence.properties.previewVisualLod.properties.selectedTargetTriangleRatio.const, 0.05);
+  assert.equal(schema.$defs.anonymousDerivationEvidence.properties.previewVisualLod.properties.selectedTargetTriangleRatio.const, 0.03);
   assert.equal(schema.$defs.anonymousDerivationEvidence.properties.previewVisualLod.properties.simplifierNormalizedErrorLimit.const, 0.02);
   assert.equal(schema.$defs.anonymousDerivationEvidence.properties.previewVisualLod.properties.minimumTrianglesPerDefinition.const, 12);
-  assert.deepEqual(schema.$defs.anonymousDerivationEvidence.properties.highQem.properties.selectedTargetTriangleRatio.enum, [0.6, 0.55]);
+  assert.deepEqual(schema.$defs.anonymousDerivationEvidence.properties.highQem.properties.selectedTargetTriangleRatio.enum, [0.7, 0.65]);
   assert.equal(schema.$defs.anonymousDerivationEvidence.properties.highQem.properties.simplifierNormalizedErrorLimit.const, 0.0005);
   assert.equal(schema.$defs.anonymousDerivationEvidence.properties.highQem.properties.minimumTrianglesPerDefinition.const, 12);
   assert.equal(schema.$defs.anonymousDerivationEvidence.properties.highQem.properties.receiptCount.minimum, 1);
@@ -391,6 +391,42 @@ test('manifest 1.4 accepts only the controlled 20-shard anonymous transport cont
   assert.equal(shardAccessPolicy?.properties?.classification?.const, 'PUBLIC');
   assert.equal(shardAccessPolicy?.properties?.redistributionAllowed?.const, true);
   assert.equal(shardAccessPolicy?.properties?.engineeringUseAllowed?.const, false);
+});
+
+test('manifest 1.4 rejects the r6-scale high QEM aggregate triangle collapse', () => {
+  const candidate = manifestCandidate();
+  Object.assign(candidate.derivationEvidence.sourceInputCleaning, {
+    sourceFaces: 37_387_145,
+    sourceTriangles: 37_387_145,
+    sanitizedTriangles: 37_387_135,
+  });
+  Object.assign(candidate.derivationEvidence.highQem.outputCleaning, {
+    selectedTrianglesBeforeCleaning: 5_835_354,
+    finalTriangles: 5_835_344,
+  });
+  Object.assign(candidate.derivationEvidence.highPartition, {
+    finalTrianglesBeforePartition: 5_835_344,
+    partitionedTriangles: 5_835_344,
+  });
+
+  assert.throws(() => parseDeviceManifest(candidate), /EXL-50U.*\u6d3e\u751f\u8bc1\u636e/u);
+});
+
+test('manifest 1.4 permits 35 million high scene triangles but rejects any excess', () => {
+  const withHighSceneTriangles = (total: number) => {
+    const candidate = manifestCandidate();
+    const shards = candidate.assets.shardBundles[0].shards;
+    const quotient = Math.floor(total / shards.length);
+    const remainder = total % shards.length;
+    shards.forEach((entry, index) => {
+      entry.sceneDrawTriangles = quotient + (index < remainder ? 1 : 0);
+    });
+    candidate.assets.shardBundles[0].sceneDrawTriangles = total;
+    return candidate;
+  };
+
+  assert.doesNotThrow(() => parseDeviceManifest(withHighSceneTriangles(35_000_000)));
+  assert.throws(() => parseDeviceManifest(withHighSceneTriangles(35_000_001)), /\u533f\u540d\u5206\u7247\u5305/u);
 });
 
 test('manifest 1.4 fails closed on identity, semantics, ordering, digest, budget and extension drift', () => {
@@ -432,10 +468,10 @@ test('manifest 1.4 fails closed on identity, semantics, ordering, digest, budget
     },
     (candidate) => { candidate.derivationEvidence.previewVisualLod.algorithm = 'meshoptimizer-simplify-qem' as never; },
     (candidate) => { candidate.derivationEvidence.highQem.algorithm = 'meshoptimizer-simplify-sloppy' as never; },
-    (candidate) => { candidate.derivationEvidence.previewVisualLod.selectedTargetTriangleRatio = 0.03; },
+    (candidate) => { candidate.derivationEvidence.previewVisualLod.selectedTargetTriangleRatio = 0.05; },
     (candidate) => { candidate.derivationEvidence.previewVisualLod.simplifierNormalizedErrorLimit = 0.04; },
     (candidate) => { candidate.derivationEvidence.previewVisualLod.minimumTrianglesPerDefinition = 11; },
-    (candidate) => { candidate.derivationEvidence.highQem.selectedTargetTriangleRatio = 0.55; },
+    (candidate) => { candidate.derivationEvidence.highQem.selectedTargetTriangleRatio = 0.6; },
     (candidate) => { candidate.derivationEvidence.highQem.simplifierNormalizedErrorLimit = 0.0004; },
     (candidate) => { candidate.derivationEvidence.highQem.minimumTrianglesPerDefinition = 11; },
     (candidate) => { candidate.derivationEvidence.selectedAttempt = 2; },
@@ -452,12 +488,12 @@ test('manifest 1.4 fails closed on identity, semantics, ordering, digest, budget
     (candidate) => { candidate.derivationEvidence.highPartition.partitionedTriangles -= 1; },
     (candidate) => { candidate.derivationEvidence.highPartition.geometryChunkCount += 1; },
     (candidate) => {
-      (candidate.derivationEvidence as unknown as Record<string, unknown>).selectedRatios = { preview: 0.05, high: 0.6 };
+      (candidate.derivationEvidence as unknown as Record<string, unknown>).selectedRatios = { preview: 0.03, high: 0.6 };
     },
     (candidate) => {
       (candidate.derivationEvidence.previewVisualLod.visualQa as unknown as Record<string, unknown>).definitionId = 'private-definition';
     },
-    (candidate) => { candidate.assets.shardBundles[0].sceneDrawTriangles = 30_000_001; },
+    (candidate) => { candidate.assets.shardBundles[0].sceneDrawTriangles = 35_000_001; },
     (candidate) => { candidate.assets.shardBundles[0].drawCalls = 801; },
   ];
   for (const mutate of mutations) {

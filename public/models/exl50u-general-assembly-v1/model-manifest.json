@@ -74,14 +74,14 @@
     },
     "highPartition": {
       "duplicateTriangles": 0,
-      "finalTrianglesBeforePartition": 5835344,
+      "finalTrianglesBeforePartition": 27011345,
       "geometryChunkCount": 800,
       "missingOccurrences": 0,
       "missingTriangles": 0,
-      "partitionedTriangles": 5835344,
+      "partitionedTriangles": 27011345,
       "policy": "stable-definition-triangle-chunks-v1",
-      "receiptSha256": "b9f079d13bd13567242efda61974fbf13242d8658d19d5026dd8aa2f44abc2e2",
-      "splitDefinitionCount": 0
+      "receiptSha256": "c5caeb233d62b68007523ca1d5b2ef26fe135b4bc9d81109404468e0183d4c1a",
+      "splitDefinitionCount": 5
     },
     "highQem": {
       "algorithm": "meshoptimizer-simplify-qem",
@@ -96,30 +96,30 @@
         "finalDuplicateTriangles": 0,
         "finalNonmanifoldEdgeCount": 0,
         "finalRepeatedIndexTriangles": 0,
-        "finalTriangles": 5835344,
+        "finalTriangles": 27011345,
         "finalZeroAreaTriangles": 0,
         "policy": "stable-repeated-zero-duplicate-edge-incidence-clean-v1",
-        "removedDuplicateTriangles": 134,
-        "removedNonmanifoldTriangles": 1209,
+        "removedDuplicateTriangles": 617,
+        "removedNonmanifoldTriangles": 1527,
         "removedRepeatedIndexTriangles": 0,
-        "removedZeroAreaTriangles": 0,
-        "repairedDefinitions": 313,
-        "selectedTrianglesBeforeCleaning": 5836687
+        "removedZeroAreaTriangles": 97,
+        "repairedDefinitions": 326,
+        "selectedTrianglesBeforeCleaning": 27013586
       },
       "receiptCount": 2026,
-      "receiptSha256": "f819828cd9e8eb90d750a85d1dec20a1f2494db7c472df127c614d648cbb3719",
-      "retainedIrreducibleCount": 1986,
+      "receiptSha256": "3531bcd04db1283ba60ace5efdb98062cf23813411cbf651821231a572b910e6",
+      "retainedIrreducibleCount": 1966,
       "retainedSourcePositionValuesUnchanged": true,
-      "selectedTargetTriangleRatio": 0.6,
+      "selectedTargetTriangleRatio": 0.7,
       "simplifierNormalizedErrorLimit": 0.0005,
-      "targetMissCount": 1986
+      "targetMissCount": 1966
     },
     "kind": "anonymous-public-derivative",
     "previewVisualLod": {
       "algorithm": "meshoptimizer-simplify-sloppy",
       "allDefinitionsNonempty": true,
       "boundsMissCount": 0,
-      "definitionsUsingMinimum": 39,
+      "definitionsUsingMinimum": 38,
       "extremaCoverage": "six-axis-first-valid-nondegenerate-incident-triangle-v1",
       "maxAcceptedSimplifierReportedNormalizedError": 0.015907255932688713,
       "minimumCoverage": "stable-source-order-minimum-plus-six-axis-extrema-v1",
@@ -128,29 +128,28 @@
         "finalDuplicateTriangles": 0,
         "finalNonmanifoldEdgeCount": 0,
         "finalRepeatedIndexTriangles": 0,
-        "finalTriangles": 901967,
+        "finalTriangles": 1422120,
         "finalZeroAreaTriangles": 0,
         "policy": "stable-repeated-zero-duplicate-edge-incidence-clean-v1",
-        "removedDuplicateTriangles": 58579,
-        "removedNonmanifoldTriangles": 83320,
+        "removedDuplicateTriangles": 225847,
+        "removedNonmanifoldTriangles": 305485,
         "removedRepeatedIndexTriangles": 0,
-        "removedZeroAreaTriangles": 0,
-        "repairedDefinitions": 1698,
-        "selectedTrianglesBeforeCleaning": 1043866
+        "removedZeroAreaTriangles": 1659,
+        "repairedDefinitions": 1837,
+        "selectedTrianglesBeforeCleaning": 1955111
       },
       "receiptCount": 2026,
-      "receiptSha256": "6f5f8e6ffc640c2c27ee8c849b5fbde2d82454d2176711d69f238f6e117c2354",
+      "receiptSha256": "a3957bfaa48b8bddfd5531c698b70edaa6fbd3004eb18910a51a8fbd3c45e1fa",
       "retainedSourcePositionValuesUnchanged": true,
-      "selectedTargetTriangleRatio": 0.05,
+      "selectedTargetTriangleRatio": 0.03,
       "simplifierNormalizedErrorLimit": 0.02,
       "visualQa": {
         "maximumObservedNormalizedDepthP99": 0,
-        "minimumObservedSilhouetteIou": 0.74330430949,
+        "minimumObservedSilhouetteIou": 0.985322762745,
         "normalizedDepthP99Ceiling": 0.02,
         "policy": "canonical-10-view-silhouette-depth-1024-v1",
-        "receiptSha256": "abd3e5b086c60325335aa6b91ba7eb12d70a39dad4b06ff9040c388681eb44a9",
+        "receiptSha256": "fee900de977b20a7ec35cb6359744539fd1cf63e90f51b0ca345adf91bd7c38b",
         "silhouetteIouFloor": 0.97,
-        "status": "USER_VISUAL_REVIEW_REQUIRED",
         "viewCount": 10
       }
     },
@@ -168,19 +167,15 @@
       "sourceTriangles": 37434299
     }
   },
-  "reviewCandidate": {
-    "status": "USER_VISUAL_REVIEW_REQUIRED",
-    "productionEligible": false
-  },
   "assets": {
     "webModel": {
-      "path": "/device-assets/exl50u-general-assembly/v1/device.preview.c74e63a34eaef550ce91f8f151eb1cafca64a0de61826713a6b1116910ac6e4b.meshopt.glb",
+      "path": "/device-assets/exl50u-general-assembly/v1/device.preview.477c107984d52e89cfa1268625ee2edda114c057ad70e52d778e1d6ef2d3d8bc.meshopt.glb",
       "format": "glTF 2.0 binary + EXT_meshopt_compression + EXT_mesh_gpu_instancing; POSITION Float32; NORMAL normalized Int8 (8-bit); indices Uint16/Uint32",
-      "sha256": "c74e63a34eaef550ce91f8f151eb1cafca64a0de61826713a6b1116910ac6e4b",
-      "bytes": 7464164,
-      "triangles": 3110126,
-      "vertices": 478392,
-      "decodedGpuBytes": 16177672,
+      "sha256": "477c107984d52e89cfa1268625ee2edda114c057ad70e52d778e1d6ef2d3d8bc",
+      "bytes": 11026020,
+      "triangles": 3741903,
+      "vertices": 747473,
+      "decodedGpuBytes": 26451018,
       "boundsMetres": {
         "min": [
           -69,
@@ -200,13 +195,13 @@
         "label": "标准",
         "quality": "preview",
         "default": true,
-        "path": "/device-assets/exl50u-general-assembly/v1/device.preview.c74e63a34eaef550ce91f8f151eb1cafca64a0de61826713a6b1116910ac6e4b.meshopt.glb",
+        "path": "/device-assets/exl50u-general-assembly/v1/device.preview.477c107984d52e89cfa1268625ee2edda114c057ad70e52d778e1d6ef2d3d8bc.meshopt.glb",
         "format": "glTF 2.0 binary + EXT_meshopt_compression + EXT_mesh_gpu_instancing; POSITION Float32; NORMAL normalized Int8 (8-bit); indices Uint16/Uint32",
-        "sha256": "c74e63a34eaef550ce91f8f151eb1cafca64a0de61826713a6b1116910ac6e4b",
-        "bytes": 7464164,
-        "triangles": 3110126,
-        "vertices": 478392,
-        "decodedGpuBytes": 16177672,
+        "sha256": "477c107984d52e89cfa1268625ee2edda114c057ad70e52d778e1d6ef2d3d8bc",
+        "bytes": 11026020,
+        "triangles": 3741903,
+        "vertices": 747473,
+        "decodedGpuBytes": 26451018,
         "boundsMetres": {
           "min": [
             -69,
@@ -241,14 +236,14 @@
           "representsEngineeringSystems": false,
           "representsAssemblyTree": false
         },
-        "bytes": 60323384,
+        "bytes": 270978652,
         "uniqueGeometryMeshes": 800,
-        "uniqueGeometryTriangles": 5835344,
-        "uniqueGeometryVertices": 6314751,
+        "uniqueGeometryTriangles": 27011345,
+        "uniqueGeometryVertices": 29535975,
         "placementInstances": 7398,
         "drawCalls": 800,
-        "sceneDrawTriangles": 11210394,
-        "decodedGpuBytes": 165631776,
+        "sceneDrawTriangles": 32638518,
+        "decodedGpuBytes": 791208298,
         "boundsMetres": {
           "min": [
             -69,
@@ -265,51 +260,51 @@
           {
             "id": "anonymous-shard-01",
             "index": 1,
-            "path": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-01.0870715693b1c97b680f11b3d68f483337f895e9bd164ae137db90449132a31d.high.meshopt.glb",
-            "sha256": "0870715693b1c97b680f11b3d68f483337f895e9bd164ae137db90449132a31d",
-            "bytes": 2473852,
-            "uniqueGeometryMeshes": 51,
-            "uniqueGeometryTriangles": 223535,
-            "uniqueGeometryVertices": 249037,
-            "placementInstances": 398,
-            "drawCalls": 51,
-            "sceneDrawTriangles": 522228,
-            "decodedGpuBytes": 6191672,
+            "path": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-01.edcf378c85545bb543842c9782b50b3edb465fb8acf2583d33bb006490717e80.high.meshopt.glb",
+            "sha256": "edcf378c85545bb543842c9782b50b3edb465fb8acf2583d33bb006490717e80",
+            "bytes": 13524992,
+            "uniqueGeometryMeshes": 33,
+            "uniqueGeometryTriangles": 1361724,
+            "uniqueGeometryVertices": 1459551,
+            "placementInstances": 378,
+            "drawCalls": 33,
+            "sceneDrawTriangles": 1698490,
+            "decodedGpuBytes": 39430424,
             "boundsMetres": {
               "min": [
-                -42.97999954223633,
-                -4.5850000381469735,
-                -10.024999618530275
+                -17.325499480590224,
+                -4.95948123931885,
+                -12.575452804565431
               ],
               "max": [
-                8.581740061795958,
-                4.839354515075686,
-                13.633179664611818
+                16.419052124023438,
+                4.727107682225524,
+                13.36972427368164
               ]
             }
           },
           {
             "id": "anonymous-shard-02",
             "index": 2,
-            "path": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-02.d71e42df290c20e9ec171b8b57ed130b82363edf608ec85c7acf91b4994dc4b5.high.meshopt.glb",
-            "sha256": "d71e42df290c20e9ec171b8b57ed130b82363edf608ec85c7acf91b4994dc4b5",
-            "bytes": 2331056,
-            "uniqueGeometryMeshes": 42,
-            "uniqueGeometryTriangles": 205273,
-            "uniqueGeometryVertices": 230711,
-            "placementInstances": 393,
-            "drawCalls": 42,
-            "sceneDrawTriangles": 524415,
-            "decodedGpuBytes": 5935476,
+            "path": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-02.38b177040bb2797df50349297dab83268e11cc7893d085f355fffb2e30c35968.high.meshopt.glb",
+            "sha256": "38b177040bb2797df50349297dab83268e11cc7893d085f355fffb2e30c35968",
+            "bytes": 13943980,
+            "uniqueGeometryMeshes": 49,
+            "uniqueGeometryTriangles": 1300787,
+            "uniqueGeometryVertices": 1449636,
+            "placementInstances": 369,
+            "drawCalls": 49,
+            "sceneDrawTriangles": 1693579,
+            "decodedGpuBytes": 38556722,
             "boundsMetres": {
               "min": [
                 -33.77699661254883,
-                -4.727930233481067,
-                -9.622500419616701
+                -4.719930171966555,
+                -9.62709953953267
               ],
               "max": [
-                8.376274271472452,
-                4.740999946370723,
+                9.203571517366656,
+                4.809500217437746,
                 11.859701156616211
               ]
             }
@@ -317,42 +312,68 @@
           {
             "id": "anonymous-shard-03",
             "index": 3,
-            "path": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-03.bea51160e97f06f5f86d699f4933f810cab5994dc81d58d8b0cd79bffa0038de.high.meshopt.glb",
-            "sha256": "bea51160e97f06f5f86d699f4933f810cab5994dc81d58d8b0cd79bffa0038de",
-            "bytes": 2064940,
-            "uniqueGeometryMeshes": 47,
-            "uniqueGeometryTriangles": 216806,
-            "uniqueGeometryVertices": 209161,
-            "placementInstances": 424,
-            "drawCalls": 47,
-            "sceneDrawTriangles": 520362,
-            "decodedGpuBytes": 5428222,
+            "path": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-03.9bf88fa22b35e96220631ed6460c443a926b1e58db7c9b409ffee6bcd9504c19.high.meshopt.glb",
+            "sha256": "9bf88fa22b35e96220631ed6460c443a926b1e58db7c9b409ffee6bcd9504c19",
+            "bytes": 13544444,
+            "uniqueGeometryMeshes": 46,
+            "uniqueGeometryTriangles": 1375860,
+            "uniqueGeometryVertices": 1446931,
+            "placementInstances": 379,
+            "drawCalls": 46,
+            "sceneDrawTriangles": 1691079,
+            "decodedGpuBytes": 39146260,
             "boundsMetres": {
               "min": [
-                -17.31249946574605,
-                -4.719930171966556,
-                -9.512826427817345
+                -17.327500488257037,
+                -4.719930171966555,
+                -9.622500419616701
               ],
               "max": [
-                8.557307243347168,
-                4.805499850127972,
-                14.281000137329102
+                8.488571166992188,
+                4.8055000552982134,
+                12.972436904907227
               ]
             }
           },
           {
             "id": "anonymous-shard-04",
             "index": 4,
-            "path": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-04.6c5951cb3f78c6902867697f961aef5b57b49e1be3db21fc4e9e7b4d3261f399.high.meshopt.glb",
-            "sha256": "6c5951cb3f78c6902867697f961aef5b57b49e1be3db21fc4e9e7b4d3261f399",
-            "bytes": 2256504,
+            "path": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-04.744bb23b81f5ef2a5bd4e3d5a82d14f7a9d95ceeeb00ef0a6396afa3aa244442.high.meshopt.glb",
+            "sha256": "744bb23b81f5ef2a5bd4e3d5a82d14f7a9d95ceeeb00ef0a6396afa3aa244442",
+            "bytes": 12237192,
+            "uniqueGeometryMeshes": 38,
+            "uniqueGeometryTriangles": 1347132,
+            "uniqueGeometryVertices": 1467518,
+            "placementInstances": 376,
+            "drawCalls": 38,
+            "sceneDrawTriangles": 1689692,
+            "decodedGpuBytes": 39176528,
+            "boundsMetres": {
+              "min": [
+                -42.97999954223633,
+                -4.719930171966555,
+                -11.550000190734865
+              ],
+              "max": [
+                10.149499893188477,
+                4.839354515075686,
+                13.633179664611818
+              ]
+            }
+          },
+          {
+            "id": "anonymous-shard-05",
+            "index": 5,
+            "path": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-05.38f18a71cf4477558040abc7ab1415415662b81cf301c0445a6312a7f12fb00b.high.meshopt.glb",
+            "sha256": "38f18a71cf4477558040abc7ab1415415662b81cf301c0445a6312a7f12fb00b",
+            "bytes": 13862884,
             "uniqueGeometryMeshes": 45,
-            "uniqueGeometryTriangles": 205825,
-            "uniqueGeometryVertices": 228288,
-            "placementInstances": 416,
+            "uniqueGeometryTriangles": 1359808,
+            "uniqueGeometryVertices": 1442537,
+            "placementInstances": 373,
             "drawCalls": 45,
-            "sceneDrawTriangles": 521247,
-            "decodedGpuBytes": 5683564,
+            "sceneDrawTriangles": 1693387,
+            "decodedGpuBytes": 39011914,
             "boundsMetres": {
               "min": [
                 -69,
@@ -360,389 +381,77 @@
                 -15.050000190734865
               ],
               "max": [
-                16.419052124023438,
-                4.805499850127972,
+                15.600000381469727,
+                4.805500055298214,
                 15.049999237060547
-              ]
-            }
-          },
-          {
-            "id": "anonymous-shard-05",
-            "index": 5,
-            "path": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-05.2efc0698087e1511f475048fa61b98bb3ca6a0b637c09527e775ec99d22f1b87.high.meshopt.glb",
-            "sha256": "2efc0698087e1511f475048fa61b98bb3ca6a0b637c09527e775ec99d22f1b87",
-            "bytes": 2400648,
-            "uniqueGeometryMeshes": 58,
-            "uniqueGeometryTriangles": 231472,
-            "uniqueGeometryVertices": 238418,
-            "placementInstances": 381,
-            "drawCalls": 58,
-            "sceneDrawTriangles": 518423,
-            "decodedGpuBytes": 6097732,
-            "boundsMetres": {
-              "min": [
-                -17.313500015241825,
-                -4.582049846649172,
-                -9.576599845662713
-              ],
-              "max": [
-                8.488571166992188,
-                4.803499947355271,
-                9.672646522521973
               ]
             }
           },
           {
             "id": "anonymous-shard-06",
             "index": 6,
-            "path": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-06.51912bcbaedced04600bedd85dcafb815267552840a75fa8caf70eb77d1d5a88.high.meshopt.glb",
-            "sha256": "51912bcbaedced04600bedd85dcafb815267552840a75fa8caf70eb77d1d5a88",
-            "bytes": 2431288,
-            "uniqueGeometryMeshes": 53,
-            "uniqueGeometryTriangles": 229392,
-            "uniqueGeometryVertices": 238130,
-            "placementInstances": 395,
-            "drawCalls": 53,
-            "sceneDrawTriangles": 519820,
-            "decodedGpuBytes": 6125314,
+            "path": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-06.13ccad243d6e5b4c6a108a11cf191f693c34c5e4f03eb9e1e4a16e56b7ec1653.high.meshopt.glb",
+            "sha256": "13ccad243d6e5b4c6a108a11cf191f693c34c5e4f03eb9e1e4a16e56b7ec1653",
+            "bytes": 12888448,
+            "uniqueGeometryMeshes": 10,
+            "uniqueGeometryTriangles": 1408872,
+            "uniqueGeometryVertices": 1416729,
+            "placementInstances": 451,
+            "drawCalls": 10,
+            "sceneDrawTriangles": 1587626,
+            "decodedGpuBytes": 39457128,
             "boundsMetres": {
               "min": [
-                -19,
-                -4.963343143463137,
+                -17.323600799776614,
+                -4.8194637298584,
                 -10.909191131591799
               ],
               "max": [
-                17.247529983520508,
-                5.069500173542794,
-                10.011139869689943
+                8.848648071289062,
+                3.7718576192855857,
+                9.676305770874023
               ]
             }
           },
           {
             "id": "anonymous-shard-07",
             "index": 7,
-            "path": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-07.5c94f8d6814569ca39bb35c74b090e8b03d30b729003f94c37987cfdc4ab27b8.high.meshopt.glb",
-            "sha256": "5c94f8d6814569ca39bb35c74b090e8b03d30b729003f94c37987cfdc4ab27b8",
-            "bytes": 2268780,
-            "uniqueGeometryMeshes": 45,
-            "uniqueGeometryTriangles": 222915,
-            "uniqueGeometryVertices": 230229,
-            "placementInstances": 430,
-            "drawCalls": 45,
-            "sceneDrawTriangles": 522989,
-            "decodedGpuBytes": 6077472,
+            "path": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-07.302fd3010ea4eef5384bb6ad4279a10ae017c5d233418f0b7fcc60af5bb8b7ba.high.meshopt.glb",
+            "sha256": "302fd3010ea4eef5384bb6ad4279a10ae017c5d233418f0b7fcc60af5bb8b7ba",
+            "bytes": 13185816,
+            "uniqueGeometryMeshes": 49,
+            "uniqueGeometryTriangles": 1412645,
+            "uniqueGeometryVertices": 1414678,
+            "placementInstances": 391,
+            "drawCalls": 49,
+            "sceneDrawTriangles": 1695685,
+            "decodedGpuBytes": 39186238,
             "boundsMetres": {
               "min": [
-                -17.347999084740877,
-                -4.719930171966555,
-                -9.627100110054014
+                -17.32465011605723,
+                -4.727930233481067,
+                -12.227152824401857
               ],
               "max": [
-                8.367191314697266,
-                4.809500217437746,
-                12.972436904907227
+                11.4252290725708,
+                4.721857428550722,
+                9.78467407247748
               ]
             }
           },
           {
             "id": "anonymous-shard-08",
             "index": 8,
-            "path": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-08.ccd198ef66602c4dcea788be14ad312f194a0248cccb0f4156f29f0b69568bcf.high.meshopt.glb",
-            "sha256": "ccd198ef66602c4dcea788be14ad312f194a0248cccb0f4156f29f0b69568bcf",
-            "bytes": 1995572,
-            "uniqueGeometryMeshes": 40,
-            "uniqueGeometryTriangles": 187509,
-            "uniqueGeometryVertices": 214734,
-            "placementInstances": 437,
-            "drawCalls": 40,
-            "sceneDrawTriangles": 521394,
-            "decodedGpuBytes": 5445658,
-            "boundsMetres": {
-              "min": [
-                -17.327500488257037,
-                -4.61872578890102,
-                -9.615100241333247
-              ],
-              "max": [
-                9.0437593460083,
-                4.805500055298214,
-                9.785028651356697
-              ]
-            }
-          },
-          {
-            "id": "anonymous-shard-09",
-            "index": 9,
-            "path": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-09.4cb3105337d55e8fcd0a9cd41f73ff0dd860ec35dd903398b42777547eb5e915.high.meshopt.glb",
-            "sha256": "4cb3105337d55e8fcd0a9cd41f73ff0dd860ec35dd903398b42777547eb5e915",
-            "bytes": 2332388,
-            "uniqueGeometryMeshes": 55,
-            "uniqueGeometryTriangles": 231983,
-            "uniqueGeometryVertices": 239077,
-            "placementInstances": 385,
-            "drawCalls": 55,
-            "sceneDrawTriangles": 518368,
-            "decodedGpuBytes": 6234154,
-            "boundsMetres": {
-              "min": [
-                -17.347999084740877,
-                -4.582080995067119,
-                -12.227152824401857
-              ],
-              "max": [
-                11.4252290725708,
-                4.809500217437746,
-                10.277313232421875
-              ]
-            }
-          },
-          {
-            "id": "anonymous-shard-10",
-            "index": 10,
-            "path": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-10.b41834c480e7a545ef4c9c1b7ef4d8a72d2f17100eed0c8e1a65fdfd145c132e.high.meshopt.glb",
-            "sha256": "b41834c480e7a545ef4c9c1b7ef4d8a72d2f17100eed0c8e1a65fdfd145c132e",
-            "bytes": 1849796,
-            "uniqueGeometryMeshes": 41,
-            "uniqueGeometryTriangles": 193878,
-            "uniqueGeometryVertices": 199119,
-            "placementInstances": 384,
-            "drawCalls": 41,
-            "sceneDrawTriangles": 518513,
-            "decodedGpuBytes": 5337986,
-            "boundsMetres": {
-              "min": [
-                -17.352499391902363,
-                -4.585530281066897,
-                -9.622599969883204
-              ],
-              "max": [
-                9.179482460021973,
-                4.803499950778125,
-                12.743484497070312
-              ]
-            }
-          },
-          {
-            "id": "anonymous-shard-11",
-            "index": 11,
-            "path": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-11.46a079858c52a18185e3658265d99e781ee30c6a6f21967fe76db082a26a7bda.high.meshopt.glb",
-            "sha256": "46a079858c52a18185e3658265d99e781ee30c6a6f21967fe76db082a26a7bda",
-            "bytes": 2068236,
-            "uniqueGeometryMeshes": 43,
-            "uniqueGeometryTriangles": 209409,
-            "uniqueGeometryVertices": 211480,
-            "placementInstances": 409,
-            "drawCalls": 43,
-            "sceneDrawTriangles": 519327,
-            "decodedGpuBytes": 5659120,
-            "boundsMetres": {
-              "min": [
-                -17.325499480590224,
-                -4.640741348266604,
-                -9.600850242611719
-              ],
-              "max": [
-                8.526355743408203,
-                4.8055000552982134,
-                13.047160148620605
-              ]
-            }
-          },
-          {
-            "id": "anonymous-shard-12",
-            "index": 12,
-            "path": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-12.87b3373e9326a4ae5b64985b6f8ec9fb6e8a05dfc8d0d5355196cd457e4fb4b0.high.meshopt.glb",
-            "sha256": "87b3373e9326a4ae5b64985b6f8ec9fb6e8a05dfc8d0d5355196cd457e4fb4b0",
-            "bytes": 2241972,
-            "uniqueGeometryMeshes": 36,
-            "uniqueGeometryTriangles": 225988,
-            "uniqueGeometryVertices": 223088,
-            "placementInstances": 365,
-            "drawCalls": 36,
-            "sceneDrawTriangles": 517992,
-            "decodedGpuBytes": 6091812,
-            "boundsMetres": {
-              "min": [
-                -17.325699985027313,
-                -5.227930068969729,
-                -12.250213623046877
-              ],
-              "max": [
-                9.270339510757923,
-                4.803499950778125,
-                13.017838982120145
-              ]
-            }
-          },
-          {
-            "id": "anonymous-shard-13",
-            "index": 13,
-            "path": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-13.625505d79e73f6d25b72a6f0e0f166eadafa314b3894b62c3e9c8f56e06b1281.high.meshopt.glb",
-            "sha256": "625505d79e73f6d25b72a6f0e0f166eadafa314b3894b62c3e9c8f56e06b1281",
-            "bytes": 2554792,
-            "uniqueGeometryMeshes": 14,
-            "uniqueGeometryTriangles": 263248,
-            "uniqueGeometryVertices": 289074,
-            "placementInstances": 498,
-            "drawCalls": 14,
-            "sceneDrawTriangles": 349774,
-            "decodedGpuBytes": 7751348,
-            "boundsMetres": {
-              "min": [
-                -4.937288004300315,
-                -4.466922715913043,
-                -9.623466493410646
-              ],
-              "max": [
-                9.25893689132855,
-                3.3737000515684485,
-                10.018075164856025
-              ]
-            }
-          },
-          {
-            "id": "anonymous-shard-14",
-            "index": 14,
-            "path": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-14.e0774d7335c1ffbfccc2c70c46fc768aa5b258fbf06c405dafecdebaeb623a3d.high.meshopt.glb",
-            "sha256": "e0774d7335c1ffbfccc2c70c46fc768aa5b258fbf06c405dafecdebaeb623a3d",
-            "bytes": 2371812,
-            "uniqueGeometryMeshes": 46,
-            "uniqueGeometryTriangles": 216310,
-            "uniqueGeometryVertices": 240544,
-            "placementInstances": 393,
-            "drawCalls": 46,
-            "sceneDrawTriangles": 518089,
-            "decodedGpuBytes": 6135132,
-            "boundsMetres": {
-              "min": [
-                -18.420000076293945,
-                -4.58215379714966,
-                -9.622826576232912
-              ],
-              "max": [
-                8.887721061706543,
-                3.829417467117312,
-                9.852183121922698
-              ]
-            }
-          },
-          {
-            "id": "anonymous-shard-15",
-            "index": 15,
-            "path": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-15.42d14bc49376b1ab84dc42f67a2705b5aa083d3e4c92a71738944fec1e45b783.high.meshopt.glb",
-            "sha256": "42d14bc49376b1ab84dc42f67a2705b5aa083d3e4c92a71738944fec1e45b783",
-            "bytes": 1887636,
-            "uniqueGeometryMeshes": 37,
-            "uniqueGeometryTriangles": 168341,
-            "uniqueGeometryVertices": 189678,
-            "placementInstances": 411,
-            "drawCalls": 37,
-            "sceneDrawTriangles": 523536,
-            "decodedGpuBytes": 4877510,
-            "boundsMetres": {
-              "min": [
-                -17.321999099105597,
-                -4.863868713378908,
-                -12.575452804565431
-              ],
-              "max": [
-                8.581740061795958,
-                4.803499947355271,
-                9.630847930908205
-              ]
-            }
-          },
-          {
-            "id": "anonymous-shard-16",
-            "index": 16,
-            "path": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-16.d93f48104169d7bbd25ef46957b8ea4316c668f6425941f24084e7268b5ad6f6.high.meshopt.glb",
-            "sha256": "d93f48104169d7bbd25ef46957b8ea4316c668f6425941f24084e7268b5ad6f6",
-            "bytes": 2170932,
-            "uniqueGeometryMeshes": 55,
-            "uniqueGeometryTriangles": 194455,
-            "uniqueGeometryVertices": 211821,
-            "placementInstances": 404,
-            "drawCalls": 55,
-            "sceneDrawTriangles": 519401,
-            "decodedGpuBytes": 5489596,
-            "boundsMetres": {
-              "min": [
-                -17.321999097809197,
-                -4.719930171966554,
-                -9.614598467946053
-              ],
-              "max": [
-                9.093835150005221,
-                4.805499847150088,
-                9.785035133361816
-              ]
-            }
-          },
-          {
-            "id": "anonymous-shard-17",
-            "index": 17,
-            "path": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-17.226545cc43288c910b7dc98a52a0cdfe0c071e3727f95ca5ceb81f989d654706.high.meshopt.glb",
-            "sha256": "226545cc43288c910b7dc98a52a0cdfe0c071e3727f95ca5ceb81f989d654706",
-            "bytes": 2137644,
-            "uniqueGeometryMeshes": 44,
-            "uniqueGeometryTriangles": 232427,
-            "uniqueGeometryVertices": 246888,
-            "placementInstances": 424,
-            "drawCalls": 44,
-            "sceneDrawTriangles": 522387,
-            "decodedGpuBytes": 6443726,
-            "boundsMetres": {
-              "min": [
-                -17.323600799776614,
-                -4.727930068969729,
-                -9.622500419616701
-              ],
-              "max": [
-                8.44448184967041,
-                3.8555000083589666,
-                10.117385864257812
-              ]
-            }
-          },
-          {
-            "id": "anonymous-shard-18",
-            "index": 18,
-            "path": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-18.f490b09fd148f14d00bce4f8c79df3d1a720c346d26c41c64a5c87b7e02fcca4.high.meshopt.glb",
-            "sha256": "f490b09fd148f14d00bce4f8c79df3d1a720c346d26c41c64a5c87b7e02fcca4",
-            "bytes": 2321676,
-            "uniqueGeometryMeshes": 44,
-            "uniqueGeometryTriangles": 211564,
-            "uniqueGeometryVertices": 233145,
-            "placementInstances": 441,
-            "drawCalls": 44,
-            "sceneDrawTriangles": 524587,
-            "decodedGpuBytes": 6056594,
-            "boundsMetres": {
-              "min": [
-                -17.352499391902363,
-                -4.7199301719665545,
-                -9.572500228881838
-              ],
-              "max": [
-                8.42591983667387,
-                4.805500056042682,
-                9.819170951843262
-              ]
-            }
-          },
-          {
-            "id": "anonymous-shard-19",
-            "index": 19,
-            "path": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-19.b47d38e445dc920165b22016849ddb3ff59ac978deff93623289f3be01abdcbe.high.meshopt.glb",
-            "sha256": "b47d38e445dc920165b22016849ddb3ff59ac978deff93623289f3be01abdcbe",
-            "bytes": 7056420,
-            "uniqueGeometryMeshes": 2,
-            "uniqueGeometryTriangles": 708573,
-            "uniqueGeometryVertices": 904344,
-            "placementInstances": 5,
-            "drawCalls": 2,
-            "sceneDrawTriangles": 730845,
-            "decodedGpuBytes": 22928092,
+            "path": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-08.acc448a2059c1df30432b6dd43f6dee0c75dc4dc56926f432eb8d061fe617baa.high.meshopt.glb",
+            "sha256": "acc448a2059c1df30432b6dd43f6dee0c75dc4dc56926f432eb8d061fe617baa",
+            "bytes": 12706016,
+            "uniqueGeometryMeshes": 30,
+            "uniqueGeometryTriangles": 1305738,
+            "uniqueGeometryVertices": 1511089,
+            "placementInstances": 354,
+            "drawCalls": 30,
+            "sceneDrawTriangles": 1691118,
+            "decodedGpuBytes": 39597648,
             "boundsMetres": {
               "min": [
                 -68.9000015258789,
@@ -757,28 +466,314 @@
             }
           },
           {
-            "id": "anonymous-shard-20",
-            "index": 20,
-            "path": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-20.6345b7eb06d4e8328052707005f14acdfa1c4b0f323f0f5142c095ae8e8eb454.high.meshopt.glb",
-            "sha256": "6345b7eb06d4e8328052707005f14acdfa1c4b0f323f0f5142c095ae8e8eb454",
-            "bytes": 13107440,
-            "uniqueGeometryMeshes": 2,
-            "uniqueGeometryTriangles": 1256441,
-            "uniqueGeometryVertices": 1287785,
-            "placementInstances": 5,
-            "drawCalls": 2,
-            "sceneDrawTriangles": 1276697,
-            "decodedGpuBytes": 35641596,
+            "id": "anonymous-shard-09",
+            "index": 9,
+            "path": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-09.fd62b0cd23c98bd57ca3991f3fd40b4c056808212be9e44057a2ddbc443ee8ca.high.meshopt.glb",
+            "sha256": "fd62b0cd23c98bd57ca3991f3fd40b4c056808212be9e44057a2ddbc443ee8ca",
+            "bytes": 13455972,
+            "uniqueGeometryMeshes": 55,
+            "uniqueGeometryTriangles": 1220905,
+            "uniqueGeometryVertices": 1403479,
+            "placementInstances": 371,
+            "drawCalls": 55,
+            "sceneDrawTriangles": 1689591,
+            "decodedGpuBytes": 36636338,
             "boundsMetres": {
               "min": [
-                -3.9812018871307373,
-                -3.207000017166138,
-                -2.1801402568817148
+                -17.327500488257037,
+                -4.670544983990194,
+                -9.6270995400846
               ],
               "max": [
-                8.396856079064237,
-                2.585000038146973,
-                2.1994557380676274
+                9.0437593460083,
+                4.803499950778125,
+                14.281000137329102
+              ]
+            }
+          },
+          {
+            "id": "anonymous-shard-10",
+            "index": 10,
+            "path": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-10.04b148409c0b474bf316443a208774b37aa5c283bcac1e642b3015397d0f4740.high.meshopt.glb",
+            "sha256": "04b148409c0b474bf316443a208774b37aa5c283bcac1e642b3015397d0f4740",
+            "bytes": 13776196,
+            "uniqueGeometryMeshes": 40,
+            "uniqueGeometryTriangles": 1212243,
+            "uniqueGeometryVertices": 1458220,
+            "placementInstances": 387,
+            "drawCalls": 40,
+            "sceneDrawTriangles": 1694200,
+            "decodedGpuBytes": 37552298,
+            "boundsMetres": {
+              "min": [
+                -17.325499480590224,
+                -5.244999885559085,
+                -9.613600242108106
+              ],
+              "max": [
+                8.731682777404785,
+                3.85950016975403,
+                10.277313232421875
+              ]
+            }
+          },
+          {
+            "id": "anonymous-shard-11",
+            "index": 11,
+            "path": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-11.8c798ed18401199501f1c90d1447a8c07508941f2f3e7c8ea02936c6c6a88f26.high.meshopt.glb",
+            "sha256": "8c798ed18401199501f1c90d1447a8c07508941f2f3e7c8ea02936c6c6a88f26",
+            "bytes": 13805532,
+            "uniqueGeometryMeshes": 41,
+            "uniqueGeometryTriangles": 1353476,
+            "uniqueGeometryVertices": 1466033,
+            "placementInstances": 387,
+            "drawCalls": 41,
+            "sceneDrawTriangles": 1694984,
+            "decodedGpuBytes": 39399832,
+            "boundsMetres": {
+              "min": [
+                -17.352499391902363,
+                -4.719930171966555,
+                -9.622599969883204
+              ],
+              "max": [
+                9.201291855218123,
+                4.803499950778125,
+                10.029942512512207
+              ]
+            }
+          },
+          {
+            "id": "anonymous-shard-12",
+            "index": 12,
+            "path": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-12.0aa417a086e810ae8946cbc6002fc99d06b6e57cdd91516ae1203b2bea725856.high.meshopt.glb",
+            "sha256": "0aa417a086e810ae8946cbc6002fc99d06b6e57cdd91516ae1203b2bea725856",
+            "bytes": 13680560,
+            "uniqueGeometryMeshes": 56,
+            "uniqueGeometryTriangles": 1286530,
+            "uniqueGeometryVertices": 1444144,
+            "placementInstances": 434,
+            "drawCalls": 56,
+            "sceneDrawTriangles": 1644975,
+            "decodedGpuBytes": 38101952,
+            "boundsMetres": {
+              "min": [
+                -17.325699985027313,
+                -4.585530281066896,
+                -9.614100242964923
+              ],
+              "max": [
+                8.526355743408203,
+                4.753750436007978,
+                9.75885486912555
+              ]
+            }
+          },
+          {
+            "id": "anonymous-shard-13",
+            "index": 13,
+            "path": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-13.368423d824b3c4a7b321eada34839fdd52d95a334120260f26f8082ec6e44863.high.meshopt.glb",
+            "sha256": "368423d824b3c4a7b321eada34839fdd52d95a334120260f26f8082ec6e44863",
+            "bytes": 14132900,
+            "uniqueGeometryMeshes": 35,
+            "uniqueGeometryTriangles": 1452407,
+            "uniqueGeometryVertices": 1563743,
+            "placementInstances": 443,
+            "drawCalls": 35,
+            "sceneDrawTriangles": 1479582,
+            "decodedGpuBytes": 42406286,
+            "boundsMetres": {
+              "min": [
+                -15.503000111848117,
+                -4.719930171966554,
+                -9.738625526428224
+              ],
+              "max": [
+                8.52564234259058,
+                4.789000153541567,
+                9.785028651356697
+              ]
+            }
+          },
+          {
+            "id": "anonymous-shard-14",
+            "index": 14,
+            "path": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-14.1e3b73f5b0ed3ac2b05a2af1955869d9a6a467bfe2615185742ee4167f0e9ee0.high.meshopt.glb",
+            "sha256": "1e3b73f5b0ed3ac2b05a2af1955869d9a6a467bfe2615185742ee4167f0e9ee0",
+            "bytes": 13399996,
+            "uniqueGeometryMeshes": 47,
+            "uniqueGeometryTriangles": 1296103,
+            "uniqueGeometryVertices": 1417903,
+            "placementInstances": 395,
+            "drawCalls": 47,
+            "sceneDrawTriangles": 1675312,
+            "decodedGpuBytes": 37858606,
+            "boundsMetres": {
+              "min": [
+                -17.327499402669343,
+                -4.582128047943118,
+                -9.625000123045233
+              ],
+              "max": [
+                8.581740061795958,
+                5.069500173542794,
+                10.655645370483398
+              ]
+            }
+          },
+          {
+            "id": "anonymous-shard-15",
+            "index": 15,
+            "path": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-15.5f0cee689d984e72ede0072f18e93a077f19de631028e5cfc57f0738295f882d.high.meshopt.glb",
+            "sha256": "5f0cee689d984e72ede0072f18e93a077f19de631028e5cfc57f0738295f882d",
+            "bytes": 13194992,
+            "uniqueGeometryMeshes": 48,
+            "uniqueGeometryTriangles": 1287628,
+            "uniqueGeometryVertices": 1446657,
+            "placementInstances": 426,
+            "drawCalls": 48,
+            "sceneDrawTriangles": 1667042,
+            "decodedGpuBytes": 38255380,
+            "boundsMetres": {
+              "min": [
+                -17.327499402669343,
+                -4.863868713378908,
+                -9.582826614379885
+              ],
+              "max": [
+                8.367191314697266,
+                4.740999946370723,
+                10.605540851596743
+              ]
+            }
+          },
+          {
+            "id": "anonymous-shard-16",
+            "index": 16,
+            "path": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-16.d34e3f14e883c6eb64cdab888bcf3e4062e0d098964e482faaa660d61516c994.high.meshopt.glb",
+            "sha256": "d34e3f14e883c6eb64cdab888bcf3e4062e0d098964e482faaa660d61516c994",
+            "bytes": 13613388,
+            "uniqueGeometryMeshes": 50,
+            "uniqueGeometryTriangles": 1288929,
+            "uniqueGeometryVertices": 1512464,
+            "placementInstances": 411,
+            "drawCalls": 50,
+            "sceneDrawTriangles": 1658242,
+            "decodedGpuBytes": 39321404,
+            "boundsMetres": {
+              "min": [
+                -17.325499480590224,
+                -4.863868713378909,
+                -10.734000205993654
+              ],
+              "max": [
+                8.571058303967732,
+                4.740999946370723,
+                13.020121565081473
+              ]
+            }
+          },
+          {
+            "id": "anonymous-shard-17",
+            "index": 17,
+            "path": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-17.fd4c65c9b3d4ef9945c2cb31bab69d1f5399385ff8afd5f645daf8fceb3c88e0.high.meshopt.glb",
+            "sha256": "fd4c65c9b3d4ef9945c2cb31bab69d1f5399385ff8afd5f645daf8fceb3c88e0",
+            "bytes": 13927116,
+            "uniqueGeometryMeshes": 49,
+            "uniqueGeometryTriangles": 1463105,
+            "uniqueGeometryVertices": 1516010,
+            "placementInstances": 389,
+            "drawCalls": 49,
+            "sceneDrawTriangles": 1511812,
+            "decodedGpuBytes": 41754570,
+            "boundsMetres": {
+              "min": [
+                -17.32465011605723,
+                -4.7199301719665545,
+                -9.50478761922568
+              ],
+              "max": [
+                8.994334104303128,
+                3.82941746894872,
+                9.735894857684428
+              ]
+            }
+          },
+          {
+            "id": "anonymous-shard-18",
+            "index": 18,
+            "path": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-18.ed3f52f34b45b37a9f4a92e29ac5505695c94b26ee71d7bf835cadec062ab6e6.high.meshopt.glb",
+            "sha256": "ed3f52f34b45b37a9f4a92e29ac5505695c94b26ee71d7bf835cadec062ab6e6",
+            "bytes": 14045536,
+            "uniqueGeometryMeshes": 45,
+            "uniqueGeometryTriangles": 1463596,
+            "uniqueGeometryVertices": 1516856,
+            "placementInstances": 387,
+            "drawCalls": 45,
+            "sceneDrawTriangles": 1512769,
+            "decodedGpuBytes": 41767502,
+            "boundsMetres": {
+              "min": [
+                -16.386499390006065,
+                -4.6555300738054415,
+                -9.358099937438965
+              ],
+              "max": [
+                9.270339510757923,
+                3.8294174671173113,
+                9.717137336730957
+              ]
+            }
+          },
+          {
+            "id": "anonymous-shard-19",
+            "index": 19,
+            "path": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-19.48742f652789cf30f413e1e20417d023830f4348d7607cf2e525780ea98811e0.high.meshopt.glb",
+            "sha256": "48742f652789cf30f413e1e20417d023830f4348d7607cf2e525780ea98811e0",
+            "bytes": 13604428,
+            "uniqueGeometryMeshes": 2,
+            "uniqueGeometryTriangles": 1447907,
+            "uniqueGeometryVertices": 1587402,
+            "placementInstances": 5,
+            "drawCalls": 2,
+            "sceneDrawTriangles": 1470179,
+            "decodedGpuBytes": 42729028,
+            "boundsMetres": {
+              "min": [
+                -6.188304901123047,
+                -1.5762000083923335,
+                -6.728020668029785
+              ],
+              "max": [
+                0.12975000040233162,
+                2.068799972534181,
+                2.419392802460361
+              ]
+            }
+          },
+          {
+            "id": "anonymous-shard-20",
+            "index": 20,
+            "path": "/device-assets/exl50u-general-assembly/v1/anonymous-shard-20.78e5b8279ca9ded9d6fa239e535cf4325e492f804ad96f2d94a7b4a417af552b.high.meshopt.glb",
+            "sha256": "78e5b8279ca9ded9d6fa239e535cf4325e492f804ad96f2d94a7b4a417af552b",
+            "bytes": 14448264,
+            "uniqueGeometryMeshes": 32,
+            "uniqueGeometryTriangles": 1365950,
+            "uniqueGeometryVertices": 1594395,
+            "placementInstances": 292,
+            "drawCalls": 32,
+            "sceneDrawTriangles": 1499174,
+            "decodedGpuBytes": 41862240,
+            "boundsMetres": {
+              "min": [
+                -19,
+                -5.227930068969729,
+                -9.629099862161905
+              ],
+              "max": [
+                17.247529983520508,
+                4.789000153541567,
+                13.017838982120145
               ]
             }
           }

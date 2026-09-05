@@ -282,9 +282,9 @@ npm run check
 - [ ] `/physics`、`/engineering`、`/control`、`/diagnostics` 能打开。
 - [ ] `/search` 搜索 `EXL-50U` 能返回带来源记录。
 - [ ] `/knowledge-graph` 能加载关系图和筛选器。
-- [ ] `/digital-prototype#prototype-workspace` 能切换 Paramak、EXL‑50U、EXL‑50U 总装、EHL‑2 与 ITER；总装 preview 自动显示，用户明确选择 high 后 20 个匿名运输分片串行加载。
+- [ ] `/digital-prototype#prototype-workspace` 能切换 Paramak、EXL‑50U、EXL‑50U 总装、EHL‑2 与 ITER；总装 preview 在能力足够的桌面客户端自动显示，窄屏/省流量/低内存客户端保留显式启动，用户明确选择 high 后 20 个匿名运输分片串行加载。
 - [ ] 完整资产模式下，`npm run assets:verify` 通过；ITER 可加载 18 个高清部件，EXL‑50U 总装可加载 1 preview + 20 high 且不把运输分片表述为工程系统/BOM。
-- [ ] 正式 EXL 总装 manifest 的 v8 匿名 evidence（sloppy preview `selectedTargetTriangleRatio = 0.05`、`simplifierNormalizedErrorLimit = 0.02`）与 canonical 10-view visual-QA receipt 已由发布门禁验证；本地复现不需要、也不得从公开包恢复私有 visual/QEM 报告、源 manifest、`geometryAccounting` 或源身份。
+- [ ] 正式 EXL 总装 manifest 的 v8 匿名 evidence（sloppy preview `selectedTargetTriangleRatio = 0.03`、`simplifierNormalizedErrorLimit = 0.02`；high QEM 两次尝试 `0.70/0.65`）与 canonical 10-view visual-QA receipt 已由发布门禁验证；high 聚合三角形达到 `floor(0.98 * selectedTargetTriangleRatio * sourceInputCleaning.sanitizedTriangles)`，该下限不用于 sloppy preview；本地复现不需要、也不得从公开包恢复私有 visual/QEM 报告、源 manifest、`geometryAccounting` 或源身份。
 - [ ] 未配置密钥时，“询问 FusionDigital”显示确定性检索回退，而不是白屏或泄漏配置。
 - [ ] `/account` 与 `/research-review` 在没有 Sites 身份时显示登录边界，而不是把客户端输入当作身份。
 

@@ -51,8 +51,10 @@ export const EXL50U_GA_MAX_PLACEMENT_INSTANCES_PER_SHARD = 250_000;
 export const EXL50U_GA_MAX_BUNDLE_PLACEMENT_INSTANCES = (
   EXL50U_GA_SHARD_COUNT * EXL50U_GA_MAX_PLACEMENT_INSTANCES_PER_SHARD
 );
-export const EXL50U_GA_MAX_SCENE_TRIANGLES = 30_000_000;
+export const EXL50U_GA_MAX_SCENE_TRIANGLES = 35_000_000;
+const EXL50U_GA_MAX_PREVIEW_TRIANGLES = 30_000_000;
 export const EXL50U_GA_MAX_DRAW_CALLS = 800;
+export const EXL50U_GA_MIN_HIGH_TRIANGLE_RETENTION = 0.98;
 export const EXL50U_GA_ASSET_FORMAT = "glTF 2.0 binary + EXT_meshopt_compression + EXT_mesh_gpu_instancing; POSITION Float32; NORMAL normalized Int8 (8-bit); indices Uint16/Uint32";
 
 const SHARD_METRICS = [
@@ -205,7 +207,7 @@ export function normalizeExl50uGeneralAssemblyDerivationEvidence(value, { review
     || !exactKeys(preview, [...lodKeys, "visualQa"])
     || preview.algorithm !== "meshoptimizer-simplify-sloppy"
     || !validLod(preview)
-    || preview.selectedTargetTriangleRatio !== 0.05
+    || preview.selectedTargetTriangleRatio !== 0.03
     || preview.simplifierNormalizedErrorLimit !== 0.02
     || preview.minimumTrianglesPerDefinition !== 12
     || !exactKeys(visualQa, [
@@ -229,9 +231,14 @@ export function normalizeExl50uGeneralAssemblyDerivationEvidence(value, { review
     || !exactKeys(high, [...lodKeys, "targetMissCount", "retainedIrreducibleCount"])
     || high.algorithm !== "meshoptimizer-simplify-qem"
     || !validLod(high)
-    || high.selectedTargetTriangleRatio !== (value.selectedAttempt === 1 ? 0.6 : 0.55)
+    || high.selectedTargetTriangleRatio !== (value.selectedAttempt === 1 ? 0.7 : 0.65)
     || high.simplifierNormalizedErrorLimit !== 0.0005
     || high.minimumTrianglesPerDefinition !== 12
+    || highCleaning.finalTriangles < Math.floor(
+      EXL50U_GA_MIN_HIGH_TRIANGLE_RETENTION
+        * high.selectedTargetTriangleRatio
+        * sourceInputCleaning.sanitizedTriangles,
+    )
     || !nonNegativeSafeInteger(high.targetMissCount)
     || !nonNegativeSafeInteger(high.retainedIrreducibleCount)
     || high.targetMissCount !== high.retainedIrreducibleCount
@@ -449,7 +456,7 @@ export function extractExl50uGeneralAssemblyAssets(manifest) {
     || SHARD_METRICS.some((field) => metricTotals[field] !== shardBundle[field])
     || unionMin.some((coordinate, axis) => coordinate !== shardBundle.boundsMetres.min[axis])
     || unionMax.some((coordinate, axis) => coordinate !== shardBundle.boundsMetres.max[axis])
-    || manifest.assets.webModel.triangles > EXL50U_GA_MAX_SCENE_TRIANGLES
+    || manifest.assets.webModel.triangles > EXL50U_GA_MAX_PREVIEW_TRIANGLES
     || derivationEvidence.previewVisualLod.outputCleaning.finalTriangles
       > manifest.assets.webModel.triangles
     || derivationEvidence.highQem.outputCleaning.finalTriangles

@@ -39,8 +39,10 @@ DeviceManifest 1.4 必须满足：
 - `disclaimer` 明确其不是工程权威模型，不可用于制造、尺寸校核、CAE 或安全决策；
 - `derivationEvidence` 必须是 exact v8 七键：`kind`、`selectedAttempt`、
   `sourceInputCleaning`、`previewVisualLod`、`highQem`、`highPartition`、`coverage`；preview
-  使用 sloppy visual LOD，且固定 `selectedTargetTriangleRatio = 0.05`、
-  `simplifierNormalizedErrorLimit = 0.02`；high 使用 QEM，两档各自保存互斥算术闭合的 `outputCleaning`；
+  使用 sloppy visual LOD，且固定 `selectedTargetTriangleRatio = 0.03`、
+  `simplifierNormalizedErrorLimit = 0.02`；high 使用 QEM，并按 `selectedAttempt` 固定为 `0.70/0.65`，两档各自保存互斥算术闭合的 `outputCleaning`；
+- high 的聚合输出不得低于
+  `floor(0.98 * selectedTargetTriangleRatio * sourceInputCleaning.sanitizedTriangles)`，该门禁只约束 high，不约束 sloppy preview；
 - preview 的 canonical 10-view visual QA 必须满足最差 silhouette IoU >= 0.97、最坏 normalized
   depth p99 <= 0.02；公开对象只保存匿名指标和 receipt SHA-256，不保存完整私有报告；
 - `sourceInputCleaning` 绑定 source face/triangle 匿名计数，但不包含逐定义拓扑保留声明或
@@ -100,11 +102,11 @@ CDN/WAF 可以对异常高频请求、枚举和热链设置速率限制并记录
 EXL-50U 总装浏览器派生包的 preview 与 high 属于同一份公开授权和同一 DeviceManifest
 的原子交付，不得通过第二份清单、隐藏 URL 或目录枚举绕过发布门禁：
 
-- preview 必须是唯一默认资产，不超过 12 MiB、解码预算不超过 192 MiB；页面先加载它，不在首屏并发拉取 high；
+- preview 必须是唯一默认资产，不超过 12 MiB、解码预算不超过 192 MiB；能力足够的桌面客户端先自动加载它，窄屏、省流量或低内存客户端由用户显式启动，不在首屏并发拉取 high；
 - high 必须精确拆为 `anonymous-shard-01` 至 `anonymous-shard-20`，每片小于 24 MiB、解码预算不超过 96 MiB，并只在用户明确选择高精度后串行加载；
 - 20 是 high 运输 shard 文件数；`highPartition.geometryChunkCount` 是 20 文件中解码得到的
   primitive/mesh 几何 chunk 总数，必须与实际 GLB、partition triangles 对账，不能固定写成 20；
-- 21 个 GLB 总量不超过 300 MiB；high 聚合解码预算不超过 1.5 GiB，场景三角面不超过 3000 万、draw call 不超过 800；无法证明预算时必须 fail closed；
+- 21 个 GLB 总量不超过 300 MiB；high 聚合解码预算不超过 1.5 GiB，场景三角面不超过 3500 万、draw call 不超过 800；无法证明预算时必须 fail closed；
 - GLB 固定使用 Float32 POSITION、normalized Int8 NORMAL、Uint32 indices、`EXT_meshopt_compression` 与 `EXT_mesh_gpu_instancing`；
 - 公开 GLB JSON 不得含 `name` / `extras`；唯一公开根名 `EXL50U_GA_VISUALIZATION` 由运行时合成，20 个编号只表示运输顺序；
 - manifest 和界面必须继续说明 preview/high 均为非工程可视化派生，不可用于制造、尺寸校核、CAE、安全决策或配置控制；

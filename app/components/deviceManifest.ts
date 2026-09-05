@@ -18,8 +18,10 @@ export const MAX_ANONYMOUS_SHARD_PLACEMENT_INSTANCES = 250_000;
 export const MAX_ANONYMOUS_BUNDLE_PLACEMENT_INSTANCES = (
   EXL50U_ANONYMOUS_SHARD_COUNT * MAX_ANONYMOUS_SHARD_PLACEMENT_INSTANCES
 );
-export const MAX_ANONYMOUS_SCENE_TRIANGLES = 30_000_000;
+export const MAX_ANONYMOUS_SCENE_TRIANGLES = 35_000_000;
+const MAX_ANONYMOUS_PREVIEW_TRIANGLES = 30_000_000;
 export const MAX_ANONYMOUS_DRAW_CALLS = 800;
+const MIN_ANONYMOUS_HIGH_TRIANGLE_RETENTION = 0.98;
 export const ANONYMOUS_SHARD_BUNDLE_FORMAT = 'glTF 2.0 binary + EXT_meshopt_compression + EXT_mesh_gpu_instancing; POSITION Float32; NORMAL normalized Int8 (8-bit); indices Uint16/Uint32';
 export const ANONYMOUS_SHARD_REQUIRED_EXTENSIONS = ['EXT_mesh_gpu_instancing', 'EXT_meshopt_compression'] as const;
 const EXL50U_ANONYMOUS_SHARD_PATH = /^\/device-assets\/exl50u-general-assembly\/v1\/anonymous-shard-(\d{2})\.([a-f0-9]{64})\.high\.meshopt\.glb$/;
@@ -442,7 +444,7 @@ function validateAnonymousDerivationEvidence(value: unknown, reviewCandidate = f
     || !hasExactKeys(preview, [...lodKeys, 'visualQa'])
     || preview.algorithm !== 'meshoptimizer-simplify-sloppy'
     || !validLod(preview)
-    || preview.selectedTargetTriangleRatio !== 0.05
+    || preview.selectedTargetTriangleRatio !== 0.03
     || preview.simplifierNormalizedErrorLimit !== 0.02
     || preview.minimumTrianglesPerDefinition !== 12
     || !visualQa || Array.isArray(visualQa)
@@ -468,9 +470,14 @@ function validateAnonymousDerivationEvidence(value: unknown, reviewCandidate = f
     || !hasExactKeys(high, [...lodKeys, 'targetMissCount', 'retainedIrreducibleCount'])
     || high.algorithm !== 'meshoptimizer-simplify-qem'
     || !validLod(high)
-    || high.selectedTargetTriangleRatio !== (evidence.selectedAttempt === 1 ? 0.6 : 0.55)
+    || high.selectedTargetTriangleRatio !== (evidence.selectedAttempt === 1 ? 0.7 : 0.65)
     || high.simplifierNormalizedErrorLimit !== 0.0005
     || high.minimumTrianglesPerDefinition !== 12
+    || Number(highCleaning?.finalTriangles) < Math.floor(
+      MIN_ANONYMOUS_HIGH_TRIANGLE_RETENTION
+        * Number(high.selectedTargetTriangleRatio)
+        * Number(sourceInputCleaning.sanitizedTriangles),
+    )
     || !integer(high.targetMissCount) || !integer(high.retainedIrreducibleCount)
     || high.targetMissCount !== high.retainedIrreducibleCount
     || Number(high.targetMissCount) > Number(high.receiptCount)
@@ -1030,7 +1037,7 @@ export function parseDeviceManifest(value: unknown, options: ParseDeviceManifest
       || !Number.isSafeInteger(preview.vertices) || Number(preview.vertices) <= 0
       || !Number.isSafeInteger(preview.decodedGpuBytes) || Number(preview.decodedGpuBytes) <= 0
       || Number(preview.decodedGpuBytes) > MAX_ANONYMOUS_PREVIEW_DECODED_BYTES
-      || Number(preview.triangles) > MAX_ANONYMOUS_SCENE_TRIANGLES
+      || Number(preview.triangles) > MAX_ANONYMOUS_PREVIEW_TRIANGLES
       || !isBoundsMetres(preview.boundsMetres)) {
       throw new Error('EXL-50U 总装 preview 必须使用摘要锁定路径并满足压缩、解码与几何预算。');
     }

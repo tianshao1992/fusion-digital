@@ -142,6 +142,36 @@ test('viewer wires serial anonymous loading, accessible shard progress and seman
   assert.match(messages, /'viewer\.shardProgress': '匿名分片 \{current\}\/\{total\} · \{phase\}'/);
 });
 
+test('anonymous catalog activation auto-starts only the preview on capable clients and exposes a prominent explicit high-detail action', async () => {
+  const source = await readFile(new URL('../app/components/TokamakCadViewer.tsx', import.meta.url), 'utf8');
+  const styles = await readFile(new URL('../app/components/tokamak-cad-viewer.css', import.meta.url), 'utf8');
+  assert.match(
+    source,
+    /if \(initialChoice\.anonymousHighDetailRequiresExplicitAction && !preferPreview\)[\s\S]*?setActivated\(true\);[\s\S]*?setStatus\('loading'\);/,
+    'an activated anonymous catalog entry must immediately start its fail-safe preview only on a capable client',
+  );
+  assert.match(source, /const preferPreview = shouldPreferPreview\(\);/);
+  assert.match(
+    source,
+    /isAnonymousShardChoice\(asset\) \? 'tokamakCadLodHighAction'/,
+    'the anonymous high-detail choice must have a dedicated visible action style',
+  );
+  assert.match(styles, /\.tokamakCadLodSelector button\.tokamakCadLodHighAction:not\(\.active\)/);
+  assert.match(source, /anonymousHighDetailIntentRef\.current = isAnonymousShardChoice\(next\)/);
+  assert.match(source, /requestedAnonymousQuality\(loadedModel, userInitiatedHighDetail\)/);
+});
+
+test('anonymous high-detail retry reloads only the model and does not refetch the manifest', async () => {
+  const source = await readFile(new URL('../app/components/TokamakCadViewer.tsx', import.meta.url), 'utf8');
+  assert.match(source, /const \[manifestAttempt, setManifestAttempt\] = useState\(0\)/);
+  assert.match(source, /const \[modelAttempt, setModelAttempt\] = useState\(0\)/);
+  assert.match(source, /\}, \[manifestAttempt, manifestUrl\]\);/);
+  assert.match(source, /if \(retryAnonymousHigh\) setModelAttempt\(\(value\) => value \+ 1\)/);
+  assert.doesNotMatch(source, /if \(retryAnonymousHigh\) setManifestAttempt/);
+  assert.match(source, /if \(manifest && isAnonymousVisualizationManifest\(manifest\)\) \{\s*setModelAttempt[\s\S]*?\} else \{\s*setManifestAttempt/,
+    'generic device retries must still refresh their no-store manifest while anonymous retries reuse the immutable manifest');
+});
+
 test('anonymous preview is routed through the strict anonymous loader and cannot bypass root validation', async () => {
   const source = await readFile(new URL('../app/components/TokamakCadViewer.tsx', import.meta.url), 'utf8');
   assert.match(source, /const anonymousBundle = loadedManifest\.assets\.shardBundles\?\.\[0\]/);
