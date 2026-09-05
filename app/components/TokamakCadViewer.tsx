@@ -1254,9 +1254,31 @@ function TokamakCadViewerSession({
         const system = inheritedPartId ? systemByPartId.get(inheritedPartId) : undefined;
         let anonymousAssemblyPreset: keyof typeof INDUSTRIAL_MATERIAL_SPECS | undefined;
         if (appearancePreset === 'assembly-color-v1' && anonymousTransport) {
-          const meshBox = new THREE.Box3().setFromObject(mesh, true);
-          const meshSize = meshBox.getSize(new THREE.Vector3());
-          const meshCentre = meshBox.getCenter(new THREE.Vector3());
+          if (!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox();
+          const definitionBox = mesh.geometry.boundingBox?.clone();
+          const meshSize = definitionBox?.getSize(new THREE.Vector3()) ?? new THREE.Vector3();
+          const worldScale = mesh.getWorldScale(new THREE.Vector3());
+          meshSize.multiply(new THREE.Vector3(
+            Math.abs(worldScale.x),
+            Math.abs(worldScale.y),
+            Math.abs(worldScale.z),
+          ));
+          const meshCentre = new THREE.Vector3();
+          if (mesh instanceof THREE.InstancedMesh && mesh.count > 0 && definitionBox) {
+            const definitionCentre = definitionBox.getCenter(new THREE.Vector3());
+            const instanceMatrix = new THREE.Matrix4();
+            const instanceWorldMatrix = new THREE.Matrix4();
+            const instanceCentre = new THREE.Vector3();
+            for (let instanceIndex = 0; instanceIndex < mesh.count; instanceIndex += 1) {
+              mesh.getMatrixAt(instanceIndex, instanceMatrix);
+              instanceWorldMatrix.multiplyMatrices(mesh.matrixWorld, instanceMatrix);
+              instanceCentre.copy(definitionCentre).applyMatrix4(instanceWorldMatrix);
+              meshCentre.add(instanceCentre);
+            }
+            meshCentre.multiplyScalar(1 / mesh.count);
+          } else {
+            new THREE.Box3().setFromObject(mesh, true).getCenter(meshCentre);
+          }
           anonymousAssemblyPreset = resolveAnonymousAssemblyMaterialPreset({
             size: meshSize.toArray() as [number, number, number],
             centre: meshCentre.toArray() as [number, number, number],
@@ -1311,7 +1333,28 @@ function TokamakCadViewerSession({
 
       const fittedBox = new THREE.Box3().setFromObject(model);
       const fittedSphere = fittedBox.getBoundingSphere(new THREE.Sphere());
+      const fittedSize = fittedBox.getSize(new THREE.Vector3());
       const floorY = fittedBox.min.y - 0.42;
+      let groundMaterial: MeshStandardMaterial | null = null;
+      if (appearancePreset === 'assembly-color-v1') {
+        const groundWidth = Math.max(18, fittedSize.x + fittedSphere.radius * 2.8);
+        const groundDepth = Math.max(18, fittedSize.z + fittedSphere.radius * 2.8);
+        const groundGeometry = new THREE.PlaneGeometry(groundWidth, groundDepth);
+        groundMaterial = new THREE.MeshStandardMaterial({
+          color: initialSceneTheme.ground.color,
+          metalness: initialSceneTheme.ground.metalness,
+          roughness: initialSceneTheme.ground.roughness,
+          side: THREE.DoubleSide,
+        });
+        groundMaterial.name = 'FusionDigital:assembly-presentation-ground';
+        disposableMaterials.add(groundMaterial);
+        const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+        ground.name = 'FUSIONDIGITAL_ASSEMBLY_PRESENTATION_GROUND';
+        ground.rotation.x = -Math.PI / 2;
+        ground.position.set(fittedSphere.center.x, floorY - 0.025, fittedSphere.center.z);
+        ground.receiveShadow = true;
+        scene.add(ground);
+      }
       const grid = new THREE.GridHelper(
         18,
         36,
@@ -1384,6 +1427,12 @@ function TokamakCadViewerSession({
         renderer.toneMappingExposure = next.exposure;
         renderer.setClearColor(next.clearColor, next.clearAlpha);
         scene.environmentIntensity = diagnosticViewerSettingsRef.current.environmentIntensity ?? next.environmentIntensity;
+        if (groundMaterial) {
+          groundMaterial.color.setHex(next.ground.color);
+          groundMaterial.metalness = next.ground.metalness;
+          groundMaterial.roughness = next.ground.roughness;
+          groundMaterial.needsUpdate = true;
+        }
         applyLightTheme(theme);
 
         const positions = grid.geometry.getAttribute('position');

@@ -69,6 +69,9 @@
 .tokamakCadSection.appearance-industrial-silver-v1 .tokamakCadViewportShell{background:radial-gradient(circle at 50% 44%,#283034 0,#121719 42%,#070a0b 100%)}
 .tokamakCadSection.appearance-industrial-silver-v1 .tokamakCadViewportShell:after{background:radial-gradient(ellipse at 50% 52%,transparent 44%,#020405b8 100%)}
 .tokamakCadSection.appearance-industrial-silver-v1 .tokamakCadViewportShell:before{border-color:#a7b4b12e}
+.tokamakCadSection.appearance-assembly-color-v1 .tokamakCadViewportShell{background:radial-gradient(circle at 50% 44%,#283234 0,#151b1c 46%,#080b0c 100%)}
+.tokamakCadSection.appearance-assembly-color-v1 .tokamakCadViewportShell:after{background:radial-gradient(ellipse at 50% 52%,transparent 48%,#0204059e 100%)}
+.tokamakCadSection.appearance-assembly-color-v1 .tokamakCadViewportShell:before{border-color:#9daead38}
 .tokamakCadViewport{position:absolute;inset:0;z-index:1}
 .tokamakCadPoster{position:absolute;inset:0;z-index:0;width:100%;height:100%;object-fit:cover;object-position:center;filter:saturate(.9) contrast(1.07) brightness(.72);transition:opacity .45s}.status-ready .tokamakCadPoster{opacity:0}
 .tokamakCadViewport canvas{display:block;width:100%;height:100%;touch-action:none;outline:none;cursor:grab}
@@ -76,10 +79,12 @@
 .tokamakCadScan{position:absolute;z-index:3;left:0;right:0;top:-12%;height:12%;pointer-events:none;opacity:0;background:linear-gradient(to bottom,transparent,#65ead51c,transparent);mix-blend-mode:screen}
 .status-ready .tokamakCadScan{opacity:1;animation:tokamakCadScan 8s linear infinite}
 .tokamakCadSection.appearance-industrial-silver-v1 .tokamakCadScan{background:linear-gradient(to bottom,transparent,#c8d2d01a,transparent);opacity:.28}
+.tokamakCadSection.appearance-assembly-color-v1 .tokamakCadScan{background:linear-gradient(to bottom,transparent,#b8cfcc18,transparent);opacity:.22}
 .tokamakCadReticle{position:absolute;z-index:3;left:50%;top:50%;width:min(46vw,570px);aspect-ratio:1;transform:translate(-50%,-50%);border:1px solid #71d8c01d;border-radius:50%;pointer-events:none}
 .tokamakCadReticle:before,.tokamakCadReticle:after{content:"";position:absolute;inset:13%;border:1px dashed #71d8c018;border-radius:50%}.tokamakCadReticle:after{inset:34%;border-style:solid}
 .tokamakCadReticle i{position:absolute;background:#71d8c01a}.tokamakCadReticle i:first-child{left:50%;top:-10%;bottom:-10%;width:1px}.tokamakCadReticle i:last-child{top:50%;left:-10%;right:-10%;height:1px}
 .tokamakCadSection.appearance-industrial-silver-v1 .tokamakCadReticle{border-color:#afbab81d}.tokamakCadSection.appearance-industrial-silver-v1 .tokamakCadReticle:before,.tokamakCadSection.appearance-industrial-silver-v1 .tokamakCadReticle:after{border-color:#afbab817}.tokamakCadSection.appearance-industrial-silver-v1 .tokamakCadReticle i{background:#afbab819}
+.tokamakCadSection.appearance-assembly-color-v1 .tokamakCadReticle{border-color:#a5b8b51f}.tokamakCadSection.appearance-assembly-color-v1 .tokamakCadReticle:before,.tokamakCadSection.appearance-assembly-color-v1 .tokamakCadReticle:after{border-color:#a5b8b519}.tokamakCadSection.appearance-assembly-color-v1 .tokamakCadReticle i{background:#a5b8b51b}
 
 .tokamakCadLaunch,.tokamakCadLoading,.tokamakCadFallback{position:absolute;z-index:8;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px;background:#06100dc4}
 .tokamakCadLaunch{background:radial-gradient(circle at 50% 47%,#102c2470,#06100dc4 68%)}
@@ -163,9 +168,13 @@
 :root[data-theme='light'] .tokamakCadSection.appearance-industrial-silver-v1 .tokamakCadViewportShell{background:radial-gradient(circle at 50% 42%,#fbf8f2 0,#e7e2da 48%,#cfc7bc 100%)}
 :root[data-theme='light'] .tokamakCadSection.appearance-industrial-silver-v1 .tokamakCadViewportShell:after{background:radial-gradient(ellipse at 50% 52%,transparent 52%,rgb(70 64 57 / 17%) 100%)}
 :root[data-theme='light'] .tokamakCadSection.appearance-industrial-silver-v1 .tokamakCadViewportShell:before{border-color:color-mix(in srgb,var(--color-border-strong) 62%,transparent)}
+:root[data-theme='light'] .tokamakCadSection.appearance-assembly-color-v1 .tokamakCadViewportShell{background:radial-gradient(circle at 50% 42%,#d9dcd8 0,#bfc3bf 50%,#969d99 100%)}
+:root[data-theme='light'] .tokamakCadSection.appearance-assembly-color-v1 .tokamakCadViewportShell:after{background:radial-gradient(ellipse at 50% 52%,transparent 55%,rgb(41 47 46 / 19%) 100%)}
+:root[data-theme='light'] .tokamakCadSection.appearance-assembly-color-v1 .tokamakCadViewportShell:before{border-color:color-mix(in srgb,var(--color-info-strong) 50%,transparent)}
 :root[data-theme='light'] .tokamakCadPoster{filter:saturate(.82) contrast(.96) brightness(1.02)}
 :root[data-theme='light'] .tokamakCadScan{background:linear-gradient(to bottom,transparent,color-mix(in srgb,var(--color-info) 13%,transparent),transparent);mix-blend-mode:multiply}
 :root[data-theme='light'] .tokamakCadSection.appearance-industrial-silver-v1 .tokamakCadScan{background:linear-gradient(to bottom,transparent,rgb(113 133 121 / 12%),transparent)}
+:root[data-theme='light'] .tokamakCadSection.appearance-assembly-color-v1 .tokamakCadScan{background:linear-gradient(to bottom,transparent,rgb(52 91 86 / 10%),transparent)}
 :root[data-theme='light'] .tokamakCadReticle{border-color:color-mix(in srgb,var(--color-info) 24%,transparent)}
 :root[data-theme='light'] .tokamakCadReticle:before,:root[data-theme='light'] .tokamakCadReticle:after{border-color:color-mix(in srgb,var(--color-info) 20%,transparent)}
 :root[data-theme='light'] .tokamakCadReticle i{background:color-mix(in srgb,var(--color-info) 18%,transparent)}
