@@ -6,6 +6,7 @@ import { lstat, readFile, readdir } from "node:fs/promises";
 import { basename, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { isDeepStrictEqual } from "node:util";
+import { isPostbuildPrunedGitAssetPath } from "./postbuild-pruned-git-assets.mjs";
 
 const SCRIPT_PATH = fileURLToPath(import.meta.url);
 const LOCK_SCHEMA = "fusiondigital.runtime-assets.v1";
@@ -871,7 +872,7 @@ export async function verifyPublicationNotice(releaseRoot, bundle) {
   }
 }
 
-async function verifyGitManagedReleaseTree(releaseRoot, gitAssets) {
+export async function verifyGitManagedReleaseTree(releaseRoot, gitAssets) {
   for (const file of gitAssets.files) {
     const relativePublicPath = safeRelativePath(file.path, "Git-managed release asset path");
     if (!relativePublicPath.startsWith("public/")) {
@@ -883,8 +884,14 @@ async function verifyGitManagedReleaseTree(releaseRoot, gitAssets) {
     try {
       info = await lstat(pathname);
     } catch (error) {
-      if (error?.code === "ENOENT") throw new Error(`Git-managed release asset is missing: ${relativePublicPath}`);
+      if (error?.code === "ENOENT") {
+        if (isPostbuildPrunedGitAssetPath(relativePublicPath)) continue;
+        throw new Error(`Git-managed release asset is missing: ${relativePublicPath}`);
+      }
       throw error;
+    }
+    if (isPostbuildPrunedGitAssetPath(relativePublicPath)) {
+      throw new Error(`Postbuild-pruned Git-managed release asset must be absent: ${relativePublicPath}`);
     }
     if (!info.isFile() || info.isSymbolicLink() || info.size !== file.bytes
       || await sha256File(pathname) !== file.sha256) {

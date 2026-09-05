@@ -13,18 +13,19 @@ import {
   extractExl50uGeneralAssemblyAssets,
 } from '../assets/exl50u-general-assembly-runtime-contract.mjs';
 import { assertManifestMatchesLock } from '../../deploy/aliyun-hk/verify-runtime-assets.mjs';
+import {
+  POSTBUILD_PRUNED_GIT_ASSET_RULES,
+  postbuildPrunedDistPath,
+  postbuildPrunedGitAssetRule,
+} from '../../deploy/aliyun-hk/postbuild-pruned-git-assets.mjs';
 
 const distUrl = new URL('../../dist/', import.meta.url);
 const distClientUrl = new URL('client/', distUrl);
 const catalogPath = fileURLToPath(new URL('models/device-catalog.json', distClientUrl));
-const searchIndexDistUrl = new URL(
-  '../../dist/client/data/fusion-knowledge-index.json',
-  import.meta.url,
-);
-const searchIndexSourceUrl = new URL(
-  '../../public/data/fusion-knowledge-index.json',
-  import.meta.url,
-);
+const SEARCH_INDEX_PRUNE_RULE = postbuildPrunedGitAssetRule('fusion-knowledge-index.client-copy');
+const PARAMAK_STEP_PRUNE_RULE = postbuildPrunedGitAssetRule('paramak-full-device.step');
+const searchIndexDistUrl = new URL(postbuildPrunedDistPath(SEARCH_INDEX_PRUNE_RULE), distClientUrl);
+const searchIndexSourceUrl = new URL(`../../${SEARCH_INDEX_PRUNE_RULE.publicPath}`, import.meta.url);
 const searchCoreUrl = new URL('../../app/search/search-core.ts', import.meta.url);
 const appUrl = new URL('../../app/', import.meta.url);
 const serverEntryUrl = new URL('../../dist/server/index.js', import.meta.url);
@@ -36,18 +37,15 @@ const BUILD_TARGET = process.env.FUSIONDIGITAL_BUILD_TARGET || 'sites';
 const ITER_HIGH_DETAIL_ID = 'iter-high-detail-v1';
 const EXL50U_GA_ID = 'exl50u-general-assembly-v1';
 const EXTERNAL_RUNTIME_IDS = new Set([ITER_HIGH_DETAIL_ID, EXL50U_GA_ID]);
-const OBSOLETE_RUNTIME_PACKAGES = Object.freeze([
-  {
-    id: 'paramak-tokamak-demo',
-    distUrl: new URL('../../dist/client/models/paramak-tokamak-demo/', import.meta.url),
-    forbiddenCatalogToken: '/models/paramak-tokamak-demo/',
-  },
-  {
-    id: 'exl50u-secure-preview',
-    distUrl: new URL('../../dist/client/models/exl50u-secure-preview/', import.meta.url),
-    forbiddenCatalogToken: '/models/exl50u-secure-preview/',
-  },
-]);
+const OBSOLETE_RUNTIME_PACKAGES = Object.freeze(
+  POSTBUILD_PRUNED_GIT_ASSET_RULES
+    .filter((rule) => rule.kind === 'directory')
+    .map((rule) => Object.freeze({
+      id: rule.id,
+      distUrl: new URL(postbuildPrunedDistPath(rule), distClientUrl),
+      forbiddenCatalogToken: rule.forbiddenCatalogToken,
+    })),
+);
 const READABLE_DIST_TEXT_EXTENSIONS = new Set([
   '.cjs',
   '.css',
@@ -711,10 +709,7 @@ export async function runPostbuildPrune({
 
   // The Paramak STEP remains tracked for collaborators and reproducible builds. The production
   // viewer loads only the GLB, and the catalog explicitly disables all download actions.
-  const sourceOnlyStep = new URL(
-    '../../dist/client/models/paramak-full-device/paramak-full-device.step',
-    import.meta.url,
-  );
+  const sourceOnlyStep = new URL(postbuildPrunedDistPath(PARAMAK_STEP_PRUNE_RULE), distClientUrl);
   let sourceOnlyBytes = 0;
   try {
     sourceOnlyBytes = (await stat(sourceOnlyStep)).size;
@@ -722,7 +717,7 @@ export async function runPostbuildPrune({
     if (error?.code !== 'ENOENT') throw error;
   }
   await rm(sourceOnlyStep, { force: true });
-  removed.push({ id: 'paramak-full-device.step', bytes: sourceOnlyBytes });
+  removed.push({ id: PARAMAK_STEP_PRUNE_RULE.id, bytes: sourceOnlyBytes });
 
   // The search API statically imports this index, so Vite embeds the complete dataset in the
   // Worker bundle. Keeping the public-directory copy in dist/client duplicates the same payload;
@@ -735,7 +730,7 @@ export async function runPostbuildPrune({
     if (error?.code !== 'ENOENT') throw error;
   }
   await rm(searchIndexDistUrl, { force: true });
-  removed.push({ id: 'fusion-knowledge-index.client-copy', bytes: embeddedSearchIndexBytes });
+  removed.push({ id: SEARCH_INDEX_PRUNE_RULE.id, bytes: embeddedSearchIndexBytes });
 
   const vinextFonts = await pruneUnreferencedVinextFonts();
   removed.push({ id: '_vinext_fonts.client-assets', bytes: vinextFonts.bytes });

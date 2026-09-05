@@ -20,7 +20,11 @@ import {
   renderLockedGlbRoutes,
   renderNginxConfig,
 } from "../deploy/aliyun-hk/render-nginx-config.mjs";
-import { validateRuntimeAssetLock } from "../deploy/aliyun-hk/verify-runtime-assets.mjs";
+import { POSTBUILD_PRUNED_GIT_ASSET_RULES } from "../deploy/aliyun-hk/postbuild-pruned-git-assets.mjs";
+import {
+  validateRuntimeAssetLock,
+  verifyGitManagedReleaseTree,
+} from "../deploy/aliyun-hk/verify-runtime-assets.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -46,6 +50,81 @@ function runNode(args, options = {}) {
     child.on("close", (code, signal) => resolveRun({ code, signal, stdout, stderr }));
   });
 }
+
+test("Hong Kong verifier accepts the exact real postbuild Git-asset projection", async () => {
+  const lock = JSON.parse(await read("assets/runtime-assets.lock.json"));
+  assert.equal(POSTBUILD_PRUNED_GIT_ASSET_RULES.length, 4);
+  assert.equal(
+    lock.gitAssets.files.some(({ path }) => path === "public/models/exl50u-general-assembly-review-candidate.json"),
+    false,
+    "the retired non-production review catalog must not remain in gitAssets",
+  );
+
+  for (const rule of POSTBUILD_PRUNED_GIT_ASSET_RULES) {
+    const lockedMatches = lock.gitAssets.files.filter(({ path }) => (
+      rule.kind === "file" ? path === rule.publicPath : path.startsWith(rule.publicPath)
+    ));
+    assert.ok(lockedMatches.length > 0, `${rule.id} must match at least one locked source asset`);
+    for (const file of lockedMatches) {
+      await assert.rejects(
+        stat(join(ROOT, "dist/client", file.path.slice("public/".length))),
+        { code: "ENOENT" },
+        `${file.path} must be absent after the real postbuild`,
+      );
+    }
+  }
+
+  await assert.doesNotReject(verifyGitManagedReleaseTree(ROOT, lock.gitAssets));
+});
+
+test("Hong Kong verifier rejects extra missing assets and restored pruned assets", async () => {
+  const temporaryRoot = await mkdtemp(join(tmpdir(), "fusiondigital-runtime-projection-"));
+  const keptPath = "public/models/paramak-tokamak-demo-copy/kept.txt";
+  const keptBody = "must remain in the release";
+  const keptDistPath = join(temporaryRoot, "dist/client", keptPath.slice("public/".length));
+  const prunedFiles = POSTBUILD_PRUNED_GIT_ASSET_RULES.map((rule) => ({
+    path: rule.kind === "file" ? rule.publicPath : `${rule.publicPath}fixture.txt`,
+    bytes: 1,
+    sha256: createHash("sha256").update("x").digest("hex"),
+  }));
+  const gitAssets = {
+    files: [
+      {
+        path: keptPath,
+        bytes: Buffer.byteLength(keptBody),
+        sha256: createHash("sha256").update(keptBody).digest("hex"),
+      },
+      ...prunedFiles,
+    ],
+  };
+
+  try {
+    await mkdir(dirname(keptDistPath), { recursive: true });
+    await writeFile(keptDistPath, keptBody);
+    await assert.doesNotReject(verifyGitManagedReleaseTree(temporaryRoot, gitAssets));
+
+    await rm(keptDistPath);
+    await assert.rejects(
+      verifyGitManagedReleaseTree(temporaryRoot, gitAssets),
+      /Git-managed release asset is missing: public\/models\/paramak-tokamak-demo-copy\/kept\.txt/u,
+    );
+
+    await writeFile(keptDistPath, keptBody);
+    const restoredPrunedPath = join(
+      temporaryRoot,
+      "dist/client",
+      POSTBUILD_PRUNED_GIT_ASSET_RULES.at(-1).publicPath.slice("public/".length),
+    );
+    await mkdir(dirname(restoredPrunedPath), { recursive: true });
+    await writeFile(restoredPrunedPath, "x");
+    await assert.rejects(
+      verifyGitManagedReleaseTree(temporaryRoot, gitAssets),
+      /Postbuild-pruned Git-managed release asset must be absent/u,
+    );
+  } finally {
+    await rm(temporaryRoot, { recursive: true, force: true });
+  }
+});
 
 test("Hong Kong Node CLIs execute through the current release directory symlink", async () => {
   const temporaryRoot = await mkdtemp(join(tmpdir(), "fusiondigital-cli-symlink-"));
