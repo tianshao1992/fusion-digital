@@ -216,6 +216,8 @@ test('EXL-50U total assembly receives the reviewed colour preset and deep inspec
   assert.match(source, /controls\.screenSpacePanning = closeInspection/);
   assert.match(source, /Math\.max\(0\.0005, modelRadius \* 0\.00035\)/);
   assert.match(source, /modelRadius \* \(closeInspection \? 0\.025 : 1\.2\)/);
+  assert.match(source, /controls\.addEventListener\('end', \(\) => \{[\s\S]*?preserveViewOnResize = true;[\s\S]*?cameraViewRef\.current = snapshot/,
+    'manual orbit, pan and zoom must mark the close-up view for preservation across resize');
   assert.match(source, /const onFullscreenChange = \(\) => \{[\s\S]*?viewerRef\.current\?\.resize\(false\)[\s\S]*?addEventListener\('fullscreenchange'/,
     'fullscreen must preserve the current close-up target instead of fitting the whole assembly again');
 });

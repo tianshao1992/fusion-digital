@@ -972,6 +972,7 @@ function TokamakCadViewerSession({
 
       const controls = new controlsModule.OrbitControls(camera, renderer.domElement);
       localControls = controls;
+      let preserveViewOnResize = false;
       controls.enableDamping = true;
       controls.dampingFactor = 0.075;
       controls.rotateSpeed = 0.62;
@@ -984,6 +985,7 @@ function TokamakCadViewerSession({
       controls.autoRotateSpeed = 0.72;
       controls.addEventListener('end', () => {
         if (disposed) return;
+        preserveViewOnResize = true;
         const snapshot = {
           position: camera.position.toArray() as [number, number, number],
           target: controls.target.toArray() as [number, number, number],
@@ -1405,7 +1407,6 @@ function TokamakCadViewerSession({
       const target = fittedSphere.center.clone();
       const modelRadius = Math.max(fittedSphere.radius, 0.1);
       let currentPreset: ViewPreset = interactionRef.current.activeView;
-      let preserveViewOnResize = false;
       const setView = (preset: ViewPreset) => {
         currentPreset = preset;
         preserveViewOnResize = false;
