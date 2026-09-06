@@ -1,5 +1,4 @@
 import type {
-  Box3,
   Group,
   Material,
   Object3D,
@@ -46,24 +45,24 @@ export type Exl50uPresentationIdentity = Readonly<{
   textures: readonly Texture[];
 }>;
 
-export function resolveExl50uPresentationIdentityLayout(bounds: Readonly<{
-  min: readonly [number, number, number];
-  max: readonly [number, number, number];
-}>): Exl50uPresentationIdentityLayout {
-  const size = bounds.max.map((value, index) => Math.max(0, value - bounds.min[index]));
-  const longestSide = Math.max(...size, 0.1);
-  // Size against the host machine rather than the 86 m hall envelope: the
-  // identity should read like real installation signage, never a billboard.
-  const unit = Math.min(0.24, Math.max(0.18, longestSide * 0.035));
+// Presentation mount for the locked 2026-06-30 anonymous derivative, in its
+// common-origin metre frame (Y up). Downward triangle probes at the pole and
+// both sign feet hit the host's upper platform at Y=2.996 m. These are visual
+// mounting coordinates, not engineering installation dimensions. Never use
+// the full hall's max Y (8.845 m) or centre to locate equipment on the host.
+export const EXL50U_HOST_TOP_MOUNT = {
+  anchor: [1.65, 2.996, 1.65] as const,
+  orientationY: Math.PI / 4,
+  unitMetres: 1.2,
+} as const;
+
+export function resolveExl50uPresentationIdentityLayout(): Exl50uPresentationIdentityLayout {
+  const unit = EXL50U_HOST_TOP_MOUNT.unitMetres;
   return {
-    anchor: [
-      bounds.min[0] + size[0] * 0.775,
-      bounds.max[1] + unit * 0.025,
-      bounds.min[2] + size[2] * 0.5,
-    ],
+    anchor: EXL50U_HOST_TOP_MOUNT.anchor,
     // The sign faces the existing three-quarter camera but remains physical
     // scene geometry as the visitor orbits around the installation.
-    orientationY: Math.atan2(0.92, 1),
+    orientationY: EXL50U_HOST_TOP_MOUNT.orientationY,
     unit,
     flagWidth: unit * 1.26,
     flagHeight: unit * (1.26 * 2 / 3),
@@ -194,13 +193,9 @@ function suppressPresentationPicking(root: Object3D) {
 
 export function createExl50uPresentationIdentity(
   THREE: ThreeRuntime,
-  fittedBounds: Box3,
   anisotropy: number,
 ): Exl50uPresentationIdentity {
-  const layout = resolveExl50uPresentationIdentityLayout({
-    min: fittedBounds.min.toArray() as [number, number, number],
-    max: fittedBounds.max.toArray() as [number, number, number],
-  });
+  const layout = resolveExl50uPresentationIdentityLayout();
   const root = new THREE.Group();
   root.name = 'FUSIONDIGITAL_EXL50U_IDENTITY_MARKER';
   root.position.set(...layout.anchor);
@@ -301,7 +296,8 @@ export function createExl50uPresentationIdentity(
       poleMaterial,
     );
     support.name = 'EXL50U_PRESENTATION_LOGO_SUPPORT';
-    support.position.set(x, layout.signHeight * 0.18, 0);
+    // Both feet start exactly at the same verified platform plane as the pole.
+    support.position.set(x, layout.signHeight * 0.35, 0);
     root.add(support);
   }
 

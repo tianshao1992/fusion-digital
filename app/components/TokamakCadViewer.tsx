@@ -1360,12 +1360,13 @@ function TokamakCadViewerSession({
       if (exl50uAssemblyPresentation) {
         const identity = createExl50uPresentationIdentity(
           THREE,
-          fittedBox,
           renderer.capabilities.getMaxAnisotropy(),
         );
         identity.materials.forEach((material) => disposableMaterials.add(material));
         identity.textures.forEach((texture) => disposableTextures.add(texture));
-        scene.add(identity.root);
+        // Mount in the CAD's metre frame; inherit its centring and display
+        // scale instead of anchoring a sibling above the full hall envelope.
+        model.add(identity.root);
       }
       let groundMaterial: MeshStandardMaterial | null = null;
       if (appearancePreset === 'assembly-color-v1') {

@@ -128,21 +128,26 @@ test('assembly viewer uses definition bounds for instances and owns a disposable
   assert.match(css, /data-theme='light'[^\n]*appearance-assembly-color-v1 \.tokamakCadViewportShell/);
 });
 
-test('EXL-50U presentation identity uses the canonical flag grid and stays within the camera headroom', async () => {
+test('EXL-50U presentation identity mounts on the host platform, not the tallest hall geometry', async () => {
   assert.deepEqual(PRC_FLAG_CONSTRUCTION_GRID.largeStar, { x: 5, y: 5, radius: 3 });
   assert.deepEqual(
     PRC_FLAG_CONSTRUCTION_GRID.smallStars.map(({ x, y, radius }) => [x, y, radius]),
     [[10, 2, 1], [12, 4, 1], [12, 7, 1], [10, 9, 1]],
   );
 
-  const bounds = { min: [-3.05, -0.5, -1.065], max: [3.05, 0.51, 1.065] } as const;
-  const layout = resolveExl50uPresentationIdentityLayout(bounds);
-  const radius = Math.hypot(6.1, 1.01, 2.13) * 0.5;
-  const finialTop = layout.anchor[1] + layout.poleHeight + layout.unit * 0.09;
-  assert.ok(layout.anchor[0] > bounds.min[0] && layout.anchor[0] < bounds.max[0]);
-  assert.ok(layout.anchor[2] > bounds.min[2] && layout.anchor[2] < bounds.max[2]);
-  assert.ok(layout.anchor[1] > bounds.max[1]);
-  assert.ok(finialTop <= bounds.max[1] + radius * 0.3);
+  const layout = resolveExl50uPresentationIdentityLayout();
+  assert.deepEqual(layout.anchor, [1.65, 2.996, 1.65]);
+  assert.ok(layout.flagWidth < 1.6 && layout.signWidth < 1.7);
+  // Independent downward probes of the locked high-detail GLBs hit the upper
+  // platform at all three points. Keep the feet inside that measured footprint.
+  const feet = [-layout.flagWidth * 0.55, -layout.signWidth * 0.34, layout.signWidth * 0.5];
+  const measuredFeet = [[1.061970, 2.238030], [1.257641, 2.042359], [2.226999, 1.073001]];
+  feet.forEach((x, index) => {
+    const sourceX = layout.anchor[0] + x * Math.cos(layout.orientationY);
+    const sourceZ = layout.anchor[2] - x * Math.sin(layout.orientationY);
+    assert.ok(Math.abs(sourceX - measuredFeet[index][0]) < 0.00001);
+    assert.ok(Math.abs(sourceZ - measuredFeet[index][1]) < 0.00001);
+  });
 
   const [viewer, identity] = await Promise.all([
     source('app/components/TokamakCadViewer.tsx'),
@@ -156,6 +161,10 @@ test('EXL-50U presentation identity uses the canonical flag grid and stays withi
   assert.match(identity, /EXL50U_PRESENTATION_LOGO_FRONT/);
   assert.match(identity, /EXL50U_PRESENTATION_LOGO_BACK/);
   assert.match(identity, /node\.raycast = \(\) => undefined/);
+  assert.match(viewer, /model\.add\(identity\.root\)/);
+  assert.doesNotMatch(viewer, /scene\.add\(identity\.root\)/);
+  assert.doesNotMatch(identity, /bounds\.max|fittedBounds/);
+  assert.match(identity, /support\.position\.set\(x, layout\.signHeight \* 0\.35, 0\)/);
 });
 
 test('Tokamak viewer applies theme changes in place without reloading the model', async () => {
