@@ -37,6 +37,7 @@ export type Exl50uPresentationIdentityLayout = Readonly<{
   poleHeight: number;
   signWidth: number;
   signHeight: number;
+  signOffset: readonly [number, number, number];
 }>;
 
 export type Exl50uPresentationIdentity = Readonly<{
@@ -46,8 +47,8 @@ export type Exl50uPresentationIdentity = Readonly<{
 }>;
 
 // Presentation mount for the locked 2026-06-30 anonymous derivative, in its
-// common-origin metre frame (Y up). Downward triangle probes at the pole and
-// both sign feet hit the host's upper platform at Y=2.996 m. These are visual
+// common-origin metre frame (Y up). A downward triangle probe at the pole
+// hits the host's upper platform at Y=2.996 m. These are visual
 // mounting coordinates, not engineering installation dimensions. Never use
 // the full hall's max Y (8.845 m) or centre to locate equipment on the host.
 export const EXL50U_HOST_TOP_MOUNT = {
@@ -69,6 +70,9 @@ export function resolveExl50uPresentationIdentityLayout(): Exl50uPresentationIde
     poleHeight: unit * 1.55,
     signWidth: unit * 1.36,
     signHeight: unit * 0.38,
+    // Below and outside the upper guardrail, in front of its diagonal frame
+    // post. The flag retains its independent top-platform placement.
+    signOffset: [0, 1.45 - EXL50U_HOST_TOP_MOUNT.anchor[1], 1.06],
   };
 }
 
@@ -271,34 +275,39 @@ export function createExl50uPresentationIdentity(
   );
   root.add(flag);
 
-  const signY = layout.signHeight * 0.62;
+  const sign = new THREE.Group();
+  sign.name = 'EXL50U_PRESENTATION_FRAME_MOUNTED_LOGO';
+  sign.position.set(...layout.signOffset);
+  root.add(sign);
   const plateDepth = layout.unit * 0.045;
   const plate = new THREE.Mesh(
     new THREE.BoxGeometry(layout.signWidth * 1.035, layout.signHeight * 1.08, plateDepth),
     plateMaterial,
   );
   plate.name = 'EXL50U_PRESENTATION_LOGO_PLATE';
-  plate.position.set(layout.signWidth * 0.08, signY, 0);
-  root.add(plate);
+  sign.add(plate);
 
   for (const side of [-1, 1] as const) {
     const face = new THREE.Mesh(new THREE.PlaneGeometry(layout.signWidth, layout.signHeight), logoMaterial);
     face.name = side === 1 ? 'EXL50U_PRESENTATION_LOGO_FRONT' : 'EXL50U_PRESENTATION_LOGO_BACK';
-    face.position.set(layout.signWidth * 0.08, signY, side * (plateDepth * 0.5 + layout.unit * 0.002));
+    face.position.set(0, 0, side * (plateDepth * 0.5 + layout.unit * 0.002));
     if (side === -1) face.rotation.y = Math.PI;
     face.renderOrder = 3;
-    root.add(face);
+    sign.add(face);
   }
 
-  for (const x of [-layout.signWidth * 0.34, layout.signWidth * 0.5]) {
+  // Two short rear brackets enter the diagonal exterior frame post instead
+  // of unsupported feet on the deck. Public-GLB inward probes at Y=1.31/1.59 m
+  // locate the post/beam near X=Z=2.109/2.284 m. The sign clears both at
+  // X=Z=2.400 m; unequal stand-offs follow the stepped frame surface.
+  for (const [y, bracketDepth] of [[-0.14, 0.45], [0.14, 0.22]]) {
     const support = new THREE.Mesh(
-      new THREE.CylinderGeometry(poleRadius * 0.48, poleRadius * 0.48, layout.signHeight * 0.7, 10),
+      new THREE.BoxGeometry(0.14, 0.07, bracketDepth),
       poleMaterial,
     );
-    support.name = 'EXL50U_PRESENTATION_LOGO_SUPPORT';
-    // Both feet start exactly at the same verified platform plane as the pole.
-    support.position.set(x, layout.signHeight * 0.35, 0);
-    root.add(support);
+    support.name = 'EXL50U_PRESENTATION_LOGO_REAR_BRACKET';
+    support.position.set(0, y, -plateDepth * 0.5 - bracketDepth * 0.5);
+    sign.add(support);
   }
 
   suppressPresentationPicking(root);

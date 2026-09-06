@@ -138,16 +138,18 @@ test('EXL-50U presentation identity mounts on the host platform, not the tallest
   const layout = resolveExl50uPresentationIdentityLayout();
   assert.deepEqual(layout.anchor, [1.65, 2.996, 1.65]);
   assert.ok(layout.flagWidth < 1.6 && layout.signWidth < 1.7);
-  // Independent downward probes of the locked high-detail GLBs hit the upper
-  // platform at all three points. Keep the feet inside that measured footprint.
-  const feet = [-layout.flagWidth * 0.55, -layout.signWidth * 0.34, layout.signWidth * 0.5];
-  const measuredFeet = [[1.061970, 2.238030], [1.257641, 2.042359], [2.226999, 1.073001]];
+  // The pole stays at the previously verified top-platform mount.
+  const feet = [-layout.flagWidth * 0.55];
+  const measuredFeet = [[1.061970, 2.238030]];
   feet.forEach((x, index) => {
     const sourceX = layout.anchor[0] + x * Math.cos(layout.orientationY);
     const sourceZ = layout.anchor[2] - x * Math.sin(layout.orientationY);
     assert.ok(Math.abs(sourceX - measuredFeet[index][0]) < 0.00001);
     assert.ok(Math.abs(sourceZ - measuredFeet[index][1]) < 0.00001);
   });
+  assert.equal(layout.anchor[1] + layout.signOffset[1], 1.45);
+  assert.ok(layout.signOffset[2] > 0.7, 'sign moves outward beyond the guardrail');
+  assert.ok(layout.signOffset[1] + layout.signHeight / 2 < 0, 'whole sign stays below the top deck');
 
   const [viewer, identity] = await Promise.all([
     source('app/components/TokamakCadViewer.tsx'),
@@ -164,7 +166,9 @@ test('EXL-50U presentation identity mounts on the host platform, not the tallest
   assert.match(viewer, /model\.add\(identity\.root\)/);
   assert.doesNotMatch(viewer, /scene\.add\(identity\.root\)/);
   assert.doesNotMatch(identity, /bounds\.max|fittedBounds/);
-  assert.match(identity, /support\.position\.set\(x, layout\.signHeight \* 0\.35, 0\)/);
+  assert.match(identity, /EXL50U_PRESENTATION_FRAME_MOUNTED_LOGO/);
+  assert.match(identity, /EXL50U_PRESENTATION_LOGO_REAR_BRACKET/);
+  assert.doesNotMatch(identity, /EXL50U_PRESENTATION_LOGO_SUPPORT/);
 });
 
 test('Tokamak viewer applies theme changes in place without reloading the model', async () => {
