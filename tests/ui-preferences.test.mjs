@@ -57,6 +57,9 @@ test('root shell and navigation wire locale and theme preferences without changi
   assert.match(nav, /aria-haspopup="menu"/);
   assert.match(nav, /aria-expanded=\{moreOpen\}/);
   assert.match(nav, /document\.addEventListener\('pointerdown', closeOutside\)/);
+  assert.match(nav, /document\.addEventListener\('pointerdown', closeKnowledgeOutside\)/);
+  assert.match(nav, /document\.removeEventListener\('pointerdown', closeKnowledgeOutside\)/);
+  assert.match(nav, /closeOpenDisclosuresOutside\(event\.target, \[knowledgeRef\.current, mobileKnowledgeRef\.current\]\)/);
   assert.match(nav, /event\.key === 'Escape'/);
   assert.match(nav, /aria-current=\{active === item\.key \? 'page' : undefined\}/);
   assert.match(nav, /data-nav-active=\{active === item\.key \? 'true' : undefined\}/);
