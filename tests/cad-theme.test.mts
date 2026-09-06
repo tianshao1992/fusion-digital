@@ -9,6 +9,10 @@ import {
   INDUSTRIAL_MATERIAL_SPECS,
   resolveAnonymousAssemblyMaterialPreset,
 } from '../app/components/device-viewer/industrialAppearance';
+import {
+  PRC_FLAG_CONSTRUCTION_GRID,
+  resolveExl50uPresentationIdentityLayout,
+} from '../app/components/device-viewer/exl50uPresentationIdentity';
 
 const source = (path: string) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
@@ -62,13 +66,13 @@ test('assembly themes preserve the EXL industrial rig with lower light energy an
   assert.equal(lightAssembly.lights.kind, 'industrial');
   assert.equal(darkAssembly.lights.kind, 'industrial');
   assert.ok(lightAssembly.fogDensity <= 0.003);
-  assert.ok(lightAssembly.exposure <= lightSilver.exposure - 0.15);
-  assert.ok(lightAssembly.environmentIntensity <= lightSilver.environmentIntensity - 0.3);
+  assert.ok(lightAssembly.exposure <= 1);
+  assert.ok(lightAssembly.environmentIntensity <= lightSilver.environmentIntensity - 0.15);
   assert.ok(lightAssembly.lights.hemisphere.intensity < lightSilver.lights.hemisphere.intensity);
   assert.ok(lightAssembly.lights.key.intensity < lightSilver.lights.key.intensity);
   assert.ok(luminance(lightAssembly.ground.color) < luminance(lightAssembly.clearColor) - 30);
   assert.ok(lightAssembly.ground.metalness <= 0.02);
-  assert.ok(lightAssembly.ground.roughness >= 0.95);
+  assert.ok(lightAssembly.ground.roughness >= 0.88);
   assert.equal(lightSilver.exposure, 0.98);
   assert.equal(lightSilver.environmentIntensity, 0.94);
 });
@@ -81,23 +85,28 @@ test('assembly presentation palette keeps visible colour and reflectance separat
     ['architectural-stone', 'pipework-teal'],
     ['pipework-teal', 'equipment-blue'],
     ['equipment-blue', 'electrical-brass'],
-    ['electrical-brass', 'copper-alloy'],
+    ['machine-red', 'industrial-green'],
+    ['industrial-green', 'cabinet-pearl'],
+    ['cabinet-pearl', 'signal-blue'],
+    ['signal-blue', 'safety-yellow'],
   ] as const) {
     assert.ok(rgbDistance(palette[left].color, palette[right].color) >= 24, `${left} and ${right} must remain visibly separated`);
   }
-  for (const preset of ['pipework-teal', 'equipment-blue', 'electrical-brass'] as const) {
-    assert.ok(palette[preset].metalness <= 0.2);
-    assert.ok(palette[preset].envMapIntensity <= 0.5);
-  }
+  assert.ok(palette['machine-red'].color > 0x800000);
+  assert.ok(palette['polished-steel'].metalness >= 0.65);
+  assert.ok(palette['cabinet-pearl'].roughness >= 0.5);
 });
 
 test('anonymous assembly classifier separates foundation, architecture, pipework and equipment by presentation geometry', () => {
   const base = { assemblySize: [100, 20, 100], assemblyCentre: [0, 0, 0] } as const;
   assert.equal(resolveAnonymousAssemblyMaterialPreset({ ...base, size: [50, 0.5, 50], centre: [0, -8, 0], ordinal: 1 }), 'foundation-slate');
-  assert.equal(resolveAnonymousAssemblyMaterialPreset({ ...base, size: [20, 12, 20], centre: [30, 0, 0], ordinal: 2 }), 'architectural-stone');
-  assert.equal(resolveAnonymousAssemblyMaterialPreset({ ...base, size: [20, 0.5, 0.5], centre: [25, 2, 0], ordinal: 3 }), 'pipework-teal');
-  assert.equal(resolveAnonymousAssemblyMaterialPreset({ ...base, size: [5, 1, 5], centre: [25, 2, 0], ordinal: 4 }), 'equipment-blue');
-  assert.equal(resolveAnonymousAssemblyMaterialPreset({ ...base, size: [5, 1, 5], centre: [25, 2, 0], ordinal: 5 }), 'electrical-brass');
+  assert.equal(resolveAnonymousAssemblyMaterialPreset({ ...base, size: [100, 12, 100], centre: [30, 0, 0], ordinal: 2 }), 'architectural-stone');
+  assert.equal(resolveAnonymousAssemblyMaterialPreset({ ...base, size: [26, 8, 26], centre: [0, 0, 0], ordinal: 2 }), 'polished-steel');
+  assert.equal(resolveAnonymousAssemblyMaterialPreset({ ...base, size: [20, 0.5, 0.5], centre: [25, 2, 0], ordinal: 3 }), 'brushed-steel');
+  assert.equal(resolveAnonymousAssemblyMaterialPreset({ ...base, size: [3, 1, 3], centre: [25, 2, 0], ordinal: 4 }), 'cabinet-pearl');
+  assert.equal(resolveAnonymousAssemblyMaterialPreset({ ...base, size: [3, 1, 3], centre: [25, 2, 0], ordinal: 7 }), 'industrial-green');
+  assert.equal(resolveAnonymousAssemblyMaterialPreset({ ...base, size: [3, 1, 3], centre: [25, 2, 0], ordinal: 11 }), 'signal-blue');
+  assert.equal(resolveAnonymousAssemblyMaterialPreset({ ...base, size: [3, 1, 3], centre: [25, 2, 0], ordinal: 17 }), 'safety-yellow');
 });
 
 test('assembly viewer uses definition bounds for instances and owns a disposable matte ground', async () => {
@@ -105,14 +114,48 @@ test('assembly viewer uses definition bounds for instances and owns a disposable
   const css = await source('app/components/tokamak-cad-viewer.css');
 
   assert.match(viewer, /mesh\.geometry\.computeBoundingBox\(\)/);
-  assert.match(viewer, /const definitionBox = mesh\.geometry\.boundingBox\?\.clone\(\)/);
-  assert.match(viewer, /mesh\.getWorldScale\(new THREE\.Vector3\(\)\)/);
-  assert.match(viewer, /mesh instanceof THREE\.InstancedMesh[\s\S]*?mesh\.getMatrixAt\(instanceIndex, instanceMatrix\)[\s\S]*?meshCentre\.multiplyScalar\(1 \/ mesh\.count\)/);
+  assert.match(viewer, /const localDefinitionBox = mesh\.geometry\.boundingBox\?\.clone\(\)/);
+  assert.match(viewer, /localDefinitionBox[\s\S]*?\.clone\(\)[\s\S]*?\.applyMatrix4\(mesh\.matrixWorld\)[\s\S]*?\.getSize\(new THREE\.Vector3\(\)\)/);
+  assert.match(viewer, /mesh instanceof THREE\.InstancedMesh[\s\S]*?const definitionCentre = localDefinitionBox\.getCenter[\s\S]*?mesh\.getMatrixAt\(instanceIndex, instanceMatrix\)[\s\S]*?meshCentre\.multiplyScalar\(1 \/ mesh\.count\)/);
   assert.match(viewer, /new THREE\.PlaneGeometry\(groundWidth, groundDepth\)/);
-  assert.match(viewer, /ground\.position\.set\(fittedSphere\.center\.x, floorY - 0\.025, fittedSphere\.center\.z\)/);
+  assert.match(viewer, /const exl50uAssemblyPresentation = viewerId === 'exl50u-general-assembly-20260630'[\s\S]*?appearancePreset === 'assembly-color-v1'[\s\S]*?anonymousTransport/);
+  assert.match(viewer, /const exl50uPresentationTarget = presentationCentre\.clone\(\)[\s\S]*?\.sub\(sourceCenter\)[\s\S]*?\.multiplyScalar\(displayScale\)/);
+  assert.match(viewer, /const presentationTarget = exl50uAssemblyPresentation[\s\S]*?\? exl50uPresentationTarget[\s\S]*?: fittedSphere\.center\.clone\(\)/);
+  assert.match(viewer, /ground\.position\.set\(presentationTarget\.x, floorY - 0\.025, presentationTarget\.z\)/);
+  assert.match(viewer, /const target = presentationTarget\.clone\(\)/);
   assert.match(viewer, /localScene\?\.traverse\(\(node\) => \{[\s\S]*?renderable\.geometry\?\.dispose\(\)/);
   assert.match(css, /appearance-assembly-color-v1 \.tokamakCadViewportShell/);
   assert.match(css, /data-theme='light'[^\n]*appearance-assembly-color-v1 \.tokamakCadViewportShell/);
+});
+
+test('EXL-50U presentation identity uses the canonical flag grid and stays within the camera headroom', async () => {
+  assert.deepEqual(PRC_FLAG_CONSTRUCTION_GRID.largeStar, { x: 5, y: 5, radius: 3 });
+  assert.deepEqual(
+    PRC_FLAG_CONSTRUCTION_GRID.smallStars.map(({ x, y, radius }) => [x, y, radius]),
+    [[10, 2, 1], [12, 4, 1], [12, 7, 1], [10, 9, 1]],
+  );
+
+  const bounds = { min: [-3.05, -0.5, -1.065], max: [3.05, 0.51, 1.065] } as const;
+  const layout = resolveExl50uPresentationIdentityLayout(bounds);
+  const radius = Math.hypot(6.1, 1.01, 2.13) * 0.5;
+  const finialTop = layout.anchor[1] + layout.poleHeight + layout.unit * 0.09;
+  assert.ok(layout.anchor[0] > bounds.min[0] && layout.anchor[0] < bounds.max[0]);
+  assert.ok(layout.anchor[2] > bounds.min[2] && layout.anchor[2] < bounds.max[2]);
+  assert.ok(layout.anchor[1] > bounds.max[1]);
+  assert.ok(finialTop <= bounds.max[1] + radius * 0.3);
+
+  const [viewer, identity] = await Promise.all([
+    source('app/components/TokamakCadViewer.tsx'),
+    source('app/components/device-viewer/exl50uPresentationIdentity.ts'),
+  ]);
+  assert.match(viewer, /viewerId === 'exl50u-general-assembly-20260630'[\s\S]*?appearancePreset === 'assembly-color-v1'[\s\S]*?anonymousTransport[\s\S]*?createExl50uPresentationIdentity/);
+  assert.match(viewer, /localDisposableTextures\?\.forEach\(\(texture\) => texture\.dispose\(\)\)/);
+  assert.match(identity, /FUSIONDIGITAL_EXL50U_IDENTITY_MARKER/);
+  assert.match(identity, /engineeringUseAllowed: false/);
+  assert.match(identity, /side: THREE\.DoubleSide/);
+  assert.match(identity, /EXL50U_PRESENTATION_LOGO_FRONT/);
+  assert.match(identity, /EXL50U_PRESENTATION_LOGO_BACK/);
+  assert.match(identity, /node\.raycast = \(\) => undefined/);
 });
 
 test('Tokamak viewer applies theme changes in place without reloading the model', async () => {

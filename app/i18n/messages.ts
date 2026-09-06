@@ -283,7 +283,7 @@ const zhCN = {
   'viewer.magneticAxis': '磁轴',
   'viewer.defaultDisclaimer': '该浏览器派生模型仅用于网页预览，不能用于制造、尺寸校核、仿真计算或安全决策。',
   'viewer.footnoteScience': '科学与安全边界',
-  'viewer.appearanceDisclaimer': '银色、青绿、蓝灰、铜色等展示配色仅用于视觉分区，不代表真实材料、工程系统、涂层、表面状态或温度场。',
+  'viewer.appearanceDisclaimer': '银灰金属、装置红、工业绿、信号蓝与安全黄等参考现场照片的艺术化展示配色仅用于视觉分区，不代表真实材料、工程系统、涂层、表面状态或温度场；国旗与 EXL-50U 标牌也是新增展示标识，不属于源 CAD。',
   'viewer.footnoteDelivery': '预览交付与可替换接口',
   'viewer.deliveryDisclaimer': '模型以浏览器派生资产发送到用户设备；界面可隐藏下载操作，但无法从技术上阻止浏览器缓存、网络调试或复制已传输的数据。原始工程 CAD 不由此查看器交付。',
   'viewer.viewManifest': '查看 DeviceManifest',
@@ -351,5 +351,6 @@ const en: Record<MessageKey, string> = {
 // Keep compact grouped entries above readable while applying terminology that
 // distinguishes a rendering detail level from a qualitative judgement.
 en['viewer.high'] = 'High detail';
+en['viewer.appearanceDisclaimer'] = 'Photo-informed silver steel, machine red, industrial green, signal blue and safety yellow are artistic presentation colours only; they do not represent real materials, engineering systems, coatings, surface condition or temperature. The flag and EXL-50U plate are added presentation markers and are not part of the source CAD.';
 
 export const messages: Record<AppLocale, Record<MessageKey, string>> = { 'zh-CN': zhCN, en };

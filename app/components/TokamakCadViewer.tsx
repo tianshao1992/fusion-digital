@@ -8,6 +8,7 @@ import type {
   Object3D,
   Plane,
   Scene,
+  Texture,
   WebGLRenderTarget,
   WebGLRenderer,
 } from 'three';
@@ -33,6 +34,7 @@ import {
   type TokamakAppearancePreset,
 } from './device-viewer/industrialAppearance';
 import { resolveCadSceneTheme, scaleCadFogDensity } from './device-viewer/cadSceneTheme';
+import { createExl50uPresentationIdentity } from './device-viewer/exl50uPresentationIdentity';
 import {
   ANALYTIC_PLASMA_RUNTIME_SEMANTICS,
   ANALYTIC_PLASMA_VISIBLE_BY_DEFAULT,
@@ -857,6 +859,7 @@ function TokamakCadViewerSession({
     let localDiagnosticOverlay: Ehl2DiagnosticThreeOverlay | null = null;
     let localDiagnosticRuntime: Ehl2DiagnosticRuntime | null = null;
     let localDisposableMaterials: Set<Material> | null = null;
+    let localDisposableTextures: Set<Texture> | null = null;
     let localEnvironmentTarget: WebGLRenderTarget | null = null;
     const modelLoadController = new AbortController();
     let resourcesReleased = false;
@@ -894,6 +897,7 @@ function TokamakCadViewerSession({
         renderable.geometry?.dispose();
       });
       localDisposableMaterials?.forEach((material) => material.dispose());
+      localDisposableTextures?.forEach((texture) => texture.dispose());
       if (localRenderer) {
         localRenderer.renderLists.dispose();
         localRenderer.dispose();
@@ -906,6 +910,7 @@ function TokamakCadViewerSession({
       localScene = null;
       localModel = null;
       localDisposableMaterials = null;
+      localDisposableTextures = null;
     };
 
     async function initialise() {
@@ -1055,6 +1060,7 @@ function TokamakCadViewerSession({
 
       const viewerMaterials = new Set<Material>();
       const disposableMaterials = new Set<Material>();
+      const disposableTextures = new Set<Texture>();
       const materialByAppearanceKey = new Map<string, MeshStandardMaterial>();
       const plasmaMaterials = new Set<MeshStandardMaterial>();
       let analyticPlasmaSurfaceMaterial: MeshStandardMaterial | null = null;
@@ -1111,6 +1117,7 @@ function TokamakCadViewerSession({
         return material;
       };
       localDisposableMaterials = disposableMaterials;
+      localDisposableTextures = disposableTextures;
 
       const meshoptDecoder = meshoptModule.MeshoptDecoder;
       const loader = new loaderModule.GLTFLoader();
@@ -1218,6 +1225,9 @@ function TokamakCadViewerSession({
       const systemByPartId = new Map<string, DeviceManifest['systems'][number]>();
       const anonymousTransport = isAnonymousShardChoice(loadedModel)
         || isAnonymousVisualizationManifest(loadedManifest);
+      const exl50uAssemblyPresentation = viewerId === 'exl50u-general-assembly-20260630'
+        && appearancePreset === 'assembly-color-v1'
+        && anonymousTransport;
       if (!anonymousTransport) {
         loadedManifest.systems.forEach((system) => system.parts.forEach((part) => systemByNodeName.set(part.nodeName, { partId: part.id })));
         loadedManifest.systems.forEach((system) => system.parts.forEach((part) => systemByPartId.set(part.id, system)));
@@ -1229,6 +1239,10 @@ function TokamakCadViewerSession({
       const sourceBox = new THREE.Box3().setFromObject(model, true);
       const sourceSize = sourceBox.getSize(new THREE.Vector3());
       const sourceCenter = sourceBox.getCenter(new THREE.Vector3());
+      const sourceOriginCentre = new THREE.Vector3(0, sourceCenter.y, 0);
+      const presentationCentre = exl50uAssemblyPresentation && sourceBox.containsPoint(sourceOriginCentre)
+        ? sourceOriginCentre
+        : sourceCenter;
       const sourceModelRadius = Math.max(
         sourceBox.getBoundingSphere(new THREE.Sphere()).radius,
         0.1,
@@ -1255,17 +1269,14 @@ function TokamakCadViewerSession({
         let anonymousAssemblyPreset: keyof typeof INDUSTRIAL_MATERIAL_SPECS | undefined;
         if (appearancePreset === 'assembly-color-v1' && anonymousTransport) {
           if (!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox();
-          const definitionBox = mesh.geometry.boundingBox?.clone();
-          const meshSize = definitionBox?.getSize(new THREE.Vector3()) ?? new THREE.Vector3();
-          const worldScale = mesh.getWorldScale(new THREE.Vector3());
-          meshSize.multiply(new THREE.Vector3(
-            Math.abs(worldScale.x),
-            Math.abs(worldScale.y),
-            Math.abs(worldScale.z),
-          ));
+          const localDefinitionBox = mesh.geometry.boundingBox?.clone();
+          const meshSize = localDefinitionBox
+            ?.clone()
+            ?.applyMatrix4(mesh.matrixWorld)
+            .getSize(new THREE.Vector3()) ?? new THREE.Vector3();
           const meshCentre = new THREE.Vector3();
-          if (mesh instanceof THREE.InstancedMesh && mesh.count > 0 && definitionBox) {
-            const definitionCentre = definitionBox.getCenter(new THREE.Vector3());
+          if (mesh instanceof THREE.InstancedMesh && mesh.count > 0 && localDefinitionBox) {
+            const definitionCentre = localDefinitionBox.getCenter(new THREE.Vector3());
             const instanceMatrix = new THREE.Matrix4();
             const instanceWorldMatrix = new THREE.Matrix4();
             const instanceCentre = new THREE.Vector3();
@@ -1283,7 +1294,7 @@ function TokamakCadViewerSession({
             size: meshSize.toArray() as [number, number, number],
             centre: meshCentre.toArray() as [number, number, number],
             assemblySize: sourceSize.toArray() as [number, number, number],
-            assemblyCentre: sourceCenter.toArray() as [number, number, number],
+            assemblyCentre: presentationCentre.toArray() as [number, number, number],
             ordinal: meshes,
           });
         }
@@ -1331,10 +1342,31 @@ function TokamakCadViewerSession({
       model.position.copy(sourceCenter).multiplyScalar(-displayScale);
       scene.add(model);
 
+      // The long hall envelope pulls the geometric midpoint far away from the
+      // EXL-50U host machine. Keep the full assembly in the fitted bounds, but
+      // orbit and zoom around the stable source origin used by the device so a
+      // close inspection does not converge into the empty aisle between them.
+      const exl50uPresentationTarget = presentationCentre.clone()
+        .sub(sourceCenter)
+        .multiplyScalar(displayScale);
+
       const fittedBox = new THREE.Box3().setFromObject(model);
       const fittedSphere = fittedBox.getBoundingSphere(new THREE.Sphere());
+      const presentationTarget = exl50uAssemblyPresentation
+        ? exl50uPresentationTarget
+        : fittedSphere.center.clone();
       const fittedSize = fittedBox.getSize(new THREE.Vector3());
       const floorY = fittedBox.min.y - 0.42;
+      if (exl50uAssemblyPresentation) {
+        const identity = createExl50uPresentationIdentity(
+          THREE,
+          fittedBox,
+          renderer.capabilities.getMaxAnisotropy(),
+        );
+        identity.materials.forEach((material) => disposableMaterials.add(material));
+        identity.textures.forEach((texture) => disposableTextures.add(texture));
+        scene.add(identity.root);
+      }
       let groundMaterial: MeshStandardMaterial | null = null;
       if (appearancePreset === 'assembly-color-v1') {
         const groundWidth = Math.max(18, fittedSize.x + fittedSphere.radius * 2.8);
@@ -1351,7 +1383,7 @@ function TokamakCadViewerSession({
         const ground = new THREE.Mesh(groundGeometry, groundMaterial);
         ground.name = 'FUSIONDIGITAL_ASSEMBLY_PRESENTATION_GROUND';
         ground.rotation.x = -Math.PI / 2;
-        ground.position.set(fittedSphere.center.x, floorY - 0.025, fittedSphere.center.z);
+        ground.position.set(presentationTarget.x, floorY - 0.025, presentationTarget.z);
         ground.receiveShadow = true;
         scene.add(ground);
       }
@@ -1361,7 +1393,7 @@ function TokamakCadViewerSession({
         initialSceneTheme.grid.center,
         initialSceneTheme.grid.line,
       );
-      grid.position.y = floorY;
+      grid.position.set(presentationTarget.x, floorY, presentationTarget.z);
       materialList(grid.material).forEach((material) => {
         material.transparent = true;
         material.opacity = initialSceneTheme.grid.opacity;
@@ -1377,7 +1409,7 @@ function TokamakCadViewerSession({
       const orbit = new THREE.Mesh(new THREE.TorusGeometry(3.72, 0.008, 6, 180), orbitMaterial);
       disposableMaterials.add(orbitMaterial);
       orbit.rotation.x = Math.PI / 2;
-      orbit.position.y = floorY + 0.03;
+      orbit.position.set(presentationTarget.x, floorY + 0.03, presentationTarget.z);
       scene.add(orbit);
 
       const applyDiagnosticViewerSettings = (settings: Ehl2DiagnosticViewerSettings) => {
@@ -1459,7 +1491,7 @@ function TokamakCadViewerSession({
         applyDiagnosticViewerSettings(diagnosticViewerSettingsRef.current);
       };
 
-      const target = fittedSphere.center.clone();
+      const target = presentationTarget.clone();
       const modelRadius = Math.max(fittedSphere.radius, 0.1);
       let currentPreset: ViewPreset = interactionRef.current.activeView;
       const setView = (preset: ViewPreset) => {

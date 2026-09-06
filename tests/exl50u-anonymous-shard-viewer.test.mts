@@ -206,7 +206,7 @@ test('EXL-50U total assembly receives the reviewed colour preset and deep inspec
   ]);
   assert.match(workspace, /device\.id === 'exl50u-general-assembly-20260630'[\s\S]*?\? 'assembly-color-v1'/);
   assert.match(workspace, /device\.id === 'exl50u-general-assembly-20260630'[\s\S]*?\? 'close-inspection'/);
-  for (const material of ['foundation-slate', 'architectural-stone', 'pipework-teal', 'equipment-blue', 'electrical-brass']) {
+  for (const material of ['polished-steel', 'machine-red', 'industrial-green', 'cabinet-pearl', 'signal-blue', 'safety-yellow']) {
     assert.match(appearance, new RegExp(`'${material}'`), `${material} must remain in the presentation-only palette`);
   }
   assert.match(appearance, /Presentation-only spatial\/shape styling/);

@@ -13,6 +13,11 @@ export type IndustrialMaterialPresetId =
   | 'pipework-teal'
   | 'equipment-blue'
   | 'electrical-brass'
+  | 'machine-red'
+  | 'industrial-green'
+  | 'cabinet-pearl'
+  | 'signal-blue'
+  | 'safety-yellow'
   | 'plasma';
 
 export type IndustrialMaterialSpec = Readonly<{
@@ -33,26 +38,26 @@ export type IndustrialMaterialSpec = Readonly<{
 export const INDUSTRIAL_MATERIAL_SPECS: Readonly<Record<IndustrialMaterialPresetId, IndustrialMaterialSpec>> = {
   'polished-steel': {
     kind: 'physical',
-    color: 0xa8b5b8,
-    metalness: 0.72,
-    roughness: 0.3,
-    envMapIntensity: 0.78,
-    clearcoat: 0.15,
-    clearcoatRoughness: 0.3,
+    color: 0x8f9ea1,
+    metalness: 0.68,
+    roughness: 0.34,
+    envMapIntensity: 0.52,
+    clearcoat: 0.08,
+    clearcoatRoughness: 0.42,
   },
   'brushed-steel': {
     kind: 'standard',
-    color: 0x7b898c,
-    metalness: 0.64,
-    roughness: 0.46,
-    envMapIntensity: 0.68,
+    color: 0x667579,
+    metalness: 0.58,
+    roughness: 0.52,
+    envMapIntensity: 0.44,
   },
   'dark-alloy': {
     kind: 'standard',
-    color: 0x3d4749,
-    metalness: 0.48,
-    roughness: 0.56,
-    envMapIntensity: 0.56,
+    color: 0x3a4644,
+    metalness: 0.34,
+    roughness: 0.66,
+    envMapIntensity: 0.3,
   },
   'copper-alloy': {
     kind: 'standard',
@@ -70,31 +75,31 @@ export const INDUSTRIAL_MATERIAL_SPECS: Readonly<Record<IndustrialMaterialPreset
   },
   'foundation-slate': {
     kind: 'standard',
-    color: 0x2d393b,
+    color: 0x17211f,
     metalness: 0.02,
-    roughness: 0.94,
-    envMapIntensity: 0.24,
+    roughness: 0.96,
+    envMapIntensity: 0.14,
   },
   'architectural-stone': {
     kind: 'standard',
-    color: 0x806a52,
-    metalness: 0.04,
-    roughness: 0.82,
-    envMapIntensity: 0.34,
+    color: 0x485653,
+    metalness: 0.05,
+    roughness: 0.8,
+    envMapIntensity: 0.28,
   },
   'pipework-teal': {
     kind: 'standard',
-    color: 0x397f79,
-    metalness: 0.18,
-    roughness: 0.5,
-    envMapIntensity: 0.48,
+    color: 0x236d5d,
+    metalness: 0.22,
+    roughness: 0.46,
+    envMapIntensity: 0.52,
   },
   'equipment-blue': {
     kind: 'standard',
-    color: 0x476f8b,
-    metalness: 0.14,
-    roughness: 0.58,
-    envMapIntensity: 0.44,
+    color: 0x315f87,
+    metalness: 0.22,
+    roughness: 0.48,
+    envMapIntensity: 0.5,
   },
   'electrical-brass': {
     kind: 'standard',
@@ -102,6 +107,43 @@ export const INDUSTRIAL_MATERIAL_SPECS: Readonly<Record<IndustrialMaterialPreset
     metalness: 0.18,
     roughness: 0.62,
     envMapIntensity: 0.46,
+  },
+  'machine-red': {
+    kind: 'physical',
+    color: 0xa22a22,
+    metalness: 0.2,
+    roughness: 0.46,
+    envMapIntensity: 0.38,
+    clearcoat: 0.1,
+    clearcoatRoughness: 0.42,
+  },
+  'industrial-green': {
+    kind: 'standard',
+    color: 0x286550,
+    metalness: 0.1,
+    roughness: 0.58,
+    envMapIntensity: 0.34,
+  },
+  'cabinet-pearl': {
+    kind: 'standard',
+    color: 0x82908f,
+    metalness: 0.1,
+    roughness: 0.68,
+    envMapIntensity: 0.32,
+  },
+  'signal-blue': {
+    kind: 'standard',
+    color: 0x245b92,
+    metalness: 0.12,
+    roughness: 0.54,
+    envMapIntensity: 0.36,
+  },
+  'safety-yellow': {
+    kind: 'standard',
+    color: 0xd9aa22,
+    metalness: 0.02,
+    roughness: 0.62,
+    envMapIntensity: 0.32,
   },
   plasma: {
     kind: 'physical',
@@ -189,24 +231,86 @@ export function resolveAnonymousAssemblyMaterialPreset({
   const safeAssembly = assemblySize.map((value) => Math.max(Math.abs(value), 1e-6));
   const normalizedSize = size.map((value, index) => Math.abs(value) / safeAssembly[index]);
   const normalizedCentre = centre.map((value, index) => (value - assemblyCentre[index]) / safeAssembly[index]);
-  const sorted = [...normalizedSize].sort((a, b) => a - b);
+  const physicalSize = size.map((value) => Math.abs(value));
+  const sorted = [...physicalSize].sort((a, b) => a - b);
   const footprint = normalizedSize[0] * normalizedSize[2];
-  const flatness = normalizedSize[1] / Math.max(normalizedSize[0], normalizedSize[2], 1e-6);
+  const flatness = physicalSize[1] / Math.max(physicalSize[0], physicalSize[2], 1e-6);
   const slenderness = sorted[2] / Math.max(sorted[1], 1e-6);
   const radialOffset = Math.hypot(normalizedCentre[0], normalizedCentre[2]);
+  const horizontalSize = Math.max(physicalSize[0], physicalSize[2], 1e-6);
+  const planRoundness = Math.min(physicalSize[0], physicalSize[2]) / horizontalSize;
+  const centralMachine = radialOffset < 0.24 && Math.abs(normalizedCentre[1]) < 0.38;
+  const largeBody = normalizedSize.some((value) => value > 0.22);
+  const largeBodyCadence = Math.abs(
+    (ordinal * 17)
+    ^ Math.round((centre[0] + 70) * 10)
+    ^ Math.round((centre[2] + 16) * 10)
+    ^ Math.round(physicalSize[0] * 10),
+  ) % 20;
 
   // Large, low horizontal surfaces form the visual foundation.
   if (flatness < 0.09 && footprint > 0.075 && normalizedCentre[1] < -0.18) return 'foundation-slate';
-  // Large cuboid envelopes are visually separated from machinery as architecture.
-  if (sorted[1] > 0.075 && sorted[2] > 0.16 && radialOffset > 0.12) return 'architectural-stone';
-  // Long, thin definitions read as pipework/cableways without asserting a real system.
-  if (slenderness > 4.2 && sorted[1] < 0.055) return 'pipework-teal';
-  // Repeated medium boxes are given a quiet equipment/cabinet colour.
-  if (sorted[0] > 0.012 && sorted[2] < 0.16) return ordinal % 5 === 0 ? 'electrical-brass' : 'equipment-blue';
-  // Keep the dense central machine legible with the EXL host-page metal palette.
-  if (radialOffset < 0.19) return ordinal % 7 === 0 ? 'copper-alloy' : 'polished-steel';
-  if (slenderness > 2.2) return 'brushed-steel';
-  return ordinal % 9 === 0 ? 'copper-alloy' : 'dark-alloy';
+  // A handful of transport draw calls span most of the long hall. Keep those
+  // envelopes graphite/architectural so the foundation and distant building
+  // do not wash out the denser machine at the photographed end of the model.
+  if (normalizedSize[0] > 0.86 && normalizedSize[2] > 0.82) {
+    return ordinal % 2 === 0 ? 'architectural-stone' : 'foundation-slate';
+  }
+  if (normalizedSize[0] > 0.38 && normalizedSize[2] > 0.62) {
+    if (centre[0] >= -8) return 'dark-alloy';
+    return ordinal % 3 === 0 ? 'architectural-stone' : 'cabinet-pearl';
+  }
+  // The anonymous derivative contains twenty large, interleaved visual
+  // batches rather than engineering systems. A stable, geometry-derived
+  // cadence distributes the photographed EXL palette across those batches:
+  // steel remains dominant while red machine bodies, green equipment and one
+  // blue routing layer remain legible at whole-installation scale.
+  if (largeBody) {
+    if (largeBodyCadence === 12) return 'machine-red';
+    if (largeBodyCadence === 11) return 'industrial-green';
+    if (largeBodyCadence === 10 || largeBodyCadence === 13) return 'dark-alloy';
+    return largeBodyCadence % 2 === 0 ? 'polished-steel' : 'brushed-steel';
+  }
+  // Broad, near-round horizontal bodies around the visual centre echo the
+  // photographed EXL-50U red machine rings without claiming coil identity.
+  if (centralMachine && planRoundness > 0.52 && flatness > 0.045 && flatness < 0.38
+    && Math.max(normalizedSize[0], normalizedSize[2]) > 0.028) {
+    return ordinal % 4 === 0 ? 'machine-red' : 'polished-steel';
+  }
+  // Keep the dense central machine predominantly stainless steel, with a
+  // restrained cadence of EXL-red and industrial-green gallery accents.
+  if (centralMachine) {
+    if (ordinal % 19 === 0 || ordinal % 23 === 0) return 'machine-red';
+    if (ordinal % 17 === 0) return 'industrial-green';
+    if (ordinal % 29 === 0) return 'signal-blue';
+    return ordinal % 3 === 0 ? 'brushed-steel' : 'polished-steel';
+  }
+  // Long, thin definitions read primarily as stainless pipework and rails;
+  // green, blue and yellow are sparse routing/safety accents inspired by the
+  // facility photographs, not engineering-system labels.
+  if (slenderness > 4.2 && sorted[1] < 0.42) {
+    if (ordinal % 19 === 0) return 'safety-yellow';
+    if (ordinal % 7 === 0) return 'signal-blue';
+    if (ordinal % 13 === 0) return 'industrial-green';
+    return ordinal % 3 === 0 ? 'brushed-steel' : 'polished-steel';
+  }
+  // Large cuboid envelopes resemble cabinets and architectural enclosures.
+  if (normalizedSize.filter((value) => value > 0.075).length >= 2
+    && Math.max(...normalizedSize) > 0.16 && radialOffset > 0.12) {
+    if (ordinal % 11 === 0) return 'industrial-green';
+    if (ordinal % 13 === 0) return 'signal-blue';
+    return ordinal % 5 === 0 ? 'architectural-stone' : 'cabinet-pearl';
+  }
+  // Repeated medium boxes stay quiet and pearlescent, with controlled colour
+  // beats so the installation reads as one machine instead of a patchwork.
+  if (sorted[0] > 0.1 && sorted[2] < 4.2 && slenderness < 3.6) {
+    if (ordinal % 17 === 0) return 'safety-yellow';
+    if (ordinal % 7 === 0) return 'industrial-green';
+    if (ordinal % 11 === 0) return 'signal-blue';
+    return 'cabinet-pearl';
+  }
+  if (slenderness > 2.2) return ordinal % 23 === 0 ? 'machine-red' : 'brushed-steel';
+  return ordinal % 11 === 0 ? 'industrial-green' : 'dark-alloy';
 }
 
 export function resolveIndustrialMaterialPreset(
