@@ -24,6 +24,18 @@ const links = [
 
 type NavigationLink = (typeof links)[number];
 
+export function closeOpenDisclosuresOutside<TTarget>(
+  target: TTarget,
+  disclosures: ReadonlyArray<{
+    open: boolean;
+    contains: (candidate: TTarget) => boolean;
+  } | null>,
+) {
+  for (const disclosure of disclosures) {
+    if (disclosure?.open && !disclosure.contains(target)) disclosure.open = false;
+  }
+}
+
 export default function SiteNav({active = 'home'}: SiteNavProps) {
   const publicAnonymousMode = isPublicAnonymousMode();
   const { locale, setLocale, t } = useI18n();
@@ -33,6 +45,7 @@ export default function SiteNav({active = 'home'}: SiteNavProps) {
   const measureRef = useRef<HTMLDivElement>(null);
   const moreRef = useRef<HTMLDivElement>(null);
   const knowledgeRef = useRef<HTMLDetailsElement>(null);
+  const mobileKnowledgeRef = useRef<HTMLDetailsElement>(null);
   // SSR deliberately exposes every destination. JavaScript then contracts the
   // row after measuring it, while no-script visitors retain a complete nav.
   const [visibleKeys, setVisibleKeys] = useState<string[]>(() => links.map(({ key }) => key));
@@ -101,6 +114,19 @@ export default function SiteNav({active = 'home'}: SiteNavProps) {
   }, [active, locale]);
 
   useEffect(() => {
+    const closeKnowledgeOutside = (event: PointerEvent | FocusEvent) => {
+      if (!(event.target instanceof Node)) return;
+      closeOpenDisclosuresOutside(event.target, [knowledgeRef.current, mobileKnowledgeRef.current]);
+    };
+    document.addEventListener('pointerdown', closeKnowledgeOutside);
+    document.addEventListener('focusin', closeKnowledgeOutside);
+    return () => {
+      document.removeEventListener('pointerdown', closeKnowledgeOutside);
+      document.removeEventListener('focusin', closeKnowledgeOutside);
+    };
+  }, []);
+
+  useEffect(() => {
     if (!moreOpen) return;
     const closeOutside = (event: PointerEvent | FocusEvent) => {
       if (event.target instanceof Node && !moreRef.current?.contains(event.target)) setMoreOpen(false);
@@ -167,7 +193,7 @@ export default function SiteNav({active = 'home'}: SiteNavProps) {
   const renderKnowledgeMenu = (mobile = false) => <details
     className={mobile ? 'mobileKnowledgeNav' : 'siteKnowledgeNav'}
     data-primary-nav="knowledge"
-    ref={mobile ? undefined : knowledgeRef}
+    ref={mobile ? mobileKnowledgeRef : knowledgeRef}
   >
     <summary className={active === 'knowledge' ? 'active' : ''} aria-label={t('nav.knowledgeModules')}>
       {t('nav.knowledge')}<span aria-hidden="true">⌄</span>
@@ -177,7 +203,10 @@ export default function SiteNav({active = 'home'}: SiteNavProps) {
         className={`siteKnowledgeHome${active === 'knowledge' ? ' active' : ''}`}
         href="/knowledge-graph"
         aria-current={active === 'knowledge' ? 'page' : undefined}
-        onClick={() => { if (!mobile && knowledgeRef.current) knowledgeRef.current.open = false; }}
+        onClick={() => {
+          const disclosure = mobile ? mobileKnowledgeRef.current : knowledgeRef.current;
+          if (disclosure) disclosure.open = false;
+        }}
       >
         <span aria-hidden="true">←</span><b>{t('nav.knowledgeHome')}</b>
       </Link>
@@ -188,7 +217,10 @@ export default function SiteNav({active = 'home'}: SiteNavProps) {
           key={item.id}
           data-knowledge-module={item.id}
           className={active === item.id ? 'active' : ''}
-          onClick={() => { if (!mobile && knowledgeRef.current) knowledgeRef.current.open = false; }}
+          onClick={() => {
+            const disclosure = mobile ? mobileKnowledgeRef.current : knowledgeRef.current;
+            if (disclosure) disclosure.open = false;
+          }}
         ><small>{item.no}</small><span>{locale === 'zh-CN' ? item.zh : item.en}</span></Link>)}
       </div>
     </div>

@@ -3,7 +3,7 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import test from 'node:test';
 import { SITES_WORKSPACE_ORIGIN } from '../app/agent/capabilities.ts';
-import SiteNav from '../app/components/SiteNav.tsx';
+import SiteNav, { closeOpenDisclosuresOutside } from '../app/components/SiteNav.tsx';
 import { selectVisibleNavigationKeys } from '../app/components/site-nav-layout.ts';
 import { ThemeProvider } from '../app/components/theme/index.ts';
 
@@ -14,6 +14,23 @@ const items = [
   { key: 'knowledge', priority: 3, width: 100 },
   { key: 'roadmap', priority: 5, width: 90 },
 ] as const;
+
+test('knowledge disclosures close only when the interaction moves outside them', () => {
+  const desktopInside = {};
+  const mobileInside = {};
+  const outside = {};
+  const desktop = { open: true, contains: (target: object) => target === desktopInside };
+  const mobile = { open: true, contains: (target: object) => target === mobileInside };
+
+  closeOpenDisclosuresOutside(desktopInside, [desktop, mobile]);
+  assert.equal(desktop.open, true, 'the disclosure containing the target must remain open');
+  assert.equal(mobile.open, false, 'another open disclosure should close');
+
+  mobile.open = true;
+  closeOpenDisclosuresOutside(outside, [desktop, mobile]);
+  assert.equal(desktop.open, false);
+  assert.equal(mobile.open, false);
+});
 
 test('all navigation entries stay visible when they fit', () => {
   assert.deepEqual(selectVisibleNavigationKeys({
