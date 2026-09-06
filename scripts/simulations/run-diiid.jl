@@ -41,7 +41,7 @@ function transport_diagnostics(actor)
         Dict("id"=>name,"unit"=>unit,"target"=>targets[(i-1)*n+1:i*n],"model"=>fluxes[(i-1)*n+1:i*n]) for (i,(name,unit)) in enumerate(channels)
     ],"selectedResidual"=>Float64(actor.error),"evaluationResiduals"=>map(norm,actor.err_history),
     "xtol"=>actor.par.xtol,"residualCriterion"=>nothing,
-    "derivation"=>"FUSE targets/fluxes; nearest source-grid samples; selected residual differs from last history; xtol is a step tolerance; momentum kg/s^2 follows torque/surface and GACODE implementation, not IMASdd kg/m/s^2 metadata")
+    "derivation"=>"FUSE targets/fluxes; nearest source-grid samples; selected residual differs from last history; xtol maps to NonlinearSolve abstol; termination norm and retcode not retained; momentum kg/s^2 follows torque/surface and GACODE implementation, not IMASdd kg/m/s^2 metadata")
 end
 function run_recipe()
     start = time_ns()

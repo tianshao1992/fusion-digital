@@ -9,7 +9,10 @@
   "scripts": {
     "simulation:run": "tsx scripts/simulations/local-runner.mts",
     "simulation:publish-diiid": "tsx scripts/simulations/publish-diiid.mts",
-    "test:simulations": "tsx --test tests/simulations.test.mts tests/simulation-physics.test.mts tests/simulation-execution.test.mts && node --test tests/simulations-rendered.test.mjs",
+    "simulation:engineering": "tsx scripts/simulations/run-fpp-engineering.mts",
+    "simulation:publish-engineering": "tsx scripts/simulations/publish-engineering.mts",
+    "simulation:publish-diagnostics": "tsx scripts/simulations/publish-diagnostics.mts",
+    "test:simulations": "tsx --test tests/simulations.test.mts tests/simulation-physics.test.mts tests/simulation-execution.test.mts tests/simulation-engineering.test.mts && node --test tests/simulations-rendered.test.mjs",
     "visualization:validate": "python scripts/visualization/blender_publish.py --job examples/visualization/blender-publish-job.example.json --validate-only && python scripts/visualization/compose_openusd.py --job examples/visualization/openusd-compose-job.example.json --validate-only",
     "test:visualization": "python tests/visualization-pipeline.test.py && tsx --test tests/visualization-platform.test.mts",
     "dev": "vinext dev",

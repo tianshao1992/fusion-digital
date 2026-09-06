@@ -14,7 +14,7 @@ const [command, ...args] = process.argv.slice(2);
 const option = (name: string) => { const i = args.indexOf(name); return i < 0 ? undefined : args[i + 1]; };
 const workspace = await realpath(option('--workspace') ?? 'D:\\Code\\Fuse');
 const results = path.join(workspace, 'results');
-const safeId = (id: string | undefined) => { if (!id || !/^fuse-diiid-[a-z0-9-]{1,90}$/.test(id)) throw new Error('Provide a valid --run-id'); return id; };
+const safeId = (id: string | undefined) => { if (!id || !/^fuse-(diiid|engineering)-[a-z0-9-]{1,90}$/.test(id)) throw new Error('Provide a valid --run-id'); return id; };
 if (command === 'template') { console.log(json(defaultRunSpec())); process.exit(0); }
 if (command === 'status' || command === 'cancel') {
   const run = path.join(results, safeId(option('--run-id')));

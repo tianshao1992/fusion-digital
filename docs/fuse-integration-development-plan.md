@@ -71,7 +71,7 @@ IMAS 兼容通过原生 dd 与显式投影实现。`imas2hdf(... freeze=false, s
 
 按固定 notebook 使用 `rho_transport=0.1:0.05:0.85`、最大 300 次、`:simple_dfsane`、step size 1、温度/密度/旋转匹配、不演化台基。TGLFNN/GKNN 使用 `sat3_em_d3d_azf-1_withnegD`，QLNN 使用 `QLNN/sat3`。Notebook 关闭 NN 训练边界警告，因此 **OOD 未评估**。
 
-直接读取 `actor.error` 和 `map(norm, actor.err_history)`，不再从日志稀疏采样。函数评估序号不是物理时间或外层迭代；最优选定残差可以与历史最后一点不同。`xtol` 是解向量步长容差，不是已确认的残差阈值；上游未保存原生 solver retcode，终止原因不得编造。
+直接读取 `actor.error` 和 `map(norm, actor.err_history)`，不再从日志稀疏采样。函数评估序号不是物理时间或外层迭代；最优选定残差可以与历史最后一点不同。此版 FUSE 的 `:simple_dfsane` 将 `xtol` 映射为 `NonlinearSolve.solve(abstol=...)`；原生终止范数/retcode 未保存，不可直接拿该参数与图中的 L2 范数比较或编造终止原因。既有归档中的“step tolerance”注释已勘误，数值与不可变原始字节不改写。
 
 通量来自 FUSE 的 `flux_match_targets/flux_match_fluxes`。目标使用积分源/磁面面积和源网格最近点。动量通量按 FUSE/GACODE 实现为 `kg/s²`，与该版 IMASdd 字段元数据 `kg/m/s²` 不同；保留实现数值并显示说明，不自行乘除 R。
 
@@ -96,6 +96,9 @@ npm run simulation:run -- status --run-id ACTUAL_RUN_ID
 npm run simulation:run -- cancel --run-id ACTUAL_RUN_ID
 # 核验成功后，显式审核和发布投影；不是 worker 自动行为
 npm run simulation:publish-diiid -- D:\Code\Fuse\results\ACTUAL_RUN_ID
+npm run simulation:publish-diagnostics -- D:\Code\Fuse\results\ACTUAL_STATIONARY_RUN_ID
+npm run simulation:engineering
+npm run simulation:publish-engineering -- D:\Code\Fuse\results\ACTUAL_ENGINEERING_RUN_ID
 ```
 
 默认环境 `D:\Code\Fuse`；Windows Julia 1.12.7，最多 8 线程，单工作区租约。异常遗留租约必须核实拥有者与进程状态，不自动删锁、自动杀磁盘记录 PID 或自动重跑。原生记录完整保留，未提供跨机器任务恢复或无人值守持久队列。
@@ -105,3 +108,5 @@ npm run simulation:publish-diiid -- D:\Code\Fuse\results\ACTUAL_RUN_ID
 当前香港 SSH 22 连接被服务端/网络关闭，无法取得 active release；不能按本地构建成功宣布上线，也不能绕开顺序先单独更新 Sites 或改变 DNS。待恢复授权 SSH 通道后，在精确提交上重新执行 AGENTS.md 与 RELEASE.md 的全部发布步骤。缺实际境内电信/联通/移动 HTTP 探针时不得以 DNS 检查替代。
 
 本文件是开发与资格计划。具体已执行结果、失败 Attempt、测试数字和提交/部署证据以同轮验收记录为准；未完成的 M3–M6 不能标记为全功能开发完成。
+
+2026-09-07：M1/M2 和 M4 首个工程子流程的真实结果、容差勘误及失败重试见 [阶段验收](fuse-stage-acceptance-2026-09-07.md)。Windows 运行前可使用 `scripts/simulations/prepare-models.ps1` 补齐固定模型，不通过改变物理配置绕过缺依赖问题。

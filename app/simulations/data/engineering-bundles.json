@@ -1,0 +1,13 @@
+[
+  {
+    "runId": "fuse-engineering-20260906174625825-09a374ef",
+    "recordSha256": "a10a47605752a9f97dea8447aa7c30f1d862cb971da8b047c02f7a3fd0101e6f",
+    "parentRunId": "fuse-fpp-20260907-003257-48a4fa67",
+    "parentRecordSha256": "7bc4af2942c024b1033bc6e25da6cb1d43f7cf9fb946388a84e3ad0ba9f19433",
+    "path": "/data/simulations/804a98aa482e7a48d0bf7c8a59110d578798233871bafd612795fdc71df24bd4.json.gz",
+    "sha256": "804a98aa482e7a48d0bf7c8a59110d578798233871bafd612795fdc71df24bd4",
+    "bytes": 66525,
+    "rawSha256": "a356a99a6117715f6ea7ce53d8a26307035ed9e0ec58b51ecfb836a866ceeb48",
+    "rawBytes": 240467
+  }
+]

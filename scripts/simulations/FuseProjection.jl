@@ -136,7 +136,7 @@ function project_physics(dd; run_id::String, core_transport_model::String, equil
         "equilibriumOrigin"=>equilibrium_origin,
         "derivation"=>"COCOS 11; psi[z][r]; contours from IMAS.flux_surface on the archived rectangular grid; unavailable samples null"
     )
-    
+
     return physics
 end
 end

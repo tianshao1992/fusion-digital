@@ -5,11 +5,29 @@ import { gunzipSync } from 'node:zlib';
 import { createHash } from 'node:crypto';
 import { loadPhysics, parsePhysics, profileDisplay, type PhysicsBundle } from '../app/simulations/physics.ts';
 import { parseSimulationRun } from '../app/simulations/contract.ts';
+import { loadInnerHistory, parseInnerHistory, type DiagnosticsBundle } from '../app/simulations/diagnostics.ts';
+import { compareRuns } from '../app/simulations/comparison.ts';
 const bundles:PhysicsBundle[]=JSON.parse(readFileSync(new URL('../app/simulations/data/physics-bundles.json',import.meta.url),'utf8'));
 const bundle=bundles.find(b=>b.runId==='fuse-fpp-20260907-003257-48a4fa67')!;
 const bytes=readFileSync(new URL(`../public${bundle.path}`,import.meta.url));
 const raw=gunzipSync(bytes); const original=JSON.parse(raw.toString());
 const hash=(b:Uint8Array)=>createHash('sha256').update(b).digest('hex');
+
+test('coupled diagnostics preserve all four native histories, bound to the manifest',async()=>{
+  const ds:DiagnosticsBundle[]=JSON.parse(readFileSync(new URL('../app/simulations/data/diagnostics-bundles.json',import.meta.url),'utf8'));assert.equal(ds.length,1);
+  const d=ds[0],zip=readFileSync(new URL(`../public${d.path}`,import.meta.url)),raw=gunzipSync(zip),rows=parseInnerHistory(JSON.parse(raw.toString()));
+  assert.equal(hash(zip),d.sha256);assert.equal(hash(raw),d.rawSha256);assert.equal(zip.length,d.bytes);assert.equal(raw.length,d.rawBytes);assert.equal(rows.length,d.iterations);assert.deepEqual(rows.map(r=>r.evaluationResiduals.length),[47,86,47,53]);
+  const runs=JSON.parse(readFileSync(new URL('../app/simulations/data/fuse-demo.json',import.meta.url),'utf8')).map(parseSimulationRun);
+  const run=runs.find((r:{id:string})=>r.id===d.runId);assert.equal(run.source.recordSha256,d.recordSha256);assert.ok(run.source.artifacts.some((a:{name:string;sha256:string})=>a.name==='inner-history.json'&&a.sha256===d.rawSha256));
+  assert.equal(run.convergence.values.length,rows.length);assert.equal(run.assessment,'passed-demo-criterion');
+  const c=structuredClone(rows);c[0].iteration=2;assert.throws(()=>parseInnerHistory(c));
+  const f=globalThis.fetch;try{globalThis.fetch=async()=>new Response(zip);assert.equal((await loadInnerHistory(d,new AbortController().signal)).length,4);await assert.rejects(loadInnerHistory({...d,iterations:3},new AbortController().signal),/IDENTITY/);}finally{globalThis.fetch=f;}
+});
+
+test('DIII-D model comparison uses physical scalars, not residual ranks',()=>{
+  const runs=JSON.parse(readFileSync(new URL('../app/simulations/data/fuse-demo.json',import.meta.url),'utf8')).map(parseSimulationRun).filter((r:{caseId:string})=>r.caseId==='diiid-fluxmatch-profile');
+  assert.equal(runs.length,3);const rows=compareRuns(runs[0],runs[1]);assert.equal(rows.length,3);assert.ok(rows.every(r=>r.id.startsWith('central_')&&r.current!==undefined&&r.reference!==undefined));
+});
 
 test('every published bundle is content-addressed and linked to its own native manifest',()=>{
   const runs=JSON.parse(readFileSync(new URL('../app/simulations/data/fuse-demo.json',import.meta.url),'utf8')).map(parseSimulationRun);

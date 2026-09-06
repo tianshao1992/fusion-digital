@@ -8,9 +8,9 @@
       "public/models/iter-high-detail-v1/",
       "public/models/exl50u-general-assembly-v1/*.glb"
     ],
-    "fileCount": 432,
-    "totalBytes": 261911992,
-    "treeSha256": "a7af305c1947fa1e909637921c5db9339fc9e4a94489af91054b6b1a15426401",
+    "fileCount": 436,
+    "totalBytes": 262587406,
+    "treeSha256": "93be29484e5dea42d6f4965799a7bc089b2496a9d8788b836dde22b130165c8c",
     "files": [
       {
         "path": "public/FusionDigital-technical-roadmap-2026-08-15.docx",
@@ -1213,9 +1213,29 @@
         "sha256": "b73521cbba1e3bbf918439486cf276f503329b9bb725f898988ada4d69fe8ed9"
       },
       {
+        "path": "public/data/simulations/0ca9762ca6837c0c296a0089c1245c5137206e058621a766014967abf0610b8a.json.gz",
+        "bytes": 2331,
+        "sha256": "0ca9762ca6837c0c296a0089c1245c5137206e058621a766014967abf0610b8a"
+      },
+      {
+        "path": "public/data/simulations/42ba42d3be00a3ba868c0be3baf9390064da38d2982b156d4a795405688060b3.json.gz",
+        "bytes": 314688,
+        "sha256": "42ba42d3be00a3ba868c0be3baf9390064da38d2982b156d4a795405688060b3"
+      },
+      {
         "path": "public/data/simulations/5f0c1a30e28567eb823f1cad8795c8c5f7f8e8ab3e92729a70bc1c2e81826893.json.gz",
         "bytes": 312232,
         "sha256": "5f0c1a30e28567eb823f1cad8795c8c5f7f8e8ab3e92729a70bc1c2e81826893"
+      },
+      {
+        "path": "public/data/simulations/804a98aa482e7a48d0bf7c8a59110d578798233871bafd612795fdc71df24bd4.json.gz",
+        "bytes": 66525,
+        "sha256": "804a98aa482e7a48d0bf7c8a59110d578798233871bafd612795fdc71df24bd4"
+      },
+      {
+        "path": "public/data/simulations/b1f4b8823d5d1588daf9355cc9f953d441986d43a9c585a900a45157d25cf9c4.json.gz",
+        "bytes": 291870,
+        "sha256": "b1f4b8823d5d1588daf9355cc9f953d441986d43a9c585a900a45157d25cf9c4"
       },
       {
         "path": "public/data/simulations/bb5707f0d970f39211adf2eac6e5d950ab3e123da0a16e0ebbb8e631644a1c27.json.gz",

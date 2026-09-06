@@ -1,5 +1,33 @@
 [
   {
+    "runId": "fuse-diiid-20260906174722551-3ffd17fc",
+    "recordSha256": "bf3b9551e1fbcebe9b4be9ad4f69cfc240eea2670533fbefd352ea8993416312",
+    "path": "/data/simulations/b1f4b8823d5d1588daf9355cc9f953d441986d43a9c585a900a45157d25cf9c4.json.gz",
+    "sha256": "b1f4b8823d5d1588daf9355cc9f953d441986d43a9c585a900a45157d25cf9c4",
+    "bytes": 291870,
+    "rawSha256": "079486db86ee3c90440ced11a6f35124ca8db5331bb5fdb69ccd0adde3e425bf",
+    "rawBytes": 1362141,
+    "profiles": 108,
+    "grid": [
+      129,
+      129
+    ]
+  },
+  {
+    "runId": "fuse-diiid-20260906172206806-43f08464",
+    "recordSha256": "b1f45cb802ac7f30c63121c649368bb2d66db0fdafa578d34f6e9a931ad1c9d7",
+    "path": "/data/simulations/42ba42d3be00a3ba868c0be3baf9390064da38d2982b156d4a795405688060b3.json.gz",
+    "sha256": "42ba42d3be00a3ba868c0be3baf9390064da38d2982b156d4a795405688060b3",
+    "bytes": 314688,
+    "rawSha256": "cb6bba4eb652625d096eaf948b591259e61e230c4192896db5ee71d49c2d1e4f",
+    "rawBytes": 1559406,
+    "profiles": 96,
+    "grid": [
+      129,
+      129
+    ]
+  },
+  {
     "runId": "fuse-diiid-20260906171840962-ede653fa",
     "recordSha256": "fa7d6b6b4c5c19f88bb4cb1e08e4dbf23574e845870a92a3ac71234595880e8e",
     "path": "/data/simulations/5f0c1a30e28567eb823f1cad8795c8c5f7f8e8ab3e92729a70bc1c2e81826893.json.gz",

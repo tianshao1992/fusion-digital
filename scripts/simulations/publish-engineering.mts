@@ -1,0 +1,26 @@
+// Explicit, reviewed public projection; native solver files remain local.
+import { readFile, writeFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+import { gzipSync } from 'node:zlib';
+import path from 'node:path';
+import { parseEngineering, type EngineeringBundle } from '../../app/simulations/engineering.ts';
+const directory = process.argv[2]; if (!directory) throw new Error('Provide exact successful engineering run directory');
+const hash = (b: Uint8Array) => createHash('sha256').update(b).digest('hex');
+const manifestBytes = await readFile(path.join(directory, 'run-manifest.json'));
+const m = JSON.parse(manifestBytes.toString());
+const status = JSON.parse(await readFile(path.join(directory, 'status.json'), 'utf8'));
+if (m.schema !== 'fuse-engineering-manifest.v1' || m.execution !== 'succeeded' || m.nativeRoundtrip !== true || status.state !== 'succeeded' || status.id !== m.runId) throw new Error('Not independently collected');
+const required = ['parent-dd.h5', 'parent-act.json', 'parent-manifest.json', 'parent-provenance.json', 'run-fpp-engineering.jl', 'FuseProjection.jl', 'engineering.json', ...[101, 201, 401].flatMap(n => [`stress-${n}.h5`, `stress-${n}-act.json`])].sort();
+if (!Array.isArray(m.artifacts) || m.artifacts.map((a: { name: string }) => a.name).sort().join('|') !== required.join('|')) throw new Error('Incomplete artifacts');
+for (const a of m.artifacts) if (!/^[a-zA-Z0-9._-]+$/.test(a.name) || hash(await readFile(path.join(directory, a.name))) !== a.sha256) throw new Error('Artifact mismatch');
+const raw = await readFile(path.join(directory, 'engineering.json')), p = parseEngineering(JSON.parse(raw.toString()));
+const records = JSON.parse(await readFile('app/simulations/data/fuse-demo.json', 'utf8'));
+if (p.runId !== m.runId || !records.some((r: { id: string; source: { recordSha256: string } }) => r.id === p.parentRunId && r.source.recordSha256 === p.parentRecordSha256) || p.parentRecordSha256 !== hash(await readFile(path.join(directory, 'parent-manifest.json')))) throw new Error('Unknown parent record');
+const zipped = gzipSync(raw, { level: 9 });
+const bundle: EngineeringBundle = { runId: p.runId, recordSha256: hash(manifestBytes), parentRunId: p.parentRunId, parentRecordSha256: p.parentRecordSha256, path: `/data/simulations/${hash(zipped)}.json.gz`, sha256: hash(zipped), bytes: zipped.length, rawSha256: hash(raw), rawBytes: raw.length };
+const indexPath = 'app/simulations/data/engineering-bundles.json';
+const bundles: EngineeringBundle[] = JSON.parse(await readFile(indexPath, 'utf8'));
+if (bundles.some(b => b.runId === p.runId || b.parentRunId === p.parentRunId)) throw new Error('Parent already linked; explicit comparison/version design required before adding a second run');
+await writeFile(`public${bundle.path}`, zipped, { flag: 'wx' });
+await writeFile(indexPath, JSON.stringify([bundle, ...bundles], null, 2) + '\n');
+console.log(JSON.stringify({ runId: p.runId, bytes: bundle.bytes, branches: p.branches.length, nativePublished: false, deviceValidated: false }));

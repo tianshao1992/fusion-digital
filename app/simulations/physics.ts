@@ -64,7 +64,7 @@ async function readBounded(stream: ReadableStream<Uint8Array>, maximum: number):
   finally { await reader.cancel(); reader.releaseLock(); }
   const bytes = new Uint8Array(size); let offset = 0; for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.length; } return bytes;
 }
-export async function loadPhysics(bundle: PhysicsBundle, signal: AbortSignal): Promise<PhysicsData> {
+export async function loadScientificJson(bundle: Pick<PhysicsBundle, 'path' | 'bytes' | 'rawBytes' | 'sha256' | 'rawSha256'>, signal: AbortSignal): Promise<unknown> {
   if (!/^\/data\/simulations\/[a-f0-9]{64}\.json\.gz$/.test(bundle.path) || !Number.isInteger(bundle.bytes) || bundle.bytes <= 0 || bundle.bytes > 6000000 || !Number.isInteger(bundle.rawBytes) || bundle.rawBytes <= 0 || bundle.rawBytes > 20000000) throw new Error('INVALID_BUNDLE');
   const response = await fetch(bundle.path, { signal, credentials: 'omit', redirect: 'error' });
   if (!response.ok || !response.body) throw new Error('PHYSICS_UNAVAILABLE');
@@ -83,7 +83,10 @@ export async function loadPhysics(bundle: PhysicsBundle, signal: AbortSignal): P
     decoded = received;
   }
   if (decoded.length !== bundle.rawBytes || await sha256(decoded) !== bundle.rawSha256) throw new Error('PHYSICS_INTEGRITY');
-  const data = parsePhysics(JSON.parse(new TextDecoder().decode(decoded)));
+  return JSON.parse(new TextDecoder().decode(decoded));
+}
+export async function loadPhysics(bundle: PhysicsBundle, signal: AbortSignal): Promise<PhysicsData> {
+  const data = parsePhysics(await loadScientificJson(bundle, signal));
   if (data.runId !== bundle.runId || data.profiles.length !== bundle.profiles || data.equilibrium.r.length !== bundle.grid[0] || data.equilibrium.z.length !== bundle.grid[1]) throw new Error('PHYSICS_IDENTITY');
   return data;
 }

@@ -91,8 +91,10 @@ node --import tsx scripts/simulations/publish-physics.mts D:\Code\Fuse\results\N
 
 ## 验收与发布
 
+2026-09-07 主体功能扩展增加 DIII-D 三模型、耦合稳态全轮历史和独立 FPP 解析工程结果，参见 [阶段验收与容差勘误](fuse-stage-acceptance-2026-09-07.md)。下段测试数字保留先前可视化阶段口径，最终状态以新阶段报告及仓库外发布证据为准。
+
 本轮已通过 25 项仿真契约/数据测试、2 项中英文服务端渲染测试、全仓 TypeScript 类型检查和完整 npm run check。浏览器实际确认磁平衡/六组剖面、源项原始数表、设计层/线圈、英文无中文泄漏、深色主题，以及 390 px 视口无页面横向溢出。已发现并修复 gzip 传输差异。内置浏览器的 CSV 下载事件未返回完成确认，不能把点击操作当作落盘验收；需在支持下载的常规浏览器补充验证。最终部署证据以本轮仓库外 release 记录为准，不以这段文档替代。
 
-Sites 原有资产包余量很小，本轮只压紧 SSR 空白，不更改标识符/表达式，不压缩 RSC，不提高上限、不删除科学资产。香港仍使用 public-anonymous 构建。
+Sites 原有资产包余量很小，最初只压紧 SSR 空白；2026-09-07 扩展阶段进一步压缩 SSR 局部变量名，仍不改写表达式、不压缩 RSC，不提高上限、不删除科学资产。香港仍使用 public-anonymous 构建。
 
 正式发布必须遵守 AGENTS.md、docs/RELEASE.md 与香港部署手册：精确提交全量检查、Codeup/GitHub 同 SHA、香港与 Sites 同 SHA、资产逐字节一致、TLS/DNS/三网访问实测。任一未核实不得宣布上线完成；不修改生产 DNS。

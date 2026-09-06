@@ -4,7 +4,7 @@ export type ComparisonRow = { id: string; unit: string; current?: number; refere
 // Display-only comparison: matching quantity names/units do not prove equivalent inputs or model qualifications.
 export function compareRuns(current: SimulationRun, reference: SimulationRun): ComparisonRow[] {
   if (current.resultProfile !== reference.resultProfile || current.caseId !== reference.caseId) throw new Error('INCOMPATIBLE_COMPARISON');
-  const quantities = (run: SimulationRun) => run.caseId === 'fpp-stationary' ? run.metrics : run.convergence.labels.map((id,i) => ({ id, value: run.convergence.values[i], unit: '1' }));
+  const quantities = (run: SimulationRun) => run.caseId === 'fpp-stationary' || run.resultProfile === 'fuse-physics-run.v1' ? run.metrics : run.convergence.labels.map((id,i) => ({ id, value: run.convergence.values[i], unit: '1' }));
   const a = quantities(current), b = quantities(reference);
   return [...new Set([...a.map(m => m.id), ...b.map(m => m.id)])].map(id => {
     const left = a.find(m => m.id === id), right = b.find(m => m.id === id);
