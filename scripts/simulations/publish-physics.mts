@@ -21,5 +21,6 @@ await writeFile(`public${bundle.path}`,compressed,{flag:'wx'});
 const recordsPath='app/simulations/data/fuse-demo.json';
 const records=JSON.parse(await readFile(recordsPath,'utf8')).filter((r:{id:string})=>r.id!==run.id);
 await writeFile(recordsPath,JSON.stringify([run,...records],null,2)+'\n');
-await writeFile('app/simulations/data/physics-bundles.json',JSON.stringify([bundle],null,2)+'\n');
+const oldBundles=JSON.parse(await readFile('app/simulations/data/physics-bundles.json','utf8')).filter((b:{runId:string})=>b.runId!==run.id);
+await writeFile('app/simulations/data/physics-bundles.json',JSON.stringify([bundle,...oldBundles],null,2)+'\n');
 console.log(JSON.stringify({runId:run.id,compressedBytes:bundle.bytes,rawBytes:bundle.rawBytes,profiles:bundle.profiles,grid:bundle.grid,nativePublished:false}));

@@ -190,3 +190,23 @@
 @media (max-width: 900px) { .simStudio { padding-top: 20px; } .simHeading { align-items: start; } .simConnection { display: none; } .simGrid { grid-template-columns: minmax(0,1fr); } .simRail { position: static; display: grid; grid-template-columns: 1fr 1fr; } .simRail .simPanelTitle { grid-column: 1 / -1; } .simRailLabel, .simRailBottom { display: none; } .simCase { margin-top: 10px; margin-bottom: 10px; } .simInspector { grid-column: auto; } .simDomainBar > p { display: none; } .simDomainBar > a { margin-left: auto; } }
 @media (max-width: 560px) { .simDomainBar { flex-wrap: wrap; } .simDomainBar button { padding: 10px; } .simDomainBar > a { border: 0; padding: 8px; } .simMetrics { grid-template-columns: 1fr 1fr; } .simMetrics > div { border-bottom: 1px solid var(--color-border); } .simMetrics > div:nth-child(2) { border-right: 0; } .simResultHeading { flex-wrap: wrap; } .simInspector { grid-template-columns: 1fr; } .simPanelTitle { flex-wrap: wrap; padding: 14px; } .simEngineering { padding: 20px; } .simCapability { flex-wrap: wrap; } }
 @media (prefers-reduced-motion: reduce) { .simulationPage *, .simulationPage *::before, .simulationPage *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; } }
+.simEngineWorkspace, .simTransport { margin-top: 1.2rem; }
+.simEngineWorkspace > .simPanel { padding: 1.5rem; margin-bottom: 1.2rem; }
+.simEngineWorkspace p, .simExecutionSteps { color: var(--color-ink-muted); line-height: 1.7; }
+.simRecipeForm { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 1rem; margin: 1.2rem 0; }
+.simRecipeForm label { display: flex; flex-direction: column; gap: .45rem; font-size: .85rem; }
+.simRecipeForm input, .simRecipeForm select { min-width: 0; width: 100%; padding: .7rem; border: 1px solid var(--color-border); border-radius: .5rem; color: var(--color-ink); background: var(--color-surface); }
+.simExecutionSteps { padding-left: 1.4rem; }
+.simExecutionSteps code { display: block; overflow-wrap: anywhere; font-size: .78rem; }
+.simCapabilityGrid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .7rem; margin: 1rem 0; }
+.simCapabilityGrid details { padding: .9rem; border: 1px solid var(--color-border); border-radius: .6rem; }
+.simCapabilityGrid summary { cursor: pointer; font-size: .88rem; }
+.simCapabilityGrid summary small { margin-left: .6rem; color: var(--color-ink-muted); }
+.simCapabilityGrid ul { padding-left: 1rem; font-size: .78rem; overflow-wrap: anywhere; }
+.simTransport { padding: 1.25rem; }
+.simTransportGrid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 1rem; }
+.simTransportGrid > div { min-width: 0; }
+.simTransportGrid h4 { font-size: .88rem; font-weight: 550; }
+.simFluxGrid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+@media (max-width: 900px) { .simCapabilityGrid { grid-template-columns: repeat(2,minmax(0,1fr)); } .simTransportGrid { grid-template-columns: 1fr; } }
+@media (max-width: 550px) { .simRecipeForm, .simCapabilityGrid { grid-template-columns: 1fr; } .simEngineWorkspace > .simPanel,.simTransport { padding: .9rem; } }

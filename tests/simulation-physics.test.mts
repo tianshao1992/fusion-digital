@@ -6,12 +6,32 @@ import { createHash } from 'node:crypto';
 import { loadPhysics, parsePhysics, profileDisplay, type PhysicsBundle } from '../app/simulations/physics.ts';
 import { parseSimulationRun } from '../app/simulations/contract.ts';
 const bundles:PhysicsBundle[]=JSON.parse(readFileSync(new URL('../app/simulations/data/physics-bundles.json',import.meta.url),'utf8'));
-const bundle=bundles[0];
+const bundle=bundles.find(b=>b.runId==='fuse-fpp-20260907-003257-48a4fa67')!;
 const bytes=readFileSync(new URL(`../public${bundle.path}`,import.meta.url));
 const raw=gunzipSync(bytes); const original=JSON.parse(raw.toString());
 const hash=(b:Uint8Array)=>createHash('sha256').update(b).digest('hex');
+
+test('every published bundle is content-addressed and linked to its own native manifest',()=>{
+  const runs=JSON.parse(readFileSync(new URL('../app/simulations/data/fuse-demo.json',import.meta.url),'utf8')).map(parseSimulationRun);
+  for(const b of bundles){
+    const zipped=readFileSync(new URL(`../public${b.path}`,import.meta.url));const native=gunzipSync(zipped);const p=parsePhysics(JSON.parse(native.toString()));
+    assert.equal(hash(zipped),b.sha256);assert.equal(hash(native),b.rawSha256);assert.equal(zipped.length,b.bytes);assert.equal(native.length,b.rawBytes);assert.equal(p.runId,b.runId);assert.equal(p.profiles.length,b.profiles);
+    const run=runs.find((r:{id:string})=>r.id===p.runId);assert.equal(run?.source.recordSha256,b.recordSha256);assert.ok(run.source.artifacts.some((a:{name:string;sha256:string})=>a.name==='physics.json'&&a.sha256===b.rawSha256));
+    assert.doesNotMatch(native.toString(),/D:\\\\|C:\\\\|Stacktrace|access_token|privateKey/);
+    if(p.schema==='fuse-physics.v2'){
+      assert.ok(p.reference&&p.fluxMatch);assert.equal(p.reference.authority,'upstream-initialized-reference');assert.equal(p.fluxMatch.residualCriterion,null);
+      if(run.caseId==='diiid-fluxmatch-profile'){assert.equal(p.equilibriumOrigin,'input-reconstruction');assert.equal(p.fluxMatch.stateRelation,'same-state');assert.equal(p.fluxMatch.selectedResidual,run.convergence.values[0]);assert.equal(p.fluxMatch.evaluationResiduals.length,run.convergence.calls[0]);assert.equal(run.assessment,'not-established');}
+      if(run.caseId==='diiid-stationary'){assert.equal(p.equilibriumOrigin,'model-solved');assert.equal(p.fluxMatch.stateRelation,'post-coupling-recomputed');}
+      const momentum=p.fluxMatch.channels.find(c=>c.id==='momentum');if(momentum)assert.equal(momentum.unit,'kg/s^2');
+      for(const v of p.profiles.filter(p=>p.id.startsWith('transport_')))assert.match(v.source,/^core_transport\.model\.\d+\.profiles_1d\.(electrons\.(energy|particles)|total_ion_energy)\.flux$/);
+      const clone=structuredClone(p);clone.fluxMatch!.residualCriterion=0.001 as unknown as null;assert.throws(()=>parsePhysics(clone));
+      const extra=structuredClone(p) as typeof p & {secret?:string};extra.secret='sentinel';assert.throws(()=>parsePhysics(extra));
+      const wrong=structuredClone(p);wrong.fluxMatch!.channels[0].target.pop();assert.throws(()=>parsePhysics(wrong));
+    }
+  }
+});
 test('published scientific bytes bind the exact native result and summary identity',()=>{
-  assert.equal(bundles.length,1); assert.equal(bytes.length,bundle.bytes);assert.equal(hash(bytes),bundle.sha256);assert.equal(hash(raw),bundle.rawSha256);assert.equal(raw.length,bundle.rawBytes);
+  assert.ok(bundles.length>=1); assert.equal(bytes.length,bundle.bytes);assert.equal(hash(bytes),bundle.sha256);assert.equal(hash(raw),bundle.rawSha256);assert.equal(raw.length,bundle.rawBytes);
   const p=parsePhysics(original);assert.equal(p.runId,bundle.runId);assert.equal(p.profiles.length,118);assert.deepEqual([p.equilibrium.r.length,p.equilibrium.z.length],[67,129]);assert.equal(p.geometry.layers.length,28);assert.equal(p.geometry.coils.length,11);assert.equal(p.coreTransportModel,'none');
   const runs=JSON.parse(readFileSync(new URL('../app/simulations/data/fuse-demo.json',import.meta.url),'utf8')).map(parseSimulationRun);
   const run=runs.find((r:{id:string})=>r.id===p.runId);assert.ok(run);assert.equal(run.source.recordSha256,bundle.recordSha256);assert.ok(run.source.artifacts.some((a:{name:string;sha256:string})=>a.name==='physics.json'&&a.sha256===bundle.rawSha256));

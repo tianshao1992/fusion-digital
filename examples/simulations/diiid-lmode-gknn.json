@@ -1,0 +1,9 @@
+{
+  "schema": "simulation-runspec.v1",
+  "engineId": "fuse",
+  "engineCommit": "9ef2f99af73497706a097d99a2aaac2f08405370",
+  "recipe": "diiid-lmode-fluxmatch",
+  "model": "GKNN",
+  "solver": { "maxIterations": 300, "xtol": 0.001, "stationaryIterations": 5, "stationaryThreshold": 0.05 },
+  "resources": { "threads": 8, "timeoutSeconds": 1800 }
+}

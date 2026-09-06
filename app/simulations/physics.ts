@@ -1,11 +1,14 @@
 export type Profile = { id: string; label: string; x: number[]; y: (number | null)[]; axis: 'rho_tor_norm' | 'psi_norm'; unit: string; source: string };
 export type RZ = [number, number][];
 export type PhysicsData = {
-  schema: 'fuse-physics.v1'; authority: 'simulated'; runId: string; timeSeconds: number; coreTimeSeconds: number; cocos: 11;
+  schema: 'fuse-physics.v1' | 'fuse-physics.v2'; authority: 'simulated'; runId: string; timeSeconds: number; coreTimeSeconds: number; cocos: 11;
   equilibrium: { r: number[]; z: number[]; psi: number[][]; arrayOrder: 'z,r'; psiUnit: 'Wb'; psiAxis: number; psiBoundary: number; boundary: RZ; axis: [number, number]; wall: RZ; contours: { psiNorm: number; paths: RZ[] }[] };
   profiles: Profile[]; sources: { prefix: string; name: string; index: number; timeSeconds: number }[];
   geometry: { layers: { name: string; material: string; thicknessM: number | null; outline: RZ }[]; coils: { name: string; elements: { geometryType: number; outline: RZ }[]; timeSeconds: (number | null)[] | null; currentA: (number | null)[] | null }[] };
   unavailable: string[]; coreTransportModel: string; nativeFormat: string; versions: { fuse: string; imas: string; julia: string }; derivation: string;
+  equilibriumOrigin?: 'input-reconstruction' | 'model-solved';
+  reference?: { authority: 'upstream-initialized-reference'; timeSeconds: number; rho: number[]; te: number[]; ti: number[]; ne: number[]; description: string };
+  fluxMatch?: { rho: number[]; channels: { id: string; unit: string; target: number[]; model: number[] }[]; selectedResidual: number; evaluationResiduals: number[]; xtol: number; residualCriterion: null; derivation: string; stateRelation: 'same-state' | 'post-coupling-recomputed' };
 };
 export type PhysicsBundle = { runId: string; recordSha256: string; path: string; sha256: string; bytes: number; rawSha256: string; rawBytes: number; profiles: number; grid: [number, number] };
 const finite = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
@@ -18,8 +21,20 @@ const keys = (v: object, allowed: string) => Object.keys(v).every(key => allowed
 export function parsePhysics(input: unknown): PhysicsData {
   assert(input && typeof input === 'object');
   const p = input as PhysicsData;
-  assert(keys(p, 'schema authority runId timeSeconds coreTimeSeconds cocos equilibrium profiles sources geometry unavailable coreTransportModel nativeFormat versions derivation'));
-  assert(p.schema === 'fuse-physics.v1' && p.authority === 'simulated' && /^[a-zA-Z0-9._-]{1,100}$/.test(p.runId) && finite(p.timeSeconds) && finite(p.coreTimeSeconds) && p.cocos === 11);
+  assert(keys(p, 'schema authority runId timeSeconds coreTimeSeconds cocos equilibrium profiles sources geometry unavailable coreTransportModel nativeFormat versions derivation equilibriumOrigin reference fluxMatch'));
+  assert(['fuse-physics.v1','fuse-physics.v2'].includes(p.schema) && p.authority === 'simulated' && /^[a-zA-Z0-9._-]{1,100}$/.test(p.runId) && finite(p.timeSeconds) && finite(p.coreTimeSeconds) && p.cocos === 11);
+  if (p.schema === 'fuse-physics.v1') assert(!p.reference && !p.fluxMatch && !p.equilibriumOrigin);
+  else {
+    assert(p.equilibriumOrigin === 'input-reconstruction' || p.equilibriumOrigin === 'model-solved');
+    const ref = p.reference;
+    if (ref) assert(keys(ref,'authority timeSeconds rho te ti ne description') && ref.authority === 'upstream-initialized-reference' && finite(ref.timeSeconds) && words(ref.description) && vector(ref.rho) && monotonic(ref.rho) && [ref.te,ref.ti,ref.ne].every(v => vector(v) && v.length === ref.rho.length));
+    const flux = p.fluxMatch;
+    if (flux) {
+      assert(keys(flux,'rho channels selectedResidual evaluationResiduals xtol residualCriterion derivation stateRelation') && vector(flux.rho) && monotonic(flux.rho) && finite(flux.selectedResidual) && flux.selectedResidual >= 0 && vector(flux.evaluationResiduals) && flux.evaluationResiduals.length > 0 && flux.evaluationResiduals.every(v=>v>=0) && finite(flux.xtol) && flux.xtol > 0 && flux.residualCriterion === null && words(flux.derivation) && ['same-state','post-coupling-recomputed'].includes(flux.stateRelation));
+      const units: Record<string,string> = {electron_heat:'W/m^2',ion_heat:'W/m^2',momentum:'kg/s^2',electron_particles:'m^-2/s'};
+      assert(Array.isArray(flux.channels) && flux.channels.length >= 2 && flux.channels.length <= 4 && new Set(flux.channels.map(c=>c.id)).size === flux.channels.length && flux.channels.every(c=>keys(c,'id unit target model') && Object.hasOwn(units,c.id) && c.unit===units[c.id] && [c.target,c.model].every(v=>vector(v) && v.length===flux.rho.length)));
+    }
+  }
   const e = p.equilibrium;
   assert(e && keys(e, 'r z psi arrayOrder psiUnit psiAxis psiBoundary boundary axis wall contours'));
   assert(e && vector(e.r) && vector(e.z) && monotonic(e.r) && monotonic(e.z) && e.r.length * e.z.length <= 300000);
@@ -28,7 +43,7 @@ export function parsePhysics(input: unknown): PhysicsData {
   assert(rz(e.boundary) && e.boundary.length > 2 && rz(e.wall) && Array.isArray(e.axis) && e.axis.length === 2 && e.axis.every(finite));
   assert(Array.isArray(e.contours) && e.contours.length <= 50 && e.contours.every(c => finite(c.psiNorm) && c.psiNorm > 0 && c.psiNorm < 1 && Array.isArray(c.paths) && c.paths.length <= 20 && c.paths.every(rz)));
   assert(Array.isArray(p.profiles) && p.profiles.length <= 500 && new Set(p.profiles.map(v => v.id)).size === p.profiles.length);
-  for (const v of p.profiles) assert(/^[a-zA-Z0-9_-]{1,100}$/.test(v.id) && words(v.label) && words(v.source) && ['eV', 'm^-3', 'A/m^2', '1', 'Pa', 'W/m^3', 'W', 'm^-3/s'].includes(v.unit) && ['rho_tor_norm', 'psi_norm'].includes(v.axis) && vector(v.x) && monotonic(v.x) && vector(v.y, true) && v.x.length === v.y.length);
+  for (const v of p.profiles) assert(/^[a-zA-Z0-9_-]{1,100}$/.test(v.id) && words(v.label) && words(v.source) && ['eV', 'm^-3', 'A/m^2', '1', 'Pa', 'W/m^3', 'W', 'm^-3/s', 'W/m^2', 'm^-2/s', 's^-1'].includes(v.unit) && ['rho_tor_norm', 'psi_norm'].includes(v.axis) && vector(v.x) && monotonic(v.x) && vector(v.y, true) && v.x.length === v.y.length);
   assert(Array.isArray(p.sources) && p.sources.length <= 100 && p.sources.every(s => words(s.prefix) && words(s.name) && finite(s.index) && finite(s.timeSeconds)));
   assert(p.geometry && Array.isArray(p.geometry.layers) && p.geometry.layers.length <= 100 && p.geometry.layers.every(l => words(l.name) && words(l.material) && (l.thicknessM === null || finite(l.thicknessM)) && rz(l.outline)));
   assert(Array.isArray(p.geometry.coils) && p.geometry.coils.length <= 200 && p.geometry.coils.every(c => words(c.name) && Array.isArray(c.elements) && c.elements.length <= 100 && c.elements.every(e => finite(e.geometryType) && rz(e.outline)) && (c.timeSeconds === null || vector(c.timeSeconds, true)) && (c.currentA === null || vector(c.currentA, true)) && (c.timeSeconds === null || c.currentA === null || c.timeSeconds.length === c.currentA.length)));

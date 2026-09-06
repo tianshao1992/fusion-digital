@@ -6,7 +6,7 @@ export type SimulationResultEnvelope = {
 };
 // First supported scientific profile, not a universal IDS/engineering result schema.
 export type SimulationRun = SimulationResultEnvelope & {
-  resultProfile: 'fuse-demo.v1'; caseId: 'fpp-stationary' | 'diiid-fluxmatcher';
+  resultProfile: 'fuse-demo.v1' | 'fuse-physics-run.v1'; caseId: 'fpp-stationary' | 'diiid-fluxmatcher' | 'diiid-fluxmatch-profile' | 'diiid-stationary';
   metrics: { id: string; value: number; unit: string }[];
   convergence: { labels: string[]; values: number[]; threshold: number | null; kind: 'iterations' | 'variants'; calls?: number[] };
   solverTolerances?: { xtol: number };
@@ -57,14 +57,15 @@ export function parseSimulationRun(value: unknown): SimulationRun {
   const finite = (x: unknown): x is number => typeof x === 'number' && Number.isFinite(x);
   const token = (x: unknown) => typeof x === 'string' && /^[a-zA-Z0-9._-]{1,100}$/.test(x);
   const sha = (x: unknown, n = 64) => typeof x === 'string' && new RegExp(`^[a-f0-9]{${n}}$`).test(x);
-  if (r.schema !== 'simulation-result.v1' || r.resultProfile !== 'fuse-demo.v1' || !token(r.id) || !['fpp-stationary', 'diiid-fluxmatcher'].includes(r.caseId) || r.authority !== 'simulated' || r.recordKind !== 'simulation-run' || r.execution !== 'succeeded' || !['passed-demo-criterion', 'not-established'].includes(r.assessment)) throw new Error('UNSUPPORTED_RESULT');
+  if (r.schema !== 'simulation-result.v1' || !['fuse-demo.v1','fuse-physics-run.v1'].includes(r.resultProfile) || !token(r.id) || !['fpp-stationary', 'diiid-fluxmatcher','diiid-fluxmatch-profile','diiid-stationary'].includes(r.caseId) || r.authority !== 'simulated' || r.recordKind !== 'simulation-run' || r.execution !== 'succeeded' || !['passed-demo-criterion', 'not-established'].includes(r.assessment)) throw new Error('UNSUPPORTED_RESULT');
+  if ((r.resultProfile==='fuse-physics-run.v1') !== ['diiid-fluxmatch-profile','diiid-stationary'].includes(r.caseId)) throw new Error('INVALID_PROFILE');
   if (!r.engine || !token(r.engine.id) || !token(r.engine.version) || !sha(r.engine.commit, 40) || !r.engine.runtime || !token(r.engine.runtime.name) || !token(r.engine.runtime.version) || !Number.isInteger(r.engine.threads) || r.engine.threads < 1 || r.engine.threads > 1024) throw new Error('INVALID_ENGINE');
   if (!Array.isArray(r.metrics) || r.metrics.length > 100 || r.metrics.some(m => !m || !Object.hasOwn(metricLabels, m.id) || !finite(m.value) || typeof m.unit !== 'string' || m.unit.length > 16) || new Set(r.metrics.map(m => m.id)).size !== r.metrics.length) throw new Error('INVALID_METRICS');
   const units: Record<string, string> = { fusion_power_MW: 'MW', fusion_gain_Q: '1', plasma_current_MA: 'MA', q95: '1', major_radius_m: 'm', minor_radius_m: 'm', toroidal_field_T: 'T', central_electron_temperature_keV: 'keV', central_ion_temperature_keV: 'keV', central_electron_density_m3: 'm⁻³', auxiliary_power_MW: 'MW', power_through_separatrix_MW: 'MW', H98y2: '1' };
   if (r.metrics.some(m => units[m.id] !== m.unit)) throw new Error('INCOMPATIBLE_UNIT');
   const c = r.convergence;
   if (!c || !Array.isArray(c.labels) || !Array.isArray(c.values) || !c.values.length || c.values.length > 1000 || c.labels.length !== c.values.length || c.labels.some(x => !token(x)) || c.values.some(x => !finite(x) || x < 0) || (c.threshold !== null && (!finite(c.threshold) || c.threshold <= 0)) || (c.kind !== 'iterations' && c.kind !== 'variants')) throw new Error('INVALID_CONVERGENCE');
-  if ((r.caseId === 'fpp-stationary') !== (c.kind === 'iterations')) throw new Error('INVALID_PROFILE');
+  if (['fpp-stationary','diiid-stationary'].includes(r.caseId) !== (c.kind === 'iterations')) throw new Error('INVALID_PROFILE');
   if (new Set(c.labels).size !== c.labels.length) throw new Error('DUPLICATE_CONVERGENCE_LABEL');
   if ((c.kind === 'variants' && c.threshold !== null) || (c.kind === 'iterations' && c.threshold === null)) throw new Error('INVALID_RESIDUAL_CRITERION');
   if (r.solverTolerances && (!finite(r.solverTolerances.xtol) || r.solverTolerances.xtol <= 0)) throw new Error('INVALID_SOLVER_TOLERANCE');

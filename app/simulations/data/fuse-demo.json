@@ -1,6 +1,250 @@
 [
   {
     "schema": "simulation-result.v1",
+    "resultProfile": "fuse-physics-run.v1",
+    "id": "fuse-diiid-20260906171840962-ede653fa",
+    "caseId": "diiid-fluxmatch-profile",
+    "authority": "simulated",
+    "recordKind": "simulation-run",
+    "execution": "succeeded",
+    "assessment": "not-established",
+    "engine": {
+      "id": "fuse",
+      "version": "1.2.0",
+      "commit": "9ef2f99af73497706a097d99a2aaac2f08405370",
+      "runtime": {
+        "name": "Julia",
+        "version": "1.12.7"
+      },
+      "threads": 8
+    },
+    "metrics": [
+      {
+        "id": "central_electron_temperature_keV",
+        "value": 2.7828402405505264,
+        "unit": "keV"
+      },
+      {
+        "id": "central_ion_temperature_keV",
+        "value": 2.9266143576988277,
+        "unit": "keV"
+      },
+      {
+        "id": "central_electron_density_m3",
+        "value": 42994121977707820000,
+        "unit": "m⁻³"
+      }
+    ],
+    "convergence": {
+      "kind": "variants",
+      "labels": [
+        "GKNN"
+      ],
+      "values": [
+        0.001662867898334227
+      ],
+      "threshold": null,
+      "calls": [
+        144
+      ]
+    },
+    "timing": {
+      "seconds": 146.6926461,
+      "scope": "simulation-stage"
+    },
+    "source": {
+      "recordSha256": "fa7d6b6b4c5c19f88bb4cb1e08e4dbf23574e845870a92a3ac71234595880e8e",
+      "artifacts": [
+        {
+          "name": "physics.json",
+          "sha256": "a49774fba74bcb87d32b7179a85a33df989e373736746d540ddf80abaf2c139a"
+        },
+        {
+          "name": "initial-native.h5",
+          "sha256": "f72e431776d45906715a23815a97a4414e4550f658b80a4049387031a8fc49b4"
+        },
+        {
+          "name": "dd-native.h5",
+          "sha256": "412544686f0688c01f2d5b311b35413bf5e27243f089f14e53cda32c617d395b"
+        },
+        {
+          "name": "input-ini.json",
+          "sha256": "9325aa1294e054765070b314e1a6a6531debcc60daf4da45977aa974de820472"
+        },
+        {
+          "name": "input-act.json",
+          "sha256": "a312d614a5d2a1ffac9190c5a60086cf3049be9e27d0973cc193d022506d6c24"
+        },
+        {
+          "name": "effective-act.json",
+          "sha256": "fcd84b83c12087b4b96895805a3524a3948e49c2a2d9342ee8b86c0a046849b9"
+        },
+        {
+          "name": "resolved-ini.json",
+          "sha256": "9325aa1294e054765070b314e1a6a6531debcc60daf4da45977aa974de820472"
+        },
+        {
+          "name": "resolved-act.json",
+          "sha256": "5165c29d4c986478fc2b8be28a6aa5ca6d1dca437476f8401d9168718641f340"
+        },
+        {
+          "name": "checks.json",
+          "sha256": "27bd6c9f4c7bb8dd7825eefc3d67eaac9255f272bf9b50def8e8d727759ccaa8"
+        },
+        {
+          "name": "stages.json",
+          "sha256": "ca07606e5093e8f6044b4858fcea9ddf1c2d7a0d884cf9f9cde230abe3d8d4c1"
+        },
+        {
+          "name": "inner-history.json",
+          "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+        },
+        {
+          "name": "run-spec.json",
+          "sha256": "7dfcca3e8d9fe2137048bd8e638ee17bf304a2a05ca6ff552721092c9d0a1daa"
+        },
+        {
+          "name": "environment-lock.json",
+          "sha256": "0cbb84240c344c088f7c354a701be7f727030215a1bd8f858f35d03cd4219671"
+        },
+        {
+          "name": "run-diiid.jl",
+          "sha256": "df0798a800edb211ec14e4d5ae8367d7b7132ba6a2fb180d60f38ba6334f3ee5"
+        },
+        {
+          "name": "FuseProjection.jl",
+          "sha256": "44c5533ef78ec5744f619d64b7a1dcc9257d925dee12c5a1121da3cd4129a15d"
+        }
+      ]
+    },
+    "solverTolerances": {
+      "xtol": 0.001
+    }
+  },
+  {
+    "schema": "simulation-result.v1",
+    "resultProfile": "fuse-physics-run.v1",
+    "id": "fuse-diiid-20260906171323467-88aa0279",
+    "caseId": "diiid-fluxmatch-profile",
+    "authority": "simulated",
+    "recordKind": "simulation-run",
+    "execution": "succeeded",
+    "assessment": "not-established",
+    "engine": {
+      "id": "fuse",
+      "version": "1.2.0",
+      "commit": "9ef2f99af73497706a097d99a2aaac2f08405370",
+      "runtime": {
+        "name": "Julia",
+        "version": "1.12.7"
+      },
+      "threads": 8
+    },
+    "metrics": [
+      {
+        "id": "central_electron_temperature_keV",
+        "value": 3.492216396976652,
+        "unit": "keV"
+      },
+      {
+        "id": "central_ion_temperature_keV",
+        "value": 3.0279040692462433,
+        "unit": "keV"
+      },
+      {
+        "id": "central_electron_density_m3",
+        "value": 41936906084665570000,
+        "unit": "m⁻³"
+      }
+    ],
+    "convergence": {
+      "kind": "variants",
+      "labels": [
+        "TGLFNN"
+      ],
+      "values": [
+        0.0013607392091884612
+      ],
+      "threshold": null,
+      "calls": [
+        56
+      ]
+    },
+    "timing": {
+      "seconds": 145.7942524,
+      "scope": "simulation-stage"
+    },
+    "source": {
+      "recordSha256": "df2d59010bcd29ca37fc4b531c19caf4f7e443e89c698b2224d6672d18886fe7",
+      "artifacts": [
+        {
+          "name": "physics.json",
+          "sha256": "c17ae889684270bfcefe0d847957e2aa1f800ea31c501466e8ed17a08686c69f"
+        },
+        {
+          "name": "initial-native.h5",
+          "sha256": "b0bcc5a9b79f41b8ef4a6a2904a17b9a7545be53dbcd2dc4a8f21103bc806f20"
+        },
+        {
+          "name": "dd-native.h5",
+          "sha256": "3d58a184c9ced92ba32da11661697f71b889595121c218be1ff6a45cb775cc96"
+        },
+        {
+          "name": "input-ini.json",
+          "sha256": "9325aa1294e054765070b314e1a6a6531debcc60daf4da45977aa974de820472"
+        },
+        {
+          "name": "input-act.json",
+          "sha256": "a312d614a5d2a1ffac9190c5a60086cf3049be9e27d0973cc193d022506d6c24"
+        },
+        {
+          "name": "effective-act.json",
+          "sha256": "01b4b3e5274622350070dec9ce0fd8bc30fa3cc737bbf289396b8fefb9a72e44"
+        },
+        {
+          "name": "resolved-ini.json",
+          "sha256": "9325aa1294e054765070b314e1a6a6531debcc60daf4da45977aa974de820472"
+        },
+        {
+          "name": "resolved-act.json",
+          "sha256": "ea60e5fa62ce29a3b7c2ee729d3f2c51c826fedbdf761c2d61e300cb878552ca"
+        },
+        {
+          "name": "checks.json",
+          "sha256": "27bd6c9f4c7bb8dd7825eefc3d67eaac9255f272bf9b50def8e8d727759ccaa8"
+        },
+        {
+          "name": "stages.json",
+          "sha256": "a68aeabb2c92dffda6e86312bc9c140ece56463dc09fa33e28ab303b95c39dca"
+        },
+        {
+          "name": "inner-history.json",
+          "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+        },
+        {
+          "name": "run-spec.json",
+          "sha256": "acff01362c0c5d66dec2f78cf864c85494d7045c856a97eeba918775605310f1"
+        },
+        {
+          "name": "environment-lock.json",
+          "sha256": "0cbb84240c344c088f7c354a701be7f727030215a1bd8f858f35d03cd4219671"
+        },
+        {
+          "name": "run-diiid.jl",
+          "sha256": "df0798a800edb211ec14e4d5ae8367d7b7132ba6a2fb180d60f38ba6334f3ee5"
+        },
+        {
+          "name": "FuseProjection.jl",
+          "sha256": "44c5533ef78ec5744f619d64b7a1dcc9257d925dee12c5a1121da3cd4129a15d"
+        }
+      ]
+    },
+    "solverTolerances": {
+      "xtol": 0.001
+    }
+  },
+  {
+    "schema": "simulation-result.v1",
     "resultProfile": "fuse-demo.v1",
     "id": "fuse-fpp-20260907-003257-48a4fa67",
     "caseId": "fpp-stationary",
