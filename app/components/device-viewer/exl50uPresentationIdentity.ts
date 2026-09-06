@@ -70,9 +70,11 @@ export function resolveExl50uPresentationIdentityLayout(): Exl50uPresentationIde
     poleHeight: unit * 1.55,
     signWidth: unit * 1.36,
     signHeight: unit * 0.38,
-    // Below and outside the upper guardrail, in front of its diagonal frame
-    // post. The flag retains its independent top-platform placement.
-    signOffset: [0, 1.45 - EXL50U_HOST_TOP_MOUNT.anchor[1], 1.06],
+    // On the OUTSIDE of the thin upper guardrail, above the green deck fascia
+    // and directly below the flag, not on the lower structural frame.
+    // X matches the flag's fabric centre; +Z is outward in this rotated frame.
+    signOffset: [-unit * 1.26 * 0.05 + unit * 0.032 * 0.7,
+      3.4 - EXL50U_HOST_TOP_MOUNT.anchor[1], 0.74],
   };
 }
 
@@ -276,7 +278,7 @@ export function createExl50uPresentationIdentity(
   root.add(flag);
 
   const sign = new THREE.Group();
-  sign.name = 'EXL50U_PRESENTATION_FRAME_MOUNTED_LOGO';
+  sign.name = 'EXL50U_PRESENTATION_GUARDRAIL_MOUNTED_LOGO';
   sign.position.set(...layout.signOffset);
   root.add(sign);
   const plateDepth = layout.unit * 0.045;
@@ -296,18 +298,23 @@ export function createExl50uPresentationIdentity(
     sign.add(face);
   }
 
-  // Two short rear brackets enter the diagonal exterior frame post instead
-  // of unsupported feet on the deck. Public-GLB inward probes at Y=1.31/1.59 m
-  // locate the post/beam near X=Z=2.109/2.284 m. The sign clears both at
-  // X=Z=2.400 m; unequal stand-offs follow the stepped frame surface.
-  for (const [y, bracketDepth] of [[-0.14, 0.45], [0.14, 0.22]]) {
-    const support = new THREE.Mesh(
-      new THREE.BoxGeometry(0.14, 0.07, bracketDepth),
+  // Hang the plate from the thin top rail. Public-GLB probes at Y=4.05 m
+  // intersect that rail at both hanger X positions (local outward Z~0.656).
+  // The plate's back is at Z=0.713: clear of the bars, with actual clips rather
+  // than long stand-offs reaching the unrelated lower frame.
+  const railHeight = 4.05 - (layout.anchor[1] + layout.signOffset[1]);
+  for (const x of [-0.55, 0.55]) {
+    const hanger = new THREE.Mesh(
+      new THREE.BoxGeometry(0.025, railHeight + 0.03, 0.035),
       poleMaterial,
     );
-    support.name = 'EXL50U_PRESENTATION_LOGO_REAR_BRACKET';
-    support.position.set(0, y, -plateDepth * 0.5 - bracketDepth * 0.5);
-    sign.add(support);
+    hanger.name = 'EXL50U_PRESENTATION_LOGO_RAIL_HANGER';
+    hanger.position.set(x, (railHeight - 0.03) * 0.5, -0.06);
+    sign.add(hanger);
+    const clip = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.05, 0.16), poleMaterial);
+    clip.name = 'EXL50U_PRESENTATION_LOGO_RAIL_CLIP';
+    clip.position.set(x, railHeight, -0.10);
+    sign.add(clip);
   }
 
   suppressPresentationPicking(root);

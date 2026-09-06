@@ -147,9 +147,13 @@ test('EXL-50U presentation identity mounts on the host platform, not the tallest
     assert.ok(Math.abs(sourceX - measuredFeet[index][0]) < 0.00001);
     assert.ok(Math.abs(sourceZ - measuredFeet[index][1]) < 0.00001);
   });
-  assert.equal(layout.anchor[1] + layout.signOffset[1], 1.45);
+  assert.equal(layout.anchor[1] + layout.signOffset[1], 3.4);
   assert.ok(layout.signOffset[2] > 0.7, 'sign moves outward beyond the guardrail');
-  assert.ok(layout.signOffset[1] + layout.signHeight / 2 < 0, 'whole sign stays below the top deck');
+  assert.ok(layout.signOffset[1] - layout.signHeight * 0.54 > 0, 'whole sign is above the green deck fascia');
+  const flagCentreX = -layout.flagWidth * 0.55 + layout.flagWidth * 0.5 + layout.unit * 0.032 * 0.7;
+  assert.ok(Math.abs(layout.signOffset[0] - flagCentreX) < 1e-10, 'sign is directly below the flag');
+  const flagBottom = layout.poleHeight - layout.flagHeight - layout.unit * 0.08;
+  assert.ok(layout.signOffset[1] + layout.signHeight * 0.54 < flagBottom, 'plate clears the flag fabric');
 
   const [viewer, identity] = await Promise.all([
     source('app/components/TokamakCadViewer.tsx'),
@@ -166,8 +170,9 @@ test('EXL-50U presentation identity mounts on the host platform, not the tallest
   assert.match(viewer, /model\.add\(identity\.root\)/);
   assert.doesNotMatch(viewer, /scene\.add\(identity\.root\)/);
   assert.doesNotMatch(identity, /bounds\.max|fittedBounds/);
-  assert.match(identity, /EXL50U_PRESENTATION_FRAME_MOUNTED_LOGO/);
-  assert.match(identity, /EXL50U_PRESENTATION_LOGO_REAR_BRACKET/);
+  assert.match(identity, /EXL50U_PRESENTATION_GUARDRAIL_MOUNTED_LOGO/);
+  assert.match(identity, /EXL50U_PRESENTATION_LOGO_RAIL_CLIP/);
+  assert.doesNotMatch(identity, /EXL50U_PRESENTATION_LOGO_REAR_BRACKET/);
   assert.doesNotMatch(identity, /EXL50U_PRESENTATION_LOGO_SUPPORT/);
 });
 
