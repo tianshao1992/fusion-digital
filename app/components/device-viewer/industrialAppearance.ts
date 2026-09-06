@@ -75,7 +75,9 @@ export const INDUSTRIAL_MATERIAL_SPECS: Readonly<Record<IndustrialMaterialPreset
   },
   'foundation-slate': {
     kind: 'standard',
-    color: 0x17211f,
+    // Mid-grey concrete keeps the large plinth legible without making the
+    // unchanged metalwork or safety colours brighter through global exposure.
+    color: 0x828b86,
     metalness: 0.02,
     roughness: 0.96,
     envMapIntensity: 0.14,

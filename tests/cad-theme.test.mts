@@ -79,7 +79,7 @@ test('assembly themes preserve the EXL industrial rig with lower light energy an
 
 test('assembly presentation palette keeps visible colour and reflectance separation', () => {
   const palette = INDUSTRIAL_MATERIAL_SPECS;
-  assert.ok(luminance(palette['foundation-slate'].color) < luminance(palette['architectural-stone'].color) - 40);
+  assert.ok(luminance(palette['foundation-slate'].color) > luminance(palette['architectural-stone'].color) + 40);
   for (const [left, right] of [
     ['foundation-slate', 'architectural-stone'],
     ['architectural-stone', 'pipework-teal'],
@@ -95,6 +95,22 @@ test('assembly presentation palette keeps visible colour and reflectance separat
   assert.ok(palette['machine-red'].color > 0x800000);
   assert.ok(palette['polished-steel'].metalness >= 0.65);
   assert.ok(palette['cabinet-pearl'].roughness >= 0.5);
+});
+
+test('assembly plinth and floor use layered concrete greys without overexposing equipment', () => {
+  const foundation = INDUSTRIAL_MATERIAL_SPECS['foundation-slate'];
+  const light = resolveCadSceneTheme('light', 'assembly-color-v1');
+  const dark = resolveCadSceneTheme('dark', 'assembly-color-v1');
+  assert.ok(luminance(foundation.color) > 120 && luminance(foundation.color) < 160);
+  assert.ok(luminance(light.ground.color) > luminance(foundation.color) + 30);
+  assert.ok(luminance(light.ground.color) < 200, 'matte floor should not become white');
+  assert.ok(luminance(dark.ground.color) > 90, 'dark mode floor must remain legible');
+  assert.ok(foundation.metalness <= 0.02 && foundation.roughness >= 0.9);
+  assert.ok(light.grid.opacity <= 0.3 && dark.grid.opacity <= 0.3);
+  assert.equal(light.exposure, 0.8);
+  assert.equal(dark.exposure, 0.84);
+  assert.equal(INDUSTRIAL_MATERIAL_SPECS['industrial-green'].color, 0x286550);
+  assert.equal(INDUSTRIAL_MATERIAL_SPECS['machine-red'].color, 0xa22a22);
 });
 
 test('anonymous assembly classifier separates foundation, architecture, pipework and equipment by presentation geometry', () => {

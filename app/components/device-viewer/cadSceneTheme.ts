@@ -145,8 +145,8 @@ const DARK_ASSEMBLY: CadSceneTheme = {
   clearAlpha: 0,
   exposure: 0.84,
   environmentIntensity: 0.48,
-  ground: { color: 0x14201d, metalness: 0.02, roughness: 0.96 },
-  grid: { center: 0x62877e, line: 0x33433f, opacity: 0.25 },
+  ground: { color: 0x63716a, metalness: 0.02, roughness: 0.96 },
+  grid: { center: 0x82948b, line: 0x74867c, opacity: 0.22 },
   orbit: { color: 0x7b9690, opacity: 0.16 },
   lights: {
     kind: 'industrial',
@@ -158,15 +158,15 @@ const DARK_ASSEMBLY: CadSceneTheme = {
 };
 
 const LIGHT_ASSEMBLY: CadSceneTheme = {
-  fogColor: 0x8f9996,
+  fogColor: 0xbac4be,
   fogDensity: 0.0008,
-  clearColor: 0xaeb7b3,
+  clearColor: 0xd9dfda,
   clearAlpha: 0.68,
   exposure: 0.8,
   environmentIntensity: 0.42,
-  ground: { color: 0x596561, metalness: 0.02, roughness: 0.94 },
-  grid: { center: 0x344d47, line: 0x78837f, opacity: 0.38 },
-  orbit: { color: 0x425d56, opacity: 0.25 },
+  ground: { color: 0xadb7b1, metalness: 0.02, roughness: 0.94 },
+  grid: { center: 0x83938a, line: 0x96a49b, opacity: 0.26 },
+  orbit: { color: 0x74877c, opacity: 0.2 },
   lights: {
     kind: 'industrial',
     hemisphere: { sky: 0xd7dfdc, ground: 0x35403d, intensity: 0.44 },
