@@ -1,0 +1,15 @@
+import Link from 'next/link';
+import type { SimulationRun } from './contract';
+export default function RunEvidence({ run, imported, engineering, en }: { run: SimulationRun; imported: boolean; engineering: boolean; en: boolean }) {
+  const text = (zh: string, english: string) => en ? english : zh;
+  if (engineering) return <aside className="simInspector"><div className="simPanelTitle"><h2>{text('工程接入要求', 'Engineering prerequisites')}</h2></div><div className="simInspectorBlock"><h3>{text('独立工程数据', 'Separate engineering data')}</h3><p>{text('几何 · 材料 · 网格 · 载荷', 'Geometry · materials · mesh · loads')}</p><small>{text('FPP 物理结果不等于工程计算结果。', 'FPP physics outputs are not engineering results.')}</small></div><div className="simInspectorBlock"><h3>{text('版本与验证', 'Versions & validation')}</h3><p>{text('固定数据版本，校验载荷映射与守恒。', 'Pin data revisions; verify load transfer and conservation.')}</p></div><Link className="simTextLink" href="/#prototype-workspace">{text('打开数字样机', 'Open digital prototype')} ↗</Link></aside>;
+  return <aside className="simInspector">
+    <div className="simPanelTitle"><h2>{text('运行证据', 'Run evidence')}</h2><span>{imported ? text('待核验', 'Unverified') : '↗'}</span></div>
+    <div className="simStatusRows"><div><span>{text('执行状态', 'Execution')}</span><strong className={imported ? 'simWarning' : 'simGood'}>{imported ? text('文件报告完成', 'Reported success') : text('正常完成', 'Succeeded')}</strong></div><div><span>{text('科学评估', 'Assessment')}</span><strong>{run.assessment === 'passed-demo-criterion' ? text('示例阈值通过', 'Demo criterion met') : text('尚未确立', 'Not established')}</strong></div><div><span>{text('装置验证', 'Device validation')}</span><strong>{text('未验证', 'Not validated')}</strong></div></div>
+    <div className="simInspectorBlock"><span className="simMiniLabel">RUNTIME</span><h3>{run.engine.runtime.name} {run.engine.runtime.version}</h3><p>{run.engine.threads} {text('线程', 'threads')} · {run.timing.seconds.toFixed(1)} s</p><small>{run.timing.scope === 'simulation-stage' ? text('仅计算阶段，不含加载和导出', 'Compute stage only; excludes loading and export') : text('上游执行脚本计时', 'Upstream execution-script timing')}</small></div>
+    {run.solverTolerances && <div className="simInspectorBlock"><span className="simMiniLabel">SOLVER CONFIGURATION</span><p>xtol = {run.solverTolerances.xtol}</p><small>{text('求解器参数，不作为本图残差阈值。', 'Solver parameter, not a residual threshold in this chart.')}</small></div>}
+    <div className="simInspectorBlock"><span className="simMiniLabel">SOURCE COMMIT</span><code>{run.engine.commit.slice(0, 12)}</code><small>{text('固定源码与原始记录摘要', 'Pinned source and original record digest')}</small></div>
+    <div className="simInspectorBlock"><span className="simMiniLabel">EVIDENCE SHA-256</span><code className="simHash">{run.source.recordSha256}</code><p>{run.source.artifacts.length} {imported ? text('个源制品引用 · 未核验', 'source references · unverified') : text('个源制品已校验', 'source artifacts verified')}</p></div>
+    <Link className="simTextLink" href="/fusion-data">{text('打开聚变数据工作台', 'Open Fusion Data')} ↗</Link>
+  </aside>;
+}

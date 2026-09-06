@@ -1002,7 +1002,9 @@ export function createEfitHybridDataSource(options: EfitHybridDataSourceOptions 
     assertPayloadMatchesSummary(payload, summary);
     const frame = frameFromPayload(payload, shotId, frameIndex);
     const contourBytes = frame.contours.reduce(
-      (total, contour) => total + contour.rM.byteLength + contour.zM.byteLength,
+      (total, contour) => total
+        + (ArrayBuffer.isView(contour.rM) ? contour.rM.byteLength : contour.rM.length * 8)
+        + (ArrayBuffer.isView(contour.zM) ? contour.zM.byteLength : contour.zM.length * 8),
       0,
     );
     rememberGraphFrame(frameKey, {

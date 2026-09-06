@@ -11,13 +11,14 @@ import { selectVisibleNavigationKeys } from './site-nav-layout';
 import { ThemeSwitcher, type ThemeSwitcherLabels } from './theme';
 
 type SiteNavProps = {
-  active?: 'home' | 'physics' | 'engineering' | 'control' | 'diagnostics' | 'data' | 'fusionData' | 'ai' | 'facilities' | 'prototype' | 'knowledge' | 'roadmap' | 'account' | 'platform';
+  active?: 'home' | 'physics' | 'engineering' | 'control' | 'diagnostics' | 'data' | 'fusionData' | 'simulations' | 'ai' | 'facilities' | 'prototype' | 'knowledge' | 'roadmap' | 'account' | 'platform';
 };
 
 const links = [
   { key: 'home', href: '/', label: 'nav.home', priority: 0 },
   { key: 'facilities', href: '/facilities', label: 'nav.facilities', priority: 1 },
   { key: 'prototype', href: '/#prototype-workspace', label: 'nav.prototype', priority: 1 },
+  { key: 'simulations', href: '/simulations', label: 'nav.simulations', priority: 1 },
   { key: 'fusionData', href: '/fusion-data', label: 'nav.fusionData', priority: 1 },
   { key: 'roadmap', href: '/roadmap', label: 'nav.roadmap', priority: 1 },
 ] as const;

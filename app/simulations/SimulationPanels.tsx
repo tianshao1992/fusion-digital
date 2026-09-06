@@ -1,0 +1,62 @@
+'use client';
+import Link from 'next/link';
+import RunComparison from './RunComparison';
+import { useState, type Dispatch, type SetStateAction } from 'react';
+import { createDraft, DEFAULT_PARAMETERS, formatMetric, metricLabels, validateDraft, type SimulationRun, type SimulationDraft } from './contract';
+
+export type StudioTab = 'overview' | 'parameters' | 'data' | 'comparison' | 'provenance' | 'guide';
+type DraftProps = { draft: SimulationDraft; setDraft: Dispatch<SetStateAction<SimulationDraft>> };
+export function useLocalizedNotice(en: boolean) {
+  const [state, setState] = useState({ en, message: '' });
+  return [state.en === en ? state.message : '', (message: string) => setState({ en, message })] as const;
+}
+export function downloadJson(value: unknown, name: string) {
+  const url = URL.createObjectURL(new Blob([JSON.stringify(value, null, 2)], { type: 'application/json' }));
+  const a = document.createElement('a'); a.href = url; a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+export default function SimulationPanels({ tab, run, runs, en, draft, setDraft }: { tab: StudioTab; run: SimulationRun; runs: SimulationRun[]; en: boolean } & DraftProps) {
+  const text = (zh: string, english: string) => en ? english : zh;
+  const variants = run.convergence.kind === 'variants';
+  if (tab === 'comparison') return <RunComparison run={run} runs={runs} en={en} />;
+  if (tab === 'parameters') return <DraftEditor en={en} draft={draft} setDraft={setDraft} />;
+  if (tab === 'data') return <div className="simPanel"><div className="simPanelTitle"><h3>{text('数据与输出', 'Data & outputs')}</h3><span>{run.metrics.length} {text('个标量', 'scalars')}</span></div>{run.metrics.length > 0 ? <div className="simTableScroll"><table className="simTable"><thead><tr><th>{text('物理量', 'Quantity')}</th><th>{text('数值', 'Value')}</th><th>{text('单位', 'Unit')}</th></tr></thead><tbody>{run.metrics.map(m => <tr key={m.id}><td>{metricLabels[m.id]?.[en ? 'en' : 'zh'] ?? m.id}<small>{m.id}</small></td><td>{formatMetric(m.value)}</td><td>{m.unit}</td></tr>)}</tbody></table></div> : <div className="simPanelBody"><p>{variants ? text('未提供等离子体标量；下表展示模型最终残差，缺失调用次数用 — 标示。', 'No plasma scalars supplied; final model residuals are shown below. Missing call counts are marked —.') : text('未提供等离子体标量；下表保留已报告的稳态迭代误差。', 'No plasma scalars supplied; reported stationary iteration errors are preserved below.')}</p><table className="simTable"><thead><tr><th>{variants ? text('模型', 'Model') : text('迭代', 'Iteration')}</th><th>{variants ? text('最终残差', 'Final residual') : text('报告误差', 'Reported error')}</th>{variants && <th>{text('调用数', 'Calls')}</th>}</tr></thead><tbody>{run.convergence.labels.map((m,i) => <tr key={m}><td>{m}</td><td>{run.convergence.values[i].toExponential(6)}</td>{variants && <td>{run.convergence.calls?.[i] ?? '—'}</td>}</tr>)}</tbody></table></div>}<div className="simPanelBody"><h3>{text('本次未导出的数据', 'Not exported by this run')}</h3><div className="simUnavailable">{[text('二维平衡场 / LCFS', '2D equilibrium / LCFS'), text('温度与密度剖面', 'Temperature & density profiles'), text('工程网格与应力', 'Engineering meshes & stress'), text('氚增殖与电厂成本', 'Tritium breeding & plant costs')].map(label => <div key={label}><span>{label}</span><small>{text('未提供，不填补为零', 'Unavailable, not zero-filled')}</small></div>)}</div></div></div>;
+  if (tab === 'provenance') return <div className="simPanel"><div className="simPanelTitle"><h3>{text('版本、来源与证据', 'Versions, provenance & evidence')}</h3><span>SHA-256</span></div><div className="simPanelBody"><dl className="simDefinitionList"><div><dt>{text('结果身份', 'Result identity')}</dt><dd>simulation-run / simulated</dd></div><div><dt>{text('引擎版本', 'Engine release')}</dt><dd>{run.engine.id} {run.engine.version}</dd></div><div><dt>{text('源码提交', 'Source commit')}</dt><dd><code>{run.engine.commit}</code></dd></div><div><dt>{text('原始记录摘要', 'Original record digest')}</dt><dd><code>{run.source.recordSha256}</code></dd></div><div><dt>{text('源制品引用', 'Source artifact references')}</dt><dd>{run.source.artifacts.map(a => <p key={a.name}><b>{a.name}</b><code>{a.sha256}</code></p>)}</dd></div></dl><p className="simMuted">{text('页面仅携带脱敏摘要，不包含原始日志、私人路径或完整 IMAS 对象。哈希可用于核对来源，不是独立复算或装置验证证明。', 'This page contains an allowlisted summary, not raw logs, private paths or complete IMAS objects. Digests support source checks; they do not prove independent reproduction or device validation.')}</p><div className="simActionRow"><a className="simButton" href="https://fuse.help/dev/" target="_blank" rel="noreferrer">{text('FUSE 文档', 'FUSE documentation')} ↗</a><Link className="simButton" href="/fusion-data">{text('聚变数据', 'Fusion Data')} ↗</Link></div></div></div>;
+  return <RunGuide en={en} />;
+}
+
+function DraftEditor({ en, draft: currentDraft, setDraft }: { en: boolean } & DraftProps) {
+  const text = (zh: string, english: string) => en ? english : zh;
+  const { name, parameters } = currentDraft;
+  const setName = (name: string) => setDraft(current => ({ ...current, name }));
+  const setParameters = (next: SetStateAction<typeof DEFAULT_PARAMETERS>) => setDraft(current => ({ ...current, parameters: typeof next === 'function' ? next(current.parameters) : next }));
+  const [message, setMessage] = useLocalizedNotice(en);
+  const draft = createDraft(name, parameters); const errors = validateDraft(draft);
+  const fields = [
+    { key: 'majorRadius', zh: '大半径 R₀', en: 'Major radius R₀', unit: 'm', min: .1, max: 20, step: .1 },
+    { key: 'toroidalField', zh: '环向磁场 B₀', en: 'Toroidal field B₀', unit: 'T', min: .1, max: 30, step: .1 },
+    { key: 'plasmaCurrent', zh: '等离子体电流 Iₚ', en: 'Plasma current Iₚ', unit: 'MA', min: .1, max: 30, step: .1 },
+    { key: 'maxIterations', zh: '最大稳态迭代数', en: 'Maximum stationary iterations', unit: '', min: 1, max: 10, step: 1 },
+    { key: 'convergenceThreshold', zh: '稳态收敛阈值', en: 'Stationary convergence threshold', unit: '', min: .001, max: .1, step: .001 },
+    { key: 'threads', zh: 'Julia 线程', en: 'Julia threads', unit: '', min: 1, max: 8, step: 1 },
+  ] as const;
+  function save() {
+    if (errors.length) return;
+    try { localStorage.setItem('fusiondigital.simulation-draft.v1', JSON.stringify(draft)); setMessage(text('草稿已保存在此浏览器；未提交计算。', 'Draft saved in this browser; no computation submitted.')); }
+    catch { setMessage(text('浏览器存储不可用，请导出草稿文件。', 'Browser storage unavailable; export the draft instead.')); }
+  }
+  function restore() {
+    try { const raw = localStorage.getItem('fusiondigital.simulation-draft.v1'); if (!raw) throw new Error(); const parsed = JSON.parse(raw); if (validateDraft(parsed).length) throw new Error(); setName(parsed.name); setParameters({ ...DEFAULT_PARAMETERS, ...parsed.parameters }); setMessage(text('已恢复本机草稿；归档结果未改变。', 'Local draft restored; archived results are unchanged.')); }
+    catch { setMessage(text('没有可恢复的有效草稿。', 'No valid local draft to restore.')); }
+  }
+  return <div className="simPanel"><div className="simPanelTitle"><h3>{text('FPP 工况草稿', 'FPP scenario draft')}</h3><span>{text('仅此浏览器', 'This browser only')}</span></div><div className="simPanelBody"><p className="simNotice">{text('草稿 ≠ 已执行任务。修改以下参数不会更新归档结果；当前版本不提供网页计算提交。', 'A draft is not an executed run. Editing these values does not update archived results. Web-based execution is not enabled in this version.')}</p><form onSubmit={e => { e.preventDefault(); save(); }}><label className="simField">{text('研究名称', 'Study name')}<input value={name} required maxLength={100} onChange={e => { setName(e.target.value); setMessage(''); }} /></label><div className="simFormGrid">{fields.map((f,i) => <label className="simField" key={f.key}><span>{text(f.zh, f.en)} {f.unit && <small>{f.unit}</small>}</span><input type="number" value={Number.isNaN(parameters[f.key]) ? '' : parameters[f.key]} min={f.min} max={f.max} step={f.step} required onChange={e => { setParameters(p => ({ ...p, [f.key]: e.target.value === '' ? Number.NaN : Number(e.target.value) })); setMessage(''); }} /><small>{i < 3 ? text('名义输入，非计算输出', 'Nominal input, not computed output') : text('候选求解配置', 'Candidate solver configuration')}</small></label>)}</div><p className="simMuted">{text('数值范围仅是输入校验边界，不是模型经过验证的适用域。DIII-D 输运算例在本版保持固定配置。', 'Input bounds are validation limits, not a qualified model domain. The DIII-D transport example retains its fixed configuration.')}</p><div className="simActionRow"><button type="submit" className="simButton simButtonPrimary" disabled={errors.length > 0}>{text('保存草稿', 'Save draft')}</button><button type="button" className="simButton" disabled={errors.length > 0} onClick={() => { downloadJson(draft, 'fpp-simulation-draft.json'); setMessage(text('已导出研究草稿；不是可执行运行锁。', 'Study draft exported; this is not an executable run lock.')); }}>{text('导出 JSON', 'Export JSON')}</button><button type="button" className="simButton" onClick={restore}>{text('恢复草稿', 'Restore draft')}</button><button type="button" className="simTextButton" onClick={() => { setParameters({ ...DEFAULT_PARAMETERS }); setMessage(text('已恢复 FPP 名义配置。', 'FPP nominal settings restored.')); }}>{text('重置参数', 'Reset parameters')}</button></div>{errors.length > 0 && <p className="simWarning" role="alert">{text('请填写有效名称，并将参数保持在标明的范围内。', 'Enter a valid name and keep parameters within the indicated bounds.')}</p>}<p className="simFeedback" role="status" aria-live="polite">{message}</p></form></div></div>;
+}
+
+function RunGuide({ en }: { en: boolean }) {
+  const text = (zh: string, english: string) => en ? english : zh;
+  const [message, setMessage] = useLocalizedNotice(en);
+  const command = '& "D:\\Code\\Fuse\\scripts\\run-fpp-demo.ps1"';
+  const exportCommand = 'node scripts/simulations/export-fuse-result.mjs --case fpp --input "D:\\Code\\Fuse\\results\\RUN_FOLDER\\run-manifest.json" --output "work/simulations/RUN_ID.json"';
+  return <div className="simPanel"><div className="simPanelTitle"><h3>{text('本地运行与结果回传', 'Local execution & result return')}</h3><span>{text('固定基线', 'Fixed baseline')}</span></div><div className="simPanelBody"><div className="simWorkflow">{[[text('准备环境', 'Prepare environment'), text('使用已配置的 Julia / FUSE 环境。', 'Use the configured Julia / FUSE environment.')],[text('运行固定算例', 'Run the fixed case'), text('在本机 PowerShell 执行；不应用网页草稿参数。', 'Execute in local PowerShell; Web draft parameters are not applied.')],[text('导出安全结果包', 'Export a safe result package'), text('使用项目中的 export-fuse-result 工具校验原始制品并脱敏。', 'Use the project export-fuse-result tool to verify and sanitize source artifacts.')],[text('导入并检查', 'Import & inspect'), text('使用页面“导入结果”；保持来源与评估独立。', 'Use Import result on this page; inspect source and assessment independently.')]].map(([heading,detail], i) => <div key={heading}><span>{String(i + 1).padStart(2, '0')}</span><div><strong>{heading}</strong><p>{detail}</p></div></div>)}</div><div className="simCodeBlock"><code>{command}</code><button className="simButton" onClick={async () => { try { await navigator.clipboard.writeText(command); setMessage(text('已复制；运行会消耗本机计算资源。', 'Copied; execution consumes local compute resources.')); } catch { setMessage(text('无法访问剪贴板，请手动复制命令。', 'Clipboard unavailable; copy the command manually.')); } }}>{text('复制命令', 'Copy command')}</button></div><p className="simMuted">{text('以上路径是本次配置的本地示例。FPP 历史计算阶段约 162 秒，不含 Julia 加载；本次耗时未承诺。当前没有远程计算队列或 Docker 运行连接。', 'The path above is the configured local example. Historical FPP compute time was about 162 seconds, excluding Julia loading; current duration is not guaranteed. No remote queue or Docker execution connection is enabled.')}</p><h3>{text('结果回传命令', 'Result export command')}</h3><p className="simMuted">{text('在 FusionDigital 仓库目录执行。将 RUN_FOLDER 替换为运行结束后报告的目录名，RUN_ID 替换为新的结果名称；工具拒绝覆盖已有文件。', 'Run from the FusionDigital checkout. Replace RUN_FOLDER with the directory reported by the completed run, and RUN_ID with a new result name. The tool refuses to overwrite an existing file.')}</p><div className="simCodeBlock"><code>{exportCommand}</code></div><p className="simNotice">{text('EXL-50U 适配需要独立的机器描述、诊断数据与验证基准，不能只修改算例名称。', 'EXL-50U adaptation requires its own machine description, diagnostics and validation benchmarks, not a renamed case.')}</p><div className="simActionRow"><Link className="simButton" href="/fusion-data">{text('查看装置数据', 'View facility data')} ↗</Link><Link className="simButton" href="/#prototype-workspace">{text('打开数字样机', 'Open digital prototype')} ↗</Link></div><p role="status" className="simFeedback">{message}</p></div></div>;
+}

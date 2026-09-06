@@ -60,6 +60,14 @@ export default defineConfig(async () => {
   const { cloudflare } = await import("@cloudflare/vite-plugin");
 
   return {
+    // Compact only SSR output, without changing identifiers or expressions.
+    // RSC stays unminified for the existing embedded-search integrity gate.
+    environments: {
+      ssr: { build: { rolldownOptions: { output: {
+        minify: { compress: false, mangle: false, codegen: { removeWhitespace: true } },
+        comments: { legal: true },
+      } } } },
+    },
     server: isCodexSeatbeltSandbox
       ? { watch: { useFsEvents: false, usePolling: true } }
       : undefined,

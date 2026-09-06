@@ -23,6 +23,7 @@ const zhCN = {
   'nav.facilities': '全球装置',
   'nav.prototype': '数字样机',
   'nav.fusionData': '聚变数据',
+  'nav.simulations': '仿真模拟',
   'nav.resources': '工具链条',
   'nav.roadmap': '路线规划',
   'nav.more': '更多',
@@ -307,6 +308,7 @@ const zhCN = {
 export type MessageKey = keyof typeof zhCN;
 
 const en: Record<MessageKey, string> = {
+  'nav.simulations': 'Simulations',
   'locale.switchTo': 'Switch to Simplified Chinese',
   'locale.current': 'Current language: English',
   'preferences.group': 'Language and appearance preferences',

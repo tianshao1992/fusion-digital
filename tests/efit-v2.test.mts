@@ -459,7 +459,8 @@ test('graph-v2 preparation is fail-closed, stops sibling workers, and preserves 
   assert.ok(candidateShot?.topologyGraph);
 
   await source.prepareShot?.(stableShot.shot);
-  await assert.rejects(source.prepareShot?.(candidateShot.shot), /request failed \(503\)/);
+  assert.ok(source.prepareShot);
+  await assert.rejects(source.prepareShot(candidateShot.shot), /request failed \(503\)/);
   assert.ok(
     candidateRequests <= 4,
     'the first failed worker must stop its siblings from scheduling the rest of the shot',

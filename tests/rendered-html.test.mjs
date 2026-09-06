@@ -35,7 +35,7 @@ function englishPresentationText(html) {
 
 test('English presentation surfaces contain no source-language Han text', async () => {
   const routes = [
-    '/', '/physics', '/engineering', '/control', '/diagnostics', '/data-foundation', '/fusion-data', '/ai', '/facilities',
+    '/', '/physics', '/engineering', '/control', '/diagnostics', '/data-foundation', '/fusion-data', '/simulations', '/ai', '/facilities',
     '/platform', '/search', '/knowledge-graph', '/roadmap', '/account', '/research-review',
   ];
   for (const pathname of routes) {
@@ -313,9 +313,9 @@ test('server-renders the FusionDigital community portal', async () => {
   assert.doesNotMatch(html, /class="siteKnowledgeRoadmap/, 'Knowledge menus must not duplicate the promoted program roadmap');
   const primaryNavigation = [...html.matchAll(/data-primary-nav="([^"]+)"/g)].map((match) => match[1]);
   assert.deepEqual(primaryNavigation, [
-    'home', 'facilities', 'prototype', 'fusionData', 'roadmap', 'knowledge',
-    'home', 'facilities', 'prototype', 'fusionData', 'roadmap', 'knowledge',
-  ], 'desktop and mobile navigation must expose the same six destinations with Home first and Knowledge last');
+    'home', 'facilities', 'prototype', 'simulations', 'fusionData', 'roadmap', 'knowledge',
+    'home', 'facilities', 'prototype', 'simulations', 'fusionData', 'roadmap', 'knowledge',
+  ], 'desktop and mobile navigation must expose the same seven destinations with Home first and Knowledge last');
   assert.doesNotMatch(html, /知识智能/);
   assert.match(html, /fusiondigital-mark\.png/);
   assert.match(html, /class="brandWordmark"/);

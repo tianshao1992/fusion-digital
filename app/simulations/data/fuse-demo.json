@@ -1,0 +1,955 @@
+[
+  {
+    "schema": "simulation-result.v1",
+    "resultProfile": "fuse-demo.v1",
+    "id": "fuse-fpp-20260907-003257-48a4fa67",
+    "caseId": "fpp-stationary",
+    "authority": "simulated",
+    "recordKind": "simulation-run",
+    "execution": "succeeded",
+    "assessment": "passed-demo-criterion",
+    "engine": {
+      "id": "fuse",
+      "version": "1.2.0",
+      "commit": "9ef2f99af73497706a097d99a2aaac2f08405370",
+      "runtime": {
+        "name": "Julia",
+        "version": "1.12.7"
+      },
+      "threads": 8
+    },
+    "metrics": [
+      {
+        "id": "fusion_power_MW",
+        "value": 449.32550278627764,
+        "unit": "MW"
+      },
+      {
+        "id": "fusion_gain_Q",
+        "value": 8.651967319376334,
+        "unit": "1"
+      },
+      {
+        "id": "plasma_current_MA",
+        "value": 7.929562514389186,
+        "unit": "MA"
+      },
+      {
+        "id": "q95",
+        "value": 3.8750687279345946,
+        "unit": "1"
+      },
+      {
+        "id": "major_radius_m",
+        "value": 4.899804256879556,
+        "unit": "m"
+      },
+      {
+        "id": "minor_radius_m",
+        "value": 1.371892580512125,
+        "unit": "m"
+      },
+      {
+        "id": "toroidal_field_T",
+        "value": 4.700187761105925,
+        "unit": "T"
+      },
+      {
+        "id": "central_electron_temperature_keV",
+        "value": 25.730414514073082,
+        "unit": "keV"
+      },
+      {
+        "id": "central_ion_temperature_keV",
+        "value": 21.530946203966078,
+        "unit": "keV"
+      },
+      {
+        "id": "central_electron_density_m3",
+        "value": 135579202620489550000,
+        "unit": "m⁻³"
+      },
+      {
+        "id": "auxiliary_power_MW",
+        "value": 51.93333333333334,
+        "unit": "MW"
+      },
+      {
+        "id": "power_through_separatrix_MW",
+        "value": 80.74614399994746,
+        "unit": "MW"
+      },
+      {
+        "id": "H98y2",
+        "value": 1.6369975936037453,
+        "unit": "1"
+      }
+    ],
+    "convergence": {
+      "kind": "iterations",
+      "labels": [
+        "1",
+        "2",
+        "3"
+      ],
+      "values": [
+        0.014866684776063779,
+        0.0770547761715284,
+        0.031351701114853504
+      ],
+      "threshold": 0.05
+    },
+    "timing": {
+      "seconds": 165.7955022,
+      "scope": "simulation-stage"
+    },
+    "source": {
+      "recordSha256": "7bc4af2942c024b1033bc6e25da6cb1d43f7cf9fb946388a84e3ad0ba9f19433",
+      "artifacts": [
+        {
+          "name": "dd-native.h5",
+          "sha256": "86a7d56d72355c986dd66326a2a93ed67f5b4243a50087d13f4d37c6d68999df"
+        },
+        {
+          "name": "digest.txt",
+          "sha256": "6255b20725b27a387fc75c52804bab8e84f4ea268811a9c90dce596163907316"
+        },
+        {
+          "name": "extracted-summary.json",
+          "sha256": "95e2ac5ef434bb7f1df86b52a0e1448d6a2b69249986bf556a826cd911adc451"
+        },
+        {
+          "name": "input-act.json",
+          "sha256": "45598ff256cf2086397e268cce57ec912338b09c11ece93b9eab7393b8a8b8ab"
+        },
+        {
+          "name": "input-ini.json",
+          "sha256": "32b949d4133fd02e708dbac648753e9417d8d710d40faf4a9af0fcb482b42ade"
+        },
+        {
+          "name": "physics.json",
+          "sha256": "606e01b106f020846d110c6f92b7ad9645a77368ab006fb29976a8cada25f2a2"
+        },
+        {
+          "name": "provenance.json",
+          "sha256": "d8173b3d5b8b62287fd49252b279f75aa9a9e42f5bbaaf3b639061b3489dd949"
+        },
+        {
+          "name": "resolved-act.json",
+          "sha256": "45598ff256cf2086397e268cce57ec912338b09c11ece93b9eab7393b8a8b8ab"
+        },
+        {
+          "name": "resolved-ini.json",
+          "sha256": "32b949d4133fd02e708dbac648753e9417d8d710d40faf4a9af0fcb482b42ade"
+        }
+      ]
+    }
+  },
+  {
+    "schema": "simulation-result.v1",
+    "resultProfile": "fuse-demo.v1",
+    "id": "fuse-fpp-20260905",
+    "caseId": "fpp-stationary",
+    "authority": "simulated",
+    "recordKind": "simulation-run",
+    "execution": "succeeded",
+    "assessment": "passed-demo-criterion",
+    "engine": {
+      "id": "fuse",
+      "version": "1.2.0",
+      "commit": "9ef2f99af73497706a097d99a2aaac2f08405370",
+      "runtime": {
+        "name": "Julia",
+        "version": "1.12.7"
+      },
+      "threads": 8
+    },
+    "metrics": [
+      {
+        "id": "fusion_power_MW",
+        "value": 449.32550278627764,
+        "unit": "MW"
+      },
+      {
+        "id": "fusion_gain_Q",
+        "value": 8.651967319376334,
+        "unit": "1"
+      },
+      {
+        "id": "plasma_current_MA",
+        "value": 7.929562514389186,
+        "unit": "MA"
+      },
+      {
+        "id": "q95",
+        "value": 3.8750687279345946,
+        "unit": "1"
+      },
+      {
+        "id": "major_radius_m",
+        "value": 4.899804256879556,
+        "unit": "m"
+      },
+      {
+        "id": "minor_radius_m",
+        "value": 1.371892580512125,
+        "unit": "m"
+      },
+      {
+        "id": "toroidal_field_T",
+        "value": 4.700187761105925,
+        "unit": "T"
+      },
+      {
+        "id": "central_electron_temperature_keV",
+        "value": 25.730414514073082,
+        "unit": "keV"
+      },
+      {
+        "id": "central_ion_temperature_keV",
+        "value": 21.530946203966078,
+        "unit": "keV"
+      },
+      {
+        "id": "central_electron_density_m3",
+        "value": 135579202620489550000,
+        "unit": "m⁻³"
+      },
+      {
+        "id": "auxiliary_power_MW",
+        "value": 51.93333333333334,
+        "unit": "MW"
+      },
+      {
+        "id": "power_through_separatrix_MW",
+        "value": 80.74614399994746,
+        "unit": "MW"
+      },
+      {
+        "id": "H98y2",
+        "value": 1.6369975936037453,
+        "unit": "1"
+      }
+    ],
+    "convergence": {
+      "labels": [
+        "1",
+        "2",
+        "3"
+      ],
+      "values": [
+        0.014866684776063779,
+        0.0770547761715284,
+        0.031351701114853504
+      ],
+      "threshold": 0.05,
+      "kind": "iterations"
+    },
+    "timing": {
+      "seconds": 162.3336979,
+      "scope": "simulation-stage"
+    },
+    "source": {
+      "recordSha256": "0462bee3245a303c918364e9676da1ed35a8e0a2960fc22f07002e416b8c513a",
+      "artifacts": [
+        {
+          "name": "digest.txt",
+          "sha256": "6255b20725b27a387fc75c52804bab8e84f4ea268811a9c90dce596163907316"
+        },
+        {
+          "name": "extracted-summary.json",
+          "sha256": "38443680055b677d7f352bb91d11c21357c6b8e70f3d496685b9328bf717e634"
+        },
+        {
+          "name": "provenance.json",
+          "sha256": "2b5daf4f58a2d75aae50fd323805429cbd47a4502f7008536ddb055d9c0c6394"
+        },
+        {
+          "name": "run.log",
+          "sha256": "b491c7819db47d8bb17373d656a7d72ec04b77a2be373ebfeb9a3efb52a62dfb"
+        }
+      ]
+    }
+  },
+  {
+    "schema": "simulation-result.v1",
+    "resultProfile": "fuse-demo.v1",
+    "id": "fuse-fluxmatcher-20260905",
+    "caseId": "diiid-fluxmatcher",
+    "authority": "simulated",
+    "recordKind": "simulation-run",
+    "execution": "succeeded",
+    "assessment": "not-established",
+    "engine": {
+      "id": "fuse",
+      "version": "1.2.0",
+      "commit": "9ef2f99af73497706a097d99a2aaac2f08405370",
+      "runtime": {
+        "name": "Julia",
+        "version": "1.12.7"
+      },
+      "threads": 8
+    },
+    "metrics": [],
+    "convergence": {
+      "labels": [
+        "TGLFNN",
+        "GKNN",
+        "QLNN"
+      ],
+      "values": [
+        0.0013607392091884612,
+        0.001662867898334227,
+        0.006229018356195579
+      ],
+      "calls": [
+        56,
+        144,
+        410
+      ],
+      "threshold": null,
+      "kind": "variants"
+    },
+    "solverTolerances": {
+      "xtol": 0.001
+    },
+    "timing": {
+      "seconds": 211.514597,
+      "scope": "upstream-execution"
+    },
+    "source": {
+      "recordSha256": "4e4e8bc9650469f583d13d7ce535cc0836c87ec8e1de4115515adb62f4bfef7d",
+      "artifacts": [
+        {
+          "name": "run.log",
+          "sha256": "fa398610496ffb7f88f900b091305985a38a0029831a971ca46d3d654f4d3a7a"
+        }
+      ]
+    },
+    "traces": [
+      {
+        "model": "TGLFNN",
+        "observations": [
+          {
+            "calls": 2,
+            "residual": 1.2677821548067922
+          },
+          {
+            "calls": 29,
+            "residual": 0.02515095342381065
+          },
+          {
+            "calls": 56,
+            "residual": 0.0013607392091884612
+          }
+        ]
+      },
+      {
+        "model": "GKNN",
+        "observations": [
+          {
+            "calls": 2,
+            "residual": 1.9549675141678415
+          },
+          {
+            "calls": 15,
+            "residual": 12.08475887950749
+          },
+          {
+            "calls": 34,
+            "residual": 1.0934142843821542
+          },
+          {
+            "calls": 48,
+            "residual": 0.3182804048968442
+          },
+          {
+            "calls": 62,
+            "residual": 0.6616459765031125
+          },
+          {
+            "calls": 76,
+            "residual": 0.01695093370608975
+          },
+          {
+            "calls": 90,
+            "residual": 0.009206156643666995
+          },
+          {
+            "calls": 104,
+            "residual": 0.015022745985720874
+          },
+          {
+            "calls": 124,
+            "residual": 0.04478023775761865
+          },
+          {
+            "calls": 140,
+            "residual": 0.029098776474166435
+          },
+          {
+            "calls": 144,
+            "residual": 0.001662867898334227
+          }
+        ]
+      },
+      {
+        "model": "QLNN",
+        "observations": [
+          {
+            "calls": 2,
+            "residual": 1.9751963536384962
+          },
+          {
+            "calls": 5,
+            "residual": 0.6967730633932048
+          },
+          {
+            "calls": 8,
+            "residual": 1.7510074840117937
+          },
+          {
+            "calls": 11,
+            "residual": 1.5875946174445366
+          },
+          {
+            "calls": 14,
+            "residual": 0.3204036615081173
+          },
+          {
+            "calls": 17,
+            "residual": 0.872995013286359
+          },
+          {
+            "calls": 20,
+            "residual": 0.10309018517085008
+          },
+          {
+            "calls": 23,
+            "residual": 0.1482312974152917
+          },
+          {
+            "calls": 26,
+            "residual": 0.04001467090900346
+          },
+          {
+            "calls": 29,
+            "residual": 1.3605475166298133
+          },
+          {
+            "calls": 32,
+            "residual": 0.031001881006242592
+          },
+          {
+            "calls": 35,
+            "residual": 0.051656469265462024
+          },
+          {
+            "calls": 38,
+            "residual": 0.018749202127171377
+          },
+          {
+            "calls": 41,
+            "residual": 1.2803379860211221
+          },
+          {
+            "calls": 44,
+            "residual": 0.011151741413732997
+          },
+          {
+            "calls": 47,
+            "residual": 0.01200727729747063
+          },
+          {
+            "calls": 50,
+            "residual": 0.5232740204412255
+          },
+          {
+            "calls": 53,
+            "residual": 0.015363659288832878
+          },
+          {
+            "calls": 56,
+            "residual": 0.6300620343214075
+          },
+          {
+            "calls": 59,
+            "residual": 0.02532501884934781
+          },
+          {
+            "calls": 62,
+            "residual": 0.11375828500873984
+          },
+          {
+            "calls": 65,
+            "residual": 0.016850612961732507
+          },
+          {
+            "calls": 68,
+            "residual": 0.11057770013229036
+          },
+          {
+            "calls": 71,
+            "residual": 0.02200686346950737
+          },
+          {
+            "calls": 74,
+            "residual": 0.0688339160042439
+          },
+          {
+            "calls": 77,
+            "residual": 0.009977732937879067
+          },
+          {
+            "calls": 80,
+            "residual": 0.013759192875636605
+          },
+          {
+            "calls": 83,
+            "residual": 0.019053419029354656
+          },
+          {
+            "calls": 86,
+            "residual": 0.037137748570507924
+          },
+          {
+            "calls": 89,
+            "residual": 0.07325359764968649
+          },
+          {
+            "calls": 92,
+            "residual": 0.010390652814681683
+          },
+          {
+            "calls": 95,
+            "residual": 0.0379994124196898
+          },
+          {
+            "calls": 98,
+            "residual": 0.023189836397997637
+          },
+          {
+            "calls": 101,
+            "residual": 0.03545639892910598
+          },
+          {
+            "calls": 104,
+            "residual": 0.1435085263626335
+          },
+          {
+            "calls": 107,
+            "residual": 0.030251606434612142
+          },
+          {
+            "calls": 110,
+            "residual": 0.007352006810009984
+          },
+          {
+            "calls": 113,
+            "residual": 0.00879567018279506
+          },
+          {
+            "calls": 116,
+            "residual": 0.0070902119496717006
+          },
+          {
+            "calls": 119,
+            "residual": 0.09871398114750149
+          },
+          {
+            "calls": 122,
+            "residual": 0.05924533467495227
+          },
+          {
+            "calls": 125,
+            "residual": 0.09044902188129327
+          },
+          {
+            "calls": 128,
+            "residual": 0.04024167512373673
+          },
+          {
+            "calls": 131,
+            "residual": 0.039394103182008644
+          },
+          {
+            "calls": 134,
+            "residual": 0.036495568778939724
+          },
+          {
+            "calls": 137,
+            "residual": 0.03372981706350317
+          },
+          {
+            "calls": 140,
+            "residual": 0.030813976170415147
+          },
+          {
+            "calls": 143,
+            "residual": 0.0777837553906162
+          },
+          {
+            "calls": 146,
+            "residual": 0.06409418976770301
+          },
+          {
+            "calls": 149,
+            "residual": 0.1119918159730716
+          },
+          {
+            "calls": 152,
+            "residual": 0.036177911735387036
+          },
+          {
+            "calls": 155,
+            "residual": 0.040509931419789265
+          },
+          {
+            "calls": 158,
+            "residual": 0.03653059813235614
+          },
+          {
+            "calls": 161,
+            "residual": 0.03349316841979527
+          },
+          {
+            "calls": 164,
+            "residual": 0.030728731463740902
+          },
+          {
+            "calls": 167,
+            "residual": 0.006371884835163205
+          },
+          {
+            "calls": 170,
+            "residual": 0.4489521007083672
+          },
+          {
+            "calls": 173,
+            "residual": 0.062331009312719
+          },
+          {
+            "calls": 176,
+            "residual": 0.017066356894069767
+          },
+          {
+            "calls": 179,
+            "residual": 0.008434281877728884
+          },
+          {
+            "calls": 182,
+            "residual": 0.02038187189837544
+          },
+          {
+            "calls": 185,
+            "residual": 0.03195984276110698
+          },
+          {
+            "calls": 188,
+            "residual": 0.010984464366451395
+          },
+          {
+            "calls": 191,
+            "residual": 0.1477607146333597
+          },
+          {
+            "calls": 194,
+            "residual": 0.008087658481462612
+          },
+          {
+            "calls": 197,
+            "residual": 0.2792611977075722
+          },
+          {
+            "calls": 200,
+            "residual": 0.04116632407862997
+          },
+          {
+            "calls": 203,
+            "residual": 0.047613738664375925
+          },
+          {
+            "calls": 206,
+            "residual": 0.00966920500492936
+          },
+          {
+            "calls": 209,
+            "residual": 0.008774817632007222
+          },
+          {
+            "calls": 212,
+            "residual": 0.403929141105773
+          },
+          {
+            "calls": 215,
+            "residual": 0.008295683903695918
+          },
+          {
+            "calls": 218,
+            "residual": 0.023846169314454352
+          },
+          {
+            "calls": 221,
+            "residual": 0.011579572003090432
+          },
+          {
+            "calls": 224,
+            "residual": 0.0200823627013184
+          },
+          {
+            "calls": 227,
+            "residual": 0.01350671817780533
+          },
+          {
+            "calls": 229,
+            "residual": 0.008469633588745638
+          },
+          {
+            "calls": 232,
+            "residual": 0.022498301823438507
+          },
+          {
+            "calls": 235,
+            "residual": 0.018507691232670015
+          },
+          {
+            "calls": 238,
+            "residual": 0.01632263399404173
+          },
+          {
+            "calls": 241,
+            "residual": 0.008148283981604767
+          },
+          {
+            "calls": 244,
+            "residual": 0.016145677170152
+          },
+          {
+            "calls": 247,
+            "residual": 0.024608080024724536
+          },
+          {
+            "calls": 250,
+            "residual": 0.013242265402710906
+          },
+          {
+            "calls": 253,
+            "residual": 0.049763979096486693
+          },
+          {
+            "calls": 256,
+            "residual": 0.15956635033994368
+          },
+          {
+            "calls": 259,
+            "residual": 0.010136654102160532
+          },
+          {
+            "calls": 262,
+            "residual": 0.008264253851592226
+          },
+          {
+            "calls": 265,
+            "residual": 0.035402326095507065
+          },
+          {
+            "calls": 268,
+            "residual": 0.1652274337065723
+          },
+          {
+            "calls": 271,
+            "residual": 0.023155928500379827
+          },
+          {
+            "calls": 274,
+            "residual": 0.018880107414487687
+          },
+          {
+            "calls": 277,
+            "residual": 0.0284480875134614
+          },
+          {
+            "calls": 280,
+            "residual": 0.018235645243428703
+          },
+          {
+            "calls": 283,
+            "residual": 0.008495903339161346
+          },
+          {
+            "calls": 286,
+            "residual": 0.011311483199025762
+          },
+          {
+            "calls": 289,
+            "residual": 0.00891592848352483
+          },
+          {
+            "calls": 292,
+            "residual": 0.04791041864627125
+          },
+          {
+            "calls": 295,
+            "residual": 0.006912647918135693
+          },
+          {
+            "calls": 298,
+            "residual": 0.2917882692514336
+          },
+          {
+            "calls": 301,
+            "residual": 0.010260151208853773
+          },
+          {
+            "calls": 304,
+            "residual": 0.08427587888405941
+          },
+          {
+            "calls": 307,
+            "residual": 0.0070278859459147495
+          },
+          {
+            "calls": 310,
+            "residual": 0.07930490294041254
+          },
+          {
+            "calls": 313,
+            "residual": 0.017687343158594316
+          },
+          {
+            "calls": 316,
+            "residual": 0.015226324338186631
+          },
+          {
+            "calls": 319,
+            "residual": 0.007957868233035712
+          },
+          {
+            "calls": 322,
+            "residual": 0.02044363479771623
+          },
+          {
+            "calls": 325,
+            "residual": 0.04287778942588169
+          },
+          {
+            "calls": 328,
+            "residual": 0.039328469329697975
+          },
+          {
+            "calls": 331,
+            "residual": 0.1251966342997344
+          },
+          {
+            "calls": 334,
+            "residual": 0.08229616968753205
+          },
+          {
+            "calls": 337,
+            "residual": 0.06986416541532937
+          },
+          {
+            "calls": 340,
+            "residual": 0.007593460026549744
+          },
+          {
+            "calls": 343,
+            "residual": 0.0148347316284075
+          },
+          {
+            "calls": 346,
+            "residual": 0.05877435089611115
+          },
+          {
+            "calls": 349,
+            "residual": 0.03806883697609741
+          },
+          {
+            "calls": 352,
+            "residual": 0.03105685389571334
+          },
+          {
+            "calls": 355,
+            "residual": 0.00725620902271209
+          },
+          {
+            "calls": 358,
+            "residual": 0.041799338567612754
+          },
+          {
+            "calls": 361,
+            "residual": 0.06211562954845043
+          },
+          {
+            "calls": 364,
+            "residual": 0.0455814917469778
+          },
+          {
+            "calls": 367,
+            "residual": 0.007598106480125699
+          },
+          {
+            "calls": 370,
+            "residual": 0.05557707313470573
+          },
+          {
+            "calls": 373,
+            "residual": 0.06342633106212368
+          },
+          {
+            "calls": 376,
+            "residual": 0.009457094195054088
+          },
+          {
+            "calls": 379,
+            "residual": 0.009553525602055054
+          },
+          {
+            "calls": 382,
+            "residual": 0.008134399854518295
+          },
+          {
+            "calls": 385,
+            "residual": 0.03748738483114427
+          },
+          {
+            "calls": 388,
+            "residual": 0.07662862986083617
+          },
+          {
+            "calls": 391,
+            "residual": 0.06731645329785343
+          },
+          {
+            "calls": 394,
+            "residual": 0.05566439296382624
+          },
+          {
+            "calls": 397,
+            "residual": 0.030557612738576326
+          },
+          {
+            "calls": 400,
+            "residual": 0.05286534164676918
+          },
+          {
+            "calls": 403,
+            "residual": 0.03630424743278718
+          },
+          {
+            "calls": 406,
+            "residual": 0.07983770253779958
+          },
+          {
+            "calls": 409,
+            "residual": 0.03647392771147624
+          },
+          {
+            "calls": 410,
+            "residual": 0.006229018356195579
+          }
+        ]
+      }
+    ]
+  }
+]

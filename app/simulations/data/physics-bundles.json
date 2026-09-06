@@ -1,0 +1,16 @@
+[
+  {
+    "runId": "fuse-fpp-20260907-003257-48a4fa67",
+    "recordSha256": "7bc4af2942c024b1033bc6e25da6cb1d43f7cf9fb946388a84e3ad0ba9f19433",
+    "path": "/data/simulations/cbaa31b226b9565dd0a2d4af82347d1dd76c75b3f688a6758c91188c67724b7e.json.gz",
+    "sha256": "cbaa31b226b9565dd0a2d4af82347d1dd76c75b3f688a6758c91188c67724b7e",
+    "bytes": 232274,
+    "rawSha256": "606e01b106f020846d110c6f92b7ad9645a77368ab006fb29976a8cada25f2a2",
+    "rawBytes": 1228392,
+    "profiles": 118,
+    "grid": [
+      67,
+      129
+    ]
+  }
+]
