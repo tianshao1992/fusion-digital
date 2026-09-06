@@ -29,6 +29,7 @@
 .simulationPage .simMetrics span { font-size:.75rem; }
 .simPhysicsResults { display:grid; gap:14px; min-width:0; }
 .simProfilePlot { position:relative; }
+@media(max-width:550px) { .simStudio .simProfileGrid { grid-template-columns:1fr; } .simStudio .simCaseSwitcher label { display:grid; grid-template-columns:1fr; gap:4px; } }
 .simResetPlot { position:absolute; z-index:4; top:9px; right:66px; }
 .simResultMeta { display:flex; flex-wrap:wrap; align-items:center; gap:18px; color:var(--color-ink-muted); font-size:.75rem; }
 .simResultMeta > button { margin-left:auto; }
