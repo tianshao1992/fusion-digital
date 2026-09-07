@@ -38,6 +38,9 @@ function errorLabel(code: string, en: boolean): string {
     JOB_NOT_SUCCEEDED: ['任务尚未成功完成，暂不能收集结果。', 'The job has not succeeded, so its result cannot be collected yet.'],
     FUSE_JOB_RESULT_COORDINATE_MISMATCH: ['结果坐标映射身份不一致，已拒绝载入。', 'The result coordinate-map identity did not match and was rejected.'],
     FUSE_JOB_VERIFICATION_MISMATCH: ['网关核验摘要与运行制品不一致，已拒绝载入。', 'Gateway verification did not match the run artifacts and was rejected.'],
+    FUSE_JOB_RESULT_RUN_SPEC_UNBOUND: ['结果未绑定完整 RunSpec 制品，已拒绝载入。', 'The result was not bound to its complete RunSpec artifact and was rejected.'],
+    FUSE_JOB_RESULT_RUN_SPEC_MISMATCH: ['恢复任务的完整 RunSpec 与当前设置不一致，已拒绝载入。', 'The recovered job RunSpec does not match the current settings and was rejected.'],
+    FUSE_JOB_VERIFICATION_UNAVAILABLE: ['当前浏览器无法执行结果摘要校验。', 'This browser cannot perform the result digest verification.'],
     FUSE_JOB_RESULT_RECIPE_MISMATCH: ['恢复任务与当前流程设置不一致，已拒绝载入结果。', 'The recovered job does not match the current recipe settings, so its result was rejected.'],
     FUSE_JOB_RESULT_ENGINE_MISMATCH: ['恢复任务与当前引擎或线程设置不一致，已拒绝载入结果。', 'The recovered job does not match the current engine or thread settings, so its result was rejected.'],
     FUSE_JOB_RESULT_SOLVER_MISMATCH: ['恢复任务与当前求解器设置不一致，已拒绝载入结果。', 'The recovered job does not match the current solver settings, so its result was rejected.'],
@@ -102,7 +105,7 @@ export function useFuseRemoteExecution(en: boolean, onCollected: CollectedHandle
   }, [endpoint, token]);
 
   const collect = useCallback(async (id: string, signal?: AbortSignal) => {
-    const result = parseFuseCollectedResult(await request(`/v1/jobs/${encodeURIComponent(id)}/result`, 'GET', undefined, undefined, signal));
+    const result = await parseFuseCollectedResult(await request(`/v1/jobs/${encodeURIComponent(id)}/result`, 'GET', undefined, undefined, signal));
     if (result.run.id !== id) throw new Error('FUSE_JOB_RESULT_IDENTITY_MISMATCH');
     if (!submittedSpec.current) throw new Error('MISSING_SUBMITTED_RUN_SPEC');
     assertFuseResultMatchesSpec(result, submittedSpec.current);

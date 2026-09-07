@@ -7,7 +7,7 @@ import { createGateway } from './gateway.mts';
 import { createFuseSnapshot, json } from './engine-service.mts';
 import { defaultEngineSpec } from '../../app/simulations/platform/contracts.ts';
 import { matchResult, parseJob, parseSubmission, requestCompute, snapshotDigest } from '../../app/simulations/platform/compute-client.ts';
-import { parseTransportGeometry, crossSectionCells } from '../../app/simulations/platform/geometry.ts';
+import { parseVerifiedTransportGeometry, crossSectionCells } from '../../app/simulations/platform/geometry.ts';
 
 const token = randomBytes(32).toString('hex');
 let gateway = createGateway(token, ['http://localhost:3012', 'https://fusiondigital.club']);
@@ -32,7 +32,8 @@ try {
   if (!job?.processStopped) { await request(`/v1/jobs/${id}/cancel`, { method: 'POST' }); throw new Error('SMOKE_TIMEOUT_CANCEL_REQUESTED'); }
   assert.equal(job.state, 'succeeded');
   const result = matchResult(await request(`/v1/jobs/${id}/result`), id, spec);
-  const geometry = parseTransportGeometry(await request(`/v1/jobs/${id}/geometry`));
+  const verifiedGeometry = parseVerifiedTransportGeometry(await request(`/v1/jobs/${id}/geometry`), id, result.provenance.nativeSha256);
+  const geometry = verifiedGeometry.geometry;
   assert.equal(geometry.sourceNativeSha256, result.provenance.nativeSha256);
   assert.ok(crossSectionCells(geometry, result, 'te', result.execution.steps).length > 0);
   assert.equal(result.time.values.at(-1), .1);
@@ -42,7 +43,7 @@ try {
   gateway = createGateway(token, 'https://fusiondigital.club'); endpoint = await start();
   assert.equal(parseJob(await request(`/v1/jobs/${id}`), id).state, 'succeeded');
   assert.equal(matchResult(await request(`/v1/jobs/${id}/result`), id, spec).id, id);
-  const evidence = { checkedAt: new Date().toISOString(), id, uploadedProfiles: true, idempotentSubmission: true, serviceRestartRecovery: true, resultMatchesSpec: true, geometry: geometry.kind, profileSource: snapshot.source.runId, steps: result.execution.steps, elapsedSeconds: job.elapsedSeconds, browserInteractionTested: false };
+  const evidence = { checkedAt: new Date().toISOString(), id, uploadedProfiles: true, idempotentSubmission: true, serviceRestartRecovery: true, resultMatchesSpec: true, geometry: geometry.kind, geometrySha256: verifiedGeometry.geometrySha256, profileSource: snapshot.source.runId, steps: result.execution.steps, elapsedSeconds: job.elapsedSeconds, browserInteractionTested: false };
   await mkdir('output/simulations', { recursive: true });
   await writeFile('output/simulations/torax-remote-verification.json', json(evidence));
   console.log(json(evidence));

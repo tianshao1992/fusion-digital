@@ -13,7 +13,7 @@ flowchart LR
   ADAPTER -->|固定 runner / recipe| FUSE[FUSE + Julia]
   FUSE --> LOCAL[本机 HDF5、日志、模型和 manifest]
   LOCAL -->|逐项 SHA-256 与科学合同校验| COLLECT[本机 collector]
-  COLLECT -->|run + physics + coordinateMap| UI
+  COLLECT -->|runSpec + run + physics + coordinateMap| UI
   UI -.人工审核后另行操作.-> PUBLISH[版本化发布流程]
 ```
 
@@ -23,18 +23,19 @@ flowchart LR
 - 网关只启动仓库内固定的 `local-runner.mts` 和固定 Julia recipe；请求不能指定命令、代码、工作目录、环境变量或输出路径。
 - `FUSE_WORKSPACE` 等路径只能由计算节点操作者通过进程环境设置，不能来自 HTTP 请求。
 - FUSE runner 会核对固定源码 commit、干净工作树、Julia Manifest 的本地路径依赖和运行环境文件清单。
-- collector 在计算节点重新计算 `run-manifest.json`、`physics.json`、`dd-native.h5`、坐标映射及 manifest 所列全部制品的 SHA-256；只有明确成功且进程已停止的任务可以收集。
-- 返回浏览器的 `verification.authority` 是 `local-gateway-verified`。浏览器会再次检查 JSON 合同、运行身份和哈希字段之间的关系，但因为没有收到原生 HDF5，不能替代计算节点的原始字节校验。
+- collector 在计算节点重新计算 `run-manifest.json`、规范化 `run-spec.json`、`physics.json`、`dd-native.h5`、坐标映射及 manifest 所列全部制品的 SHA-256；只有明确成功且进程已停止的任务可以收集。
+- 返回浏览器的 `verification.authority` 是 `local-gateway-verified`。浏览器会重新计算所返回规范化 RunSpec 的 SHA-256，并检查它与 `run-spec.json` 制品、运行身份和全部参数一致；因为浏览器没有收到原生 HDF5，这仍不能替代计算节点的原始字节校验。
 - 不返回本机路径、PID、原生 HDF5、日志、源码、模型权重或环境文件内容。
 
 当前安全结果 envelope 为：
 
 ```text
 fuse-job-result.v1
+├── runSpec             simulation-runspec.v1（完整规范化规格）
 ├── run                 simulation-result.v1
 ├── physics             fuse-physics.v2
 ├── coordinateMap       fuse-flux-coordinate-map.v1
-└── verification        local-gateway-verified + 四项 SHA-256
+└── verification        local-gateway-verified + 五项 SHA-256
 ```
 
 `coordinateMap` 直接取自同一次原生 equilibrium 的 `psi_norm` 与 `rho_tor_norm`，并绑定 `physics.json`、`dd-native.h5` 和投影器哈希。它用于 Te/Ti/ne 的二维、三维剖面云图，不是独立的二维输运求解。

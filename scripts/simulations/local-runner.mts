@@ -29,17 +29,29 @@ if (command === 'status' || command === 'cancel') {
 }
 if (command !== 'run' || !option('--spec')) throw new Error('Usage: local-runner.mts run --spec <RunSpec.json> [--workspace <FUSE workspace>] | status/cancel --run-id <id> | template');
 const specFile = option('--spec')!;
+const preflightFailureFile = option('--preflight-failure-file');
 if ((await stat(specFile)).size > 16384) throw new Error('RunSpec too large');
 const spec = parseRunSpec(JSON.parse(await readFile(specFile, 'utf8')));
 const requestedRunId = option('--run-id') ? safeId(option('--run-id')) : undefined;
-const manifestText=await readFile(path.join(workspace,'environment','Manifest.toml'),'utf8');
-const manifestPaths=[...manifestText.matchAll(/^path = (".*")$/gm)].map(m=>JSON.parse(m[1]) as string);
-const actualPaths=await Promise.all(manifestPaths.map(p=>realpath(p)));
-const approvedPaths=await Promise.all(['FUSE.jl','deps/TurbulentTransport.jl'].map(p=>realpath(path.join(workspace,p))));
-if(actualPaths.length!==approvedPaths.length || approvedPaths.some(p=>!actualPaths.includes(p))) throw new Error('Manifest path dependencies are not bound to this workspace');
-const git = (repo: string, arguments_: string[]) => execFileSync('git', ['-C', path.join(workspace,repo),...arguments_], { encoding:'utf8',windowsHide:true }).trim();
-for (const [repo, expected] of [['FUSE.jl',spec.engineCommit],['FuseExamples','a77970e85356a429178232d119b3b747878c1e32']]) {
-  if (git(repo,['rev-parse','HEAD']) !== expected || git(repo,['status','--porcelain','--untracked-files=all'])) throw new Error(`Pinned source mismatch: ${repo}`);
+try {
+  const manifestText=await readFile(path.join(workspace,'environment','Manifest.toml'),'utf8');
+  const manifestPaths=[...manifestText.matchAll(/^path = (".*")$/gm)].map(m=>JSON.parse(m[1]) as string);
+  const actualPaths=await Promise.all(manifestPaths.map(p=>realpath(p)));
+  const approvedPaths=await Promise.all(['FUSE.jl','deps/TurbulentTransport.jl'].map(p=>realpath(path.join(workspace,p))));
+  if(actualPaths.length!==approvedPaths.length || approvedPaths.some(p=>!actualPaths.includes(p))) throw new Error('Manifest path dependencies are not bound to this workspace');
+  const git = (repo: string, arguments_: string[]) => execFileSync('git', ['-C', path.join(workspace,repo),...arguments_], { encoding:'utf8',windowsHide:true }).trim();
+  for (const [repo, expected] of [['FUSE.jl',spec.engineCommit],['FuseExamples','a77970e85356a429178232d119b3b747878c1e32']]) {
+    if (git(repo,['rev-parse','HEAD']) !== expected || git(repo,['status','--porcelain','--untracked-files=all'])) throw new Error(`Pinned source mismatch: ${repo}`);
+  }
+} catch (error) {
+  // This private, identity-bound marker is positive evidence that the runner
+  // failed before acquiring the workspace lease or spawning Julia. If marker
+  // persistence itself fails, the gateway keeps the conservative lease.
+  if (preflightFailureFile) await writeFile(preflightFailureFile, json({
+    schema: 'fuse-runner-preflight.v1', id: requestedRunId,
+    specSha256: sha(json(spec)), state: 'failed',
+  }), { flag: 'wx' }).catch(() => undefined);
+  throw error;
 }
 await mkdir(results,{recursive:true});
 const lockPath = path.join(results,'.fusiondigital-runner.lock');

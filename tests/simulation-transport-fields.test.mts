@@ -3,7 +3,7 @@ import test from 'node:test';
 import { readFile } from 'node:fs/promises';
 import { gunzipSync } from 'node:zlib';
 import { createHash } from 'node:crypto';
-import { parseTransportGeometry, spaceTimeCells, crossSectionCells, inputContourSegments, type GeometryEntry } from '../app/simulations/platform/geometry.ts';
+import { parseTransportGeometry, parseVerifiedTransportGeometry, spaceTimeCells, crossSectionCells, inputContourSegments, type GeometryEntry } from '../app/simulations/platform/geometry.ts';
 import { parseTransportResult, interpolateProfile, type TransportRunEntry } from '../app/simulations/platform/contracts.ts';
 
 const entries: TransportRunEntry[] = JSON.parse(await readFile(new URL('../app/simulations/data/transport-runs.json', import.meta.url), 'utf8'));
@@ -28,6 +28,12 @@ test('eight geometry sidecars bind unchanged native solver results and declare g
     assert.equal(geometry.kind, result.recipe === 'step-flat-top' ? 'input-equilibrium-grid' : 'shape-reconstruction');
     assert.ok(crossSectionCells(geometry, result, 'te', result.execution.steps).length > 1000);
   }
+});
+test('live geometry response preserves its gateway-verified artifact identity', () => {
+  const { result, geometry } = cases[0], entry = geometryEntries.find(value => value.runId === result.id)!;
+  const verified = parseVerifiedTransportGeometry({ schema: 'transport-geometry-result.v1', geometry, verification: { authority: 'local-gateway-verified', geometrySha256: entry.artifact.rawSha256 } }, result.id, result.provenance.nativeSha256);
+  assert.equal(verified.geometrySha256, entry.artifact.rawSha256);
+  assert.throws(() => parseVerifiedTransportGeometry({ schema: 'transport-geometry-result.v1', geometry, verification: { authority: 'local-gateway-verified', geometrySha256: '0'.repeat(64) } }, 'different-run', result.provenance.nativeSha256));
 });
 test('time-radius cells retain actual nonuniform native times, units and profile samples', () => {
   const { result } = cases.find(c => c.result.recipe === 'iter-grid-50')!;

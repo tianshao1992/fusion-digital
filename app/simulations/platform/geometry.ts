@@ -10,6 +10,7 @@ export type TransportGeometry = {
   grid: { r: number[]; z: number[]; psi: (number | null)[][]; rho: (number | null)[][]; psiAxis: number; psiBoundary: number } | null;
 };
 export type GeometryEntry = Pick<TransportGeometry, 'runId' | 'kind' | 'sourceNativeSha256'> & { artifact: ResultArtifact };
+export type VerifiedTransportGeometry = { geometry: TransportGeometry; geometrySha256: string };
 const finite = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
 const keys = (v: unknown, list: string) => !!v && typeof v === 'object' && Object.keys(v).sort().join(' ') === list.split(' ').sort().join(' ');
 const point = (v: unknown): v is Point => Array.isArray(v) && v.length === 2 && v.every(finite) && v[0] > 0 && v[0] < 10000 && Math.abs(v[1]) < 10000;
@@ -35,6 +36,16 @@ export function parseTransportGeometry(value: unknown): TransportGeometry {
     g.rings.forEach((ring, i) => check(keys(ring, 'rho points') && finite(ring.rho) && (!i || ring.rho > g.rings[i-1].rho) && Array.isArray(ring.points) && ring.points.length === count && ring.points.every(point)));
   }
   return structuredClone(g);
+}
+export function parseVerifiedTransportGeometry(value: unknown, runId: string, nativeSha256: string): VerifiedTransportGeometry {
+  check(keys(value, 'schema geometry verification'));
+  const envelope = value as { schema: unknown; geometry: unknown; verification: unknown };
+  check(envelope.schema === 'transport-geometry-result.v1' && keys(envelope.verification, 'authority geometrySha256'));
+  const verification = envelope.verification as { authority: unknown; geometrySha256: unknown };
+  check(verification.authority === 'local-gateway-verified' && isDigest(verification.geometrySha256));
+  const geometry = parseTransportGeometry(envelope.geometry);
+  check(geometry.runId === runId && geometry.sourceNativeSha256 === nativeSha256);
+  return { geometry, geometrySha256: verification.geometrySha256 as string };
 }
 export type FieldCell = { x: number; y: number; value: number; rho: number | null; polygon: Point[] };
 export function spaceTimeCells(result: TransportResult, variable: string): FieldCell[] {

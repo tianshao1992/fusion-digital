@@ -1,11 +1,19 @@
 import assert from 'node:assert/strict';
+import { execFile } from 'node:child_process';
+import { randomBytes, randomUUID } from 'node:crypto';
+import type { AddressInfo } from 'node:net';
 import test from 'node:test';
-import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { promisify } from 'node:util';
 import { defaultRunSpec, parseRunSpec } from '../app/simulations/run-spec.ts';
 import { fuseCatalog } from '../app/simulations/engine-catalog.ts';
+import * as transportRuntime from '../scripts/simulations/engine-service.mts';
+import { createGateway } from '../scripts/simulations/gateway.mts';
 import { supervise } from '../scripts/simulations/supervisor.mts';
+
+const execFileAsync = promisify(execFile);
 
 test('RunSpec is closed, bounded and maps only approved offline recipes',()=>{
   const s=defaultRunSpec();assert.deepEqual(parseRunSpec(s),s);
@@ -42,4 +50,72 @@ test('cancellation and state-write failure reconcile process before return',asyn
 test('existing log is never overwritten and prevents launch',async()=>{
   const dir=await mkdtemp(path.join(tmpdir(),'fuse-supervisor-'));const logPath=path.join(dir,'existing.log');await writeFile(logPath,'protected fixture');
   await assert.rejects(supervise(process.execPath,['-e','process.exit(0)'],{logPath,timeoutMs:5000}),/EEXIST/);assert.equal(await readFile(logPath,'utf8'),'protected fixture');
+});
+
+test('real manifest and pin preflight failures are terminal and release unified gateway capacity', async () => {
+  const workspace = await mkdtemp(path.join(tmpdir(), 'fuse-preflight-'));
+  const fuseRepository = path.join(workspace, 'FUSE.jl');
+  const transportRepository = path.join(workspace, 'deps', 'TurbulentTransport.jl');
+  await mkdir(path.join(workspace, 'environment'), { recursive: true });
+  await mkdir(fuseRepository, { recursive: true });
+  await mkdir(transportRepository, { recursive: true });
+  await writeFile(path.join(workspace, 'environment', 'Manifest.toml'), '# deliberately unbound path dependencies\n');
+  const previousWorkspace = process.env.FUSE_WORKSPACE;
+  process.env.FUSE_WORKSPACE = workspace;
+  const fuseRuntime = await import(new URL(`../scripts/simulations/fuse-engine-service.mts?preflight=${randomUUID()}`, import.meta.url).href);
+  if (previousWorkspace === undefined) delete process.env.FUSE_WORKSPACE;
+  else process.env.FUSE_WORKSPACE = previousWorkspace;
+
+  const token = randomBytes(32).toString('hex');
+  const origin = 'https://fusiondigital.club';
+  const server = createGateway(token, origin, transportRuntime, fuseRuntime);
+  await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
+  const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+  const headers = { Authorization: `Bearer ${token}`, Origin: origin, 'Content-Type': 'application/json' };
+  const submit = (key: string) => fetch(`${base}/v1/jobs`, { method: 'POST', headers: { ...headers, 'Idempotency-Key': key },
+    body: JSON.stringify({ spec: defaultRunSpec() }) });
+  const waitForFailure = async (id: string) => {
+    const deadline = Date.now() + 15_000;
+    while (Date.now() < deadline) {
+      const current = await fuseRuntime.status(id);
+      if (current.state === 'failed') return current;
+      await new Promise(resolve => setTimeout(resolve, 25));
+    }
+    throw new Error(`preflight failure did not become terminal: ${id}`);
+  };
+  try {
+    const manifestFailure = await submit('fuse-preflight-manifest-0001');
+    assert.equal(manifestFailure.status, 202);
+    const firstId = (await manifestFailure.json() as { id: string }).id;
+    assert.deepEqual(await waitForFailure(firstId), {
+      schema: 'engine-job.v1', id: firstId, engineId: 'fuse', state: 'failed',
+      processStopped: true, exitCode: 1, elapsedSeconds: 0, reason: 'runner-preflight-failed',
+    });
+    await new Promise(resolve => setImmediate(resolve));
+
+    await execFileAsync('git', ['init', fuseRepository], { windowsHide: true });
+    await writeFile(path.join(fuseRepository, 'fixture.txt'), 'unpinned test repository\n');
+    await execFileAsync('git', ['-C', fuseRepository, 'add', 'fixture.txt'], { windowsHide: true });
+    await execFileAsync('git', ['-C', fuseRepository, '-c', 'user.name=FusionDigital Test',
+      '-c', 'user.email=fusiondigital-test@example.invalid', 'commit', '-m', 'fixture'], { windowsHide: true });
+    await writeFile(path.join(workspace, 'environment', 'Manifest.toml'),
+      `path = ${JSON.stringify(fuseRepository)}\npath = ${JSON.stringify(transportRepository)}\n`);
+
+    const pinFailure = await submit('fuse-preflight-pin-0002');
+    assert.equal(pinFailure.status, 202, 'the manifest failure must release the gateway slot');
+    const secondId = (await pinFailure.json() as { id: string }).id;
+    const secondStatus = await waitForFailure(secondId);
+    assert.equal(secondStatus.reason, 'runner-preflight-failed');
+    assert.equal(secondStatus.processStopped, true);
+    await new Promise(resolve => setImmediate(resolve));
+
+    const afterPinFailure = await submit('fuse-preflight-pin-0003');
+    assert.equal(afterPinFailure.status, 202, 'the pin failure must release the gateway slot');
+    const thirdId = (await afterPinFailure.json() as { id: string }).id;
+    await waitForFailure(thirdId);
+  } finally {
+    server.closeAllConnections();
+    await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
+    await rm(workspace, { recursive: true, force: true });
+  }
 });

@@ -61,6 +61,9 @@ test('matrix order, units, axes and missing samples are validated without fabric
   const p=parsePhysics(original);assert.equal(p.equilibrium.arrayOrder,'z,r');assert.equal(p.equilibrium.psiUnit,'Wb');
   for(const mutate of [(p:typeof original)=>{p.equilibrium.psi.pop();},(p:typeof original)=>{p.equilibrium.r[1]=p.equilibrium.r[0];},(p:typeof original)=>{p.profiles[0].y[0]=Infinity;},(p:typeof original)=>{p.profiles[0].unit='unqualified';},(p:typeof original)=>{p.equilibrium.psiBoundary=p.equilibrium.psiAxis;}]){const copy=structuredClone(original);mutate(copy);assert.throws(()=>parsePhysics(copy));}
   const copy=structuredClone(original);copy.profiles[0].y[0]=null;const missing=parsePhysics(copy).profiles[0];assert.equal(profileDisplay(missing).data[0][1],null);
+  const wrongTemperatureUnit=structuredClone(original);wrongTemperatureUnit.profiles.find((profile:{id:string})=>profile.id==='te').unit='Pa';assert.throws(()=>parsePhysics(wrongTemperatureUnit));
+  const emptyProfile=structuredClone(original);emptyProfile.profiles[0].y=emptyProfile.profiles[0].y.map(()=>null);assert.throws(()=>parsePhysics(emptyProfile));
+  const signedSafetyFactor=structuredClone(original);const q=signedSafetyFactor.profiles.find((profile:{id:string})=>profile.id==='q');q.y=q.y.map((value:number|null)=>value===null?null:-Math.abs(value));assert.ok(parsePhysics(signedSafetyFactor).profiles.find(profile=>profile.id==='q')!.y.some(value=>value!==null&&value<0));
 });
 test('equilibrium cloud projects the native psi grid through an LCFS mask',()=>{
   const p=parsePhysics(original);
@@ -97,13 +100,15 @@ test('equilibrium cloud projects the native psi grid through an LCFS mask',()=>{
 });
 test('native flux-coordinate sidecars are content-addressed and bound to each physics result',()=>{
   assert.equal(coordinateMapEntries.length,bundles.length);
+  const runs=JSON.parse(readFileSync(new URL('../app/simulations/data/fuse-demo.json',import.meta.url),'utf8')).map(parseSimulationRun);
   for(const entry of coordinateMapEntries as FluxCoordinateMapBundle[]){
     const physicsBundle=bundles.find(item=>item.runId===entry.runId)!;
+    const run=runs.find((item:{id:string})=>item.id===entry.runId)!;
     const compressed=readFileSync(new URL(`../public${entry.artifact.path}`,import.meta.url));
     const raw=gunzipSync(compressed);const map=parseFluxCoordinateMap(JSON.parse(raw.toString()));
     assert.equal(hash(compressed),entry.artifact.sha256);assert.equal(hash(raw),entry.artifact.rawSha256);
     assert.equal(compressed.length,entry.artifact.bytes);assert.equal(raw.length,entry.artifact.rawBytes);
-    assert.equal(map.runId,physicsBundle.runId);assert.equal(map.source.physicsSha256,physicsBundle.rawSha256);assert.equal(map.source.nativeSha256,entry.sourceNativeSha256);
+    assert.equal(map.runId,physicsBundle.runId);assert.equal(map.source.physicsSha256,physicsBundle.rawSha256);assert.equal(map.source.nativeSha256,entry.sourceNativeSha256);assert.ok(run.source.artifacts.some((artifact:{name:string;sha256:string})=>artifact.name==='dd-native.h5'&&artifact.sha256===map.source.nativeSha256));
     assert.deepEqual([map.psiNorm[0],map.psiNorm.at(-1),map.rhoTorNorm[0],map.rhoTorNorm.at(-1)],[0,1,0,1]);
     assert.ok(map.psiNorm.every((value,index)=>index===0||value>map.psiNorm[index-1]));
     assert.ok(map.rhoTorNorm.every((value,index)=>index===0||value>map.rhoTorNorm[index-1]));

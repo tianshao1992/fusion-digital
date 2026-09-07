@@ -35,14 +35,18 @@ export type FuseJobStatus = {
   latestStage?: { name: string; state: string; timeUtc: string };
 };
 export type FuseJobResult = {
-  schema: 'fuse-job-result.v1'; run: SimulationRun; physics: PhysicsData;
+  schema: 'fuse-job-result.v1'; runSpec: RunSpec; run: SimulationRun; physics: PhysicsData;
   coordinateMap: FluxCoordinateMap;
   verification: {
-    authority: 'local-gateway-verified'; manifestSha256: string; physicsSha256: string;
+    authority: 'local-gateway-verified'; manifestSha256: string; runSpecSha256: string; physicsSha256: string;
     nativeSha256: string; coordinateMapSha256: string;
   };
 };
-type Launch = { child: ChildProcess; cancelFile: string; cancelRequested: boolean; closed: boolean };
+type Launch = {
+  child: ChildProcess; cancelFile: string; preflightFailureFile: string;
+  cancelRequested: boolean; closed: boolean; preflightFailed: boolean;
+  spawnFailed: boolean; exitCode: number | null;
+};
 const launches = new Map<string, Launch>();
 
 function fileError(error: unknown, code: string): boolean {
@@ -108,6 +112,11 @@ export function reconciledStatus(id: string): FuseJobStatus {
   // stopped. Retain the global lease until an operator reconciles this attempt.
   return { schema: 'engine-job.v1', id, engineId: 'fuse', state: 'reconciliation-required', processStopped: false, exitCode: null, elapsedSeconds: 0, reason: 'launcher-state-unresolved' };
 }
+function stoppedLaunchFailureStatus(id: string, exitCode: number | null,
+  reason: 'runner-preflight-failed' | 'runner-launch-failed'): FuseJobStatus {
+  return { schema: 'engine-job.v1', id, engineId: 'fuse', state: 'failed', processStopped: true,
+    exitCode, elapsedSeconds: 0, reason };
+}
 export async function status(id: string): Promise<FuseJobStatus> {
   safeId(id);
   const launch = launches.get(id);
@@ -129,6 +138,8 @@ export async function status(id: string): Promise<FuseJobStatus> {
   } catch (error) {
     if (!fileError(error, 'ENOENT')) throw error;
     if (!launch) throw new Error('UNKNOWN_JOB');
+    if (launch.closed && launch.preflightFailed) return stoppedLaunchFailureStatus(id, launch.exitCode, 'runner-preflight-failed');
+    if (launch.closed && launch.spawnFailed) return stoppedLaunchFailureStatus(id, launch.exitCode, 'runner-launch-failed');
     if (launch.closed) return reconciledStatus(id);
     return { schema: 'engine-job.v1', id, engineId: 'fuse', state: launch.cancelRequested ? 'cancellation-requested' : 'queued', processStopped: false, exitCode: null, elapsedSeconds: 0 };
   }
@@ -167,23 +178,35 @@ export async function submit(value: unknown, input?: unknown): Promise<{ id: str
   const staging = await mkdtemp(path.join(tmpdir(), 'fusiondigital-fuse-'));
   const specFile = path.join(staging, 'run-spec.json');
   const cancelFile = path.join(staging, 'cancel.request');
+  const preflightFailureFile = path.join(staging, 'preflight-failed.json');
   await writeFile(specFile, json(spec), { flag: 'wx' });
-  const child = spawn(process.execPath, ['--import', 'tsx', runner, 'run', '--spec', specFile, '--workspace', workspaceRoot, '--run-id', id, '--cancel-file', cancelFile], {
+  const child = spawn(process.execPath, ['--import', 'tsx', runner, 'run', '--spec', specFile, '--workspace', workspaceRoot, '--run-id', id, '--cancel-file', cancelFile, '--preflight-failure-file', preflightFailureFile], {
     cwd: project, windowsHide: true, stdio: 'ignore', shell: false,
   });
-  const launch: Launch = { child, cancelFile, cancelRequested: false, closed: false };
+  const launch: Launch = { child, cancelFile, preflightFailureFile, cancelRequested: false, closed: false,
+    preflightFailed: false, spawnFailed: false, exitCode: null };
   launches.set(id, launch);
   const completion = new Promise<FuseJobStatus>((resolve) => {
     let settled = false;
-    const finish = async () => {
+    const finish = async (exitCode: number | null, spawnFailed = false) => {
       if (settled) return;
       settled = true;
+      launch.exitCode = exitCode;
+      launch.spawnFailed = spawnFailed;
+      try {
+        const marker = await readJson(preflightFailureFile, 1_024) as Record<string, unknown>;
+        launch.preflightFailed = Object.keys(marker).length === 4
+          && marker.schema === 'fuse-runner-preflight.v1' && marker.id === id
+          && marker.specSha256 === digest(json(spec)) && marker.state === 'failed';
+      } catch { launch.preflightFailed = false; }
       launch.closed = true;
-      await rm(staging, { recursive: true, force: true });
+      // Temp cleanup failure must not strand the unified gateway slot after
+      // process closure; the execution classification above is independent.
+      await rm(staging, { recursive: true, force: true }).catch(() => undefined);
       try { resolve(await status(id)); } catch { resolve(reconciledStatus(id)); }
     };
-    child.once('error', finish);
-    child.once('close', finish);
+    child.once('error', () => void finish(null, true));
+    child.once('close', code => void finish(code));
   });
   return { id, completion };
 }
@@ -207,15 +230,19 @@ export async function collect(id: string): Promise<FuseJobResult> {
   const directory = fuseAttemptPath(id);
   const manifestBytes = await readBytes(path.join(directory, 'run-manifest.json'), 2_000_000);
   const manifest = JSON.parse(manifestBytes.toString()) as Record<string, unknown>;
-  const spec = parseRunSpec(await readJson(path.join(directory, 'run-spec.json'), 16_384));
+  const specBytes = await readBytes(path.join(directory, 'run-spec.json'), 16_384);
+  const spec = parseRunSpec(JSON.parse(specBytes.toString('utf8')));
+  if (!specBytes.equals(Buffer.from(json(spec), 'utf8'))) throw new Error('RUN_SPEC_NOT_CANONICAL');
+  const specSha256 = digest(specBytes);
   const attempt = await nativeStatus(id);
   if (manifest.schema !== 'fuse-native-run.v2' || manifest.runId !== id || manifest.execution !== 'succeeded'
     || manifest.authority !== 'simulated' || manifest.recipe !== spec.recipe || manifest.model !== spec.model
     || manifest.fuseCommit !== spec.engineCommit || manifest.threads !== spec.resources.threads
-    || attempt.recipe !== spec.recipe || attempt.model !== spec.model || attempt.specSha256 !== digest(json(spec))) throw new Error('RESULT_IDENTITY');
+    || attempt.recipe !== spec.recipe || attempt.model !== spec.model || attempt.specSha256 !== specSha256) throw new Error('RESULT_IDENTITY');
   const artifacts = artifactMap(manifest);
   const required = ['physics.json', 'coordinate-map.json', 'dd-native.h5', 'initial-native.h5', 'solved-native.h5', 'checks.json', 'run-spec.json', 'environment-lock.json', 'run-diiid.jl', 'FuseProjection.jl'];
   if (required.some(name => !artifacts.has(name))) throw new Error('MISSING_RESULT_ARTIFACT');
+  if (artifacts.get('run-spec.json') !== specSha256) throw new Error('RESULT_IDENTITY');
   for (const [name, expected] of artifacts) {
     if (await hashFile(path.join(directory, name)) !== expected) throw new Error('MANIFEST_INTEGRITY');
   }
@@ -263,9 +290,10 @@ export async function collect(id: string): Promise<FuseJobResult> {
     source: { recordSha256: digest(manifestBytes), artifacts: [...artifacts].map(([name, sha256]) => ({ name, sha256 })) },
   });
   return {
-    schema: 'fuse-job-result.v1', run, physics, coordinateMap,
+    schema: 'fuse-job-result.v1', runSpec: spec, run, physics, coordinateMap,
     verification: {
       authority: 'local-gateway-verified', manifestSha256: digest(manifestBytes),
+      runSpecSha256: specSha256,
       physicsSha256: digest(physicsBytes), nativeSha256: artifacts.get('dd-native.h5')!,
       coordinateMapSha256: artifacts.get('coordinate-map.json')!,
     },

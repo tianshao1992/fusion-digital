@@ -18,6 +18,20 @@ const vector = (v: unknown, nullable = false): v is number[] => Array.isArray(v)
 const monotonic = (v: number[]) => v.length > 1 && v.every((n, i) => finite(n) && (!i || n > v[i - 1]));
 const rz = (v: unknown) => Array.isArray(v) && v.length <= 20000 && v.every(p => Array.isArray(p) && p.length === 2 && p.every(finite));
 const keys = (v: object, allowed: string) => Object.keys(v).every(key => allowed.split(' ').includes(key));
+function expectedProfileUnit(id: string): string | null {
+  if (['te', 'ti'].includes(id) || /^ion_\d+_temperature$/.test(id)) return 'eV';
+  if (id === 'ne' || /^ion_\d+_density$/.test(id)) return 'm^-3';
+  if (['eq_j_tor', 'j_bootstrap', 'j_ohmic', 'j_parallel', 'j_tor'].includes(id) || /^source_\d+_j_parallel$/.test(id)) return 'A/m^2';
+  if (id === 'pressure') return 'Pa';
+  if (id === 'q') return '1';
+  if (id === 'rotation') return 's^-1';
+  if (/^source_\d+_(electron|ion)_heating$/.test(id)) return 'W/m^3';
+  if (/^source_\d+_(electron|ion)_power$/.test(id)) return 'W';
+  if (/^source_\d+_particles$/.test(id)) return 'm^-3/s';
+  if (/^transport_\d+_(electron|ion)_heat$/.test(id)) return 'W/m^2';
+  if (/^transport_\d+_electron_particles$/.test(id)) return 'm^-2/s';
+  return null;
+}
 export function parsePhysics(input: unknown): PhysicsData {
   assert(input && typeof input === 'object');
   const p = input as PhysicsData;
@@ -43,7 +57,10 @@ export function parsePhysics(input: unknown): PhysicsData {
   assert(rz(e.boundary) && e.boundary.length > 2 && rz(e.wall) && Array.isArray(e.axis) && e.axis.length === 2 && e.axis.every(finite));
   assert(Array.isArray(e.contours) && e.contours.length <= 50 && e.contours.every(c => finite(c.psiNorm) && c.psiNorm > 0 && c.psiNorm < 1 && Array.isArray(c.paths) && c.paths.length <= 20 && c.paths.every(rz)));
   assert(Array.isArray(p.profiles) && p.profiles.length <= 500 && new Set(p.profiles.map(v => v.id)).size === p.profiles.length);
-  for (const v of p.profiles) assert(/^[a-zA-Z0-9_-]{1,100}$/.test(v.id) && words(v.label) && words(v.source) && ['eV', 'm^-3', 'A/m^2', '1', 'Pa', 'W/m^3', 'W', 'm^-3/s', 'W/m^2', 'm^-2/s', 's^-1'].includes(v.unit) && ['rho_tor_norm', 'psi_norm'].includes(v.axis) && vector(v.x) && monotonic(v.x) && vector(v.y, true) && v.x.length === v.y.length);
+  for (const v of p.profiles) {
+    const expectedUnit = expectedProfileUnit(v.id);
+    assert(/^[a-zA-Z0-9_-]{1,100}$/.test(v.id) && words(v.label) && words(v.source) && ['eV', 'm^-3', 'A/m^2', '1', 'Pa', 'W/m^3', 'W', 'm^-3/s', 'W/m^2', 'm^-2/s', 's^-1'].includes(v.unit) && (!expectedUnit || v.unit === expectedUnit) && ['rho_tor_norm', 'psi_norm'].includes(v.axis) && vector(v.x) && monotonic(v.x) && vector(v.y, true) && v.y.some(finite) && v.x.length === v.y.length);
+  }
   assert(Array.isArray(p.sources) && p.sources.length <= 100 && p.sources.every(s => words(s.prefix) && words(s.name) && finite(s.index) && finite(s.timeSeconds)));
   assert(p.geometry && Array.isArray(p.geometry.layers) && p.geometry.layers.length <= 100 && p.geometry.layers.every(l => words(l.name) && words(l.material) && (l.thicknessM === null || finite(l.thicknessM)) && rz(l.outline)));
   assert(Array.isArray(p.geometry.coils) && p.geometry.coils.length <= 200 && p.geometry.coils.every(c => words(c.name) && Array.isArray(c.elements) && c.elements.length <= 100 && c.elements.every(e => finite(e.geometryType) && rz(e.outline)) && (c.timeSeconds === null || vector(c.timeSeconds, true)) && (c.currentA === null || vector(c.currentA, true)) && (c.timeSeconds === null || c.currentA === null || c.timeSeconds.length === c.currentA.length)));

@@ -4,6 +4,7 @@ import { spawn } from 'node:child_process';
 import { copyFile, mkdir, open, readFile, writeFile, unlink, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { isDeepStrictEqual } from 'node:util';
 import { gzipSync, gunzipSync } from 'node:zlib';
 import { getRecipe } from '../../app/simulations/platform/catalog.ts';
 import { parseEngineSpec, parseProfileSnapshot, parseTransportResult, isIdentifier, type ProfileSnapshot, type TransportRunEntry } from '../../app/simulations/platform/contracts.ts';
@@ -63,7 +64,7 @@ export async function cancel(id: string) {
 // Adapter boundary: replacing TORAX requires a new validator/launcher/collector,
 // not changes to the transport viewer. FUSE's mature native runner remains separate.
 export async function submit(value: unknown, input?: unknown): Promise<{ id: string; completion: Promise<JobStatus> }> {
-  const { spec, snapshot } = validateInput(value, input);
+  const { spec, snapshot } = await validateInput(value, input);
   await mkdir(resultsRoot, { recursive: true });
   const leasePath = path.join(resultsRoot, '.runner.lock');
   const lease = await open(leasePath, 'wx').catch(() => { throw new Error('ENGINE_BUSY_OR_UNRECONCILED'); });
@@ -101,10 +102,14 @@ export async function submit(value: unknown, input?: unknown): Promise<{ id: str
     return { id, completion };
   } catch (error) { await unlink(leasePath); throw error; }
 }
-export function validateInput(value: unknown, input?: unknown) {
+export async function validateInput(value: unknown, input?: unknown) {
   const spec = parseEngineSpec(value);
   const snapshot = input === undefined ? null : parseProfileSnapshot(input);
   if ((snapshot === null) !== (spec.input === null) || (snapshot && sha(json(snapshot)) !== spec.input?.profileSnapshotSha256)) throw new Error('SNAPSHOT_BINDING');
+  // A self-consistent upload digest proves only that the request was not
+  // changed in transit. Coupled runs also require the exact projection derived
+  // from this node's hash-verified published FUSE artifact.
+  if (snapshot && !isDeepStrictEqual(snapshot, await createFuseSnapshot())) throw new Error('FUSE_SNAPSHOT_SOURCE_UNVERIFIED');
   return { spec, snapshot };
 }
 export async function collectGeometry(id: string) {
@@ -116,7 +121,10 @@ export async function collectGeometry(id: string) {
   }
   const geometry = parseTransportGeometry(await readJson(path.join(out, 'geometry.json')));
   if (geometry.runId !== id || geometry.sourceNativeSha256 !== result.provenance.nativeSha256 || geometry.projectorSha256 !== manifest['export_geometry.py'].sha256) throw new Error('GEOMETRY_IDENTITY');
-  return geometry;
+  return {
+    schema: 'transport-geometry-result.v1', geometry,
+    verification: { authority: 'local-gateway-verified', geometrySha256: manifest['geometry.json'].sha256 },
+  } as const;
 }
 export async function collect(id: string) {
   const out = attemptPath(id), job = await status(id);

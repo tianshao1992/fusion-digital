@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { randomBytes } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { request as httpRequest } from 'node:http';
 import type { AddressInfo } from 'node:net';
@@ -250,31 +250,35 @@ test('FUSE cancellation stays cooperative and errors do not reveal private files
   } finally { await h.close(); }
 });
 
-test('real published projection fixtures reject cross-run mixing, missing bindings and invalid units', () => {
+test('real published projection fixtures reject cross-run mixing, missing bindings and invalid units', async () => {
   const bundles = JSON.parse(readFileSync(new URL('../app/simulations/data/physics-bundles.json', import.meta.url), 'utf8'));
   const bundle = bundles[0];
   const physics = JSON.parse(gunzipSync(readFileSync(new URL(`../public${bundle.path}`, import.meta.url))).toString());
   const runs = JSON.parse(readFileSync(new URL('../app/simulations/data/fuse-demo.json', import.meta.url), 'utf8'));
   const run = runs.find((value: { id: string }) => value.id === bundle.runId);
   assert.ok(run);
+  const runSpec = { ...defaultRunSpec(), recipe: 'diiid-default-stationary' as const };
+  const runSpecSha256 = createHash('sha256').update(`${JSON.stringify(runSpec, null, 2)}\n`).digest('hex');
+  run.source.artifacts.find((value: { name: string }) => value.name === 'run-spec.json').sha256 = runSpecSha256;
   // This wraps approved published fixtures in the gateway's metadata shape;
   // it does not assert that a real gateway collector ran during this test.
-  const fixture = { schema: 'fuse-job-result.v1', run, physics, verification: {
+  const fixture = { schema: 'fuse-job-result.v1', runSpec, run, physics, verification: {
     authority: 'local-gateway-verified', manifestSha256: run.source.recordSha256,
+    runSpecSha256,
     physicsSha256: run.source.artifacts.find((value: { name: string }) => value.name === 'physics.json').sha256,
     nativeSha256: run.source.artifacts.find((value: { name: string }) => value.name === 'dd-native.h5').sha256,
   } };
-  assert.equal(parseFuseCollectedResult(fixture).run.id, bundle.runId);
+  assert.equal((await parseFuseCollectedResult(fixture)).run.id, bundle.runId);
   const wrongRun = structuredClone(fixture); wrongRun.physics.runId = 'another-fuse-run';
-  assert.throws(() => parseFuseCollectedResult(wrongRun), /IDENTITY_MISMATCH/);
+  await assert.rejects(parseFuseCollectedResult(wrongRun), /IDENTITY_MISMATCH/);
   const noBinding = structuredClone(fixture);
   noBinding.run.source.artifacts = noBinding.run.source.artifacts.filter((value: { name: string }) => value.name !== 'physics.json');
-  assert.throws(() => parseFuseCollectedResult(noBinding), /PHYSICS_UNBOUND/);
+  await assert.rejects(parseFuseCollectedResult(noBinding), /PHYSICS_UNBOUND/);
   const wrongUnit = structuredClone(fixture); wrongUnit.physics.profiles[0].unit = 'unqualified';
-  assert.throws(() => parseFuseCollectedResult(wrongUnit), /PHYSICS/);
+  await assert.rejects(parseFuseCollectedResult(wrongUnit), /PHYSICS/);
   const wrongDigest = structuredClone(fixture); wrongDigest.verification.physicsSha256 = '0'.repeat(64);
-  assert.throws(() => parseFuseCollectedResult(wrongDigest), /VERIFICATION_MISMATCH/);
-  assert.throws(() => parseFuseCollectedResult({ ...fixture, privatePath: 'C:/private' }), /INVALID_FUSE_JOB_RESULT/);
+  await assert.rejects(parseFuseCollectedResult(wrongDigest), /VERIFICATION_MISMATCH/);
+  await assert.rejects(parseFuseCollectedResult({ ...fixture, privatePath: 'C:/private' }), /INVALID_FUSE_JOB_RESULT/);
 });
 
 test('anonymous web catalog remains read-only and does not import local execution code', () => {

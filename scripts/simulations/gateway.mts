@@ -79,7 +79,7 @@ export function createGateway(token: string, allowedOrigins: string | readonly s
         const isFuse = body.spec?.schema === 'simulation-runspec.v1';
         const spec = isFuse ? parseRunSpec(body.spec) : parseEngineSpec(body.spec);
         if (isFuse && body.snapshot !== undefined) throw new Error('FUSE_INPUT_NOT_SUPPORTED');
-        if (!isFuse) service.validateInput(spec, body.snapshot);
+        if (!isFuse) await service.validateInput(spec, body.snapshot);
         if (url.pathname === '/v1/validate') return reply(200, { valid: true, spec });
         const key = req.headers['idempotency-key'];
         if (typeof key !== 'string' || !/^[a-zA-Z0-9-]{16,80}$/.test(key)) return reply(400, { error: 'IDEMPOTENCY_KEY_REQUIRED' });

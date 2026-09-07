@@ -16,14 +16,20 @@ test('uploaded profiles bind browser bytes to backend input and cannot change th
   const spec = defaultEngineSpec('fuse-profile-handoff', { profileSnapshotSha256: await snapshotDigest(snapshot) });
   const upload = { schema: 'torax-run-upload.v1', spec, snapshot };
   assert.deepEqual((await parseUpload(JSON.stringify(upload))).snapshot, snapshot);
-  assert.deepEqual(validateInput(spec, snapshot).snapshot, snapshot);
+  assert.deepEqual((await validateInput(spec, snapshot)).snapshot, snapshot);
   const altered = structuredClone(snapshot); altered.profiles[0].values[0] *= 1.1;
   await assert.rejects(parseUpload(JSON.stringify({ ...upload, snapshot: altered })), /SNAPSHOT_BINDING/);
-  assert.throws(() => validateInput(spec, altered), /SNAPSHOT_BINDING/);
+  await assert.rejects(validateInput(spec, altered), /SNAPSHOT_BINDING/);
+  const rebound = defaultEngineSpec('fuse-profile-handoff', { profileSnapshotSha256: await snapshotDigest(altered) });
+  assert.deepEqual((await parseUpload(JSON.stringify({ ...upload, spec: rebound, snapshot: altered }))).snapshot, altered);
+  await assert.rejects(validateInput(rebound, altered), /FUSE_SNAPSHOT_SOURCE_UNVERIFIED/);
+  const unknownSource = structuredClone(snapshot); unknownSource.source.engineId = 'user-model';
+  const unknownSourceSpec = defaultEngineSpec('fuse-profile-handoff', { profileSnapshotSha256: await snapshotDigest(unknownSource) });
+  await assert.rejects(validateInput(unknownSourceSpec, unknownSource), /FUSE_SNAPSHOT_SOURCE_UNVERIFIED/);
   await assert.rejects(parseUpload(JSON.stringify({ ...upload, command: 'python user.py' })), /INVALID_UPLOAD/);
   await assert.rejects(parseUpload(JSON.stringify({ ...upload, snapshot: { ...snapshot, coordinate: 'psi_norm' } })), /INCOMPATIBLE/);
   await assert.rejects(parseUpload(' '.repeat(120001)), /UPLOAD_TOO_LARGE/);
-  assert.throws(() => validateInput(defaultEngineSpec(), snapshot), /SNAPSHOT_BINDING/);
+  await assert.rejects(validateInput(defaultEngineSpec(), snapshot), /SNAPSHOT_BINDING/);
 });
 test('remote job responses preserve identity and unresolved processes remain active', () => {
   const status = { schema: 'engine-job.v1', id: 'torax-basic-test', state: 'running', processStopped: false, elapsedSeconds: 1 };

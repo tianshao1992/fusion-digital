@@ -1,7 +1,7 @@
 import { parseSimulationRun, type SimulationRun } from './contract';
 import { parseFluxCoordinateMap, type FluxCoordinateMap } from './flux-coordinate-map';
 import { parsePhysics, type PhysicsData } from './physics';
-import type { RunSpec } from './run-spec';
+import { parseRunSpec, type RunSpec } from './run-spec';
 
 export const FUSE_JOB_STATES = [
   'queued',
@@ -31,12 +31,14 @@ export type FuseJobStatus = {
 
 export type FuseCollectedResult = {
   schema: 'fuse-job-result.v1';
+  runSpec: RunSpec;
   run: SimulationRun;
   physics: PhysicsData;
   coordinateMap?: FluxCoordinateMap;
   verification: {
     authority: 'local-gateway-verified';
     manifestSha256: string;
+    runSpecSha256: string;
     physicsSha256: string;
     nativeSha256: string;
     coordinateMapSha256?: string;
@@ -47,6 +49,7 @@ const fuseJobIdentifier = (value: unknown): value is string => typeof value === 
 const digest = (value: unknown): value is string => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
 const finite = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value);
 const exactKeys = (value: unknown, keys: string[]): boolean => !!value && typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length === keys.length && Object.keys(value).every(key => keys.includes(key));
+const canonicalRunSpec = (value: RunSpec): string => `${JSON.stringify(value, null, 2)}\n`;
 
 function check(condition: unknown, code: string): asserts condition {
   if (!condition) throw new Error(code);
@@ -116,14 +119,22 @@ export function parseFuseSubmission(value: unknown): { id: string } {
   return { id: (value as { id: string }).id };
 }
 
-export function parseFuseCollectedResult(value: unknown): FuseCollectedResult {
+async function sha256(value: string): Promise<string> {
+  check(globalThis.crypto?.subtle, 'FUSE_JOB_VERIFICATION_UNAVAILABLE');
+  const bytes = new Uint8Array(await globalThis.crypto.subtle.digest('SHA-256', new TextEncoder().encode(value)));
+  return Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
+}
+
+export async function parseFuseCollectedResult(value: unknown): Promise<FuseCollectedResult> {
   check(value && typeof value === 'object' && !Array.isArray(value), 'INVALID_FUSE_JOB_RESULT');
   const envelope = value as Record<string, unknown>;
   check(envelope.schema === 'fuse-job-result.v1', 'INVALID_FUSE_JOB_RESULT');
-  check(Object.keys(envelope).every(key => ['schema', 'run', 'physics', 'coordinateMap', 'verification'].includes(key)), 'INVALID_FUSE_JOB_RESULT');
+  check(Object.keys(envelope).every(key => ['schema', 'runSpec', 'run', 'physics', 'coordinateMap', 'verification'].includes(key)), 'INVALID_FUSE_JOB_RESULT');
+  const runSpec = parseRunSpec(envelope.runSpec);
   const run = parseSimulationRun(envelope.run);
   const physics = parsePhysics(envelope.physics);
   check(run.engine.id === 'fuse' && fuseJobIdentifier(run.id) && run.id === physics.runId, 'FUSE_JOB_RESULT_IDENTITY_MISMATCH');
+  const runSpecArtifact = run.source.artifacts.find(artifact => artifact.name === 'run-spec.json');
   const physicsArtifact = run.source.artifacts.find(artifact => artifact.name === 'physics.json');
   const nativeArtifact = run.source.artifacts.find(artifact => artifact.name === 'dd-native.h5');
   const mapArtifact = run.source.artifacts.find(artifact => artifact.name === 'coordinate-map.json');
@@ -131,10 +142,12 @@ export function parseFuseCollectedResult(value: unknown): FuseCollectedResult {
   check(envelope.verification && typeof envelope.verification === 'object' && !Array.isArray(envelope.verification), 'INVALID_FUSE_JOB_VERIFICATION');
   const verification = envelope.verification as FuseCollectedResult['verification'];
   const verificationKeys = envelope.coordinateMap === undefined
-    ? ['authority', 'manifestSha256', 'physicsSha256', 'nativeSha256']
-    : ['authority', 'manifestSha256', 'physicsSha256', 'nativeSha256', 'coordinateMapSha256'];
+    ? ['authority', 'manifestSha256', 'runSpecSha256', 'physicsSha256', 'nativeSha256']
+    : ['authority', 'manifestSha256', 'runSpecSha256', 'physicsSha256', 'nativeSha256', 'coordinateMapSha256'];
   check(exactKeys(verification, verificationKeys) && verification.authority === 'local-gateway-verified', 'INVALID_FUSE_JOB_VERIFICATION');
-  check(digest(verification.manifestSha256) && digest(verification.physicsSha256) && digest(verification.nativeSha256), 'INVALID_FUSE_JOB_VERIFICATION');
+  check(digest(verification.manifestSha256) && digest(verification.runSpecSha256) && digest(verification.physicsSha256) && digest(verification.nativeSha256), 'INVALID_FUSE_JOB_VERIFICATION');
+  check(runSpecArtifact && digest(runSpecArtifact.sha256) && verification.runSpecSha256 === runSpecArtifact.sha256, 'FUSE_JOB_RESULT_RUN_SPEC_UNBOUND');
+  check(verification.runSpecSha256 === await sha256(canonicalRunSpec(runSpec)), 'FUSE_JOB_VERIFICATION_MISMATCH');
   check(verification.manifestSha256 === run.source.recordSha256 && verification.physicsSha256 === physicsArtifact.sha256, 'FUSE_JOB_VERIFICATION_MISMATCH');
   check(nativeArtifact && verification.nativeSha256 === nativeArtifact.sha256, 'FUSE_JOB_VERIFICATION_MISMATCH');
   let coordinateMap: FluxCoordinateMap | undefined;
@@ -152,18 +165,20 @@ export function parseFuseCollectedResult(value: unknown): FuseCollectedResult {
       'FUSE_JOB_RESULT_COORDINATE_MISMATCH',
     );
   }
-  return { schema: 'fuse-job-result.v1', run, physics, ...(coordinateMap ? { coordinateMap } : {}), verification: { ...verification } };
+  return { schema: 'fuse-job-result.v1', runSpec, run, physics, ...(coordinateMap ? { coordinateMap } : {}), verification: { ...verification } };
 }
 
 export function assertFuseResultMatchesSpec(result: FuseCollectedResult, spec: RunSpec): void {
-  const expectedCase = spec.recipe === 'diiid-default-stationary' ? 'diiid-stationary' : 'diiid-fluxmatch-profile';
+  const expected = parseRunSpec(spec);
+  check(canonicalRunSpec(result.runSpec) === canonicalRunSpec(expected), 'FUSE_JOB_RESULT_RUN_SPEC_MISMATCH');
+  const expectedCase = expected.recipe === 'diiid-default-stationary' ? 'diiid-stationary' : 'diiid-fluxmatch-profile';
   check(result.run.caseId === expectedCase, 'FUSE_JOB_RESULT_RECIPE_MISMATCH');
-  check(result.run.engine.commit === spec.engineCommit && result.run.engine.threads === spec.resources.threads, 'FUSE_JOB_RESULT_ENGINE_MISMATCH');
-  check(result.run.solverTolerances?.xtol === spec.solver.xtol, 'FUSE_JOB_RESULT_SOLVER_MISMATCH');
-  if (spec.recipe === 'diiid-lmode-fluxmatch') {
-    check(result.run.convergence.kind === 'variants' && result.run.convergence.labels.length === 1 && result.run.convergence.labels[0] === spec.model, 'FUSE_JOB_RESULT_MODEL_MISMATCH');
+  check(result.run.engine.commit === expected.engineCommit && result.run.engine.threads === expected.resources.threads, 'FUSE_JOB_RESULT_ENGINE_MISMATCH');
+  check(result.run.solverTolerances?.xtol === expected.solver.xtol, 'FUSE_JOB_RESULT_SOLVER_MISMATCH');
+  if (expected.recipe === 'diiid-lmode-fluxmatch') {
+    check(result.run.convergence.kind === 'variants' && result.run.convergence.labels.length === 1 && result.run.convergence.labels[0] === expected.model, 'FUSE_JOB_RESULT_MODEL_MISMATCH');
   } else {
-    check(spec.model === 'TGLFNN' && result.run.convergence.kind === 'iterations' && result.run.convergence.threshold === spec.solver.stationaryThreshold, 'FUSE_JOB_RESULT_MODEL_MISMATCH');
+    check(expected.model === 'TGLFNN' && result.run.convergence.kind === 'iterations' && result.run.convergence.threshold === expected.solver.stationaryThreshold, 'FUSE_JOB_RESULT_MODEL_MISMATCH');
   }
 }
 

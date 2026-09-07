@@ -6,7 +6,7 @@
 
 1. 在 `/simulations?engine=torax` 选择算例，进入“配置与运行”。
 2. 设置模拟时长、径向网格、加热倍率、CPU 核数和墙钟超时。
-3. 可导入 `torax-run-upload.v1` 运行包；FUSE 剖面传递案例另支持上传 `core-profile-snapshot.v1` JSON，或读取节点已有 FUSE 剖面。
+3. 可导入 `torax-run-upload.v1` 运行包；FUSE 剖面传递案例另支持导入该节点发布的 `core-profile-snapshot.v1` JSON，或直接读取节点已有 FUSE 剖面。节点不接受自行修改或仅自报来源的剖面。
 4. 填写计算节点地址与令牌，连接后点击“上传并启动计算”。
 5. 查看真实状态、刷新或取消。成功后“查看新计算结果”显示该次计算的剖面、时序与 R–Z 映射，可下载结果和任务回执。
 6. 刷新页面后输入令牌，连接并恢复已保存的任务编号；也可手动输入任务编号。切换结果/参数标签不会卸载正在跟踪的任务。
@@ -43,18 +43,18 @@ pwsh -File D:\Code\FusionDigital\scripts\simulations\start-compute-node.ps1 -Cop
 
 - 运行包：`{schema: "torax-run-upload.v1", spec, snapshot}`。普通配方的 snapshot 必须为 null。
 - 剖面：Te/Ti 使用 eV，ne 使用 m⁻³；严格递增的 ρtor,norm 覆盖 0–1，最多 1024 点，所有剖面为有限正值。
-- 只接收 `simulated` 剖面。接收几何固定为明确标注的 DIII-D-like 圆截面；不接收磁平衡、装置文件或任意代码。上传者声明的源记录哈希不等同于原始生产者制品已经核验。
-- 前端文件上限 120,000 字节，网关 JSON 上限 128,000 字节。服务端重新校验规格、单位、轴和快照 SHA-256；`/v1/validate` 同样校验快照绑定。
+- FUSE 联动只接收与节点当前已验证发布投影完全一致的 `simulated` 快照。节点先核验 FUSE 压缩/原始制品哈希和 run ID，再逐字段比对 Te/Ti/ne、坐标、时间与来源身份；修改数值后重算自摘要或改成未知引擎仍会拒绝。接收几何固定为明确标注的 DIII-D-like 圆截面；不接收磁平衡、装置文件或任意代码。
+- 前端文件上限 120,000 字节，网关 JSON 上限 128,000 字节。服务端重新校验规格、单位、轴、快照 SHA-256 和节点发布来源；`/v1/validate` 与 `/v1/jobs` 执行同一验证。
 - CPU 1–8，超时 30–3600 s，模拟时长 0.01–400 s，径向单元 10–100，加热倍率 0.5–1.5；STEP 只允许倍率 1。这些是执行边界，不是物理适用域声明。
 - `/v1/jobs/:id/result` 返回通过 manifest/原生结果/配置/环境哈希核验的 `transport-timeseries.v1`。
-- `/v1/jobs/:id/geometry` 返回同次运行的 `transport-geometry.v1`，验证原生文件、投影器和读取器哈希。STEP 显示原始输入平衡；其他配方显示参数化磁面重建，剖面沿磁面映射。
+- `/v1/jobs/:id/geometry` 返回 `transport-geometry-result.v1` 验证包，包含同次运行的 `transport-geometry.v1` 以及计算节点已核验的 `geometry.json` SHA-256。STEP 显示原始输入平衡；其他配方显示参数化磁面重建，剖面沿磁面映射；新会话导出的派生场保留该几何身份。
 - 旧运行可能没有 geometry sidecar，此时只显示可用时序和径向场，不用其他运行的几何补齐。
 
 结果返回不自动提交 Git 或加入公共算例目录，也不授予数值收敛或装置精度资格。当前演示保留各配方电阻率倍率，不能直接当作物理控制时标验证。
 
 ## 验证
 
-`tests/torax-remote.test.mts` 覆盖 HTTPS 地址、上传绑定、非法代码字段、坐标错误、结果身份及运行参数匹配。已有网关测试覆盖鉴权、来源、代理 Host、请求限额、幂等和 FUSE 全局租约。
+`tests/torax-remote.test.mts` 覆盖 HTTPS 地址、上传绑定、数值篡改后重算摘要、未知来源引擎、非法代码字段、坐标错误、结果身份及运行参数匹配。已有网关测试覆盖鉴权、来源、代理 Host、请求限额、幂等和 FUSE 全局租约。
 
 `scripts/simulations/verify-torax-integration.mts` 实际执行基础算例，验证取消和篡改拒绝。
 

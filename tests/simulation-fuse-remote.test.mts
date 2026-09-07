@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import { gunzipSync } from 'node:zlib';
@@ -18,6 +19,7 @@ import { defaultRunSpec } from '../app/simulations/run-spec.ts';
 
 const project = new URL('../', import.meta.url);
 const asset = async (publicPath: string) => JSON.parse(gunzipSync(await readFile(new URL(`public${publicPath}`, project))).toString());
+const runSpecDigest = (value: ReturnType<typeof defaultRunSpec>) => createHash('sha256').update(`${JSON.stringify(value, null, 2)}\n`).digest('hex');
 
 test('FUSE gateway endpoint accepts loopback HTTP or origin-only HTTPS', () => {
   assert.equal(normalizeFuseGatewayEndpoint('http://127.0.0.1:8791/'), 'http://127.0.0.1:8791');
@@ -50,19 +52,33 @@ test('FUSE recovery UI keeps endpoint, token and job ID in component memory only
 test('FUSE session result binds gateway verification, native artifacts, state and submitted spec', async () => {
   const run = structuredClone(records[0]); const bundle = bundles.find(item => item.runId === run.id)!; const mapBundle = maps.find(item => item.runId === run.id)!;
   const physics = await asset(bundle.path); const coordinateMap = await asset(mapBundle.artifact.path);
+  const runSpec = { ...defaultRunSpec(), recipe: 'diiid-default-stationary' as const };
+  const runSpecSha256 = runSpecDigest(runSpec);
+  const runSpecArtifact = run.source.artifacts.find(item => item.name === 'run-spec.json');
+  assert.ok(runSpecArtifact); runSpecArtifact.sha256 = runSpecSha256;
   run.source.artifacts.push({ name: 'coordinate-map.json', sha256: mapBundle.artifact.rawSha256 });
   const value = {
-    schema: 'fuse-job-result.v1', run, physics, coordinateMap,
+    schema: 'fuse-job-result.v1', runSpec, run, physics, coordinateMap,
     verification: {
       authority: 'local-gateway-verified', manifestSha256: run.source.recordSha256,
+      runSpecSha256,
       physicsSha256: bundle.rawSha256, nativeSha256: mapBundle.sourceNativeSha256,
       coordinateMapSha256: mapBundle.artifact.rawSha256,
     },
   };
-  const result = parseFuseCollectedResult(value);
+  const result = await parseFuseCollectedResult(value);
   assert.equal(result.run.id, result.physics.runId);
-  assertFuseResultMatchesSpec(result, { ...defaultRunSpec(), recipe: 'diiid-default-stationary' });
-  assert.throws(() => parseFuseCollectedResult({ ...value, verification: { ...value.verification, nativeSha256: '0'.repeat(64) } }));
+  assertFuseResultMatchesSpec(result, runSpec);
+  await assert.rejects(parseFuseCollectedResult({ ...value, verification: { ...value.verification, nativeSha256: '0'.repeat(64) } }));
+  const unboundRunSpec = structuredClone(value);
+  unboundRunSpec.run.source.artifacts = unboundRunSpec.run.source.artifacts.filter(item => item.name !== 'run-spec.json');
+  await assert.rejects(parseFuseCollectedResult(unboundRunSpec), /RUN_SPEC_UNBOUND/);
+  await assert.rejects(parseFuseCollectedResult({ ...value, runSpec: { ...runSpec, solver: { ...runSpec.solver, maxIterations: 299 } } }), /VERIFICATION_MISMATCH/);
+  for (const mismatch of [
+    { ...runSpec, solver: { ...runSpec.solver, maxIterations: 299 } },
+    { ...runSpec, solver: { ...runSpec.solver, stationaryIterations: 4 } },
+    { ...runSpec, resources: { ...runSpec.resources, timeoutSeconds: 1799 } },
+  ]) assert.throws(() => assertFuseResultMatchesSpec(result, mismatch), /RUN_SPEC_MISMATCH/);
   assert.throws(() => assertFuseResultMatchesSpec(result, defaultRunSpec()));
   assert.equal(parseFuseJobStatus({ schema: 'engine-job.v1', engineId: 'fuse', id: run.id, state: 'running', processStopped: false, exitCode: null, elapsedSeconds: 2 }).state, 'running');
   assert.throws(() => parseFuseJobStatus({ schema: 'engine-job.v1', engineId: 'fuse', id: run.id, state: 'unknown', processStopped: false, exitCode: null }));
