@@ -62,9 +62,11 @@ wsl -d Ubuntu -- /mnt/d/Code/Torax/.venv-wsl/bin/python -m venv /mnt/d/Code/Fusi
 wsl -d Ubuntu -- /mnt/d/Code/FusionDigital/work/diagnostics/.venv-wsl/bin/python -m pip install --index-url https://pypi.org/simple --only-binary=:all: -r /mnt/d/Code/FusionDigital/scripts/diagnostics/requirements-lock.txt
 npm run diagnostic:demo
 npm run test:synthetic-diagnostics
-wsl -d Ubuntu -- /mnt/d/Code/FusionDigital/work/diagnostics/.venv-wsl/bin/python /mnt/d/Code/FusionDigital/tests/synthetic-diagnostics-math.test.py
+npm run test:diagnostic-runtime
 npm run dev -- --host 127.0.0.1 --port 3023
 ```
+
+`test:synthetic-diagnostics` 是 Web 发布门禁的一部分，同时验证归档的来源数组绑定和构建后的双语页面。`test:diagnostic-runtime` 是具有 CHERAB/Raysect 环境的计算节点强制门禁；隔离工作树可以通过 `DIAGNOSTIC_WSL_PYTHON`（Windows/WSL）或 `DIAGNOSTIC_PYTHON`（Linux）指向已审核的解释器，脚本以参数数组启动，不经 shell 拼接。
 
 沿用仓库 Node >=22.13 要求，命令显式启用原生 TypeScript 类型剥离；本次使用 Node 24.18.0。环境内 `pip check` 已通过。环境锁来自本次实际安装；重新安装仍需信任/校验官方发行包。
 

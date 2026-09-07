@@ -8,7 +8,8 @@
   },
   "scripts": {
     "diagnostic:demo": "node scripts/diagnostics/run-demo.mjs",
-    "test:synthetic-diagnostics": "node --experimental-strip-types --test tests/synthetic-diagnostics.test.mts",
+    "test:synthetic-diagnostics": "node --experimental-strip-types --test tests/synthetic-diagnostics.test.mts && node --test tests/synthetic-diagnostics-rendered.test.mjs",
+    "test:diagnostic-runtime": "node scripts/diagnostics/test-runtime.mjs",
     "simulation:engine": "tsx scripts/simulations/engine-cli.mts",
     "simulation:gateway": "tsx scripts/simulations/gateway.mts",
     "test:simulation-platform": "tsx --test tests/simulation-platform.test.mts tests/simulation-gateway.test.mts tests/simulation-gateway-origins.test.mts tests/simulation-fuse-gateway.test.mts tests/simulation-fuse-boundaries.test.mts tests/simulation-fuse-remote.test.mts tests/simulation-transport-fields.test.mts tests/torax-remote.test.mts",
