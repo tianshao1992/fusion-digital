@@ -117,6 +117,11 @@ function run_recipe()
         "description"=>case == :L_mode ? "Initialized upstream L-mode example; not raw diagnostics; no shot ID supplied" : "Parameterized profiles initialized on upstream equilibrium; not observed profiles")
     write_json(joinpath(OUTPUT,"physics.json"),physics)
     IMAS.imas2hdf(dd, joinpath(OUTPUT,"dd-native.h5"); freeze=false, strict=false, compress=3)
+    coordinate_map = project_flux_coordinate_map(dd; run_id=ENV["FUSE_RUN_ID"],
+        native_sha256=hash_file(joinpath(OUTPUT,"dd-native.h5")),
+        physics_sha256=hash_file(joinpath(OUTPUT,"physics.json")),
+        projector_sha256=hash_file(joinpath(OUTPUT,"FuseProjection.jl")))
+    write_json(joinpath(OUTPUT,"coordinate-map.json"),coordinate_map)
     FUSE.ini2json(ini, joinpath(OUTPUT,"resolved-ini.json"))
     FUSE.act2json(act, joinpath(OUTPUT,"resolved-act.json"))
     # Check actual native roundtrip, not only successful serialization.
@@ -150,7 +155,7 @@ function run_recipe()
         "threads"=>Threads.nthreads(),"fuseCommit"=>SPEC["engineCommit"],"selectedResidual"=>diagnostics["selectedResidual"],
         "evaluationCount"=>length(diagnostics["evaluationResiduals"]),"stationaryHistory"=>HISTORY,
         "stationaryThreshold"=>SPEC["solver"]["stationaryThreshold"],"checks"=>checks,
-        "artifacts"=>[Dict("name"=>name,"sha256"=>hash_file(joinpath(OUTPUT,name))) for name in ["physics.json","initial-native.h5","dd-native.h5","input-ini.json","input-act.json","effective-act.json","resolved-ini.json","resolved-act.json","checks.json","stages.json","inner-history.json","run-spec.json","environment-lock.json","run-diiid.jl","FuseProjection.jl"]])
+        "artifacts"=>[Dict("name"=>name,"sha256"=>hash_file(joinpath(OUTPUT,name))) for name in ["physics.json","coordinate-map.json","initial-native.h5","solved-native.h5","dd-native.h5","input-ini.json","input-act.json","effective-act.json","resolved-ini.json","resolved-act.json","checks.json","stages.json","inner-history.json","run-spec.json","environment-lock.json","run-diiid.jl","FuseProjection.jl"]])
     write_json(joinpath(OUTPUT,"run-manifest.json"),manifest)
     println("[completed] "*ENV["FUSE_RUN_ID"]*" selected residual="*string(diagnostics["selectedResidual"]))
 end

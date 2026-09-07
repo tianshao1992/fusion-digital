@@ -23,7 +23,12 @@ export async function supervise(file: string, args: string[], options: {
     if(process.platform==='win32') {
       // Only the live handle created above, never a PID recovered from a status file.
       const killer=spawn('taskkill.exe',['/PID',String(child.pid),'/T','/F'],{windowsHide:true,stdio:'ignore'});
-      killer.on('error',()=>{if(!closed)child.kill('SIGKILL');});
+      const fallback=()=>{if(!closed)child.kill(force?'SIGKILL':'SIGTERM');};
+      killer.once('error',fallback);
+      // taskkill can start successfully yet be denied by the host. A non-zero
+      // exit must fall back to the still-owned ChildProcess handle, otherwise
+      // cancellation can wait forever for a close event that never arrives.
+      killer.once('close',code=>{if(code!==0)fallback();});
     } else {
       try {process.kill(-child.pid,force?'SIGKILL':'SIGTERM');} catch {child.kill(force?'SIGKILL':'SIGTERM');}
     }

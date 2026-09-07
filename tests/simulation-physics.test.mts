@@ -4,11 +4,13 @@ import { readFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
 import { createHash } from 'node:crypto';
 import { loadPhysics, parsePhysics, profileDisplay, type PhysicsBundle } from '../app/simulations/physics.ts';
-import { buildEquilibriumFieldProjection, gridCellBounds, normalizedPoloidalFlux, pointInClosedPolygon } from '../app/simulations/equilibrium-field.ts';
+import { buildEquilibriumFieldProjection, gridCellBounds, interpolateBounded, normalizedPoloidalFlux, pointInClosedPolygon, sampleSpatialFieldAtPsiNorm, spatialFieldUnavailableReason, SPATIAL_FIELD_SPECS } from '../app/simulations/equilibrium-field.ts';
+import { loadFluxCoordinateMap, parseFluxCoordinateMap, type FluxCoordinateMapBundle } from '../app/simulations/flux-coordinate-map.ts';
 import { parseSimulationRun } from '../app/simulations/contract.ts';
 import { loadInnerHistory, parseInnerHistory, type DiagnosticsBundle } from '../app/simulations/diagnostics.ts';
 import { compareRuns } from '../app/simulations/comparison.ts';
 const bundles:PhysicsBundle[]=JSON.parse(readFileSync(new URL('../app/simulations/data/physics-bundles.json',import.meta.url),'utf8'));
+const coordinateMapEntries:FluxCoordinateMapBundle[]=JSON.parse(readFileSync(new URL('../app/simulations/data/fuse-coordinate-maps.json',import.meta.url),'utf8'));
 const bundle=bundles.find(b=>b.runId==='fuse-fpp-20260907-003257-48a4fa67')!;
 const bytes=readFileSync(new URL(`../public${bundle.path}`,import.meta.url));
 const raw=gunzipSync(bytes); const original=JSON.parse(raw.toString());
@@ -92,6 +94,46 @@ test('equilibrium cloud projects the native psi grid through an LCFS mask',()=>{
   assert.deepEqual(gridCellBounds([0,1,4],2),[2.5,5.5]);
   assert.equal(normalizedPoloidalFlux(2,2,0),0);
   assert.equal(normalizedPoloidalFlux(0,2,0),1);
+});
+test('native flux-coordinate sidecars are content-addressed and bound to each physics result',()=>{
+  assert.equal(coordinateMapEntries.length,bundles.length);
+  for(const entry of coordinateMapEntries as FluxCoordinateMapBundle[]){
+    const physicsBundle=bundles.find(item=>item.runId===entry.runId)!;
+    const compressed=readFileSync(new URL(`../public${entry.artifact.path}`,import.meta.url));
+    const raw=gunzipSync(compressed);const map=parseFluxCoordinateMap(JSON.parse(raw.toString()));
+    assert.equal(hash(compressed),entry.artifact.sha256);assert.equal(hash(raw),entry.artifact.rawSha256);
+    assert.equal(compressed.length,entry.artifact.bytes);assert.equal(raw.length,entry.artifact.rawBytes);
+    assert.equal(map.runId,physicsBundle.runId);assert.equal(map.source.physicsSha256,physicsBundle.rawSha256);assert.equal(map.source.nativeSha256,entry.sourceNativeSha256);
+    assert.deepEqual([map.psiNorm[0],map.psiNorm.at(-1),map.rhoTorNorm[0],map.rhoTorNorm.at(-1)],[0,1,0,1]);
+    assert.ok(map.psiNorm.every((value,index)=>index===0||value>map.psiNorm[index-1]));
+    assert.ok(map.rhoTorNorm.every((value,index)=>index===0||value>map.rhoTorNorm[index-1]));
+    assert.ok(Math.max(...map.psiNorm.map((value,index)=>Math.abs(Math.sqrt(value)-map.rhoTorNorm[index])))>.05,'the native toroidal-flux coordinate must not collapse to sqrt(psiN)');
+  }
+});
+test('rho-based profiles map to the R-Z grid with bounded interpolation and preserved display units',()=>{
+  const p=parsePhysics(original);const entry=(coordinateMapEntries as FluxCoordinateMapBundle[]).find(item=>item.runId===p.runId)!;
+  const map=parseFluxCoordinateMap(JSON.parse(gunzipSync(readFileSync(new URL(`../public${entry.artifact.path}`,import.meta.url))).toString()));
+  assert.equal(spatialFieldUnavailableReason(p,'te',map),null);assert.equal(spatialFieldUnavailableReason(p,'te'), 'flux-coordinate-map-unavailable');
+  assert.throws(()=>buildEquilibriumFieldProjection(p,'te'),/flux-coordinate-map-unavailable/);
+  const projection=buildEquilibriumFieldProjection(p,'te',map);assert.equal(projection.unit,'keV');assert.equal(projection.sourceUnit,'eV');assert.equal(projection.authority,'profile-mapped');assert.ok(projection.samples.length>1000);
+  const sample=projection.samples[Math.floor(projection.samples.length/2)], profile=p.profiles.find(item=>item.id==='te')!;
+  const rho=interpolateBounded(map.psiNorm,map.rhoTorNorm,sample[3]);assert.equal(sample[9],rho);assert.notEqual(rho,null);
+  const rawValue=interpolateBounded(profile.x,profile.y,rho!);assert.notEqual(rawValue,null);assert.ok(Math.abs(sample[2]-rawValue!*1e-3)<1e-10);
+  const point=sampleSpatialFieldAtPsiNorm(p,'ne',sample[3],map,sample[4]);assert.ok(point&&point.value>0&&point.unit==='10²⁰ m⁻³');
+  assert.equal(interpolateBounded([0,.5,1],[1,null,3],.25),null);assert.equal(interpolateBounded([0,.5,1],[1,2,3],-0.01),null);assert.equal(interpolateBounded([0,.5,1],[1,2,3],1.01),null);
+  const invalid=structuredClone(map);invalid.source.coreTimeSeconds+=1;assert.equal(spatialFieldUnavailableReason(p,'te',invalid),'profile-state-mismatch');
+});
+test('spatial selector only exposes qualified flux functions',()=>{
+  const p=parsePhysics(original);
+  assert.deepEqual(SPATIAL_FIELD_SPECS.map(item=>item.id),['psi_norm','psi','te','ti','ne','q','pressure']);
+  assert.ok(p.profiles.some(item=>item.id==='eq_j_tor'),'the 1D current profile remains available outside the spatial selector');
+});
+test('browser loader verifies coordinate-map bytes and run/state identity',async()=>{
+  const p=parsePhysics(original);const entry=(coordinateMapEntries as FluxCoordinateMapBundle[]).find(item=>item.runId===p.runId)!;const compressed=readFileSync(new URL(`../public${entry.artifact.path}`,import.meta.url));
+  const originalFetch=globalThis.fetch;
+  try{globalThis.fetch=async()=>new Response(compressed);assert.equal((await loadFluxCoordinateMap(entry,bundle,p,new AbortController().signal)).runId,p.runId);
+    await assert.rejects(loadFluxCoordinateMap({...entry,sourcePhysicsSha256:'0'.repeat(64)},bundle,p,new AbortController().signal),/CATALOG_MISMATCH/);
+  }finally{globalThis.fetch=originalFetch;}
 });
 test('temperature and current display conversions do not overwrite native units',()=>{
   const te=parsePhysics(original).profiles.find(p=>p.id==='te')!; const q=original.profiles.find((p:{id:string})=>p.id==='q');

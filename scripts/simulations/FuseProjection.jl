@@ -1,7 +1,7 @@
 # Shared scientific projection; never executes a solver or publishes files.
 module FuseProjection
 using FUSE, IMAS, JSON
-export write_json, json_safe, project_physics
+export write_json, json_safe, project_physics, project_flux_coordinate_map
 function json_safe(value)
     if value === missing || value === nothing
         return nothing
@@ -31,6 +31,39 @@ function write_json(path, value)
         JSON.print(io, value, 2)
         println(io)
     end
+end
+
+function project_flux_coordinate_map(dd; run_id::String, native_sha256::String, physics_sha256::String, projector_sha256::String)
+    eqt = dd.equilibrium.time_slice[]
+    cp = dd.core_profiles.profiles_1d[]
+    psi_norm = Float64.(collect(eqt.profiles_1d.psi_norm))
+    rho_tor_norm = Float64.(collect(eqt.profiles_1d.rho_tor_norm))
+    length(psi_norm) == length(rho_tor_norm) >= 3 || error("Coordinate shape mismatch")
+    all(isfinite, psi_norm) && all(isfinite, rho_tor_norm) || error("Non-finite coordinate map")
+    all(diff(psi_norm) .> 0) && all(diff(rho_tor_norm) .> 0) || error("Non-monotonic coordinate map")
+    all(isapprox.([psi_norm[1], psi_norm[end], rho_tor_norm[1], rho_tor_norm[end]], [0.0, 1.0, 0.0, 1.0]; atol=1e-10, rtol=0.0)) || error("Incomplete coordinate map")
+    eqt.time == cp.time || error("Unaligned equilibrium and core-profile state")
+    return Dict(
+        "schema" => "fuse-flux-coordinate-map.v1",
+        "authority" => "simulation-derived",
+        "runId" => run_id,
+        "source" => Dict(
+            "nativeSha256" => native_sha256,
+            "physicsSha256" => physics_sha256,
+            "equilibriumTimeSeconds" => eqt.time,
+            "coreTimeSeconds" => cp.time,
+            "cocos" => 11,
+            "psiNormPath" => "equilibrium.time_slice.profiles_1d.psi_norm",
+            "rhoTorNormPath" => "equilibrium.time_slice.profiles_1d.rho_tor_norm",
+        ),
+        "psiNorm" => psi_norm,
+        "rhoTorNorm" => rho_tor_norm,
+        "method" => "native-equilibrium-coordinate-map",
+        "interpolation" => "bounded-linear",
+        "extrapolation" => "none",
+        "assumptions" => ["axisymmetric-flux-function"],
+        "projectorSha256" => projector_sha256,
+    )
 end
 
 

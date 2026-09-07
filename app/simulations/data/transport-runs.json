@@ -1,0 +1,642 @@
+[
+  {
+    "id": "torax-basic-1788759205801-b84287cc",
+    "engineId": "torax",
+    "recipe": "basic",
+    "device": "ITER-like",
+    "comparisonGroup": "basic",
+    "duration": 5,
+    "steps": 21,
+    "radialCells": 25,
+    "metrics": [
+      {
+        "id": "fusion_power",
+        "unit": "W",
+        "value": 390118469.56721246
+      },
+      {
+        "id": "external_power",
+        "unit": "W",
+        "value": 123456691.76371294
+      },
+      {
+        "id": "alpha_power",
+        "unit": "W",
+        "value": 78023693.91344249
+      },
+      {
+        "id": "auxiliary_power",
+        "unit": "W",
+        "value": 119999999.99999997
+      },
+      {
+        "id": "fusion_gain",
+        "unit": "1",
+        "value": 3.1599621210802433
+      },
+      {
+        "id": "plasma_current",
+        "unit": "A",
+        "value": 15000000.000000002
+      },
+      {
+        "id": "thermal_energy",
+        "unit": "J",
+        "value": 268150980.51352867
+      },
+      {
+        "id": "q95",
+        "unit": "1",
+        "value": 2.872288004102212
+      },
+      {
+        "id": "te_volume_average",
+        "unit": "eV",
+        "value": 7207.341025592062
+      },
+      {
+        "id": "ti_volume_average",
+        "unit": "eV",
+        "value": 6263.095563999234
+      },
+      {
+        "id": "ne_volume_average",
+        "unit": "m^-3",
+        "value": 91934139534883720000
+      },
+      {
+        "id": "bootstrap_fraction",
+        "unit": "1",
+        "value": 0.16551172850422333
+      }
+    ],
+    "artifact": {
+      "path": "/data/simulations/59eb0a1dd704fad6977ce17abb1a3902660f7394cbd9cdc5c54b0a7f63260eda.json.gz",
+      "sha256": "59eb0a1dd704fad6977ce17abb1a3902660f7394cbd9cdc5c54b0a7f63260eda",
+      "bytes": 33245,
+      "rawSha256": "d5e9bc8346bac31bd9d79420436218ec66ce3cfb8c8a3508f4b5cb4b0b2d91c4",
+      "rawBytes": 188703
+    },
+    "sourceRunId": null
+  },
+  {
+    "id": "torax-iter-hybrid-1788759225911-2b7ab30b",
+    "engineId": "torax",
+    "recipe": "iter-hybrid",
+    "device": "ITER",
+    "comparisonGroup": "iter-hybrid",
+    "duration": 5,
+    "steps": 31,
+    "radialCells": 25,
+    "metrics": [
+      {
+        "id": "fusion_power",
+        "unit": "W",
+        "value": 352547920.59318596
+      },
+      {
+        "id": "external_power",
+        "unit": "W",
+        "value": 51000000
+      },
+      {
+        "id": "alpha_power",
+        "unit": "W",
+        "value": 70509584.11863719
+      },
+      {
+        "id": "auxiliary_power",
+        "unit": "W",
+        "value": 51000000
+      },
+      {
+        "id": "fusion_gain",
+        "unit": "1",
+        "value": 6.912704325356574
+      },
+      {
+        "id": "plasma_current",
+        "unit": "A",
+        "value": 10500000.000000002
+      },
+      {
+        "id": "thermal_energy",
+        "unit": "J",
+        "value": 302789405.198022
+      },
+      {
+        "id": "q95",
+        "unit": "1",
+        "value": 4.882178802811379
+      },
+      {
+        "id": "te_volume_average",
+        "unit": "eV",
+        "value": 11524.49625579645
+      },
+      {
+        "id": "ti_volume_average",
+        "unit": "eV",
+        "value": 8734.0045483577
+      },
+      {
+        "id": "ne_volume_average",
+        "unit": "m^-3",
+        "value": 68921258614877315000
+      },
+      {
+        "id": "bootstrap_fraction",
+        "unit": "1",
+        "value": 0.4337032832038382
+      }
+    ],
+    "artifact": {
+      "path": "/data/simulations/e266b9f71a7f6130a69aeff0bbccef386c31f7448e4565a308711be4255e920b.json.gz",
+      "sha256": "e266b9f71a7f6130a69aeff0bbccef386c31f7448e4565a308711be4255e920b",
+      "bytes": 87023,
+      "rawSha256": "6c620a9d99e5793dbdc7991781aa46185e018d20ae93c1974f28669360acce3b",
+      "rawBytes": 289044
+    },
+    "sourceRunId": null
+  },
+  {
+    "id": "torax-iter-rampup-1788759249586-f28ff659",
+    "engineId": "torax",
+    "recipe": "iter-rampup",
+    "device": "ITER",
+    "comparisonGroup": "iter-rampup",
+    "duration": 80,
+    "steps": 40,
+    "radialCells": 25,
+    "metrics": [
+      {
+        "id": "fusion_power",
+        "unit": "W",
+        "value": 3181305.5336859357
+      },
+      {
+        "id": "external_power",
+        "unit": "W",
+        "value": 22879616.21337177
+      },
+      {
+        "id": "alpha_power",
+        "unit": "W",
+        "value": 636261.1067371871
+      },
+      {
+        "id": "auxiliary_power",
+        "unit": "W",
+        "value": 20000000
+      },
+      {
+        "id": "fusion_gain",
+        "unit": "1",
+        "value": 0.1390454063572377
+      },
+      {
+        "id": "plasma_current",
+        "unit": "A",
+        "value": 10500000.000000002
+      },
+      {
+        "id": "thermal_energy",
+        "unit": "J",
+        "value": 53426444.901568465
+      },
+      {
+        "id": "q95",
+        "unit": "1",
+        "value": 4.889297479530601
+      },
+      {
+        "id": "te_volume_average",
+        "unit": "eV",
+        "value": 2669.9883306417178
+      },
+      {
+        "id": "ti_volume_average",
+        "unit": "eV",
+        "value": 2218.991917975502
+      },
+      {
+        "id": "ne_volume_average",
+        "unit": "m^-3",
+        "value": 52931839527199280000
+      },
+      {
+        "id": "bootstrap_fraction",
+        "unit": "1",
+        "value": 0.08185490499128605
+      }
+    ],
+    "artifact": {
+      "path": "/data/simulations/ce9d30f537537cf62a14c65438db61a45fb57389b114379b10bc12255dee50a2.json.gz",
+      "sha256": "ce9d30f537537cf62a14c65438db61a45fb57389b114379b10bc12255dee50a2",
+      "bytes": 112433,
+      "rawSha256": "5150b9b815079fb579a6061e475187537e0044a0d3b5b4d82e95611861da6d58",
+      "rawBytes": 368252
+    },
+    "sourceRunId": null
+  },
+  {
+    "id": "torax-step-flat-top-1788759286712-50e15cb2",
+    "engineId": "torax",
+    "recipe": "step-flat-top",
+    "device": "STEP",
+    "comparisonGroup": "step-flat-top",
+    "duration": 400,
+    "steps": 40,
+    "radialCells": 100,
+    "metrics": [
+      {
+        "id": "fusion_power",
+        "unit": "W",
+        "value": 1305609750.417543
+      },
+      {
+        "id": "external_power",
+        "unit": "W",
+        "value": 150067651.8180593
+      },
+      {
+        "id": "alpha_power",
+        "unit": "W",
+        "value": 261121950.0835086
+      },
+      {
+        "id": "auxiliary_power",
+        "unit": "W",
+        "value": 150067492.08983523
+      },
+      {
+        "id": "fusion_gain",
+        "unit": "1",
+        "value": 8.700141133683173
+      },
+      {
+        "id": "plasma_current",
+        "unit": "A",
+        "value": 20834177.361617696
+      },
+      {
+        "id": "thermal_energy",
+        "unit": "J",
+        "value": 536530320.45179254
+      },
+      {
+        "id": "q95",
+        "unit": "1",
+        "value": 9.107137925460938
+      },
+      {
+        "id": "te_volume_average",
+        "unit": "eV",
+        "value": 10201.060371881207
+      },
+      {
+        "id": "ti_volume_average",
+        "unit": "eV",
+        "value": 10409.538286911944
+      },
+      {
+        "id": "ne_volume_average",
+        "unit": "m^-3",
+        "value": 154489691931911620000
+      },
+      {
+        "id": "bootstrap_fraction",
+        "unit": "1",
+        "value": 0.9117414808643688
+      }
+    ],
+    "artifact": {
+      "path": "/data/simulations/fd7c94b242faf05b04503adfc2b7527fccf4f455559c7ae8b6528b9aec2d67af.json.gz",
+      "sha256": "fd7c94b242faf05b04503adfc2b7527fccf4f455559c7ae8b6528b9aec2d67af",
+      "bytes": 389451,
+      "rawSha256": "8e84df2a2b78b741992d43f0e6b4dcdcf0f051c689d7c53647af264eaa53204d",
+      "rawBytes": 1371200
+    },
+    "sourceRunId": null
+  },
+  {
+    "id": "torax-iter-heat-low-1788759330881-1089fa56",
+    "engineId": "torax",
+    "recipe": "iter-heat-low",
+    "device": "ITER",
+    "comparisonGroup": "iter-hybrid",
+    "duration": 5,
+    "steps": 25,
+    "radialCells": 25,
+    "metrics": [
+      {
+        "id": "fusion_power",
+        "unit": "W",
+        "value": 340667385.6691984
+      },
+      {
+        "id": "external_power",
+        "unit": "W",
+        "value": 40800000
+      },
+      {
+        "id": "alpha_power",
+        "unit": "W",
+        "value": 68133477.13383968
+      },
+      {
+        "id": "auxiliary_power",
+        "unit": "W",
+        "value": 40800000
+      },
+      {
+        "id": "fusion_gain",
+        "unit": "1",
+        "value": 8.349690825225432
+      },
+      {
+        "id": "plasma_current",
+        "unit": "A",
+        "value": 10500000.000000002
+      },
+      {
+        "id": "thermal_energy",
+        "unit": "J",
+        "value": 295978756.9253965
+      },
+      {
+        "id": "q95",
+        "unit": "1",
+        "value": 4.879929097132684
+      },
+      {
+        "id": "te_volume_average",
+        "unit": "eV",
+        "value": 11416.304640487948
+      },
+      {
+        "id": "ti_volume_average",
+        "unit": "eV",
+        "value": 8749.327237951115
+      },
+      {
+        "id": "ne_volume_average",
+        "unit": "m^-3",
+        "value": 67931103279860230000
+      },
+      {
+        "id": "bootstrap_fraction",
+        "unit": "1",
+        "value": 0.42045916506375147
+      }
+    ],
+    "artifact": {
+      "path": "/data/simulations/6a5ca20151c6df0e388480b27202b648de5a0c118639ab29fdd0288f99229d34.json.gz",
+      "sha256": "6a5ca20151c6df0e388480b27202b648de5a0c118639ab29fdd0288f99229d34",
+      "bytes": 71541,
+      "rawSha256": "3f4d55ff81aa6a160ffdda863364f75bd217e1449ab0cd5564970132e89312be",
+      "rawBytes": 236091
+    },
+    "sourceRunId": null
+  },
+  {
+    "id": "torax-iter-heat-high-1788759349827-bdd4b756",
+    "engineId": "torax",
+    "recipe": "iter-heat-high",
+    "device": "ITER",
+    "comparisonGroup": "iter-hybrid",
+    "duration": 5,
+    "steps": 36,
+    "radialCells": 25,
+    "metrics": [
+      {
+        "id": "fusion_power",
+        "unit": "W",
+        "value": 360132775.4906584
+      },
+      {
+        "id": "external_power",
+        "unit": "W",
+        "value": 61200000
+      },
+      {
+        "id": "alpha_power",
+        "unit": "W",
+        "value": 72026555.09813169
+      },
+      {
+        "id": "auxiliary_power",
+        "unit": "W",
+        "value": 61200000
+      },
+      {
+        "id": "fusion_gain",
+        "unit": "1",
+        "value": 5.884522475337547
+      },
+      {
+        "id": "plasma_current",
+        "unit": "A",
+        "value": 10500000.000000002
+      },
+      {
+        "id": "thermal_energy",
+        "unit": "J",
+        "value": 306744173.9298943
+      },
+      {
+        "id": "q95",
+        "unit": "1",
+        "value": 4.883867690002386
+      },
+      {
+        "id": "te_volume_average",
+        "unit": "eV",
+        "value": 11583.078564302625
+      },
+      {
+        "id": "ti_volume_average",
+        "unit": "eV",
+        "value": 8736.644930308628
+      },
+      {
+        "id": "ne_volume_average",
+        "unit": "m^-3",
+        "value": 69478876914555900000
+      },
+      {
+        "id": "bootstrap_fraction",
+        "unit": "1",
+        "value": 0.4427042215108478
+      }
+    ],
+    "artifact": {
+      "path": "/data/simulations/df0827eb28d9a49a452654f83907a975c41e871e5e86d18895f258ce67965e22.json.gz",
+      "sha256": "df0827eb28d9a49a452654f83907a975c41e871e5e86d18895f258ce67965e22",
+      "bytes": 100414,
+      "rawSha256": "4c4317a1d62bc1a1a01e8b65793721d009f2b50629abff76fa7e187e26784f9f",
+      "rawBytes": 333614
+    },
+    "sourceRunId": null
+  },
+  {
+    "id": "torax-iter-grid-50-1788759368633-f66975dd",
+    "engineId": "torax",
+    "recipe": "iter-grid-50",
+    "device": "ITER",
+    "comparisonGroup": "iter-hybrid",
+    "duration": 5,
+    "steps": 125,
+    "radialCells": 50,
+    "metrics": [
+      {
+        "id": "fusion_power",
+        "unit": "W",
+        "value": 382530811.0347763
+      },
+      {
+        "id": "external_power",
+        "unit": "W",
+        "value": 51000000
+      },
+      {
+        "id": "alpha_power",
+        "unit": "W",
+        "value": 76506162.20695525
+      },
+      {
+        "id": "auxiliary_power",
+        "unit": "W",
+        "value": 51000000
+      },
+      {
+        "id": "fusion_gain",
+        "unit": "1",
+        "value": 7.500604137936775
+      },
+      {
+        "id": "plasma_current",
+        "unit": "A",
+        "value": 10500000.000000002
+      },
+      {
+        "id": "thermal_energy",
+        "unit": "J",
+        "value": 307714735.639434
+      },
+      {
+        "id": "q95",
+        "unit": "1",
+        "value": 4.965825995000095
+      },
+      {
+        "id": "te_volume_average",
+        "unit": "eV",
+        "value": 10978.085115037391
+      },
+      {
+        "id": "ti_volume_average",
+        "unit": "eV",
+        "value": 8632.621210140893
+      },
+      {
+        "id": "ne_volume_average",
+        "unit": "m^-3",
+        "value": 71694786286604050000
+      },
+      {
+        "id": "bootstrap_fraction",
+        "unit": "1",
+        "value": 0.4520917722883074
+      }
+    ],
+    "artifact": {
+      "path": "/data/simulations/a0290afe033451c9cfc577622989b9a434e07bf827d60d98119314c133d7941d.json.gz",
+      "sha256": "a0290afe033451c9cfc577622989b9a434e07bf827d60d98119314c133d7941d",
+      "bytes": 635601,
+      "rawSha256": "1da14e9f2e79210b12010da44d379655205ab9657080172a6571d1ea99636c56",
+      "rawBytes": 2123485
+    },
+    "sourceRunId": null
+  },
+  {
+    "id": "torax-fuse-profile-handoff-1788759506301-ded889d5",
+    "engineId": "torax",
+    "recipe": "fuse-profile-handoff",
+    "device": "DIII-D-derived",
+    "comparisonGroup": "fuse-profile-handoff",
+    "duration": 0.2,
+    "steps": 38,
+    "radialCells": 50,
+    "metrics": [
+      {
+        "id": "fusion_power",
+        "unit": "W",
+        "value": 0
+      },
+      {
+        "id": "external_power",
+        "unit": "W",
+        "value": 11423204.069835251
+      },
+      {
+        "id": "alpha_power",
+        "unit": "W",
+        "value": 0
+      },
+      {
+        "id": "auxiliary_power",
+        "unit": "W",
+        "value": 2000000.0000000005
+      },
+      {
+        "id": "fusion_gain",
+        "unit": "1",
+        "value": 0
+      },
+      {
+        "id": "plasma_current",
+        "unit": "A",
+        "value": 1083742.6499999997
+      },
+      {
+        "id": "thermal_energy",
+        "unit": "J",
+        "value": 529829.3211802496
+      },
+      {
+        "id": "q95",
+        "unit": "1",
+        "value": 3.9068324792049287
+      },
+      {
+        "id": "te_volume_average",
+        "unit": "eV",
+        "value": 894.3618110259926
+      },
+      {
+        "id": "ti_volume_average",
+        "unit": "eV",
+        "value": 799.1716233744022
+      },
+      {
+        "id": "ne_volume_average",
+        "unit": "m^-3",
+        "value": 59386583867757970000
+      },
+      {
+        "id": "bootstrap_fraction",
+        "unit": "1",
+        "value": 0.22609135471525899
+      }
+    ],
+    "artifact": {
+      "path": "/data/simulations/6c05672ea91c3e0453671b0d601723b67254ccb12da4301d2325400b68c11a1d.json.gz",
+      "sha256": "6c05672ea91c3e0453671b0d601723b67254ccb12da4301d2325400b68c11a1d",
+      "bytes": 72044,
+      "rawSha256": "4f10907414e0dcee1459457fafd2ad50633019779a28dd3af59a0235e306742d",
+      "rawBytes": 514413
+    },
+    "sourceRunId": "fuse-diiid-20260906174722551-3ffd17fc"
+  }
+]

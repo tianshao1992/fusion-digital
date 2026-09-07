@@ -1,0 +1,98 @@
+[
+  {
+    "runId": "torax-basic-1788759205801-b84287cc",
+    "kind": "shape-reconstruction",
+    "sourceNativeSha256": "f36285ffcde3ca86fbed08bdb0d7e4d98c2b7cca05e58d858ccda6f1ba4c3459",
+    "artifact": {
+      "path": "/data/simulations/17798db837e4b06c95dc6f27c097a84d65d92b0b97e4c5856d4fdcefc7b5332b.json.gz",
+      "sha256": "17798db837e4b06c95dc6f27c097a84d65d92b0b97e4c5856d4fdcefc7b5332b",
+      "bytes": 27380,
+      "rawSha256": "93921d43d0643b8b9d22b134123d6bcf08e02ae4cf7ab40856d99a4a5bd77652",
+      "rawBytes": 99782
+    }
+  },
+  {
+    "runId": "torax-iter-hybrid-1788759225911-2b7ab30b",
+    "kind": "shape-reconstruction",
+    "sourceNativeSha256": "53f76dd84921c9357a70ab5ab186f56e66262128748904b60f22b3c050d46675",
+    "artifact": {
+      "path": "/data/simulations/daa0e8ed3957eb5c0456b7bb452900fd5411e4f388540dfacf19b09b7b412fed.json.gz",
+      "sha256": "daa0e8ed3957eb5c0456b7bb452900fd5411e4f388540dfacf19b09b7b412fed",
+      "bytes": 35973,
+      "rawSha256": "92578ef53802434c612ceb3a364fe4c209bf821ece26a66f60ace0aeb59083aa",
+      "rawBytes": 102043
+    }
+  },
+  {
+    "runId": "torax-iter-rampup-1788759249586-f28ff659",
+    "kind": "shape-reconstruction",
+    "sourceNativeSha256": "afbb165a1cade57d460db3634ecd1699e36a2ed6ec9fabb1da01ecb429808196",
+    "artifact": {
+      "path": "/data/simulations/86cdbda3c08fbd54c21ad2771e956e1b8e23e8c282643d1cd726fda8198d8794.json.gz",
+      "sha256": "86cdbda3c08fbd54c21ad2771e956e1b8e23e8c282643d1cd726fda8198d8794",
+      "bytes": 35985,
+      "rawSha256": "4b3e61ed0aeff05d29d46bf3e89810bfbabff1ae5d49c235d819d4e83379f3f9",
+      "rawBytes": 102043
+    }
+  },
+  {
+    "runId": "torax-step-flat-top-1788759286712-50e15cb2",
+    "kind": "input-equilibrium-grid",
+    "sourceNativeSha256": "29def43ac1c438421e3d43ec01ff9d0c6af8920e6d93eca53bc572a84bf6ef6e",
+    "artifact": {
+      "path": "/data/simulations/4f396185ccbc052f842ffe7b1a63e716fd883d5d5e56448a959f907319be753a.json.gz",
+      "sha256": "4f396185ccbc052f842ffe7b1a63e716fd883d5d5e56448a959f907319be753a",
+      "bytes": 265247,
+      "rawSha256": "5067ddda03bd859c32524695260d954456b283e52ddd0de7cb18585d677bb787",
+      "rawBytes": 653287
+    }
+  },
+  {
+    "runId": "torax-iter-heat-low-1788759330881-1089fa56",
+    "kind": "shape-reconstruction",
+    "sourceNativeSha256": "bc4045ca7e352733017834a895af9142701f65da38114a1b5d64e06b733c139b",
+    "artifact": {
+      "path": "/data/simulations/619567b3b98ccf6e1d98d560e6f6bfca52d284b4613d133041482f3ab0b26821.json.gz",
+      "sha256": "619567b3b98ccf6e1d98d560e6f6bfca52d284b4613d133041482f3ab0b26821",
+      "bytes": 35979,
+      "rawSha256": "4cdc41260311c1eb8d8a70dd0bc475c2ac4c9b95d48c49d67359520d2459a849",
+      "rawBytes": 102045
+    }
+  },
+  {
+    "runId": "torax-iter-heat-high-1788759349827-bdd4b756",
+    "kind": "shape-reconstruction",
+    "sourceNativeSha256": "03aef76fa572c61cfe4bbd10924aefbaf474643c2a8562bf09425caf94c51a51",
+    "artifact": {
+      "path": "/data/simulations/052ebf5b4ba7b4cc9fa9788385ddfb5edf99155ea97366bcf9f0adf0ba415cbf.json.gz",
+      "sha256": "052ebf5b4ba7b4cc9fa9788385ddfb5edf99155ea97366bcf9f0adf0ba415cbf",
+      "bytes": 35987,
+      "rawSha256": "92dfebcc42d9eeed2372e7c53cca7c91ae93a090697b4ff938ed960ae8ca0fd3",
+      "rawBytes": 102046
+    }
+  },
+  {
+    "runId": "torax-iter-grid-50-1788759368633-f66975dd",
+    "kind": "shape-reconstruction",
+    "sourceNativeSha256": "0365801f90f8e7680cf0f730624ca3bbe0acaea53993036142ebecfd3686f5ac",
+    "artifact": {
+      "path": "/data/simulations/528ebd88b5f7deb6b1d90171387c38c6d4ef9d5a6ad5c4cba24c4bc5d0c3a9aa.json.gz",
+      "sha256": "528ebd88b5f7deb6b1d90171387c38c6d4ef9d5a6ad5c4cba24c4bc5d0c3a9aa",
+      "bytes": 70516,
+      "rawSha256": "79d8385a9c5d940a23e00a5a2cdfb1fecd9c068fd8589e095a35818b56c712d3",
+      "rawBytes": 198347
+    }
+  },
+  {
+    "runId": "torax-fuse-profile-handoff-1788759506301-ded889d5",
+    "kind": "shape-reconstruction",
+    "sourceNativeSha256": "ad704929c5ff3a59778f4d04c620c48d43b5c139c7a85751bb1ff8b37a0a0a40",
+    "artifact": {
+      "path": "/data/simulations/97b781c5c2917261512954d3aef099b7b26b101e37b2d13af2f2002b44f485d6.json.gz",
+      "sha256": "97b781c5c2917261512954d3aef099b7b26b101e37b2d13af2f2002b44f485d6",
+      "bytes": 54268,
+      "rawSha256": "a96c49b8db6d349e09258231ac5d08dd0f2b1a9ed5d9b4c403950b5a12c43780",
+      "rawBytes": 200330
+    }
+  }
+]

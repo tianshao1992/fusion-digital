@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
-import { revolveContours, SURFACE_VERTEX_BUDGET } from '../app/simulations/flux-surface-geometry.ts';
+import { buildPoloidalFieldSlice, revolveContours, SURFACE_VERTEX_BUDGET } from '../app/simulations/flux-surface-geometry.ts';
+import type { EquilibriumFieldSample } from '../app/simulations/equilibrium-field.ts';
 import { parsePhysics, type PhysicsBundle, type RZ } from '../app/simulations/physics.ts';
 
 const square: RZ = [[1, -1], [2, -1], [2, 1], [1, 1], [1, -1]];
@@ -49,6 +50,12 @@ test('malformed geometry and excessive allocation fail closed', () => {
   for (const degrees of [NaN, 0, 361]) assert.throws(() => revolveContours([square], degrees));
   for (const segments of [2, 129, 12.5]) assert.throws(() => revolveContours([square], 270, segments));
   assert.throws(() => revolveContours([Array.from({ length: 4000 }, (_, i) => [1, i] as [number, number])], 270, 128), /BUDGET/);
+});
+test('poloidal field slice preserves cell values and the scientific-to-Three coordinate transform',()=>{
+  const samples:EquilibriumFieldSample[]=[[2,.5,7,.4,-1,1.5,2.5,.25,.75,.6]];
+  const slice=buildPoloidalFieldSlice(samples,90);assert.equal(slice.cells,1);assert.deepEqual([...slice.values],[7,7,7,7]);assert.deepEqual([...slice.indices],[0,1,2,0,2,3]);
+  for(let index=0;index<4;index++){const x=slice.positions[index*3],y=slice.positions[index*3+1],z=slice.positions[index*3+2];assert.ok(Math.abs(x)<1e-6);assert.ok([.25,.75].some(value=>Math.abs(y-value)<1e-6));assert.ok([1.5,2.5].some(value=>Math.abs(z+value)<1e-6));}
+  assert.throws(()=>buildPoloidalFieldSlice([[2,.5,7,.4,-1,1.5,2.5,.25,.75] as unknown as EquilibriumFieldSample]),/FIELD_SLICE_SAMPLES/);
 });
 test('every real published FUSE contour and LCFS fits the demo budget without decimation', () => {
   const bundles: PhysicsBundle[] = JSON.parse(readFileSync(new URL('../app/simulations/data/physics-bundles.json', import.meta.url), 'utf8'));

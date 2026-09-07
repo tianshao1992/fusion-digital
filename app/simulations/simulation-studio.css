@@ -66,6 +66,7 @@
 .simGridSamplerBody input { grid-column:1/-1; width:100%; accent-color:var(--color-accent-strong); }
 .simGridSamplerBody output { color:var(--color-ink); font:inherit; font-variant-numeric:tabular-nums; }
 .simGridSampleValue { grid-column:1/-1; padding-top:3px; overflow-wrap:anywhere; }
+.simFieldUnavailable { margin:0; padding:10px 14px; border-bottom:1px solid var(--color-border); background:var(--color-warning-soft); color:var(--color-ink-muted); font-size:.75rem; }
 .simEquilibriumSvg { width:100%; height:480px; flex:1; min-height:400px; touch-action:pan-y; }
 .simCoordinate { min-height:35px; margin:0; padding:7px 14px; font: .7rem/1.5 ui-monospace,monospace; color:var(--color-ink-muted); }
 .simPlotLegend { display:flex; flex-wrap:wrap; gap:16px; justify-content:center; padding:7px 14px 14px; font-size:.7rem; }
@@ -215,7 +216,7 @@
 .simEngineWorkspace, .simTransport { margin-top: 1.2rem; }
 .simEngineWorkspace > .simPanel { padding: 1.5rem; margin-bottom: 1.2rem; }
 .simEngineWorkspace p, .simExecutionSteps { color: var(--color-ink-muted); line-height: 1.7; }
-.simRecipeForm { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 1rem; margin: 1.2rem 0; }
+.simRecipeForm { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 1rem; min-inline-size: 0; margin: 1.2rem 0; padding: 0; border: 0; }
 .simRecipeForm label { display: flex; flex-direction: column; gap: .45rem; font-size: .85rem; }
 .simRecipeForm input, .simRecipeForm select { min-width: 0; width: 100%; padding: .7rem; border: 1px solid var(--color-border); border-radius: .5rem; color: var(--color-ink); background: var(--color-surface); }
 .simExecutionSteps { padding-left: 1.4rem; }
@@ -232,3 +233,24 @@
 .simFluxGrid { grid-template-columns: repeat(2,minmax(0,1fr)); }
 @media (max-width: 900px) { .simCapabilityGrid { grid-template-columns: repeat(2,minmax(0,1fr)); } .simTransportGrid { grid-template-columns: 1fr; } }
 @media (max-width: 550px) { .simRecipeForm, .simCapabilityGrid { grid-template-columns: 1fr; } .simEngineWorkspace > .simPanel,.simTransport { padding: .9rem; } }
+
+.simActiveJobBar { display: flex; align-items: center; gap: 14px; margin: 0 0 18px; padding: 10px 14px; border: 1px solid color-mix(in srgb, var(--color-accent) 35%, var(--color-border)); border-radius: 8px; background: color-mix(in srgb, var(--color-accent-soft) 36%, var(--color-surface-raised)); font-size: .8rem; }
+.simActiveJobBar code { min-width: 0; overflow-wrap: anywhere; color: var(--color-ink-muted); }
+.simActiveJobBar .simTextButton { margin-left: auto; padding: 4px 6px; color: var(--color-accent-strong); white-space: nowrap; }
+.simRemoteGateway { margin-top: 1.35rem; padding: 1.2rem; border: 1px solid color-mix(in srgb, var(--color-accent) 30%, var(--color-border)); border-radius: 10px; background: linear-gradient(145deg, color-mix(in srgb, var(--color-accent-soft) 24%, var(--color-surface-raised)), var(--color-surface-raised)); }
+.simRemoteHeading { display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; }
+.simRemoteHeading h4 { margin: .25rem 0 0; font-size: 1.08rem; font-weight: 600; }
+.simRemoteHeading > span { flex: none; font-size: .78rem; }
+.simRemoteGateway > p { margin: .75rem 0; }
+.simGatewayForm { margin-bottom: .8rem; }
+.simGatewayForm label small { color: var(--color-ink-muted); font-size: .72rem; line-height: 1.45; }
+.simRemoteJob { display: grid; grid-template-columns: max-content minmax(0,1fr) max-content; gap: 8px 14px; align-items: center; margin-top: 1rem; padding: .85rem 1rem; border: 1px solid var(--color-border); border-radius: 7px; background: var(--color-surface-raised); font-size: .8rem; }
+.simRemoteJob code { min-width: 0; overflow-wrap: anywhere; color: var(--color-ink-muted); }
+.simRemoteStage { grid-column: 2 / -1; color: var(--color-ink-muted); overflow-wrap: anywhere; }
+.simRemoteReason { grid-column: 2 / -1; color: var(--color-warning); overflow-wrap: anywhere; }
+.simCollectedResult { margin-top: 1rem; padding: 1rem; border-left: 3px solid var(--color-positive); border-radius: 0 8px 8px 0; background: color-mix(in srgb, var(--color-positive) 8%, var(--color-surface-raised)); }
+.simCollectedResult > p { margin: .45rem 0 0; font-size: .82rem; }
+.simCollectedResult .simActionRow { margin-top: .85rem; }
+.simRemoteNotice { margin: .85rem 0 0; padding: .7rem .85rem; border-radius: 6px; background: var(--color-info-soft); color: var(--color-info-strong) !important; font-size: .8rem; }
+.simRemoteBoundary { padding-top: .85rem; border-top: 1px solid var(--color-border); color: var(--color-ink-muted) !important; font-size: .76rem; }
+@media (max-width: 650px) { .simActiveJobBar, .simRemoteHeading { align-items: flex-start; flex-direction: column; } .simActiveJobBar .simTextButton { margin-left: 0; } .simRemoteJob { grid-template-columns: 1fr; } .simRemoteStage, .simRemoteReason { grid-column: auto; } }

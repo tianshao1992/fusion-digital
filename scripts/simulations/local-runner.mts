@@ -31,6 +31,7 @@ if (command !== 'run' || !option('--spec')) throw new Error('Usage: local-runner
 const specFile = option('--spec')!;
 if ((await stat(specFile)).size > 16384) throw new Error('RunSpec too large');
 const spec = parseRunSpec(JSON.parse(await readFile(specFile, 'utf8')));
+const requestedRunId = option('--run-id') ? safeId(option('--run-id')) : undefined;
 const manifestText=await readFile(path.join(workspace,'environment','Manifest.toml'),'utf8');
 const manifestPaths=[...manifestText.matchAll(/^path = (".*")$/gm)].map(m=>JSON.parse(m[1]) as string);
 const actualPaths=await Promise.all(manifestPaths.map(p=>realpath(p)));
@@ -43,7 +44,9 @@ for (const [repo, expected] of [['FUSE.jl',spec.engineCommit],['FuseExamples','a
 await mkdir(results,{recursive:true});
 const lockPath = path.join(results,'.fusiondigital-runner.lock');
 const lease = await open(lockPath,'wx').catch(()=>{ throw new Error('Runner workspace is leased. Do not delete the lease until its owner is reconciled.'); });
-const id = 'fuse-diiid-' + new Date().toISOString().replace(/[^0-9]/g,'') + '-' + randomUUID().slice(0,8);
+// --run-id is used only by the trusted local gateway so it can return an
+// identity before Julia starts. The public request never controls this value.
+const id = requestedRunId ?? 'fuse-diiid-' + new Date().toISOString().replace(/[^0-9]/g,'') + '-' + randomUUID().slice(0,8);
 const output = path.join(results,id);
 await lease.writeFile(json({id,supervisorPid:process.pid}));
 await lease.close();
@@ -76,7 +79,8 @@ try {
   const julia = path.join(workspace,'.tools','julia-1.12.7','bin',process.platform==='win32'?'julia.exe':'julia');
   await save(); console.log(json({id,state,output}));
   const controller=new AbortController();
-  const poll=setInterval(()=>void stat(path.join(output,'cancel.request')).then(()=>controller.abort()).catch(()=>{}),500);
+  const cancellationFiles=[path.join(output,'cancel.request'),option('--cancel-file')].filter((value): value is string => Boolean(value));
+  const poll=setInterval(()=>void Promise.any(cancellationFiles.map(file=>stat(file))).then(()=>controller.abort()).catch(()=>{}),500);
   let code: number | null = null;
   try {
     const result=await supervise(julia,['--startup-file=no',`--project=${path.join(workspace,'environment')}`,path.join(output,'run-diiid.jl')],{
@@ -91,7 +95,7 @@ try {
   if(state==='succeeded') {
     try {
       const manifest=JSON.parse(await readFile(path.join(output,'run-manifest.json'),'utf8'));
-      const required=[...frozenNames,'physics.json','initial-native.h5','dd-native.h5','input-ini.json','input-act.json','effective-act.json','resolved-ini.json','resolved-act.json','checks.json','stages.json','inner-history.json'];
+      const required=[...frozenNames,'physics.json','coordinate-map.json','initial-native.h5','solved-native.h5','dd-native.h5','input-ini.json','input-act.json','effective-act.json','resolved-ini.json','resolved-act.json','checks.json','stages.json','inner-history.json'];
       if(manifest.schema!=='fuse-native-run.v2' || manifest.runId!==id || manifest.execution!=='succeeded' || manifest.recipe!==spec.recipe || manifest.model!==spec.model || manifest.threads!==spec.resources.threads || !Array.isArray(manifest.artifacts) || required.some(n=>!manifest.artifacts.some((a:{name:string})=>a.name===n))) throw new Error('Identity or required artifacts mismatch');
       for(const key of ['nativeRoundtrip','finiteGrid','positiveTe','positiveNe']) if(manifest.checks?.[key]!==true) throw new Error('Scientific output invalid');
       for(const artifact of manifest.artifacts) {

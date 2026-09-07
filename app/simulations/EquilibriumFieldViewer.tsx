@@ -7,13 +7,19 @@ import EfitCanvasChart from '../components/efit/EfitCanvasChart';
 import { PSI_N_COLORS } from '../components/efit/psi-n-palette';
 import { useChartTheme } from '../components/charts/chart-theme';
 import type { PhysicsData, RZ } from './physics';
+import type { FluxCoordinateMap } from './flux-coordinate-map';
 import {
   buildEquilibriumFieldProjection,
   normalizedPoloidalFlux,
-  type EquilibriumFieldChannel,
+  pointInClosedPolygon,
+  sampleSpatialFieldAtPsiNorm,
+  spatialFieldSpec,
+  spatialFieldUnavailableReason,
+  SPATIAL_FIELD_SPECS,
+  type EquilibriumFieldProjection,
+  type SpatialFieldChannel,
 } from './equilibrium-field';
 
-type FieldSelection = EquilibriumFieldChannel | 'none';
 type OverlaySelection = 'wall' | 'contours' | 'lcfs' | 'axis';
 
 const OVERLAYS: readonly OverlaySelection[] = ['wall', 'contours', 'lcfs', 'axis'];
@@ -40,23 +46,25 @@ function extent(points: RZ): { r: [number, number]; z: [number, number] } {
   return { r: [rMin - padding, rMax + padding], z: [zMin - padding, zMax + padding] };
 }
 
-function tooltipValue(params: unknown, field: FieldSelection, en: boolean): string {
+function tooltipValue(params: unknown, projection: EquilibriumFieldProjection | null, en: boolean): string {
   if (!params || typeof params !== 'object' || !('value' in params)) return '';
   const value = (params as { value?: unknown }).value;
   if (!Array.isArray(value) || value.length < 5 || !value.slice(0, 5).every((item) => typeof item === 'number' && Number.isFinite(item))) return '';
-  const [rM, zM, , psiNorm, psiWb] = value as number[];
+  if (!projection) return '';
+  const [rM, zM, fieldValue, psiNorm, psiWb, , , , , rhoTorNorm] = value as (number | null)[];
+  const spec = spatialFieldSpec(projection.channel);
   return [
-    `<b>${field === 'psi' ? 'ψ / Wb' : 'ψN / 1'}</b>`,
-    `R ${rM.toFixed(4)} m · Z ${zM.toFixed(4)} m`,
-    `ψ ${psiWb.toPrecision(6)} Wb`,
-    `ψN ${psiNorm.toFixed(4)}`,
-    `<small>${en ? 'Nearest archived grid sample' : '最近归档网格点'}</small>`,
-  ].join('<br/>');
+    `<b>${en ? spec.labelEn : spec.labelZh} · ${Number(fieldValue).toPrecision(6)} ${projection.unit}</b>`,
+    `R ${Number(rM).toFixed(4)} m · Z ${Number(zM).toFixed(4)} m`,
+    `ψ ${Number(psiWb).toPrecision(6)} Wb · ψN ${Number(psiNorm).toFixed(4)}`,
+    rhoTorNorm === null ? '' : `ρtor,N ${Number(rhoTorNorm).toFixed(4)}`,
+    `<small>${projection.authority === 'profile-mapped' ? (en ? 'Bounded radial interpolation on an archived flux-coordinate map' : '基于归档磁通坐标映射的有界径向插值') : (en ? 'Nearest archived equilibrium-grid sample' : '最近归档磁平衡网格样本')}</small>`,
+  ].filter(Boolean).join('<br/>');
 }
 
-export default function EquilibriumFieldViewer({ data, en }: { data: PhysicsData; en: boolean }) {
+export default function EquilibriumFieldViewer({ data, coordinateMap, field, onFieldChange, en }: { data: PhysicsData; coordinateMap?: FluxCoordinateMap; field: SpatialFieldChannel; onFieldChange: (field: SpatialFieldChannel) => void; en: boolean }) {
   const chartTheme = useChartTheme();
-  const [field, setField] = useState<FieldSelection>('psi_norm');
+  const [cloudVisible, setCloudVisible] = useState(true);
   const [overlays, setOverlays] = useState<ReadonlySet<OverlaySelection>>(() => new Set(OVERLAYS));
   const [revision, setRevision] = useState(0);
   const equilibrium = data.equilibrium;
@@ -66,12 +74,15 @@ export default function EquilibriumFieldViewer({ data, en }: { data: PhysicsData
   }));
   const samplePsi = equilibrium.psi[sampleIndex.z][sampleIndex.r];
   const samplePsiNorm = normalizedPoloidalFlux(samplePsi, equilibrium.psiAxis, equilibrium.psiBoundary);
+  const sampleInside = pointInClosedPolygon(equilibrium.r[sampleIndex.r], equilibrium.z[sampleIndex.z], equilibrium.boundary);
+  const sampleField = sampleInside ? sampleSpatialFieldAtPsiNorm(data, field, samplePsiNorm, coordinateMap, samplePsi) : null;
+  const selectedSpec = spatialFieldSpec(field);
   const sampleId = `equilibrium-sample-${data.runId}`;
   const geometryExtent = useMemo(() => extent([...equilibrium.wall, ...equilibrium.boundary]), [equilibrium]);
   const dataAspectRatio = (geometryExtent.r[1] - geometryExtent.r[0]) / (geometryExtent.z[1] - geometryExtent.z[0]);
   const projection = useMemo(
-    () => field === 'none' ? null : buildEquilibriumFieldProjection(data, field),
-    [data, field],
+    () => !cloudVisible || spatialFieldUnavailableReason(data, field, coordinateMap) ? null : buildEquilibriumFieldProjection(data, field, coordinateMap),
+    [cloudVisible, coordinateMap, data, field],
   );
 
   const option = useMemo<EChartsCoreOption>(() => {
@@ -99,13 +110,13 @@ export default function EquilibriumFieldViewer({ data, en }: { data: PhysicsData
     };
     const fieldSeries = projection ? [{
       id: 'simulation-equilibrium-field',
-      name: projection.channel === 'psi_norm' ? 'ψN' : 'ψ',
+      name: en ? spatialFieldSpec(projection.channel).labelEn : spatialFieldSpec(projection.channel).labelZh,
       type: 'custom' as const,
       coordinateSystem: 'cartesian2d' as const,
       renderItem: renderFieldCell,
       data: projection.samples,
-      dimensions: ['R', 'Z', 'fieldValue', 'psiNorm', 'psiWb', 'rLower', 'rUpper', 'zLower', 'zUpper'],
-      encode: { x: 0, y: 1, value: 2, tooltip: [0, 1, 3, 4] },
+      dimensions: ['R', 'Z', 'fieldValue', 'psiNorm', 'psiWb', 'rLower', 'rUpper', 'zLower', 'zUpper', 'rhoTorNorm'],
+      encode: { x: 0, y: 1, value: 2, tooltip: [0, 1, 2, 3, 4, 9] },
       progressive: 4000,
       progressiveThreshold: 8000,
       emphasis: { disabled: true },
@@ -142,8 +153,8 @@ export default function EquilibriumFieldViewer({ data, en }: { data: PhysicsData
     const colorbarText = projection?.channel === 'psi_norm'
       ? ['LCFS · ψN 1', en ? 'Axis · 0' : '磁轴 · 0']
       : projection ? [
-        `${projection.maximum.toPrecision(4)} Wb`,
-        `${projection.minimum.toPrecision(4)} Wb`,
+        `${projection.maximum.toPrecision(4)} ${projection.unit}`,
+        `${projection.minimum.toPrecision(4)} ${projection.unit}`,
       ] : undefined;
 
     return {
@@ -152,8 +163,8 @@ export default function EquilibriumFieldViewer({ data, en }: { data: PhysicsData
       aria: {
         enabled: true,
         description: en
-          ? `Simulated R-Z equilibrium at ${data.timeSeconds} seconds with ${field === 'none' ? 'no field cloud' : field}, LCFS-masked native grid, and selectable overlays.`
-          : `${data.timeSeconds} 秒模拟 R–Z 磁平衡；${field === 'none' ? '未显示云图' : `显示 ${field} 云图`}，采用 LCFS 掩膜的原生网格和可选叠加层。`,
+          ? `Simulated R-Z field at ${data.timeSeconds} seconds with ${cloudVisible ? field : 'no field cloud'}, an LCFS grid-point mask, and selectable overlays.`
+          : `${data.timeSeconds} 秒模拟 R–Z 场；${cloudVisible ? `显示 ${field} 云图` : '未显示云图'}，采用 LCFS 网格点掩膜和可选叠加层。`,
       },
       grid: { left: 58, right: 72, top: 26, bottom: 52, containLabel: false },
       visualMap: projection ? {
@@ -163,7 +174,7 @@ export default function EquilibriumFieldViewer({ data, en }: { data: PhysicsData
         textStyle: { color: chartTheme.muted, fontSize: 9 }, inRange: { color: palette }, borderColor: chartTheme.line,
       } : undefined,
       tooltip: {
-        trigger: 'item', formatter: (params: unknown) => tooltipValue(params, field, en),
+        trigger: 'item', formatter: (params: unknown) => tooltipValue(params, projection, en),
         backgroundColor: chartTheme.tooltipBackground, borderColor: chartTheme.tooltipBorder,
         textStyle: { color: chartTheme.tooltipText, fontSize: 11 },
       },
@@ -183,7 +194,7 @@ export default function EquilibriumFieldViewer({ data, en }: { data: PhysicsData
       },
       series: [...fieldSeries, ...wallSeries, ...contourSeries, ...boundarySeries, ...axisSeries],
     };
-  }, [chartTheme, data.timeSeconds, en, equilibrium, field, geometryExtent, overlays, projection]);
+  }, [chartTheme, cloudVisible, data.timeSeconds, en, equilibrium, field, geometryExtent, overlays, projection]);
 
   function toggleOverlay(overlay: OverlaySelection) {
     setOverlays((current) => {
@@ -198,27 +209,32 @@ export default function EquilibriumFieldViewer({ data, en }: { data: PhysicsData
     : data.equilibriumOrigin === 'model-solved'
       ? (en ? 'Model solved' : '模型求解')
       : (en ? 'Exported · solve origin unspecified' : '归档导出 · 求解来源未声明');
+  const fieldUnavailable = spatialFieldUnavailableReason(data, field, coordinateMap);
+  const authority = selectedSpec.authority === 'native-grid'
+    ? (en ? 'NATIVE R–Z GRID' : '原生 R–Z 网格')
+    : selectedSpec.authority === 'normalized-grid'
+      ? (en ? 'NORMALIZED FROM NATIVE ψ' : '由原生 ψ 归一化')
+      : (en ? 'PROFILE-MAPPED / AXISYMMETRIC' : '剖面映射 / 轴对称派生');
 
   return <section className="simPanel simEquilibrium simEquilibriumCloud">
     <div className="simPanelTitle">
-      <div><p className="simMiniLabel">R–Z FIELD · {origin.toUpperCase()}</p><h3>{en ? 'Poloidal equilibrium cloud' : '极向磁平衡云图'}</h3></div>
+      <div><p className="simMiniLabel">R–Z FIELD · {origin.toUpperCase()} · {authority}</p><h3>{en ? 'Poloidal section field cloud' : '极向截面场云图'}</h3></div>
       <button className="simTinyButton" onClick={() => setRevision((value) => value + 1)}>{en ? 'Reset view' : '重置视图'}</button>
     </div>
     <div className="simFieldTools simFieldChannelTools">
-      <label className="simFieldChannelSelect"><span>{en ? 'Field channel' : '云图通道'}</span><select value={field} onChange={(event) => setField(event.currentTarget.value as FieldSelection)}>
-        <option value="psi_norm">{en ? 'Normalized poloidal flux ψN' : '归一化极向磁通 ψN'}</option>
-        <option value="psi">{en ? 'Poloidal flux ψ / Wb' : '极向磁通 ψ / Wb'}</option>
-        <option value="none">{en ? 'Contours and boundaries only' : '仅磁通面与边界'}</option>
+      <label className="simFieldChannelSelect"><span>{en ? 'Field variable · linked with 3D' : '场变量 · 与三维联动'}</span><select value={field} onChange={(event) => onFieldChange(event.currentTarget.value as SpatialFieldChannel)}>
+        {SPATIAL_FIELD_SPECS.map((spec) => { const unavailable = spatialFieldUnavailableReason(data, spec.id, coordinateMap); return <option key={spec.id} value={spec.id} disabled={Boolean(unavailable)}>{en ? spec.labelEn : spec.labelZh} · {spec.displayUnit}{unavailable ? (en ? ' · unavailable' : ' · 暂不可用') : ''}</option>; })}
       </select></label>
-      <fieldset><legend>{en ? 'Display channels' : '显示通道'}</legend>{OVERLAYS.map((overlay) => <label key={overlay}><input type="checkbox" checked={overlays.has(overlay)} onChange={() => toggleOverlay(overlay)} />{{ wall: en ? 'Wall' : '第一壁', contours: en ? 'Flux surfaces' : '磁通面', lcfs: 'LCFS', axis: en ? 'Axis' : '磁轴' }[overlay]}</label>)}</fieldset>
+      <fieldset><legend>{en ? 'Display layers' : '显示图层'}</legend><label><input type="checkbox" checked={cloudVisible} onChange={(event) => setCloudVisible(event.currentTarget.checked)} />{en ? 'Field cloud' : '场云图'}</label>{OVERLAYS.map((overlay) => <label key={overlay}><input type="checkbox" checked={overlays.has(overlay)} onChange={() => toggleOverlay(overlay)} />{{ wall: en ? 'Wall' : '第一壁', contours: en ? 'Flux surfaces' : '磁通面', lcfs: 'LCFS', axis: en ? 'Axis' : '磁轴' }[overlay]}</label>)}</fieldset>
     </div>
+    {fieldUnavailable && <p className="simFieldUnavailable" role="status">{en ? 'This field cannot be projected for the selected run because its verified radial coordinate map or aligned profile is unavailable.' : '当前运行缺少已校验的径向坐标映射或对齐剖面，无法投影该场；原一维剖面仍可查看。'}</p>}
     <EfitCanvasChart key={`${data.runId}-${revision}`} option={option} ariaLabel={en ? 'Simulated R-Z poloidal equilibrium field' : '模拟 R–Z 极向磁平衡场'} fallback={<div className="simEquilibriumFallback"><strong>{en ? 'Preparing verified field…' : '正在准备已校验场数据…'}</strong><span>{equilibrium.r.length} × {equilibrium.z.length} · COCOS {data.cocos}</span></div>} className="simEquilibriumChart" dataAspectRatio={dataAspectRatio} preserveDataZoom />
     <details className="simGridSampler"><summary>{en ? 'Keyboard grid readout' : '键盘网格读数'}</summary><div className="simGridSamplerBody">
       <label htmlFor={`${sampleId}-r`}><span>R index · {sampleIndex.r + 1}/{equilibrium.r.length}</span><input id={`${sampleId}-r`} type="range" min="0" max={equilibrium.r.length - 1} value={sampleIndex.r} onChange={(event) => setSampleIndex((current) => ({ ...current, r: Number(event.currentTarget.value) }))} /><output>{equilibrium.r[sampleIndex.r].toFixed(4)} m</output></label>
       <label htmlFor={`${sampleId}-z`}><span>Z index · {sampleIndex.z + 1}/{equilibrium.z.length}</span><input id={`${sampleId}-z`} type="range" min="0" max={equilibrium.z.length - 1} value={sampleIndex.z} onChange={(event) => setSampleIndex((current) => ({ ...current, z: Number(event.currentTarget.value) }))} /><output>{equilibrium.z[sampleIndex.z].toFixed(4)} m</output></label>
-      <output className="simGridSampleValue" aria-live="polite">R {equilibrium.r[sampleIndex.r].toFixed(4)} m · Z {equilibrium.z[sampleIndex.z].toFixed(4)} m · ψ {samplePsi.toPrecision(6)} Wb · ψN {samplePsiNorm.toFixed(4)}</output>
+      <output className="simGridSampleValue" aria-live="polite">R {equilibrium.r[sampleIndex.r].toFixed(4)} m · Z {equilibrium.z[sampleIndex.z].toFixed(4)} m · ψN {samplePsiNorm.toFixed(4)}{sampleField ? ` · ${en ? selectedSpec.labelEn : selectedSpec.labelZh} ${sampleField.value.toPrecision(6)} ${sampleField.unit}${sampleField.rhoTorNorm === null ? '' : ` · ρtor,N ${sampleField.rhoTorNorm.toFixed(4)}`}` : ` · ${en ? 'unavailable outside the mapped plasma domain' : '映射等离子体域外不可用'}`}</output>
     </div></details>
-    <div className="simPlotLegend">{overlays.has('axis') && <span>◇ {en ? 'Magnetic axis' : '磁轴'}</span>}{overlays.has('lcfs') && <span>━ LCFS</span>}<span>{field === 'none' ? (en ? 'Field hidden' : '云图已关闭') : field === 'psi_norm' ? 'ψN 0–1' : `ψ ${equilibrium.psiAxis.toPrecision(4)} → ${equilibrium.psiBoundary.toPrecision(4)} Wb`}</span><span>COCOS {data.cocos}</span></div>
-    <p className="simChartNote">{equilibrium.r.length} × {equilibrium.z.length} {en ? 'native archived grid · LCFS grid-point mask · no spatial interpolation. Hover reports the nearest archived sample when the cloud is visible; the keyboard readout is always available. Te, Ti and ne remain 1-D radial profiles.' : '原生归档网格 · 按 LCFS 对网格点作掩膜 · 不进行空间插值；云图启用时，悬停提示显示最近归档样本，键盘读数器始终可用。Te、Ti、ne 仍保持一维径向剖面。'}</p>
+    <div className="simPlotLegend">{overlays.has('axis') && <span>◇ {en ? 'Magnetic axis' : '磁轴'}</span>}{overlays.has('lcfs') && <span>━ LCFS</span>}<span>{!cloudVisible ? (en ? 'Field hidden' : '云图已关闭') : projection ? `${en ? selectedSpec.labelEn : selectedSpec.labelZh} · ${projection.minimum.toPrecision(4)} → ${projection.maximum.toPrecision(4)} ${projection.unit}` : (en ? 'Field unavailable' : '场不可用')}</span><span>COCOS {data.cocos}</span></div>
+    <p className="simChartNote">{equilibrium.r.length} × {equilibrium.z.length} {selectedSpec.authority === 'profile-mapped' ? (en ? `archived equilibrium grid · LCFS grid-point mask · ${selectedSpec.sourceAxis === 'rho_tor_norm' ? 'native ψN↔ρtor,N coordinate map · ' : ''}bounded linear radial interpolation · no extrapolation. This is an axisymmetric flux-surface mapping, not a 2-D transport solve.` : `归档磁平衡网格 · LCFS 网格点掩膜 · ${selectedSpec.sourceAxis === 'rho_tor_norm' ? '原生 ψN↔ρtor,N 坐标映射 · ' : ''}有界线性径向插值 · 不外推。这是轴对称磁通面剖面映射，不是二维输运求解。`) : (en ? 'native archived ψ grid · LCFS grid-point mask · no spatial interpolation.' : '原生归档 ψ 网格 · LCFS 网格点掩膜 · 不进行空间插值。')}{coordinateMap && selectedSpec.authority === 'profile-mapped' ? ` · map ${coordinateMap.projectorSha256.slice(0, 8)}` : ''}</p>
   </section>;
 }

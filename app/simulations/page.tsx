@@ -4,11 +4,14 @@ import SiteNav from '../components/SiteNav';
 import { DEFAULT_LOCALE, LOCALE_COOKIE_NAME, resolveLocale } from '../i18n/config';
 import SimulationStudio from './SimulationStudio';
 import './simulation-studio.css';
+import './platform/platform.css';
 export async function generateMetadata(): Promise<Metadata> {
   const store = await cookies();
   const en = (resolveLocale(store.get(LOCALE_COOKIE_NAME)?.value) ?? DEFAULT_LOCALE) === 'en';
-  return { title: en ? 'Simulations · FUSE Studio' : '仿真模拟 · FUSE 工作台', description: en ? 'Explore traceable FUSE physics results and configure simulation studies.' : '查看可追溯的 FUSE 物理结果、配置计算研究，逐步连接物理模拟与工程仿真。', alternates: { canonical: '/simulations' } };
+  return { title: en ? 'Simulations · FUSE & TORAX' : '仿真模拟 · FUSE 与 TORAX', description: en ? 'Explore traceable simulations, transport trajectories and connected engine workflows.' : '探索可追溯的仿真结果、输运时序与多引擎协同研究。', alternates: { canonical: '/simulations' } };
 }
-export default function SimulationsPage() {
-  return <div className="simulationPage"><SiteNav active="simulations" /><SimulationStudio /></div>;
+export default async function SimulationsPage({ searchParams }: { searchParams: Promise<{ engine?: string }> }) {
+  const params = await searchParams;
+  const engine = ['torax', 'workflow'].includes(params?.engine ?? '') ? params.engine : 'fuse';
+  return <div className="simulationPage"><SiteNav active="simulations" /><SimulationStudio initialEngine={engine} /></div>;
 }

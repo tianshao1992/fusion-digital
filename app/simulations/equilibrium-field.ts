@@ -1,6 +1,30 @@
 import type { PhysicsData, RZ } from './physics';
+import type { FluxCoordinateMap } from './flux-coordinate-map';
 
-export type EquilibriumFieldChannel = 'psi_norm' | 'psi';
+export type SpatialFieldChannel = 'psi_norm' | 'psi' | 'te' | 'ti' | 'ne' | 'q' | 'pressure';
+export type EquilibriumFieldChannel = SpatialFieldChannel;
+
+export type SpatialFieldSpec = {
+  id: SpatialFieldChannel;
+  profileId: string | null;
+  labelZh: string;
+  labelEn: string;
+  sourceUnit: string;
+  displayUnit: string;
+  displayScale: number;
+  sourceAxis: 'rz-grid' | 'psi_norm' | 'rho_tor_norm';
+  authority: 'native-grid' | 'normalized-grid' | 'profile-mapped';
+};
+
+export const SPATIAL_FIELD_SPECS: readonly SpatialFieldSpec[] = [
+  { id: 'psi_norm', profileId: null, labelZh: '归一化极向磁通', labelEn: 'Normalized poloidal flux', sourceUnit: '1', displayUnit: '1', displayScale: 1, sourceAxis: 'rz-grid', authority: 'normalized-grid' },
+  { id: 'psi', profileId: null, labelZh: '极向磁通', labelEn: 'Poloidal flux', sourceUnit: 'Wb', displayUnit: 'Wb', displayScale: 1, sourceAxis: 'rz-grid', authority: 'native-grid' },
+  { id: 'te', profileId: 'te', labelZh: '电子温度', labelEn: 'Electron temperature', sourceUnit: 'eV', displayUnit: 'keV', displayScale: 1e-3, sourceAxis: 'rho_tor_norm', authority: 'profile-mapped' },
+  { id: 'ti', profileId: 'ti', labelZh: '平均离子温度', labelEn: 'Average ion temperature', sourceUnit: 'eV', displayUnit: 'keV', displayScale: 1e-3, sourceAxis: 'rho_tor_norm', authority: 'profile-mapped' },
+  { id: 'ne', profileId: 'ne', labelZh: '电子密度', labelEn: 'Electron density', sourceUnit: 'm^-3', displayUnit: '10²⁰ m⁻³', displayScale: 1e-20, sourceAxis: 'rho_tor_norm', authority: 'profile-mapped' },
+  { id: 'q', profileId: 'q', labelZh: '安全因子', labelEn: 'Safety factor', sourceUnit: '1', displayUnit: '1', displayScale: 1, sourceAxis: 'psi_norm', authority: 'profile-mapped' },
+  { id: 'pressure', profileId: 'pressure', labelZh: '平衡压强', labelEn: 'Equilibrium pressure', sourceUnit: 'Pa', displayUnit: 'kPa', displayScale: 1e-3, sourceAxis: 'psi_norm', authority: 'profile-mapped' },
+] as const;
 
 export type EquilibriumFieldSample = [
   rM: number,
@@ -12,6 +36,7 @@ export type EquilibriumFieldSample = [
   rUpperM: number,
   zLowerM: number,
   zUpperM: number,
+  rhoTorNorm: number | null,
 ];
 
 export type EquilibriumFieldProjection = {
@@ -20,7 +45,83 @@ export type EquilibriumFieldProjection = {
   minimum: number;
   maximum: number;
   reversePalette: boolean;
+  unit: string;
+  sourceUnit: string;
+  sourceAxis: SpatialFieldSpec['sourceAxis'];
+  authority: SpatialFieldSpec['authority'];
 };
+
+export type SpatialFieldValue = {
+  value: number;
+  rawValue: number;
+  unit: string;
+  sourceUnit: string;
+  psiNorm: number;
+  rhoTorNorm: number | null;
+  authority: SpatialFieldSpec['authority'];
+};
+
+export function spatialFieldSpec(channel: SpatialFieldChannel): SpatialFieldSpec {
+  const spec = SPATIAL_FIELD_SPECS.find((item) => item.id === channel);
+  if (!spec) throw new Error('UNKNOWN_SPATIAL_FIELD');
+  return spec;
+}
+
+/** Bounded piecewise-linear interpolation. Missing neighbours stay missing and values are never extrapolated. */
+export function interpolateBounded(x: number[], y: (number | null)[], target: number): number | null {
+  if (!Number.isFinite(target) || x.length !== y.length || x.length < 2 || target < x[0] || target > x.at(-1)!) return null;
+  let low = 0; let high = x.length - 1;
+  while (high - low > 1) {
+    const middle = Math.floor((low + high) / 2);
+    if (x[middle] < target) low = middle; else high = middle;
+  }
+  if (target === x[low]) return y[low];
+  if (target === x[high]) return y[high];
+  if (y[low] === null || y[high] === null) return null;
+  const fraction = (target - x[low]) / (x[high] - x[low]);
+  return y[low]! + (y[high]! - y[low]!) * fraction;
+}
+
+export function spatialFieldUnavailableReason(data: PhysicsData, channel: SpatialFieldChannel, coordinateMap?: FluxCoordinateMap): string | null {
+  const spec = spatialFieldSpec(channel);
+  if (!spec.profileId) return null;
+  const profile = data.profiles.find((item) => item.id === spec.profileId);
+  if (!profile || profile.unit !== spec.sourceUnit || profile.axis !== spec.sourceAxis) return 'profile-unavailable';
+  if (profile.axis === 'rho_tor_norm') {
+    if (!coordinateMap) return 'flux-coordinate-map-unavailable';
+    if (coordinateMap.runId !== data.runId || coordinateMap.source.equilibriumTimeSeconds !== data.timeSeconds || coordinateMap.source.coreTimeSeconds !== data.coreTimeSeconds || data.timeSeconds !== data.coreTimeSeconds) return 'profile-state-mismatch';
+  }
+  return null;
+}
+
+export function sampleSpatialFieldAtPsiNorm(
+  data: PhysicsData,
+  channel: SpatialFieldChannel,
+  psiNorm: number,
+  coordinateMap?: FluxCoordinateMap,
+  psiWb = data.equilibrium.psiAxis + psiNorm * (data.equilibrium.psiBoundary - data.equilibrium.psiAxis),
+): SpatialFieldValue | null {
+  if (spatialFieldUnavailableReason(data, channel, coordinateMap)) return null;
+  const spec = spatialFieldSpec(channel);
+  let rawValue = channel === 'psi_norm' ? psiNorm : channel === 'psi' ? psiWb : null;
+  const rhoTorNorm: number | null = coordinateMap ? interpolateBounded(coordinateMap.psiNorm, coordinateMap.rhoTorNorm, psiNorm) : null;
+  if (spec.profileId) {
+    const profile = data.profiles.find((item) => item.id === spec.profileId)!;
+    const coordinate = profile.axis === 'psi_norm' ? psiNorm : rhoTorNorm;
+    if (coordinate === null) return null;
+    rawValue = interpolateBounded(profile.x, profile.y, coordinate);
+  }
+  if (rawValue === null || !Number.isFinite(rawValue)) return null;
+  return {
+    value: rawValue * spec.displayScale,
+    rawValue,
+    unit: spec.displayUnit,
+    sourceUnit: spec.sourceUnit,
+    psiNorm,
+    rhoTorNorm,
+    authority: spec.authority,
+  };
+}
 
 export function normalizedPoloidalFlux(psiWb: number, psiAxisWb: number, psiBoundaryWb: number): number {
   const normalized = (psiWb - psiAxisWb) / (psiBoundaryWb - psiAxisWb);
@@ -68,7 +169,11 @@ export function pointInClosedPolygon(r: number, z: number, polygon: RZ): boolean
 export function buildEquilibriumFieldProjection(
   data: PhysicsData,
   channel: EquilibriumFieldChannel,
+  coordinateMap?: FluxCoordinateMap,
 ): EquilibriumFieldProjection {
+  const unavailable = spatialFieldUnavailableReason(data, channel, coordinateMap);
+  if (unavailable) throw new Error(unavailable);
+  const spec = spatialFieldSpec(channel);
   const { equilibrium } = data;
   const samples: EquilibriumFieldSample[] = [];
   const boundaryR = equilibrium.boundary.map(([r]) => r);
@@ -87,27 +192,42 @@ export function buildEquilibriumFieldProjection(
       const psiWb = equilibrium.psi[zIndex][rIndex];
       const psiNorm = normalizedPoloidalFlux(psiWb, equilibrium.psiAxis, equilibrium.psiBoundary);
       if (!Number.isFinite(psiNorm)) continue;
+      const field = sampleSpatialFieldAtPsiNorm(data, channel, psiNorm, coordinateMap, psiWb);
+      if (!field) continue;
       const [rLowerM, rUpperM] = gridCellBounds(equilibrium.r, rIndex);
       const [zLowerM, zUpperM] = gridCellBounds(equilibrium.z, zIndex);
       samples.push([
         rM,
         zM,
-        channel === 'psi_norm' ? psiNorm : psiWb,
+        field.value,
         psiNorm,
         psiWb,
         rLowerM,
         rUpperM,
         zLowerM,
         zUpperM,
+        field.rhoTorNorm,
       ]);
     }
   }
 
+  if (!samples.length) throw new Error('SPATIAL_FIELD_HAS_NO_VALID_SAMPLES');
+  const values = samples.map((sample) => sample[2]);
+  const minimum = channel === 'psi_norm' ? 0 : channel === 'psi'
+    ? Math.min(equilibrium.psiAxis, equilibrium.psiBoundary) : Math.min(...values);
+  let maximum = channel === 'psi_norm' ? 1 : channel === 'psi'
+    ? Math.max(equilibrium.psiAxis, equilibrium.psiBoundary) : Math.max(...values);
+  if (maximum === minimum) maximum += Math.max(Math.abs(minimum) * 1e-9, 1e-12);
+
   return {
     channel,
     samples,
-    minimum: channel === 'psi_norm' ? 0 : Math.min(equilibrium.psiAxis, equilibrium.psiBoundary),
-    maximum: channel === 'psi_norm' ? 1 : Math.max(equilibrium.psiAxis, equilibrium.psiBoundary),
+    minimum,
+    maximum,
     reversePalette: channel === 'psi' && equilibrium.psiBoundary < equilibrium.psiAxis,
+    unit: spec.displayUnit,
+    sourceUnit: spec.sourceUnit,
+    sourceAxis: spec.sourceAxis,
+    authority: spec.authority,
   };
 }

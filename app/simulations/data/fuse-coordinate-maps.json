@@ -1,0 +1,62 @@
+[
+  {
+    "runId": "fuse-diiid-20260906174722551-3ffd17fc",
+    "sourceNativeSha256": "0e791df1b9a0a421523d875404c123ce3b56d46a514eb92ab42e8c7f2151d397",
+    "sourcePhysicsSha256": "079486db86ee3c90440ced11a6f35124ca8db5331bb5fdb69ccd0adde3e425bf",
+    "artifact": {
+      "path": "/data/simulations/ebd610aaa716568d31b828fa00146cf8f5ac5e40ea9a4dfe2401f8490d618324.json.gz",
+      "sha256": "ebd610aaa716568d31b828fa00146cf8f5ac5e40ea9a4dfe2401f8490d618324",
+      "bytes": 1696,
+      "rawSha256": "5932cb26b574cb6c027b5b4254988f4d71c604491ed5bae29b84e508fddfa592",
+      "rawBytes": 4024
+    }
+  },
+  {
+    "runId": "fuse-diiid-20260906172206806-43f08464",
+    "sourceNativeSha256": "8a78c8b8f6fe71581ee05ac025fb3bcf9e3c4772b1a2f4c3edb3cc3214f8ce82",
+    "sourcePhysicsSha256": "cb6bba4eb652625d096eaf948b591259e61e230c4192896db5ee71d49c2d1e4f",
+    "artifact": {
+      "path": "/data/simulations/c450bf4b8a6b4f48bb07f3e63e8be8d9d4da83d14f0b7fc585e9e3399e3cd225.json.gz",
+      "sha256": "c450bf4b8a6b4f48bb07f3e63e8be8d9d4da83d14f0b7fc585e9e3399e3cd225",
+      "bytes": 2109,
+      "rawSha256": "7b64b57e7556360d0b5082b44ece670dae38ac9e583c9af9686a250222405dad",
+      "rawBytes": 5030
+    }
+  },
+  {
+    "runId": "fuse-diiid-20260906171840962-ede653fa",
+    "sourceNativeSha256": "412544686f0688c01f2d5b311b35413bf5e27243f089f14e53cda32c617d395b",
+    "sourcePhysicsSha256": "a49774fba74bcb87d32b7179a85a33df989e373736746d540ddf80abaf2c139a",
+    "artifact": {
+      "path": "/data/simulations/573c24653bd8c1eaa644fff24462f54184ff3a50d42b1028e767f67069a48385.json.gz",
+      "sha256": "573c24653bd8c1eaa644fff24462f54184ff3a50d42b1028e767f67069a48385",
+      "bytes": 2107,
+      "rawSha256": "b9c4dad07fec2e332208eadb12e0872cdeb8c328bfe7e2aaa9da9869c44b935b",
+      "rawBytes": 5030
+    }
+  },
+  {
+    "runId": "fuse-diiid-20260906171323467-88aa0279",
+    "sourceNativeSha256": "3d58a184c9ced92ba32da11661697f71b889595121c218be1ff6a45cb775cc96",
+    "sourcePhysicsSha256": "c17ae889684270bfcefe0d847957e2aa1f800ea31c501466e8ed17a08686c69f",
+    "artifact": {
+      "path": "/data/simulations/56547a85fb2cdb6db337be48c117c3ece6d52e2afb580a2d973f65f497b16481.json.gz",
+      "sha256": "56547a85fb2cdb6db337be48c117c3ece6d52e2afb580a2d973f65f497b16481",
+      "bytes": 2108,
+      "rawSha256": "b91f6dc314cd1f5ff6c1a5b009312b86e999d8db1cba6beffc1e3cc65a0f9e18",
+      "rawBytes": 5030
+    }
+  },
+  {
+    "runId": "fuse-fpp-20260907-003257-48a4fa67",
+    "sourceNativeSha256": "86a7d56d72355c986dd66326a2a93ed67f5b4243a50087d13f4d37c6d68999df",
+    "sourcePhysicsSha256": "606e01b106f020846d110c6f92b7ad9645a77368ab006fb29976a8cada25f2a2",
+    "artifact": {
+      "path": "/data/simulations/13351251e82995326a47ec7b6ba31599ba348d1fbc456ea3b832cffaec6539dd.json.gz",
+      "sha256": "13351251e82995326a47ec7b6ba31599ba348d1fbc456ea3b832cffaec6539dd",
+      "bytes": 2096,
+      "rawSha256": "7a9306ec8feffa75c6f0ba8f64b9d53e43f39d24edb5ea20a699c23ecd600694",
+      "rawBytes": 4920
+    }
+  }
+]

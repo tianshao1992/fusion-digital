@@ -50,7 +50,7 @@ test('unsupported profiles are rejected and xtol cannot become a residual thresh
   const flux = structuredClone(raw[1]); flux.convergence.threshold = 0.001; assert.throws(() => parseSimulationRun(flux), /RESIDUAL_CRITERION/);
 });
 test('draft state is owned by the workspace and not remounted with the scenario tab', () => {
-  const root = readFileSync(new URL('../app/simulations/SimulationStudio.tsx', import.meta.url), 'utf8');
+  const root = readFileSync(new URL('../app/simulations/FuseWorkspace.tsx', import.meta.url), 'utf8');
   const panel = readFileSync(new URL('../app/simulations/SimulationPanels.tsx', import.meta.url), 'utf8');
   assert.match(root, /\[draft, setDraft\] = useState/); assert.match(panel, /draft: currentDraft, setDraft/);
   assert.doesNotMatch(panel, /\[parameters, setParameters\] = useState/);
@@ -132,7 +132,7 @@ test('comparison view renders source identities and neutral scientific boundarie
   assert.doesNotMatch(html, /\p{Script=Han}/u);
 });
 test('the Web integration never includes local process execution or writes an API', () => {
-  const source = readFileSync(new URL('../app/simulations/SimulationStudio.tsx', import.meta.url), 'utf8');
+  const source = readFileSync(new URL('../app/simulations/FuseWorkspace.tsx', import.meta.url), 'utf8');
   assert.doesNotMatch(source, /child_process|docker\.sock|method:\s*['"]POST/);
   assert.match(source, /512 \* 1024/); assert.match(source, /parseSimulationRun/);
 });
