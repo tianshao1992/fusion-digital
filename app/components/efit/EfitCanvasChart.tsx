@@ -15,14 +15,41 @@ type EfitCanvasChartProps = {
   onChartClick?: (params: unknown) => void;
   /** Locks x/y to the same physical pixel scale (x data span / y data span). */
   dataAspectRatio?: number;
+  /** Keeps the current user zoom while non-geometric option layers change. */
+  preserveDataZoom?: boolean;
 };
+
+type DataZoomState = {
+  start?: number;
+  end?: number;
+  startValue?: string | number;
+  endValue?: string | number;
+};
+
+function currentDataZoom(chart: EChartsType): DataZoomState[] {
+  const dataZoom = (chart.getOption() as { dataZoom?: unknown }).dataZoom;
+  if (!Array.isArray(dataZoom)) return [];
+  return dataZoom.map((item) => {
+    if (!item || typeof item !== 'object') return {};
+    const option = item as DataZoomState;
+    return {
+      start: option.start,
+      end: option.end,
+      startValue: option.startValue,
+      endValue: option.endValue,
+    };
+  });
+}
 
 function equalScaleGrid(element: HTMLElement, dataAspectRatio?: number) {
   if (!dataAspectRatio || !Number.isFinite(dataAspectRatio) || dataAspectRatio <= 0) return undefined;
   const width = element.clientWidth;
   const height = element.clientHeight;
   if (width <= 0 || height <= 0) return undefined;
-  const margins = { left: 56, right: 24, top: 24, bottom: 48 };
+  // Equal-scale equilibrium views reserve the right gutter for their vertical
+  // colour bar. The old 24 px override silently discarded the 64 px gutter in
+  // EfitEquilibriumChart and could place the legend over the R-Z plot.
+  const margins = { left: 56, right: 64, top: 24, bottom: 48 };
   const availableWidth = Math.max(40, width - margins.left - margins.right);
   const availableHeight = Math.max(40, height - margins.top - margins.bottom);
   let plotWidth = availableWidth;
@@ -55,6 +82,7 @@ export default function EfitCanvasChart({
   className = '',
   onChartClick,
   dataAspectRatio,
+  preserveDataZoom = false,
 }: EfitCanvasChartProps) {
   const { t } = useI18n();
   const chartTheme = useChartTheme();
@@ -139,11 +167,15 @@ export default function EfitCanvasChart({
 
   useEffect(() => {
     if (!chartRef.current || !mountRef.current) return;
+    const dataZoom = preserveDataZoom ? currentDataZoom(chartRef.current) : [];
     chartRef.current.setOption(optionWithEqualScale(themedOption, mountRef.current, dataAspectRatio), { notMerge: true, lazyUpdate: true });
+    if (dataZoom.length > 0) {
+      chartRef.current.setOption({ dataZoom }, { notMerge: false, lazyUpdate: false, silent: true });
+    }
     if (incrementalOptionRef.current) {
       chartRef.current.setOption(incrementalOptionRef.current, { notMerge: false, lazyUpdate: true });
     }
-  }, [dataAspectRatio, themedOption]);
+  }, [dataAspectRatio, preserveDataZoom, themedOption]);
 
   useEffect(() => {
     if (!chartRef.current || !incrementalOption) return;

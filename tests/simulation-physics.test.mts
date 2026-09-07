@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
 import { createHash } from 'node:crypto';
 import { loadPhysics, parsePhysics, profileDisplay, type PhysicsBundle } from '../app/simulations/physics.ts';
+import { buildEquilibriumFieldProjection, gridCellBounds, normalizedPoloidalFlux, pointInClosedPolygon } from '../app/simulations/equilibrium-field.ts';
 import { parseSimulationRun } from '../app/simulations/contract.ts';
 import { loadInnerHistory, parseInnerHistory, type DiagnosticsBundle } from '../app/simulations/diagnostics.ts';
 import { compareRuns } from '../app/simulations/comparison.ts';
@@ -58,6 +59,39 @@ test('matrix order, units, axes and missing samples are validated without fabric
   const p=parsePhysics(original);assert.equal(p.equilibrium.arrayOrder,'z,r');assert.equal(p.equilibrium.psiUnit,'Wb');
   for(const mutate of [(p:typeof original)=>{p.equilibrium.psi.pop();},(p:typeof original)=>{p.equilibrium.r[1]=p.equilibrium.r[0];},(p:typeof original)=>{p.profiles[0].y[0]=Infinity;},(p:typeof original)=>{p.profiles[0].unit='unqualified';},(p:typeof original)=>{p.equilibrium.psiBoundary=p.equilibrium.psiAxis;}]){const copy=structuredClone(original);mutate(copy);assert.throws(()=>parsePhysics(copy));}
   const copy=structuredClone(original);copy.profiles[0].y[0]=null;const missing=parsePhysics(copy).profiles[0];assert.equal(profileDisplay(missing).data[0][1],null);
+});
+test('equilibrium cloud projects the native psi grid through an LCFS mask',()=>{
+  const p=parsePhysics(original);
+  const normalized=buildEquilibriumFieldProjection(p,'psi_norm');
+  const rawPsi=buildEquilibriumFieldProjection(p,'psi');
+  assert.ok(normalized.samples.length>0);
+  assert.ok(normalized.samples.length<p.equilibrium.r.length*p.equilibrium.z.length);
+  assert.equal(normalized.samples.length,rawPsi.samples.length);
+  assert.deepEqual([normalized.minimum,normalized.maximum],[0,1]);
+  assert.deepEqual([rawPsi.minimum,rawPsi.maximum],[Math.min(p.equilibrium.psiAxis,p.equilibrium.psiBoundary),Math.max(p.equilibrium.psiAxis,p.equilibrium.psiBoundary)]);
+  normalized.samples.forEach((sample,index)=>{
+    const [r,z,value,psiNorm,psiWb,rLower,rUpper,zLower,zUpper]=sample;
+    const rIndex=p.equilibrium.r.indexOf(r),zIndex=p.equilibrium.z.indexOf(z);
+    assert.ok(rIndex>=0&&zIndex>=0);
+    assert.ok(pointInClosedPolygon(r,z,p.equilibrium.boundary));
+    assert.equal(psiWb,p.equilibrium.psi[zIndex][rIndex]);
+    assert.equal(psiNorm,normalizedPoloidalFlux(psiWb,p.equilibrium.psiAxis,p.equilibrium.psiBoundary));
+    assert.equal(value,psiNorm);
+    assert.deepEqual([rLower,rUpper],gridCellBounds(p.equilibrium.r,rIndex));
+    assert.deepEqual([zLower,zUpper],gridCellBounds(p.equilibrium.z,zIndex));
+    assert.ok(rLower<=r&&r<=rUpper&&zLower<=z&&z<=zUpper);
+    assert.deepEqual(rawPsi.samples[index].slice(0,2),[r,z]);
+    assert.equal(rawPsi.samples[index][2],psiWb);
+  });
+  const square:[[number,number],[number,number],[number,number],[number,number]]=[[0,0],[1,0],[1,1],[0,1]];
+  assert.equal(pointInClosedPolygon(.5,.5,square),true);
+  assert.equal(pointInClosedPolygon(1,.5,square),true);
+  assert.equal(pointInClosedPolygon(1.1,.5,square),false);
+  assert.deepEqual(gridCellBounds([0,1,4],0),[-.5,.5]);
+  assert.deepEqual(gridCellBounds([0,1,4],1),[.5,2.5]);
+  assert.deepEqual(gridCellBounds([0,1,4],2),[2.5,5.5]);
+  assert.equal(normalizedPoloidalFlux(2,2,0),0);
+  assert.equal(normalizedPoloidalFlux(0,2,0),1);
 });
 test('temperature and current display conversions do not overwrite native units',()=>{
   const te=parsePhysics(original).profiles.find(p=>p.id==='te')!; const q=original.profiles.find((p:{id:string})=>p.id==='q');

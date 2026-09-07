@@ -44,6 +44,28 @@
 .simFieldTools label { display:flex; align-items:center; gap:4px; cursor:pointer; }
 .simFieldTools input { accent-color:var(--color-accent-strong); }
 .simFieldTools > span { margin-left:auto; color:var(--color-ink-muted); }
+.simFieldChannelTools { align-items:flex-end; gap:14px 20px; padding-bottom:9px; border-bottom:1px solid var(--color-border); }
+.simFieldChannelSelect { display:grid !important; gap:5px !important; min-width:min(100%,250px); color:var(--color-ink-muted); cursor:default !important; }
+.simFieldChannelSelect select { min-width:0; width:100%; border:1px solid var(--color-border-strong); border-radius:6px; padding:8px 28px 8px 10px; background:var(--color-surface-raised); color:var(--color-ink); font:inherit; }
+.simFieldChannelTools fieldset { display:flex; flex:1; flex-wrap:wrap; align-items:center; gap:7px 14px; min-width:220px; margin:0; padding:0; border:0; }
+.simFieldChannelTools legend { float:left; margin-right:7px; color:var(--color-ink-muted); }
+.simFieldChannelTools fieldset label { white-space:nowrap; }
+.simEquilibriumChart { position:relative; width:100%; height:480px; min-height:400px; flex:1; touch-action:none; }
+.simEquilibriumChart > .efitChartMount,.simEquilibriumChart > .efitChartFallback { position:absolute; inset:0; }
+.simEquilibriumChart > .efitChartMount { z-index:2; }
+.simEquilibriumChart > .efitChartFallback { z-index:1; display:grid; place-items:center; padding:55px 20px 20px; }
+.simEquilibriumChart.isReady > .efitChartFallback { visibility:hidden; }
+.simEquilibriumChart > .efitChartStatus { position:absolute; z-index:3; right:12px; bottom:10px; color:var(--color-ink-muted); font:.62rem ui-monospace,monospace; }
+.simEquilibriumFallback { display:grid; justify-items:center; gap:5px; color:var(--color-ink-muted); text-align:center; }
+.simEquilibriumFallback strong { color:var(--color-ink); font-size:.8rem; font-weight:550; }
+.simEquilibriumFallback span { font:.68rem ui-monospace,monospace; }
+.simGridSampler { border-top:1px solid var(--color-border); color:var(--color-ink-muted); font-size:.7rem; }
+.simGridSampler summary { width:max-content; max-width:100%; margin:0 14px; padding:8px 0; cursor:pointer; }
+.simGridSamplerBody { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px 18px; padding:4px 14px 12px; background:var(--color-surface-muted); }
+.simGridSamplerBody label { display:grid; grid-template-columns:1fr auto; gap:4px 10px; align-items:center; }
+.simGridSamplerBody input { grid-column:1/-1; width:100%; accent-color:var(--color-accent-strong); }
+.simGridSamplerBody output { color:var(--color-ink); font:inherit; font-variant-numeric:tabular-nums; }
+.simGridSampleValue { grid-column:1/-1; padding-top:3px; overflow-wrap:anywhere; }
 .simEquilibriumSvg { width:100%; height:480px; flex:1; min-height:400px; touch-action:pan-y; }
 .simCoordinate { min-height:35px; margin:0; padding:7px 14px; font: .7rem/1.5 ui-monospace,monospace; color:var(--color-ink-muted); }
 .simPlotLegend { display:flex; flex-wrap:wrap; gap:16px; justify-content:center; padding:7px 14px 14px; font-size:.7rem; }
@@ -63,9 +85,9 @@
 .simAvailability summary { cursor:pointer; color:var(--color-ink); }
 .simPhysicsLoading { padding:48px 28px; min-height:390px; border:1px solid var(--color-border); border-radius:10px; background:var(--color-surface); }
 .simulationPage .simInspector { position:static; margin-top:20px; }
-@media(min-width:1500px) { .simEquilibriumSvg { height:570px; } .simulationPage .simCompactChart { height:210px; min-height:210px; } }
+@media(min-width:1500px) { .simEquilibriumSvg,.simEquilibriumChart { height:570px; } .simulationPage .simCompactChart { height:210px; min-height:210px; } }
 @media(max-width:1000px) { .simScienceGrid { grid-template-columns:minmax(260px,.8fr) minmax(0,1fr); } .simCaseSwitcher { flex-wrap:wrap; gap:10px; } .simulationPage .simMetrics { grid-template-columns:repeat(3,minmax(0,1fr)); } .simProfileCard header { padding-inline:10px; } }
-@media(max-width:720px) { .simScienceGrid { grid-template-columns:1fr; } .simEquilibriumSvg { height:410px; } .simCaseSwitcher { align-items:start; } .simCaseSwitcher label { width:100%; flex:auto; } .simCaseSwitcher select { width:100%; } .simResultMeta { gap:8px 14px; } .simProfileGrid { gap:8px; } .simulationPage .simCompactChart { height:190px; min-height:190px; } .simExplorerControls { padding:12px; } .simVariablePath { padding-inline:12px; } .simProfileCard h3 { font-size:.7rem; } .simStudio .simHeading { gap:10px; } .simConnection { display:none; } }
+@media(max-width:720px) { .simScienceGrid { grid-template-columns:1fr; } .simEquilibriumSvg,.simEquilibriumChart { height:410px; } .simFieldChannelSelect,.simFieldChannelTools fieldset { width:100%; } .simGridSamplerBody { grid-template-columns:1fr; } .simGridSampleValue { grid-column:auto; } .simCaseSwitcher { align-items:start; } .simCaseSwitcher label { width:100%; flex:auto; } .simCaseSwitcher select { width:100%; } .simResultMeta { gap:8px 14px; } .simProfileGrid { gap:8px; } .simulationPage .simCompactChart { height:190px; min-height:190px; } .simExplorerControls { padding:12px; } .simVariablePath { padding-inline:12px; } .simProfileCard h3 { font-size:.7rem; } .simStudio .simHeading { gap:10px; } .simConnection { display:none; } }
 .simStudio { max-width: 1920px; margin: auto; padding: 28px clamp(16px, 3vw, 54px) 48px; font-size: 1rem; line-height: 1.6; font-variant-numeric: tabular-nums; }
 .simHeading { display: flex; justify-content: space-between; align-items: center; gap: 24px; padding-bottom: 24px; }
 .simEyebrow, .simMiniLabel { font: 500 .75rem/1.5 ui-monospace, Consolas, monospace; letter-spacing: .09em; color: var(--color-ink-muted); overflow-wrap: anywhere; }
