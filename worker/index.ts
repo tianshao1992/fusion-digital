@@ -3,6 +3,7 @@ import { handleImageOptimization, DEFAULT_DEVICE_SIZES, DEFAULT_IMAGE_SIZES } fr
 import handler from "vinext/server/app-router-entry";
 import { ITER_HIGH_DETAIL_RELEASE_ASSETS } from "./iter-high-assets.generated";
 import { EXL50U_GENERAL_ASSEMBLY_RELEASE_ASSETS } from "./exl50u-general-assembly-assets.generated";
+import sitesStaticOffloadLock from "../assets/sites-static-offload.lock.json" with { type: "json" };
 
 export interface Env {
   ASSETS: Fetcher;
@@ -132,6 +133,104 @@ const RUNTIME_ASSET_MIRROR_REPOSITORY_PATH = "tianshao1992/fusion-physics-atlas-
 const ITER_HIGH_DETAIL_BUNDLE_ID = "iter-high-detail-v1";
 const EXL50U_GA_BUNDLE_ID = "exl50u-general-assembly-v1";
 type RuntimeAssetBundleId = typeof ITER_HIGH_DETAIL_BUNDLE_ID | typeof EXL50U_GA_BUNDLE_ID;
+
+interface SitesStaticOffloadLockFile {
+  route: string;
+  sourcePath: string;
+  bytes: number;
+  sha256: string;
+  contentType: string;
+}
+
+interface SitesStaticOffloadLock {
+  schemaVersion: string;
+  bundleId: string;
+  source: {
+    origin: string;
+    repository: string;
+    commitSha: string;
+    publicRoot: string;
+  };
+  fileCount: number;
+  totalBytes: number;
+  files: SitesStaticOffloadLockFile[];
+}
+
+export interface SitesStaticOffloadProxyAsset extends SitesStaticOffloadLockFile {
+  upstreamUrl: string;
+  localPath: string;
+}
+
+function expectedSitesStaticOffloadRoute(sourcePath: string): string {
+  return sourcePath.startsWith("data/exl50u-efit")
+    ? `/device-data/${sourcePath.slice("data/".length)}`
+    : `/${sourcePath}`;
+}
+
+export function createControlledSitesStaticOffloads(
+  lock: SitesStaticOffloadLock,
+): ReadonlyMap<string, SitesStaticOffloadProxyAsset> {
+  if (
+    lock.schemaVersion !== "fusiondigital.sites-static-offload.v1"
+    || lock.bundleId !== "sites-static-offload-v1"
+    || lock.source.origin !== RUNTIME_ASSET_MIRROR_ORIGIN
+    || lock.source.repository !== "tianshao1992/fusion-digital"
+    || !/^[a-f0-9]{40}$/u.test(lock.source.commitSha)
+    || lock.source.publicRoot !== "public"
+    || lock.fileCount !== lock.files.length
+    || lock.fileCount !== 232
+  ) {
+    throw new Error("Invalid Sites static offload root contract");
+  }
+
+  const mirrorBase = `${lock.source.origin}/${lock.source.repository}/${lock.source.commitSha}/${lock.source.publicRoot}`;
+  const routes = new Map<string, SitesStaticOffloadProxyAsset>();
+  const sourcePaths = new Set<string>();
+  let totalBytes = 0;
+  for (const file of lock.files) {
+    const segments = file.sourcePath.split("/");
+    const allowedSource = /^(?:[A-Za-z0-9][A-Za-z0-9._-]*\.(?:docx|pdf)|data\/exl50u-efit(?:-v2)?\/[a-z0-9][a-z0-9.-]*\.(?:bin|jsonl\.gz))$/u;
+    if (
+      !allowedSource.test(file.sourcePath)
+      || segments.some((segment) => segment === "" || segment === "." || segment === "..")
+      || file.route !== expectedSitesStaticOffloadRoute(file.sourcePath)
+      || routes.has(file.route)
+      || sourcePaths.has(file.sourcePath)
+      || !Number.isSafeInteger(file.bytes)
+      || file.bytes <= 0
+      || !/^[a-f0-9]{64}$/u.test(file.sha256)
+      || ![
+        "application/gzip",
+        "application/octet-stream",
+        "application/pdf",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      ].includes(file.contentType)
+    ) {
+      throw new Error(`Invalid Sites static offload entry: ${file.sourcePath}`);
+    }
+    totalBytes += file.bytes;
+    sourcePaths.add(file.sourcePath);
+    routes.set(file.route, {
+      ...file,
+      localPath: `/${file.sourcePath}`,
+      upstreamUrl: `${mirrorBase}/${file.sourcePath}`,
+    });
+  }
+  if (totalBytes !== lock.totalBytes || totalBytes < 100 * 1024 * 1024) {
+    throw new Error("Invalid Sites static offload byte total");
+  }
+  return routes;
+}
+
+const controlledSitesStaticOffloads = createControlledSitesStaticOffloads(
+  sitesStaticOffloadLock as SitesStaticOffloadLock,
+);
+const SITES_STATIC_OFFLOAD_MIRROR_BASE = [
+  sitesStaticOffloadLock.source.origin,
+  sitesStaticOffloadLock.source.repository,
+  sitesStaticOffloadLock.source.commitSha,
+  sitesStaticOffloadLock.source.publicRoot,
+].join("/");
 const FORBIDDEN_RUNTIME_ASSET_MIRROR_HOSTS = new Set([
   "fusiondigital.club",
   "www.fusiondigital.club",
@@ -561,6 +660,65 @@ async function fetchControlledImmutableMirror(
   return response;
 }
 
+function sitesStaticOffloadSuccessHeaders(
+  request: Request,
+  asset: SitesStaticOffloadProxyAsset,
+  source: Headers,
+): Headers {
+  const headers = new Headers(source);
+  const isEfitData = asset.route.startsWith("/device-data/exl50u-efit");
+  headers.set(
+    "Cache-Control",
+    isEfitData ? "no-store, private, max-age=0" : "public, max-age=300, must-revalidate",
+  );
+  headers.set("Content-Type", asset.contentType);
+  headers.set("Content-Disposition", asset.sourcePath.endsWith(".docx")
+    ? `attachment; filename="${asset.sourcePath.split("/").at(-1)}"`
+    : "inline");
+  headers.set("Accept-Ranges", "bytes");
+  headers.set("Cross-Origin-Resource-Policy", "same-origin");
+  headers.set("Referrer-Policy", "no-referrer");
+  headers.set("X-Content-Type-Options", "nosniff");
+  headers.delete("Content-Encoding");
+  headers.delete("Set-Cookie");
+  if (request.method === "HEAD") headers.delete("Transfer-Encoding");
+  return headers;
+}
+
+export async function proxySitesStaticOffload(
+  request: Request,
+  asset: SitesStaticOffloadProxyAsset,
+  upstreamFetch: typeof fetch = fetch,
+): Promise<Response> {
+  const response = await proxyIterHighDetailAsset(request, asset, upstreamFetch);
+  if (![200, 206, 304].includes(response.status)) return response;
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: sitesStaticOffloadSuccessHeaders(request, asset, response.headers),
+  });
+}
+
+function createSitesStaticOffloadLocalFirstFetch(
+  request: Request,
+  env: Env,
+  asset: SitesStaticOffloadProxyAsset,
+): typeof fetch {
+  return async (_input, init) => {
+    const localResponse = await env.ASSETS.fetch(new Request(
+      new URL(asset.localPath, request.url),
+      init,
+    ));
+    if (localResponse.status !== 404) return localResponse;
+    await discardUpstreamBody(localResponse);
+    return fetchControlledImmutableMirror(
+      SITES_STATIC_OFFLOAD_MIRROR_BASE,
+      asset.sourcePath,
+      init,
+    );
+  };
+}
+
 function createIterHighDetailLocalFirstFetch(
   request: Request,
   env: Env,
@@ -639,6 +797,16 @@ const worker = {
       globalThis.__FUSIONDIGITAL_ANALYTICS_REPORT_SECRET__ = env.FUSIONDIGITAL_ANALYTICS_REPORT_SECRET;
     }
     const url = new URL(request.url);
+
+    const sitesStaticOffload = controlledSitesStaticOffloads.get(url.pathname);
+    if (sitesStaticOffload && (request.method === "GET" || request.method === "HEAD")) {
+      return proxySitesStaticOffload(
+        request,
+        sitesStaticOffload,
+        createSitesStaticOffloadLocalFirstFetch(request, env, sitesStaticOffload),
+      );
+    }
+    if (sitesStaticOffload) return controlledNotFound();
 
     const controlledEfitPath = controlledEfitAssets.get(url.pathname);
     if (controlledEfitPath && (request.method === "GET" || request.method === "HEAD")) {

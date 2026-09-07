@@ -23,6 +23,7 @@ import {
   pruneUnreferencedMirroredSsrWorkers,
   pruneUnreferencedVinextFonts,
   shouldEnforceSitesExpandedLimit,
+  validateSitesStaticOffloadLock,
 } from "../scripts/deployment/prune-obsolete-runtime-assets.mjs";
 
 const execFileAsync = promisify(execFile);
@@ -31,6 +32,7 @@ const LOCK_PATH = join(ROOT, "assets", "runtime-assets.lock.json");
 const MANIFEST_PATH = join(ROOT, "public", "models", "iter-public-simplified", "model-manifest.json");
 const ALLOWLIST_PATH = join(ROOT, "worker", "iter-high-assets.generated.ts");
 const SCRIPT_PATH = join(ROOT, "scripts", "assets", "runtime-assets.mjs");
+const SITES_STATIC_OFFLOAD_LOCK_PATH = join(ROOT, "assets", "sites-static-offload.lock.json");
 
 async function readJson(pathname) {
   return JSON.parse(await readFile(pathname, "utf8"));
@@ -61,6 +63,43 @@ test("runtime asset lock covers the complete Git-managed public tree", async () 
   assert.ok(lockedPaths.includes("public/models/exl50u-interactive/exl50u-interactive-high.meshopt.glb"));
   assert.ok(lockedPaths.includes("public/models/iter-public-simplified/model-manifest.json"));
   assert.ok(lockedPaths.includes("public/data/exl50u-efit-v2/index.json"));
+});
+
+test("Sites static offload lock is complete, digest-bound and pinned to an immutable public source", async () => {
+  const runtimeLock = await readJson(LOCK_PATH);
+  const offloadLock = validateSitesStaticOffloadLock(await readJson(SITES_STATIC_OFFLOAD_LOCK_PATH));
+  const tracked = new Map(runtimeLock.gitAssets.files.map((file) => [
+    file.path.slice("public/".length),
+    file,
+  ]));
+
+  assert.equal(offloadLock.fileCount, 232);
+  assert.equal(offloadLock.totalBytes, 149_391_811);
+  assert.equal(offloadLock.source.origin, "https://raw.githubusercontent.com");
+  assert.equal(offloadLock.source.repository, "tianshao1992/fusion-digital");
+  assert.equal(offloadLock.source.commitSha, "72810e61c9fc207d1f168ec8f828566cc52c7bdf");
+  assert.equal(offloadLock.files.filter((file) => file.sourcePath.endsWith(".docx")).length, 6);
+  assert.equal(offloadLock.files.filter((file) => file.sourcePath.endsWith(".pdf")).length, 2);
+  assert.equal(offloadLock.files.filter((file) => file.sourcePath.endsWith(".bin")).length, 5);
+  assert.equal(offloadLock.files.filter((file) => file.sourcePath.endsWith(".jsonl.gz")).length, 219);
+  for (const file of offloadLock.files) {
+    const trackedFile = tracked.get(file.sourcePath);
+    assert.ok(trackedFile, `${file.sourcePath} must remain Git-managed`);
+    assert.equal(file.bytes, trackedFile.bytes, `${file.sourcePath} byte lock drift`);
+    assert.equal(file.sha256, trackedFile.sha256, `${file.sourcePath} digest lock drift`);
+  }
+
+  for (const mutate of [
+    (lock) => { lock.source.commitSha = "main"; },
+    (lock) => { lock.files[0].route = "/outside.bin"; },
+    (lock) => { lock.files[0].sourcePath = "../outside.bin"; },
+    (lock) => { lock.files[0].bytes += 1; },
+    (lock) => { lock.files[1].route = lock.files[0].route; },
+  ]) {
+    const candidate = structuredClone(offloadLock);
+    mutate(candidate);
+    assert.throws(() => validateSitesStaticOffloadLock(candidate), /Sites static offload/u);
+  }
 });
 
 test("ITER lock is identical to the current manifest and Worker allowlist", async () => {

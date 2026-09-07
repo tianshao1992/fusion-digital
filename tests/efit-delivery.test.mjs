@@ -255,7 +255,13 @@ test("EFIT Worker blocks direct storage paths, unknown files, directories, and w
 });
 
 test("public and built EFIT packages contain only reviewed derivatives and no raw experimental formats", async () => {
+  const sitesOffloadLock = JSON.parse(await readFile(
+    resolve(repositoryRoot, "assets/sites-static-offload.lock.json"),
+    "utf8",
+  ));
+  const sitesOffloadedSources = new Set(sitesOffloadLock.files.map(({ sourcePath }) => sourcePath));
   for (const root of [resolve(repositoryRoot, "public"), resolve(repositoryRoot, "dist")]) {
+    const isPublicSource = root === resolve(repositoryRoot, "public");
     const files = await walkFiles(root);
     for (const path of files) {
       const normalized = relative(root, path).replaceAll("\\", "/");
@@ -263,15 +269,21 @@ test("public and built EFIT packages contain only reviewed derivatives and no ra
       assert.doesNotMatch(name, /^g\d{6}\.\d+$/i, `G-EQDSK leaked into ${normalized}`);
       assert.ok(![".zip", ".h5", ".hdf5", ".nc", ".mat"].includes(extname(name).toLowerCase()), `raw data leaked into ${normalized}`);
     }
-    const derivedRoot = resolve(root, root === resolve(repositoryRoot, "public") ? "data/exl50u-efit" : "client/data/exl50u-efit");
+    const derivedRoot = resolve(root, isPublicSource ? "data/exl50u-efit" : "client/data/exl50u-efit");
     const derived = await walkFiles(derivedRoot);
     const derivedRelative = derived.map((path) => relative(derivedRoot, path).replaceAll("\\", "/")).sort();
-    assert.deepEqual(derivedRelative, [...approvedFiles].sort(), `${derivedRoot} must contain exactly the six reviewed derivatives`);
+    const expectedDerived = [...approvedFiles].filter((name) => (
+      isPublicSource || !sitesOffloadedSources.has(`data/exl50u-efit/${name}`)
+    )).sort();
+    assert.deepEqual(derivedRelative, expectedDerived, `${derivedRoot} must contain exactly its target-specific reviewed derivatives`);
     for (const path of derived) assert.ok((await stat(path)).size > 0);
-    const v2Root = resolve(root, root === resolve(repositoryRoot, "public") ? "data/exl50u-efit-v2" : "client/data/exl50u-efit-v2");
+    const v2Root = resolve(root, isPublicSource ? "data/exl50u-efit-v2" : "client/data/exl50u-efit-v2");
     const v2Derived = await walkFiles(v2Root);
     const v2Relative = v2Derived.map((path) => relative(v2Root, path).replaceAll("\\", "/")).sort();
-    assert.deepEqual(v2Relative, [...approvedV2Files].sort(), `${v2Root} must contain exactly the reviewed v2 catalog and chunks`);
+    const expectedV2Derived = [...approvedV2Files].filter((name) => (
+      isPublicSource || !sitesOffloadedSources.has(`data/exl50u-efit-v2/${name}`)
+    )).sort();
+    assert.deepEqual(v2Relative, expectedV2Derived, `${v2Root} must contain exactly its target-specific v2 catalog and chunks`);
     for (const path of v2Derived) assert.ok((await stat(path)).size > 0);
   }
 });

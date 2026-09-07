@@ -1,0 +1,1638 @@
+{
+  "schemaVersion": "fusiondigital.sites-static-offload.v1",
+  "bundleId": "sites-static-offload-v1",
+  "source": {
+    "origin": "https://raw.githubusercontent.com",
+    "repository": "tianshao1992/fusion-digital",
+    "commitSha": "72810e61c9fc207d1f168ec8f828566cc52c7bdf",
+    "publicRoot": "public"
+  },
+  "fileCount": 232,
+  "totalBytes": 149391811,
+  "files": [
+    {
+      "route": "/FusionDigital-technical-roadmap-2026-08-15.docx",
+      "sourcePath": "FusionDigital-technical-roadmap-2026-08-15.docx",
+      "bytes": 50188,
+      "sha256": "b319df2248e038dda29c9485c34c97cc4ba8f8afee781474d8fe79873d3caa58",
+      "contentType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20213-part-000.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20213-part-000.jsonl.gz",
+      "bytes": 218589,
+      "sha256": "27f998336e22f3b9d2c065a42a5222dc03246857f23ad7e25a0fc0df5eb23e33",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20213-part-001.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20213-part-001.jsonl.gz",
+      "bytes": 219849,
+      "sha256": "6303255f34adb90ce8868baf4d8f52b1337919d8b9c101442f2ddc3d6f11e4c7",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20213-part-002.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20213-part-002.jsonl.gz",
+      "bytes": 219206,
+      "sha256": "9c21095b9cabfbc3ccf7938186a313099514ebebdaa8a9c64b76e6a69ad08835",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20213-part-003.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20213-part-003.jsonl.gz",
+      "bytes": 222263,
+      "sha256": "cb1e30d20c938075c77d404b3693b723186f5162781ae66af3b5c0fe3c84cf89",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20213-part-004.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20213-part-004.jsonl.gz",
+      "bytes": 256924,
+      "sha256": "e9455e3a4786d133972fc76287c144ad531f7eaa9007ce987f32c5b9023b9d64",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20213-part-005.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20213-part-005.jsonl.gz",
+      "bytes": 270594,
+      "sha256": "9142e81f4523b8837a97afb0202d827ea53dcb25a9b717aad5dae7b388a4c0bb",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20213-part-006.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20213-part-006.jsonl.gz",
+      "bytes": 261459,
+      "sha256": "71f93d60a0a65ebdd259253aaf6f583debed0d91f0255ed1b001a586c7342713",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20213-part-007.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20213-part-007.jsonl.gz",
+      "bytes": 271059,
+      "sha256": "4d5889c0755c4de85f0a204571d025ab50aa67f487cd4d6b77dcde55e72865e3",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20213-part-008.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20213-part-008.jsonl.gz",
+      "bytes": 269609,
+      "sha256": "e516eb53800192bca647b15c5c3491d50247f1a2a66aa00733578ababb26c89c",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20213-part-009.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20213-part-009.jsonl.gz",
+      "bytes": 271472,
+      "sha256": "93ec6c9c4407708378ac0cb10f0c713c24168f6b235db7059b6c2df68a08318c",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20213-part-010.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20213-part-010.jsonl.gz",
+      "bytes": 258511,
+      "sha256": "948a9fb84812a902b98d636bef3d1b962a6e0de471bbc0752fdea892dedb4047",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20213-part-011.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20213-part-011.jsonl.gz",
+      "bytes": 270826,
+      "sha256": "751a8c0202d1d15f06dbf0f6adab2a285ad2ee668694264fdaf7385961ab9555",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20213-part-012.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20213-part-012.jsonl.gz",
+      "bytes": 248609,
+      "sha256": "c9ebd5892d3c3ae28385eb8187c9241ddd005d8825033a062813450ea930ebb8",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20213-part-013.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20213-part-013.jsonl.gz",
+      "bytes": 255824,
+      "sha256": "4d2647bf1ed9452cae055e15fe2d1834db79f285dd4474171c00a3d502f8edbc",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20213-part-014.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20213-part-014.jsonl.gz",
+      "bytes": 260021,
+      "sha256": "3995302aeb81fbc5b26c779ed08691ee6720052a5abdc91a08214a60a25a157e",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20213-part-015.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20213-part-015.jsonl.gz",
+      "bytes": 252495,
+      "sha256": "310a38152f635211d1ebef3efde17ffab9c6dbac242107e164c638a9be66a105",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20213-part-016.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20213-part-016.jsonl.gz",
+      "bytes": 265676,
+      "sha256": "b2898735ef8ccbd38fcf9af771447990a582fdd20d8dc15bd57b71ad2c603080",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20213-part-017.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20213-part-017.jsonl.gz",
+      "bytes": 254365,
+      "sha256": "f6428a4ab9366fd6ee4d40042a4e317bc88875306c188565a256545fede5ffd5",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20213-part-018.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20213-part-018.jsonl.gz",
+      "bytes": 260895,
+      "sha256": "28d3669cfd01bf509ffc391f873db756281061db96f7c959d1420a5b82e123e3",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20213-part-019.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20213-part-019.jsonl.gz",
+      "bytes": 272352,
+      "sha256": "42eb9e68bc90cd0b95815908b3facb465aa709f5c68051e031113e0097a64af5",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20213-part-020.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20213-part-020.jsonl.gz",
+      "bytes": 254902,
+      "sha256": "32755e56b72599fd25185de75c6d0d1f97bef0facab65e01d98f92517e24c1ce",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20213-part-021.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20213-part-021.jsonl.gz",
+      "bytes": 258215,
+      "sha256": "2b42b0cc866ee2e90a82438f2cb2ae8e7f5ae15e2ac88aafeb31ae0e2c818aa2",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20213-part-022.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20213-part-022.jsonl.gz",
+      "bytes": 260373,
+      "sha256": "d5984e9fe551040f935d928fdc8fa5a6c6914ab5f8fdf472d678d49f7aa5c172",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20213-part-023.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20213-part-023.jsonl.gz",
+      "bytes": 263984,
+      "sha256": "5820cbc78954316da031700082b6afbee1194a0c1dd2a7bce3c2563bea92d515",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20213-part-024.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20213-part-024.jsonl.gz",
+      "bytes": 278871,
+      "sha256": "4fa70df363012dc5bef746749ffa97b87cf1151ae91e9d64646bc323ee734549",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20213-part-025.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20213-part-025.jsonl.gz",
+      "bytes": 268031,
+      "sha256": "a97540f549fb8efedd5653168cd408e4fa750631e1115882d9cfc551b1c9a290",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20213-part-026.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20213-part-026.jsonl.gz",
+      "bytes": 225469,
+      "sha256": "e4277f36a8ec1aa957455ffcca5bce54bf89a0c44395f9734235edc32c7f7a10",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20213-part-027.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20213-part-027.jsonl.gz",
+      "bytes": 218729,
+      "sha256": "e1116291f2eddc6c58d1e428a7a6e5b9cef1953b7438d0c658eec187b2e3ef7f",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20213-part-028.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20213-part-028.jsonl.gz",
+      "bytes": 218240,
+      "sha256": "e825105739eb305d1390872b2655aaf8b7a60ef0f4673ef939c25c9f1d11ede7",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20213-part-029.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20213-part-029.jsonl.gz",
+      "bytes": 217985,
+      "sha256": "c2108ba60277c4d385775295eb4e4ab32a734a56cef1f82fa11f0535f3f5f0a2",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20213-part-030.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20213-part-030.jsonl.gz",
+      "bytes": 218157,
+      "sha256": "b97d60cc9082815a60e5cfb14f7c9bd17bffc8894d07943d5c1ef86f168185d0",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20213-part-031.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20213-part-031.jsonl.gz",
+      "bytes": 218172,
+      "sha256": "4bf49cc1124b8b62ac3f7f5930cce0ffb23613184c8bb45a394afb1587da723a",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20213-part-032.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20213-part-032.jsonl.gz",
+      "bytes": 28145,
+      "sha256": "6108d475b355ed3c65add0c3bd899c21e85302760294fb669a85ae1d49b40f3d",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20289-part-000.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20289-part-000.jsonl.gz",
+      "bytes": 232470,
+      "sha256": "862e3267ccfc85f494ec94de9ca185e9273791ee2cea04e7b684f256ec05ef26",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20289-part-001.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20289-part-001.jsonl.gz",
+      "bytes": 265086,
+      "sha256": "49f7eabf566576727c1863926a4c819965c2a5f5acd7ca1f964df05e02f4c096",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20289-part-002.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20289-part-002.jsonl.gz",
+      "bytes": 270584,
+      "sha256": "a9326284adb0c30ffb702908c22a0bbe9d067152a3cb9ad91e2e1bb22971822f",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20289-part-003.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20289-part-003.jsonl.gz",
+      "bytes": 168581,
+      "sha256": "5cd0abe22f7151bd5a38d30cbe2cce5617f941fc3ea1850acaa9e74aeb5b4824",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20666-part-000.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20666-part-000.jsonl.gz",
+      "bytes": 218074,
+      "sha256": "5afd25b2964ea0b0a384ba23431f52ba3e65d4b442f44bb7911c8793f3a57a37",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20666-part-001.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20666-part-001.jsonl.gz",
+      "bytes": 218181,
+      "sha256": "a29fc22d1adef192a198d9504c93b286b8f302fe3f1ccd31add8654bdd801fa6",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20666-part-002.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20666-part-002.jsonl.gz",
+      "bytes": 218164,
+      "sha256": "0f33c9307584055bfb1f9756d5cfcf777f6b2ec8a5fd8fd3640cdda040b9140c",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20666-part-003.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20666-part-003.jsonl.gz",
+      "bytes": 217975,
+      "sha256": "dce45024b0b43eae036608ad1f938b07303882113ca25ec9b2b54998506d2548",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20666-part-004.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20666-part-004.jsonl.gz",
+      "bytes": 218043,
+      "sha256": "fa2da05f6eec3260eeb59b8de70a9809d6f6db3114a4407d1953b9f7b0e6d1b9",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20666-part-005.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20666-part-005.jsonl.gz",
+      "bytes": 217996,
+      "sha256": "c0e9d44efa4990245b6ccea228bec572d3a37b4a907c5beb5de18ee9f31e989e",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20666-part-006.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20666-part-006.jsonl.gz",
+      "bytes": 217783,
+      "sha256": "e2cf474a69c43de1aec934a3faba8eddddc52d2b6d460fca0b0be4bee33f8e8f",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20666-part-007.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20666-part-007.jsonl.gz",
+      "bytes": 217778,
+      "sha256": "3b9a413f81e485da7995d7b38ada9ee5db4e01678cbf288f4c6bfa0633cd47bf",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20666-part-008.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20666-part-008.jsonl.gz",
+      "bytes": 239070,
+      "sha256": "1dc0c1c934f681d5bd5430a03c836fc13811ab84aca4352d03ddd788826d2ccd",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20666-part-009.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20666-part-009.jsonl.gz",
+      "bytes": 251880,
+      "sha256": "ff403fd3c0d850e70522288a4c897cd7c87d7a6179e55c75776cb7c023ffdd29",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20666-part-010.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20666-part-010.jsonl.gz",
+      "bytes": 217870,
+      "sha256": "8f4edf618460d2f3998abf3eeba1228a642178ddbc029f2d6dae39008760dcd6",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20666-part-011.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20666-part-011.jsonl.gz",
+      "bytes": 217865,
+      "sha256": "54714c2e222f137630877b628a639669fbad717598976c5c94a98bb1532c3f62",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20666-part-012.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20666-part-012.jsonl.gz",
+      "bytes": 219496,
+      "sha256": "1bd2c766172008502ee1cdf5caf6ad26da707f687f0868eee781b495f7ed9281",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20666-part-013.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20666-part-013.jsonl.gz",
+      "bytes": 220641,
+      "sha256": "88b28201672342dccfbf23f9315d2715e8e5aa3768e2838108952a5eaf9ec0c8",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20666-part-014.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20666-part-014.jsonl.gz",
+      "bytes": 218211,
+      "sha256": "1eaa44ed8697f3d16c1670868b1d9c2bf39d09d08af7eb4636a43850a321b0ec",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20666-part-015.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20666-part-015.jsonl.gz",
+      "bytes": 220968,
+      "sha256": "74a3e1f5ae2083dff4b0cd901984549940b210da4944adc742b28d90d96cf9d8",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20666-part-016.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20666-part-016.jsonl.gz",
+      "bytes": 248446,
+      "sha256": "9feafa092e968fcb48d860e2fa83b82b844857dda8b9ff6cae5175000e9fadbf",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20666-part-017.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20666-part-017.jsonl.gz",
+      "bytes": 255875,
+      "sha256": "f1d6116aa156a796c1d81d95d17b8979a33457556f8adff7e54f23c21df34b50",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20666-part-018.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20666-part-018.jsonl.gz",
+      "bytes": 236706,
+      "sha256": "6a55cb8159efb37e123149e5b0443c0b15e2f3d65c1b04f48c7e733b11c214b7",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20666-part-019.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20666-part-019.jsonl.gz",
+      "bytes": 218433,
+      "sha256": "bacfe86ea6ae1c4b90bc705673e2906c39331c617a797c5f7871d1d8d91c261d",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20666-part-020.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20666-part-020.jsonl.gz",
+      "bytes": 218089,
+      "sha256": "478b7f5239167d8ee6c8d54a1d6f021b4b7deee4a1fbf42000fe2dad955c505a",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20666-part-021.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20666-part-021.jsonl.gz",
+      "bytes": 217949,
+      "sha256": "3e76af4764e6517070f17ccd80fa0bb1fa6e2f5017f3f188d8353c21cd238f16",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20666-part-022.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20666-part-022.jsonl.gz",
+      "bytes": 217531,
+      "sha256": "0756e0261a58ef6dbfe03d046289f4d839b24b3e1c6b4d91d98417f772248df2",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20666-part-023.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20666-part-023.jsonl.gz",
+      "bytes": 217521,
+      "sha256": "98ea59c1d21cfeada4a952f0f3dd84342038bbc1a14702d4849dc9b92c567d11",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20666-part-024.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20666-part-024.jsonl.gz",
+      "bytes": 217445,
+      "sha256": "909ab21bbfeb5ba3184ad3ed27d3e9ae2cbbd9c1f068b5be5d31d5a079e630c9",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20666-part-025.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20666-part-025.jsonl.gz",
+      "bytes": 217191,
+      "sha256": "9028666d0e3aa07b2e4fe78bae52a0dc5f1219971cb28d1c26963536580581a5",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20666-part-026.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20666-part-026.jsonl.gz",
+      "bytes": 217400,
+      "sha256": "7f2ac6e2ae4983bf9dfc81c74681a2c56ad3e5bbbbdec9bc173dc3651e6144ab",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20666-part-027.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20666-part-027.jsonl.gz",
+      "bytes": 217629,
+      "sha256": "f828b981184e9376d52d367ddcf4520430789d9483e16fd5957ea48ef629a6cd",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20666-part-028.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20666-part-028.jsonl.gz",
+      "bytes": 217976,
+      "sha256": "2a3ce1b504cb7e9caab21bfcf383dab4efd7655a4b228cdd8d89c9f7aeabaa40",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20666-part-029.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20666-part-029.jsonl.gz",
+      "bytes": 218283,
+      "sha256": "3efb95d5150b32402b067fc2dfdf4011f888780b4e7958aa467e11465ef41fab",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20666-part-030.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20666-part-030.jsonl.gz",
+      "bytes": 221537,
+      "sha256": "d5ac1634b41859d407cf5cf511a345e35f00641ca786d10f106148fbf5af10ad",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20666-part-031.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20666-part-031.jsonl.gz",
+      "bytes": 226813,
+      "sha256": "f8ea82451955b183a322ec2bdb860058dd4f0fcb472c072a5f02ae23a47db450",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20666-part-032.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20666-part-032.jsonl.gz",
+      "bytes": 226836,
+      "sha256": "e8cc4aa2d3c381cb7f8036ae500a83af31b36b7421c47b8d247061df053e6208",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20666-part-033.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20666-part-033.jsonl.gz",
+      "bytes": 226922,
+      "sha256": "a148c5e2481bd99a7e6c6751a378a99b093a3b3f0cc3f26ab835e7131ed5c297",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20666-part-034.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20666-part-034.jsonl.gz",
+      "bytes": 226945,
+      "sha256": "9c5e14184e354b098818b5b04411e3be114cdebafddecb1ed695e4cd4849fcd3",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20666-part-035.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20666-part-035.jsonl.gz",
+      "bytes": 227008,
+      "sha256": "fbf5ada9565e7aaaa1e4a30a9f3d61555e58e4fffbf6c1a5cecb9331074b35a2",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20666-part-036.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20666-part-036.jsonl.gz",
+      "bytes": 227099,
+      "sha256": "5cbb731a8d63a1868d943e5972d027756db5d4803073c7e2f761b496c38ddfb0",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20666-part-037.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20666-part-037.jsonl.gz",
+      "bytes": 226967,
+      "sha256": "5a9a89a2e15f82581c9cddfc1e11b68b6abb4f8d698e1409aee55f08b3160ff9",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20666-part-038.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20666-part-038.jsonl.gz",
+      "bytes": 243096,
+      "sha256": "26699667cca83fd1023e636a061e998799b89d44468c87ba09ff496584e6f7b5",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20666-part-039.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20666-part-039.jsonl.gz",
+      "bytes": 259393,
+      "sha256": "22ae7d050040e1dae2de2c68140b4f28a6e21f71f7483f2182503f0672cf7938",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20666-part-040.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20666-part-040.jsonl.gz",
+      "bytes": 260153,
+      "sha256": "ee739fa448652272eb14de777e4a00e395779c42ecc223ec98f90d51b23cf97c",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20666-part-041.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20666-part-041.jsonl.gz",
+      "bytes": 253768,
+      "sha256": "4aa6df58aeed60390f55d6ff1818ffd8ed17b9fdad04fca234b797edba818f50",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20666-part-042.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20666-part-042.jsonl.gz",
+      "bytes": 281516,
+      "sha256": "e3a32a65f7f1cd92842eeefa6a92e4d70afea3e358b49b60489fb0e58f0d11f1",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20666-part-043.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20666-part-043.jsonl.gz",
+      "bytes": 247837,
+      "sha256": "81bd03488140b9ec9f50ced2729f9408fb2e2639faf32fb06f6a076402c60894",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20666-part-044.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20666-part-044.jsonl.gz",
+      "bytes": 803,
+      "sha256": "492f2f85ee117d17dd2c7544e47e93b7a1ddb0ba0e4171d1f81f462d11813079",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-000.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-000.jsonl.gz",
+      "bytes": 218228,
+      "sha256": "fb5407dca64efa701cef4c203be4955d85bd2463f72f22cf7d91e550c6e4e85b",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-001.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-001.jsonl.gz",
+      "bytes": 217734,
+      "sha256": "c0856ddba1edf164f1a27c38303503486261fbed0ca93154f7f62c3f89c7693a",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-002.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-002.jsonl.gz",
+      "bytes": 217507,
+      "sha256": "d38f6e2d2e555ba81fa6662416071225ce245d3e393e7b3fffdaf6336ebf454b",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-003.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-003.jsonl.gz",
+      "bytes": 217705,
+      "sha256": "c934f8cfe00499dac6b3b5439e4669d7f891e936d106920c55bed62f3d394cc1",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-004.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-004.jsonl.gz",
+      "bytes": 217989,
+      "sha256": "f36e44a2e8dc298469016793f2c958643700db64199e5a89efbe226ceced9f5d",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-005.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-005.jsonl.gz",
+      "bytes": 218341,
+      "sha256": "9117be04f01b3e1aef7abcb1ca9ea4c6af1ae931d281276ed4797f348cc6e413",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-006.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-006.jsonl.gz",
+      "bytes": 217956,
+      "sha256": "509b86573c58fc57ef63950fb38d218ce8852f18a46e75f7d06deef091f8827e",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-007.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-007.jsonl.gz",
+      "bytes": 217606,
+      "sha256": "0b3f98058a2eb46d996b69f095e58774540be920f305081b8eed34bf35d44d1c",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-008.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-008.jsonl.gz",
+      "bytes": 228011,
+      "sha256": "383d58b519a5adbe356fd60e6b3f3824689ce2759b2a59c01dd3ad4f75ba524a",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-009.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-009.jsonl.gz",
+      "bytes": 253381,
+      "sha256": "d0b45650c7472bcc72c2ae1b30d4ea6d8a85e62714b65a4f2e22a6c34012aaed",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-010.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-010.jsonl.gz",
+      "bytes": 218154,
+      "sha256": "fe5ed1157a1270bc604df78f97b7c54f16ef830c22aa5c1275b2fc30ea44b69f",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-011.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-011.jsonl.gz",
+      "bytes": 217877,
+      "sha256": "ab4511897acf938c7893ec8a02c8c64b5a19a4e632ba9796f1afcd27d564a7af",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-012.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-012.jsonl.gz",
+      "bytes": 218843,
+      "sha256": "be1bf7f2b5e6fff062ac1b72f74dc11fe7aef78a8ea343c406da307598fcf936",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-013.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-013.jsonl.gz",
+      "bytes": 226429,
+      "sha256": "648a3fbf1cdab324f17ceeae27f53c6dfaa9dac8e50927fc7d850a3b0c72debd",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-014.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-014.jsonl.gz",
+      "bytes": 229148,
+      "sha256": "c852533ea6d493e473bb022a51193ec44f0c3fa25e4167b8645289c19d789e50",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-015.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-015.jsonl.gz",
+      "bytes": 219168,
+      "sha256": "d4c726c5f4faee0d8e8392d655d27721a32e35a7cacc4cc6fad227b047bc6bf8",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-016.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-016.jsonl.gz",
+      "bytes": 225186,
+      "sha256": "271a444f9b00bbed29dbf90e2a44914de43218d67eee81f5f3cf9e501728c98d",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-017.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-017.jsonl.gz",
+      "bytes": 254390,
+      "sha256": "3b729a9e5dbc70f1b4712241bfda3c5cd63c3e614c5947bed33b632c1eb86eaf",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-018.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-018.jsonl.gz",
+      "bytes": 259973,
+      "sha256": "4f8aaad4d988359243f375bc8d0d58ed4c23dbaab5f9101389bbccb78678ee03",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-019.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-019.jsonl.gz",
+      "bytes": 222654,
+      "sha256": "fecd733593d597f75992e0b2dffe8b8a5033939185520a51367ccbc0bb3fbc6a",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-020.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-020.jsonl.gz",
+      "bytes": 217754,
+      "sha256": "5fe406b0901b3887b4d15232cf656a6c6d256215456e036d2488bc8d4e858f32",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-021.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-021.jsonl.gz",
+      "bytes": 217408,
+      "sha256": "bb36ea25d17a55f4a21995afbf31a348e9a4d057c985ae1ec864aaae9c840d7f",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-022.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-022.jsonl.gz",
+      "bytes": 217752,
+      "sha256": "ed5381bcfe17285b7affd5ea47187323686d26396bec92c5771134e9e49bb007",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-023.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-023.jsonl.gz",
+      "bytes": 217710,
+      "sha256": "7cb8646652b67ca21d1a319296733da445d701e833d1c79b84d334a2f62a30f0",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-024.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-024.jsonl.gz",
+      "bytes": 217721,
+      "sha256": "2eeb506d5724fb1bb32e42195c83e9ba9b6c76d631f90ffd830c7f518b3677ee",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-025.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-025.jsonl.gz",
+      "bytes": 217928,
+      "sha256": "b590e7ff7607ab4adc70280db39cda6c71c0012694dd379e6decbe18fed34b4b",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-026.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-026.jsonl.gz",
+      "bytes": 217846,
+      "sha256": "7c4f10fdb7ee6ed2b9459984f69f422cd234d150790da8fda76ea052e8cf598b",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-027.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-027.jsonl.gz",
+      "bytes": 217833,
+      "sha256": "680abf37f259ee7c1311533487a73bc01268e998831eb9b092c28a587361a9e8",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-028.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-028.jsonl.gz",
+      "bytes": 221645,
+      "sha256": "0dca6e7a8d5e64ea3801d4bd5621e6683bb1a542bed05eb5a4ac0e7bf385ace3",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-029.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-029.jsonl.gz",
+      "bytes": 262712,
+      "sha256": "0a2bf53a608ecc398f70101b9607eb91225c695bd6cf7184207ebd04b56f1560",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-030.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-030.jsonl.gz",
+      "bytes": 282283,
+      "sha256": "04565380b158de2a38b12ff19f81519a7691b033e80a105d571410b6a15a354b",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-031.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-031.jsonl.gz",
+      "bytes": 295038,
+      "sha256": "c275144054591f1095267b17dbac2f50e8205e8e017d0ec932571bd3fffc7016",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-032.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-032.jsonl.gz",
+      "bytes": 289670,
+      "sha256": "2a15b105f003512813ff65f5b142242b617f872533af8e6e870a29e4793c3089",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-033.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-033.jsonl.gz",
+      "bytes": 289324,
+      "sha256": "469a580c071b6bc5bce42cb33c16ed42b7f4ca6b6c7b7ece319e4ad50d41f989",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-034.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-034.jsonl.gz",
+      "bytes": 290465,
+      "sha256": "b57a87747cfca5501a27d815f94a52915f19e151a3b68b4b0bf24da6c4e9f9ee",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-035.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-035.jsonl.gz",
+      "bytes": 292713,
+      "sha256": "3d5b68dc074d9cdb245ab6931b700dc226c5a5117088020b43ad7a62287c7184",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-036.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-036.jsonl.gz",
+      "bytes": 296423,
+      "sha256": "cd76b485605f6cafc16d9f192b17ca8446f9075934806ee33e34094102eb635e",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-037.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-037.jsonl.gz",
+      "bytes": 286321,
+      "sha256": "4a43c60d6a09ea7f19145fc422991ce358195de68b1f3c8728ef1042855e039b",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-038.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-038.jsonl.gz",
+      "bytes": 286856,
+      "sha256": "bc2b443242c8b60f2c8f3744a44e179d42ae96a1c8808a04d4ba8e2e727dfb58",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-039.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-039.jsonl.gz",
+      "bytes": 293038,
+      "sha256": "cd33217ca60b760bdbbd90b90e59d50ecb1005d3ab4b8ec1ac2cf052444953c1",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-040.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-040.jsonl.gz",
+      "bytes": 282628,
+      "sha256": "111d4116a5f682409918b685f9342580c35597bd946dc3d2d3adde3ceb21ec24",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-041.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-041.jsonl.gz",
+      "bytes": 278204,
+      "sha256": "8e1cadca7c0d5571664fa69623536f13129664f38e689b8a760a6b84fa5cd74c",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-042.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-042.jsonl.gz",
+      "bytes": 286553,
+      "sha256": "008337136972ed34658585cc4b0c46446d14ea6e5ab6e2baa9abb8ca866d64c8",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-043.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-043.jsonl.gz",
+      "bytes": 295918,
+      "sha256": "3062c957806728d52c59482258a2aba739847ab5e93a735c0b7515c6d45a0f45",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-044.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-044.jsonl.gz",
+      "bytes": 284765,
+      "sha256": "f672e9a52dc6fec085125e2773636c9f818a2fbb3673d67abb09e7e64950c9ed",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-045.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-045.jsonl.gz",
+      "bytes": 271053,
+      "sha256": "facc632774deca5423870dea2cdc8727a286e1d805785079c581bf4ce975d516",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-046.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-046.jsonl.gz",
+      "bytes": 267739,
+      "sha256": "49447c54290cb47106455534a90dd7374ab28e11ffc9425751e851c7cd81b597",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-047.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-047.jsonl.gz",
+      "bytes": 276240,
+      "sha256": "d3da78887861ca49c5b3db1c07118ccf241a444f996566165fe7b5b10def1acb",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-048.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-048.jsonl.gz",
+      "bytes": 267465,
+      "sha256": "0cc074590506729806def049279e9346e6e64833cd1bc3b12a2e356a468f4091",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-049.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-049.jsonl.gz",
+      "bytes": 223836,
+      "sha256": "c2be46b6153fee98b6ce52532c203b3c597e3a2935cfc3baa017ac22c0426ddc",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-050.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-050.jsonl.gz",
+      "bytes": 215598,
+      "sha256": "da0a6e36308a5b8ce0b3d7692fb9ed50c283eab46f9e3e158eb9730700a7d1a9",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-051.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-051.jsonl.gz",
+      "bytes": 83068,
+      "sha256": "49fac06e254fd0321f2b6dcfe308f27ba886a3a66b85b89a402109eddeffe4b7",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-052.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-052.jsonl.gz",
+      "bytes": 1609,
+      "sha256": "09b24ee4085a59daa006672d8339cc410a9ad7b4fab3c8531a18e8805f3bc596",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-053.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-053.jsonl.gz",
+      "bytes": 1589,
+      "sha256": "a22f1c182ddf666f4269474c1ee1f07256b0d9a8e81df8b431a3ca701d9fea8d",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-054.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-054.jsonl.gz",
+      "bytes": 1580,
+      "sha256": "dd5550f165696e190f3515c613f24eac2c7dd328cdd6f581d98c081d9c2b5078",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-055.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-055.jsonl.gz",
+      "bytes": 1644,
+      "sha256": "441b77f68d762bd4dd9ef398417193946db25cb26655b7c73cd4e010e17eeb9a",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20669-part-056.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20669-part-056.jsonl.gz",
+      "bytes": 1527,
+      "sha256": "31317aafa25a507beccaf2ea4979d84095f8f1b8ad55ce7ab07cf15c0baf7e96",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20707-part-000.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20707-part-000.jsonl.gz",
+      "bytes": 217147,
+      "sha256": "d6de97007cb5062398725a890b8c3605279e8a4b58ee02f999662304f6aadbb9",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20707-part-001.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20707-part-001.jsonl.gz",
+      "bytes": 216818,
+      "sha256": "e92afeb3e07436ec523e16bd0ebe71a0f144ad826855ef720673c1ef9b316c52",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20707-part-002.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20707-part-002.jsonl.gz",
+      "bytes": 216844,
+      "sha256": "7bd83d48b6e0982900d99c93a7a6fe785f0c30ea5db07499c88b11667e5d3a68",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20707-part-003.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20707-part-003.jsonl.gz",
+      "bytes": 216606,
+      "sha256": "33950a960a31c61bd0a37af70bd276d45bae09562011b747dc635689496e03e2",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20707-part-004.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20707-part-004.jsonl.gz",
+      "bytes": 216645,
+      "sha256": "241b4b89b59a1797172044ae141bc31a04017d235949ff76d17f173673110953",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20707-part-005.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20707-part-005.jsonl.gz",
+      "bytes": 217041,
+      "sha256": "e72003cb2cb1ae96766ba75735dc48e165a574fbf1cdfd46c42597c59d8e5c27",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20707-part-006.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20707-part-006.jsonl.gz",
+      "bytes": 217053,
+      "sha256": "ee697c3ea183862c21917120e71d51b59b13222dcc2dee0f9b46ed7c6f5357b8",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20707-part-007.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20707-part-007.jsonl.gz",
+      "bytes": 217527,
+      "sha256": "700236855bee5ccdb816e6c07883fef28c96c5dab7c3d4cfd3198da2fbb1b498",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20707-part-008.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20707-part-008.jsonl.gz",
+      "bytes": 218300,
+      "sha256": "ab744cf407d8e1573adbe224c548555c7665756136c4973e57fb70742e268114",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20707-part-009.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20707-part-009.jsonl.gz",
+      "bytes": 218563,
+      "sha256": "8966525b21f32cc4812b86522f8c263b4dd2bcd8beb00d50c4b642d672a437c3",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20707-part-010.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20707-part-010.jsonl.gz",
+      "bytes": 218223,
+      "sha256": "8fdcfc958c32f84041db81e858345783895c8897662a3f51c61881fcd6b7942a",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20707-part-011.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20707-part-011.jsonl.gz",
+      "bytes": 218595,
+      "sha256": "455161534b0ed76786f514a43017d81cbb213a07664ba2b685ed6ca2d228bfb9",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20707-part-012.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20707-part-012.jsonl.gz",
+      "bytes": 218563,
+      "sha256": "1c74736249eb79070de239d025eb4824b436300910a84414bcec0b9943a9bbb0",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20707-part-013.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20707-part-013.jsonl.gz",
+      "bytes": 218348,
+      "sha256": "d20d10ac12cca301cbdb82c8f6ac0be1156caac1d0d309086daea6daccf37990",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20707-part-014.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20707-part-014.jsonl.gz",
+      "bytes": 218021,
+      "sha256": "336b5fe9325d3aab93e212fa66c1bb56dc881cd0c5ef7bc5570d1f264bcf2180",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20707-part-015.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20707-part-015.jsonl.gz",
+      "bytes": 218020,
+      "sha256": "40e46fb1057b0bbddf191160d19c4f1533b646b3c0a0e0ae639c31527d1fea35",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20707-part-016.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20707-part-016.jsonl.gz",
+      "bytes": 217998,
+      "sha256": "1dde2aa805b36158a3c16d722dfddde8bd73c8de9cec25edf26e061631401853",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20707-part-017.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20707-part-017.jsonl.gz",
+      "bytes": 217780,
+      "sha256": "23fa679ffe9d54cdc09464ef1f784f1adcf841766bdf1e69d7228836ce105734",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20707-part-018.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20707-part-018.jsonl.gz",
+      "bytes": 217930,
+      "sha256": "3ed78f280d9222537d88ce5ddbb316597d2a4d9ee37ca25161ca773baf4aa9f1",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20707-part-019.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20707-part-019.jsonl.gz",
+      "bytes": 217898,
+      "sha256": "65db3f3d02167750c92ba6113774a958bd4fe3ca582dbf5dabac878f620a6f04",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20707-part-020.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20707-part-020.jsonl.gz",
+      "bytes": 217899,
+      "sha256": "dbeb38a094ee2adf4992f056e9deb9c62c8067a8937fe98157dfd41a8ff1dcdc",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20707-part-021.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20707-part-021.jsonl.gz",
+      "bytes": 218085,
+      "sha256": "9e1d72f413cc47f3c09c9313702eeb344ee1bb97c82314ec35adc8efefa22f44",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20707-part-022.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20707-part-022.jsonl.gz",
+      "bytes": 218197,
+      "sha256": "cbb945ac8ca0fb7ced7ab4c69a3eab8cbb3434a0028b9e36ffb98d066f863ed5",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20707-part-023.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20707-part-023.jsonl.gz",
+      "bytes": 218382,
+      "sha256": "a5db18ca85ad10795ad55e60e6ba3621d1508e14242d209aa9c38decc305cb38",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20707-part-024.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20707-part-024.jsonl.gz",
+      "bytes": 218406,
+      "sha256": "8bbd67b4d8591cd869045b649ef13b372c76050f0757cb8220f0c83865f6db1d",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20707-part-025.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20707-part-025.jsonl.gz",
+      "bytes": 218727,
+      "sha256": "ada5112fabb85e9cc7f7d1b3efde4c0225ad5ca68be4c28fff18578af5babbe1",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20707-part-026.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20707-part-026.jsonl.gz",
+      "bytes": 218876,
+      "sha256": "66bcc574a2f988dfd2e0e1ffaa319389279539b9ccbb63c4366803597bb55e1a",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20707-part-027.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20707-part-027.jsonl.gz",
+      "bytes": 219349,
+      "sha256": "3343d11138db4b21f4020b7e4ce17344a5f99bfe75eb1c31da39973f28c7fe9e",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20707-part-028.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20707-part-028.jsonl.gz",
+      "bytes": 219474,
+      "sha256": "24ba2f494b8aabb946b90a394bf842affdc79780b9dc5688b755633a6a29d507",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20707-part-029.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20707-part-029.jsonl.gz",
+      "bytes": 219800,
+      "sha256": "ff4138a9a4fdb16d005f10a733c2ac8307dd4d8446bf23b4cdaf568de7b16e68",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20707-part-030.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20707-part-030.jsonl.gz",
+      "bytes": 219770,
+      "sha256": "481102335d5eaa6924b95f8cf7fbc070f5edb34435674487c95a43a4b5ba386f",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20707-part-031.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20707-part-031.jsonl.gz",
+      "bytes": 222858,
+      "sha256": "ce1361b18b1bd91074afe993ef2d087e66f75eaaeaab0e935a95a9cf01d94a2e",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20707-part-032.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20707-part-032.jsonl.gz",
+      "bytes": 223209,
+      "sha256": "eea71e244714d6774f941fce7b826efaa975e45a76272e777bddfdab75bb88bb",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20707-part-033.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20707-part-033.jsonl.gz",
+      "bytes": 217780,
+      "sha256": "04b68144872aa172f23016f6265395f9cad0496b2054b856c57d2d64d63a7ffc",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20707-part-034.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20707-part-034.jsonl.gz",
+      "bytes": 247128,
+      "sha256": "aa9e4cccf4993d74e1e1cc7614ade7bd036d66a6fc223e9e8ed823196b983213",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20707-part-035.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20707-part-035.jsonl.gz",
+      "bytes": 258879,
+      "sha256": "7daedd4555e1573d744d97e7fb98678bb4ebcabd15e16d2110018046f8632286",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20707-part-036.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20707-part-036.jsonl.gz",
+      "bytes": 135780,
+      "sha256": "526633f4d32ef6d2171e014b0cff04c2c827bc059b1d60e71c6ae125eb55e43f",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20707-part-037.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20707-part-037.jsonl.gz",
+      "bytes": 873,
+      "sha256": "768916a8dbbc2022e1cd4bbbdf3f39e5e7542168d8c70cbb191bc8cc6e342d20",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20708-part-000.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20708-part-000.jsonl.gz",
+      "bytes": 218303,
+      "sha256": "4224c5af6f26064ac1d6dec979f85ba99df6b4b0f5867a9bb7006cf42fbc314e",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20708-part-001.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20708-part-001.jsonl.gz",
+      "bytes": 219050,
+      "sha256": "ed3a6f943db34f156bcf1155a1925ab2f2471f47ac6852093950310e0af97e68",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20708-part-002.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20708-part-002.jsonl.gz",
+      "bytes": 226817,
+      "sha256": "68e0c1ffea66e2e4d152e92f452aa7e29404b15fba7bf74efb0e8b8e3bfa73a6",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20708-part-003.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20708-part-003.jsonl.gz",
+      "bytes": 219205,
+      "sha256": "6a5eec35d988b3c3cb82c22f015cbd1f1920f23ebf732f9beb95556d8b1cf9e3",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20708-part-004.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20708-part-004.jsonl.gz",
+      "bytes": 246183,
+      "sha256": "91651d9477eccb512b4a5e2e663c3eb5e0b774561dd67ed2a2548cbca9ce9c0d",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20708-part-005.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20708-part-005.jsonl.gz",
+      "bytes": 247671,
+      "sha256": "9ed00ec84d178dd55e0007530a959146d39b13dd1bb64c1c34696721e50b564b",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20708-part-006.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20708-part-006.jsonl.gz",
+      "bytes": 267964,
+      "sha256": "1f4cfae6700de0a213b8bd340d37969f3efb4eeca081b2b0f2311854ba4ca93d",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20708-part-007.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20708-part-007.jsonl.gz",
+      "bytes": 275648,
+      "sha256": "17f8a8a28889295e802dd39bda0be0f492de3756ed2ee9865522636ca797f0f5",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20708-part-008.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20708-part-008.jsonl.gz",
+      "bytes": 260551,
+      "sha256": "8fffdb70841b9dee0b9d2166db150be3082add73aaedfc6e193d87d915a4e491",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20708-part-009.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20708-part-009.jsonl.gz",
+      "bytes": 246255,
+      "sha256": "fa7b7b032f1e78c6f6e8d0eec0aacc823ce60a0dde543c39855667a3d59a1df1",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20708-part-010.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20708-part-010.jsonl.gz",
+      "bytes": 219177,
+      "sha256": "ecda4da5c0065d24fbe8f4beb5500081b6f76d4307512e9a89551c826d77a555",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20708-part-011.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20708-part-011.jsonl.gz",
+      "bytes": 218230,
+      "sha256": "1035292573071b6c92f26c40da08f3738b237016a3a0532b711e9f72bdb03d84",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20708-part-012.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20708-part-012.jsonl.gz",
+      "bytes": 220968,
+      "sha256": "be1a30a33fb26959a08153a1ad0abb254281d4caaa802725d23103d4236f5c1b",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20708-part-013.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20708-part-013.jsonl.gz",
+      "bytes": 219879,
+      "sha256": "28502ba1739a13c76c910bb5d3a0f725787cdcde8ab69a9ae82e8e687d5a01f6",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20708-part-014.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20708-part-014.jsonl.gz",
+      "bytes": 226776,
+      "sha256": "54feac1fad62c9a5320ad7898a09dd9b8e36dc521172016f0966a7180e335122",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20708-part-015.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20708-part-015.jsonl.gz",
+      "bytes": 247275,
+      "sha256": "aa17edddf2d5c221302358a47ed5b85f1bbf499ef99ace1e6811769d806381f6",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20708-part-016.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20708-part-016.jsonl.gz",
+      "bytes": 263049,
+      "sha256": "cf4c3516283784e4b5740c9a397cafa3cc72f0fdc2334a801e4ae6c09d955844",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20708-part-017.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20708-part-017.jsonl.gz",
+      "bytes": 276570,
+      "sha256": "35c9645c7a565a3865a484ced6e046bdafae873a372146bd726b68c436b44bc9",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20708-part-018.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20708-part-018.jsonl.gz",
+      "bytes": 274058,
+      "sha256": "75a46df7547e755f63be4a0d8cd9de46e2191a4ee62e633f84f62376d6db265b",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20708-part-019.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20708-part-019.jsonl.gz",
+      "bytes": 266445,
+      "sha256": "0e77415ee1eebd9887423b0e570de3650a7254df91a262f8fe3a818c2803cc5c",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20708-part-020.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20708-part-020.jsonl.gz",
+      "bytes": 274244,
+      "sha256": "e4563b2bb758dbfb20e16d71e5377104fdb0c8ef0c5564e2eb999b74774ab38f",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20708-part-021.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20708-part-021.jsonl.gz",
+      "bytes": 283452,
+      "sha256": "7f76140e9ae0d036dd1f193895eae8297c621a262d2873c5d7b93775ad705fba",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20708-part-022.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20708-part-022.jsonl.gz",
+      "bytes": 286833,
+      "sha256": "e48b67fe6e2c589c20f0944d50071811aef17f26b94b10f8dea24efe2f6358e4",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20708-part-023.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20708-part-023.jsonl.gz",
+      "bytes": 280069,
+      "sha256": "7832c0d8869b0ff9fe145618dc0cee45703beb3c9a5e6b63035b86b733f3b710",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20708-part-024.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20708-part-024.jsonl.gz",
+      "bytes": 284069,
+      "sha256": "62f6df2a6b8e60ea2692e7fdb4eb8b7f5bc2af359a10bbad2244030e3d7965b1",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20708-part-025.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20708-part-025.jsonl.gz",
+      "bytes": 279938,
+      "sha256": "a95b229562e9228293dbc354dade75ba78836e6448c8414363b0fa840663fa92",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20708-part-026.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20708-part-026.jsonl.gz",
+      "bytes": 272636,
+      "sha256": "0c4e13a40bfcb86e51272f9d5b7c35847d134dd64752927958b3350db57030a4",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20708-part-027.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20708-part-027.jsonl.gz",
+      "bytes": 258784,
+      "sha256": "e51f5e27a69df48169d9b3353e77daf99146f2e45dbda3857ecde18a2931bc5e",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20708-part-028.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20708-part-028.jsonl.gz",
+      "bytes": 227245,
+      "sha256": "908149fe020a7863d85081fe67dbe11609f3fbedc7bbe25f13f24cbc56c42b81",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20708-part-029.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20708-part-029.jsonl.gz",
+      "bytes": 226910,
+      "sha256": "1b498c7d0acc56a44d463c6884a8c409d4d49b05a0370fd575caabb84ff252ee",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20708-part-030.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20708-part-030.jsonl.gz",
+      "bytes": 226277,
+      "sha256": "c8284fa73b4294b0377232f5ae4ac77ff7827c3b234d92b348c95960bf1e427a",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20708-part-031.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20708-part-031.jsonl.gz",
+      "bytes": 266093,
+      "sha256": "886417a1cd977b45a3e040b3f0515b1cc43fbaf49e89c880a8f11a0db1b867e4",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20708-part-032.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20708-part-032.jsonl.gz",
+      "bytes": 289887,
+      "sha256": "ac783363145b0174e5c9b5c7b4b54bdcd02444039486003ab8423dde07a71b66",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20708-part-033.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20708-part-033.jsonl.gz",
+      "bytes": 266680,
+      "sha256": "6ef46e8329dcc3ce794535de1a01d3e782fd94faf2b175895d2a4793db062b50",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20708-part-034.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20708-part-034.jsonl.gz",
+      "bytes": 283229,
+      "sha256": "efde632537af2cf0b6fa1bf35a6a4dfdde1bd545fcf8ab7287107d17fec6fb00",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20708-part-035.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20708-part-035.jsonl.gz",
+      "bytes": 280691,
+      "sha256": "c82dbdb58aa98a2bbd14776860e376975782019cd021a7a428e10132119c06dd",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20708-part-036.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20708-part-036.jsonl.gz",
+      "bytes": 259980,
+      "sha256": "c5edfd973c746e02c66cafa5d0d09a32761e5006f13377b3989d64215fef5e55",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20708-part-037.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20708-part-037.jsonl.gz",
+      "bytes": 268671,
+      "sha256": "8d690aad59bdd977d2d831377d9387d00ce4ff989f54ddc90bdb9f5858dcfcc1",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20708-part-038.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20708-part-038.jsonl.gz",
+      "bytes": 270369,
+      "sha256": "a9a46f33f565b88af1e1c0bc923a62570d0081c8fa474654d94cde3a5b4f5126",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20708-part-039.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20708-part-039.jsonl.gz",
+      "bytes": 289845,
+      "sha256": "5e94cc15a15c6784793e45aac1028c2d62f9352a32f176a99e65b19aa89dae77",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20708-part-040.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20708-part-040.jsonl.gz",
+      "bytes": 264780,
+      "sha256": "0234413db883ace86ee7e393f7e16444f392f73d1b43a180b863cb16282465c3",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit-v2/shot-20708-part-041.jsonl.gz",
+      "sourcePath": "data/exl50u-efit-v2/shot-20708-part-041.jsonl.gz",
+      "bytes": 29045,
+      "sha256": "6e441a126d1a55a989a4d8dd74e19cd57190967c97f4ba1f231090ed4047dd27",
+      "contentType": "application/gzip"
+    },
+    {
+      "route": "/device-data/exl50u-efit/shot-18301.bin",
+      "sourcePath": "data/exl50u-efit/shot-18301.bin",
+      "bytes": 10025856,
+      "sha256": "069e4bab854b3a880bccc68790ae84706e07e86fbabe083d87a3a9e79686bf81",
+      "contentType": "application/octet-stream"
+    },
+    {
+      "route": "/device-data/exl50u-efit/shot-18303-topology.bin",
+      "sourcePath": "data/exl50u-efit/shot-18303-topology.bin",
+      "bytes": 1525792,
+      "sha256": "2ef7f26c747817a0eed28ea1c86bb65cc2d49ac3d74d17630d819f21ecdaf222",
+      "contentType": "application/octet-stream"
+    },
+    {
+      "route": "/device-data/exl50u-efit/shot-18303.bin",
+      "sourcePath": "data/exl50u-efit/shot-18303.bin",
+      "bytes": 7120128,
+      "sha256": "99191a749d35ec6136300dcfa00e8cedc47e6c105109241ec9b2334abff43a5a",
+      "contentType": "application/octet-stream"
+    },
+    {
+      "route": "/device-data/exl50u-efit/shot-18304.bin",
+      "sourcePath": "data/exl50u-efit/shot-18304.bin",
+      "bytes": 2606976,
+      "sha256": "d61559312cea79a3e94ed4b714f542fa6959b77bf447c1ac79b5806bf2f27e31",
+      "contentType": "application/octet-stream"
+    },
+    {
+      "route": "/device-data/exl50u-efit/shot-18308.bin",
+      "sourcePath": "data/exl50u-efit/shot-18308.bin",
+      "bytes": 4544128,
+      "sha256": "90da2a61bbe8a962a9a4c94344234bd929586887d293393c12585772523e8174",
+      "contentType": "application/octet-stream"
+    },
+    {
+      "route": "/fusion-ai-native-research-report.docx",
+      "sourcePath": "fusion-ai-native-research-report.docx",
+      "bytes": 25910594,
+      "sha256": "62510f6c3f50ab6d938a4bd18ab25a8d45efc76b434ff229b9603f214f83c607",
+      "contentType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    },
+    {
+      "route": "/fusion-diagnostics-research-report.docx",
+      "sourcePath": "fusion-diagnostics-research-report.docx",
+      "bytes": 1624668,
+      "sha256": "5197d4fd1811791179ed6232053b1e10ed854016cf2751806e4d4eb6af2bda43",
+      "contentType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    },
+    {
+      "route": "/fusion-integrated-control-research-report.docx",
+      "sourcePath": "fusion-integrated-control-research-report.docx",
+      "bytes": 998527,
+      "sha256": "967ea84b74eddd097b2144d44eed2b453f42712705972c442111e120e8b2684d",
+      "contentType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    },
+    {
+      "route": "/fusion-physics-simulation-report.pdf",
+      "sourcePath": "fusion-physics-simulation-report.pdf",
+      "bytes": 9250505,
+      "sha256": "2653c150ba51effed28efe50713492475c8fe0578360da797fbe82b6e6eb47e1",
+      "contentType": "application/pdf"
+    },
+    {
+      "route": "/tokamak-engineering-simulation-report.docx",
+      "sourcePath": "tokamak-engineering-simulation-report.docx",
+      "bytes": 13956015,
+      "sha256": "355cca10d8cc8c127ca3fd1e625a817736b94ab1ffd3a7f7447049f0e79d7a99",
+      "contentType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    },
+    {
+      "route": "/tokamak-engineering-simulation-report.pdf",
+      "sourcePath": "tokamak-engineering-simulation-report.pdf",
+      "bytes": 18772384,
+      "sha256": "fc3ab960466c25a08bc021d4d7c9b637cdb8148d95d2b367f5b96bd207893763",
+      "contentType": "application/pdf"
+    },
+    {
+      "route": "/xjtu-engineering-digital-twin-phase1-brief.docx",
+      "sourcePath": "xjtu-engineering-digital-twin-phase1-brief.docx",
+      "bytes": 2733367,
+      "sha256": "c2f44ec729a8ff66f02a4366be9a32f6e51da98ea34d076cf11d2aa636da9213",
+      "contentType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    }
+  ]
+}

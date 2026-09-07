@@ -144,9 +144,10 @@ git ls-remote https://github.com/tianshao1992/fusion-digital.git refs/heads/main
    `assets/runtime-assets.lock.json` 补齐并逐文件校验 ITER 以及所有已激活外置 bundle，
    设置 `NEXT_PUBLIC_FUSIONDIGITAL_MODE=public-anonymous` 和
    `FUSIONDIGITAL_BUILD_TARGET=aliyun-hk` 后生成不可变发布包；未 hydration 的 Sites
-   worktree 设置 `FUSIONDIGITAL_BUILD_TARGET=sites`，postbuild 删除两类外置 GLB cache
-   并保持 256 MiB 展开上限，再使用官方 `package-site.sh` 归档。两个 bundle 的
-   source-dir/base-url 独立，旧 ITER CLI 保持兼容。
+   worktree 设置 `FUSIONDIGITAL_BUILD_TARGET=sites`，postbuild 删除两类外置 GLB cache，
+   并按 `assets/sites-static-offload.lock.json` 逐文件校验后裁剪报告与 EFIT 大载荷，
+   保持 256 MiB 展开上限，再使用官方 `package-site.sh` 归档。两个 3D bundle 的
+   source-dir/base-url 独立，旧 ITER CLI 保持兼容；香港包仍须自包含这些静态文件。
 5. **SSH 部署**：把香港发布包上传到 `47.75.119.239`，安装到全新的 SHA release 目录，
    原子切换 `/srv/fusiondigital/current` 并重启服务。生产机不从 GitHub 拉资源，也不
    执行源码构建。必须调用版本化的 `deploy/aliyun-hk/install-release.sh`；
@@ -362,6 +363,13 @@ curl.exe -fsS "https://fusiondigital.club/api/search?q=tokamak&limit=5" | Out-Nu
   最终 URL 漂移都失败。未知路径必须 `404`，未配置
   fallback 时必须 `503`，不得扫描目录、接受客户端上游或回退 HTTP。GitHub Releases
   常规 URL 会跨 origin `302`，因此必须拒绝。
+- Sites 对 8 份公开报告、5 个 EFIT v1 二进制和 219 个 EFIT v2 压缩分块使用独立的
+  `fusiondigital.sites-static-offload.v1` 合同。合同固定公开 GitHub 源仓库、已先行发布的
+  完整提交 SHA、精确路由、源路径、字节数、SHA-256 与 MIME；postbuild 必须先完成全部
+  文件复核再裁剪，Worker 仅在本地静态绑定返回 404 后访问固定 `raw.githubusercontent.com`
+  URL，并拒绝重定向、URL 漂移、非精确 Range、变换编码和未列入白名单的路径。香港构建
+  不得裁剪这些文件，以保持生产源站自包含。外置文件若变化，必须先把新文件提交并同步到
+  GitHub，再在后续提交中推进 offload lock，禁止让锁引用尚未存在或可变的 branch/tag。
 - EXL manifest 与 runtime lock 必须同时固定 `classification=PUBLIC`、
   `redistributionAllowed=true`、`engineeringUseAllowed=false`，并明确不含 source CAD；
   schema、投影、catalog 激活、formal pair 与香港安装任一层不满足即失败。metadata-only

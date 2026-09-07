@@ -30,6 +30,7 @@ const searchCoreUrl = new URL('../../app/search/search-core.ts', import.meta.url
 const appUrl = new URL('../../app/', import.meta.url);
 const serverEntryUrl = new URL('../../dist/server/index.js', import.meta.url);
 const runtimeAssetLockUrl = new URL('../../assets/runtime-assets.lock.json', import.meta.url);
+const sitesStaticOffloadLockUrl = new URL('../../assets/sites-static-offload.lock.json', import.meta.url);
 
 const SITES_EXPANDED_LIMIT_BYTES = 256 * 1024 * 1024;
 const REQUIRED_HEADROOM_BYTES = 3 * 1024 * 1024;
@@ -330,6 +331,78 @@ async function assertReadableFile(fileUrl, expected) {
       `Refusing public-anonymous build: ${fileURLToPath(fileUrl)} does not match its locked SHA-256.`,
     );
   }
+}
+
+export function validateSitesStaticOffloadLock(lock) {
+  if (
+    lock?.schemaVersion !== 'fusiondigital.sites-static-offload.v1'
+    || lock.bundleId !== 'sites-static-offload-v1'
+    || lock.source?.origin !== 'https://raw.githubusercontent.com'
+    || lock.source?.repository !== 'tianshao1992/fusion-digital'
+    || !/^[a-f0-9]{40}$/u.test(lock.source?.commitSha ?? '')
+    || lock.source?.publicRoot !== 'public'
+    || !Array.isArray(lock.files)
+    || lock.fileCount !== lock.files.length
+    || lock.fileCount !== 232
+  ) {
+    throw new Error('Sites static offload lock has an invalid root contract.');
+  }
+
+  const routes = new Set();
+  const sourcePaths = new Set();
+  let totalBytes = 0;
+  for (const file of lock.files) {
+    const segments = typeof file.sourcePath === 'string' ? file.sourcePath.split('/') : [];
+    const expectedRoute = file.sourcePath?.startsWith('data/exl50u-efit')
+      ? `/device-data/${file.sourcePath.slice('data/'.length)}`
+      : `/${file.sourcePath}`;
+    const allowedSource = /^(?:[A-Za-z0-9][A-Za-z0-9._-]*\.(?:docx|pdf)|data\/exl50u-efit(?:-v2)?\/[a-z0-9][a-z0-9.-]*\.(?:bin|jsonl\.gz))$/u;
+    const allowedContentTypes = new Set([
+      'application/gzip',
+      'application/octet-stream',
+      'application/pdf',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    ]);
+    if (
+      !allowedSource.test(file.sourcePath ?? '')
+      || segments.some((segment) => segment === '' || segment === '.' || segment === '..')
+      || file.route !== expectedRoute
+      || routes.has(file.route)
+      || sourcePaths.has(file.sourcePath)
+      || !Number.isSafeInteger(file.bytes)
+      || file.bytes <= 0
+      || !/^[a-f0-9]{64}$/u.test(file.sha256 ?? '')
+      || !allowedContentTypes.has(file.contentType)
+    ) {
+      throw new Error(`Sites static offload lock contains an unsafe entry: ${file?.sourcePath ?? '<unknown>'}.`);
+    }
+    routes.add(file.route);
+    sourcePaths.add(file.sourcePath);
+    totalBytes += file.bytes;
+  }
+  if (lock.totalBytes !== totalBytes || totalBytes < 100 * 1024 * 1024) {
+    throw new Error('Sites static offload lock byte total is invalid.');
+  }
+  return lock;
+}
+
+export async function pruneSitesStaticOffloads({
+  clientUrl = distClientUrl,
+  lockUrl = sitesStaticOffloadLockUrl,
+} = {}) {
+  const lock = validateSitesStaticOffloadLock(JSON.parse(await readFile(lockUrl, 'utf8')));
+  const clientRoot = resolve(fileURLToPath(clientUrl));
+  const lockedFiles = lock.files.map((file) => {
+    const pathname = resolve(clientRoot, ...file.sourcePath.split('/'));
+    if (!pathIsWithin(pathname, clientRoot)) {
+      throw new Error(`Sites static offload target escapes dist/client: ${file.sourcePath}`);
+    }
+    return { file, fileUrl: pathToFileURL(pathname) };
+  });
+
+  await Promise.all(lockedFiles.map(({ file, fileUrl }) => assertReadableFile(fileUrl, file)));
+  await Promise.all(lockedFiles.map(({ fileUrl }) => rm(fileUrl)));
+  return { bytes: lock.totalBytes, fileCount: lock.fileCount };
 }
 
 async function inspectExternalCacheTree(cacheUrl, { allowMissing = false } = {}) {
@@ -705,6 +778,14 @@ export async function runPostbuildPrune({
         bytes: cache.bytes,
       });
     }
+  }
+
+  if (buildContract.isSites) {
+    const offloaded = await pruneSitesStaticOffloads();
+    removed.push({
+      id: 'sites-static-offload-v1.client-assets',
+      bytes: offloaded.bytes,
+    });
   }
 
   // The Paramak STEP remains tracked for collaborators and reproducible builds. The production

@@ -247,7 +247,10 @@ npx tsx --test tests/exl50u-anonymous-shard-viewer.test.mts
 
 不要复制或 Git add `$Projected\*.glb`；`.gitignore` 与 lock 只允许跟踪 manifest、公告、
 生成白名单和真实摘要锁。Sites 构建不 hydrate 这两个外置缓存，postbuild 会删除两类
-GLB 并保持展开包小于 256 MiB；其运行时值
+GLB，并按 `assets/sites-static-offload.lock.json` 精确校验和裁剪公开报告及 EFIT 大载荷，
+从而保持展开包小于 256 MiB。香港构建保留并校验上述全部文件；Sites Worker 对静态外置
+文件只允许固定 GitHub 源仓库完整提交、精确路径、字节数/SHA-256 和 Range 合同，本地
+静态文件存在时仍保持 local-first。EXL 运行时值
 `EXL50U_GENERAL_ASSEMBLY_ASSET_BASE_URL` 必须精确配置为
 `https://raw.githubusercontent.com/tianshao1992/fusion-physics-atlas-assets/<40位小写提交SHA>/exl50u-general-assembly-v1`；
 不得使用其他仓库、分支/tag/短 SHA、香港生产域名、Sites 域名或任何会重定向的

@@ -52,8 +52,12 @@ function runNode(args, options = {}) {
   });
 }
 
-test("Hong Kong verifier accepts the exact real postbuild Git-asset projection", async () => {
+test("Sites postbuild preserves the exact non-offloaded Git-asset projection", async () => {
   const lock = JSON.parse(await read("assets/runtime-assets.lock.json"));
+  const sitesOffloadLock = JSON.parse(await read("assets/sites-static-offload.lock.json"));
+  const sitesOffloadedPaths = new Set(
+    sitesOffloadLock.files.map(({ sourcePath }) => `public/${sourcePath}`),
+  );
   assert.equal(POSTBUILD_PRUNED_GIT_ASSET_RULES.length, 4);
   assert.equal(
     lock.gitAssets.files.some(({ path }) => path === "public/models/exl50u-general-assembly-review-candidate.json"),
@@ -84,12 +88,24 @@ test("Hong Kong verifier accepts the exact real postbuild Git-asset projection",
     }
   }
 
-  await assert.doesNotReject(verifyGitManagedReleaseTree(ROOT, lock.gitAssets));
+  for (const file of lock.gitAssets.files.filter(({ path }) => sitesOffloadedPaths.has(path))) {
+    await assert.rejects(
+      stat(join(ROOT, "dist/client", file.path.slice("public/".length))),
+      { code: "ENOENT" },
+      `${file.path} must be absent from the real Sites postbuild`,
+    );
+  }
+
+  const sitesGitAssetProjection = {
+    ...lock.gitAssets,
+    files: lock.gitAssets.files.filter(({ path }) => !sitesOffloadedPaths.has(path)),
+  };
+  await assert.doesNotReject(verifyGitManagedReleaseTree(ROOT, sitesGitAssetProjection));
 });
 
-test("Hong Kong verifier rejects extra missing assets and restored pruned assets", async () => {
+test("Hong Kong verifier requires Sites-offloaded assets and rejects restored shared prunes", async () => {
   const temporaryRoot = await mkdtemp(join(tmpdir(), "fusiondigital-runtime-projection-"));
-  const keptPath = "public/models/paramak-tokamak-demo-copy/kept.txt";
+  const keptPath = "public/data/exl50u-efit/shot-18301.bin";
   const keptBody = "must remain in the release";
   const keptDistPath = join(temporaryRoot, "dist/client", keptPath.slice("public/".length));
   const prunedFiles = POSTBUILD_PRUNED_GIT_ASSET_RULES.map((rule) => ({
@@ -116,7 +132,7 @@ test("Hong Kong verifier rejects extra missing assets and restored pruned assets
     await rm(keptDistPath);
     await assert.rejects(
       verifyGitManagedReleaseTree(temporaryRoot, gitAssets),
-      /Git-managed release asset is missing: public\/models\/paramak-tokamak-demo-copy\/kept\.txt/u,
+      /Git-managed release asset is missing: public\/data\/exl50u-efit\/shot-18301\.bin/u,
     );
 
     await writeFile(keptDistPath, keptBody);

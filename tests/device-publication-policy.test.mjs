@@ -1252,6 +1252,92 @@ test('ITER high-detail proxy enforces its content-addressed HTTP and header boun
   });
 });
 
+test('Sites static offload proxy preserves range semantics and replaces upstream headers', async () => {
+  const workerUrl = new URL('../dist/server/index.js', import.meta.url);
+  workerUrl.searchParams.set('sites-static-offload-contract-test', `${process.pid}-${Date.now()}`);
+  const { proxySitesStaticOffload } = await import(workerUrl.href);
+  assert.equal(typeof proxySitesStaticOffload, 'function');
+
+  const payload = new Uint8Array(128);
+  const sourcePath = 'fusion-physics-simulation-report.pdf';
+  const upstreamUrl = `https://raw.githubusercontent.com/tianshao1992/fusion-digital/${'7'.repeat(40)}/public/${sourcePath}`;
+  const asset = {
+    route: `/${sourcePath}`,
+    sourcePath,
+    localPath: `/${sourcePath}`,
+    upstreamUrl,
+    bytes: payload.byteLength,
+    sha256: createHash('sha256').update(payload).digest('hex'),
+    contentType: 'application/pdf',
+  };
+  let captured;
+  const response = await proxySitesStaticOffload(
+    new Request(`https://example.test/${sourcePath}`, {
+      headers: {
+        Authorization: 'Bearer never-forward',
+        Cookie: 'never=forward',
+        Range: 'bytes=0-63',
+      },
+    }),
+    asset,
+    async (input, init) => {
+      captured = { input, init };
+      return responseAt(upstreamUrl, {
+        body: payload.slice(0, 64),
+        status: 206,
+        headers: {
+          'Content-Length': '64',
+          'Content-Range': 'bytes 0-63/128',
+          'Content-Type': 'text/plain',
+          'Set-Cookie': 'never=forward',
+        },
+      });
+    },
+  );
+
+  assert.equal(captured.input, upstreamUrl);
+  const forwarded = new Headers(captured.init.headers);
+  assert.equal(forwarded.get('range'), 'bytes=0-63');
+  assert.equal(forwarded.get('authorization'), null);
+  assert.equal(forwarded.get('cookie'), null);
+  assert.equal(response.status, 206);
+  assert.equal((await response.arrayBuffer()).byteLength, 64);
+  assert.equal(response.headers.get('content-range'), 'bytes 0-63/128');
+  assert.equal(response.headers.get('content-length'), '64');
+  assert.equal(response.headers.get('content-type'), 'application/pdf');
+  assert.match(response.headers.get('cache-control') ?? '', /public.*max-age=300.*must-revalidate/i);
+  assert.equal(response.headers.get('content-disposition'), 'inline');
+  assert.equal(response.headers.get('content-encoding'), null);
+  assert.equal(response.headers.get('set-cookie'), null);
+
+  const invalidRange = await proxySitesStaticOffload(
+    new Request(`https://example.test/${sourcePath}`, { headers: { Range: 'bytes=128-' } }),
+    asset,
+    async () => { throw new Error('must not fetch'); },
+  );
+  assert.equal(invalidRange.status, 416);
+  assert.equal(invalidRange.headers.get('content-range'), 'bytes */128');
+
+  const docx = await proxySitesStaticOffload(
+    new Request('https://example.test/report.docx', { method: 'HEAD' }),
+    {
+      ...asset,
+      route: '/report.docx',
+      sourcePath: 'report.docx',
+      localPath: '/report.docx',
+      contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    },
+    async () => responseAt(upstreamUrl, {
+      body: payload,
+      status: 200,
+      headers: { 'Content-Length': '128' },
+    }),
+  );
+  assert.equal(docx.status, 200);
+  assert.equal(docx.body, null);
+  assert.equal(docx.headers.get('content-disposition'), 'attachment; filename="report.docx"');
+});
+
 test('ITER high-detail delivery is local-first and only uses a strictly configured mirror after a local 404', async (t) => {
   const manifest = JSON.parse(await readFile(endpointToPublicPath(iterManifestEndpoint), 'utf8'));
   const component = manifest.assets?.componentBundles?.[0]?.components?.find((item) => item.path.split('/').at(-1)?.startsWith('cs.'));
