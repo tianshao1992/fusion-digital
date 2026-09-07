@@ -27,6 +27,7 @@ import {
 } from "../db/analytics.ts";
 import {
   ANALYTICS_COLLECTOR_HEALTH_PATH,
+  collectorFailureCategory,
   ANALYTICS_COLLECTOR_PATH,
   probeReportBridge,
   parseCollectorEvent,
@@ -49,6 +50,15 @@ import {
 } from "../app/analytics/report-bridge.ts";
 
 const opaque = (seed: string) => seed.padEnd(24, "x");
+
+test("collector diagnostics expose fixed failure categories without exception data", () => {
+  assert.equal(collectorFailureCategory(new Error("analytics pseudonym key changed without a migration")), "PSEUDONYM_KEY_MISMATCH");
+  assert.equal(collectorFailureCategory(Object.assign(new Error("private path or SQL"), {code:"EACCES"})), "EACCES");
+  assert.equal(collectorFailureCategory(Object.assign(new Error("private record"), {code:"ERR_SQLITE_ERROR",errcode:14})), "SQLITE_14");
+  assert.equal(collectorFailureCategory(Object.assign(new Error("private record"), {code:"ERR_SQLITE_ERROR",errcode:"secret"})), "SQLITE_ERROR");
+  assert.equal(collectorFailureCategory({message:"secret, personal event and SQL",code:"PRIVATE_SECRET"}), "UNCLASSIFIED");
+  assert.equal(collectorFailureCategory(null), "UNCLASSIFIED");
+});
 const validEvent = {
   eventId: opaque("event"),
   eventType: "page_view" as const,

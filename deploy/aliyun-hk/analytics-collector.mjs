@@ -694,6 +694,30 @@ function respondJson(response, body, additionalHeaders = {}) {
   response.end(body);
 }
 
+// Only fixed categories reach operational logs, never exception messages or data.
+export function collectorFailureCategory(error) {
+  const known = new Map([
+    ["analytics collector secret is unavailable", "SECRET_UNAVAILABLE"],
+    ["analytics pseudonym key changed without a migration", "PSEUDONYM_KEY_MISMATCH"],
+    ["analytics content label map is invalid", "CONTENT_LABELS_INVALID"],
+    ["analytics journal segment is unsafe", "JOURNAL_UNSAFE"],
+    ["analytics journal line is invalid", "JOURNAL_INVALID"],
+    ["analytics journal line is oversized", "JOURNAL_OVERSIZED"],
+    ["analytics journal timestamp is invalid", "JOURNAL_TIMESTAMP_INVALID"],
+    ["analytics database capacity contract is unavailable", "DATABASE_CAPACITY"],
+    ["analytics database integrity check failed", "DATABASE_INTEGRITY"],
+    ["analytics collector could not bind its loopback socket", "LOOPBACK_BIND"],
+    ["analytics collector rejected the request", "JOURNAL_EVENT_CONTRACT"],
+  ]);
+  if (known.has(error?.message)) return known.get(error.message);
+  if (["EACCES", "EPERM", "ENOENT", "ELOOP"].includes(error?.code)) return error.code;
+  if (error?.code === "ERR_SQLITE_ERROR") {
+    return Number.isInteger(error.errcode) && error.errcode >= 0 && error.errcode <= 65535
+      ? `SQLITE_${error.errcode}` : "SQLITE_ERROR";
+  }
+  return "UNCLASSIFIED";
+}
+
 if (isDirectExecution(import.meta.url)) {
   try {
     if (process.argv.includes("--report-probe") || process.argv.includes("--report-tls-probe")) {
@@ -722,8 +746,9 @@ if (isDirectExecution(import.meta.url)) {
       process.once("SIGTERM", close);
       process.once("SIGINT", close);
     }
-  } catch {
+  } catch (error) {
     console.error("FusionDigital analytics collector failed without persisting request data.");
+    console.error("FusionDigital analytics failure category:", collectorFailureCategory(error));
     process.exitCode = 1;
   }
 }
