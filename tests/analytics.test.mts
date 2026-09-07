@@ -559,7 +559,7 @@ test("admin APIs and Hong Kong ingress remain fail-closed and privacy-minimized"
   assert.match(store, /analytics_report_nonces/u);
   assert.match(installer, /for attempt in \{1\.\.120\}/u);
   assert.match(installer, /--probe >\/dev\/null 2>&1/u);
-  assert.match(installer, /systemctl is-active --quiet fusiondigital-analytics-collector\.service \|\| break/u);
+  assert.match(installer, /systemctl show --property=ActiveState --value fusiondigital-analytics-collector\.service/u);
   assert.match(installer, /sleep 1/u);
   assert.match(installer, /--report-probe/u);
   assert.match(installer, /--report-tls-probe/u);

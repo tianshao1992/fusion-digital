@@ -406,7 +406,13 @@ for attempt in {1..120}; do
     COLLECTOR_HEALTHY=true
     break
   fi
-  systemctl is-active --quiet fusiondigital-analytics-collector.service || break
+  # Restart=on-failure briefly reports activating during its restart delay.
+  # Keep the bounded health gate running while systemd can still recover.
+  COLLECTOR_STATE=$(systemctl show --property=ActiveState --value fusiondigital-analytics-collector.service || true)
+  case "$COLLECTOR_STATE" in
+    active|activating) ;;
+    *) break ;;
+  esac
   sleep 1
 done
 "$COLLECTOR_HEALTHY" || {

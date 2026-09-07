@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { mkdir, mkdtemp, readFile, rm, stat, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -32,6 +32,45 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 async function read(relativePath) {
   return readFile(join(ROOT, relativePath), "utf8");
 }
+
+test("analytics readiness waits for automatic restart and keeps failure and timeout gates", async () => {
+  const installer = await read("deploy/aliyun-hk/install-analytics-forwarder.sh");
+  const start = installer.indexOf("COLLECTOR_HEALTHY=false");
+  const end = installer.indexOf('node "$RUNTIME_CURRENT/analytics-collector.mjs" --report-probe', start);
+  assert.ok(start > 0 && end > start);
+  const gate = installer.slice(start, end);
+  const bash = process.platform === "win32" ? "C:/Program Files/Git/bin/bash.exe" : "bash";
+  for (const [scenario, expectedStatus, expectedProbes] of [
+    ["recover", 0, 3], ["failed", 1, 1], ["unhealthy", 1, 120], ["unknown", 1, 1],
+  ]) {
+    // Execute the actual shell gate with process-local substitutes. No service,
+    // production data, network endpoint, or elapsed restart delay is involved.
+    const setup = `
+set -euo pipefail
+scenario=$1
+probes=0
+RUNTIME_CURRENT=/unused
+trap 'printf "probes=%s\\n" "$probes"' EXIT
+node() { probes=$((probes + 1)); [[ $scenario == recover && $probes -ge 3 ]]; }
+systemctl() {
+  case "$scenario" in
+    recover) printf 'activating\\n' ;;
+    failed) printf 'failed\\n' ;;
+    unhealthy) printf 'active\\n' ;;
+    unknown) return 1 ;;
+  esac
+}
+sleep() { :; }
+`;
+    const result = spawnSync(bash, ["--noprofile", "--norc", "-c", setup + gate, "readiness-test", scenario], {
+      cwd: ROOT, encoding: "utf8", timeout: 10000, windowsHide: true,
+    });
+    assert.ifError(result.error);
+    assert.equal(result.status, expectedStatus, `${scenario}: ${result.stderr}`);
+    assert.match(result.stdout, new RegExp(`probes=${expectedProbes}\\s*$`, "u"));
+    if (expectedStatus !== 0) assert.match(result.stderr, /analytics collector did not become ready/u);
+  }
+});
 
 function runNode(args, options = {}) {
   return new Promise((resolveRun, rejectRun) => {
