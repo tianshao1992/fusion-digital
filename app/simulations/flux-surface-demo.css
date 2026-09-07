@@ -1,0 +1,39 @@
+.fluxDemo { --flux-accent:#c86545; --flux-line:#b9ab9b; overflow:hidden; border:1px solid var(--color-border); border-radius:16px; background:var(--color-surface); color:var(--color-ink); }
+.fluxHeader { display:flex; align-items:center; justify-content:space-between; gap:18px; padding:22px 26px; border-bottom:1px solid var(--color-border); }
+.fluxEyebrow { font-size:10px; letter-spacing:.18em; color:var(--color-ink-muted); }
+.fluxHeader h2 { margin:6px 0 0; font-size:1.55rem; font-weight:500; letter-spacing:-.03em; }
+.fluxAuthority { font-size:9px; letter-spacing:.07em; border:1px solid var(--flux-line); padding:7px 9px; border-radius:4px; color:var(--color-ink-muted); }
+.fluxLayout { display:grid; grid-template-columns:minmax(0,1fr) 244px; }
+.fluxStage { position:relative; min-width:0; min-height:520px; background:radial-gradient(ellipse at 48% 38%,color-mix(in srgb,var(--flux-line) 13%,transparent),transparent 65%),linear-gradient(135deg,transparent,color-mix(in srgb,var(--flux-line) 8%,transparent)); }
+.fluxViewport { position:absolute; inset:0; }
+.fluxViewport canvas { display:block; width:100%; height:100%; touch-action:none; }
+.fluxCorner { position:absolute; top:24px; left:26px; display:grid; gap:5px; pointer-events:none; }
+.fluxCorner > span { font-size:10px; letter-spacing:.12em; color:var(--color-ink-muted); }
+.fluxCorner strong { font-size:1.5rem; font-weight:500; font-variant-numeric:tabular-nums; }
+.fluxCorner small { font-size:10px; color:var(--color-ink-muted); }
+.fluxStageFooter { position:absolute; bottom:18px; left:26px; right:20px; display:flex; align-items:center; justify-content:space-between; gap:12px; pointer-events:none; }
+.fluxStageFooter span { font-size:11px; color:var(--color-ink-muted); }
+.fluxDemo button { border:1px solid var(--flux-line); background:var(--color-surface); color:var(--color-ink); padding:8px 12px; border-radius:6px; cursor:pointer; font:inherit; font-size:11px; pointer-events:auto; }
+.fluxDemo button:disabled { opacity:.5; cursor:default; }
+.fluxDemo button:focus-visible,.fluxDemo select:focus-visible,.fluxDemo input:focus-visible { outline:2px solid var(--flux-accent); outline-offset:3px; }
+.fluxInspector { padding:22px; border-left:1px solid var(--color-border); display:flex; flex-direction:column; gap:16px; }
+.fluxInspectorTitle { display:flex; align-items:center; gap:10px; font-size:11px; }
+.fluxInspectorTitle > span { color:var(--flux-accent); font-size:18px; }
+.fluxInspectorTitle strong { font-weight:500; }
+.fluxSection { display:block; width:100%; height:172px; }
+.fluxAxisNote { margin:-10px 0 0; text-align:center; font-size:10px; color:var(--color-ink-muted); }
+.fluxControl { display:grid; gap:8px; font-size:11px; color:var(--color-ink-muted); }
+.fluxControl select { width:100%; padding:8px; border:1px solid var(--color-border); border-radius:5px; background:var(--color-canvas); color:var(--color-ink); font:inherit; }
+.fluxRange { display:flex; align-items:center; gap:10px; }
+.fluxRange input { min-width:0; width:100%; accent-color:var(--flux-accent); }
+.fluxRange output { min-width:34px; font-variant-numeric:tabular-nums; color:var(--color-ink); }
+.fluxCheck { display:flex; align-items:center; gap:8px; font-size:11px; }
+.fluxCheck input { accent-color:var(--flux-accent); }
+.fluxStats { margin:auto 0 0; padding-top:14px; border-top:1px solid var(--color-border); display:grid; gap:8px; font-size:10px; }
+.fluxStats div { display:flex; justify-content:space-between; gap:12px; }
+.fluxStats dt { color:var(--color-ink-muted); }.fluxStats dd { margin:0; font-variant-numeric:tabular-nums; }
+.fluxEvidence { border-top:1px solid var(--color-border); padding:15px 26px; font-size:11px; line-height:1.65; color:var(--color-ink-muted); }
+.fluxEvidence p { margin:0 0 4px; }.fluxEvidence code { font-size:10px; overflow-wrap:anywhere; }
+.fluxStatus { position:absolute; top:45%; left:10%; right:10%; text-align:center; font-size:12px; padding:16px; border:1px solid var(--color-border); border-radius:8px; background:var(--color-surface); }
+@media(max-width:850px) { .fluxLayout { grid-template-columns:minmax(0,1fr) 208px; }.fluxInspector { padding:18px; }.fluxHeader { flex-wrap:wrap; }.fluxStage { min-height:480px; } }
+@media(max-width:600px) { .fluxLayout { grid-template-columns:1fr; }.fluxStage { min-height:390px; }.fluxInspector { border-left:0; border-top:1px solid var(--color-border); display:grid; grid-template-columns:1fr 1fr; gap:14px; }.fluxInspectorTitle,.fluxCheck,.fluxStats { grid-column:1/-1; }.fluxSection { grid-row:2/5; height:180px; }.fluxAxisNote { grid-column:1; grid-row:5; }.fluxControl { grid-column:2; }.fluxStats { margin:0; }.fluxHeader,.fluxEvidence { padding:18px; }.fluxCorner { left:18px; }.fluxStageFooter { left:18px; }.fluxHeader h2 { font-size:1.35rem; } }

@@ -7,6 +7,12 @@
 <p align="center"><strong>聚变数字孪生知识与协作平台</strong></p>
 <p align="center">Fusion Digital Twin Research Atlas &amp; Collaboration Portal</p>
 
+### FUSE 三维结果 Demo
+
+`/simulations` 的可信 FUSE 结果现在包含交互式三维磁通面：选择已导出的 `psiNorm` 层级、调整环向剖开角度、显示 LCFS 截面参考线，并对照原始 R–Z 轮廓。几何在浏览器中按轴对称假设生成，保留米制坐标和全部源轮廓点，不改写已校验的数据制品。采用延迟加载 Three.js、按事件渲染、1.5 倍像素比上限与 250,000 顶点硬预算；这只是轻量 FUSE 展示路径，超大 CAD/CAE 仍应使用独立 LOD / ParaView-trame 路径，不能由该 Demo 推断大网格性能。
+
+展示始终标记 `SIMULATED / AXISYMMETRIC-DERIVED`；不是三维 CAD、非轴对称求解场或磁力线追踪。颜色不表示温度、密度或应力；输入重建平衡与模型求解平衡分别标注。WebGL 失败时保留二维结果。`npm run test:simulations` 包含真实公开结果的旋转几何、尺度、开放边界与资源预算测试；完整发布仍须通过 `npm run check` 及双端发布门禁。
+
 > **开放可视化平台 V1：** 当前仓库已加入版本化制品/上下文合同、Three.js / vtk.js / ParaView 确定性分流、Blender headless 发布任务和 OpenUSD 场景组合。Omniverse 保持为可关闭的适配器，不成为平台依赖。架构、真实性边界和后续验收门见 [开放可视化平台文档](docs/VISUALIZATION_PLATFORM.md)。
 
 <p align="center">
