@@ -36,6 +36,12 @@ The project operator subsequently and explicitly authorized public web delivery 
 
 The repository stores links and bibliographic metadata. It does not grant rights to republish linked papers or datasets. Do not add paywalled PDFs, restricted experimental data or partner materials without written authorization.
 
+## Synthetic diagnostic compute runtime
+
+The optional, separately installed Python diagnostic worker uses [CHERAB 1.5.0](https://github.com/cherab/core/tree/v1.5.0), licensed under EUPL 1.1 (see its [upstream licence](https://github.com/cherab/core/blob/v1.5.0/LICENCE.txt)), and [Raysect 0.8.1.post1](https://github.com/raysect/source), licensed under BSD-3-Clause. Preserve their notices and applicable source/distribution obligations when distributing the compute runtime. The runtime is excluded from Git and the browser bundle; separation is not a claim that licence obligations are waived.
+
+The free-free emission approximation references Rybicki & Lightman, *Radiative Processes in Astrophysics*, equation 5.15b. Its hydrogenic composition and constant Gaunt factor are explicit modelling assumptions. The diagnostic artifacts are synthetic calculations from previously published simulation projections, not measured signals or calibrated instrument predictions.
+
 ## Project licensing status
 
 The repository currently has no general open-source license. Code, structured data, reports and images may require separate licensing decisions. Contact `tianshao1992@gmail.com` before external reuse.

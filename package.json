@@ -7,6 +7,11 @@
     "node": ">=22.13.0"
   },
   "scripts": {
+    "diagnostic:demo": "node scripts/diagnostics/run-demo.mjs",
+    "test:synthetic-diagnostics": "node --experimental-strip-types --test tests/synthetic-diagnostics.test.mts",
+    "simulation:engine": "tsx scripts/simulations/engine-cli.mts",
+    "simulation:gateway": "tsx scripts/simulations/gateway.mts",
+    "test:simulation-platform": "tsx --test tests/simulation-platform.test.mts tests/simulation-gateway.test.mts tests/simulation-gateway-origins.test.mts tests/simulation-fuse-gateway.test.mts tests/simulation-fuse-boundaries.test.mts tests/simulation-fuse-remote.test.mts tests/simulation-transport-fields.test.mts tests/torax-remote.test.mts",
     "simulation:run": "tsx scripts/simulations/local-runner.mts",
     "simulation:publish-diiid": "tsx scripts/simulations/publish-diiid.mts",
     "simulation:engineering": "tsx scripts/simulations/run-fpp-engineering.mts",
@@ -19,9 +24,9 @@
     "build": "vinext build",
     "postbuild": "node scripts/deployment/prune-obsolete-runtime-assets.mjs",
     "start": "vinext start",
-    "test": "npm run test:exl50u-assembly-private && npm run build && node --test --test-concurrency=1 tests/rendered-html.test.mjs tests/agent-turn-worker.test.mjs tests/runtime-assets.test.mjs tests/external-runtime-bundle-contract.test.mjs tests/device-publication-policy.test.mjs tests/exl50u-assembly-pipeline.test.mjs tests/exl50u-general-assembly.test.mjs tests/efit-data.test.mjs tests/efit-delivery.test.mjs tests/efit-store.test.mjs tests/efit-ui.test.mjs tests/ui-preferences.test.mjs tests/search-core.test.mjs tests/static-english-content.test.mjs tests/sync-remotes.test.mjs tests/production-dns.test.mjs tests/formal-release-contract.test.mjs tests/mainland-deployment.test.mjs tests/aliyun-hk-deployment.test.mjs tests/static-precompression.test.mjs tests/admin-role-migration.test.mjs && tsx --test --test-concurrency=1 tests/analytics.test.mts tests/efit-v2.test.mts tests/cad-theme.test.mts tests/site-nav-layout.test.mts tests/analytic-plasma.test.mts tests/iter-device-contract.test.mts tests/iter-component-loader.test.mts tests/exl50u-anonymous-shard-loader.test.mts tests/exl50u-anonymous-shard-viewer.test.mts tests/ehl2-diagview2.test.mts tests/ehl2-diagview2-core.test.mts tests/ehl2-diagview2-physics.test.mts tests/ehl2-diagview2-forward-presentation.test.mts tests/ehl2-diagview2-plasma-overlay.test.mts tests/ehl2-diagview2-ports.test.mts tests/exl50u-diagview2-ports.test.mts tests/exl50u-sensor-points.test.mts tests/ehl2-diagnostic-runtime.test.mts tests/knowledge-chat.test.mts tests/assistant-conversation.test.mts tests/agent-identity.test.mts tests/agent-turn-stream.test.mts tests/agent-capabilities.test.mts tests/agent-workspace.test.mts tests/llm-providers.test.mts tests/user-llm-credential-crypto.test.mts tests/user-llm-credentials.test.mts tests/knowledge-graph-ui.test.mts tests/knowledge-graph-i18n.test.mts tests/chart-english.test.mts tests/program-roadmap.test.mts tests/data-foundation.test.mts tests/fusion-data.test.mts",
+    "test": "npm run test:exl50u-assembly-private && npm run build && node --test --test-concurrency=1 tests/rendered-html.test.mjs tests/agent-turn-worker.test.mjs tests/runtime-assets.test.mjs tests/external-runtime-bundle-contract.test.mjs tests/device-publication-policy.test.mjs tests/exl50u-assembly-pipeline.test.mjs tests/exl50u-general-assembly.test.mjs tests/efit-data.test.mjs tests/efit-delivery.test.mjs tests/efit-store.test.mjs tests/efit-ui.test.mjs tests/ui-preferences.test.mjs tests/search-core.test.mjs tests/static-english-content.test.mjs tests/sync-remotes.test.mjs tests/production-dns.test.mjs tests/formal-release-contract.test.mjs tests/mainland-deployment.test.mjs tests/aliyun-hk-deployment.test.mjs tests/static-precompression.test.mjs tests/admin-role-migration.test.mjs && tsx --test --test-concurrency=1 tests/analytics.test.mts tests/efit-v2.test.mts tests/cad-theme.test.mts tests/site-nav-layout.test.mts tests/analytic-plasma.test.mts tests/iter-device-contract.test.mts tests/iter-component-loader.test.mts tests/exl50u-anonymous-shard-loader.test.mts tests/exl50u-anonymous-shard-viewer.test.mts tests/ehl2-diagview2.test.mts tests/ehl2-diagview2-core.test.mts tests/ehl2-diagview2-physics.test.mts tests/ehl2-diagview2-forward-presentation.test.mts tests/ehl2-diagview2-plasma-overlay.test.mts tests/ehl2-diagview2-ports.test.mts tests/exl50u-diagview2-ports.test.mts tests/exl50u-sensor-points.test.mts tests/ehl2-diagnostic-runtime.test.mts tests/knowledge-chat.test.mts tests/assistant-conversation.test.mts tests/agent-identity.test.mts tests/agent-turn-stream.test.mts tests/agent-capabilities.test.mts tests/agent-workspace.test.mts tests/llm-providers.test.mts tests/user-llm-credential-crypto.test.mts tests/user-llm-credentials.test.mts tests/knowledge-graph-ui.test.mts tests/knowledge-graph-i18n.test.mts tests/chart-english.test.mts tests/chart-theme.test.mts tests/program-roadmap.test.mts tests/data-foundation.test.mts tests/fusion-data.test.mts",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next --ignore-pattern .vinext --ignore-pattern public --ignore-pattern research",
-    "check": "npm run assets:check-sites-static-offload-lock && npm run lint && npm run test:visualization && npm test && npm run test:simulations",
+    "check": "npm run assets:check-sites-static-offload-lock && npm run lint && npm run test:visualization && npm test && npm run test:simulations && npm run test:synthetic-diagnostics",
     "research:ai": "node scripts/research/ai-native.mjs rebuild",
     "research:audit": "node scripts/research/ai-native.mjs audit",
     "research:report": "node scripts/research/ai-native.mjs report",
@@ -57,10 +62,7 @@
     "test:formal-release": "node --test tests/formal-release-contract.test.mjs",
     "release:sync-remotes": "node scripts/deployment/sync-remotes.mjs",
     "release:verify-dns": "node scripts/deployment/verify-production-dns.mjs",
-    "release:verify-pair": "node scripts/deployment/verify-formal-release.mjs",
-    "simulation:engine": "tsx scripts/simulations/engine-cli.mts",
-    "simulation:gateway": "tsx scripts/simulations/gateway.mts",
-    "test:simulation-platform": "tsx --test tests/simulation-platform.test.mts tests/simulation-gateway.test.mts tests/simulation-gateway-origins.test.mts tests/simulation-fuse-gateway.test.mts tests/simulation-fuse-boundaries.test.mts tests/simulation-fuse-remote.test.mts tests/simulation-transport-fields.test.mts tests/torax-remote.test.mts"
+    "release:verify-pair": "node scripts/deployment/verify-formal-release.mjs"
   },
   "dependencies": {
     "drizzle-orm": "0.45.2",

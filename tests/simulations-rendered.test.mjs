@@ -8,7 +8,7 @@ async function render(locale, query = '') {
 test('simulation route renders genuine result values and navigation in Chinese', async () => {
   const response = await render('zh-CN'); assert.equal(response.status, 200);
   const html = await response.text();
-  assert.match(html, /仿真模拟/); assert.match(html, /FPP/); assert.match(html, /DIII-D/); assert.match(html, /SIMULATED/);
+  assert.match(html, /仿真引擎/); assert.match(html, /FPP/); assert.match(html, /DIII-D/); assert.match(html, /SIMULATED/);
   const first=JSON.parse(readFileSync(new URL('../app/simulations/data/fuse-demo.json',import.meta.url),'utf8'))[0];
   const n=first.metrics[0].value;
   const displayed=Math.abs(n)>=1e6?n.toExponential(3):new Intl.NumberFormat('en-US',{maximumFractionDigits:3}).format(n);
@@ -38,5 +38,5 @@ test('English simulation surface has no source-language presentation leakage', a
   const html = await response.text();
   const presentation = html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '').replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, '').replace(/<[^>]+>/g, '');
   assert.doesNotMatch(presentation, /\p{Script=Han}/u); assert.doesNotMatch(presentation, /Technical annotation/);
-  assert.match(presentation, /Simulations/); assert.match(presentation, /Configure &amp; run/); assert.match(presentation, /Not validated/);
+  assert.match(presentation, /Simulation Engines/); assert.match(presentation, /Configure &amp; run/); assert.match(presentation, /Not validated/);
 });

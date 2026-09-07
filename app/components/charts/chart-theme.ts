@@ -126,11 +126,13 @@ export function applyScientificChartTheme(option: EChartsCoreOption, palette: Ch
       textStyle: { ...tooltipText, color: palette.tooltipText },
       axisPointer: { ...axisPointer, lineStyle: { ...pointerLine, color: palette.line } },
     },
-    legend: themedTextCollection(source.legend, palette),
-    visualMap: themedTextCollection(source.visualMap, palette),
-    xAxis: themedAxis(source.xAxis, palette),
-    yAxis: themedAxis(source.yAxis, palette),
-    radiusAxis: themedAxis(source.radiusAxis, palette),
-    angleAxis: themedAxis(source.angleAxis, palette),
+    // ECharts checks component keys even when their values are undefined.
+    // Preserve absent components so Cartesian-only runtimes do not require Polar.
+    ...(Object.hasOwn(source, 'legend') ? { legend: themedTextCollection(source.legend, palette) } : {}),
+    ...(Object.hasOwn(source, 'visualMap') ? { visualMap: themedTextCollection(source.visualMap, palette) } : {}),
+    ...(Object.hasOwn(source, 'xAxis') ? { xAxis: themedAxis(source.xAxis, palette) } : {}),
+    ...(Object.hasOwn(source, 'yAxis') ? { yAxis: themedAxis(source.yAxis, palette) } : {}),
+    ...(Object.hasOwn(source, 'radiusAxis') ? { radiusAxis: themedAxis(source.radiusAxis, palette) } : {}),
+    ...(Object.hasOwn(source, 'angleAxis') ? { angleAxis: themedAxis(source.angleAxis, palette) } : {}),
   } as EChartsCoreOption;
 }

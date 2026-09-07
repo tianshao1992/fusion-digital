@@ -1,0 +1,36 @@
+{
+  "path": "/data/simulations/75a504026791f6d5ce289d75db22e0d308b9de38e4592a779448902a452a856c.json.gz",
+  "sha256": "75a504026791f6d5ce289d75db22e0d308b9de38e4592a779448902a452a856c",
+  "bytes": 1153756,
+  "rawSha256": "125ee19a1cf39cc2671a72fd855b77c96883ed4472237b9804f386116bae984c",
+  "rawBytes": 3750667,
+  "cases": [
+    {
+      "id": "fuse-diiid",
+      "name": "FUSE \u00b7 DIII-D",
+      "device": "DIII-D",
+      "engine": "fuse",
+      "runId": "fuse-diiid-20260906174722551-3ffd17fc",
+      "frames": 1,
+      "geometryKind": "native-equilibrium"
+    },
+    {
+      "id": "torax-diiid",
+      "name": "FUSE \u2192 TORAX \u00b7 DIII-D-derived",
+      "device": "DIII-D-derived",
+      "engine": "torax",
+      "runId": "torax-fuse-profile-handoff-1788759506301-ded889d5",
+      "frames": 39,
+      "geometryKind": "shape-reconstruction"
+    },
+    {
+      "id": "torax-iter",
+      "name": "TORAX \u00b7 ITER hybrid",
+      "device": "ITER",
+      "engine": "torax",
+      "runId": "torax-iter-hybrid-1788759225911-2b7ab30b",
+      "frames": 32,
+      "geometryKind": "shape-reconstruction"
+    }
+  ]
+}

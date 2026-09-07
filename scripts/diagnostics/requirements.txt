@@ -1,0 +1,6 @@
+# Official PyPI packages. Install into an isolated Python 3.12 Linux venv.
+cherab==1.5.0
+raysect==0.8.1.post1
+numpy==1.26.4
+scipy==1.14.1
+matplotlib==3.9.4

@@ -13,6 +13,8 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
     "cloudflare-env.d.ts",
+    // Third-party Python runtime installed for the local diagnostic worker.
+    "work/diagnostics/.venv-wsl/**",
   ]),
 ]);
 

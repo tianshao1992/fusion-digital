@@ -1,0 +1,16 @@
+# Exact installed packages for the verified Python 3.12.14 / WSL Linux run.
+cherab==1.5.0
+contourpy==1.3.3
+cycler==0.12.1
+fonttools==4.64.0
+kiwisolver==1.5.1
+matplotlib==3.9.4
+numpy==1.26.4
+packaging==26.3
+pillow==12.3.0
+pip==25.0.1
+pyparsing==3.3.2
+python-dateutil==2.9.0.post0
+raysect==0.8.1.post1
+scipy==1.14.1
+six==1.17.0
