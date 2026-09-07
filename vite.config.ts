@@ -1,6 +1,7 @@
 import vinext from "vinext";
 import { defineConfig } from "vite";
 import hostingConfig from "./.openai/hosting.json";
+import sitesStaticOffloadLock from "./assets/sites-static-offload.lock.json" with { type: "json" };
 import { sites } from "./build/sites-vite-plugin";
 
 const SITE_CREATOR_PLACEHOLDER_DATABASE_ID =
@@ -10,6 +11,14 @@ const { d1, r2 } = hostingConfig;
 
 // macOS Seatbelt blocks FSEvents, so Codex previews need polling for HMR.
 const isCodexSeatbeltSandbox = process.env.CODEX_SANDBOX === "seatbelt";
+const sitesStaticOffloadWorkerFirst = [
+  ...sitesStaticOffloadLock.files
+    .filter(({ sourcePath }) => !sourcePath.includes("/"))
+    .map(({ route }) => route),
+  ...new Set(sitesStaticOffloadLock.files
+    .filter(({ sourcePath }) => sourcePath.startsWith("models/"))
+    .map(({ route }) => `${route.split("/").slice(0, -1).join("/")}/*`)),
+];
 
 const localBindingConfig = {
   main: "./worker/index.ts",
@@ -17,9 +26,8 @@ const localBindingConfig = {
   assets: {
     binding: "ASSETS",
     run_worker_first: [
-      "/device-assets/exl50u-interactive/*",
+      ...sitesStaticOffloadWorkerFirst,
       "/device-assets/iter-high-detail/v1/*",
-      "/models/exl50u-interactive/*",
       "/device-data/exl50u-efit",
       "/device-data/exl50u-efit/*",
       "/data/exl50u-efit",

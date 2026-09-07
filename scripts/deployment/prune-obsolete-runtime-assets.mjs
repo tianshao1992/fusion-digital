@@ -334,6 +334,12 @@ async function assertReadableFile(fileUrl, expected) {
 }
 
 export function validateSitesStaticOffloadLock(lock) {
+  const allowedModelSources = new Set([
+    'models/ehl2-preliminary-v1/ehl2-preliminary.meshopt.glb',
+    'models/exl50u-interactive/exl50u-interactive-high.meshopt.glb',
+    'models/exl50u-interactive/exl50u-interactive.glb',
+    'models/paramak-full-device/paramak-full-device.glb',
+  ]);
   if (
     lock?.schemaVersion !== 'fusiondigital.sites-static-offload.v1'
     || lock.bundleId !== 'sites-static-offload-v1'
@@ -343,7 +349,7 @@ export function validateSitesStaticOffloadLock(lock) {
     || lock.source?.publicRoot !== 'public'
     || !Array.isArray(lock.files)
     || lock.fileCount !== lock.files.length
-    || lock.fileCount !== 232
+    || lock.fileCount !== 236
   ) {
     throw new Error('Sites static offload lock has an invalid root contract.');
   }
@@ -353,18 +359,21 @@ export function validateSitesStaticOffloadLock(lock) {
   let totalBytes = 0;
   for (const file of lock.files) {
     const segments = typeof file.sourcePath === 'string' ? file.sourcePath.split('/') : [];
-    const expectedRoute = file.sourcePath?.startsWith('data/exl50u-efit')
-      ? `/device-data/${file.sourcePath.slice('data/'.length)}`
-      : `/${file.sourcePath}`;
+    const expectedRoute = file.sourcePath?.startsWith('models/exl50u-interactive/')
+      ? `/device-assets/exl50u-interactive/${file.sourcePath.split('/').at(-1)}`
+      : file.sourcePath?.startsWith('data/exl50u-efit')
+        ? `/device-data/${file.sourcePath.slice('data/'.length)}`
+        : `/${file.sourcePath}`;
     const allowedSource = /^(?:[A-Za-z0-9][A-Za-z0-9._-]*\.(?:docx|pdf)|data\/exl50u-efit(?:-v2)?\/[a-z0-9][a-z0-9.-]*\.(?:bin|jsonl\.gz))$/u;
     const allowedContentTypes = new Set([
       'application/gzip',
       'application/octet-stream',
       'application/pdf',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'model/gltf-binary',
     ]);
     if (
-      !allowedSource.test(file.sourcePath ?? '')
+      (!allowedSource.test(file.sourcePath ?? '') && !allowedModelSources.has(file.sourcePath))
       || segments.some((segment) => segment === '' || segment === '.' || segment === '..')
       || file.route !== expectedRoute
       || routes.has(file.route)

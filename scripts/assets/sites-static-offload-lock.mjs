@@ -20,9 +20,16 @@ const REPORTS = Object.freeze([
   "tokamak-engineering-simulation-report.pdf",
   "xjtu-engineering-digital-twin-phase1-brief.docx",
 ]);
+const DISPLAY_MODELS = Object.freeze([
+  "models/ehl2-preliminary-v1/ehl2-preliminary.meshopt.glb",
+  "models/exl50u-interactive/exl50u-interactive-high.meshopt.glb",
+  "models/exl50u-interactive/exl50u-interactive.glb",
+  "models/paramak-full-device/paramak-full-device.glb",
+]);
 const CONTENT_TYPES = Object.freeze({
   ".bin": "application/octet-stream",
   ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  ".glb": "model/gltf-binary",
   ".gz": "application/gzip",
   ".pdf": "application/pdf",
 });
@@ -42,6 +49,9 @@ function contentType(pathname) {
 }
 
 function publicRoute(sourcePath) {
+  if (sourcePath.startsWith("models/exl50u-interactive/")) {
+    return `/device-assets/exl50u-interactive/${sourcePath.split("/").at(-1)}`;
+  }
   return sourcePath.startsWith("data/exl50u-efit")
     ? `/device-data/${sourcePath.slice("data/".length)}`
     : `/${sourcePath}`;
@@ -63,11 +73,12 @@ async function buildLock() {
   await execFileAsync("git", ["cat-file", "-e", `${ASSET_SOURCE_COMMIT}^{commit}`], { cwd: ROOT });
   const sourcePaths = [
     ...REPORTS,
+    ...DISPLAY_MODELS,
     ...await listFiles(join(PUBLIC_ROOT, "data", "exl50u-efit"), ".bin"),
     ...await listFiles(join(PUBLIC_ROOT, "data", "exl50u-efit-v2"), ".jsonl.gz"),
   ].sort(codepointCompare);
-  if (sourcePaths.length !== 232) {
-    throw new Error(`Sites static offload contract expected 232 files; found ${sourcePaths.length}.`);
+  if (sourcePaths.length !== 236) {
+    throw new Error(`Sites static offload contract expected 236 files; found ${sourcePaths.length}.`);
   }
 
   const { stdout: changedPublic } = await execFileAsync(
@@ -118,7 +129,7 @@ if (process.argv.includes("--check")) {
   if (actual !== expected) {
     throw new Error("Sites static offload lock is stale; regenerate it before release.");
   }
-  console.log("Sites static offload lock is current (232 files).");
+  console.log("Sites static offload lock is current (236 files).");
 } else {
   await writeFile(LOCK_PATH, expected, "utf8");
   console.log(`Wrote ${LOCK_PATH}`);

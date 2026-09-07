@@ -7,8 +7,8 @@
     "commitSha": "72810e61c9fc207d1f168ec8f828566cc52c7bdf",
     "publicRoot": "public"
   },
-  "fileCount": 232,
-  "totalBytes": 149391811,
+  "fileCount": 236,
+  "totalBytes": 184797247,
   "files": [
     {
       "route": "/FusionDigital-technical-roadmap-2026-08-15.docx",
@@ -1612,6 +1612,34 @@
       "bytes": 9250505,
       "sha256": "2653c150ba51effed28efe50713492475c8fe0578360da797fbe82b6e6eb47e1",
       "contentType": "application/pdf"
+    },
+    {
+      "route": "/models/ehl2-preliminary-v1/ehl2-preliminary.meshopt.glb",
+      "sourcePath": "models/ehl2-preliminary-v1/ehl2-preliminary.meshopt.glb",
+      "bytes": 14219976,
+      "sha256": "983c04152d78f5520e68646c31bde74557061df8d90862e07f649afff4040f07",
+      "contentType": "model/gltf-binary"
+    },
+    {
+      "route": "/device-assets/exl50u-interactive/exl50u-interactive-high.meshopt.glb",
+      "sourcePath": "models/exl50u-interactive/exl50u-interactive-high.meshopt.glb",
+      "bytes": 13372196,
+      "sha256": "35bdecc122c4d74ee82e696f372c14ee4fee67ce02596eb05590a1c6bd288aa3",
+      "contentType": "model/gltf-binary"
+    },
+    {
+      "route": "/device-assets/exl50u-interactive/exl50u-interactive.glb",
+      "sourcePath": "models/exl50u-interactive/exl50u-interactive.glb",
+      "bytes": 5643452,
+      "sha256": "d8b88358398d006f019142b7f38b1c4459c5ec882ff092fd2b7d3b4b048d7844",
+      "contentType": "model/gltf-binary"
+    },
+    {
+      "route": "/models/paramak-full-device/paramak-full-device.glb",
+      "sourcePath": "models/paramak-full-device/paramak-full-device.glb",
+      "bytes": 2169812,
+      "sha256": "e9d4e05fdd1f99955a52f13dc742a31156470b386c247d8c299a905fa1c4f971",
+      "contentType": "model/gltf-binary"
     },
     {
       "route": "/tokamak-engineering-simulation-report.docx",

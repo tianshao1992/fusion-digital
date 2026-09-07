@@ -363,7 +363,8 @@ curl.exe -fsS "https://fusiondigital.club/api/search?q=tokamak&limit=5" | Out-Nu
   最终 URL 漂移都失败。未知路径必须 `404`，未配置
   fallback 时必须 `503`，不得扫描目录、接受客户端上游或回退 HTTP。GitHub Releases
   常规 URL 会跨 origin `302`，因此必须拒绝。
-- Sites 对 8 份公开报告、5 个 EFIT v1 二进制和 219 个 EFIT v2 压缩分块使用独立的
+- Sites 对 8 份公开报告、5 个 EFIT v1 二进制、219 个 EFIT v2 压缩分块和 4 个公开
+  浏览器展示 GLB 使用独立的
   `fusiondigital.sites-static-offload.v1` 合同。合同固定公开 GitHub 源仓库、已先行发布的
   完整提交 SHA、精确路由、源路径、字节数、SHA-256 与 MIME；postbuild 必须先完成全部
   文件复核再裁剪，Worker 仅在本地静态绑定返回 404 后访问固定 `raw.githubusercontent.com`

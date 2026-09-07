@@ -247,7 +247,8 @@ npx tsx --test tests/exl50u-anonymous-shard-viewer.test.mts
 
 不要复制或 Git add `$Projected\*.glb`；`.gitignore` 与 lock 只允许跟踪 manifest、公告、
 生成白名单和真实摘要锁。Sites 构建不 hydrate 这两个外置缓存，postbuild 会删除两类
-GLB，并按 `assets/sites-static-offload.lock.json` 精确校验和裁剪公开报告及 EFIT 大载荷，
+GLB，并按 `assets/sites-static-offload.lock.json` 精确校验和裁剪公开报告、EFIT 大载荷及
+4 个已发布的浏览器展示 GLB，
 从而保持展开包小于 256 MiB。香港构建保留并校验上述全部文件；Sites Worker 对静态外置
 文件只允许固定 GitHub 源仓库完整提交、精确路径、字节数/SHA-256 和 Range 合同，本地
 静态文件存在时仍保持 local-first。EXL 运行时值

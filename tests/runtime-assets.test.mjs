@@ -73,8 +73,8 @@ test("Sites static offload lock is complete, digest-bound and pinned to an immut
     file,
   ]));
 
-  assert.equal(offloadLock.fileCount, 232);
-  assert.equal(offloadLock.totalBytes, 149_391_811);
+  assert.equal(offloadLock.fileCount, 236);
+  assert.equal(offloadLock.totalBytes, 184_797_247);
   assert.equal(offloadLock.source.origin, "https://raw.githubusercontent.com");
   assert.equal(offloadLock.source.repository, "tianshao1992/fusion-digital");
   assert.equal(offloadLock.source.commitSha, "72810e61c9fc207d1f168ec8f828566cc52c7bdf");
@@ -82,12 +82,16 @@ test("Sites static offload lock is complete, digest-bound and pinned to an immut
   assert.equal(offloadLock.files.filter((file) => file.sourcePath.endsWith(".pdf")).length, 2);
   assert.equal(offloadLock.files.filter((file) => file.sourcePath.endsWith(".bin")).length, 5);
   assert.equal(offloadLock.files.filter((file) => file.sourcePath.endsWith(".jsonl.gz")).length, 219);
+  assert.equal(offloadLock.files.filter((file) => file.sourcePath.endsWith(".glb")).length, 4);
   for (const file of offloadLock.files) {
     const trackedFile = tracked.get(file.sourcePath);
     assert.ok(trackedFile, `${file.sourcePath} must remain Git-managed`);
     assert.equal(file.bytes, trackedFile.bytes, `${file.sourcePath} byte lock drift`);
     assert.equal(file.sha256, trackedFile.sha256, `${file.sourcePath} digest lock drift`);
   }
+  const viteConfig = await readFile(join(ROOT, "vite.config.ts"), "utf8");
+  assert.match(viteConfig, /sitesStaticOffloadLock/u);
+  assert.match(viteConfig, /\.\.\.sitesStaticOffloadWorkerFirst/u);
 
   for (const mutate of [
     (lock) => { lock.source.commitSha = "main"; },
@@ -95,6 +99,11 @@ test("Sites static offload lock is complete, digest-bound and pinned to an immut
     (lock) => { lock.files[0].sourcePath = "../outside.bin"; },
     (lock) => { lock.files[0].bytes += 1; },
     (lock) => { lock.files[1].route = lock.files[0].route; },
+    (lock) => {
+      const model = lock.files.find((file) => file.sourcePath.endsWith(".glb"));
+      model.sourcePath = "models/exl50u-interactive/other.glb";
+      model.route = "/models/exl50u-interactive/other.glb";
+    },
   ]) {
     const candidate = structuredClone(offloadLock);
     mutate(candidate);
