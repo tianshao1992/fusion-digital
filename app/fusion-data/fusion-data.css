@@ -235,3 +235,11 @@
 }
 
 @media (prefers-reduced-motion: reduce) { .fusionShotSelect { scroll-behavior: auto; } }
+.fusionCampaignFilter { display: grid; gap: 8px; padding: 0 16px 16px; font-size: 14px; }
+.fusionCampaignFilter select { min-height: 42px; width: 100%; background: var(--color-workbench-panel); color: var(--color-workbench-ink); border: 1px solid var(--color-workbench-line); padding: 8px; font: inherit; }
+.fusionSignalGroups { display: flex; gap: 8px; flex-wrap: wrap; padding: 12px 0; }
+.fusionSignalGroups button, .fusionRetry, .fusionLoadNotice button { padding: 10px 16px; min-height: 44px; font-size: 14px; border: 1px solid var(--color-workbench-line); background: var(--color-workbench-panel); color: var(--color-workbench-ink); cursor: pointer; }
+.fusionSignalGroups button[aria-pressed='true'] { background: var(--color-workbench-ink); color: var(--color-workbench-panel); }
+.fusionSignalGroups button:focus-visible, .fusionCampaignFilter select:focus-visible, .fusionRetry:focus-visible { outline: 2px solid var(--color-workbench-accent); outline-offset: 3px; }
+.fusionLoadNotice { padding: 16px; font-size: 14px; line-height: 1.7; overflow-wrap: anywhere; }
+.fusionShotRail .fusionShotSelect small { font-size: 12px; }

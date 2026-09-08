@@ -13,8 +13,8 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: en ? 'Fusion Data Workspace' : '聚变数据工作台',
     description: en
-      ? 'An interactive workspace for pulses, IMAS IDS, governed MDSplus mappings, data quality and CAE results.'
-      : '面向炮次、IMAS IDS、受治理的 MDSplus 映射、数据质量与 CAE 结果的交互式聚变数据工作台。',
+      ? 'EXL-50U public snapshots: shot comparison, diagnostic time series, equilibrium scalars and IMAS provenance.'
+      : 'EXL-50U 公开数据快照：炮次对比、诊断时序、平衡重建标量与 IMAS 数据溯源。',
   };
 }
 
@@ -28,7 +28,7 @@ export default async function FusionDataPage() {
         <p><Link href="/data-foundation">{en ? 'Data foundation' : '数据基座'}</Link><span>/</span> {en ? 'Data workspace' : '数据工作台'}</p>
         <h1>Fusion Data Workspace <b>EXL-50U SNAPSHOT</b></h1>
       </div>
-      <p>{en ? 'Four reviewed EXL-50U shots: authoritative IMAS H5, read-only MDSplus projection, and a hashed public snapshot.' : '4 炮经审核的 EXL-50U 数据：权威 IMAS H5、MDSplus 只读时序投影与可校验的公开快照。'}</p>
+      <p>{en ? 'Explore EXL-50U experiments by shot: diagnostic currents, probe measurements and equilibrium reconstruction, with independently timed signals and traceable IMAS dataset versions.' : '按炮次浏览 EXL-50U 实验：诊断电流、探针测量与平衡重建，保留独立采样时间基和可追溯的 IMAS 数据版本。'}</p>
     </header>
     <FusionDataWorkspace />
     <SiteFooter />

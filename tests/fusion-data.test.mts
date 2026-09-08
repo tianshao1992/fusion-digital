@@ -33,22 +33,26 @@ function readShot(entry: SnapshotManifest['shots'][number]) {
   return { compressed, content, shot: JSON.parse(content.toString('utf8')) as SnapshotShot };
 }
 
-test('public manifest exposes four unique EXL-50U shots and an explicit non-live boundary', () => {
+const addedPulses = [21066, 21067, 21068, 21069, 21070, 21071, 21074, 21075, 21076, 21077, 21078, 21079, 21080, 21081, 21082, 21083, 21084, 21085, 21093, 21094, 21095, 21096, 21097, 21098, 21099, 21100, 21101, 21102, 21103];
+
+test('public manifest retains four legacy shots and adds 29 unique captured shots', () => {
   assert.equal(manifest.schemaVersion, SNAPSHOT_SCHEMA);
-  assert.equal(manifest.snapshotId, 'exl50u-mdsplus-20260901-r1');
+  assert.equal(manifest.snapshotId, 'exl50u-imas-20260908-r1');
   assert.equal(manifest.facility, 'EXL-50U');
   assert.equal(manifest.state, 'versioned-public-snapshot');
   assert.equal(manifest.live, false);
   assert.equal(manifest.source.authority, 'IMAS H5');
-  assert.equal(manifest.source.projection, 'read-only MDSplus time-series projection');
+  assert.equal(manifest.source.projection, 'mixed MDSplus projection and offline IMAS H5 extraction');
   assert.equal(manifest.source.browserConnection, 'none');
   assert.equal(manifest.publication.interpolation, 'none');
   assert.equal(manifest.publication.missingValuePolicy, 'preserve-null');
-  assert.equal(manifest.publication.qualityBasis, 'not-provided-by-source');
+  assert.equal(manifest.publication.qualityBasis, 'per-signal-disclosure');
   assert.equal(manifest.publication.peakClaims, 'not-published');
-  assert.deepEqual(manifest.shots.map(({ pulse }) => pulse), [20831, 20833, 20835, 20836]);
+  assert.deepEqual(manifest.shots.map(({ pulse }) => pulse), [20831, 20833, 20835, 20836, ...addedPulses]);
   assert.equal(new Set(manifest.shots.map(({ pulse }) => pulse)).size, manifest.shots.length);
-  assert.ok(manifest.shots.length >= 3 && manifest.shots.length <= 5);
+  assert.equal(manifest.shots.length, 33);
+  assert.equal(manifest.shots.filter(({ campaignDate }) => campaignDate === '2026-09-07').length, 18);
+  assert.equal(manifest.shots.filter(({ campaignDate }) => campaignDate === '2026-09-08').length, 11);
   assert.equal(new Date(manifest.generatedAt).toISOString(), manifest.generatedAt);
 });
 
@@ -78,31 +82,42 @@ test('every published signal is traceable, finite, independently timed and non-s
   for (const entry of manifest.shots) {
     const { shot } = readShot(entry);
     assert.equal(shot.schemaVersion, SNAPSHOT_SCHEMA);
-    assert.equal(shot.snapshotId, manifest.snapshotId);
+    assert.equal(shot.snapshotId, entry.snapshotId ?? manifest.snapshotId);
     assert.equal(shot.facility, 'EXL-50U');
     assert.equal(shot.pulse, entry.pulse);
     assert.equal(shot.source.transport, 'reviewed public snapshot');
-    assert.equal(shot.signals.length, expectedSignals.length);
-    assert.deepEqual(shot.signals.map(({ id }) => id), expectedSignals.map(([id]) => id));
+    const offline = addedPulses.includes(shot.pulse);
+    assert.equal(shot.signals.length, offline && shot.pulse !== 21096 ? 7 : 4);
+    assert.deepEqual(shot.signals.slice(0, 4).map(({ id }) => id), expectedSignals.map(([id]) => id));
 
     for (const [index, signal] of shot.signals.entries()) {
-      const [id, ids, path, unit, sourcePoints] = expectedSignals[index];
-      assert.equal(signal.id, id);
-      assert.equal(signal.dataItem, ids);
-      assert.equal(signal.path, path);
-      assert.equal(signal.unit, unit);
-      assert.equal(signal.sampling.sourcePoints, sourcePoints);
+      if (index < 4) {
+        const [id, ids, path, unit, sourcePoints] = expectedSignals[index];
+        assert.equal(signal.id, id);
+        assert.equal(signal.dataItem, ids);
+        assert.equal(signal.path, path);
+        assert.equal(signal.unit, unit);
+        assert.equal(signal.sampling.sourcePoints, sourcePoints);
+      } else {
+        assert.equal(signal.dataItem, 'equilibrium');
+        assert.equal(signal.id, ['equilibrium-ip', 'magnetic-axis-r', 'magnetic-axis-z'][index - 4]);
+        assert.equal(signal.unit, index === 4 ? 'A' : 'm');
+      }
       assert.equal(signal.sampling.publishedPoints, signal.samples.length);
       assert.ok(signal.samples.length > 2 && signal.samples.length <= 800);
       assert.equal(signal.sampling.requestedMaxPoints, 800);
-      assert.equal(signal.sampling.method, 'gateway-downsample');
+      assert.equal(signal.sampling.method, offline ? 'offline-index-subsample' : 'gateway-downsample');
       assert.equal(signal.sampling.samplePolicy, 'nearest');
       assert.equal(signal.sampling.noInterpolation, true);
       assert.equal(signal.sampling.connectAcrossGaps, false);
       assert.equal(signal.quality.state, 'unknown');
-      assert.equal(signal.quality.basis, 'not-provided-by-source');
-      assert.equal(signal.dataset.id, `${shot.pulse}/${ids}/0/r${shot.pulse === 20836 ? 1 : 0}`);
-      assert.equal(signal.dataset.idsName, ids);
+      assert.equal(signal.quality.basis, offline ? 'not-exported' : 'not-provided-by-source');
+      assert.equal(signal.dataset.id, `${shot.pulse}/${signal.dataItem}/${signal.dataset.occurrence}/r${signal.dataset.run}`);
+      assert.equal(signal.dataset.idsName, signal.dataItem);
+      if (offline) {
+        assert.match(signal.origin!.h5Sha256, /^[a-f0-9]{64}$/);
+        assert.equal(signal.origin!.timeUnit, 's');
+      } else assert.equal(signal.dataset.run, shot.pulse === 20836 ? 1 : 0);
       assert.equal(signal.dataset.hasAuthoritativeImasH5, true);
       assert.equal(signal.dataset.catalogueStatus, 'valid');
       assert.equal(signal.dataset.publishState, 'published');
@@ -116,6 +131,16 @@ test('every published signal is traceable, finite, independently timed and non-s
     }
 
     assert.doesNotMatch(JSON.stringify(shot), /synthetic|mock|mapping-preview/i);
+  }
+});
+
+test('missing equilibrium is explicit and no uncertain log entry becomes a measurement', () => {
+  const missing = manifest.shots.find(({ pulse }) => pulse === 21096)!;
+  assert.deepEqual(missing.missingDataItems, ['equilibrium']);
+  assert.equal(readShot(missing).shot.signals.some(({ dataItem }) => dataItem === 'equilibrium'), false);
+  assert.equal(manifest.shots.some(({ pulse }) => pulse === 21104), false);
+  for (const entry of manifest.shots.filter(({ campaignDate }) => campaignDate)) {
+    assert.doesNotMatch(JSON.stringify(readShot(entry).shot.signals.map((signal) => ({ id: signal.id, path: signal.path, label: signal.label }))), /Rmax|rmax|rmin|kappa|PID|takeover|20440_|NBI/);
   }
 });
 
@@ -141,6 +166,11 @@ test('nearest-sample lookup respects each signal time base and comparison aligns
   assert.deepEqual(commonSignalIds(left, reversed), left.signals.map(({ id }) => id));
   const reduced = { ...right, signals: right.signals.slice(1) };
   assert.deepEqual(commonSignalIds(left, reduced), right.signals.slice(1).map(({ id }) => id));
+  const mismatchedUnit = { ...right, signals: right.signals.map((signal) => ({ ...signal, unit: 'incompatible' })) };
+  assert.deepEqual(commonSignalIds(left, mismatchedUnit), []);
+  assert.equal(nearestSample(left.signals[0], -100), null);
+  assert.equal(nearestSample(left.signals[0], 100), null);
+  assert.equal(nearestSample(left.signals[0], NaN), null);
 });
 
 test('browser loader verifies both compressed and decoded hashes before accepting a shot', async () => {
@@ -157,6 +187,10 @@ test('browser loader verifies both compressed and decoded hashes before acceptin
   const loadedShot = await loadSnapshotShot(loadedManifest, loadedManifest.shots[0].pulse, fetcher);
   assert.equal(loadedShot.pulse, 20831);
   assert.equal(loadedShot.signals.length, 4);
+  // Exercise the browser's fail-closed contract against EVERY shipped shot.
+  for (const { pulse, signalCount } of loadedManifest.shots) {
+    assert.equal((await loadSnapshotShot(loadedManifest, pulse, fetcher)).signals.length, signalCount);
+  }
 
   const transparentEncoding: typeof fetch = async (input) => {
     const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
@@ -165,11 +199,22 @@ test('browser loader verifies both compressed and decoded hashes before acceptin
     return new Response(readFileSync(new URL(entry.path, DATA_ROOT)), { headers: { 'Content-Encoding': 'gzip' } });
   };
   await assert.rejects(() => loadSnapshotShot(manifest, 20831, transparentEncoding), /raw gzip bytes/);
+  const broken = structuredClone(manifest);
+  broken.shots[0].compressedSha256 = '0'.repeat(64);
+  await assert.rejects(() => loadSnapshotShot(broken, 20831, fetcher), /integrity failed/);
+  const invalidPath = structuredClone(manifest);
+  invalidPath.shots[0].path = '../shot-20831.jsonl.gz';
+  await assert.rejects(() => loadSnapshotManifest(async () => new Response(JSON.stringify(invalidPath))), /path is invalid/);
 });
 
 test('production workspace uses real snapshots and removes every synthetic derived view', () => {
   assert.match(workspaceSource, /loadSnapshotManifest/);
   assert.match(workspaceSource, /loadSnapshotShot/);
+  assert.doesNotMatch(workspaceSource, /Promise\.all\(nextManifest\.shots/);
+  assert.match(workspaceSource, /cache\.size > 8/);
+  assert.match(workspaceSource, /result\?\.pulse === pulse/);
+  assert.match(workspaceSource, /fusionCampaignFilter/);
+  assert.match(workspaceSource, /fusionSignalGroups/);
   assert.match(workspaceSource, /nearestSample/);
   assert.match(workspaceSource, /SNAPSHOT · NOT LIVE/);
   assert.match(workspaceSource, /connectNulls:\s*false/);

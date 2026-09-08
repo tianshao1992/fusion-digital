@@ -8,9 +8,9 @@
       "public/models/iter-high-detail-v1/",
       "public/models/exl50u-general-assembly-v1/*.glb"
     ],
-    "fileCount": 458,
-    "totalBytes": 265814365,
-    "treeSha256": "02811fe5266d4024650b99f0e8d59ded40b81c91ffd66d7d19b4f1a628195433",
+    "fileCount": 487,
+    "totalBytes": 267910781,
+    "treeSha256": "862f16e2cf1faf3fc588181cb97fc32241f52e7e767b24745be73148fec59494",
     "files": [
       {
         "path": "public/FusionDigital-technical-roadmap-2026-08-15.docx",
@@ -1149,8 +1149,8 @@
       },
       {
         "path": "public/data/exl50u-mdsplus-snapshot-v1/manifest.json",
-        "bytes": 2639,
-        "sha256": "ec3dcaec69db30d7dc6530e1efc1d5d59d7b34919391c2af3590ed23dcc6d59e"
+        "bytes": 23543,
+        "sha256": "891f0bb0883288fcc969ce9d2aa4856faa75498b08b3593dffcf80b42b2191f7"
       },
       {
         "path": "public/data/exl50u-mdsplus-snapshot-v1/shot-20831.jsonl.gz",
@@ -1171,6 +1171,151 @@
         "path": "public/data/exl50u-mdsplus-snapshot-v1/shot-20836.jsonl.gz",
         "bytes": 54105,
         "sha256": "0d2f491b83f53c2f7fb011b06bb3da5922eb0b49db813fecd0c2232cdad1589f"
+      },
+      {
+        "path": "public/data/exl50u-mdsplus-snapshot-v1/shot-21066.jsonl.gz",
+        "bytes": 73719,
+        "sha256": "73934474c0f7de6e9f3828bde72bfffacf4caaed92c9a0ef2f2186b105070937"
+      },
+      {
+        "path": "public/data/exl50u-mdsplus-snapshot-v1/shot-21067.jsonl.gz",
+        "bytes": 73697,
+        "sha256": "4a0c4d264111386451643fc80d2e9fdb60b5b09da23d02a4b27840debe3f2fb0"
+      },
+      {
+        "path": "public/data/exl50u-mdsplus-snapshot-v1/shot-21068.jsonl.gz",
+        "bytes": 73713,
+        "sha256": "3b84b2c6ef535636ae7b6cbfe47984273c5caabd96600c0964c35f737446924e"
+      },
+      {
+        "path": "public/data/exl50u-mdsplus-snapshot-v1/shot-21069.jsonl.gz",
+        "bytes": 74107,
+        "sha256": "067cfe94d65d762424b014ec196f1135f5575f8fc31048813c4ba230c4c7a4fe"
+      },
+      {
+        "path": "public/data/exl50u-mdsplus-snapshot-v1/shot-21070.jsonl.gz",
+        "bytes": 73758,
+        "sha256": "54d199746fb7dad2ae9fcd5293f174ee067f227b0f2853d96251e3057d17f40e"
+      },
+      {
+        "path": "public/data/exl50u-mdsplus-snapshot-v1/shot-21071.jsonl.gz",
+        "bytes": 73878,
+        "sha256": "2649be5ecaf0af94aaefa72f13067cee48d3dd5e052066081c3df6f5fd212194"
+      },
+      {
+        "path": "public/data/exl50u-mdsplus-snapshot-v1/shot-21074.jsonl.gz",
+        "bytes": 73925,
+        "sha256": "b5747c800621524e737e8e07d35d0ef22c8dfc6af235c708dc833f207aae04c5"
+      },
+      {
+        "path": "public/data/exl50u-mdsplus-snapshot-v1/shot-21075.jsonl.gz",
+        "bytes": 72835,
+        "sha256": "6ecef8d9f2dbb63622396a18159a3069242d294002977250f8f54cfba1a1cdab"
+      },
+      {
+        "path": "public/data/exl50u-mdsplus-snapshot-v1/shot-21076.jsonl.gz",
+        "bytes": 73725,
+        "sha256": "91b0aad1bf584e558da70bb9bb1ecd3d1ab45a0b428e6b2cb379f10ae4124002"
+      },
+      {
+        "path": "public/data/exl50u-mdsplus-snapshot-v1/shot-21077.jsonl.gz",
+        "bytes": 73605,
+        "sha256": "e61abb90fcd9b650ba8f8107618daddc679d16960df5ec59bda163a420fff666"
+      },
+      {
+        "path": "public/data/exl50u-mdsplus-snapshot-v1/shot-21078.jsonl.gz",
+        "bytes": 73799,
+        "sha256": "e89dbf6f787862df39eba6eee509679ecb6e7acf71e6380778ae7ddf97fb19cc"
+      },
+      {
+        "path": "public/data/exl50u-mdsplus-snapshot-v1/shot-21079.jsonl.gz",
+        "bytes": 73249,
+        "sha256": "122c91f2cc6e4e65b3b05d05814db4fa8551851ac20cf5df3983d3e62a7eff21"
+      },
+      {
+        "path": "public/data/exl50u-mdsplus-snapshot-v1/shot-21080.jsonl.gz",
+        "bytes": 73503,
+        "sha256": "c9f616713207b2471c486229f0fe7d51813142ecc8853a1ec1ff6beb9ec421e3"
+      },
+      {
+        "path": "public/data/exl50u-mdsplus-snapshot-v1/shot-21081.jsonl.gz",
+        "bytes": 73559,
+        "sha256": "e5f9c83e082aa98d2f45b5a2cc08c907225ec6ebc5d33458eb427df94657159b"
+      },
+      {
+        "path": "public/data/exl50u-mdsplus-snapshot-v1/shot-21082.jsonl.gz",
+        "bytes": 70142,
+        "sha256": "7ef8e83fbb2f768bac63b611fbd8f25be3400a415a644654a38d1403f8ecf9f2"
+      },
+      {
+        "path": "public/data/exl50u-mdsplus-snapshot-v1/shot-21083.jsonl.gz",
+        "bytes": 73552,
+        "sha256": "79ab4f984b443ade5afb052a07c1c4e8705f4f583f570d919c7ae60d849e2ff9"
+      },
+      {
+        "path": "public/data/exl50u-mdsplus-snapshot-v1/shot-21084.jsonl.gz",
+        "bytes": 55505,
+        "sha256": "587a667eef3d16328a3e9beac4c76af2a8d61ebe43c67b9d843c6eb376c6ee46"
+      },
+      {
+        "path": "public/data/exl50u-mdsplus-snapshot-v1/shot-21085.jsonl.gz",
+        "bytes": 73576,
+        "sha256": "423c624da2486c36d4a983dca4fde2e1e7cf35a752f671bdb85e5640a79e34ec"
+      },
+      {
+        "path": "public/data/exl50u-mdsplus-snapshot-v1/shot-21093.jsonl.gz",
+        "bytes": 72636,
+        "sha256": "5622434c3bbd3527f52394d6cd7cecb94f0242173ed79aa60f59dbc910a6cf2a"
+      },
+      {
+        "path": "public/data/exl50u-mdsplus-snapshot-v1/shot-21094.jsonl.gz",
+        "bytes": 73481,
+        "sha256": "cda165f5319065f8629657b51fbf88ada3a2b0fc1682bfae705057ed2a4d916f"
+      },
+      {
+        "path": "public/data/exl50u-mdsplus-snapshot-v1/shot-21095.jsonl.gz",
+        "bytes": 73718,
+        "sha256": "7f3453de116bb87ae970ea0d8cd531c132b1e68daeaefb94e36b90c9fa3c20df"
+      },
+      {
+        "path": "public/data/exl50u-mdsplus-snapshot-v1/shot-21096.jsonl.gz",
+        "bytes": 54449,
+        "sha256": "f0277a4215524a0e612fee9380f2718fa71834e44b628abd4f76c3d6b44a247a"
+      },
+      {
+        "path": "public/data/exl50u-mdsplus-snapshot-v1/shot-21097.jsonl.gz",
+        "bytes": 73939,
+        "sha256": "3a52d9e0d77bd14f3db44b4a8d0c13228efc87416f4065dac7eb6235780ea011"
+      },
+      {
+        "path": "public/data/exl50u-mdsplus-snapshot-v1/shot-21098.jsonl.gz",
+        "bytes": 73673,
+        "sha256": "8616d0adaec5a88f2de8a27258f7c801d693a37eff681e813cd8bd7d829149fe"
+      },
+      {
+        "path": "public/data/exl50u-mdsplus-snapshot-v1/shot-21099.jsonl.gz",
+        "bytes": 73300,
+        "sha256": "46d578ede1433e9d25d2fc88793c9d51a33bcc3c53425c21b4be0820b891762a"
+      },
+      {
+        "path": "public/data/exl50u-mdsplus-snapshot-v1/shot-21100.jsonl.gz",
+        "bytes": 73741,
+        "sha256": "fb7f62e0f5e7248556849cabe2c64a2220112a2e1d79bba1e99f3f734acdda93"
+      },
+      {
+        "path": "public/data/exl50u-mdsplus-snapshot-v1/shot-21101.jsonl.gz",
+        "bytes": 73568,
+        "sha256": "158ccbe982537133eabb99b1425e8dbcbb94861f9c0a7a5353f2867ce81d8f8d"
+      },
+      {
+        "path": "public/data/exl50u-mdsplus-snapshot-v1/shot-21102.jsonl.gz",
+        "bytes": 72783,
+        "sha256": "359850659c0dd263e3f4ca24fff14c8167c0b1407ccd88d524f6cb7dac263c5f"
+      },
+      {
+        "path": "public/data/exl50u-mdsplus-snapshot-v1/shot-21103.jsonl.gz",
+        "bytes": 56377,
+        "sha256": "f7b5e0b81268a84c955781554c7d0cee4a038dc839865fd544c7582e0a53e11a"
       },
       {
         "path": "public/data/fusion-ai-native-landscape.json",

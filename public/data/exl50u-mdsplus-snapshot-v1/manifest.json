@@ -1,20 +1,20 @@
 {
   "schemaVersion": "fusiondigital.exl50u.public-snapshot.v1",
-  "snapshotId": "exl50u-mdsplus-20260901-r1",
-  "generatedAt": "2026-08-31T17:28:51.520Z",
+  "snapshotId": "exl50u-imas-20260908-r1",
+  "generatedAt": "2026-09-08T14:36:54.242Z",
   "facility": "EXL-50U",
   "state": "versioned-public-snapshot",
   "live": false,
   "source": {
     "authority": "IMAS H5",
-    "projection": "read-only MDSplus time-series projection",
+    "projection": "mixed MDSplus projection and offline IMAS H5 extraction",
     "browserConnection": "none"
   },
   "publication": {
-    "scope": "4 reviewed shots and 4 allowlisted 1D signals per shot",
+    "scope": "Allowlisted EXL-50U time series; independent clocks; no controller targets, actions or inferred performance claims",
     "missingValuePolicy": "preserve-null",
     "interpolation": "none",
-    "qualityBasis": "not-provided-by-source",
+    "qualityBasis": "per-signal-disclosure",
     "peakClaims": "not-published"
   },
   "shots": [
@@ -31,7 +31,8 @@
         "20831/pf_active/0/r0",
         "20831/tf/0/r0",
         "20831/langmuir_probes/0/r0"
-      ]
+      ],
+      "snapshotId": "exl50u-mdsplus-20260901-r1"
     },
     {
       "pulse": 20833,
@@ -46,7 +47,8 @@
         "20833/pf_active/0/r0",
         "20833/tf/0/r0",
         "20833/langmuir_probes/0/r0"
-      ]
+      ],
+      "snapshotId": "exl50u-mdsplus-20260901-r1"
     },
     {
       "pulse": 20835,
@@ -61,7 +63,8 @@
         "20835/pf_active/0/r0",
         "20835/tf/0/r0",
         "20835/langmuir_probes/0/r0"
-      ]
+      ],
+      "snapshotId": "exl50u-mdsplus-20260901-r1"
     },
     {
       "pulse": 20836,
@@ -76,7 +79,616 @@
         "20836/pf_active/0/r1",
         "20836/tf/0/r1",
         "20836/langmuir_probes/0/r1"
+      ],
+      "snapshotId": "exl50u-mdsplus-20260901-r1"
+    },
+    {
+      "pulse": 21066,
+      "path": "shot-21066.jsonl.gz",
+      "snapshotId": "exl50u-imas-20260908-r1",
+      "campaignDate": "2026-09-07",
+      "signalCount": 7,
+      "compressedBytes": 73719,
+      "compressedSha256": "73934474c0f7de6e9f3828bde72bfffacf4caaed92c9a0ef2f2186b105070937",
+      "contentBytes": 187194,
+      "contentSha256": "bb35bb5d2917a32228b66e695255a73425d56506a2d9ab7ed3481e7c8afb5377",
+      "datasetIds": [
+        "21066/magnetics/0/r2",
+        "21066/pf_active/0/r2",
+        "21066/tf/0/r2",
+        "21066/langmuir_probes/0/r2",
+        "21066/equilibrium/0/r2",
+        "21066/equilibrium/0/r2",
+        "21066/equilibrium/0/r2"
+      ],
+      "missingDataItems": []
+    },
+    {
+      "pulse": 21067,
+      "path": "shot-21067.jsonl.gz",
+      "snapshotId": "exl50u-imas-20260908-r1",
+      "campaignDate": "2026-09-07",
+      "signalCount": 7,
+      "compressedBytes": 73697,
+      "compressedSha256": "4a0c4d264111386451643fc80d2e9fdb60b5b09da23d02a4b27840debe3f2fb0",
+      "contentBytes": 187222,
+      "contentSha256": "e4db8a503c787321a277bc6f0cf9e00d4bd0090c871bb0c6b8b9f5f323985da6",
+      "datasetIds": [
+        "21067/magnetics/0/r1",
+        "21067/pf_active/0/r1",
+        "21067/tf/0/r1",
+        "21067/langmuir_probes/0/r1",
+        "21067/equilibrium/0/r1",
+        "21067/equilibrium/0/r1",
+        "21067/equilibrium/0/r1"
+      ],
+      "missingDataItems": []
+    },
+    {
+      "pulse": 21068,
+      "path": "shot-21068.jsonl.gz",
+      "snapshotId": "exl50u-imas-20260908-r1",
+      "campaignDate": "2026-09-07",
+      "signalCount": 7,
+      "compressedBytes": 73713,
+      "compressedSha256": "3b84b2c6ef535636ae7b6cbfe47984273c5caabd96600c0964c35f737446924e",
+      "contentBytes": 187035,
+      "contentSha256": "04ed93a92f4081cef587401ab60b6cb1656f3f4e118ca124657870ca1886616a",
+      "datasetIds": [
+        "21068/magnetics/0/r1",
+        "21068/pf_active/0/r1",
+        "21068/tf/0/r1",
+        "21068/langmuir_probes/0/r1",
+        "21068/equilibrium/0/r1",
+        "21068/equilibrium/0/r1",
+        "21068/equilibrium/0/r1"
+      ],
+      "missingDataItems": []
+    },
+    {
+      "pulse": 21069,
+      "path": "shot-21069.jsonl.gz",
+      "snapshotId": "exl50u-imas-20260908-r1",
+      "campaignDate": "2026-09-07",
+      "signalCount": 7,
+      "compressedBytes": 74107,
+      "compressedSha256": "067cfe94d65d762424b014ec196f1135f5575f8fc31048813c4ba230c4c7a4fe",
+      "contentBytes": 187365,
+      "contentSha256": "239b6f7e9a7a664b39658e448467655d9e6a17264c16bd6586bd11dfd8d451fe",
+      "datasetIds": [
+        "21069/magnetics/0/r2",
+        "21069/pf_active/0/r2",
+        "21069/tf/0/r2",
+        "21069/langmuir_probes/0/r2",
+        "21069/equilibrium/0/r2",
+        "21069/equilibrium/0/r2",
+        "21069/equilibrium/0/r2"
+      ],
+      "missingDataItems": []
+    },
+    {
+      "pulse": 21070,
+      "path": "shot-21070.jsonl.gz",
+      "snapshotId": "exl50u-imas-20260908-r1",
+      "campaignDate": "2026-09-07",
+      "signalCount": 7,
+      "compressedBytes": 73758,
+      "compressedSha256": "54d199746fb7dad2ae9fcd5293f174ee067f227b0f2853d96251e3057d17f40e",
+      "contentBytes": 186928,
+      "contentSha256": "362ab100a420d131185307cf428a90accee3f1aeeb1e383babdc9020fa40527b",
+      "datasetIds": [
+        "21070/magnetics/0/r1",
+        "21070/pf_active/0/r1",
+        "21070/tf/0/r1",
+        "21070/langmuir_probes/0/r1",
+        "21070/equilibrium/0/r1",
+        "21070/equilibrium/0/r1",
+        "21070/equilibrium/0/r1"
+      ],
+      "missingDataItems": []
+    },
+    {
+      "pulse": 21071,
+      "path": "shot-21071.jsonl.gz",
+      "snapshotId": "exl50u-imas-20260908-r1",
+      "campaignDate": "2026-09-07",
+      "signalCount": 7,
+      "compressedBytes": 73878,
+      "compressedSha256": "2649be5ecaf0af94aaefa72f13067cee48d3dd5e052066081c3df6f5fd212194",
+      "contentBytes": 186988,
+      "contentSha256": "4052bd65436ea5e9b876352583d0c5a3f1f679eb7864329e690ccf18d2db3dc2",
+      "datasetIds": [
+        "21071/magnetics/0/r1",
+        "21071/pf_active/0/r1",
+        "21071/tf/0/r1",
+        "21071/langmuir_probes/0/r1",
+        "21071/equilibrium/0/r1",
+        "21071/equilibrium/0/r1",
+        "21071/equilibrium/0/r1"
+      ],
+      "missingDataItems": []
+    },
+    {
+      "pulse": 21074,
+      "path": "shot-21074.jsonl.gz",
+      "snapshotId": "exl50u-imas-20260908-r1",
+      "campaignDate": "2026-09-07",
+      "signalCount": 7,
+      "compressedBytes": 73925,
+      "compressedSha256": "b5747c800621524e737e8e07d35d0ef22c8dfc6af235c708dc833f207aae04c5",
+      "contentBytes": 187138,
+      "contentSha256": "54fa957446d4fc840f9384b0ac8c367fc253b6e0f9b9c7a336cc26109c020d34",
+      "datasetIds": [
+        "21074/magnetics/0/r2",
+        "21074/pf_active/0/r2",
+        "21074/tf/0/r2",
+        "21074/langmuir_probes/0/r2",
+        "21074/equilibrium/0/r2",
+        "21074/equilibrium/0/r2",
+        "21074/equilibrium/0/r2"
+      ],
+      "missingDataItems": []
+    },
+    {
+      "pulse": 21075,
+      "path": "shot-21075.jsonl.gz",
+      "snapshotId": "exl50u-imas-20260908-r1",
+      "campaignDate": "2026-09-07",
+      "signalCount": 7,
+      "compressedBytes": 72835,
+      "compressedSha256": "6ecef8d9f2dbb63622396a18159a3069242d294002977250f8f54cfba1a1cdab",
+      "contentBytes": 183955,
+      "contentSha256": "4a14c9df0b44f73a5c42f58571af1d420cfca4cb9f4a1c329ce6685d8d8b38e0",
+      "datasetIds": [
+        "21075/magnetics/0/r1",
+        "21075/pf_active/0/r1",
+        "21075/tf/0/r1",
+        "21075/langmuir_probes/0/r1",
+        "21075/equilibrium/0/r1",
+        "21075/equilibrium/0/r1",
+        "21075/equilibrium/0/r1"
+      ],
+      "missingDataItems": []
+    },
+    {
+      "pulse": 21076,
+      "path": "shot-21076.jsonl.gz",
+      "snapshotId": "exl50u-imas-20260908-r1",
+      "campaignDate": "2026-09-07",
+      "signalCount": 7,
+      "compressedBytes": 73725,
+      "compressedSha256": "91b0aad1bf584e558da70bb9bb1ecd3d1ab45a0b428e6b2cb379f10ae4124002",
+      "contentBytes": 186953,
+      "contentSha256": "d03b4637dd90522dec702c8df5a9edc4221957f4a342e659c94ba2c4995dcda8",
+      "datasetIds": [
+        "21076/magnetics/0/r1",
+        "21076/pf_active/0/r1",
+        "21076/tf/0/r1",
+        "21076/langmuir_probes/0/r1",
+        "21076/equilibrium/0/r1",
+        "21076/equilibrium/0/r1",
+        "21076/equilibrium/0/r1"
+      ],
+      "missingDataItems": []
+    },
+    {
+      "pulse": 21077,
+      "path": "shot-21077.jsonl.gz",
+      "snapshotId": "exl50u-imas-20260908-r1",
+      "campaignDate": "2026-09-07",
+      "signalCount": 7,
+      "compressedBytes": 73605,
+      "compressedSha256": "e61abb90fcd9b650ba8f8107618daddc679d16960df5ec59bda163a420fff666",
+      "contentBytes": 186913,
+      "contentSha256": "d94dbcaeab1a296015856b91120cbfe7133e75b67af40f04c13ca46d7d14c0c5",
+      "datasetIds": [
+        "21077/magnetics/0/r4",
+        "21077/pf_active/0/r4",
+        "21077/tf/0/r4",
+        "21077/langmuir_probes/0/r4",
+        "21077/equilibrium/0/r4",
+        "21077/equilibrium/0/r4",
+        "21077/equilibrium/0/r4"
+      ],
+      "missingDataItems": []
+    },
+    {
+      "pulse": 21078,
+      "path": "shot-21078.jsonl.gz",
+      "snapshotId": "exl50u-imas-20260908-r1",
+      "campaignDate": "2026-09-07",
+      "signalCount": 7,
+      "compressedBytes": 73799,
+      "compressedSha256": "e89dbf6f787862df39eba6eee509679ecb6e7acf71e6380778ae7ddf97fb19cc",
+      "contentBytes": 186882,
+      "contentSha256": "ca2fa56588a27092eae9cb3f9bff23282a8ccc5accea0059a88c17dee062272a",
+      "datasetIds": [
+        "21078/magnetics/0/r2",
+        "21078/pf_active/0/r2",
+        "21078/tf/0/r2",
+        "21078/langmuir_probes/0/r2",
+        "21078/equilibrium/0/r2",
+        "21078/equilibrium/0/r2",
+        "21078/equilibrium/0/r2"
+      ],
+      "missingDataItems": []
+    },
+    {
+      "pulse": 21079,
+      "path": "shot-21079.jsonl.gz",
+      "snapshotId": "exl50u-imas-20260908-r1",
+      "campaignDate": "2026-09-07",
+      "signalCount": 7,
+      "compressedBytes": 73249,
+      "compressedSha256": "122c91f2cc6e4e65b3b05d05814db4fa8551851ac20cf5df3983d3e62a7eff21",
+      "contentBytes": 185877,
+      "contentSha256": "e7f5737f4c602f784c9a67bf72902d679135ba65269e1233af4dae8b5bfbd83e",
+      "datasetIds": [
+        "21079/magnetics/0/r3",
+        "21079/pf_active/0/r3",
+        "21079/tf/0/r3",
+        "21079/langmuir_probes/0/r3",
+        "21079/equilibrium/0/r3",
+        "21079/equilibrium/0/r3",
+        "21079/equilibrium/0/r3"
+      ],
+      "missingDataItems": []
+    },
+    {
+      "pulse": 21080,
+      "path": "shot-21080.jsonl.gz",
+      "snapshotId": "exl50u-imas-20260908-r1",
+      "campaignDate": "2026-09-07",
+      "signalCount": 7,
+      "compressedBytes": 73503,
+      "compressedSha256": "c9f616713207b2471c486229f0fe7d51813142ecc8853a1ec1ff6beb9ec421e3",
+      "contentBytes": 186446,
+      "contentSha256": "453ba5f66e9ba58e0e80d923f0118b883745215d289e10ab8f16db55ee67e4bc",
+      "datasetIds": [
+        "21080/magnetics/0/r4",
+        "21080/pf_active/0/r4",
+        "21080/tf/0/r4",
+        "21080/langmuir_probes/0/r4",
+        "21080/equilibrium/0/r4",
+        "21080/equilibrium/0/r4",
+        "21080/equilibrium/0/r4"
+      ],
+      "missingDataItems": []
+    },
+    {
+      "pulse": 21081,
+      "path": "shot-21081.jsonl.gz",
+      "snapshotId": "exl50u-imas-20260908-r1",
+      "campaignDate": "2026-09-07",
+      "signalCount": 7,
+      "compressedBytes": 73559,
+      "compressedSha256": "e5f9c83e082aa98d2f45b5a2cc08c907225ec6ebc5d33458eb427df94657159b",
+      "contentBytes": 186475,
+      "contentSha256": "63c83d02a5295644152f89ce9d4899a1fb542c37f8cdda584718d19d8375ab7b",
+      "datasetIds": [
+        "21081/magnetics/0/r5",
+        "21081/pf_active/0/r5",
+        "21081/tf/0/r5",
+        "21081/langmuir_probes/0/r5",
+        "21081/equilibrium/0/r5",
+        "21081/equilibrium/0/r5",
+        "21081/equilibrium/0/r5"
+      ],
+      "missingDataItems": []
+    },
+    {
+      "pulse": 21082,
+      "path": "shot-21082.jsonl.gz",
+      "snapshotId": "exl50u-imas-20260908-r1",
+      "campaignDate": "2026-09-07",
+      "signalCount": 7,
+      "compressedBytes": 70142,
+      "compressedSha256": "7ef8e83fbb2f768bac63b611fbd8f25be3400a415a644654a38d1403f8ecf9f2",
+      "contentBytes": 177168,
+      "contentSha256": "1b186fbcc8771199e0057a41257c3d22f2d0b129c64d50254a44cc269288902b",
+      "datasetIds": [
+        "21082/magnetics/0/r1",
+        "21082/pf_active/0/r1",
+        "21082/tf/0/r1",
+        "21082/langmuir_probes/0/r1",
+        "21082/equilibrium/0/r1",
+        "21082/equilibrium/0/r1",
+        "21082/equilibrium/0/r1"
+      ],
+      "missingDataItems": []
+    },
+    {
+      "pulse": 21083,
+      "path": "shot-21083.jsonl.gz",
+      "snapshotId": "exl50u-imas-20260908-r1",
+      "campaignDate": "2026-09-07",
+      "signalCount": 7,
+      "compressedBytes": 73552,
+      "compressedSha256": "79ab4f984b443ade5afb052a07c1c4e8705f4f583f570d919c7ae60d849e2ff9",
+      "contentBytes": 186698,
+      "contentSha256": "3a34dbe8bfcd34655b47366bb320f0e6c48facab454476378221e9b79fa81e84",
+      "datasetIds": [
+        "21083/magnetics/0/r4",
+        "21083/pf_active/0/r4",
+        "21083/tf/0/r4",
+        "21083/langmuir_probes/0/r4",
+        "21083/equilibrium/0/r4",
+        "21083/equilibrium/0/r4",
+        "21083/equilibrium/0/r4"
+      ],
+      "missingDataItems": []
+    },
+    {
+      "pulse": 21084,
+      "path": "shot-21084.jsonl.gz",
+      "snapshotId": "exl50u-imas-20260908-r1",
+      "campaignDate": "2026-09-07",
+      "signalCount": 7,
+      "compressedBytes": 55505,
+      "compressedSha256": "587a667eef3d16328a3e9beac4c76af2a8d61ebe43c67b9d843c6eb376c6ee46",
+      "contentBytes": 136295,
+      "contentSha256": "d4e3ddd1e90dc4bbb04ad716dae91ea3dd3967f7472b0aa8c85eb9ff227aae38",
+      "datasetIds": [
+        "21084/magnetics/0/r0",
+        "21084/pf_active/0/r0",
+        "21084/tf/0/r0",
+        "21084/langmuir_probes/0/r0",
+        "21084/equilibrium/0/r0",
+        "21084/equilibrium/0/r0",
+        "21084/equilibrium/0/r0"
+      ],
+      "missingDataItems": []
+    },
+    {
+      "pulse": 21085,
+      "path": "shot-21085.jsonl.gz",
+      "snapshotId": "exl50u-imas-20260908-r1",
+      "campaignDate": "2026-09-07",
+      "signalCount": 7,
+      "compressedBytes": 73576,
+      "compressedSha256": "423c624da2486c36d4a983dca4fde2e1e7cf35a752f671bdb85e5640a79e34ec",
+      "contentBytes": 186762,
+      "contentSha256": "1d0d0895205253845f6173744753d4433c4c8cfde5e9f521dff7b2daa1fa859f",
+      "datasetIds": [
+        "21085/magnetics/0/r3",
+        "21085/pf_active/0/r3",
+        "21085/tf/0/r3",
+        "21085/langmuir_probes/0/r3",
+        "21085/equilibrium/0/r3",
+        "21085/equilibrium/0/r3",
+        "21085/equilibrium/0/r3"
+      ],
+      "missingDataItems": []
+    },
+    {
+      "pulse": 21093,
+      "path": "shot-21093.jsonl.gz",
+      "snapshotId": "exl50u-imas-20260908-r1",
+      "campaignDate": "2026-09-08",
+      "signalCount": 7,
+      "compressedBytes": 72636,
+      "compressedSha256": "5622434c3bbd3527f52394d6cd7cecb94f0242173ed79aa60f59dbc910a6cf2a",
+      "contentBytes": 184051,
+      "contentSha256": "311201a2a7bc9836cd1b82c6720da25ae3e38f238feb7c1e8f8d43623123541f",
+      "datasetIds": [
+        "21093/magnetics/0/r1",
+        "21093/pf_active/0/r1",
+        "21093/tf/0/r1",
+        "21093/langmuir_probes/0/r1",
+        "21093/equilibrium/0/r1",
+        "21093/equilibrium/0/r1",
+        "21093/equilibrium/0/r1"
+      ],
+      "missingDataItems": []
+    },
+    {
+      "pulse": 21094,
+      "path": "shot-21094.jsonl.gz",
+      "snapshotId": "exl50u-imas-20260908-r1",
+      "campaignDate": "2026-09-08",
+      "signalCount": 7,
+      "compressedBytes": 73481,
+      "compressedSha256": "cda165f5319065f8629657b51fbf88ada3a2b0fc1682bfae705057ed2a4d916f",
+      "contentBytes": 185915,
+      "contentSha256": "5c5dd27318920e926c0cd1818713844a901189edee7aa60bac8c4f1f7166320c",
+      "datasetIds": [
+        "21094/magnetics/0/r1",
+        "21094/pf_active/0/r1",
+        "21094/tf/0/r1",
+        "21094/langmuir_probes/0/r1",
+        "21094/equilibrium/0/r1",
+        "21094/equilibrium/0/r1",
+        "21094/equilibrium/0/r1"
+      ],
+      "missingDataItems": []
+    },
+    {
+      "pulse": 21095,
+      "path": "shot-21095.jsonl.gz",
+      "snapshotId": "exl50u-imas-20260908-r1",
+      "campaignDate": "2026-09-08",
+      "signalCount": 7,
+      "compressedBytes": 73718,
+      "compressedSha256": "7f3453de116bb87ae970ea0d8cd531c132b1e68daeaefb94e36b90c9fa3c20df",
+      "contentBytes": 186224,
+      "contentSha256": "3ce4af51f6fa2b0dbfae8d87f83cb232301fb838886ae90621892824d8cd5fd3",
+      "datasetIds": [
+        "21095/magnetics/0/r1",
+        "21095/pf_active/0/r1",
+        "21095/tf/0/r1",
+        "21095/langmuir_probes/0/r1",
+        "21095/equilibrium/0/r1",
+        "21095/equilibrium/0/r1",
+        "21095/equilibrium/0/r1"
+      ],
+      "missingDataItems": []
+    },
+    {
+      "pulse": 21096,
+      "path": "shot-21096.jsonl.gz",
+      "snapshotId": "exl50u-imas-20260908-r1",
+      "campaignDate": "2026-09-08",
+      "signalCount": 4,
+      "compressedBytes": 54449,
+      "compressedSha256": "f0277a4215524a0e612fee9380f2718fa71834e44b628abd4f76c3d6b44a247a",
+      "contentBytes": 132725,
+      "contentSha256": "e85d9c9289e9868512fb2d2642fe87d26fc9a3d19e56ed163ea27bb9e1eb377d",
+      "datasetIds": [
+        "21096/magnetics/0/r0",
+        "21096/pf_active/0/r0",
+        "21096/tf/0/r0",
+        "21096/langmuir_probes/0/r0"
+      ],
+      "missingDataItems": [
+        "equilibrium"
       ]
+    },
+    {
+      "pulse": 21097,
+      "path": "shot-21097.jsonl.gz",
+      "snapshotId": "exl50u-imas-20260908-r1",
+      "campaignDate": "2026-09-08",
+      "signalCount": 7,
+      "compressedBytes": 73939,
+      "compressedSha256": "3a52d9e0d77bd14f3db44b4a8d0c13228efc87416f4065dac7eb6235780ea011",
+      "contentBytes": 186956,
+      "contentSha256": "b9de316b29c9a1dac33e52157b2428fc601955dc4ae1249165166f0fd5d0a272",
+      "datasetIds": [
+        "21097/magnetics/0/r1",
+        "21097/pf_active/0/r1",
+        "21097/tf/0/r1",
+        "21097/langmuir_probes/0/r1",
+        "21097/equilibrium/0/r1",
+        "21097/equilibrium/0/r1",
+        "21097/equilibrium/0/r1"
+      ],
+      "missingDataItems": []
+    },
+    {
+      "pulse": 21098,
+      "path": "shot-21098.jsonl.gz",
+      "snapshotId": "exl50u-imas-20260908-r1",
+      "campaignDate": "2026-09-08",
+      "signalCount": 7,
+      "compressedBytes": 73673,
+      "compressedSha256": "8616d0adaec5a88f2de8a27258f7c801d693a37eff681e813cd8bd7d829149fe",
+      "contentBytes": 185795,
+      "contentSha256": "9de5dad9efd628c61fc0e1f57d6f9e13e61eb7f8780974b38943ca2f114d4fd9",
+      "datasetIds": [
+        "21098/magnetics/0/r4",
+        "21098/pf_active/0/r4",
+        "21098/tf/0/r4",
+        "21098/langmuir_probes/0/r4",
+        "21098/equilibrium/0/r4",
+        "21098/equilibrium/0/r4",
+        "21098/equilibrium/0/r4"
+      ],
+      "missingDataItems": []
+    },
+    {
+      "pulse": 21099,
+      "path": "shot-21099.jsonl.gz",
+      "snapshotId": "exl50u-imas-20260908-r1",
+      "campaignDate": "2026-09-08",
+      "signalCount": 7,
+      "compressedBytes": 73300,
+      "compressedSha256": "46d578ede1433e9d25d2fc88793c9d51a33bcc3c53425c21b4be0820b891762a",
+      "contentBytes": 185391,
+      "contentSha256": "198dce4c8776fd2a4389d5ca3ee15343ae222bde779032caf96b9c4c84cf3fe8",
+      "datasetIds": [
+        "21099/magnetics/0/r4",
+        "21099/pf_active/0/r4",
+        "21099/tf/0/r4",
+        "21099/langmuir_probes/0/r4",
+        "21099/equilibrium/0/r4",
+        "21099/equilibrium/0/r4",
+        "21099/equilibrium/0/r4"
+      ],
+      "missingDataItems": []
+    },
+    {
+      "pulse": 21100,
+      "path": "shot-21100.jsonl.gz",
+      "snapshotId": "exl50u-imas-20260908-r1",
+      "campaignDate": "2026-09-08",
+      "signalCount": 7,
+      "compressedBytes": 73741,
+      "compressedSha256": "fb7f62e0f5e7248556849cabe2c64a2220112a2e1d79bba1e99f3f734acdda93",
+      "contentBytes": 186365,
+      "contentSha256": "e173e4c395d9819f2a3004f8e492e8ba381a2e570b106ec8f995b8164856a9eb",
+      "datasetIds": [
+        "21100/magnetics/0/r3",
+        "21100/pf_active/0/r3",
+        "21100/tf/0/r3",
+        "21100/langmuir_probes/0/r3",
+        "21100/equilibrium/0/r3",
+        "21100/equilibrium/0/r3",
+        "21100/equilibrium/0/r3"
+      ],
+      "missingDataItems": []
+    },
+    {
+      "pulse": 21101,
+      "path": "shot-21101.jsonl.gz",
+      "snapshotId": "exl50u-imas-20260908-r1",
+      "campaignDate": "2026-09-08",
+      "signalCount": 7,
+      "compressedBytes": 73568,
+      "compressedSha256": "158ccbe982537133eabb99b1425e8dbcbb94861f9c0a7a5353f2867ce81d8f8d",
+      "contentBytes": 186251,
+      "contentSha256": "bb0b49c4619861a9593ec9635824437842bf58ab7808508388089514a98f659e",
+      "datasetIds": [
+        "21101/magnetics/0/r3",
+        "21101/pf_active/0/r3",
+        "21101/tf/0/r3",
+        "21101/langmuir_probes/0/r3",
+        "21101/equilibrium/0/r3",
+        "21101/equilibrium/0/r3",
+        "21101/equilibrium/0/r3"
+      ],
+      "missingDataItems": []
+    },
+    {
+      "pulse": 21102,
+      "path": "shot-21102.jsonl.gz",
+      "snapshotId": "exl50u-imas-20260908-r1",
+      "campaignDate": "2026-09-08",
+      "signalCount": 7,
+      "compressedBytes": 72783,
+      "compressedSha256": "359850659c0dd263e3f4ca24fff14c8167c0b1407ccd88d524f6cb7dac263c5f",
+      "contentBytes": 184268,
+      "contentSha256": "0b999d7c18b39e46e58229f3d3231a29c37744c2be3ee163a1ebeef74daa6c87",
+      "datasetIds": [
+        "21102/magnetics/0/r3",
+        "21102/pf_active/0/r3",
+        "21102/tf/0/r3",
+        "21102/langmuir_probes/0/r3",
+        "21102/equilibrium/0/r3",
+        "21102/equilibrium/0/r3",
+        "21102/equilibrium/0/r3"
+      ],
+      "missingDataItems": []
+    },
+    {
+      "pulse": 21103,
+      "path": "shot-21103.jsonl.gz",
+      "snapshotId": "exl50u-imas-20260908-r1",
+      "campaignDate": "2026-09-08",
+      "signalCount": 7,
+      "compressedBytes": 56377,
+      "compressedSha256": "f7b5e0b81268a84c955781554c7d0cee4a038dc839865fd544c7582e0a53e11a",
+      "contentBytes": 138032,
+      "contentSha256": "730a5f36eb928b8d469dcc02bef5e8c7d99c2a418f302a22d348dd6f3bea459a",
+      "datasetIds": [
+        "21103/magnetics/0/r1",
+        "21103/pf_active/0/r1",
+        "21103/tf/0/r1",
+        "21103/langmuir_probes/0/r1",
+        "21103/equilibrium/0/r1",
+        "21103/equilibrium/0/r1",
+        "21103/equilibrium/0/r1"
+      ],
+      "missingDataItems": []
     }
   ]
 }

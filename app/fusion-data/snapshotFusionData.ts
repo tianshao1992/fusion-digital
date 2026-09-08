@@ -1,5 +1,7 @@
 export const SNAPSHOT_MANIFEST_URL = '/data/exl50u-mdsplus-snapshot-v1/manifest.json';
 export const SNAPSHOT_SCHEMA = 'fusiondigital.exl50u.public-snapshot.v1';
+type SourceProjection = 'read-only MDSplus time-series projection' | 'offline IMAS H5 time-series extraction';
+const SOURCE_PROJECTIONS: string[] = ['read-only MDSplus time-series projection', 'offline IMAS H5 time-series extraction'];
 
 export type SnapshotManifestShot = {
   pulse: number;
@@ -10,6 +12,9 @@ export type SnapshotManifestShot = {
   contentBytes: number;
   contentSha256: string;
   datasetIds: string[];
+  snapshotId?: string;
+  campaignDate?: string;
+  missingDataItems?: string[];
 };
 
 export type SnapshotManifest = {
@@ -21,14 +26,14 @@ export type SnapshotManifest = {
   live: false;
   source: {
     authority: 'IMAS H5';
-    projection: 'read-only MDSplus time-series projection';
+    projection: SourceProjection | 'mixed MDSplus projection and offline IMAS H5 extraction';
     browserConnection: 'none';
   };
   publication: {
     scope: string;
     missingValuePolicy: 'preserve-null';
     interpolation: 'none';
-    qualityBasis: 'not-provided-by-source';
+    qualityBasis: 'not-provided-by-source' | 'per-signal-disclosure';
     peakClaims: 'not-published';
   };
   shots: SnapshotManifestShot[];
@@ -43,7 +48,8 @@ export type SnapshotSignal = {
   color: string;
   observationKind: 'facility-record';
   processingLevel: 'unclassified';
-  projection: 'mdsplus-readonly-snapshot';
+  projection: 'mdsplus-readonly-snapshot' | 'imas-h5-offline';
+  origin?: { h5Sha256: string; field: string; timeField: string; channelIndex: number | null; timeUnit: 's' };
   dataItem: string;
   path: string;
   unit: string;
@@ -62,16 +68,17 @@ export type SnapshotSignal = {
     sourcePoints: number;
     publishedPoints: number;
     requestedMaxPoints: number;
-    method: 'gateway-downsample';
+    method: 'gateway-downsample' | 'offline-index-subsample';
     timeRange: [number, number];
     samplePolicy: 'nearest';
     noInterpolation: true;
     connectAcrossGaps: false;
     missingValues: number;
+    sourceMissingValues?: number;
   };
   quality: {
     state: 'unknown';
-    basis: 'not-provided-by-source';
+    basis: 'not-provided-by-source' | 'not-exported';
   };
   sampleSha256: string;
   samples: SnapshotSample[];
@@ -84,7 +91,7 @@ export type SnapshotShot = {
   pulse: number;
   source: {
     authority: 'IMAS H5';
-    projection: 'read-only MDSplus time-series projection';
+    projection: SourceProjection;
     transport: 'reviewed public snapshot';
   };
   signals: SnapshotSignal[];
@@ -119,21 +126,21 @@ function assertManifest(value: unknown): asserts value is SnapshotManifest {
     || value.live !== false
     || typeof value.generatedAt !== 'string'
     || !Array.isArray(value.shots)
-    || value.shots.length < 3
-    || value.shots.length > 5) {
+    || value.shots.length < 1
+    || value.shots.length > 100) {
     throw new Error('FusionData snapshot manifest identity is invalid');
   }
   if (new Date(value.generatedAt).toISOString() !== value.generatedAt) throw new Error('Snapshot generatedAt is not canonical UTC');
   if (!isObject(value.source)
     || value.source.authority !== 'IMAS H5'
-    || value.source.projection !== 'read-only MDSplus time-series projection'
+    || ![...SOURCE_PROJECTIONS, 'mixed MDSplus projection and offline IMAS H5 extraction'].includes(String(value.source.projection))
     || value.source.browserConnection !== 'none') {
     throw new Error('Snapshot source boundary is invalid');
   }
   if (!isObject(value.publication)
     || value.publication.missingValuePolicy !== 'preserve-null'
     || value.publication.interpolation !== 'none'
-    || value.publication.qualityBasis !== 'not-provided-by-source'
+    || !['not-provided-by-source', 'per-signal-disclosure'].includes(String(value.publication.qualityBasis))
     || value.publication.peakClaims !== 'not-published') {
     throw new Error('Snapshot publication policy is invalid');
   }
@@ -143,12 +150,16 @@ function assertManifest(value: unknown): asserts value is SnapshotManifest {
     assertSafePositiveInteger(shot.pulse, 'shot pulse');
     if (pulses.has(Number(shot.pulse))) throw new Error('Snapshot pulse numbers must be unique');
     pulses.add(Number(shot.pulse));
-    if (typeof shot.path !== 'string' || !/^shot-\d+\.jsonl\.gz$/u.test(shot.path) || shot.path.includes('/')) {
+    if (shot.path !== `shot-${shot.pulse}.jsonl.gz`) {
       throw new Error('Snapshot shot path is invalid');
     }
     assertSafePositiveInteger(shot.signalCount, 'signalCount');
     assertSafePositiveInteger(shot.compressedBytes, 'compressedBytes');
     assertSafePositiveInteger(shot.contentBytes, 'contentBytes');
+    if (Number(shot.signalCount) > 32 || Number(shot.contentBytes) > 4_000_000 || Number(shot.compressedBytes) > 2_000_000) throw new Error('Snapshot exceeds per-shot size budget');
+    if (shot.snapshotId !== undefined && (typeof shot.snapshotId !== 'string' || !shot.snapshotId.length)) throw new Error('Invalid shot snapshot version');
+    if (shot.campaignDate !== undefined && (typeof shot.campaignDate !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(shot.campaignDate))) throw new Error('Invalid campaign date');
+    if (shot.missingDataItems !== undefined && (!Array.isArray(shot.missingDataItems) || !shot.missingDataItems.every((item) => typeof item === 'string'))) throw new Error('Invalid missing IDS list');
     assertSha256(shot.compressedSha256, 'compressedSha256');
     assertSha256(shot.contentSha256, 'contentSha256');
     if (!Array.isArray(shot.datasetIds) || shot.datasetIds.length !== shot.signalCount) {
@@ -177,7 +188,7 @@ async function validateSignal(signal: unknown, pulse: number): Promise<SnapshotS
     || typeof signal.color !== 'string'
     || signal.observationKind !== 'facility-record'
     || signal.processingLevel !== 'unclassified'
-    || signal.projection !== 'mdsplus-readonly-snapshot'
+    || !['mdsplus-readonly-snapshot', 'imas-h5-offline'].includes(String(signal.projection))
     || typeof signal.dataItem !== 'string'
     || typeof signal.path !== 'string'
     || typeof signal.unit !== 'string'
@@ -194,6 +205,7 @@ async function validateSignal(signal: unknown, pulse: number): Promise<SnapshotS
     || dataset.idsName !== signal.dataItem
     || !Number.isSafeInteger(dataset.occurrence)
     || !Number.isSafeInteger(dataset.run)
+    || Number(dataset.occurrence) < 0 || Number(dataset.run) < 0
     || dataset.recommended !== true
     || dataset.catalogueStatus !== 'valid'
     || dataset.publishState !== 'published'
@@ -203,16 +215,26 @@ async function validateSignal(signal: unknown, pulse: number): Promise<SnapshotS
   const sampling = signal.sampling;
   assertSafePositiveInteger(sampling.sourcePoints, 'sourcePoints');
   assertSafePositiveInteger(sampling.publishedPoints, 'publishedPoints');
+  assertSafePositiveInteger(sampling.requestedMaxPoints, 'requestedMaxPoints');
+  const offline = signal.projection === 'imas-h5-offline';
   if (sampling.publishedPoints !== signal.samples.length
-    || sampling.method !== 'gateway-downsample'
+    || signal.samples.length < 2 || signal.samples.length > 800
+    || Number(sampling.publishedPoints) > Number(sampling.sourcePoints)
+    || Number(sampling.requestedMaxPoints) > 800 || signal.samples.length > Number(sampling.requestedMaxPoints)
+    || sampling.method !== (offline ? 'offline-index-subsample' : 'gateway-downsample')
     || sampling.samplePolicy !== 'nearest'
     || sampling.noInterpolation !== true
     || sampling.connectAcrossGaps !== false
     || !Array.isArray(sampling.timeRange)
     || sampling.timeRange.length !== 2
     || signal.quality.state !== 'unknown'
-    || signal.quality.basis !== 'not-provided-by-source') {
+    || signal.quality.basis !== (offline ? 'not-exported' : 'not-provided-by-source')) {
     throw new Error(`Snapshot sampling contract is invalid for shot ${pulse}/${signal.id}`);
+  }
+  if (offline) {
+    if (!isObject(signal.origin) || typeof signal.origin.field !== 'string' || typeof signal.origin.timeField !== 'string' || signal.origin.timeUnit !== 's'
+      || (signal.origin.channelIndex !== null && (!Number.isSafeInteger(signal.origin.channelIndex) || Number(signal.origin.channelIndex) < 0))) throw new Error('Missing offline H5 provenance');
+    assertSha256(signal.origin.h5Sha256, 'source H5 SHA-256');
   }
   let previous = -Infinity;
   for (const [index, sample] of signal.samples.entries()) {
@@ -225,6 +247,7 @@ async function validateSignal(signal: unknown, pulse: number): Promise<SnapshotS
   if (signal.samples[0][0] !== sampling.timeRange[0] || signal.samples.at(-1)?.[0] !== sampling.timeRange[1]) {
     throw new Error(`Snapshot time range does not match samples for shot ${pulse}/${signal.id}`);
   }
+  if (sampling.missingValues !== signal.samples.filter((sample) => sample[1] === null).length) throw new Error('Snapshot missing-value count mismatch');
   assertSha256(signal.sampleSha256, 'sampleSha256');
   if (await sha256Hex(new TextEncoder().encode(JSON.stringify(signal.samples))) !== signal.sampleSha256) {
     throw new Error(`Snapshot sample hash mismatch for shot ${pulse}/${signal.id}`);
@@ -235,12 +258,12 @@ async function validateSignal(signal: unknown, pulse: number): Promise<SnapshotS
 async function assertShot(value: unknown, manifest: SnapshotManifest, entry: SnapshotManifestShot): Promise<SnapshotShot> {
   if (!isObject(value)
     || value.schemaVersion !== SNAPSHOT_SCHEMA
-    || value.snapshotId !== manifest.snapshotId
+    || value.snapshotId !== (entry.snapshotId ?? manifest.snapshotId)
     || value.facility !== 'EXL-50U'
     || value.pulse !== entry.pulse
     || !isObject(value.source)
     || value.source.authority !== 'IMAS H5'
-    || value.source.projection !== 'read-only MDSplus time-series projection'
+    || !SOURCE_PROJECTIONS.includes(String(value.source.projection))
     || value.source.transport !== 'reviewed public snapshot'
     || !Array.isArray(value.signals)
     || value.signals.length !== entry.signalCount) {
@@ -250,6 +273,7 @@ async function assertShot(value: unknown, manifest: SnapshotManifest, entry: Sna
   const signals: SnapshotSignal[] = [];
   for (const candidate of value.signals) {
     const signal = await validateSignal(candidate, entry.pulse);
+    if ((signal.projection === 'imas-h5-offline') !== (value.source.projection === 'offline IMAS H5 time-series extraction')) throw new Error('Signal and shot source disagree');
     if (ids.has(signal.id)) throw new Error(`Duplicate signal id in shot ${entry.pulse}: ${signal.id}`);
     ids.add(signal.id);
     signals.push(signal);
@@ -306,7 +330,7 @@ export async function loadSnapshotShot(
 }
 
 export function nearestSample(signal: SnapshotSignal, targetTime: number) {
-  if (!signal.samples.length) return null;
+  if (!signal.samples.length || !Number.isFinite(targetTime) || targetTime < signal.samples[0][0] || targetTime > signal.samples[signal.samples.length - 1][0]) return null;
   let low = 0;
   let high = signal.samples.length - 1;
   while (low < high) {
@@ -321,6 +345,5 @@ export function nearestSample(signal: SnapshotSignal, targetTime: number) {
 
 export function commonSignalIds(left: SnapshotShot, right: SnapshotShot | null) {
   if (!right) return left.signals.map((signal) => signal.id);
-  const rightIds = new Set(right.signals.map((signal) => signal.id));
-  return left.signals.map((signal) => signal.id).filter((id) => rightIds.has(id));
+  return left.signals.filter((signal) => right.signals.some((other) => other.id === signal.id && other.unit === signal.unit)).map(({ id }) => id);
 }
