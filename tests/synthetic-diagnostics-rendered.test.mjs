@@ -11,7 +11,7 @@ test('diagnostic route resolves to its own bilingual case selector and retains s
     assert.match(text, /DIII-D-derived/); assert.match(text, /ITER hybrid/);
     assert.doesNotMatch(text, /D:\\Code|\.venv-wsl/);
     assert.match(text, locale === 'en' ? /Physics–diagnostic loop/ : /物理—诊断闭环/);
-    assert.match(text, locale === 'en' ? /Simulations/ : /仿真模拟/);
+    assert.match(text, locale === 'en' ? /Simulation Engines/ : /仿真引擎/);
     if (locale === 'en') assert.doesNotMatch(text, /\p{Script=Han}/u);
     assert.match(html, /aria-pressed="true"[^>]*>[^<]*CHERAB–Raysect/);
   }
