@@ -14,6 +14,7 @@ import {
   type SnapshotManifest,
   type SnapshotShot,
 } from './snapshotFusionData';
+import { defaultTimeZoom, fullTimeExtent } from './timeViewport';
 
 type ChartClick = { value?: unknown };
 
@@ -112,17 +113,14 @@ export default function FusionDataWorkspace() {
   const shot = primary.shot;
   const compareShot = comparison.shot;
   const commonIds = useMemo(() => shot ? commonSignalIds(shot, compareShot) : [], [compareShot, shot]);
-  const visibleSignals = useMemo(() => shot?.signals.filter((signal) => (signal.dataItem === 'equilibrium') === (signalGroup === 'equilibrium')) ?? [], [shot, signalGroup]);
-  const selectedSignal = shot?.signals.find(({ id }) => id === selectedSignalId) ?? shot?.signals[0] ?? null;
+  const visibleSignals = useMemo(() => (shot?.signals.filter((signal) => (signal.dataItem === 'equilibrium') === (signalGroup === 'equilibrium')) ?? [])
+    .sort((a, b) => Number(b.processingLevel === 'boundary-derived') - Number(a.processingLevel === 'boundary-derived')), [shot, signalGroup]);
+  const selectedSignal = visibleSignals.find(({ id }) => id === selectedSignalId) ?? visibleSignals[0] ?? shot?.signals[0] ?? null;
   const selectedSample = selectedSignal ? nearestSample(selectedSignal, selectedTime) : null;
   const selectedTimeDelta = selectedSample ? selectedSample[0] - selectedTime : null;
   const globalTimeRange = useMemo<[number, number]>(() => {
-    if (!visibleSignals.length) return [0, 1];
     const all = [...visibleSignals, ...(compareShot?.signals.filter((signal) => visibleSignals.some((primary) => primary.id === signal.id && primary.unit === signal.unit)) ?? [])];
-    return [
-      Math.min(...all.map(({ sampling }) => sampling.timeRange[0])),
-      Math.max(...all.map(({ sampling }) => sampling.timeRange[1])),
-    ];
+    return fullTimeExtent(all.map(({ sampling }) => sampling.timeRange));
   }, [visibleSignals, compareShot]);
 
   const filteredShots = useMemo(() => {
@@ -150,8 +148,8 @@ export default function FusionDataWorkspace() {
       name: `#${shot.pulse} · ${en ? signal.labelEn : signal.label}`,
       type: 'line', xAxisIndex: index, yAxisIndex: index,
       data: signal.samples,
-      showSymbol: false, connectNulls: false, smooth: false,
-      lineStyle: { width: 2.1, color: signal.color }, itemStyle: { color: signal.color },
+      showSymbol: signal.dataItem === 'equilibrium' && signal.samples.length < 100, symbolSize: 5, connectNulls: false, smooth: false,
+      lineStyle: { width: signal.dataItem === 'equilibrium' && signal.samples.length < 100 ? 0 : 2.1, color: signal.color }, itemStyle: { color: signal.color },
       markLine: {
         silent: true, symbol: 'none', label: { show: index === 0, formatter: `${selectedTime.toFixed(3)} s` },
         lineStyle: { color: palette.accent, width: 1 }, data: [{ xAxis: selectedTime }],
@@ -164,11 +162,12 @@ export default function FusionDataWorkspace() {
         name: `#${compareShot.pulse} · ${en ? counterpart.labelEn : counterpart.label}`,
         type: 'line', xAxisIndex: index, yAxisIndex: index,
         data: counterpart.samples,
-        showSymbol: false, connectNulls: false, smooth: false,
-        lineStyle: { width: 1.3, type: 'dotted', color: counterpart.color, opacity: .7 },
+        showSymbol: counterpart.dataItem === 'equilibrium' && counterpart.samples.length < 100, symbolSize: 5, connectNulls: false, smooth: false,
+        lineStyle: { width: counterpart.dataItem === 'equilibrium' && counterpart.samples.length < 100 ? 0 : 1.3, type: 'dotted', color: counterpart.color, opacity: .7 },
         itemStyle: { color: counterpart.color, opacity: .7 },
       }] : [];
     }) : [];
+    const timeZoom = defaultTimeZoom(signals.map((_, index) => index));
     return {
       aria: { enabled: true, decal: { show: true } },
       animationDuration: 220,
@@ -176,8 +175,8 @@ export default function FusionDataWorkspace() {
       tooltip: { trigger: 'axis', confine: true },
       grid, xAxis, yAxis,
       dataZoom: [
-        { type: 'inside', xAxisIndex: signals.map((_, index) => index), filterMode: 'none' },
-        { type: 'slider', xAxisIndex: signals.map((_, index) => index), bottom: 3, height: 17, borderColor: palette.line, fillerColor: palette.infoSoft },
+        { ...timeZoom, type: 'inside' },
+        { ...timeZoom, type: 'slider', bottom: 3, height: 17, borderColor: palette.line, fillerColor: palette.infoSoft },
       ],
       series: [...comparison, ...primary],
     };
@@ -188,6 +187,13 @@ export default function FusionDataWorkspace() {
   const selectedManifestShot = manifest.shots.find(({ pulse }) => pulse === selectedPulse);
   const offline = shot?.source.projection === 'offline IMAS H5 time-series extraction';
   const projectionLabel = offline ? (en ? 'Offline IMAS H5 extraction' : 'IMAS H5 离线提取') : (en ? 'Read-only MDSplus projection' : 'MDSplus 只读时序投影');
+
+  function selectSignal(id: string) {
+    const signal = shot?.signals.find((item) => item.id === id);
+    if (!signal) return;
+    setSignalGroup(signal.dataItem === 'equilibrium' ? 'equilibrium' : 'diagnostics');
+    setSelectedSignalId(id);
+  }
 
   function selectShot(pulse: number) {
     setSelectedPulse(pulse);
@@ -240,7 +246,13 @@ export default function FusionDataWorkspace() {
           </dl>
         </div>
         {comparePulse !== null && !compareShot && <div className="fusionLoadNotice" role="status">{comparison.error ? `${en ? 'Comparison failed' : '对比炮加载失败'} #${comparePulse}: ${comparison.error}` : `${en ? 'Loading comparison' : '正在加载对比炮'} #${comparePulse}`}{comparison.error && <button type="button" onClick={comparison.retry}>{en ? 'Retry' : '重试'}</button>}</div>}
-        <nav className="fusionSignalGroups" aria-label={en ? 'Signal group' : '信号分组'}>{(['diagnostics', 'equilibrium'] as const).map((group) => <button type="button" key={group} aria-pressed={signalGroup === group} onClick={() => { setSignalGroup(group); setSelectedSignalId(group === 'equilibrium' ? 'magnetic-axis-r' : 'plasma-current'); setSelectedTime(.3); }}>{group === 'diagnostics' ? (en ? 'Currents & probe' : '电流与探针') : (en ? 'Equilibrium reconstruction' : '平衡重建')}</button>)}</nav>
+        <nav className="fusionSignalGroups" aria-label={en ? 'Signal group' : '信号分组'}>{(['diagnostics', 'equilibrium'] as const).map((group) => <button type="button" key={group} aria-pressed={signalGroup === group} onClick={() => { setSignalGroup(group); setSelectedSignalId(group === 'equilibrium' ? 'boundary-rmax' : 'plasma-current'); setSelectedTime(.3); }}>{group === 'diagnostics' ? (en ? 'Currents & probe' : '电流与探针') : (en ? 'Shape & equilibrium · Rmax / Rmin / κ' : '位形与平衡 · Rmax / Rmin / κ')}</button>)}</nav>
+        {signalGroup === 'equilibrium' && visibleSignals.some(({ derivation }) => derivation) && <div className="fusionLoadNotice">
+          <b>{en ? 'Boundary-derived shape parameters' : '位形参数：边界重建派生值'}</b>
+          <p>{en ? 'Rmax = max(R), Rmin = min(R), κ = (max(Z) − min(Z)) / (Rmax − Rmin), using each stored boundary outline. These are not controller setpoints or real-time feedback; their definition may differ from the PCS. Source quality remains unverified.' : '按每帧已保存边界计算：Rmax = max(R)，Rmin = min(R)，κ = (max(Z) − min(Z)) / (Rmax − Rmin)。不是控制器目标或实时反馈，定义可能与 PCS 不同；源数据质量尚未核验。'}</p>
+          {visibleSignals[0].sampling.sourcePoints < 100 && <p>{en ? `Sparse reconstruction: only ${visibleSignals[0].sampling.sourcePoints} frames; shown as sample points, not a continuous control trace.` : `平衡数据稀疏：仅 ${visibleSignals[0].sampling.sourcePoints} 帧，仅显示采样点，不连成连续控制曲线。`}</p>}
+          {!visibleSignals[0].samples.some(([time]) => time >= .3 && time <= .65) && <p>{en ? 'No reconstruction samples cover the 0.300–0.650 s interval discussed in the experiment log.' : '没有重建样本覆盖实验记录所关注的 0.300–0.650 s 区间。'}</p>}
+        </div>}
 
         <article className="fusionPanel fusionPulsePanel">
           <div className="fusionPanelHeading"><div><span>02</span><h2>{signalGroup === 'equilibrium' ? (en ? 'Reconstructed time series' : '平衡重建时序') : (en ? 'Measured time series' : '实测时序')}</h2></div><small>{compareShot ? (en ? `solid #${shot.pulse} · dotted #${compareShot.pulse}` : `实线 #${shot.pulse} · 点线 #${compareShot.pulse}`) : (en ? 'shared physical time · no interpolation' : '共享物理时间 · 未插值')}</small></div>
@@ -256,13 +268,13 @@ export default function FusionDataWorkspace() {
             keepFallbackAccessible
             fallback={<table><caption>{en ? 'Nearest published samples' : '最近发布样本'}</caption><thead><tr><th>{en ? 'Signal' : '信号'}</th><th>{en ? 'Time' : '时间'}</th><th>{en ? 'Value' : '值'}</th></tr></thead><tbody>{shot.signals.map((signal) => { const sample = nearestSample(signal, selectedTime); return <tr key={signal.id}><th>{en ? signal.labelEn : signal.label}</th><td>{sample?.[0].toFixed(6) ?? '—'} s</td><td>{formatValue(sample?.[1] ?? null, locale)} {signal.unit}</td></tr>; })}</tbody></table>}
           />}
-          <nav className="fusionCoverageTrack" aria-label={en ? 'Signal acquisition windows' : '信号采集时窗'}><span>{en ? 'WINDOWS' : '时窗'}</span>{shot.signals.map((signal) => <button type="button" key={signal.id} aria-pressed={signal.id === selectedSignal.id} onClick={() => setSelectedSignalId(signal.id)}><b>{en ? signal.labelEn : signal.label}</b><time>{signal.sampling.timeRange[0].toFixed(3)} → {signal.sampling.timeRange[1].toFixed(3)} s</time></button>)}</nav>
+          <nav className="fusionCoverageTrack" aria-label={en ? 'Signal acquisition windows' : '信号采集时窗'}><span>{en ? 'WINDOWS' : '时窗'}</span>{shot.signals.map((signal) => <button type="button" key={signal.id} aria-pressed={signal.id === selectedSignal.id} onClick={() => selectSignal(signal.id)}><b>{en ? signal.labelEn : signal.label}</b><time>{signal.sampling.timeRange[0].toFixed(3)} → {signal.sampling.timeRange[1].toFixed(3)} s</time></button>)}</nav>
         </article>
 
         <div className="fusionAnalysisGrid">
           <article className="fusionPanel">
             <div className="fusionPanelHeading"><div><span>03</span><h2>{en ? 'Dataset identity' : '数据集身份'}</h2></div><small>IDS / occurrence / run</small></div>
-            <div className="fusionDatasetCards">{shot.signals.map((signal) => <button type="button" key={signal.id} aria-pressed={signal.id === selectedSignal.id} onClick={() => setSelectedSignalId(signal.id)}><i style={{ background: signal.color }} /><span><b>{en ? signal.labelEn : signal.label}</b><small>{signal.dataset.id}</small></span><em>{signal.unit}</em></button>)}</div>
+            <div className="fusionDatasetCards">{shot.signals.map((signal) => <button type="button" key={signal.id} aria-pressed={signal.id === selectedSignal.id} onClick={() => selectSignal(signal.id)}><i style={{ background: signal.color }} /><span><b>{en ? signal.labelEn : signal.label}</b><small>{signal.dataset.id}</small></span><em>{signal.unit}</em></button>)}</div>
           </article>
           <article className="fusionPanel">
             <div className="fusionPanelHeading"><div><span>04</span><h2>{en ? 'Sampling disclosure' : '采样披露'}</h2></div><small>{en ? 'source → published' : '源数据 → 发布快照'}</small></div>
@@ -296,10 +308,11 @@ export default function FusionDataWorkspace() {
       {shot && selectedSignal && <aside className="fusionInspector">
         <div className="fusionPanelHeading"><div><span>06</span><h2>{en ? 'Evidence inspector' : '证据检查器'}</h2></div><small>{selectedTime.toFixed(3)} s</small></div>
         <section><span>{en ? 'SHOT IDENTITY' : '炮次身份'}</span><dl><div><dt>facility</dt><dd>{shot.facility}</dd></div><div><dt>pulse</dt><dd>{shot.pulse}</dd></div><div><dt>snapshot</dt><dd>{shot.snapshotId}</dd></div><div><dt>state</dt><dd><b className="fusionBadge">not live</b></dd></div></dl></section>
-        <section className="fusionIdsBrowser"><span>{en ? 'PUBLISHED SIGNALS' : '已发布信号'}</span><div>{shot.signals.map((signal) => <button type="button" key={signal.id} aria-pressed={signal.id === selectedSignal.id} onClick={() => setSelectedSignalId(signal.id)}><b>{en ? signal.labelEn : signal.label}</b><small>{signal.path}</small></button>)}</div></section>
+        <section className="fusionIdsBrowser"><span>{en ? 'PUBLISHED SIGNALS' : '已发布信号'}</span><div>{shot.signals.map((signal) => <button type="button" key={signal.id} aria-pressed={signal.id === selectedSignal.id} onClick={() => selectSignal(signal.id)}><b>{en ? signal.labelEn : signal.label}</b><small>{signal.path}</small></button>)}</div></section>
         <section><span>{en ? 'NEAREST SAMPLE' : '最近样本'}</span><dl><div><dt>{en ? 'name' : '名称'}</dt><dd>{en ? selectedSignal.labelEn : selectedSignal.label}</dd></div><div><dt>{en ? 'value' : '值'}</dt><dd>{formatValue(selectedSample?.[1] ?? null, locale)} {selectedSignal.unit}</dd></div><div><dt>{en ? 'sample time' : '样本时间'}</dt><dd>{selectedSample?.[0].toFixed(6) ?? '—'} s</dd></div><div><dt>Δt</dt><dd>{selectedTimeDelta === null ? '—' : `${selectedTimeDelta >= 0 ? '+' : ''}${selectedTimeDelta.toFixed(6)} s`}</dd></div><div><dt>{en ? 'quality' : '质量'}</dt><dd>{en ? 'Unknown · quality bits not included' : '未知 · 快照未纳入质量位'}</dd></div></dl></section>
         <section><span>{en ? 'TRACE' : '溯源'}</span><dl><div><dt>dataset_id</dt><dd>{selectedSignal.dataset.id}</dd></div><div><dt>IDS</dt><dd>{selectedSignal.dataset.idsName}</dd></div><div><dt>occ / run</dt><dd>{selectedSignal.dataset.occurrence} / {selectedSignal.dataset.run}</dd></div><div><dt>signal</dt><dd>{selectedSignal.path}</dd></div><div><dt>unit</dt><dd>{selectedSignal.unit}</dd></div><div><dt>{en ? 'points' : '点数'}</dt><dd>{selectedSignal.sampling.sourcePoints.toLocaleString()} → {selectedSignal.sampling.publishedPoints.toLocaleString()}</dd></div><div><dt>sample SHA</dt><dd>{shortHash(selectedSignal.sampleSha256)}…</dd></div></dl></section>
         {selectedSignal.origin && <section><span>{en ? 'SOURCE H5' : '源 H5'}</span><dl><div><dt>SHA-256</dt><dd>{selectedSignal.origin.h5Sha256}</dd></div><div><dt>field</dt><dd>{selectedSignal.origin.field}</dd></div><div><dt>time field</dt><dd>{selectedSignal.origin.timeField} (s)</dd></div><div><dt>index</dt><dd>{selectedSignal.origin.channelIndex ?? '—'}</dd></div></dl></section>}
+        {selectedSignal.derivation && <section><span>{en ? 'DERIVATION · NOT CONTROLLER TELEMETRY' : '派生方法 · 非控制器遥测'}</span><p>{selectedSignal.derivation.formula}</p><p>{en ? 'Uses per-frame outline lengths; invalid outlines yield null. No fitting, time interpolation or target imputation.' : '按逐帧有效轮廓长度计算；无效轮廓整帧留空。不拟合、不作时间插值、不填入日志目标。'}</p><small>{selectedSignal.derivation.method}</small><a href="https://imas-data-dictionary.readthedocs.io/en/4.1.1/generated/ids/equilibrium.html" target="_blank" rel="noreferrer">IMAS 4.1.1 · equilibrium ↗</a></section>}
         <section><span>{en ? 'PROVENANCE' : '血缘'}</span><ol><li><b>01</b>{en ? 'Authoritative IMAS H5 dataset' : '权威 IMAS H5 数据集'}</li><li><b>02</b>{projectionLabel}</li><li><b>03</b>{en ? 'Allowlisted, hashed public snapshot' : '白名单导出与哈希校验的公开快照'}</li></ol></section>
         <section className="fusionReferenceLinks"><span>{en ? 'DOWNLOAD / CONTRACT' : '下载 / 合同'}</span><a href={`/data/exl50u-mdsplus-snapshot-v1/${selectedManifestShot?.path}`} download>{en ? 'Reviewed raw-gzip shot ↓' : '已审核原始 gzip 炮次包 ↓'}</a><a href={SNAPSHOT_MANIFEST_URL} target="_blank" rel="noreferrer">manifest.json ↗</a></section>
       </aside>}

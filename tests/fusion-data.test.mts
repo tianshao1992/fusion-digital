@@ -1,8 +1,16 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
+import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
+import { fileURLToPath } from 'node:url';
 import { readdirSync, readFileSync } from 'node:fs';
 import test from 'node:test';
-import { gunzipSync } from 'node:zlib';
+import { gzipSync, gunzipSync } from 'node:zlib';
+import { init, use as registerEChartsModules } from 'echarts/core';
+import { LineChart } from 'echarts/charts';
+import { GridComponent, DataZoomComponent } from 'echarts/components';
+import { SVGRenderer } from 'echarts/renderers';
+import { DEFAULT_TIME_WINDOW_SECONDS, defaultTimeZoom, fullTimeExtent } from '../app/fusion-data/timeViewport';
+import { fusionDataPreview } from '../build/fusion-data-preview';
 
 import {
   commonSignalIds,
@@ -10,6 +18,7 @@ import {
   loadSnapshotShot,
   nearestSample,
   SNAPSHOT_MANIFEST_URL,
+  SNAPSHOT_RELEASE_ID,
   SNAPSHOT_SCHEMA,
   type SnapshotManifest,
   type SnapshotShot,
@@ -35,9 +44,61 @@ function readShot(entry: SnapshotManifest['shots'][number]) {
 
 const addedPulses = [21066, 21067, 21068, 21069, 21070, 21071, 21074, 21075, 21076, 21077, 21078, 21079, 21080, 21081, 21082, 21083, 21084, 21085, 21093, 21094, 21095, 21096, 21097, 21098, 21099, 21100, 21101, 21102, 21103];
 
+test('all shot groups and comparisons default to -0.2 through 1.1 seconds without cropping data', () => {
+  assert.deepEqual(DEFAULT_TIME_WINDOW_SECONDS, [-0.2, 1.1]);
+  assert.deepEqual(fullTimeExtent([]), [-0.2, 1.1]);
+  assert.deepEqual(fullTimeExtent([[0.1, 0.5]]), [-0.2, 1.1]);
+  assert.deepEqual(fullTimeExtent([[-10, 10], [-20, 20]]), [-20, 20]);
+  for (const entry of manifest.shots) {
+    const { shot } = readShot(entry);
+    const original = JSON.stringify(shot.signals);
+    for (const equilibrium of [false, true]) {
+      const signals = shot.signals.filter((signal) => (signal.dataItem === 'equilibrium') === equilibrium);
+      const extent = fullTimeExtent(signals.map(({ sampling }) => sampling.timeRange));
+      assert.ok(extent[0] <= -0.2 && extent[1] >= 1.1);
+      for (const signal of signals) {
+        assert.ok(extent[0] <= signal.sampling.timeRange[0]);
+        assert.ok(extent[1] >= signal.sampling.timeRange[1]);
+      }
+      const zoom = defaultTimeZoom(signals.map((_, index) => index));
+      assert.equal(zoom.startValue, -0.2);
+      assert.equal(zoom.endValue, 1.1);
+      assert.deepEqual(zoom.rangeMode, ['value', 'value']);
+      assert.equal(zoom.filterMode, 'none');
+    }
+    assert.equal(JSON.stringify(shot.signals), original);
+  }
+  assert.match(workspaceSource, /fullTimeExtent\(all\.map/);
+  assert.match(workspaceSource, /const timeZoom = defaultTimeZoom/);
+  assert.equal(workspaceSource.match(/\.\.\.timeZoom, type:/g)?.length, 2);
+});
+
+test('ECharts starts every linked time axis at the requested window and can expand to the full record', () => {
+  registerEChartsModules([LineChart, GridComponent, DataZoomComponent, SVGRenderer]);
+  const chart = init(null, undefined, { renderer: 'svg', ssr: true, width: 800, height: 400 });
+  try {
+    const extent = fullTimeExtent([[-10, 10], [-20, 20]]);
+    const zoom = defaultTimeZoom([0, 1]);
+    chart.setOption({
+      animation: false,
+      grid: [{ top: 20, height: 120 }, { top: 200, height: 120 }],
+      xAxis: [0, 1].map(gridIndex => ({ type: 'value', gridIndex, min: extent[0], max: extent[1] })),
+      yAxis: [0, 1].map(gridIndex => ({ type: 'value', gridIndex })),
+      dataZoom: [{ ...zoom, type: 'inside' }, { ...zoom, type: 'slider' }],
+      series: [0, 1].map(index => ({ type: 'line', xAxisIndex: index, yAxisIndex: index, data: [[-20, 0], [-0.2, 1], [0.5, 2], [1.1, 1], [20, 0]] })),
+    });
+    const readExtent = (index: number) => (chart as unknown as { getModel(): { getComponent(name: string, index: number): { axis: { scale: { getExtent(): number[] } } } } }).getModel().getComponent('xAxis', index).axis.scale.getExtent();
+    for (const index of [0, 1]) assert.deepEqual(readExtent(index), [-0.2, 1.1]);
+    chart.dispatchAction({ type: 'dataZoom', startValue: -20, endValue: 20 });
+    for (const index of [0, 1]) assert.deepEqual(readExtent(index), [-20, 20]);
+  } finally {
+    chart.dispose();
+  }
+});
+
 test('public manifest retains four legacy shots and adds 29 unique captured shots', () => {
   assert.equal(manifest.schemaVersion, SNAPSHOT_SCHEMA);
-  assert.equal(manifest.snapshotId, 'exl50u-imas-20260908-r1');
+  assert.equal(manifest.snapshotId, SNAPSHOT_RELEASE_ID);
   assert.equal(manifest.facility, 'EXL-50U');
   assert.equal(manifest.state, 'versioned-public-snapshot');
   assert.equal(manifest.live, false);
@@ -57,7 +118,7 @@ test('public manifest retains four legacy shots and adds 29 unique captured shot
 });
 
 test('manifest is a complete allowlist for deterministic raw-gzip shot assets', () => {
-  const expected = ['manifest.json', ...manifest.shots.map(({ path }) => path)].sort();
+  const expected = [...new Set(['manifest.json', `manifest.${SNAPSHOT_RELEASE_ID}.json`, ...manifest.shots.map(({ path }) => path), ...manifest.shots.map(({ pulse }) => `shot-${pulse}.jsonl.gz`)])].sort();
   const actual = readdirSync(DATA_ROOT, { withFileTypes: true }).filter((entry) => entry.isFile()).map(({ name }) => name).sort();
   assert.deepEqual(actual, expected);
   for (const entry of manifest.shots) {
@@ -87,7 +148,7 @@ test('every published signal is traceable, finite, independently timed and non-s
     assert.equal(shot.pulse, entry.pulse);
     assert.equal(shot.source.transport, 'reviewed public snapshot');
     const offline = addedPulses.includes(shot.pulse);
-    assert.equal(shot.signals.length, offline && shot.pulse !== 21096 ? 7 : 4);
+    assert.equal(shot.signals.length, offline && shot.pulse !== 21096 ? 10 : 4);
     assert.deepEqual(shot.signals.slice(0, 4).map(({ id }) => id), expectedSignals.map(([id]) => id));
 
     for (const [index, signal] of shot.signals.entries()) {
@@ -100,8 +161,8 @@ test('every published signal is traceable, finite, independently timed and non-s
         assert.equal(signal.sampling.sourcePoints, sourcePoints);
       } else {
         assert.equal(signal.dataItem, 'equilibrium');
-        assert.equal(signal.id, ['equilibrium-ip', 'magnetic-axis-r', 'magnetic-axis-z'][index - 4]);
-        assert.equal(signal.unit, index === 4 ? 'A' : 'm');
+        assert.equal(signal.id, ['equilibrium-ip', 'magnetic-axis-r', 'magnetic-axis-z', 'boundary-rmax', 'boundary-rmin', 'boundary-kappa'][index - 4]);
+        assert.equal(signal.unit, index === 4 ? 'A' : index === 9 ? '1' : 'm');
       }
       assert.equal(signal.sampling.publishedPoints, signal.samples.length);
       assert.ok(signal.samples.length > 2 && signal.samples.length <= 800);
@@ -140,7 +201,110 @@ test('missing equilibrium is explicit and no uncertain log entry becomes a measu
   assert.equal(readShot(missing).shot.signals.some(({ dataItem }) => dataItem === 'equilibrium'), false);
   assert.equal(manifest.shots.some(({ pulse }) => pulse === 21104), false);
   for (const entry of manifest.shots.filter(({ campaignDate }) => campaignDate)) {
-    assert.doesNotMatch(JSON.stringify(readShot(entry).shot.signals.map((signal) => ({ id: signal.id, path: signal.path, label: signal.label }))), /Rmax|rmax|rmin|kappa|PID|takeover|20440_|NBI/);
+    assert.doesNotMatch(JSON.stringify(readShot(entry).shot.signals.map((signal) => ({ id: signal.id, path: signal.path, label: signal.label }))), /target|reference|PID|takeover|20440_|NBI/);
+  }
+});
+
+test('28 shape extensions retain prior signals and disclose derived quantities, not PCS feedback', () => {
+  let added = 0;
+  for (const entry of manifest.shots) {
+    const { shot } = readShot(entry);
+    const original = JSON.parse(gunzipSync(readFileSync(new URL(`shot-${entry.pulse}.jsonl.gz`, DATA_ROOT))).toString()) as SnapshotShot;
+    assert.deepEqual(shot.signals.slice(0, original.signals.length), original.signals);
+    const derived = shot.signals.filter(({ derivation }) => derivation);
+    if (!derived.length) continue;
+    added++;
+    assert.equal(entry.path, `shot-${entry.pulse}.${SNAPSHOT_RELEASE_ID}.jsonl.gz`);
+    assert.deepEqual(derived.map(({ id }) => id), ['boundary-rmax', 'boundary-rmin', 'boundary-kappa']);
+    for (const signal of derived) {
+      assert.equal(signal.processingLevel, 'boundary-derived');
+      assert.equal(signal.derivation!.method, 'boundary-extents-v1');
+      assert.equal(signal.derivation!.notControllerTelemetry, true);
+      assert.equal(signal.derivation!.invalidOutlinePolicy, 'whole-frame-null');
+      assert.equal(signal.origin!.h5Sha256, shot.signals[4].origin!.h5Sha256);
+      assert.deepEqual(signal.samples.map(([t]) => t), shot.signals[4].samples.map(([t]) => t));
+      assert.ok(signal.samples.every(([, v]) => v === null || v > 0));
+    }
+    for (let i = 0; i < derived[0].samples.length; i++) {
+      const max = derived[0].samples[i][1], min = derived[1].samples[i][1];
+      assert.ok(max === null || min === null || max > min);
+    }
+  }
+  assert.equal(added, 28);
+  assert.equal(manifest.shots.reduce((n, s) => n + s.signalCount, 0), 300);
+  const sparse = readShot(manifest.shots.find(({ pulse }) => pulse === 21084)!).shot;
+  assert.equal(sparse.signals.find(({ id }) => id === 'boundary-kappa')!.samples.length, 4);
+  const late = readShot(manifest.shots.find(({ pulse }) => pulse === 21103)!).shot;
+  const kappa = late.signals.find(({ id }) => id === 'boundary-kappa')!;
+  assert.equal(kappa.samples.length, 34);
+  assert.equal(nearestSample(kappa, .3), null);
+  assert.equal(kappa.samples.some(([t]) => t >= .3 && t <= .65), false);
+  assert.match(workspaceSource, /位形与平衡 · Rmax \/ Rmin \/ κ/);
+  assert.match(workspaceSource, /非控制器遥测/);
+  assert.match(workspaceSource, /selectSignal\(signal.id\)/);
+});
+
+test('catalog is release-pinned so cached legacy manifests cannot hide the added shots', async () => {
+  assert.equal(SNAPSHOT_MANIFEST_URL, `/data/exl50u-mdsplus-snapshot-v1/manifest.${SNAPSHOT_RELEASE_ID}.json`);
+  assert.deepEqual(JSON.parse(readFileSync(new URL(`manifest.${SNAPSHOT_RELEASE_ID}.json`, DATA_ROOT), 'utf8')), manifest);
+  await loadSnapshotManifest(async (input, init) => {
+    assert.equal(input, SNAPSHOT_MANIFEST_URL);
+    assert.equal(init?.cache, 'no-store');
+    return new Response(JSON.stringify(manifest));
+  });
+  await assert.rejects(() => loadSnapshotManifest(async () => new Response(JSON.stringify({ ...manifest, snapshotId: 'exl50u-mdsplus-20260901-r1' }))), /catalog version/);
+});
+
+test('local preview serves original gzip bytes through an exact GET/HEAD allowlist', async () => {
+  type Middleware = (req: IncomingMessage, res: ServerResponse, next: () => void) => void;
+  let middleware!: Middleware;
+  const plugin = fusionDataPreview();
+  assert.equal(plugin.apply, 'serve');
+  const configure = plugin.configureServer as (server: unknown) => void;
+  configure({ config: { root: fileURLToPath(new URL('../', import.meta.url)) }, middlewares: { use: (handler: Middleware) => { middleware = handler; } } });
+  const server = createServer((req, res) => middleware(req, res, () => { res.statusCode = 404; res.end(); }));
+  await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
+  try {
+    const address = server.address() as { port: number };
+    const origin = `http://127.0.0.1:${address.port}/data/exl50u-mdsplus-snapshot-v1/`;
+    for (const pulse of [20831, 21066]) {
+      const entry = manifest.shots.find((entry) => entry.pulse === pulse)!;
+      const response = await fetch(origin + entry.path);
+      assert.equal(response.status, 200);
+      assert.equal(response.headers.get('content-type'), 'application/gzip');
+      assert.equal(response.headers.get('content-encoding'), null);
+      assert.equal(sha256(Buffer.from(await response.arrayBuffer())), entry.compressedSha256);
+      const head = await fetch(origin + entry.path, { method: 'HEAD' });
+      assert.equal(head.status, 200);
+      assert.equal(Number(head.headers.get('content-length')), entry.compressedBytes);
+      assert.equal((await head.arrayBuffer()).byteLength, 0);
+      assert.equal((await fetch(origin + entry.path, { method: 'POST' })).status, 404);
+    }
+    assert.equal((await fetch(origin + 'shot-99999.jsonl.gz')).status, 404);
+    assert.equal((await fetch(origin + '..%2F..%2F.env')).status, 404);
+  } finally {
+    await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
+  }
+});
+
+test('loader rejects altered shape semantics even when the payload hashes are valid', async () => {
+  const entry = manifest.shots.find(({ pulse }) => pulse === 21066)!;
+  for (const alteration of ['formula', 'unit', 'level', 'source', 'telemetry']) {
+    const { shot } = readShot(entry);
+    const signal = shot.signals.find(({ id }) => id === 'boundary-kappa')!;
+    if (alteration === 'formula') signal.derivation!.formula = '1.9';
+    if (alteration === 'unit') signal.unit = 'm';
+    if (alteration === 'level') signal.processingLevel = 'unclassified';
+    if (alteration === 'source') signal.origin!.field = 'controller.target';
+    if (alteration === 'telemetry') Object.assign(signal.derivation!, { notControllerTelemetry: false });
+    const content = Buffer.from(JSON.stringify(shot));
+    const compressed = gzipSync(content);
+    const forged = structuredClone(manifest);
+    Object.assign(forged.shots.find(({ pulse }) => pulse === entry.pulse)!, {
+      compressedBytes: compressed.length, compressedSha256: sha256(compressed),
+      contentBytes: content.length, contentSha256: sha256(content),
+    });
+    await assert.rejects(() => loadSnapshotShot(forged, entry.pulse, async () => new Response(compressed)), /boundary-derived/i);
   }
 });
 

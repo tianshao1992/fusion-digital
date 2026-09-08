@@ -24,6 +24,37 @@ SIGNALS = [
     ("magnetic-axis-z", "磁轴 Z", "Magnetic axis Z", "#b55224", "equilibrium", "GLOBAL_QUANTITIES.MAGNETIC_AXIS.Z", "m", "time_slice[]&global_quantities&magnetic_axis&z", None),
 ]
 
+BOUNDARY_R = "time_slice[]&boundary&outline&r"
+BOUNDARY_Z = "time_slice[]&boundary&outline&z"
+SHAPE_SIGNALS = [
+    ("boundary-rmax", "Rmax（边界派生）", "Rmax (boundary-derived)", "#c03131", "m", "max(R)"),
+    ("boundary-rmin", "Rmin（边界派生）", "Rmin (boundary-derived)", "#2459c4", "m", "min(R)"),
+    ("boundary-kappa", "κ（边界派生）", "Kappa (boundary-derived)", "#247b38", "1", "(max(Z)-min(Z))/(max(R)-min(R))"),
+]
+
+
+def boundary_parameters(r, z, r_shapes, z_shapes):
+    """Geometric extrema of the stored outline, NOT real-time PCS feedback.
+
+    Flattened IMAS arrays are padded. Only the per-frame *_SHAPE prefix is
+    physical data. An incomplete/degenerate outline invalidates the entire
+    frame; do not shrink it by dropping invalid vertices. No contour fitting.
+    """
+    if r.ndim != 2 or r.shape != z.shape or r_shapes.shape != (len(r), 1) or z_shapes.shape != r_shapes.shape:
+        raise ValueError("Invalid boundary array dimensions")
+    output = np.full((len(r), 3), np.nan)
+    for i, (nr, nz) in enumerate(zip(r_shapes[:, 0], z_shapes[:, 0])):
+        if not np.isfinite(nr) or not np.isfinite(nz) or nr != nz or nr != int(nr) or not 3 <= nr <= r.shape[1]:
+            continue
+        rr, zz = r[i, :int(nr)], z[i, :int(nr)]
+        if not np.all(np.isfinite(rr)) or not np.all(np.isfinite(zz)) or np.any(rr <= 0) or np.any(zz <= -9e39):
+            continue
+        width, height = np.ptp(rr), np.ptp(zz)
+        if width <= 0 or height <= 0:
+            continue
+        output[i] = (np.max(rr), np.min(rr), height / width)
+    return output
+
 
 def sample_indices(values, limit=800):
     """Uniform source indices plus every null boundary; never bridge missing data."""
@@ -87,6 +118,28 @@ def extract(root, shots):
                         "sampling": {"sourcePoints": len(values), "publishedPoints": len(samples), "requestedMaxPoints": 800, "method": "offline-index-subsample", "timeRange": [samples[0][0], samples[-1][0]], "samplePolicy": "nearest", "noInterpolation": True, "connectAcrossGaps": False, "missingValues": sum(v is None for _, v in samples), "sourceMissingValues": int(np.count_nonzero(~np.isfinite(values)))},
                         "quality": {"state": "unknown", "basis": "not-exported"}, "samples": samples,
                     })
+                if ids == "equilibrium":
+                    times = np.asarray(group["time"][()], dtype=float)
+                    shape_values = boundary_parameters(
+                        np.asarray(group[BOUNDARY_R][()], dtype=float), np.asarray(group[BOUNDARY_Z][()], dtype=float),
+                        group[BOUNDARY_R + "_SHAPE"][()], group[BOUNDARY_Z + "_SHAPE"][()],
+                    )
+                    if len(shape_values) != len(times):
+                        raise ValueError("Boundary and equilibrium time lengths differ")
+                    for column, (sid, zh, en, color, unit, formula) in enumerate(SHAPE_SIGNALS):
+                        values = shape_values[:, column]
+                        indices = sample_indices(values)
+                        samples = [[float(times[i]), float(values[i]) if np.isfinite(values[i]) else None] for i in indices]
+                        records.append({
+                            "id": sid, "label": zh, "labelEn": en, "color": color,
+                            "observationKind": "facility-record", "processingLevel": "boundary-derived",
+                            "projection": "imas-h5-offline", "dataItem": ids, "path": "DERIVED.BOUNDARY." + sid.removeprefix("boundary-").upper(), "unit": unit, "kind": "1d",
+                            "dataset": {"id": entry["datasetId"], "idsName": ids, "occurrence": entry["occurrence"], "run": entry["run"], "recommended": True, "catalogueStatus": "valid", "publishState": "published", "hasAuthoritativeImasH5": True},
+                            "origin": {"h5Sha256": digest, "field": BOUNDARY_R, "timeField": "time", "channelIndex": None, "timeUnit": "s"},
+                            "derivation": {"method": "boundary-extents-v1", "formula": formula, "fields": [BOUNDARY_R, BOUNDARY_Z, BOUNDARY_R + "_SHAPE", BOUNDARY_Z + "_SHAPE"], "notControllerTelemetry": True, "invalidOutlinePolicy": "whole-frame-null"},
+                            "sampling": {"sourcePoints": len(values), "publishedPoints": len(samples), "requestedMaxPoints": 800, "method": "offline-index-subsample", "timeRange": [samples[0][0], samples[-1][0]], "samplePolicy": "nearest", "noInterpolation": True, "connectAcrossGaps": False, "missingValues": sum(v is None for _, v in samples), "sourceMissingValues": int(np.count_nonzero(~np.isfinite(values)))},
+                            "quality": {"state": "unknown", "basis": "not-exported"}, "samples": samples,
+                        })
         results.append({"pulse": pulse, "campaignDate": "2026-09-07" if pulse <= 21085 else "2026-09-08", "missingDataItems": missing, "signals": records})
         print(f"#{pulse}: {len(records)} signals; missing: {','.join(missing) or 'none'}", flush=True)
     return results

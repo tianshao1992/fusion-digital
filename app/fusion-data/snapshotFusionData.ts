@@ -1,4 +1,7 @@
-export const SNAPSHOT_MANIFEST_URL = '/data/exl50u-mdsplus-snapshot-v1/manifest.json';
+// Pin the catalog to this UI release: an hour-old browser/CDN catalog must not
+// silently replace the new shot list. Shot extensions also use immutable URLs.
+export const SNAPSHOT_RELEASE_ID = 'exl50u-imas-20260908-r2';
+export const SNAPSHOT_MANIFEST_URL = `/data/exl50u-mdsplus-snapshot-v1/manifest.${SNAPSHOT_RELEASE_ID}.json`;
 export const SNAPSHOT_SCHEMA = 'fusiondigital.exl50u.public-snapshot.v1';
 type SourceProjection = 'read-only MDSplus time-series projection' | 'offline IMAS H5 time-series extraction';
 const SOURCE_PROJECTIONS: string[] = ['read-only MDSplus time-series projection', 'offline IMAS H5 time-series extraction'];
@@ -47,7 +50,8 @@ export type SnapshotSignal = {
   labelEn: string;
   color: string;
   observationKind: 'facility-record';
-  processingLevel: 'unclassified';
+  processingLevel: 'unclassified' | 'boundary-derived';
+  derivation?: { method: 'boundary-extents-v1'; formula: string; fields: string[]; notControllerTelemetry: true; invalidOutlinePolicy: 'whole-frame-null' };
   projection: 'mdsplus-readonly-snapshot' | 'imas-h5-offline';
   origin?: { h5Sha256: string; field: string; timeField: string; channelIndex: number | null; timeUnit: 's' };
   dataItem: string;
@@ -150,7 +154,8 @@ function assertManifest(value: unknown): asserts value is SnapshotManifest {
     assertSafePositiveInteger(shot.pulse, 'shot pulse');
     if (pulses.has(Number(shot.pulse))) throw new Error('Snapshot pulse numbers must be unique');
     pulses.add(Number(shot.pulse));
-    if (shot.path !== `shot-${shot.pulse}.jsonl.gz`) {
+    if (shot.path !== `shot-${shot.pulse}.jsonl.gz`
+      && !(typeof shot.snapshotId === 'string' && /^exl50u-imas-\d{8}-r\d+$/.test(shot.snapshotId) && shot.path === `shot-${shot.pulse}.${shot.snapshotId}.jsonl.gz`)) {
       throw new Error('Snapshot shot path is invalid');
     }
     assertSafePositiveInteger(shot.signalCount, 'signalCount');
@@ -187,7 +192,7 @@ async function validateSignal(signal: unknown, pulse: number): Promise<SnapshotS
     || typeof signal.labelEn !== 'string'
     || typeof signal.color !== 'string'
     || signal.observationKind !== 'facility-record'
-    || signal.processingLevel !== 'unclassified'
+    || !['unclassified', 'boundary-derived'].includes(String(signal.processingLevel))
     || !['mdsplus-readonly-snapshot', 'imas-h5-offline'].includes(String(signal.projection))
     || typeof signal.dataItem !== 'string'
     || typeof signal.path !== 'string'
@@ -235,6 +240,25 @@ async function validateSignal(signal: unknown, pulse: number): Promise<SnapshotS
     if (!isObject(signal.origin) || typeof signal.origin.field !== 'string' || typeof signal.origin.timeField !== 'string' || signal.origin.timeUnit !== 's'
       || (signal.origin.channelIndex !== null && (!Number.isSafeInteger(signal.origin.channelIndex) || Number(signal.origin.channelIndex) < 0))) throw new Error('Missing offline H5 provenance');
     assertSha256(signal.origin.h5Sha256, 'source H5 SHA-256');
+  }
+  if (signal.processingLevel === 'boundary-derived') {
+    const expected = {
+      'boundary-rmax': ['m', 'max(R)', 'DERIVED.BOUNDARY.RMAX'],
+      'boundary-rmin': ['m', 'min(R)', 'DERIVED.BOUNDARY.RMIN'],
+      'boundary-kappa': ['1', '(max(Z)-min(Z))/(max(R)-min(R))', 'DERIVED.BOUNDARY.KAPPA'],
+    }[signal.id];
+    const r = 'time_slice[]&boundary&outline&r';
+    const z = 'time_slice[]&boundary&outline&z';
+    if (!expected || !offline || signal.dataItem !== 'equilibrium' || signal.unit !== expected[0] || signal.path !== expected[2]
+      || !isObject(signal.origin) || signal.origin.field !== r || signal.origin.timeField !== 'time' || signal.origin.channelIndex !== null
+      || !isObject(signal.derivation) || signal.derivation.method !== 'boundary-extents-v1'
+      || signal.derivation.formula !== expected[1] || signal.derivation.notControllerTelemetry !== true
+      || signal.derivation.invalidOutlinePolicy !== 'whole-frame-null'
+      || JSON.stringify(signal.derivation.fields) !== JSON.stringify([r, z, `${r}_SHAPE`, `${z}_SHAPE`])) {
+      throw new Error('Invalid boundary-derived signal provenance');
+    }
+  } else if (signal.derivation !== undefined || signal.id.startsWith('boundary-')) {
+    throw new Error('Boundary-derived signals must disclose their processing level');
   }
   let previous = -Infinity;
   for (const [index, sample] of signal.samples.entries()) {
@@ -286,10 +310,11 @@ async function assertShot(value: unknown, manifest: SnapshotManifest, entry: Sna
 }
 
 export async function loadSnapshotManifest(fetcher: FetchLike = fetch) {
-  const response = await fetcher(SNAPSHOT_MANIFEST_URL, { headers: { Accept: 'application/json' } });
+  const response = await fetcher(SNAPSHOT_MANIFEST_URL, { headers: { Accept: 'application/json' }, cache: 'no-store' });
   if (!response.ok) throw new Error(`FusionData snapshot manifest failed with HTTP ${response.status}`);
   const value: unknown = await response.json();
   assertManifest(value);
+  if (value.snapshotId !== SNAPSHOT_RELEASE_ID) throw new Error('FusionData catalog version does not match this release');
   return value;
 }
 

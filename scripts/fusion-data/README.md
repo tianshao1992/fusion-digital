@@ -42,7 +42,7 @@ not timestamps inferred from signal data.
 2. Run `extract-offline-imas.py --capture-root <private-capture-directory>
    --shots <comma-separated-pulses> --output <private-staging-json>`.
 3. Run `node scripts/fusion-data/publish-offline-imas.mjs <private-staging-json>
-   exl50u-imas-20260908-r1 <canonical-UTC-export-time>`.
+   exl50u-imas-20260908-r2 <canonical-UTC-export-time>`.
 
 Extraction checks the local verified download manifest (full-file SHA-256 and
 bytes) against each shot's captured catalog. Only valid, recommended, published
@@ -60,6 +60,8 @@ label for the whole shot.
 | Probe EMB000 Jsat | langmuir_probes / `embedded[]&j_i_saturation&data` | 0 | A/m² |
 | Equilibrium current | equilibrium / `time_slice[]&global_quantities&ip` | — | A |
 | Magnetic axis R/Z | equilibrium / `time_slice[]&global_quantities&magnetic_axis&r` / `&z` | — | m |
+| Rmax / Rmin (derived) | max/min of `time_slice[]&boundary&outline&r` | per-frame `_SHAPE` prefix | m |
+| κ (derived) | `(max(Z)-min(Z))/(max(R)-min(R))` from boundary outline R/Z | per-frame `_SHAPE` prefix | 1 |
 
 Time is seconds from each IDS's `time`, except the embedded probe which uses
 its own `embedded[]&time[0]`. No resampling onto another IDS clock, scale changes,
@@ -69,9 +71,11 @@ NaN, infinity and IMAS undefined real sentinels become null. This display
 subsample is **not suitable for authoritative peak or controller-performance
 claims**; the complete original 445 H5 files remain in the private capture.
 
-28 new shots contain all seven signals. **21096 has no recommended equilibrium
+28 new shots contain ten signals (seven extracted and three boundary-derived).
+There are **33 shots and 300 signals** in the current catalog.
+**21096 has no recommended equilibrium
 dataset in the captured catalog** and publishes only the four diagnostic
-signals. Previous shots retain their existing four-signal scope. No LCFS, 2D
+signals. Previous shots retain their existing four-signal scope. No rendered LCFS, 2D
 equilibrium field, controller reference/action trace or quality-bit product is
 included. Quality is explicitly unknown, not inferred from catalog approval.
 
@@ -90,3 +94,36 @@ content and sample hashes before displaying a curve.
 Validation: `npx tsx --test tests/fusion-data.test.mts`, optional offline
 extractor tests in `tests/fusion-data-offline.test.py`, full `npm run check`,
 and all 33 shot paths in the formal paired-release shared-content contract.
+
+### Boundary-derived shape parameters (r2)
+
+The reviewed captures contain no direct Rmax/Rmin/kappa scalar channels or
+controller references/actions. The three new numerical curves are derived from
+the stored equilibrium boundary, not PCS feedback, midplane intersections or
+the unconfirmed experiment-log targets. Definitions and SI units follow the
+[IMAS 4.1.1 equilibrium dictionary](https://imas-data-dictionary.readthedocs.io/en/4.1.1/generated/ids/equilibrium.html).
+The boundary flux level is not inferred to be the exact separatrix.
+
+Use the H5 `_SHAPE` length for **each frame**, excluding array padding. A bad,
+missing or degenerate outline gives whole-frame null, never a smaller contour
+created by silently removing vertices. Retain irregular source times and all
+available frames (each equilibrium has fewer than 800). No fitting, smoothing,
+interpolation, target imputation or controller-performance claim is made.
+`processingLevel=boundary-derived` and `derivation` record the method, formula,
+four source fields and invalid-outline policy. The original seven signals are
+unchanged. Quality remains unknown, including numerical reconstruction outliers.
+
+21084 has only **4 equilibrium frames**; 21103 has **34 frames at 0.761–0.907 s**,
+none at 0.300–0.650 s. Sparse series (<100 samples) render points without joining
+them into a continuous control trace. 21096 remains explicitly unavailable.
+The “Shape & equilibrium · Rmax / Rmin / κ” tab places these parameters first,
+then the existing equilibrium current and magnetic-axis R/Z. Cross-shot matching
+still requires identical signal IDs and units. The default time view is
+**−0.2–1.1 s**; zooming does not crop or change the public data.
+
+Extensions write `shot-<pulse>.<snapshotId>.jsonl.gz`, retaining all original
+gzip files. Publishing refuses any change to an existing signal. The UI pins
+`manifest.<snapshotId>.json` and validates its version; the mutable `manifest.json`
+remains a compatibility/release-check alias. This prevents cached four-shot
+catalogs or older payloads from being mixed with the updated UI. Every new
+immutable path is included in the paired-release contract and runtime asset lock.

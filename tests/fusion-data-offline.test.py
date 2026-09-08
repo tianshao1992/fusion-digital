@@ -11,6 +11,32 @@ spec.loader.exec_module(module)
 
 
 class OfflineSamplingTests(unittest.TestCase):
+    def test_outline_extrema_ignore_padding_and_preserve_real_geometry(self):
+        r = np.array([[.3, 1.3, .8, .8, -9e40], [.4, 1.4, .9, .9, 999]])
+        z = np.array([[0., 0., .95, -.95, -9e40], [0., 0., 1., -1., 999]])
+        sizes = np.array([[4], [4]])
+        result = module.boundary_parameters(r, z, sizes, sizes)
+        np.testing.assert_allclose(result, [[1.3, .3, 1.9], [1.4, .4, 2.]])
+
+    def test_invalid_outline_does_not_become_a_smaller_plasma(self):
+        r = np.tile([.3, 1.3, .8, .8], (8, 1))
+        z = np.tile([0., 0., .95, -.95], (8, 1))
+        sizes = np.full((8, 1), 4)
+        zsizes = sizes.copy()
+        r[0, 0] = -9e40
+        z[1, 0] = np.nan
+        r[2, :] = .8
+        z[3, :] = 0
+        sizes[4] = 2
+        zsizes[5] = 3
+        sizes[6] = zsizes[6] = 5
+        r[7, 0] = np.inf
+        self.assertTrue(np.isnan(module.boundary_parameters(r, z, sizes, zsizes)).all())
+
+    def test_mismatched_outline_arrays_fail_closed(self):
+        with self.assertRaisesRegex(ValueError, "boundary array dimensions"):
+            module.boundary_parameters(np.zeros((2, 4)), np.zeros((2, 3)), np.ones((2, 1)), np.ones((2, 1)))
+
     def test_small_signal_is_lossless(self):
         np.testing.assert_array_equal(module.sample_indices(np.arange(723)), np.arange(723))
 
