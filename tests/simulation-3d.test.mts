@@ -5,8 +5,35 @@ import { gunzipSync } from 'node:zlib';
 import { buildPoloidalFieldSlice, revolveContours, SURFACE_VERTEX_BUDGET } from '../app/simulations/flux-surface-geometry.ts';
 import type { EquilibriumFieldSample } from '../app/simulations/equilibrium-field.ts';
 import { parsePhysics, type PhysicsBundle, type RZ } from '../app/simulations/physics.ts';
+import { buildFieldDisplayRaster, interpolateDisplayGrid } from '../app/simulations/field-display-raster.ts';
 
 const square: RZ = [[1, -1], [2, -1], [2, 1], [1, 1], [1, -1]];
+test('display interpolation is exact for a bilinear field on nonuniform native axes and leaves holes missing', () => {
+  const r = [1, 1.3, 2.8], z = [-2, -.1, 1];
+  const value = (r: number, z: number) => 2 * r + 3 * z + r * z;
+  const grid = z.map(y => r.map(x => value(x, y)));
+  for (const x of [1, 1.2, 1.3, 2.5, 2.8]) for (const y of [-2, -1, -.1, .3, 1]) {
+    assert.ok(Math.abs(interpolateDisplayGrid(r, z, grid, x, y)! - value(x, y)) < 1e-12);
+  }
+  assert.equal(interpolateDisplayGrid(r, z, grid, .9, 0), null);
+  assert.equal(interpolateDisplayGrid(r, z, [[1, null, 3], ...grid.slice(1)], 1.1, -1), null);
+  assert.equal(interpolateDisplayGrid(r, z, [[1, NaN, 3], ...grid.slice(1)], 1.1, -1), null);
+});
+test('smooth cloud is bounded presentation data and never changes archived scientific samples', () => {
+  const bundles: PhysicsBundle[] = JSON.parse(readFileSync(new URL('../app/simulations/data/physics-bundles.json', import.meta.url), 'utf8'));
+  for (const bundle of bundles) {
+    const data = parsePhysics(JSON.parse(gunzipSync(readFileSync(new URL(`../public${bundle.path}`, import.meta.url))).toString()));
+    const original = JSON.stringify(data);
+    const raster = buildFieldDisplayRaster(data, 'psi_norm', undefined, 96);
+    assert.ok(raster.width <= 96 && raster.height <= 96);
+    assert.equal(raster.values.length, raster.width * raster.height);
+    assert.ok(raster.values.some(Number.isFinite));
+    const [rMin, rMax, zMin, zMax] = raster.bounds;
+    for (const [r,z] of data.equilibrium.boundary) assert.ok(r >= rMin && r <= rMax && z >= zMin && z <= zMax);
+    assert.equal(JSON.stringify(data), original);
+    assert.throws(() => buildFieldDisplayRaster(data, 'psi', undefined, 2048), /BUDGET/);
+  }
+});
 test('revolution preserves metres, handedness and every source point', () => {
   const original = structuredClone(square);
   const mesh = revolveContours([square], 360, 8);

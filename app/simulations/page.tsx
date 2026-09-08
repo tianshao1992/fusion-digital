@@ -8,7 +8,7 @@ import './platform/platform.css';
 export async function generateMetadata(): Promise<Metadata> {
   const store = await cookies();
   const en = (resolveLocale(store.get(LOCALE_COOKIE_NAME)?.value) ?? DEFAULT_LOCALE) === 'en';
-  return { title: en ? 'Simulations · FUSE, TORAX & CHERAB–Raysect' : '仿真模拟 · FUSE、TORAX 与 CHERAB–Raysect', description: en ? 'Explore traceable simulations, transport trajectories and connected engine workflows.' : '探索可追溯的仿真结果、输运时序与多引擎协同研究。', alternates: { canonical: '/simulations' } };
+  return { title: en ? 'Simulation Engines · FUSE, TORAX & CHERAB–Raysect' : '仿真引擎 · FUSE、TORAX 与 CHERAB–Raysect', description: en ? 'Explore traceable simulations, transport trajectories and connected engine workflows.' : '探索可追溯的仿真结果、输运时序与多引擎协同研究。', alternates: { canonical: '/simulations' } };
 }
 export default async function SimulationsPage({ searchParams }: { searchParams: Promise<{ engine?: string }> }) {
   const params = await searchParams;

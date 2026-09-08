@@ -8,7 +8,8 @@ import { PSI_N_COLORS } from '../components/efit/psi-n-palette';
 import type { PhysicsData, RZ } from './physics';
 import type { FluxCoordinateMap } from './flux-coordinate-map';
 import { buildEquilibriumFieldProjection, sampleSpatialFieldAtPsiNorm, spatialFieldSpec, spatialFieldUnavailableReason, SPATIAL_FIELD_SPECS, type SpatialFieldChannel } from './equilibrium-field';
-import { buildPoloidalFieldSlice, revolveContours, type RevolvedSurface } from './flux-surface-geometry';
+import { revolveContours, type RevolvedSurface } from './flux-surface-geometry';
+import { buildFieldDisplayRaster } from './field-display-raster';
 import './flux-surface-demo.css';
 
 type CameraPose = { position: [number, number, number]; target: [number, number, number] };
@@ -37,7 +38,11 @@ export default function FluxSurfaceDemo({ data, coordinateMap, field, onFieldCha
     catch { return null; }
   }, [coordinateMap, data, field]);
   const selectedField = useMemo(() => sampleSpatialFieldAtPsiNorm(data, field, selection.value, coordinateMap), [coordinateMap, data, field, selection.value]);
-  const fieldSlice = useMemo(() => fieldProjection && slice ? buildPoloidalFieldSlice(fieldProjection.samples) : null, [fieldProjection, slice]);
+  const fieldRaster = useMemo(() => {
+    if (!fieldProjection || !slice) return null;
+    try { return buildFieldDisplayRaster(data, field, coordinateMap); }
+    catch { return null; }
+  }, [fieldProjection, slice, data, field, coordinateMap]);
   const model = useMemo(() => {
     try { return { surface: revolveContours(selection.paths, degrees), error: false }; }
     catch { return { surface: null, error: true }; }
@@ -57,6 +62,7 @@ export default function FluxSurfaceDemo({ data, coordinateMap, field, onFieldCha
     let cleanup = () => {};
     const geometries: THREE.BufferGeometry[] = [];
     const materials: THREE.Material[] = [];
+    const textures: THREE.Texture[] = [];
     void Promise.all([import('three'), import('three/addons/controls/OrbitControls.js')]).then(([T, { OrbitControls }]) => {
       if (disposed) return;
       setStatus('loading');
@@ -69,11 +75,12 @@ export default function FluxSurfaceDemo({ data, coordinateMap, field, onFieldCha
         renderer.domElement.removeEventListener('webglcontextlost', lost);
         geometries.forEach(g => g.dispose());
         materials.forEach(m => m.dispose());
+        textures.forEach(t => t.dispose());
         renderer.dispose();
         renderer.domElement.remove();
         reset.current = null;
       };
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
       renderer.setClearColor(0x000000, 0);
       renderer.toneMapping = T.ACESFilmicToneMapping;
       renderer.toneMappingExposure = 1.35;
@@ -125,14 +132,26 @@ export default function FluxSurfaceDemo({ data, coordinateMap, field, onFieldCha
         ? new T.MeshBasicMaterial({ color: colorAt(selectedField.value), transparent: slice, opacity: slice ? 0.46 : 0.9, depthWrite: !slice, side: T.DoubleSide, toneMapped: false })
         : new T.MeshStandardMaterial({ color: theme.mode === 'dark' ? '#83b6ad' : '#568d88', metalness: 0.22, roughness: 0.32, side: T.DoubleSide });
       materials.push(material); scene.add(new T.Mesh(geometry, material));
-      if (fieldSlice && fieldProjection) {
-        const sliceGeometry = new T.BufferGeometry(); geometries.push(sliceGeometry);
-        sliceGeometry.setAttribute('position', new T.BufferAttribute(fieldSlice.positions, 3));
-        sliceGeometry.setIndex(new T.BufferAttribute(fieldSlice.indices, 1));
-        const colors = new Float32Array(fieldSlice.values.length * 3);
-        fieldSlice.values.forEach((value, index) => colorAt(value).toArray(colors, index * 3));
-        sliceGeometry.setAttribute('color', new T.BufferAttribute(colors, 3));
-        const sliceMaterial = new T.MeshBasicMaterial({ vertexColors: true, transparent: false, side: T.DoubleSide, toneMapped: false });
+      if (fieldRaster && fieldProjection) {
+        // The native LCFS polygon supplies the edge, avoiding a staircase of cell rectangles.
+        const shape = new T.Shape(data.equilibrium.boundary.map(([r, z]) => new T.Vector2(r, z)));
+        const sliceGeometry = new T.ShapeGeometry(shape); geometries.push(sliceGeometry);
+        const positions = sliceGeometry.getAttribute('position'), uv = sliceGeometry.getAttribute('uv');
+        const [rMin, rMax, zMin, zMax] = fieldRaster.bounds;
+        for (let i = 0; i < positions.count; i++) uv.setXY(i, (positions.getX(i) - rMin) / (rMax - rMin), (positions.getY(i) - zMin) / (zMax - zMin));
+        const lut = Array.from({ length: 1024 }, (_, i) => colorAt(fieldProjection.minimum + i / 1023 * (fieldProjection.maximum - fieldProjection.minimum)).convertLinearToSRGB());
+        const pixels = new Uint8Array(fieldRaster.width * fieldRaster.height * 4);
+        fieldRaster.values.forEach((value, i) => {
+          if (!Number.isFinite(value)) return; // Missing support stays transparent.
+          const normalized = Math.max(0, Math.min(1, (value - fieldProjection.minimum) / (fieldProjection.maximum - fieldProjection.minimum)));
+          const color = lut[Math.round(normalized * 1023)];
+          pixels[i * 4] = Math.round(color.r * 255); pixels[i * 4 + 1] = Math.round(color.g * 255); pixels[i * 4 + 2] = Math.round(color.b * 255); pixels[i * 4 + 3] = 255;
+        });
+        const texture = new T.DataTexture(pixels, fieldRaster.width, fieldRaster.height);
+        textures.push(texture); texture.colorSpace = T.SRGBColorSpace;
+        texture.minFilter = T.LinearFilter; texture.magFilter = T.LinearFilter;
+        texture.generateMipmaps = false; texture.needsUpdate = true;
+        const sliceMaterial = new T.MeshBasicMaterial({ map: texture, alphaTest: 0.99, side: T.DoubleSide, toneMapped: false });
         materials.push(sliceMaterial);
         const sliceMesh = new T.Mesh(sliceGeometry, sliceMaterial); sliceMesh.renderOrder = 4; scene.add(sliceMesh);
       }
@@ -155,7 +174,7 @@ export default function FluxSurfaceDemo({ data, coordinateMap, field, onFieldCha
       setStatus('ready');
     }).catch(() => { cleanup(); if (!disposed) setStatus('failed'); });
     return () => { disposed = true; cleanup(); };
-  }, [model, bounds, selection, degrees, frame, slice, fieldProjection, fieldSlice, selectedField, data, theme, en, attempt]);
+  }, [model, bounds, selection, degrees, frame, slice, fieldProjection, fieldRaster, selectedField, data, theme, en, attempt]);
 
   const path = (points: RZ) => points.map(([r, z], i) => `${i ? 'L' : 'M'}${r},${-z}`).join(' ');
   const span = Math.max(bounds.rMax - bounds.rMin, bounds.zMax - bounds.zMin, 0.1);
@@ -195,7 +214,8 @@ export default function FluxSurfaceDemo({ data, coordinateMap, field, onFieldCha
         <label className="fluxCheck"><input type="checkbox" checked={slice} onChange={e => setSlice(e.target.checked)} />{en ? 'R–Z field-cloud cut plane' : 'R–Z 场云图剖切面'}</label>
         <label className="fluxCheck"><input type="checkbox" checked={frame} onChange={e => setFrame(e.target.checked)} />{en ? 'LCFS section guides' : 'LCFS 截面参考线'}</label>
         {fieldUnavailable && <p className="fluxUnavailable">{en ? 'Verified spatial mapping unavailable; the original 1-D profile remains available below.' : '已校验空间映射不可用；下方原一维剖面仍可查看。'}</p>}
-        <dl className="fluxStats"><div><dt>{en ? 'Surface triangles' : '磁面三角形'}</dt><dd>{model.surface?.triangles.toLocaleString('en-US') ?? '—'}</dd></div><div><dt>{en ? 'Cloud cells' : '云图单元'}</dt><dd>{fieldSlice?.cells.toLocaleString('en-US') ?? '—'}</dd></div><div><dt>{en ? 'Source points' : '源轮廓点'}</dt><dd>{model.surface?.sourcePoints ?? '—'}</dd></div></dl>
+        <p className="fluxAxisNote">{en ? 'Smooth display interpolation · original grid retained in 2D and exports' : '显示插值平滑 · 二维读数与导出保留原始网格'}</p>
+        <dl className="fluxStats"><div><dt>{en ? 'Surface triangles' : '磁面三角形'}</dt><dd>{model.surface?.triangles.toLocaleString('en-US') ?? '—'}</dd></div><div><dt>{en ? 'Source cloud cells' : '云图源单元'}</dt><dd>{fieldProjection?.samples.length.toLocaleString('en-US') ?? '—'}</dd></div><div><dt>{en ? 'Source points' : '源轮廓点'}</dt><dd>{model.surface?.sourcePoints ?? '—'}</dd></div></dl>
       </aside>
     </div>
     <footer className="fluxEvidence"><p>{fieldSpec.authority === 'profile-mapped' ? (en ? 'The R–Z cloud and selected surface use the same bounded profile mapping. A flux-function is constant on each selected surface; radial gradients are visible on the cut plane. This is not a 3-D transport solve.' : 'R–Z 云图剖切面与选中磁面共用同一有界剖面映射。磁通函数在单一磁面上保持常值，径向梯度由剖切面显示；这不是三维输运求解。') : (en ? 'The cut plane retains the archived equilibrium grid; the surface is an axisymmetric revolution of an exported contour.' : '剖切面保留归档磁平衡网格；磁面由导出轮廓按轴对称假设旋转。')} {en ? 'Section guides are not magnetic field lines; cut edges are display cuts, not physical boundaries.' : '截面参考线不是磁力线；剖开边缘仅为显示切口，不是物理边界。'}</p><p>{data.equilibriumOrigin === 'model-solved' ? (en ? 'Model-solved equilibrium' : '模型求解平衡') : data.equilibriumOrigin === 'input-reconstruction' ? (en ? 'Input reconstruction, not a newly solved equilibrium' : '输入重建平衡，并非本次新求解') : (en ? 'Exported equilibrium; solve origin unspecified' : '导出平衡，未声明求解来源')}{en ? ' · Axisymmetric-derived display; no toroidal variation, MHD mode, turbulence structure or non-axisymmetric solution is implied.' : ' · 轴对称派生显示；不包含环向变化、MHD 模态、湍流结构或非轴对称解。'}</p><code>{data.runId}{coordinateMap && fieldSpec.authority === 'profile-mapped' ? ` · map ${coordinateMap.projectorSha256.slice(0, 8)}` : ''}</code></footer>
