@@ -1,0 +1,54 @@
+[
+  {
+    "id": "dina-example-20260822-16ms",
+    "engineId": "dina",
+    "labelZh": "DINA · 16 ms 历史扰动验收",
+    "labelEn": "DINA · 16 ms historical perturbation acceptance",
+    "samples": 16,
+    "requestedDurationSeconds": 0.016,
+    "recordedSpanSeconds": 0.015,
+    "initial": {
+      "ip": 490225.625,
+      "r": 0.8417491316795349,
+      "z": -0.006705695763230324
+    },
+    "units": {
+      "ip": "A",
+      "r": "m",
+      "z": "m"
+    },
+    "artifact": {
+      "path": "/data/simulations/9d26f1b29b858c498f281951f3e53bf754ede70cea665c25655e167e5c64af7b.json.gz",
+      "sha256": "9d26f1b29b858c498f281951f3e53bf754ede70cea665c25655e167e5c64af7b",
+      "bytes": 3227,
+      "rawSha256": "3c4cf1845449ebdaa21b72016b4350cee23b2898d9f312e90f259cd2d6a83803",
+      "rawBytes": 5938
+    }
+  },
+  {
+    "id": "fge-example-20260816-100ms",
+    "engineId": "fge",
+    "labelZh": "FGE · 100 ms 历史 PPO 测试",
+    "labelEn": "FGE · 100 ms historical PPO evaluation",
+    "samples": 101,
+    "requestedDurationSeconds": 0.1,
+    "recordedSpanSeconds": 0.1,
+    "initial": {
+      "ip": 500179.73399856896,
+      "r": 0.892282338451059,
+      "z": -0.014321308485689063
+    },
+    "units": {
+      "ip": "code-unit",
+      "r": "m",
+      "z": "m"
+    },
+    "artifact": {
+      "path": "/data/simulations/a68287e324c1ed77294ab3fe51e83d1b5e36d8defadf89a279808e6596d3de6d.json.gz",
+      "sha256": "a68287e324c1ed77294ab3fe51e83d1b5e36d8defadf89a279808e6596d3de6d",
+      "bytes": 66155,
+      "rawSha256": "aa47a79e97a958252f3e604dfa2b845d3c6bef02d2d420e0042858c1592651df",
+      "rawBytes": 155661
+    }
+  }
+]
