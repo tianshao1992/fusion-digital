@@ -51,6 +51,7 @@ const SHARED_PATHS = [
   "/models/device-catalog.json",
   "/data/simulations/9d26f1b29b858c498f281951f3e53bf754ede70cea665c25655e167e5c64af7b.json.gz",
   "/data/simulations/a68287e324c1ed77294ab3fe51e83d1b5e36d8defadf89a279808e6596d3de6d.json.gz",
+  "/data/simulations/2f854f2dabc630adfa62cdfb0c4993221cb31d62b08bcde4e4567a217dce468c.json.gz",
   "/models/exl50u-diagview2-v1/manifest.json",
   "/models/exl50u-diagview2-v1/diagview2-ports.json",
   "/models/exl50u-sensor-points-v1/manifest.json",
