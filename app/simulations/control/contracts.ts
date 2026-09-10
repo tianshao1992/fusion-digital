@@ -44,7 +44,7 @@ const identifier = (v: unknown): v is string => typeof v === 'string' && /^[A-Za
 function check(ok: unknown, code: string): asserts ok { if (!ok) throw new Error(code); }
 export function recipeFor(engine: ControlEngine) { return controlRecipes.find(r => r.engineId === engine)!; }
 export function defaultControlSpec(engine: ControlEngine): ControlRunSpec {
-  return { schema: 'control-runspec.v1', engine: { id: engine, commit: CONTROL_SOURCE_COMMIT }, recipe: recipeFor(engine).id, parameters: { durationSeconds: .016, timeStepSeconds: .001, recordEvery: 1, voltagesV: Array(recipeFor(engine).channels).fill(0) as number[] }, resources: { timeoutSeconds: 180 }, input: null };
+  return { schema: 'control-runspec.v1', engine: { id: engine, commit: CONTROL_SOURCE_COMMIT }, recipe: recipeFor(engine).id, parameters: { durationSeconds: .2, timeStepSeconds: .001, recordEvery: 1, voltagesV: Array(recipeFor(engine).channels).fill(0) as number[] }, resources: { timeoutSeconds: 180 }, input: null };
 }
 export function parseControlSpec(value: unknown): ControlRunSpec {
   check(keys(value, 'schema engine recipe parameters resources input'), 'INVALID_CONTROL_SPEC');
