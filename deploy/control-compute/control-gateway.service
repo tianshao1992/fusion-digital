@@ -1,0 +1,27 @@
+[Unit]
+Description=FusionDigital dedicated DINA/FGE compute gateway
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=fusioncompute
+Group=fusioncompute
+WorkingDirectory=/srv/fusiondigital-compute/current
+EnvironmentFile=/etc/fusiondigital-control/gateway.env
+ExecStart=/usr/bin/node --import tsx scripts/simulations/gateway.mts
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+KillMode=control-group
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/fusiondigital-control
+MemoryMax=2G
+TasksMax=128
+
+[Install]
+WantedBy=multi-user.target

@@ -1,17 +1,21 @@
 // Browser-safe capability and recipe registry. Runtime launch plans live in scripts/.
+import { CONTROL_SOURCE_COMMIT } from '../control/contracts.ts';
 export const TORAX_COMMIT = '4aea2377385ba4dfe37b0ef4396374162af1314b';
 export const FUSE_SOURCE_COMMIT = '9ef2f99af73497706a097d99a2aaac2f08405370';
 export type EngineDescriptor = {
   id: string; name: string; version: string; commit: string; runtime: string;
   domains: readonly string[]; capabilities: readonly string[];
   inputProfiles: readonly string[]; outputProfiles: readonly string[];
-  execution: 'local-adapter' | 'legacy-adapter'; checkpoint: boolean;
+  execution: 'local-adapter' | 'legacy-adapter' | 'cloud-adapter'; checkpoint: boolean;
 };
 export const engines: readonly EngineDescriptor[] = [
+  ...(['fge', 'dina'] as const).map(id => ({ id, name: id.toUpperCase(), version: id === 'fge' ? 'linear HFM' : 'warm-start', commit: CONTROL_SOURCE_COMMIT, runtime: 'Linux Docker / Python', domains: ['control'], capabilities: ['virtual-discharge', 'control-timeseries'], inputProfiles: ['control-runspec.v1'], outputProfiles: ['control-result.v1', 'control-coupling-assessment.v1'], execution: 'cloud-adapter' as const, checkpoint: false })),
   { id: 'fuse', name: 'FUSE', version: '1.2.0', commit: FUSE_SOURCE_COMMIT, runtime: 'Julia', domains: ['physics', 'engineering'], capabilities: ['equilibrium', 'core-transport', 'sources', 'engineering', 'plant-design'], inputProfiles: ['imas-native', 'simulation-runspec.v1'], outputProfiles: ['fuse-physics.v2', 'core-profile-snapshot.v1'], execution: 'legacy-adapter', checkpoint: false },
   { id: 'torax', name: 'TORAX', version: '1.4.3', commit: TORAX_COMMIT, runtime: 'Python / JAX', domains: ['physics'], capabilities: ['core-transport', 'current-diffusion', 'sources', 'pulse-design', 'profile-handoff'], inputProfiles: ['engine-runspec.v1', 'core-profile-snapshot.v1'], outputProfiles: ['transport-timeseries.v1'], execution: 'local-adapter', checkpoint: false },
 ];
 export const capabilities = [
+  { id: 'virtual-discharge', zh: '虚拟放电', en: 'Virtual discharge', scopeZh: '固定初态、毫秒步进与电压程序', scopeEn: 'Fixed initial state, millisecond steps and voltage programs' },
+  { id: 'control-timeseries', zh: '控制响应', en: 'Control response', scopeZh: '电流、位置和执行器时序', scopeEn: 'Current, position and actuator time series' },
   { id: 'core-transport', zh: '核心输运', en: 'Core transport', scopeZh: '温度、密度与输运系数', scopeEn: 'Temperature, density and transport coefficients' },
   { id: 'current-diffusion', zh: '电流与脉冲', en: 'Current & pulses', scopeZh: '电流扩散、爬升与时序', scopeEn: 'Current diffusion, ramp-up and trajectories' },
   { id: 'sources', zh: '加热与粒子源', en: 'Heating & fueling', scopeZh: '源项与参数研究', scopeEn: 'Sources and parameter studies' },

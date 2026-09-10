@@ -8,6 +8,8 @@ import { parseEngineSpec } from '../../app/simulations/platform/contracts.ts';
 import { parseRunSpec } from '../../app/simulations/run-spec.ts';
 import * as runtime from './engine-service.mts';
 import * as fuseRuntime from './fuse-engine-service.mts';
+import { controlRecipes, parseControlSpec } from '../../app/simulations/control/contracts.ts';
+import { configuredControlService, type ControlService } from './control-engine-service.mts';
 
 const MAX_ALLOWED_ORIGINS = 16;
 
@@ -29,7 +31,7 @@ export function parseGatewayOrigins(value: string | readonly string[]): string[]
   return [...unique];
 }
 
-export function createGateway(token: string, allowedOrigins: string | readonly string[], service = runtime, fuseService = fuseRuntime, allowedHost?: string) {
+export function createGateway(token: string, allowedOrigins: string | readonly string[], service = runtime, fuseService = fuseRuntime, allowedHost?: string, controlService: ControlService | null = null, enabledEngines?: string[]) {
   if (token.length < 32) throw new Error('GATEWAY_TOKEN must contain at least 32 characters');
   const allowedOriginSet = new Set(parseGatewayOrigins(allowedOrigins));
   if (allowedHost && (new URL(`http://${allowedHost}`).host !== allowedHost || /[/@]/.test(allowedHost))) throw new Error('GATEWAY_ALLOWED_HOST must be an exact host');
@@ -37,7 +39,9 @@ export function createGateway(token: string, allowedOrigins: string | readonly s
   const idempotency = new Map<string, { bodyHash: string; id: string }>();
   let submitting = false;
   let activeJobId: string | null = null;
-  const serviceForJob = (id: string) => id.startsWith('fuse-diiid-') ? fuseService : id.startsWith('torax-') ? service : null;
+  const executionEngineIds = enabledEngines ?? ['fuse', 'torax', ...(controlService?.engines ?? [])];
+  if (executionEngineIds.some(id => !['fuse', 'torax', ...(controlService?.engines ?? [])].includes(id))) throw new Error('INVALID_GATEWAY_ENGINES');
+  const serviceForJob = (id: string) => id.startsWith('fuse-diiid-') && executionEngineIds.includes('fuse') ? fuseService : id.startsWith('torax-') && executionEngineIds.includes('torax') ? service : /^(fge|dina)-/.test(id) && executionEngineIds.includes(id.split('-')[0]) ? controlService : null;
   return createServer(async (req: IncomingMessage, res: ServerResponse) => {
     const reply = (code: number, value: unknown) => { res.writeHead(code, { 'content-type': 'application/json', 'cache-control': 'no-store' }); res.end(JSON.stringify(value)); };
     const origin = req.headers.origin;
@@ -58,7 +62,7 @@ export function createGateway(token: string, allowedOrigins: string | readonly s
     try {
       const url = new URL(req.url ?? '/', 'http://localhost');
       if (url.search) return reply(400, { error: 'QUERY_NOT_ALLOWED' });
-      if (req.method === 'GET' && url.pathname === '/v1/catalog') return reply(200, { schema: 'engine-catalog.v1', engines, recipes, executionEngineIds: ['fuse', 'torax'], concurrency: 1 });
+      if (req.method === 'GET' && url.pathname === '/v1/catalog') return reply(200, { schema: 'engine-catalog.v1', engines, recipes, controlRecipes, executionEngineIds, concurrency: 1 });
       if (req.method === 'GET' && url.pathname === '/v1/inputs/fuse-profile') return reply(200, await service.createFuseSnapshot());
       const match = /^\/v1\/jobs\/([a-zA-Z0-9._-]+)(?:\/(cancel|result|geometry))?$/.exec(url.pathname);
       const matchedService = match ? serviceForJob(match[1]) : null;
@@ -76,7 +80,19 @@ export function createGateway(token: string, allowedOrigins: string | readonly s
         for await (const chunk of req) { size += chunk.length; if (size > 128000) return reply(413, { error: 'BODY_TOO_LARGE' }); chunks.push(chunk); }
         const raw = Buffer.concat(chunks), body = JSON.parse(raw.toString());
         if (!body || Object.keys(body).some(k => !['spec', 'snapshot'].includes(k))) return reply(400, { error: 'INVALID_ENVELOPE' });
+        if (body.spec?.schema === 'control-runspec.v1') {
+          const spec = parseControlSpec(body.spec);
+          if (body.snapshot !== undefined) throw new Error('CONTROL_INPUT_NOT_SUPPORTED');
+          if (!controlService || !executionEngineIds.includes(spec.engine.id)) throw new Error('CONTROL_ENGINE_NOT_CONFIGURED');
+          if (url.pathname === '/v1/validate') return reply(200, { valid: true, spec });
+          const key = req.headers['idempotency-key'];
+          if (typeof key !== 'string' || !/^[a-zA-Z0-9-]{16,80}$/.test(key)) return reply(400, { error: 'IDEMPOTENCY_KEY_REQUIRED' });
+          if (submitting || activeJobId) throw new Error('ENGINE_BUSY');
+          const job = await controlService.submit(spec, key, service.sha(raw));
+          return reply(job.duplicate ? 200 : 202, { id: job.id, engineId: job.engineId });
+        }
         const isFuse = body.spec?.schema === 'simulation-runspec.v1';
+        if (!executionEngineIds.includes(isFuse ? 'fuse' : 'torax')) throw new Error('ENGINE_NOT_CONFIGURED');
         const spec = isFuse ? parseRunSpec(body.spec) : parseEngineSpec(body.spec);
         if (isFuse && body.snapshot !== undefined) throw new Error('FUSE_INPUT_NOT_SUPPORTED');
         if (!isFuse) await service.validateInput(spec, body.snapshot);
@@ -87,6 +103,7 @@ export function createGateway(token: string, allowedOrigins: string | readonly s
         if (previous) return reply(previous.bodyHash === hash ? 200 : 409, previous.bodyHash === hash ? { id: previous.id } : { error: 'IDEMPOTENCY_CONFLICT' });
         if (submitting) return reply(409, { error: 'SUBMISSION_IN_PROGRESS' });
         if (activeJobId) return reply(409, { error: 'ENGINE_BUSY' });
+        if (controlService?.busy()) return reply(409, { error: 'CONTROL_NODE_REARM_REQUIRED' });
         if (idempotency.size >= 1000) return reply(503, { error: 'SESSION_CAPACITY_REACHED' });
         submitting = true;
         try {
@@ -106,7 +123,7 @@ export function createGateway(token: string, allowedOrigins: string | readonly s
     } catch (error) {
       const message = error instanceof Error ? error.message : '';
       const code = /^[A-Z][A-Z0-9_]{1,100}$/.test(message) ? message : 'REQUEST_FAILED';
-      reply(code.includes('BUSY') || code.includes('SUCCEEDED') ? 409 : 400, { error: code });
+      reply(code.includes('BUSY') || code.includes('SUCCEEDED') || code.includes('CONFLICT') || code.includes('REARM') ? 409 : 400, { error: code });
     }
   });
 }
@@ -114,7 +131,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const port = Number(process.env.GATEWAY_PORT ?? 8791);
   if (!Number.isInteger(port) || port < 1024 || port > 65535) throw new Error('Invalid port');
   const origins = process.env.GATEWAY_ORIGINS ?? process.env.GATEWAY_ORIGIN ?? 'http://localhost:3012';
-  const server = createGateway(process.env.GATEWAY_TOKEN ?? '', origins, runtime, fuseRuntime, process.env.GATEWAY_ALLOWED_HOST);
+  const server = createGateway(process.env.GATEWAY_TOKEN ?? '', origins, runtime, fuseRuntime, process.env.GATEWAY_ALLOWED_HOST, configuredControlService(), process.env.GATEWAY_ENGINES?.split(','));
   server.requestTimeout = 15000; server.headersTimeout = 10000;
   server.listen(port, '127.0.0.1', () => console.log(`Local simulation gateway: http://127.0.0.1:${port} (token required; concurrency 1)`));
 }
