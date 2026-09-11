@@ -26,8 +26,8 @@ export default function KnowledgeGraphPage() {
     <header className="kgHero">
       <div>
         <p className="kgEyebrow">FUSION KNOWLEDGE GRAPH · EVIDENCE FIRST</p>
-        <h1>让每个结论，都能沿关系回到<br/><em>论文、代码与装置证据</em></h1>
-        <p>FusionDigital 把物理、工程、控制、诊断和智能原生调研转化为统一的实体—关系—证据网络。图谱不是由大模型自由编造的连线；公开关系来自结构化调研记录，保留来源和更新时间。</p>
+        <h1>知识图谱</h1>
+        <p>探索论文、代码、装置与研究任务之间的关系；来源和更新时间随记录保留。</p>
       </div>
       <dl>
         <div><dt>{knowledgeGraph.statistics.nodes.toLocaleString()}</dt><dd>实体节点</dd></div>
@@ -38,7 +38,7 @@ export default function KnowledgeGraphPage() {
         <div><dt>{knowledgeGraph.asOf}</dt><dd>证据截止</dd></div>
       </dl>
     </header>
-    <div className="kgPrincipleBand"><span>ENTITY</span><b>实体</b><i>→</i><span>CLAIM</span><b>关系主张</b><i>→</i><span>EVIDENCE</span><b>论文 / 代码 / 官方来源</b><i>→</i><span>DECISION</span><b>可审计结论</b></div>
+    <details className="researchMethodNote"><summary>图谱来源说明</summary><p>关系来自结构化调研记录，不由模型生成。选择节点可查看论文、代码与官方来源。</p></details>
     <KnowledgeGraphExplorer initial={initial} devices={devices} />
     <section className="platformInlineLink"><span>图谱保留来源与更新时间，并按需加载邻域。</span><Link href="/platform#contracts">查看数据合同与接入路线 →</Link></section>
     <SiteFooter />
@@ -48,8 +48,8 @@ export default function KnowledgeGraphPage() {
     <header className="kgHero">
       <div>
         <p className="kgEyebrow">FUSION KNOWLEDGE GRAPH · EVIDENCE FIRST</p>
-        <h1>Let every conclusion trace its relationships back to<br/><em>papers, code and facility evidence</em></h1>
-        <p>FusionDigital transforms research on physics, engineering, integrated control, diagnostics and AI-native systems into a unified entity–relationship–evidence network. Edges are not invented by a language model: published relationships come from structured research records and retain their source and update date.</p>
+        <h1>Knowledge graph</h1>
+        <p>Explore relationships among papers, code, facilities and research tasks, with sources and update dates.</p>
       </div>
       <dl>
         <div><dt>{knowledgeGraph.statistics.nodes.toLocaleString('en-US')}</dt><dd>Entity nodes</dd></div>
@@ -60,7 +60,7 @@ export default function KnowledgeGraphPage() {
         <div><dt>{knowledgeGraph.asOf}</dt><dd>Evidence cut-off</dd></div>
       </dl>
     </header>
-    <div className="kgPrincipleBand"><span>ENTITY</span><b>Entity</b><i>→</i><span>CLAIM</span><b>Relationship claim</b><i>→</i><span>EVIDENCE</span><b>Paper / code / official source</b><i>→</i><span>DECISION</span><b>Auditable conclusion</b></div>
+    <details className="researchMethodNote"><summary>About graph sources</summary><p>Relationships come from structured research records, not generated links. Select a node to inspect its papers, code and official sources.</p></details>
     <KnowledgeGraphExplorer initial={initial} devices={devices} />
     <section className="platformInlineLink"><span>The graph retains sources and update dates and loads neighborhoods on demand.</span><Link href="/platform#contracts">View data contracts and the integration route →</Link></section>
     <SiteFooter />

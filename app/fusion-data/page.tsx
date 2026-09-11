@@ -28,7 +28,7 @@ export default async function FusionDataPage() {
         <p><Link href="/data-foundation">{en ? 'Data foundation' : '数据基座'}</Link><span>/</span> {en ? 'Data workspace' : '数据工作台'}</p>
         <h1>Fusion Data Workspace <b>EXL-50U SNAPSHOT</b></h1>
       </div>
-      <p>{en ? 'Explore EXL-50U experiments by shot: diagnostic currents, probe measurements and equilibrium reconstruction, with independently timed signals and traceable IMAS dataset versions.' : '按炮次浏览 EXL-50U 实验：诊断电流、探针测量与平衡重建，保留独立采样时间基和可追溯的 IMAS 数据版本。'}</p>
+      <p>{en ? 'EXL-50U shots, diagnostic signals and equilibrium reconstruction.' : 'EXL-50U 炮次、诊断信号与平衡重建。'}</p>
     </header>
     <FusionDataWorkspace />
     <SiteFooter />

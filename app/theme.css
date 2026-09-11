@@ -1,16 +1,16 @@
 :root,
 :root[data-theme='light'] {
   color-scheme: light;
-  --color-canvas: #f7f3ec;
-  --color-surface: #fffdf8;
+  --color-canvas: #f7f8fa;
+  --color-surface: #ffffff;
   --color-surface-raised: #ffffff;
-  --color-surface-muted: #eee7dc;
-  --color-surface-subtle: #e7ded2;
-  --color-ink: #2f2b27;
-  --color-ink-muted: #706960;
-  --color-ink-subtle: #8b8379;
-  --color-border: #d7cdc0;
-  --color-border-strong: #b9ab9b;
+  --color-surface-muted: #eef1f4;
+  --color-surface-subtle: #e5eaf0;
+  --color-ink: #17212f;
+  --color-ink-muted: #5c6876;
+  --color-ink-subtle: #657181;
+  --color-border: #d8dfe6;
+  --color-border-strong: #a7b3c1;
   --color-accent: #c86545;
   --color-accent-strong: #a94e33;
   --color-accent-soft: #efd7cc;
@@ -28,16 +28,16 @@
   --color-on-inverse-subtle: #999f99;
   --color-inverse-border: #515b54;
   --color-workbench: #eee8de;
-  --color-workbench-raised: #fffdf8;
+  --color-workbench-raised: #ffffff;
   --color-workbench-panel: #e5ded3;
-  --color-workbench-ink: #2f2b27;
-  --color-workbench-muted: #706960;
+  --color-workbench-ink: #17212f;
+  --color-workbench-muted: #5c6876;
   --color-workbench-line: #c8bcaf;
   --color-workbench-accent: #c86545;
   --color-workbench-info: #657c6f;
   --color-workbench-violet: #7d7085;
   --color-grid: rgb(82 104 91 / 12%);
-  --color-glass: rgb(255 253 248 / 86%);
+  --color-glass: rgb(255 255 255 / 94%);
   --shadow-sm: 0 1px 2px rgb(47 43 39 / 7%), 0 8px 24px rgb(47 43 39 / 5%);
   --shadow-md: 0 18px 48px rgb(47 43 39 / 12%);
   --focus-ring: #87513f;
@@ -47,16 +47,16 @@
 
 :root[data-theme='dark'] {
   color-scheme: dark;
-  --color-canvas: #151916;
-  --color-surface: #1b211d;
-  --color-surface-raised: #222923;
-  --color-surface-muted: #272d28;
-  --color-surface-subtle: #313832;
-  --color-ink: #f1ebe2;
-  --color-ink-muted: #b8b0a6;
-  --color-ink-subtle: #938d84;
-  --color-border: #3c463f;
-  --color-border-strong: #58655c;
+  --color-canvas: #0e1520;
+  --color-surface: #151e2b;
+  --color-surface-raised: #1d2836;
+  --color-surface-muted: #222d3b;
+  --color-surface-subtle: #2b3848;
+  --color-ink: #f1f5f9;
+  --color-ink-muted: #b0bdcc;
+  --color-ink-subtle: #93a3b5;
+  --color-border: #344254;
+  --color-border-strong: #516279;
   --color-accent: #e18766;
   --color-accent-strong: #f0a081;
   --color-accent-soft: #4c3027;
@@ -83,7 +83,7 @@
   --color-workbench-info: #9fb8a7;
   --color-workbench-violet: #b5a4bd;
   --color-grid: rgb(154 175 160 / 8%);
-  --color-glass: rgb(21 27 23 / 88%);
+  --color-glass: rgb(14 21 32 / 94%);
   --shadow-sm: 0 1px 2px rgb(0 0 0 / 24%), 0 8px 24px rgb(0 0 0 / 18%);
   --shadow-md: 0 24px 64px rgb(0 0 0 / 32%);
   --focus-ring: #f0a081;
@@ -94,16 +94,16 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
     color-scheme: dark;
-    --color-canvas: #151916;
-    --color-surface: #1b211d;
-    --color-surface-raised: #222923;
-    --color-surface-muted: #272d28;
-    --color-surface-subtle: #313832;
-    --color-ink: #f1ebe2;
-    --color-ink-muted: #b8b0a6;
-    --color-ink-subtle: #938d84;
-    --color-border: #3c463f;
-    --color-border-strong: #58655c;
+    --color-canvas: #0e1520;
+    --color-surface: #151e2b;
+    --color-surface-raised: #1d2836;
+    --color-surface-muted: #222d3b;
+    --color-surface-subtle: #2b3848;
+    --color-ink: #f1f5f9;
+    --color-ink-muted: #b0bdcc;
+    --color-ink-subtle: #93a3b5;
+    --color-border: #344254;
+    --color-border-strong: #516279;
     --color-accent: #e18766;
     --color-accent-strong: #f0a081;
     --color-accent-soft: #4c3027;
@@ -130,7 +130,7 @@
     --color-workbench-info: #9fb8a7;
     --color-workbench-violet: #b5a4bd;
     --color-grid: rgb(154 175 160 / 8%);
-    --color-glass: rgb(21 27 23 / 88%);
+    --color-glass: rgb(14 21 32 / 94%);
     --shadow-sm: 0 1px 2px rgb(0 0 0 / 24%), 0 8px 24px rgb(0 0 0 / 18%);
     --shadow-md: 0 24px 64px rgb(0 0 0 / 32%);
     --focus-ring: #f0a081;
@@ -178,7 +178,7 @@
 .themeSwitcherIcon { width: 1.15em; font-size: 14px; text-align: center; }
 .themeSwitcher--compact .themeSwitcherLabel { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 
-/* Portal bridge: light mode becomes warm paper, terracotta and muted sage. */
+/* Semantic aliases for the editorial homepage; diagram colours remain independent. */
 html .portalPage {
   --fd-bg: var(--color-inverse);
   --fd-panel: var(--color-inverse-raised);
@@ -190,36 +190,6 @@ html .portalPage {
   --fd-line: var(--color-border);
   --fd-muted: var(--color-ink-muted);
 }
-html .portalPage .portalHero { color: var(--color-ink); background: radial-gradient(circle at 73% 32%,var(--color-info-soft),var(--color-canvas) 48%); }
-html .portalPage .portalHero::before { background-image: linear-gradient(var(--color-grid) 1px,transparent 1px),linear-gradient(90deg,var(--color-grid) 1px,transparent 1px); }
-html .portalPage .kicker,html .portalPage .heroLead { color: var(--color-ink-muted); }
-html .portalPage .heroActions a { border-color: var(--color-border-strong); }
-html .portalPage .heroActions a.solid { color: var(--color-on-inverse); background: var(--color-accent); border-color: var(--color-accent); }
-html .portalPage .heroMetrics,html .portalPage .heroMetrics span { color: var(--color-ink-muted); border-color: var(--color-border); }
-html .portalPage .heroMetrics b { color: var(--color-ink); }
-html .portalPage .heroArchitectureFigure,html .portalPage .heroArchitectureFigure > a { background: var(--color-workbench); border-color: var(--color-workbench-line); }
-html .portalPage .heroArchitectureFigure { box-shadow: var(--shadow-md); }
-html .portalPage .plantValue { color: var(--color-ink); background: linear-gradient(110deg,var(--color-surface-raised),var(--color-info-soft)); box-shadow: var(--shadow-md); }
-html .portalPage .plantValue > p,html .portalPage .plantValueGrid,html .portalPage .plantValueGrid article { border-color: var(--color-border); }
-html .portalPage .plantValueEnglish,html .portalPage .plantValueGrid p { color: var(--color-ink-muted); }
-html .portalPage .plantValueEnglish b,html .portalPage .plantValueGrid b { color: var(--color-info-strong); }
-html .portalPage .portalThesis,html .portalPage .domainSection,html .portalPage .portalRoadmap { background: var(--color-surface-muted); }
-html .portalPage .mainLine,html .portalPage .resourceSection { background: var(--color-surface-raised); }
-html .portalPage .aiNativePortal { color: var(--color-ink); background: radial-gradient(circle at 78% 12%,var(--color-info-soft),var(--color-surface) 62%); border-color: var(--color-border); }
-html .portalPage .aiNativePortalIntro > p:last-child,html .portalPage .aiNativePortalGrid p { color: var(--color-ink-muted); }
-html .portalPage .aiNativePortalGrid,html .portalPage .resourceGrid,html .portalPage .roadmapCards { background: var(--color-border); border-color: var(--color-border); }
-html .portalPage .aiNativePortalGrid a,html .portalPage .lineSteps article,html .portalPage .resourceGrid a,html .portalPage .roadmapCards article { background: var(--color-surface); }
-html .portalPage .aiNativePortalGrid a:hover,html .portalPage .aiNativePortalGrid a:focus-visible,html .portalPage .resourceGrid a:hover { background: var(--color-surface-raised); }
-html .portalPage .aiNativeGuardrail { color: var(--color-ink-muted); border-color: var(--color-border); }
-html .portalPage .domainCard,html .portalPage .featuredDomainCard { background: var(--color-surface-raised); border-color: var(--color-border); }
-html .portalPage .domainCard:hover,html .portalPage .domainCard:focus-visible { border-color: var(--color-border-strong); box-shadow: var(--shadow-md); }
-html .portalPage .facilityPreview { color: var(--color-ink); background: var(--color-surface-subtle); }
-html .portalPage .facilityPreview p,html .portalPage .facilityTicker span { color: var(--color-ink-muted); }
-html .portalPage .facilityTicker,html .portalPage .facilityTicker span { border-color: var(--color-border); }
-html .portalPage .portalRoadmap > img { background: var(--color-surface-raised); border-color: var(--color-border); }
-html .portalPage .communityBand { color: var(--color-ink); background: linear-gradient(120deg,var(--color-accent-soft),var(--color-surface-muted)); }
-html .portalPage .communityBand > div:last-child p { color: var(--color-ink-muted); }
-
 /* The workbench follows the selected theme; the WebGL scene keeps its own depth-aware palette. */
 html .prototypePage {
   --pt-bg: var(--color-workbench);

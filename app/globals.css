@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "./theme.css";
 @import "./theme-legacy-surfaces.css";
+@import "./editorial.css";
 
 :root {
   --ink: var(--color-ink);
@@ -53,10 +54,10 @@ h1,h2,h3,h4 { font-family: "Microsoft YaHei UI", "Microsoft YaHei", "Noto Sans S
 .siteBrand { display: flex; flex: 0 0 auto; align-items: center; gap: 11px; }
 .siteBrand > img { width: 42px; height: 42px; object-fit: cover; border-radius: 9px; }
 .siteBrandCopy { font-size: 19px; letter-spacing: -.02em; }
-.siteBrand small { display: block; margin-top: 2px; color: var(--color-ink-subtle); font: 700 7px/1.4 Arial,sans-serif; letter-spacing: .18em; }
+.siteBrand small { display: block; margin-top: 2px; color: var(--color-ink-subtle); font: 500 10px/1.4 Arial,sans-serif; letter-spacing: .18em; }
 .siteLinksShell { position: relative; flex: 1 1 auto; min-width: 0; margin: 0 clamp(12px,2vw,30px); }
 .siteLinks { display: flex; justify-content: center; gap: 22px; align-items: center; }
-.siteLinks > a,.siteMoreButton { padding: 29px 0 25px; border: 0; border-bottom: 2px solid transparent; color: var(--color-ink-muted); background: transparent; font-size: 12px; font-weight: 700; line-height: 18px; white-space: nowrap; cursor: pointer; }
+.siteLinks > a,.siteMoreButton { padding: 29px 0 25px; border: 0; border-bottom: 2px solid transparent; color: var(--color-ink-muted); background: transparent; font-size: 14px; font-weight: 700; line-height: 18px; white-space: nowrap; cursor: pointer; }
 .siteLinks > a:hover,.siteMoreButton:hover { color: var(--color-accent-strong); border-color: var(--color-accent); }
 .siteNav.siteNav .siteLinks > a.active[aria-current='page'],
 .siteNav.siteNav .siteMoreButton.active,
@@ -73,7 +74,7 @@ h1,h2,h3,h4 { font-family: "Microsoft YaHei UI", "Microsoft YaHei", "Noto Sans S
 .siteMoreMenu a:hover,.siteMoreMenu a:focus-visible { color: var(--color-accent-strong); background: var(--color-accent-soft); outline: none; }
 .siteMoreMenu a.active { background: var(--color-accent-soft); }
 .siteLinksMeasure { position: absolute; left: 0; top: 0; display: flex; gap: 22px; width: max-content; height: 0; overflow: hidden; visibility: hidden; pointer-events: none; }
-.siteLinksMeasure > span { font-size: 12px; font-weight: 700; line-height: 18px; white-space: nowrap; }
+.siteLinksMeasure > span { font-size: 14px; font-weight: 700; line-height: 18px; white-space: nowrap; }
 .siteLinksMeasure > span[data-nav-active='true'] { font-weight: 900; }
 .siteLinksMeasure > span[data-nav-more] { display: flex; gap: 4px; font-weight: 900; }
 .siteLinksMeasure i { font: inherit; }
@@ -127,7 +128,7 @@ h1,h2,h3,h4 { font-family: "Microsoft YaHei UI", "Microsoft YaHei", "Noto Sans S
 .footerBrandName { font-size: 20px; font-weight: 800; }
 .siteFooter a:hover { color: var(--color-accent-strong); }
 
-@media(max-width:1400px) and (min-width:1241px) { .siteLinks,.siteLinksMeasure { gap: 13px; } .siteLinks > a,.siteMoreButton,.siteLinksMeasure > span,.siteKnowledgeNav > summary { font-size: 11px; } .siteAccountAccess { margin-left: 5px; } }
+@media(max-width:1400px) and (min-width:1241px) { .siteLinks,.siteLinksMeasure { gap: 13px; } .siteAccountAccess { margin-left: 5px; } }
 @media(max-width:1240px) { .siteLinksShell,.siteKnowledgeNav,.siteDesktopPreferences { display: none; } .mobileNav { display: block; } }
 @media(max-width:1000px) { .siteFooter { grid-template-columns: 1fr 1fr; } }
 @media(max-width:600px) { .siteNav { padding: 0 5vw; } .siteBrandCopy { font-size: 16px; } .siteAccountAccess { margin-left: auto; margin-right: 14px; } .siteFooter { grid-template-columns: 1fr; } }

@@ -7,19 +7,19 @@ const root = process.cwd();
 const read = (relativePath) => readFile(path.join(root, relativePath), 'utf8');
 
 const routeExpectations = [
-  ['app/page.tsx', 'Fusion digital twins for future power plants'],
-  ['app/physics/page.tsx', 'From plasma control to'],
-  ['app/engineering/page.tsx', 'Convert plasma loads into'],
+  ['app/page.tsx', 'See the device.'],
+  ['app/physics/page.tsx', 'Physics simulation'],
+  ['app/engineering/page.tsx', 'Engineering simulation'],
   ['app/control/page.tsx', 'Integrated control is not every loop in one program'],
-  ['app/diagnostics/page.tsx', 'turn unobservable fusion states into calibrated, verifiable decision evidence'],
-  ['app/ai/page.tsx', 'AI-native is not another chat box'],
-  ['app/facilities/page.tsx', 'construction and operations observatory'],
-  ['app/platform/page.tsx', 'From a public prototype to a reproducible scientific and engineering platform'],
+  ['app/diagnostics/page.tsx', 'Diagnostics &amp; sensing'],
+  ['app/ai/page.tsx', 'AI for fusion'],
+  ['app/facilities/page.tsx', 'Global fusion facilities'],
+  ['app/platform/page.tsx', 'Platform architecture'],
   ['app/account/page.tsx', 'This deployment is the public anonymous edition'],
   ['app/research-review/page.tsx', 'The public site displays published material only'],
-  ['app/search/page.tsx', 'From more than one thousand research records'],
-  ['app/knowledge-graph/page.tsx', 'Let every conclusion trace its relationships back to'],
-  ['app/roadmap/page.tsx', 'From an EXL-50U minimum closed loop to'],
+  ['app/search/page.tsx', 'Papers, code &amp; answers'],
+  ['app/knowledge-graph/page.tsx', 'Knowledge graph'],
+  ['app/roadmap/page.tsx', 'Development roadmap'],
 ];
 
 test('all principal routes expose a deliberate English rendering branch', async () => {
@@ -48,6 +48,27 @@ test('server-rendered route metadata is locale-aware', async () => {
     assert.match(source, /LOCALE_COOKIE_NAME/, `${file} metadata must depend on the locale cookie`);
     assert.match(source, /resolveLocale/, `${file} metadata must normalize the locale`);
   }
+});
+
+test('editorial photographs are local, credited and bounded for delivery', async () => {
+  const credits = JSON.parse(await read('public/photos/credits.json'));
+  assert.equal(credits.photos.length, 2);
+  for (const photo of credits.photos) {
+    assert.match(photo.source, /^https:\/\/commons\.wikimedia\.org\/wiki\/File:/);
+    assert.match(photo.license_url, /^https:\/\/creativecommons\.org\/licenses\//);
+    assert.ok(photo.author && photo.device && photo.changes);
+    const image = await readFile(path.join(root, 'public/photos', photo.file));
+    assert.equal(image.readUInt16BE(0), 0xffd8, 'documentary image is a JPEG, not a generated placeholder');
+    assert.ok(image.length < 600_000, 'each editorial photo stays under 600 kB');
+  }
+  const home = await read('app/page.tsx');
+  assert.match(home, /fetchPriority="high"/);
+  assert.match(home, /loading="lazy"/);
+  assert.match(home, /<FusionTwinSystemMap/);
+  assert.match(home, /<PhaseOneRoadmap/);
+  assert.match(home, /<MultiDeviceWorkspace/);
+  assert.match(home, /knowledgeModules\.map/);
+  assert.doesNotMatch(home, /https:\/\/upload\.wikimedia\.org/, 'page loads local images without a Wikimedia runtime dependency');
 });
 
 test('research catalogues never publish unreviewed Chinese prose in English mode', async () => {

@@ -321,7 +321,7 @@ test('server-renders the FusionDigital community portal', async () => {
   assert.match(html, /class="brandWordmark"/);
   assert.match(html, /class="brandFusion">Fusion/);
   assert.match(html, /class="brandDigital">Digital/);
-  assert.match(html, /TOOLCHAINS/);
+  assert.match(html, /TOOLS &amp; METHODS/);
   assert.equal((html.match(/id="prototype-workspace"/g) ?? []).length, 1);
   assert.match(html, /class="prototypePage prototypePage--embedded"/);
   assert.doesNotMatch(html, />三维与 EFIT 联动<\/a>/);
@@ -364,22 +364,23 @@ test('server-renders the FusionDigital community portal', async () => {
   assert.doesNotMatch(html, /roadmap-image2-v2\.png|class="roadmapCards"/);
   assert.doesNotMatch(html, /COMMUNITY THESIS|DIGITAL TWIN MAINLINE|一炮一链：聚变数字孪生的共同主线/);
   assert.match(html, /fusion-twin-ai-native-overview\.png/);
-  assert.match(html, /class="heroTitleValues">成本可控/);
-  assert.match(html, /<figcaption class="srOnly">聚变、数字孪生与智能体关系图/);
   assert.match(html, /loading="lazy" decoding="async"/);
-  assert.match(html, /权限、安全与物理约束门/);
-  assert.match(html, /成本可控 · 高效运行 · 可靠可用 · 安全可证/);
-  assert.match(html, /LIFECYCLE COST CONTROL · EFFICIENT OPERATION · RELIABLE AVAILABILITY · EVIDENCE-BASED SAFETY/);
+  assert.match(html, /看见装置。/);
+  assert.match(englishHomeHtml, /See the device\./);
+  assert.match(html, /src="\/photos\/alcator-cmod-interior\.jpg"/);
+  assert.match(html, /src="\/photos\/w7x-interior\.jpg"/);
+  assert.match(html, /Mike Garrett · CC BY 3\.0/);
+  assert.match(html, /Gwurden · CC BY-SA 3\.0/);
+  assert.equal((html.match(/<details class="editorialDisclosure"/g) ?? []).length, 2);
+  assert.doesNotMatch(html, /class="plantValue"|class="heroMetrics"/);
+  assert.match(html, /数字孪生不替代实体验证或安全系统/);
   assert.match(html, /能量转化/);
-  assert.match(html, /ENERGY CONVERSION/);
-  assert.match(html, /包层热取出、一次\/二次回路/);
+  assert.match(englishHomeHtml, /Energy Conversion/);
   assert.match(html, /辅机模拟/);
   assert.match(html, /人机交互/);
   assert.match(html, /总体集成/);
-  assert.match(html, /WHOLE-PLANT INTEGRATION/);
-  assert.match(html, /<b>06<\/b>已开放知识域/);
-  assert.match(html, /DIAGNOSTICS &amp; SENSING/);
-  assert.match(html, /诊断证据链/);
+  assert.match(englishHomeHtml, /Whole-Plant Integration/);
+  assert.match(englishHomeHtml, /Diagnostics &amp; Sensing/);
   assert.doesNotMatch(html, /智能诊断|INTELLIGENT DIAGNOSTICS/);
   for (const figure of [
     'domain-physics-dark-image2.png',
@@ -399,8 +400,8 @@ test('server-renders the FusionDigital community portal', async () => {
 test('server-renders the EXL-50U to EHL-2 program roadmap', async () => {
   const html = await htmlFor('/roadmap');
   assert.doesNotMatch(html, /class="knowledgeBackLink"/, 'the promoted roadmap is a primary destination, not a Knowledge child page');
-  assert.match(html, /从 EXL(?:‑|-)?50U 最小闭环/);
-  assert.match(html, /EHL(?:‑|-)?2 首等离子体虚拟实验/);
+  assert.match(html, /EXL-50U 实验验证/);
+  assert.match(html, /EHL-2 虚拟实验/);
   assert.match(html, /12 周/);
   assert.match(html, /6 个月/);
   assert.match(html, /data-echart="fusion-twin-system-support-map"/);
@@ -817,8 +818,8 @@ test('server-renders the fusion data-foundation evidence atlas with accessible c
   assert.equal(response.status, 200);
   const html = await response.text();
   assert.match(html, /08 \/ [^<]*聚变数据基座/);
-  assert.match(html, /从“存下数据”，走向/);
-  assert.match(html, /聚变数据基座不是一个数据库/);
+  assert.match(html, /数据基座/);
+  assert.match(html, /实验记录与仿真数据分别标识/);
   const verifiedCount = html.match(/>(\d+)<\/dt><dd>核验条目<\/dd>/);
   assert.ok(verifiedCount, 'the hero must publish the verified-record count');
   assert.match(html, /物理含义与时间、几何、配置和不确定度不可分离/);
@@ -1000,7 +1001,7 @@ test('ships and server-renders the evidence-first knowledge graph', async () => 
   const html = await htmlFor('/knowledge-graph');
   assert.match(html, /FUSION KNOWLEDGE GRAPH/);
   assert.match(html, /data-echart="fusion-knowledge-graph"/);
-  assert.match(html, /论文、代码与装置证据/);
+  assert.match(html, /图谱来源说明/);
   assert.match(html, /href="\/data\/fusion-knowledge-graph\.json"/);
   assert.match(html, /节点上限/);
   assert.match(html, /1 跳 · 直接关系/);
@@ -1025,11 +1026,11 @@ test('ships and server-renders evidence-grounded knowledge search', async () => 
 
   const html = await htmlFor('/search');
   assert.match(html, /AI-NATIVE KNOWLEDGE/);
-  assert.match(html, /确定性检索/);
+  assert.match(html, /检索与问答说明/);
   assert.match(html, /在智能体侧栏继续追问/);
   assert.match(html, /aria-controls="fusion-agent-workspace"/);
   assert.match(html, /智能体.*持续对话/s);
-  assert.match(html, /证据不足则拒答/);
+  assert.match(html, /证据不足时不生成结论/);
   assert.match(html, /href="\/platform#contracts"/);
   assert.doesNotMatch(html, /03 \/ TRUST BOUNDARY|当前能力边界/);
 });

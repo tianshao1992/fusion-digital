@@ -383,14 +383,18 @@ export default function MultiDeviceWorkspace({ catalog }: { catalog: DeviceCatal
           onClick={() => setSelectedId(device.id)}
           onKeyDown={(event) => handleDeviceTabKeyDown(event, index)}
         >
-          <span className="deviceCardHead"><small>{t('workspace.deviceOverview')}</small><span className="deviceCardIndex">{device.index}</span></span>
+          <span className="deviceCardHead"><span className="deviceCardIndex">{device.index}</span></span>
           <strong>{content(device.title)}</strong>
           <em>{content(device.state)}</em>
-          <span className="deviceCardIntro">{content(device.deviceOverview)}</span>
-          <span className="deviceCardAssets"><b>{t('workspace.fileSummary')}</b><span>{content(device.fileSummary)}</span></span>
         </button>;
       })}
     </div>
+
+    <details className="deviceIntroduction" key={current.id}>
+      <summary>{content(current.title)} · {t('workspace.deviceOverview')} / {t('workspace.fileSummary')}</summary>
+      <p>{content(current.deviceOverview)}</p>
+      <p>{content(current.fileSummary)}</p>
+    </details>
 
     {catalog.devices.map((device) => {
       const selected = current.id === device.id;

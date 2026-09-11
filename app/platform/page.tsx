@@ -88,8 +88,8 @@ function PlatformContent({en}:{en:boolean}) {
 
     <header className="platformHero">
       <p>PLATFORM ARCHITECTURE / 2026</p>
-      <h1>{en?'From a public prototype to a reproducible scientific and engineering platform':'从公开原型，走向可复现的科学与工程平台'}</h1>
-      <div>{en?'Retain the current site as the public experience and publication-projection layer. Experimental data, engineering assets, scientific computing and control capabilities belong in separate intranet and real-time domains connected through versioned contracts.':'现有网站保留为公开体验和发布投影层；实验数据、工程资产、科学计算与控制能力进入独立的内网平台和实时域，通过版本化合同连接。'}</div>
+      <h1>{en?'Platform architecture':'平台架构'}</h1>
+      <div>{en?'Public website, intranet computing and real-time control: separate systems, versioned interfaces.':'公网展示、内网计算与实时控制分离，通过版本化接口连接。'}</div>
       <nav aria-label={en?'Platform architecture contents':'平台架构页目录'}><a href="#current">{en?'Current baseline':'当前状态'}</a><a href="#architecture">{en?'Target architecture':'目标架构'}</a><a href="#contracts">{en?'Unified contracts':'统一合同'}</a><a href="#stack">{en?'Technology stack':'技术栈'}</a><a href="#visualization">{en?'Visualization fabric':'可视化平台'}</a><a href="#roadmap">{en?'Delivery roadmap':'建设路线'}</a></nav>
       <a className="platformDownload" href="/FusionDigital-technical-roadmap-2026-08-15.docx">{en?'Download the full technical roadmap (Chinese)':'下载完整技术路线报告'}</a>
     </header>

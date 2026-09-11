@@ -91,7 +91,7 @@ test('navigation selected state remains bold orange across page and theme overri
   assert.match(globals, /\.siteLinksMeasure > span\[data-nav-active='true'\] \{ font-weight: 900; \}/);
 });
 
-test('theme registry exposes system, Morandi light and dark modes with pre-hydration persistence', async () => {
+test('theme registry exposes system, neutral light and dark modes with pre-hydration persistence', async () => {
   const [config, boot, provider, switcher, css] = await Promise.all([
     source('app/components/theme/theme-config.ts'),
     source('app/components/theme/ThemeBootScript.tsx'),
@@ -110,7 +110,7 @@ test('theme registry exposes system, Morandi light and dark modes with pre-hydra
   assert.match(switcher, /role="radio"/);
   assert.match(switcher, /event\.key === 'ArrowRight'/);
   assert.match(css, /:root\[data-theme='light'\]/);
-  assert.match(css, /--color-canvas: #f7f3ec/);
+  assert.match(css, /--color-canvas: #f7f8fa/);
   assert.match(css, /--color-accent: #c86545/);
   assert.match(css, /--color-info: #718579/);
   assert.match(css, /:root\[data-theme='dark'\]/);
@@ -119,7 +119,7 @@ test('theme registry exposes system, Morandi light and dark modes with pre-hydra
   assert.match(css, /@media \(forced-colors:active\)/);
 });
 
-test('Morandi light mode covers legacy heroes, workspaces and filter modules', async () => {
+test('neutral light mode covers legacy heroes, workspaces and filter modules', async () => {
   const [globals, surfaces] = await Promise.all([
     source('app/globals.css'),
     source('app/theme-legacy-surfaces.css'),
@@ -181,7 +181,7 @@ test('knowledge graph explorer has distinct high-contrast light and dark surface
   assert.match(tooltip, /text\(data\.entityLabel/);
 });
 
-test('Morandi light mode covers every digital-prototype workspace shell while preserving dark tokens', async () => {
+test('neutral light mode covers every digital-prototype workspace shell while preserving dark tokens', async () => {
   const [theme, prototype, workspaceLayout, turntable] = await Promise.all([
     source('app/theme.css'),
     source('app/digital-prototype/prototype.css'),

@@ -63,8 +63,8 @@ function ProgramRoadmapContent({en}:{en:boolean}) {
     <header className="programHero">
       <div className="programHeroCopy">
         <p className="programEyebrow">FUSION DIGITAL TWIN PROGRAM · 3 + 6 MONTHS</p>
-        <h1>{en?'From an EXL-50U minimum closed loop to':<>从 EXL‑50U 最小闭环，走向</>}<br/><em>{en?'an EHL-2 first-plasma virtual experiment':'EHL‑2 首等离子体虚拟实验'}</em></h1>
-        <p className="programHeroLead">{en?'Build safely evolvable fusion digital-twin infrastructure on a Machine Description foundation, a unified data-contract backbone, validated physics and engineering models, and acceptance against a real experimental closed loop.':'以装置描述（Machine Description）为基础、以统一数据契约为骨架、以经过验证的物理与工程模型为核心、以真实实验闭环作为验收对象，建设可安全演进的聚变数字孪生基础设施。'}</p>
+        <h1>{en?'Development roadmap':'开发路线图'}</h1>
+        <p className="programHeroLead">{en?'EXL-50U validation and EHL-2 virtual experiments: milestones, interfaces and acceptance criteria.':'EXL-50U 实验验证与 EHL-2 虚拟实验：里程碑、接口和验收条件。'}</p>
         <div className="programHeroActions"><a href="#system-map">{en?'Integrated technical route':'总体技术路线'}</a><a href="#phase-one">{en?'Phase I delivery plan':'一期实施计划'}</a><a href="#phase-two">{en?'Phase II delivery plan':'二期实施计划'}</a><a href="#technology">{en?'Technology decision audit':'选型审计表'}</a><Link href="/knowledge-graph">{en?'Open knowledge graph':'进入知识图谱'}</Link></div>
       </div>
       <aside className="programMandate">

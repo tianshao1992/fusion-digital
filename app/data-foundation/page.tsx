@@ -65,15 +65,15 @@ export default async function DataFoundationPage() {
     <header className="dataHero">
       <div className="dataHeroCopy">
         <p className="dataEyebrow">08 / {en ? 'FUSION DATA FOUNDATION' : '聚变数据基座'}</p>
-        <h1>{en ? <>From stored bytes to<br/><em>credible fusion evidence</em></> : <>从“存下数据”，走向<br/><em>可信聚变证据</em></>}</h1>
+        <h1>{en ? 'Data foundation' : '数据基座'}</h1>
         <p>{en
-          ? 'A professional map of operational acquisition, pulse archives, diagnostic objects, IMAS semantics, federated access, scientific databases, provenance and VVUQ—connecting experimental and simulated data without collapsing their distinct authority.'
-          : '以运行采集、炮次档案、诊断大对象、IMAS 语义、联邦访问、专业数据库、血缘与 VVUQ 为主线，连接实验与模拟数据，同时保持各自不同的权威性。'}</p>
+          ? 'Standards, archives and interfaces for fusion data. Experimental records and simulations remain distinct.'
+          : '聚变数据的标准、档案与接口。实验记录与仿真数据分别标识。'}</p>
         <div className="dataHeroActions"><Link href="/fusion-data">{en ? 'Open the data workspace' : '进入数据工作台'}</Link><a href="#architecture">{en ? 'Inspect the architecture' : '查看总体架构'}</a><a href="#catalog">{en ? 'Browse the evidence catalogue' : '浏览证据目录'}</a><Link href="/platform">{en ? 'View platform deployment' : '查看平台部署'}</Link></div>
       </div>
       <aside className="dataHeroThesis">
         <span>{en ? 'CORE POSITION' : '核心判断'}</span>
-        <blockquote>{en ? 'A fusion data foundation is not one database. It is a governed composition of operational time series, pulse archives, large diagnostic objects, physics semantics, federated access, provenance and credibility evidence.' : '聚变数据基座不是一个数据库，而是实时运行时序、炮号档案、诊断大对象、物理语义、联邦访问、数据血缘与可信度证据的分层组合。'}</blockquote>
+        <blockquote>{en ? 'From acquisition to IMAS, archives, access and provenance.' : '从采集到 IMAS、档案、访问与溯源。'}</blockquote>
         <p>{en ? 'Storage, semantics, access, discovery, provenance and assurance answer different questions and must remain separate in the architecture.' : '存储、语义、访问、发现、血缘和可信度回答不同问题，架构上不能混为一层。'}</p>
       </aside>
       <dl className="dataHeroMetrics">

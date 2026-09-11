@@ -1,0 +1,7 @@
+{
+  "description": "Documentary photographs of reference fusion devices, not EXL-50U or FusionDigital-owned equipment. Resized, progressively encoded JPEGs; responsive CSS crops.",
+  "photos": [
+    {"file":"alcator-cmod-interior.jpg","title":"Alcator C-Mod Tokamak Interior","device":"MIT Alcator C-Mod","author":"Mike Garrett","source":"https://commons.wikimedia.org/wiki/File:Alcator_C-Mod_Tokamak_Interior.jpg","original":"https://upload.wikimedia.org/wikipedia/commons/c/c7/Alcator_C-Mod_Tokamak_Interior.jpg","license":"CC BY 3.0","license_url":"https://creativecommons.org/licenses/by/3.0/","changes":"Resized to 1800 pixels wide and JPEG-compressed; no content or colour manipulation. Responsive display may crop edges."},
+    {"file":"w7x-interior.jpg","title":"Interior of W7-X stellarator","device":"Wendelstein 7-X","author":"Gwurden","source":"https://commons.wikimedia.org/wiki/File:Interior_of_W7-X_stellarator.jpg","original":"https://upload.wikimedia.org/wikipedia/commons/8/8e/Interior_of_W7-X_stellarator.jpg","license":"CC BY-SA 3.0","license_url":"https://creativecommons.org/licenses/by-sa/3.0/","changes":"Resized to 1800 pixels wide and JPEG-compressed; no content or colour manipulation. Responsive display may crop edges. Any adaptation of this photograph remains CC BY-SA 3.0."}
+  ]
+}
