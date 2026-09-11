@@ -246,6 +246,15 @@ test('homepage mounts one full prototype workspace and the legacy route redirect
   assert.doesNotMatch(legacyPage, /MultiDeviceWorkspace|DigitalPrototypeContent/);
 });
 
+test('editorial introductions override legacy theme decoration without targeting chart controls', async () => {
+  const css = await source('app/editorial.css');
+  assert.ok(css.includes('html:root:is([data-theme],:not([data-theme])) main'));
+  assert.ok(css.includes('background-image:none'));
+  assert.ok(css.includes('.kgHero>dl{grid-template-columns:repeat(6,minmax(0,1fr))'));
+  assert.ok(css.includes('.kgHero>dl{grid-template-columns:repeat(3,minmax(0,1fr))'));
+  assert.doesNotMatch(css, /\.efit|canvas\s*\{|\.kgCanvasPanel/);
+});
+
 test('scientific visualizations consume the resolved theme and redraw with semantic palettes', async () => {
   const [theme, scientific, systemMap, roadmap, efitCanvas, efitSignals, efitEquilibrium, roadmapCss] = await Promise.all([
     source('app/components/charts/chart-theme.ts'),
