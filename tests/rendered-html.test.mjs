@@ -368,6 +368,10 @@ test('server-renders the FusionDigital community portal', async () => {
   assert.match(html, /看见装置。/);
   assert.match(englishHomeHtml, /See the device\./);
   assert.match(html, /src="\/photos\/exl50u-device\.jpg"/);
+  assert.match(html, /class="heroPhotography heroVrTour"/);
+  assert.match(html, /进入 VR 实景/);
+  assert.match(englishHomeHtml, /Enter the VR tour/);
+  assert.doesNotMatch(html, /class="deviceVrTour"/);
   assert.match(html, /src="\/photos\/iter-assembly\.jpg"/);
   assert.match(html, /© ENN Research/);
   assert.match(html, /© ITER Organization/);

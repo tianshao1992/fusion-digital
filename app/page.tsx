@@ -2,6 +2,7 @@ import FusionTwinSystemMap from './components/FusionTwinSystemMap';
 import PhaseOneRoadmap from './components/PhaseOneRoadmap';
 import SiteFooter from './components/SiteFooter';
 import FacilityPhoto from './components/FacilityPhoto';
+import Exl50uVrTour from './digital-prototype/Exl50uVrTour';
 import SiteNav from './components/SiteNav';
 import StaticLocaleContent from './components/StaticLocaleContent';
 import MultiDeviceWorkspace from './digital-prototype/MultiDeviceWorkspace';
@@ -42,7 +43,7 @@ function HomeContent({ en }: { en: boolean }) {
           <a href="/fusion-data">{en ? 'Browse experimental data' : '查看实验数据'} <span aria-hidden="true">→</span></a>
         </div>
       </div>
-      <FacilityPhoto device="EXL-50U" en={en} className="heroPhotography" priority />
+      <Exl50uVrTour en={en} />
       <nav className="heroShortcuts" aria-label={en ? 'Research workspaces' : '研究工作台'}>
         <a href="/facilities"><span>01</span>{en ? 'Global facilities' : '全球装置'}<i>↗</i></a>
         <a href="/simulations"><span>02</span>{en ? 'Simulation engines' : '仿真引擎'}<i>↗</i></a>

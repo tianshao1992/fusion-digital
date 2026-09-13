@@ -1,6 +1,11 @@
-.deviceVrTour{color:var(--color-workbench-ink);background:var(--color-workbench-raised);border-bottom:1px solid var(--color-workbench-line);padding:16px 3vw}
-.deviceVrToolbar{display:flex;align-items:center;flex-wrap:wrap;gap:12px 24px;font-size:14px}
-.deviceVrToolbar>span{margin-right:auto;color:var(--color-workbench-muted)}
-.deviceVrToolbar a{font-weight:600;padding:10px 18px;border:1px solid var(--color-workbench-line);background:var(--color-workbench-panel);text-decoration:none}
-.deviceVrToolbar a:hover{border-color:var(--color-workbench-info)}
-@media(max-width:700px){.deviceVrToolbar>span{flex-basis:100%}}
+.heroVrTour .facilityPhotoLink{position:relative;display:block;flex:1;min-height:0;isolation:isolate;border-radius:2px;overflow:hidden;text-decoration:none}
+.heroVrTour .facilityPhotoLink img{display:block;transition:transform .3s ease}
+.heroVrTour .facilityPhotoLink:hover img{transform:scale(1.025)}
+.heroVrTour .photoVrBadge{position:absolute;top:18px;left:18px;padding:8px 12px;border-radius:3px;background:var(--color-canvas);color:var(--color-ink);font:600 14px/1.4 var(--font-mono,monospace)}
+.heroVrTour .photoVrAction{position:absolute;bottom:22px;left:22px;right:22px;display:flex;align-items:center;gap:16px;padding:18px 22px;background:var(--color-canvas);color:var(--color-ink);border:1px solid var(--color-border);border-radius:3px;box-shadow:0 4px 24px #0003}
+.heroVrTour .photoVrPlay{display:grid;place-items:center;width:44px;height:44px;flex-shrink:0;border:1px solid var(--color-accent);border-radius:50%;color:var(--color-accent);font-size:18px}
+.heroVrTour .photoVrAction strong{display:block;font-size:18px;line-height:1.5;font-weight:600}
+.heroVrTour .photoVrAction small{display:block;margin-top:4px;font-size:14px;line-height:1.5;color:var(--color-ink-muted);text-wrap:balance}
+.heroVrTour .facilityPhotoLink:focus-visible{outline:3px solid var(--color-accent);outline-offset:5px}
+@media(max-width:700px){.heroVrTour .photoVrAction{bottom:14px;left:14px;right:14px;padding:12px 14px;gap:12px}.heroVrTour .photoVrAction strong{font-size:16px}.heroVrTour .photoVrPlay{width:36px;height:36px}}
+@media(prefers-reduced-motion:reduce){.heroVrTour .facilityPhotoLink img{transition:none}.heroVrTour .facilityPhotoLink:hover img{transform:none}}

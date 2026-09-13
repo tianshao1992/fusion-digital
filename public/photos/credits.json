@@ -1,6 +1,72 @@
 {
-  "description": "Device photographs shown with source attribution. Dates describe the photographs, not the current machine configuration. Copyright and individual reuse terms remain with their owners.",
+  "description": "Device photographs and explicitly labelled published design concepts. Dates describe the images, not the current machine configuration. Copyright and individual reuse terms remain with their owners; attribution does not grant downstream reuse rights.",
   "photos": [
+    {
+      "file": "ehl2-concept.jpg", "device": "EHL-2", "title": "EHL-2 published CAD concept, not a photograph", "kind": "concept",
+      "author": "ENN Research", "source": "https://en.ennresearch.com/researchfield/Compactfusion/EHL_2/",
+      "original": "https://en.ennresearch.com/uploads/allimg/250418/1_250418124010_1.png",
+      "license": "Copyright ENN Research. No open image license claimed.",
+      "changes": "JPEG compressed at native 1047 x 575; no content or colour manipulation. Displayed without cropping."
+    },
+    {
+      "file": "sparc-assembly.jpg", "device": "SPARC", "title": "SPARC tokamak assembly hall", "kind": "assembly-photo",
+      "author": "Commonwealth Fusion Systems", "source": "https://cfs.energy/technology/",
+      "original": "https://images.prismic.io/cfs-website/ahWwQbK9tuLqEJ8F_CFS-Technology-SPARC-1.jpg",
+      "license": "Copyright Commonwealth Fusion Systems. No open image license claimed.",
+      "changes": "Resized to 1200 pixels wide and JPEG compressed; no content or colour manipulation. Responsive display may crop edges."
+    },
+    {
+      "file": "best-assembly.jpg", "device": "BEST", "title": "BEST cryostat base installation, published 1 October 2025", "kind": "assembly-photo",
+      "author": "HFIPS / ASIPP, Chinese Academy of Sciences", "source": "https://hf.cas.cn/zhxw/jrtt/202510/t20251001_7984000.html",
+      "original": "https://hf.cas.cn/zhxw/jrtt/202510/W020251001845964683926_ORIGIN.jpg",
+      "license": "Copyright HFIPS / ASIPP. No open image license claimed.",
+      "changes": "Resized to 1200 pixels wide and JPEG compressed; no content or colour manipulation. Responsive display may crop edges."
+    },
+    {
+      "file": "dtt-concept.jpg", "device": "DTT", "title": "DTT published CAD concept, ENEA EAI 2020 Figure 3", "kind": "concept",
+      "author": "ENEA / Energia Ambiente e Innovazione", "source": "https://www.eai.enea.it/archivio/energia-e-green-new-deal-sommario/fusione-nucleare-e-green-new-deal.html",
+      "original": "https://www.eai.enea.it/images/2-2020/fig-3-dodaro.png",
+      "license": "Copyright retained by ENEA/EAI; no open image license claimed.",
+      "changes": "Resized to 1200 pixels wide and JPEG compressed; no content or colour manipulation. Displayed without cropping."
+    },
+    {
+      "file": "jt60sa-device.jpg", "device": "JT-60SA", "title": "JT-60SA assembly-era photograph, European Commission archive", "kind": "photograph",
+      "author": "European Commission source; individual photographer not identified", "source": "https://energy.ec.europa.eu/topics/research-and-technology/fusion-energy-and-iter/broader-approach_en",
+      "original": "https://energy.ec.europa.eu/sites/default/files/2025-01/JT60SA.png",
+      "license": "European Commission default CC BY 4.0 applies to EU-owned content only. Individual image ownership is not separately identified; no image-specific open license claimed.",
+      "license_url": "https://commission.europa.eu/legal-notice_en",
+      "changes": "JPEG compressed at native 600 x 450; no content or colour manipulation. Responsive display may crop edges."
+    },
+    {
+      "file": "step-concept.jpg", "device": "STEP", "title": "STEP early conceptual illustration, UKAEA 2021; not final design", "kind": "concept",
+      "author": "United Kingdom Atomic Energy Authority", "source": "https://www.gov.uk/government/news/uks-prototype-fusion-energy-plant-is-one-step-closer-to-finding-a-home",
+      "original": "https://assets.publishing.service.gov.uk/media/60c23376d3bf7f4bd11a2302/s960_STEP_image_-_Landscape_Day__1_.jpg",
+      "license": "Open Government Licence v3.0 under GOV.UK page terms, except where otherwise stated. Historical 2021 concept from an archived/withdrawn news page, not a current final design.",
+      "license_url": "https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/",
+      "changes": "JPEG recompressed at native 960 x 640; no content or colour manipulation. Displayed without cropping."
+    },
+    {
+      "file": "east-device.jpg", "device": "EAST", "title": "EAST experimental device exterior", "kind": "photograph",
+      "author": "HFIPS / Chinese Academy of Sciences", "source": "https://english.cas.cn/special-reports/Highlights_2025/202602/t20260209_1150238.shtml",
+      "original": "https://english.cas.cn/special-reports/Highlights_2025/202602/W020260209511319208083.jpg",
+      "license": "Copyright HFIPS / CAS. No open image license claimed.",
+      "changes": "Resized to 1200 pixels wide and JPEG compressed; no content or colour manipulation. Responsive display may crop edges."
+    },
+    {
+      "file": "mast-upgrade-device.jpg", "device": "MAST Upgrade", "title": "MAST Upgrade experimental device", "kind": "photograph",
+      "author": "United Kingdom Atomic Energy Authority", "source": "https://www.gov.uk/government/news/mast-upgrade-helping-answer-the-big-questions-in-fusion-physics",
+      "original": "https://assets.publishing.service.gov.uk/media/670e76a3366f494ab2e7b8cc/s960_mast-upgrade-machine.jpg",
+      "license": "Open Government Licence v3.0 under GOV.UK page terms, except where otherwise stated. Image explicitly credited to UKAEA.",
+      "license_url": "https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/",
+      "changes": "JPEG recompressed at native 960 x 640; no content or colour manipulation. Responsive display may crop edges."
+    },
+    {
+      "file": "diiid-interior.jpg", "device": "DIII-D", "title": "DIII-D tokamak chamber interior, 2017", "kind": "photograph",
+      "author": "Rswilcox", "source": "https://commons.wikimedia.org/wiki/File:2017_TOCAMAC_Fusion_Chamber_N0689.jpg",
+      "original": "https://upload.wikimedia.org/wikipedia/commons/0/00/2017_TOCAMAC_Fusion_Chamber_N0689.jpg",
+      "license": "CC BY-SA 4.0", "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "changes": "Resized to 1200 pixels wide and JPEG compressed; no content or colour manipulation. Responsive display may crop edges. Any adaptation remains CC BY-SA 4.0."
+    },
     {
       "file": "alcator-cmod-interior.jpg",
       "title": "Alcator C-Mod Tokamak Interior",

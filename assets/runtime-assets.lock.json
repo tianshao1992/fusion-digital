@@ -8,9 +8,9 @@
       "public/models/iter-high-detail-v1/",
       "public/models/exl50u-general-assembly-v1/*.glb"
     ],
-    "fileCount": 526,
-    "totalBytes": 276744639,
-    "treeSha256": "58042d2d5614c8cfd5b921c1845d5d4548c4e397f1961ce38cc92c24ff51e55f",
+    "fileCount": 535,
+    "totalBytes": 278015701,
+    "treeSha256": "45993afcb2c6acd13016cec1db441e64dca30f9c3fa9e789f6c969c9768fbc6c",
     "files": [
       {
         "path": "public/FusionDigital-technical-roadmap-2026-08-15.docx",
@@ -2578,9 +2578,34 @@
         "sha256": "d82cf50975313c4500e4e84232297eaa1f639cae8537a1e5f6a6663687f0a463"
       },
       {
+        "path": "public/photos/best-assembly.jpg",
+        "bytes": 158984,
+        "sha256": "9a5290d4f295a91a23e89e9030a21a3a28b5bf7c200a138b4ea76e9629f0a916"
+      },
+      {
         "path": "public/photos/credits.json",
-        "bytes": 4082,
-        "sha256": "7d8be1d2a63543f66fbfe7dfc9b420e3cbdd107466fa5c7ecc12e7da93d4057d"
+        "bytes": 10234,
+        "sha256": "2c23148989e0b9806d4766e274dc0fcd1bed8a6e398c6a8695919471ce9e688f"
+      },
+      {
+        "path": "public/photos/diiid-interior.jpg",
+        "bytes": 148847,
+        "sha256": "f1a1db379edeec73c6b31a8145cadb23763a4ad886133ca09907507fb93e890b"
+      },
+      {
+        "path": "public/photos/dtt-concept.jpg",
+        "bytes": 139382,
+        "sha256": "9a87be9f5de87324c839e5175cff892952a89e4c7f8a12eb1cf96cd9089237fa"
+      },
+      {
+        "path": "public/photos/east-device.jpg",
+        "bytes": 186539,
+        "sha256": "a531bc359fb155c821c9b6840875440db33eb8ba2c7762ae2d6af0843cbeebda"
+      },
+      {
+        "path": "public/photos/ehl2-concept.jpg",
+        "bytes": 69159,
+        "sha256": "56799463a54fa6fd1565366aa254b70fb8225249984dd858a9fa80dd6a192bc4"
       },
       {
         "path": "public/photos/exl50u-device.jpg",
@@ -2598,9 +2623,29 @@
         "sha256": "f92cb8481757cb2fc27946cfb4095fbc61c7f355e8d24102944b2a5705d0fcc2"
       },
       {
+        "path": "public/photos/jt60sa-device.jpg",
+        "bytes": 77816,
+        "sha256": "1bb823035df1e823a24ea45f0a7a643ba6a4b166e46c577e52da3482bf78d9b8"
+      },
+      {
         "path": "public/photos/kstar-device.jpg",
         "bytes": 228638,
         "sha256": "961367ef7b036da1cf939ca8ad67f12ab39bd9cc56fc064331231a69e0c7b8ac"
+      },
+      {
+        "path": "public/photos/mast-upgrade-device.jpg",
+        "bytes": 186956,
+        "sha256": "4c836a5e1ca6127c743f4e0b7ee1d9a5d01ca422ffa86c8d65180730b1430698"
+      },
+      {
+        "path": "public/photos/sparc-assembly.jpg",
+        "bytes": 204387,
+        "sha256": "b8c7a0d7770ea49f5029d8f68a4233cf5240ba7b2f40b28141f16a21764f4388"
+      },
+      {
+        "path": "public/photos/step-concept.jpg",
+        "bytes": 92840,
+        "sha256": "7a4e21f19b4e7cca0e5c4d4abc8f7cd6307b043430ce8c76d145d1522d24ea51"
       },
       {
         "path": "public/photos/w7x-interior.jpg",

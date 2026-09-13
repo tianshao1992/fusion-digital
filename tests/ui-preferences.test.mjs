@@ -128,19 +128,43 @@ test('restored palette and compact English navigation preserve the original bran
   assert.ok(messages.includes("'nav.fusionData': 'DataPlatforms'"));
 });
 
-test('EXL-50U VR tour opens separately without loading duplicate geometry or third-party scripts', async () => {
+test('EXL-50U VR tour belongs to the homepage photograph, not the CAD workspace', async () => {
   const vr = await source('app/digital-prototype/Exl50uVrTour.tsx');
+  const home = await source('app/page.tsx');
+  const photo = await source('app/components/FacilityPhoto.tsx');
   const workspace = await source('app/digital-prototype/MultiDeviceWorkspace.tsx');
   assert.ok(vr.includes('https://www.720yun.com/vr/ac7jzpsavm5'));
   assert.doesNotMatch(vr, /<iframe|<script|fetch\(|useEffect/);
-  assert.match(vr, /<a href=\{EXL50U_VR_URL\} target="_blank" rel="noopener noreferrer"/);
+  assert.match(photo, /href=\{imageLink.href\} target="_blank" rel="noopener noreferrer"/);
   assert.match(vr, /在新窗口打开 EXL-50U VR 实景/);
   assert.doesNotMatch(vr, /allow-top-navigation|allow-downloads|postMessage|dangerouslySetInnerHTML/);
-  assert.ok(workspace.includes("current.id === 'exl-50u-2026-upgrade' || current.id === 'exl50u-general-assembly-20260630'"));
-  // The adjacent device introduction already owns current.id as its key.
-  // Duplicating it leaves stale VR elements behind when React switches devices.
-  assert.ok(workspace.includes('<Exl50uVrTour />'));
-  assert.doesNotMatch(workspace, /<Exl50uVrTour key=\{current\.id\}/);
+  assert.ok(home.includes('<Exl50uVrTour en={en} />'));
+  assert.ok(vr.includes('heroPhotography heroVrTour'));
+  assert.ok(vr.includes('新窗口打开'));
+  assert.doesNotMatch(workspace, /Exl50uVrTour|deviceVrTour/);
+});
+
+test('every global facility has its own local image and attributed source, with concepts labelled', async () => {
+  const registry = await source('app/components/FacilityPhoto.tsx');
+  const catalog = await source('app/facilities/data.ts');
+  const { photos } = JSON.parse(await source('public/photos/credits.json'));
+  const names = [...catalog.matchAll(/\{name:'([^']+)'/g)].map(match => match[1]);
+  assert.equal(names.length, 14);
+  for (const name of names) {
+    const entry = photos.find(photo => photo.device === name);
+    assert.ok(entry, `${name} attribution`);
+    assert.ok(registry.includes(`'${name}': { file: '${entry.file}'`), `${name} image mapping`);
+    assert.ok(entry.source.startsWith('https://'), `${name} public source`);
+    const bytes = await readFile(new URL(`../public/photos/${entry.file}`, import.meta.url));
+    assert.ok(bytes.length > 10000, `${name} local image`);
+    assert.equal(bytes.readUInt16BE(0), 0xffd8, `${name} JPEG header`);
+  }
+  for (const name of ['EHL-2', 'DTT', 'STEP']) {
+    assert.equal(photos.find(photo => photo.device === name).kind, 'concept');
+    const line = registry.split('\n').find(line => line.includes(`'${name}':`));
+    assert.match(line, /非实拍/);
+    assert.match(line, /concept: true/);
+  }
 });
 
 test('original light mode covers legacy heroes, workspaces and filter modules', async () => {
