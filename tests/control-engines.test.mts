@@ -13,11 +13,12 @@ import { createGateway } from '../scripts/simulations/gateway.mts';
 import type { AddressInfo } from 'node:net';
 
 // SYNTHETIC protocol fixtures only. They never go into the product's public directory.
-function fixture(engine: ControlEngine = 'dina') {
-  const spec = defaultControlSpec(engine); spec.parameters.durationSeconds = .002;
+function fixture(engine: ControlEngine = 'dina', durationSeconds = .002) {
+  const spec = defaultControlSpec(engine); spec.parameters.durationSeconds = durationSeconds;
+  const steps = Math.round(durationSeconds / spec.parameters.timeStepSeconds);
   const channels = ['CS', ...Array.from({ length: 10 }, (_, i) => `PF${i + 1}`), ...(engine === 'fge' ? ['VS'] : [])];
   const action = { rawCommandV: channels.map(() => 0), mappedCommandV: channels.map(() => 0), psmSentV: channels.map(() => 0), channelNames: channels, actualAppliedV: null, actualAppliedStatus: 'not_reported', vsOwnership: 'plant_internal' };
-  const native = { schemaVersion: 'control-run.v1', authority: 'simulated', engine, scenarioId: spec.recipe, status: 'completed', requestedSteps: 2, completedSteps: 2, dispatchedSteps: 2, unconfirmedSteps: 0, dtS: .001, frames: [0, 1, 2].map(i => ({ step: i, tRelativeS: i * .001, solverTimeS: engine === 'dina' ? .8 + i * .001 : null, signals: { Ip: 500000 - i, R: .8, Z: .01, I_PF: Array.from({ length: 12 }, (_, k) => k) }, action: i === 0 ? null : structuredClone(action), fields: engine === 'fge' ? { lcfsPointsM: [[.7, 0], [.8, .1], [.9, 0], [.7, 0]] } : { available: false }, failure: false })) };
+  const native = { schemaVersion: 'control-run.v1', authority: 'simulated', engine, scenarioId: spec.recipe, status: 'completed', requestedSteps: steps, completedSteps: steps, dispatchedSteps: steps, unconfirmedSteps: 0, dtS: .001, frames: Array.from({ length: steps + 1 }, (_, i) => ({ step: i, tRelativeS: i * .001, solverTimeS: engine === 'dina' ? .8 + i * .001 : null, signals: { Ip: 500000 - i, R: .8, Z: .01, I_PF: Array.from({ length: 12 }, (_, k) => k) }, action: i === 0 ? null : structuredClone(action), fields: engine === 'fge' ? { lcfsPointsM: [[.7, 0], [.8, .1], [.9, 0], [.7, 0]] } : { available: false }, failure: false })) };
   const nativeSpec = { ...spec, parameters: { ...spec.parameters, usePsm: false } };
   const manifest = { schemaVersion: 'control-run-manifest.v1', authority: 'simulated', engine: spec.engine, runnerCommit: CONTROL_SOURCE_COMMIT, scenarioId: spec.recipe, runnerSha256: CONTROL_RUNNER_SHA256, status: native.status, execution: { backend: 'docker_raw_protocol', imageVerification: 'docker_inspect', endpointBinding: 'loopback_only', imageId: IMAGE_DIGESTS[engine], containerId: 'c'.repeat(64) }, quality: { missingValues: 'fail_closed', imputation: 'none' }, controller: { training: false, vsOwnership: 'plant_internal' }, artifacts: [] as { path: string; sha256: string; bytes: number }[] };
   const pack = () => { const raw = Buffer.from(JSON.stringify(native)), specBytes = Buffer.from(JSON.stringify(nativeSpec)); manifest.artifacts = [['result.json', raw], ['spec.json', specBytes]].map(([name, bytes]) => ({ path: name as string, sha256: sha(bytes as Buffer), bytes: (bytes as Buffer).length })); return { raw, specBytes, manifestBytes: Buffer.from(JSON.stringify(manifest)) }; };
@@ -25,6 +26,18 @@ function fixture(engine: ControlEngine = 'dina') {
   return { spec, native, nativeSpec, manifest, pack, result };
 }
 for (const engine of ['dina', 'fge'] as const) {
+  test(`${engine}: new runs default to 200 ms with 200 one-ms steps and unchanged initial state`, () => {
+    const spec = parseControlSpec(defaultControlSpec(engine));
+    assert.equal(spec.parameters.durationSeconds, .2); assert.equal(spec.parameters.timeStepSeconds, .001); assert.equal(spec.parameters.recordEvery, 1);
+    assert.equal(spec.parameters.durationSeconds / spec.parameters.timeStepSeconds, 200);
+    const r = fixture(engine, spec.parameters.durationSeconds).result();
+    assert.equal(r.execution.state, 'succeeded'); assert.equal(r.execution.completedSteps, 200); assert.equal(r.time.values.length, 201);
+    assert.equal(r.time.values[0], 0); assert.equal(r.time.values.at(-1), .2); assert.equal(r.initialState.timeSeconds, engine === 'dina' ? .8 : .4);
+  });
+  test(`${engine}: a short result cannot claim successful completion of a 200 ms request`, () => {
+    const f = fixture(engine); f.spec.parameters.durationSeconds = f.nativeSpec.parameters.durationSeconds = .2; f.native.requestedSteps = 200;
+    assert.throws(f.result);
+  });
   test(`${engine}: native baseline projection retains time, actions, 12 currents, source and missing applied values`, () => {
     const f = fixture(engine), r = f.result(); assert.equal(r.engine.sourceCommit, CONTROL_SOURCE_COMMIT); assert.deepEqual(r.time.values, [0, .001, .002]); assert.equal(r.signals.filter(s => s.id.startsWith('pf_current_')).length, 12); assert.equal(r.actions.appliedV, null); assert.equal(r.actions.commandedV[0][0], null); assert.equal(r.geometry.state, engine === 'fge' ? 'available' : 'unavailable'); assert.equal(r.assessment.numericalConvergence, 'not-established');
   });

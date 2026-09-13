@@ -1,0 +1,21 @@
+[
+  {
+    "id": "fge-equilibrium-20260816-100ms",
+    "engineId": "fge",
+    "exampleId": "fge-example-20260816-100ms",
+    "labelZh": "FGE · 原生位形与磁通场",
+    "labelEn": "FGE · native configuration and poloidal flux",
+    "frames": 101,
+    "grid": [
+      66,
+      65
+    ],
+    "artifact": {
+      "path": "/data/simulations/2f854f2dabc630adfa62cdfb0c4993221cb31d62b08bcde4e4567a217dce468c.json.gz",
+      "sha256": "2f854f2dabc630adfa62cdfb0c4993221cb31d62b08bcde4e4567a217dce468c",
+      "bytes": 3960970,
+      "rawSha256": "9f85759e97af4c06e64128b733ef3d402989352bbebc96fbf23cdd9ffa806aaf",
+      "rawBytes": 9075130
+    }
+  }
+]
