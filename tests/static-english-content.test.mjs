@@ -50,9 +50,9 @@ test('server-rendered route metadata is locale-aware', async () => {
   }
 });
 
-test('editorial photographs are local, credited and bounded for delivery', async () => {
+test('editorial photographs and labelled concepts are local, credited and bounded for delivery', async () => {
   const credits = JSON.parse(await read('public/photos/credits.json'));
-  assert.equal(credits.photos.length, 6);
+  assert.equal(credits.photos.length, 15); // 14 facility images plus the retained C-Mod photograph.
   for (const photo of credits.photos) {
     assert.match(photo.source, /^https:\/\//);
     assert.match(photo.license_url, /^https:\/\//);
@@ -64,8 +64,10 @@ test('editorial photographs are local, credited and bounded for delivery', async
   }
   const home = await read('app/page.tsx');
   const photoComponent = await read('app/components/FacilityPhoto.tsx');
+  const vr = await read('app/digital-prototype/Exl50uVrTour.tsx');
   assert.match(photoComponent, /fetchPriority/);
-  assert.match(home, /device="EXL-50U"[^>]*priority/);
+  assert.match(vr, /device="EXL-50U"[^>]*priority/);
+  assert.match(home, /<Exl50uVrTour en=\{en\}/);
   assert.match(home, /device="ITER"/);
   assert.match(photoComponent, /'lazy'/);
   assert.match(home, /<FusionTwinSystemMap/);
