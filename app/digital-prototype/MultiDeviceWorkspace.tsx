@@ -391,7 +391,7 @@ export default function MultiDeviceWorkspace({ catalog }: { catalog: DeviceCatal
       })}
     </div>
 
-    {(current.id === 'exl-50u-2026-upgrade' || current.id === 'exl50u-general-assembly-20260630') && <Exl50uVrTour key={current.id} />}
+    {(current.id === 'exl-50u-2026-upgrade' || current.id === 'exl50u-general-assembly-20260630') && <Exl50uVrTour />}
 
     <details className="deviceIntroduction" key={current.id}>
       <summary>{content(current.title)} · {t('workspace.deviceOverview')} / {t('workspace.fileSummary')}</summary>

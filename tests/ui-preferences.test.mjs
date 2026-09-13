@@ -137,7 +137,10 @@ test('EXL-50U VR tour opens separately without loading duplicate geometry or thi
   assert.match(vr, /在新窗口打开 EXL-50U VR 实景/);
   assert.doesNotMatch(vr, /allow-top-navigation|allow-downloads|postMessage|dangerouslySetInnerHTML/);
   assert.ok(workspace.includes("current.id === 'exl-50u-2026-upgrade' || current.id === 'exl50u-general-assembly-20260630'"));
-  assert.ok(workspace.includes('<Exl50uVrTour key={current.id} />'));
+  // The adjacent device introduction already owns current.id as its key.
+  // Duplicating it leaves stale VR elements behind when React switches devices.
+  assert.ok(workspace.includes('<Exl50uVrTour />'));
+  assert.doesNotMatch(workspace, /<Exl50uVrTour key=\{current\.id\}/);
 });
 
 test('original light mode covers legacy heroes, workspaces and filter modules', async () => {
