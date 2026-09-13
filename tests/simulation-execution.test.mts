@@ -68,7 +68,16 @@ test('real manifest and pin preflight failures are terminal and release unified 
 
   const token = randomBytes(32).toString('hex');
   const origin = 'https://fusiondigital.club';
-  const server = createGateway(token, origin, transportRuntime, fuseRuntime);
+  const completions = new Map<string, Promise<unknown>>();
+  const trackedFuseRuntime = {
+    ...fuseRuntime,
+    async submit(...args: Parameters<typeof fuseRuntime.submit>) {
+      const job = await fuseRuntime.submit(...args);
+      completions.set(job.id, job.completion);
+      return job;
+    },
+  };
+  const server = createGateway(token, origin, transportRuntime, trackedFuseRuntime);
   await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
   const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
   const headers = { Authorization: `Bearer ${token}`, Origin: origin, 'Content-Type': 'application/json' };
@@ -83,6 +92,20 @@ test('real manifest and pin preflight failures are terminal and release unified 
     }
     throw new Error(`preflight failure did not become terminal: ${id}`);
   };
+  const waitForCompletion = async (id: string) => {
+    const completion = completions.get(id);
+    assert.ok(completion, 'the real submission must expose its completion');
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      // A terminal status precedes staging cleanup. The gateway correctly
+      // retains its lease until completion, not merely one event-loop tick.
+      await Promise.race([completion, new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new Error(`preflight cleanup did not finish: ${id}`)), 15_000);
+      })]);
+    } finally {
+      clearTimeout(timer);
+    }
+  };
   try {
     const manifestFailure = await submit('fuse-preflight-manifest-0001');
     assert.equal(manifestFailure.status, 202);
@@ -91,7 +114,7 @@ test('real manifest and pin preflight failures are terminal and release unified 
       schema: 'engine-job.v1', id: firstId, engineId: 'fuse', state: 'failed',
       processStopped: true, exitCode: 1, elapsedSeconds: 0, reason: 'runner-preflight-failed',
     });
-    await new Promise(resolve => setImmediate(resolve));
+    await waitForCompletion(firstId);
 
     await execFileAsync('git', ['init', fuseRepository], { windowsHide: true });
     await writeFile(path.join(fuseRepository, 'fixture.txt'), 'unpinned test repository\n');
@@ -107,12 +130,13 @@ test('real manifest and pin preflight failures are terminal and release unified 
     const secondStatus = await waitForFailure(secondId);
     assert.equal(secondStatus.reason, 'runner-preflight-failed');
     assert.equal(secondStatus.processStopped, true);
-    await new Promise(resolve => setImmediate(resolve));
+    await waitForCompletion(secondId);
 
     const afterPinFailure = await submit('fuse-preflight-pin-0003');
     assert.equal(afterPinFailure.status, 202, 'the pin failure must release the gateway slot');
     const thirdId = (await afterPinFailure.json() as { id: string }).id;
     await waitForFailure(thirdId);
+    await waitForCompletion(thirdId);
   } finally {
     server.closeAllConnections();
     await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
