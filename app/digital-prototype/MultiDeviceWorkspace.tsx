@@ -18,6 +18,7 @@ import type { DeviceCatalog, DeviceCatalogEntry, DevicePhysicsOverlay } from './
 import Ehl2DiagnosticExperience, { Ehl2DiagnosticNoScriptSummary } from './Ehl2DiagnosticExperience';
 import Exl50uDiagnosticPanel from './Exl50uDiagnosticPanel';
 import Exl50uSensorPointPanel from './Exl50uSensorPointPanel';
+import Exl50uVrTour from './Exl50uVrTour';
 import TurntableDeviceViewer from './TurntableDeviceViewer';
 
 type Exl50uAnalysisMode = 'efit' | 'diagnostic' | 'sensors';
@@ -389,6 +390,8 @@ export default function MultiDeviceWorkspace({ catalog }: { catalog: DeviceCatal
         </button>;
       })}
     </div>
+
+    {(current.id === 'exl-50u-2026-upgrade' || current.id === 'exl50u-general-assembly-20260630') && <Exl50uVrTour key={current.id} />}
 
     <details className="deviceIntroduction" key={current.id}>
       <summary>{content(current.title)} · {t('workspace.deviceOverview')} / {t('workspace.fileSummary')}</summary>

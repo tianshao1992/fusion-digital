@@ -1,0 +1,8 @@
+.deviceVrTour{color:var(--color-workbench-ink);background:var(--color-workbench-raised);border-bottom:1px solid var(--color-workbench-line);padding:16px 3vw}
+.deviceVrToolbar{display:flex;align-items:center;flex-wrap:wrap;gap:12px 24px;font-size:14px}
+.deviceVrToolbar strong{margin-right:auto}
+.deviceVrToolbar button{font:inherit;cursor:pointer;padding:9px 18px;color:var(--color-workbench-ink);background:var(--color-workbench-panel);border:1px solid var(--color-workbench-line)}
+.deviceVrToolbar a{text-decoration:underline;text-underline-offset:4px}
+.deviceVrPlayer p{font-size:14px;line-height:1.6;color:var(--color-workbench-muted)}
+.deviceVrPlayer iframe{display:block;width:100%;height:clamp(420px,70vh,800px);border:1px solid var(--color-workbench-line);background:var(--color-workbench)}
+@media(max-width:700px){.deviceVrToolbar strong{flex-basis:100%}.deviceVrPlayer iframe{height:65vh;min-height:380px}}

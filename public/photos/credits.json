@@ -1,7 +1,71 @@
 {
-  "description": "Documentary photographs of reference fusion devices, not EXL-50U or FusionDigital-owned equipment. Resized, progressively encoded JPEGs; responsive CSS crops.",
+  "description": "Device photographs shown with source attribution. Dates describe the photographs, not the current machine configuration. Copyright and individual reuse terms remain with their owners.",
   "photos": [
-    {"file":"alcator-cmod-interior.jpg","title":"Alcator C-Mod Tokamak Interior","device":"MIT Alcator C-Mod","author":"Mike Garrett","source":"https://commons.wikimedia.org/wiki/File:Alcator_C-Mod_Tokamak_Interior.jpg","original":"https://upload.wikimedia.org/wikipedia/commons/c/c7/Alcator_C-Mod_Tokamak_Interior.jpg","license":"CC BY 3.0","license_url":"https://creativecommons.org/licenses/by/3.0/","changes":"Resized to 1800 pixels wide and JPEG-compressed; no content or colour manipulation. Responsive display may crop edges."},
-    {"file":"w7x-interior.jpg","title":"Interior of W7-X stellarator","device":"Wendelstein 7-X","author":"Gwurden","source":"https://commons.wikimedia.org/wiki/File:Interior_of_W7-X_stellarator.jpg","original":"https://upload.wikimedia.org/wikipedia/commons/8/8e/Interior_of_W7-X_stellarator.jpg","license":"CC BY-SA 3.0","license_url":"https://creativecommons.org/licenses/by-sa/3.0/","changes":"Resized to 1800 pixels wide and JPEG-compressed; no content or colour manipulation. Responsive display may crop edges. Any adaptation of this photograph remains CC BY-SA 3.0."}
+    {
+      "file": "alcator-cmod-interior.jpg",
+      "title": "Alcator C-Mod Tokamak Interior",
+      "device": "MIT Alcator C-Mod",
+      "author": "Mike Garrett",
+      "source": "https://commons.wikimedia.org/wiki/File:Alcator_C-Mod_Tokamak_Interior.jpg",
+      "original": "https://upload.wikimedia.org/wikipedia/commons/c/c7/Alcator_C-Mod_Tokamak_Interior.jpg",
+      "license": "CC BY 3.0",
+      "license_url": "https://creativecommons.org/licenses/by/3.0/",
+      "changes": "Resized to 1800 pixels wide and JPEG-compressed; no content or colour manipulation. Responsive display may crop edges."
+    },
+    {
+      "file": "w7x-interior.jpg",
+      "title": "Interior of W7-X stellarator",
+      "device": "Wendelstein 7-X",
+      "author": "Gwurden",
+      "source": "https://commons.wikimedia.org/wiki/File:Interior_of_W7-X_stellarator.jpg",
+      "original": "https://upload.wikimedia.org/wikipedia/commons/8/8e/Interior_of_W7-X_stellarator.jpg",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "changes": "Resized to 1800 pixels wide and JPEG-compressed; no content or colour manipulation. Responsive display may crop edges. Any adaptation of this photograph remains CC BY-SA 3.0."
+    },
+    {
+      "file": "exl50u-device.jpg",
+      "title": "EXL-50U experimental device",
+      "device": "EXL-50U",
+      "author": "ENN Research",
+      "source": "https://en.ennresearch.com/researchfield/Compactfusion/Experiment/",
+      "original": "https://en.ennresearch.com/uploads/allimg/251105/1_251105160424_1.jpg",
+      "license": "© ENN Research. Copyright retained; no open license claimed.",
+      "license_url": "https://en.ennresearch.com/researchfield/Compactfusion/Experiment/",
+      "changes": "JPEG recompressed for this informational device profile. No colour or content manipulation. Responsive display may crop edges. Source attribution is not a grant of downstream reuse rights."
+    },
+    {
+      "file": "iter-assembly.jpg",
+      "title": "Four of nine sectors, 1 April 2026",
+      "device": "ITER",
+      "author": "ITER Organization",
+      "source": "https://www.iter.org/iter-image-galleries/construction",
+      "original": "https://www.iter.org/sites/default/files/media/2026-04/near_sectors_3.jpg",
+      "license": "© ITER Organization. Educational and informational use under ITER photographic terms; not an endorsement.",
+      "license_url": "https://www.iter.org/sites/default/files/media/2023-11/terms_of_use_iter-organization.pdf",
+      "changes": "Resized to 1800 pixels wide and JPEG-compressed; no colour or content manipulation. Responsive display may crop edges."
+    },
+    {
+      "file": "jet-interior.jpg",
+      "title": "JET vessel internal view, 2011",
+      "device": "JET",
+      "author": "EUROfusion",
+      "source": "https://commons.wikimedia.org/wiki/File:JET_vessel_internal_view.jpg",
+      "original": "https://upload.wikimedia.org/wikipedia/commons/2/2e/JET_vessel_internal_view.jpg",
+      "license": "CC BY 4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "changes": "Resized to 1200 pixels wide and JPEG-compressed; no colour or content manipulation. Responsive display may crop edges."
+    },
+    {
+      "file": "kstar-device.jpg",
+      "title": "KSTAR tokamak, 2007",
+      "device": "KSTAR",
+      "author": "Michel Maccagnan",
+      "source": "https://commons.wikimedia.org/wiki/File:KSTAR_tokamak.jpg",
+      "original": "https://upload.wikimedia.org/wikipedia/commons/2/2a/KSTAR_tokamak.jpg",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "changes": "Resized to 1200 pixels wide and JPEG-compressed; no colour or content manipulation. Responsive display may crop edges. Any adaptation remains CC BY-SA 3.0."
+    }
   ]
 }

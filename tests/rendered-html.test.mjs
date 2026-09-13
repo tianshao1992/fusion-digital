@@ -367,10 +367,10 @@ test('server-renders the FusionDigital community portal', async () => {
   assert.match(html, /loading="lazy" decoding="async"/);
   assert.match(html, /看见装置。/);
   assert.match(englishHomeHtml, /See the device\./);
-  assert.match(html, /src="\/photos\/alcator-cmod-interior\.jpg"/);
-  assert.match(html, /src="\/photos\/w7x-interior\.jpg"/);
-  assert.match(html, /Mike Garrett · CC BY 3\.0/);
-  assert.match(html, /Gwurden · CC BY-SA 3\.0/);
+  assert.match(html, /src="\/photos\/exl50u-device\.jpg"/);
+  assert.match(html, /src="\/photos\/iter-assembly\.jpg"/);
+  assert.match(html, /© ENN Research/);
+  assert.match(html, /© ITER Organization/);
   assert.equal((html.match(/<details class="editorialDisclosure"/g) ?? []).length, 2);
   assert.doesNotMatch(html, /class="plantValue"|class="heroMetrics"/);
   assert.match(html, /数字孪生不替代实体验证或安全系统/);
@@ -870,7 +870,7 @@ test('marks the independent fusion data workspace as the current primary navigat
   const enResponse = await render('/fusion-data', { cookie: 'fusiondigital_locale=en' });
   assert.equal(enResponse.status, 200);
   const enHtml = await enResponse.text();
-  const activeEnLinks = enHtml.match(/<a(?=[^>]*href="\/fusion-data")(?=[^>]*class="active")(?=[^>]*aria-current="page")(?=[^>]*data-primary-nav="fusionData")[^>]*>Fusion Data<\/a>/g) ?? [];
+  const activeEnLinks = enHtml.match(/<a(?=[^>]*href="\/fusion-data")(?=[^>]*class="active")(?=[^>]*aria-current="page")(?=[^>]*data-primary-nav="fusionData")[^>]*>DataPlatforms<\/a>/g) ?? [];
   assert.equal(activeEnLinks.length, 2, 'desktop and mobile navigation must both mark Fusion Data as current');
 });
 

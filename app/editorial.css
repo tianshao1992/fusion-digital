@@ -1,16 +1,16 @@
 /* Shared editorial rhythm. Only page introductions are affected; scientific
    colour encodings, plots, CAD scenes and application controls stay independent. */
 html:root:is([data-theme],:not([data-theme])) main :is(.hero,.engHero,.controlHero,.diagnosticsHero,.aiHero,.dataHero,.facilitiesHero,.programHero,.platformHero,.knowledgeHero,.kgHero){
-  min-height:0;padding-top:48px;padding-bottom:40px;background:var(--color-canvas);color:var(--color-ink);background-image:none;
+  min-height:0;padding-top:48px;padding-bottom:40px;
 }
 html:root:is([data-theme],:not([data-theme])) main :is(.knowledgeHero,.kgHero)::before{content:none}
 html:root:is([data-theme],:not([data-theme])) main :is(.knowledgeHero,.kgHero)::after{content:none}
 html:root:is([data-theme],:not([data-theme])) main :is(.hero,.engHero,.controlHero,.diagnosticsHero,.aiHero,.dataHero,.facilitiesHero,.programHero,.platformHero,.knowledgeHero,.kgHero) h1{
-  color:var(--color-ink);font-size:clamp(34px,3.8vw,58px);line-height:1.15;font-weight:600;letter-spacing:-.035em;margin-top:14px;margin-bottom:22px;text-wrap:balance;
+  font-size:clamp(34px,3.8vw,58px);line-height:1.15;font-weight:600;letter-spacing:-.035em;margin-top:14px;margin-bottom:22px;text-wrap:balance;
 }
-html:root:is([data-theme],:not([data-theme])) main :is(.hero,.engHero,.controlHero,.diagnosticsHero,.aiHero,.dataHero,.facilitiesHero,.programHero,.platformHero,.knowledgeHero,.kgHero) h1 :is(em,span){color:inherit;font-size:inherit;font-style:normal}
-html:root:is([data-theme],:not([data-theme])) main :is(.lede,.programHeroLead,.editorialRouteLead){font-size:17px;line-height:1.65;max-width:48em;color:var(--color-ink-muted)}
-html:root:is([data-theme],:not([data-theme])) main :is(.controlHeroCopy,.diagnosticsHeroCopy,.aiHero>div,.dataHeroCopy)>p:not(:first-child){font-size:17px;line-height:1.65;color:var(--color-ink-muted);max-width:46em}
+html:root:is([data-theme],:not([data-theme])) main :is(.hero,.engHero,.controlHero,.diagnosticsHero,.aiHero,.dataHero,.facilitiesHero,.programHero,.platformHero,.knowledgeHero,.kgHero) h1 :is(em,span){font-size:inherit;font-style:normal}
+html:root:is([data-theme],:not([data-theme])) main :is(.lede,.programHeroLead,.editorialRouteLead){font-size:17px;line-height:1.65;max-width:48em}
+html:root:is([data-theme],:not([data-theme])) main :is(.controlHeroCopy,.diagnosticsHeroCopy,.aiHero>div,.dataHeroCopy)>p:not(:first-child){font-size:17px;line-height:1.65;max-width:46em}
 html:root:is([data-theme],:not([data-theme])) main :is(.knowledgeHero,.kgHero){padding-left:4vw;padding-right:4vw;gap:32px}
 html:root:is([data-theme],:not([data-theme])) main .knowledgeHero aside{padding:20px;box-shadow:none;align-self:center}
 html:root:is([data-theme],:not([data-theme])) main .knowledgeHero aside>strong{font-size:38px}
@@ -27,7 +27,7 @@ html:root:is([data-theme],:not([data-theme])) main .researchMethodNote summary{c
 html:root:is([data-theme],:not([data-theme])) main .researchMethodNote p{max-width:80ch;margin:16px 0 0;color:var(--color-ink-muted)}
 html:root:is([data-theme],:not([data-theme])) main .knowledgeGraphPortal h2{font-size:clamp(24px,2.6vw,36px)}
 html .siteNav :is(.siteMoreMenu a,.siteKnowledgeMenu a){font-size:14px}
-html .siteFooter{background:var(--color-surface);color:var(--color-ink);padding-top:36px;padding-bottom:36px;border-top:1px solid var(--color-border);box-shadow:none}
+html .siteFooter{padding-top:36px;padding-bottom:36px;border-top:1px solid var(--color-border);box-shadow:none}
 html .multiDeviceSection .deviceSelector button{min-height:0;padding:22px 24px}
 html .multiDeviceSection .deviceSelector strong{font-size:18px;margin-top:12px;line-height:1.4}
 html .multiDeviceSection .deviceSelector em{font-size:13px;line-height:1.5}

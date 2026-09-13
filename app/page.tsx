@@ -1,6 +1,7 @@
 import FusionTwinSystemMap from './components/FusionTwinSystemMap';
 import PhaseOneRoadmap from './components/PhaseOneRoadmap';
 import SiteFooter from './components/SiteFooter';
+import FacilityPhoto from './components/FacilityPhoto';
 import SiteNav from './components/SiteNav';
 import StaticLocaleContent from './components/StaticLocaleContent';
 import MultiDeviceWorkspace from './digital-prototype/MultiDeviceWorkspace';
@@ -41,10 +42,7 @@ function HomeContent({ en }: { en: boolean }) {
           <a href="/fusion-data">{en ? 'Browse experimental data' : '查看实验数据'} <span aria-hidden="true">→</span></a>
         </div>
       </div>
-      <figure className="heroPhotography">
-        <img src="/photos/alcator-cmod-interior.jpg" alt={en ? 'Interior of MIT’s Alcator C-Mod tokamak, with its central column and plasma-facing components' : 'MIT Alcator C-Mod 托卡马克内部的中心柱与面向等离子体部件'} width="1800" height="1331" fetchPriority="high" />
-        <figcaption><span>ALCATOR C-MOD · MIT</span><a href="/photos/credits.json" target="_blank" rel="noreferrer">Mike Garrett · CC BY 3.0 ↗</a></figcaption>
-      </figure>
+      <FacilityPhoto device="EXL-50U" en={en} className="heroPhotography" priority />
       <nav className="heroShortcuts" aria-label={en ? 'Research workspaces' : '研究工作台'}>
         <a href="/facilities"><span>01</span>{en ? 'Global facilities' : '全球装置'}<i>↗</i></a>
         <a href="/simulations"><span>02</span>{en ? 'Simulation engines' : '仿真引擎'}<i>↗</i></a>
@@ -65,7 +63,7 @@ function HomeContent({ en }: { en: boolean }) {
     </section>
 
     <section className="facilityPreview">
-      <figure><img src="/photos/w7x-interior.jpg" alt={en ? 'A view inside the Wendelstein 7-X stellarator during assembly' : 'Wendelstein 7-X 仿星器装配期间的内部实景'} width="1800" height="1201" loading="lazy" decoding="async" /><figcaption>WENDELSTEIN 7-X · <a href="/photos/credits.json" target="_blank" rel="noreferrer">Gwurden · CC BY-SA 3.0 ↗</a></figcaption></figure>
+      <FacilityPhoto device="ITER" en={en} />
       <div><p className="sectionIndex">02 / EXPLORE</p><h2>{en ? 'Real machines. Connected research.' : <>真实装置。<br />相互连接的研究。</>}</h2><p>{en ? 'Compare facilities, follow a research question, and open the original paper or code.' : '查看装置，追踪研究问题，直达论文与代码。'}</p><div className="editorialLinks"><a href="/facilities">{en ? 'Global facilities' : '全球装置'} ↗</a><a href="/knowledge-graph">{en ? 'Knowledge graph' : '知识图谱'} ↗</a><a href="/search">{en ? 'Evidence search & dialogue' : '证据检索与问答'} ↗</a></div></div>
     </section>
 

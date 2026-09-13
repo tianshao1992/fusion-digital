@@ -52,18 +52,22 @@ test('server-rendered route metadata is locale-aware', async () => {
 
 test('editorial photographs are local, credited and bounded for delivery', async () => {
   const credits = JSON.parse(await read('public/photos/credits.json'));
-  assert.equal(credits.photos.length, 2);
+  assert.equal(credits.photos.length, 6);
   for (const photo of credits.photos) {
-    assert.match(photo.source, /^https:\/\/commons\.wikimedia\.org\/wiki\/File:/);
-    assert.match(photo.license_url, /^https:\/\/creativecommons\.org\/licenses\//);
+    assert.match(photo.source, /^https:\/\//);
+    assert.match(photo.license_url, /^https:\/\//);
+    assert.ok(photo.license);
     assert.ok(photo.author && photo.device && photo.changes);
     const image = await readFile(path.join(root, 'public/photos', photo.file));
     assert.equal(image.readUInt16BE(0), 0xffd8, 'documentary image is a JPEG, not a generated placeholder');
     assert.ok(image.length < 600_000, 'each editorial photo stays under 600 kB');
   }
   const home = await read('app/page.tsx');
-  assert.match(home, /fetchPriority="high"/);
-  assert.match(home, /loading="lazy"/);
+  const photoComponent = await read('app/components/FacilityPhoto.tsx');
+  assert.match(photoComponent, /fetchPriority/);
+  assert.match(home, /device="EXL-50U"[^>]*priority/);
+  assert.match(home, /device="ITER"/);
+  assert.match(photoComponent, /'lazy'/);
   assert.match(home, /<FusionTwinSystemMap/);
   assert.match(home, /<PhaseOneRoadmap/);
   assert.match(home, /<MultiDeviceWorkspace/);

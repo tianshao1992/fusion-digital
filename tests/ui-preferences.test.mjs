@@ -110,7 +110,7 @@ test('theme registry exposes system, neutral light and dark modes with pre-hydra
   assert.match(switcher, /role="radio"/);
   assert.match(switcher, /event\.key === 'ArrowRight'/);
   assert.match(css, /:root\[data-theme='light'\]/);
-  assert.match(css, /--color-canvas: #f7f8fa/);
+  assert.match(css, /--color-canvas: #f7f3ec/);
   assert.match(css, /--color-accent: #c86545/);
   assert.match(css, /--color-info: #718579/);
   assert.match(css, /:root\[data-theme='dark'\]/);
@@ -119,7 +119,29 @@ test('theme registry exposes system, neutral light and dark modes with pre-hydra
   assert.match(css, /@media \(forced-colors:active\)/);
 });
 
-test('neutral light mode covers legacy heroes, workspaces and filter modules', async () => {
+test('restored palette and compact English navigation preserve the original brand', async () => {
+  const css = await source('app/theme.css');
+  const messages = await source('app/i18n/messages.ts');
+  for (const value of ['--color-canvas: #f7f3ec', '--color-surface: #fffdf8', '--color-ink: #2f2b27', '--color-canvas: #151916', '--color-surface: #1b211d', '--color-ink: #f1ebe2']) assert.ok(css.includes(value), value);
+  assert.doesNotMatch(css, /#0e1520|#151e2b|#f7f8fa|#17212f/);
+  assert.ok(messages.includes("'nav.simulations': 'Engines'"));
+  assert.ok(messages.includes("'nav.fusionData': 'DataPlatforms'"));
+});
+
+test('EXL-50U VR tour is opt-in, isolated and keeps a direct fallback', async () => {
+  const vr = await source('app/digital-prototype/Exl50uVrTour.tsx');
+  const workspace = await source('app/digital-prototype/MultiDeviceWorkspace.tsx');
+  assert.ok(vr.includes('https://www.720yun.com/vr/ac7jzpsavm5'));
+  assert.ok(vr.includes('useState(false)'));
+  assert.match(vr, /\{open && <div/);
+  assert.match(vr, /<a href=\{EXL50U_VR_URL\} target="_blank" rel="noopener noreferrer"/);
+  assert.match(vr, /allowFullScreen/);
+  assert.doesNotMatch(vr, /allow-top-navigation|allow-downloads|postMessage|dangerouslySetInnerHTML/);
+  assert.ok(workspace.includes("current.id === 'exl-50u-2026-upgrade' || current.id === 'exl50u-general-assembly-20260630'"));
+  assert.ok(workspace.includes('<Exl50uVrTour key={current.id} />'));
+});
+
+test('original light mode covers legacy heroes, workspaces and filter modules', async () => {
   const [globals, surfaces] = await Promise.all([
     source('app/globals.css'),
     source('app/theme-legacy-surfaces.css'),
@@ -246,10 +268,10 @@ test('homepage mounts one full prototype workspace and the legacy route redirect
   assert.doesNotMatch(legacyPage, /MultiDeviceWorkspace|DigitalPrototypeContent/);
 });
 
-test('editorial introductions override legacy theme decoration without targeting chart controls', async () => {
+test('editorial introductions preserve original theme decoration without targeting chart controls', async () => {
   const css = await source('app/editorial.css');
   assert.ok(css.includes('html:root:is([data-theme],:not([data-theme])) main'));
-  assert.ok(css.includes('background-image:none'));
+  assert.ok(!css.includes('background-image:none'));
   assert.ok(css.includes('.kgHero>dl{grid-template-columns:repeat(6,minmax(0,1fr))'));
   assert.ok(css.includes('.kgHero>dl{grid-template-columns:repeat(3,minmax(0,1fr))'));
   assert.doesNotMatch(css, /\.efit|canvas\s*\{|\.kgCanvasPanel/);

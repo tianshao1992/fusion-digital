@@ -6,7 +6,7 @@ const zhCN = {
   'preferences.group': '语言与外观偏好',
   'theme.group': '外观主题',
   'theme.system': '跟随系统',
-  'theme.light': '浅色',
+  'theme.light': '莫兰迪浅色',
   'theme.dark': '深色',
   'nav.main': '主导航',
   'nav.brandHome': 'FusionDigital 首页',
@@ -308,15 +308,15 @@ const zhCN = {
 export type MessageKey = keyof typeof zhCN;
 
 const en: Record<MessageKey, string> = {
-  'nav.simulations': 'Simulation Engines',
+  'nav.simulations': 'Engines',
   'locale.switchTo': 'Switch to Simplified Chinese',
   'locale.current': 'Current language: English',
   'preferences.group': 'Language and appearance preferences',
   'theme.group': 'Color theme',
   'theme.system': 'Use system setting',
-  'theme.light': 'Light',
+  'theme.light': 'Morandi light',
   'theme.dark': 'Dark',
-  'nav.main': 'Main navigation', 'nav.brandHome': 'FusionDigital home', 'nav.home': 'Home', 'nav.physics': 'Physics', 'nav.engineering': 'Engineering', 'nav.control': 'Control', 'nav.diagnostics': 'Diagnostics', 'nav.ai': 'AI', 'nav.knowledge': 'Knowledge', 'nav.knowledgeHome': 'Knowledge graph home', 'nav.knowledgeModules': 'Ten knowledge modules', 'nav.backToKnowledge': 'Back to Knowledge', 'nav.facilities': 'Facilities', 'nav.prototype': 'Prototype', 'nav.fusionData': 'Fusion Data', 'nav.resources': 'Toolchain', 'nav.roadmap': 'Roadmap', 'nav.more': 'More', 'nav.account': 'Account', 'nav.accountCenter': 'Account center', 'nav.aiWorkspace': 'Sign in / AI workspace ↗', 'nav.aiWorkspaceLabel': 'Sign in on Sites and open the AI workspace (new window)', 'nav.open': 'Open navigation', 'nav.menu': 'Menu',
+  'nav.main': 'Main navigation', 'nav.brandHome': 'FusionDigital home', 'nav.home': 'Home', 'nav.physics': 'Physics', 'nav.engineering': 'Engineering', 'nav.control': 'Control', 'nav.diagnostics': 'Diagnostics', 'nav.ai': 'AI', 'nav.knowledge': 'Knowledge', 'nav.knowledgeHome': 'Knowledge graph home', 'nav.knowledgeModules': 'Ten knowledge modules', 'nav.backToKnowledge': 'Back to Knowledge', 'nav.facilities': 'Facilities', 'nav.prototype': 'Prototype', 'nav.fusionData': 'DataPlatforms', 'nav.resources': 'Toolchain', 'nav.roadmap': 'Roadmap', 'nav.more': 'More', 'nav.account': 'Account', 'nav.accountCenter': 'Account center', 'nav.aiWorkspace': 'Sign in / AI workspace ↗', 'nav.aiWorkspaceLabel': 'Sign in on Sites and open the AI workspace (new window)', 'nav.open': 'Open navigation', 'nav.menu': 'Menu',
   'footer.tagline': 'An open technology community for fusion digital twins', 'footer.team': 'Team', 'footer.teamName': 'ENN Fusion AI Team', 'footer.contact': 'Contact and collaboration', 'footer.platform': 'Platform', 'footer.platformLink': 'Architecture, integration contracts and roadmap', 'footer.updated': 'Updated 15 August 2026',
   'chat.provider': 'Model service', 'chat.providerAuto': 'Automatically select an available model', 'chat.providerRetrieval': 'Retrieval only (no model call)', 'chat.providerUnavailable': 'Not configured', 'chat.providerHint': 'API keys remain server-side only', 'chat.providerPersonal': 'Personal API', 'chat.providerPlatform': 'Site-provided', 'chat.providerManage': 'Manage APIs',
   'chat.eyebrow': 'AI assistant', 'chat.defaultTitle': 'Chat with the FusionDigital Assistant', 'chat.persistence': 'Multi-turn conversation stays on this device. The assistant automatically uses indexed site knowledge and retains sources for factual answers.', 'chat.messages': 'messages', 'chat.new': 'New conversation', 'chat.context': 'Current context', 'chat.emptyTitle': 'Start a conversation with FusionDigital', 'chat.emptyCopy': 'Ask naturally, discuss a plan, or request analysis. The assistant uses the current page signal and indexed site knowledge automatically, and labels retrieval fallback when a model is unavailable.', 'chat.promptEvidence': 'What conclusions are best supported by the current evidence?', 'chat.promptCompare': 'Compare the related models, code and experimental devices.', 'chat.promptGaps': 'What evidence gaps remain?', 'chat.user': 'You', 'chat.assistant': 'FusionDigital', 'chat.chatMode': 'AI assistant', 'chat.aiMode': 'AI evidence synthesis', 'chat.assistantMode': 'Site assistant note', 'chat.retrievalMode': 'Retrieval fallback', 'chat.signIn': 'Sign in to continue', 'chat.signInForModels': 'Sign in to chat with any model', 'chat.caveats': 'Limits and uncertainty', 'chat.pending': 'The assistant is thinking and composing a response…', 'chat.stop': 'Stop', 'chat.input': 'Continue the conversation', 'chat.placeholder': 'Continue the conversation with a question, idea, or task to work through together…', 'chat.inputHint': 'Enter for a new line · use Send to submit', 'chat.composing': 'Answering…', 'chat.send': 'Send question', 'chat.toCanvas': 'Send to Canvas', 'chat.logAria': 'FusionDigital conversation history',
