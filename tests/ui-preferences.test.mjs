@@ -128,14 +128,13 @@ test('restored palette and compact English navigation preserve the original bran
   assert.ok(messages.includes("'nav.fusionData': 'DataPlatforms'"));
 });
 
-test('EXL-50U VR tour is opt-in, isolated and keeps a direct fallback', async () => {
+test('EXL-50U VR tour opens separately without loading duplicate geometry or third-party scripts', async () => {
   const vr = await source('app/digital-prototype/Exl50uVrTour.tsx');
   const workspace = await source('app/digital-prototype/MultiDeviceWorkspace.tsx');
   assert.ok(vr.includes('https://www.720yun.com/vr/ac7jzpsavm5'));
-  assert.ok(vr.includes('useState(false)'));
-  assert.match(vr, /\{open && <div/);
+  assert.doesNotMatch(vr, /<iframe|<script|fetch\(|useEffect/);
   assert.match(vr, /<a href=\{EXL50U_VR_URL\} target="_blank" rel="noopener noreferrer"/);
-  assert.match(vr, /allowFullScreen/);
+  assert.match(vr, /在新窗口打开 EXL-50U VR 实景/);
   assert.doesNotMatch(vr, /allow-top-navigation|allow-downloads|postMessage|dangerouslySetInnerHTML/);
   assert.ok(workspace.includes("current.id === 'exl-50u-2026-upgrade' || current.id === 'exl50u-general-assembly-20260630'"));
   assert.ok(workspace.includes('<Exl50uVrTour key={current.id} />'));
