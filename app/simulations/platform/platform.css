@@ -6,7 +6,7 @@
 .engineNavigation > .engineSegments { max-width:100%; overflow-x:auto; }
 .engineNavigation > .engineSegments button { flex:0 0 auto; white-space:nowrap; }
 .engineSegments button,.transportTabs button { padding:10px 20px; border:0; border-radius:8px; background:transparent; color:var(--color-ink-muted); cursor:pointer; font:inherit; font-size:14px; }
-.engineSegments button[aria-pressed=true],.transportTabs button[aria-pressed=true] { background:var(--color-accent-strong); color:white; }
+.engineSegments button[aria-pressed=true],.transportTabs button[aria-pressed=true],.transportTabs button[aria-selected=true] { background:var(--color-accent-strong); color:white; }
 .transportStudio { padding:30px 0 72px; font-size:15px; line-height:1.65; }
 .transportHeading { display:flex; align-items:center; justify-content:space-between; gap:24px; margin-bottom:30px; }
 .transportEyebrow { font-size:12px; letter-spacing:.13em; color:var(--color-accent-strong); font-weight:700; margin:0 0 8px; }

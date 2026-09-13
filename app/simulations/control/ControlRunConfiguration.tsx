@@ -8,7 +8,7 @@ import { normalizeEndpoint } from '../platform/compute-client';
 const terminal = new Set(['succeeded', 'failed', 'timed-out', 'cancelled', 'collection-failed']);
 export default function ControlRunConfiguration({ engine, en, onResult }: { engine: ControlEngine; en: boolean; onResult: (r: ControlResult) => void }) {
   const t = (zh: string, english: string) => en ? english : zh;
-  const [duration, setDuration] = useState('.016');
+  const [duration, setDuration] = useState(() => String(defaultControlSpec(engine).parameters.durationSeconds));
   const [endpoint, setEndpoint] = useState('');
   const [token, setToken] = useState('');
   const [connected, setConnected] = useState(false);
