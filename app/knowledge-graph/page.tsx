@@ -40,7 +40,7 @@ export default function KnowledgeGraphPage() {
     </header>
     <details className="researchMethodNote"><summary>图谱来源说明</summary><p>关系来自结构化调研记录，不由模型生成。选择节点可查看论文、代码与官方来源。</p></details>
     <KnowledgeGraphExplorer initial={initial} devices={devices} />
-    <section className="platformInlineLink"><span>图谱保留来源与更新时间，并按需加载邻域。</span><Link href="/platform#contracts">查看数据合同与接入路线 →</Link></section>
+    <section className="platformInlineLink"><span>图谱保留来源与更新时间，并按需加载邻域。</span><Link href="/platform#contracts">数据合同与接入 →</Link></section>
     <SiteFooter />
   </main>;
   const en=<main className="kgPage">
@@ -62,7 +62,7 @@ export default function KnowledgeGraphPage() {
     </header>
     <details className="researchMethodNote"><summary>About graph sources</summary><p>Relationships come from structured research records, not generated links. Select a node to inspect its papers, code and official sources.</p></details>
     <KnowledgeGraphExplorer initial={initial} devices={devices} />
-    <section className="platformInlineLink"><span>The graph retains sources and update dates and loads neighborhoods on demand.</span><Link href="/platform#contracts">View data contracts and the integration route →</Link></section>
+    <section className="platformInlineLink"><span>The graph retains sources and update dates and loads neighborhoods on demand.</span><Link href="/platform#contracts">Data contracts & integration →</Link></section>
     <SiteFooter />
   </main>;
   return <StaticLocaleContent zh={zh} en={en}/>;

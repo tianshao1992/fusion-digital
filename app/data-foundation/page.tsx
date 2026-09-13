@@ -74,7 +74,7 @@ export default async function DataFoundationPage() {
       <aside className="dataHeroThesis">
         <span>{en ? 'CORE POSITION' : '核心判断'}</span>
         <blockquote>{en ? 'From acquisition to IMAS, archives, access and provenance.' : '从采集到 IMAS、档案、访问与溯源。'}</blockquote>
-        <p>{en ? 'Storage, semantics, access, discovery, provenance and assurance answer different questions and must remain separate in the architecture.' : '存储、语义、访问、发现、血缘和可信度回答不同问题，架构上不能混为一层。'}</p>
+        <p>{en ? 'Keep storage, semantics, access, discovery, provenance and assurance as distinct layers.' : '存储、语义、访问、发现、血缘与可信度分别建层。'}</p>
       </aside>
       <dl className="dataHeroMetrics">
         <div><dt>{dataFoundationRecords.length}</dt><dd>{en ? 'verified records' : '核验条目'}</dd></div>
@@ -85,38 +85,38 @@ export default async function DataFoundationPage() {
     </header>
 
     <section className="dataCharacteristics" aria-labelledby="data-characteristics-title">
-      <div className="dataSectionHead"><p className="dataEyebrow">01 / {en ? 'WHY FUSION DATA ARE DIFFERENT' : '聚变数据为何不同'}</p><h2 id="data-characteristics-title">{en ? 'Physics meaning is inseparable from time, geometry, configuration and uncertainty' : '物理含义与时间、几何、配置和不确定度不可分离'}</h2><p>{en ? 'These characteristics define the architecture. They are not generic big-data labels.' : '这些特征直接决定技术架构，而不是泛化的“大数据”标签。'}</p></div>
+      <div className="dataSectionHead"><p className="dataEyebrow">01 / {en ? 'WHY FUSION DATA ARE DIFFERENT' : '聚变数据为何不同'}</p><h2 id="data-characteristics-title">{en ? 'Time, geometry, configuration and uncertainty' : '时间、几何、配置与不确定度'}</h2><p>{en ? 'These define physical meaning and shape the architecture.' : '这些要素决定数据的物理含义与技术架构。'}</p></div>
       <div className="dataCharacteristicGrid">{fusionDataCharacteristics.map((item, index) => <article key={item.id}><span>{String(index + 1).padStart(2, '0')}</span><h3>{en ? item.en : item.zh}</h3><p>{en ? item.detailEn : item.detail}</p><b>{en ? 'Architectural implication' : '架构含义'}</b><small>{en ? item.implicationEn : item.implication}</small></article>)}</div>
     </section>
 
     <section id="architecture" className="dataArchitecture" aria-labelledby="data-architecture-title">
-      <div className="dataSectionHead"><p className="dataEyebrow">02 / {en ? 'LAYERED REFERENCE ARCHITECTURE' : '分层参考架构'}</p><h2 id="data-architecture-title">{en ? 'Connect the scientific data thread without routing control through the web' : '贯通科学数据链，但不让控制穿越网页'}</h2><p>{en ? 'The lower chain forms a reproducible scientific evidence path. The upper branch preserves the deterministic control hot path and exposes only governed, read-only shadow services.' : '下方主链形成可重现的科学证据路径；上方分支保留确定性控制热路径，只向平台暴露受治理的只读影子服务。'}</p></div>
+      <div className="dataSectionHead"><p className="dataEyebrow">02 / {en ? 'LAYERED REFERENCE ARCHITECTURE' : '分层参考架构'}</p><h2 id="data-architecture-title">{en ? 'Data and control separation' : '科学数据与控制分离'}</h2><p>{en ? 'The lower chain carries reproducible evidence; the upper keeps deterministic control isolated, exposing only governed read-only shadow services.' : '下方主链承载可复现证据；上方保留确定性控制，仅开放受控的只读影子服务。'}</p></div>
       <DataArchitectureChart />
       <div className="dataRouteCards">{dataFoundationRoute.map((step) => <article key={step.id}><span>{step.id}</span><h3>{en ? step.en : step.zh}</h3><b>{step.tools}</b><p>{en ? step.deliverableEn : step.deliverable}</p></article>)}</div>
     </section>
 
     <section className="dataDistinctions" aria-labelledby="data-distinction-title">
-      <div className="dataSectionHead"><p className="dataEyebrow">03 / {en ? 'DO NOT CONFUSE THE LAYERS' : '不要混淆这些层级'}</p><h2 id="data-distinction-title">{en ? 'A database, a semantic model and an evidence standard are not interchangeable' : '数据库、语义模型和证据标准不能相互替代'}</h2></div>
+      <div className="dataSectionHead"><p className="dataEyebrow">03 / {en ? 'DO NOT CONFUSE THE LAYERS' : '不要混淆这些层级'}</p><h2 id="data-distinction-title">{en ? 'Layer responsibilities and limits' : '各层职责与边界'}</h2></div>
       <div className="dataDistinctionGrid">{distinctions.map((item) => <article key={item.en}><h3>{en ? item.en : item.zh}</h3><b>{item.examples}</b><p>{en ? item.answerEn : item.answerZh}</p><small>{en ? item.boundaryEn : item.boundaryZh}</small></article>)}</div>
     </section>
 
     <section className="dataImplementation" aria-labelledby="data-implementation-title">
-      <div className="dataSectionHead"><p className="dataEyebrow">04 / EXL-50U → EHL-2</p><h2 id="data-implementation-title">{en ? 'A practical implementation route for the experimental minimum closed loop' : '面向实验最小闭环的可实施技术路线'}</h2><p>{en ? 'The route retains each facility’s source-of-record systems, then adds versioned semantics, governed compute and evidence publication. It does not begin with a wholesale database migration.' : '路线保留每台装置的权威事实源，在其上增加版本化语义、受治理计算和证据发布；起点不是“一次性迁库”。'}</p></div>
+      <div className="dataSectionHead"><p className="dataEyebrow">04 / EXL-50U → EHL-2</p><h2 id="data-implementation-title">{en ? 'Implementation route' : '实施路线'}</h2><p>{en ? 'Build on facility source systems with versioned semantics, governed compute and evidence release.' : '保留装置权威源，逐步补齐版本化语义、受控计算与证据发布。'}</p></div>
       <ol className="dataImplementationRoute">{exlEhlRoute.map((step, index) => <li key={step.en}><span>{String(index + 1).padStart(2, '0')}</span><div><h3>{en ? step.en : step.zh}</h3><b>{step.stack}</b><p>{en ? step.outputEn : step.outputZh}</p></div></li>)}</ol>
       <aside className="dataPhaseBoundary"><strong>{en ? 'Phase-I acceptance boundary' : '一期验收边界'}</strong><p>{en ? 'For EXL-50U, accept one scenario family and a governed subset of control-relevant diagnostics and engineering sensors: retained source revisions, a policy-locked raw snapshot, tested mappings, as-shot reconstruction, replayable workflows, residuals and a released evidence snapshot. Full-facility migration and all-diagnostic IMAS conversion remain outside the three-month promise.' : 'EXL-50U 一期只验收一个场景族和受治理的控制相关诊断/工程传感器子集：源修订保留、原始快照经策略锁定、映射可测试、as-shot 重构可回放、工作流可复现、残差可核对、证据快照可发布。全装置迁移和全诊断 IMAS 化不属于三个月承诺。'}</p></aside>
     </section>
 
     <section className="dataLandscape" aria-labelledby="data-landscape-title">
-      <div className="dataSectionHead"><p className="dataEyebrow">05 / {en ? 'EVIDENCE LANDSCAPE' : '证据版图'}</p><h2 id="data-landscape-title">{en ? 'Platforms differ in lifecycle reach and semantic interoperability' : '平台在生命周期覆盖与语义互操作上各有侧重'}</h2><p>{en ? 'Point positions and sizes are editorial planning assessments from public evidence, not official rankings or measured performance benchmarks. Records with the same integer score are separated only by a small screen-space offset for legibility; the tooltip retains the original score.' : '点位与大小是基于公开证据的编辑性规划判断，不是官方评级或实测性能排名。同一整数评分的条目仅做屏幕像素级错位以便辨读，提示框仍显示原始评分。'}</p></div>
+      <div className="dataSectionHead"><p className="dataEyebrow">05 / {en ? 'EVIDENCE LANDSCAPE' : '证据版图'}</p><h2 id="data-landscape-title">{en ? 'Lifecycle coverage and interoperability' : '生命周期覆盖与语义互操作'}</h2><p>{en ? 'Point positions and sizes are editorial planning assessments from public evidence, not official rankings or measured performance benchmarks. Records with the same integer score are separated only by a small screen-space offset for legibility; the tooltip retains the original score.' : '点位与大小是基于公开证据的编辑性规划判断，不是官方评级或实测性能排名。同一整数评分的条目仅做屏幕像素级错位以便辨读，提示框仍显示原始评分。'}</p></div>
       <DataLandscapeChart />
     </section>
 
     <DataFoundationCatalog />
 
     <section className="dataGovernance" aria-labelledby="data-governance-title">
-      <div className="dataSectionHead"><p className="dataEyebrow">06 / {en ? 'AUTHORITY AND GOVERNANCE' : '权限与治理红线'}</p><h2 id="data-governance-title">{en ? 'Data integration must not erase scientific or operational authority' : '数据集成不能抹平科学与运行权威边界'}</h2></div>
+      <div className="dataSectionHead"><p className="dataEyebrow">06 / {en ? 'AUTHORITY AND GOVERNANCE' : '权限与治理红线'}</p><h2 id="data-governance-title">{en ? 'Governance boundaries' : '科学与运行权限边界'}</h2></div>
       <div className="dataGovernanceGrid">{redLines.map((item, index) => <article key={item.en}><span>R{index + 1}</span><h3>{en ? item.en : item.zh}</h3><p>{en ? item.detailEn : item.detailZh}</p></article>)}</div>
-      <div className="dataEvidenceNote"><strong>{en ? `Evidence cut-off: ${dataFoundationCutoff}` : `证据核验截止：${dataFoundationCutoff}`}</strong><p>{en ? 'This atlas covers discoverable primary documentation, official repositories and published reports. It cannot enumerate undisclosed internal systems or confer access rights. Availability, licences and facility policies must be rechecked before implementation.' : '本图谱覆盖可发现的一手文档、官方仓库与已发表报告，无法穷举未公开的内部系统，也不授予数据访问权。实施前必须再次核验可用性、许可证和装置政策。'}</p></div>
+      <div className="dataEvidenceNote"><strong>{en ? `Evidence cut-off: ${dataFoundationCutoff}` : `证据核验截止：${dataFoundationCutoff}`}</strong><p>{en ? 'Based on discoverable primary documents, official repositories and published reports; excludes undisclosed systems and grants no access rights. Recheck availability, licences and facility policies before use.' : '依据可发现的一手文档、官方仓库与报告，不涵盖未公开系统，也不授予访问权。实施前须复核可用性、许可证与装置政策。'}</p></div>
     </section>
     <SiteFooter />
   </main>;

@@ -54,6 +54,27 @@ async function htmlFor(pathname) {
   return response.text();
 }
 
+test('principal page headings stay concise in both languages', async () => {
+  const routes = ['/physics', '/engineering', '/control', '/diagnostics', '/ai', '/facilities',
+    '/data-foundation', '/fusion-data', '/simulations', '/platform', '/roadmap',
+    '/knowledge-graph', '/search', '/account', '/research-review'];
+  for (const locale of ['zh-CN', 'en']) {
+    for (const pathname of routes) {
+      const response = await render(pathname, { cookie: `fusiondigital_locale=${locale}` });
+      assert.equal(response.status, 200, `${pathname} ${locale} must remain available`);
+      const html = (await response.text()).replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
+      const headings = [...html.matchAll(/<h([12])\b[^>]*>([\s\S]*?)<\/h\1>/gi)]
+        .map(match => englishPresentationText(match[2]));
+      assert.ok(headings.length > 0, `${pathname} must retain its page structure`);
+      for (const heading of headings) {
+        const limit = locale === 'en' ? 120 : 64;
+        assert.ok([...heading].length <= limit,
+          `${pathname} ${locale} heading exceeds ${limit} characters: ${heading}`);
+      }
+    }
+  }
+});
+
 async function listFiles(root) {
   const entries = await readdir(root, { withFileTypes: true });
   return (await Promise.all(entries.map(async (entry) => {
@@ -415,7 +436,7 @@ test('server-renders the EXL-50U to EHL-2 program roadmap', async () => {
   assert.match(html, /五大专业环节如何支撑两期目标/);
   assert.match(html, /PROFESSIONAL SUBROUTE MAP/);
   assert.match(html, /专业覆盖 → 工具链 → 技术子路线 → 阶段交付/);
-  assert.match(html, /节点展示“研究覆盖什么、用什么工具、如何接成受控技术链、形成什么可验收结果”/);
+  assert.match(html, /节点列出专业范围、工具、技术链与交付物。候选工具须经装置基准题和适用域审查后确定。/);
   assert.match(html, /aria-label="位形与等离子体物理\s+路线阶段筛选"/);
   assert.match(html, /aria-label="位形与等离子体物理\s+技术子路线"/);
   assert.match(html, /位形与等离子体物理专业覆盖、候选工具链、技术子路线与一期二期交付的四层关系图/);
@@ -826,9 +847,9 @@ test('server-renders the fusion data-foundation evidence atlas with accessible c
   assert.match(html, /实验记录与仿真数据分别标识/);
   const verifiedCount = html.match(/>(\d+)<\/dt><dd>核验条目<\/dd>/);
   assert.ok(verifiedCount, 'the hero must publish the verified-record count');
-  assert.match(html, /物理含义与时间、几何、配置和不确定度不可分离/);
-  assert.match(html, /面向实验最小闭环的可实施技术路线/);
-  assert.match(html, /数据集成不能抹平科学与运行权威边界/);
+  assert.match(html, /时间、几何、配置与不确定度/);
+  assert.match(html, /<h2 id="data-implementation-title">实施路线<\/h2>/);
+  assert.match(html, /科学与运行权限边界/);
   assert.match(html, /data-echart="fusion-data-foundation-architecture"/);
   assert.match(html, /data-echart="fusion-data-platform-landscape"/);
 
@@ -1031,9 +1052,9 @@ test('ships and server-renders evidence-grounded knowledge search', async () => 
   const html = await htmlFor('/search');
   assert.match(html, /AI-NATIVE KNOWLEDGE/);
   assert.match(html, /检索与问答说明/);
-  assert.match(html, /在智能体侧栏继续追问/);
+  assert.match(html, /在侧栏继续提问/);
   assert.match(html, /aria-controls="fusion-agent-workspace"/);
-  assert.match(html, /智能体.*持续对话/s);
+  assert.match(html, /AI 助手.*持续对话/s);
   assert.match(html, /证据不足时不生成结论/);
   assert.match(html, /href="\/platform#contracts"/);
   assert.doesNotMatch(html, /03 \/ TRUST BOUNDARY|当前能力边界/);
@@ -1045,7 +1066,7 @@ test('server-renders the identity-aware account entry without exposing credentia
   assert.match(html, /REGISTER &amp; SIGN IN/);
   assert.match(html, /href="\/signin-with-chatgpt\?return_to=%2Faccount"/);
   assert.match(html, /使用 ChatGPT 注册 \/ 登录/);
-  assert.match(html, /模型密钥始终保留在服务端/);
+  assert.match(html, /模型密钥仅存服务端，不返回浏览器。/);
   assert.match(html, /href="\/account"[^>]*aria-label="账户中心"/);
   assert.doesNotMatch(html, /href="https:\/\/fusion-physics-atlas-2026\.tianyuanliu1992\.chatgpt\.site\/account"/);
   assert.match(html, /href="\/platform#architecture"/);
@@ -1056,7 +1077,7 @@ test('server-renders the identity-aware account entry without exposing credentia
 test('server-renders the signed-out research review boundary without D1 access', async () => {
   const html = await htmlFor('/research-review');
   assert.match(html, /GOVERNED RESEARCH AGENT/);
-  assert.match(html, /智能体负责发现/);
+  assert.match(html, /智能体发现候选。<br\s*\/><em>人工负责发布。<\/em>/);
   assert.match(html, /href="\/signin-with-chatgpt\?return_to=%2Fresearch-review"/);
   assert.match(html, /“接受”不等于“发布”|接受.*不等于.*发布/);
   assert.doesNotMatch(html, /(?:OPENAI|ANTHROPIC|DEEPSEEK|MOONSHOT)_API_KEY|sk-[A-Za-z0-9_-]{16,}/);

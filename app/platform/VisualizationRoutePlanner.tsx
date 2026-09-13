@@ -134,12 +134,12 @@ export default function VisualizationRoutePlanner({ en }: { en: boolean }) {
       <div className="visualizationPlanner__header">
         <div>
           <p className="visualizationPlanner__kicker">05 / OPEN VISUALIZATION FABRIC</p>
-          <h2 id="visualization-title">{en ? 'Route data, not brands' : '按数据特征分流，而不是押注单一引擎'}</h2>
+          <h2 id="visualization-title">{en ? 'Visualization routing' : '可视化分流'}</h2>
         </div>
         <p>
           {en
-            ? 'A deterministic policy chooses browser geometry, local scientific rendering, remote ParaView, or an optional immersive session from one audited artifact contract.'
-            : '同一份可审计制品合同，根据权限、工作集、设备预算和任务意图，确定浏览器几何、本地科学渲染、远程 ParaView 或可选沉浸式会话。'}
+            ? 'An auditable contract routes rendering by access, working set, device budget and task.'
+            : '按权限、工作集、设备预算和任务，通过可审计合同选择渲染方式。'}
         </p>
       </div>
 

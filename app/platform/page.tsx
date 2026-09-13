@@ -91,16 +91,16 @@ function PlatformContent({en}:{en:boolean}) {
       <h1>{en?'Platform architecture':'平台架构'}</h1>
       <div>{en?'Public website, intranet computing and real-time control: separate systems, versioned interfaces.':'公网展示、内网计算与实时控制分离，通过版本化接口连接。'}</div>
       <nav aria-label={en?'Platform architecture contents':'平台架构页目录'}><a href="#current">{en?'Current baseline':'当前状态'}</a><a href="#architecture">{en?'Target architecture':'目标架构'}</a><a href="#contracts">{en?'Unified contracts':'统一合同'}</a><a href="#stack">{en?'Technology stack':'技术栈'}</a><a href="#visualization">{en?'Visualization fabric':'可视化平台'}</a><a href="#roadmap">{en?'Delivery roadmap':'建设路线'}</a></nav>
-      <a className="platformDownload" href="/FusionDigital-technical-roadmap-2026-08-15.docx">{en?'Download the full technical roadmap (Chinese)':'下载完整技术路线报告'}</a>
+      <a className="platformDownload" href="/FusionDigital-technical-roadmap-2026-08-15.docx">{en?'Full roadmap (Chinese)':'下载完整报告'}</a>
     </header>
 
     <section className="platformCurrent" id="current" aria-labelledby="platform-current-title">
-      <div className="platformSectionHead"><p>01 / CURRENT BASELINE</p><h2 id="platform-current-title">{en?'Begin with what is already implemented':'先确认已经实现什么'}</h2><span>{en?'The current system is more than a static site, but it is not yet an experiment-and-simulation backend.':'当前系统不是纯静态站，但也还不是实验与仿真后端。'}</span></div>
+      <div className="platformSectionHead"><p>01 / CURRENT BASELINE</p><h2 id="platform-current-title">{en?'Current capabilities':'当前能力'}</h2><span>{en?'Public interaction is separate from experiment and simulation backends.':'公开交互与实验、仿真后端分开部署。'}</span></div>
       <div className="platformCurrentGrid">{capabilityRows.map(([title, tech, copy]) => <article key={title}><span>{tech}</span><h3>{title}</h3><p>{copy}</p></article>)}</div>
     </section>
 
     <section className="platformArchitecture" id="architecture" aria-labelledby="platform-architecture-title">
-      <div className="platformSectionHead"><p>02 / THREE PLANES</p><h2 id="platform-architecture-title">{en?'Isolate three planes; connect them with governed data products':'三平面隔离，数据产品连接'}</h2><span>{en?'Public experience, scientific computing and real-time control have different latency, authorization and reliability requirements.':'公网体验、科学计算和实时控制具有不同的时延、权限与可靠性要求。'}</span></div>
+      <div className="platformSectionHead"><p>02 / THREE PLANES</p><h2 id="platform-architecture-title">{en?'Three separate planes':'三平面架构'}</h2><span>{en?'Separate latency, access and reliability requirements; governed data products connect the planes.':'各平面的时延、权限与可靠性要求不同，通过受控数据产品连接。'}</span></div>
       <div className="platformPlanes" role="img" aria-label={en?'Three-plane architecture: public projection, intranet scientific platform and experimental real-time plane':'公开投影面、内网科学平台面和实验实时面三层架构'}>
         <article className="public"><span>PUBLIC PROJECTION</span><h3>{en?'Public projection plane':'公开投影面'}</h3><p>Sites / Worker / D1 / R2</p><b>{en?'Knowledge, public 3D, public EFIT and citation-grounded Q&A':'知识、公开三维、公开 EFIT、带引用问答'}</b></article>
         <i aria-hidden="true">{en?'Signed snapshot ↓':'签名快照 ↓'}</i>
@@ -111,7 +111,7 @@ function PlatformContent({en}:{en:boolean}) {
     </section>
 
     <section className="platformContracts" id="contracts" aria-labelledby="platform-contracts-title">
-      <div className="platformSectionHead"><p>03 / CONTRACT FIRST</p><h2 id="platform-contracts-title">{en?'Share contracts across modules—not one giant table':'模块共用合同，不共用一套大表'}</h2><span>{en?'Every new module must deliver a schema, adapter, contract tests and search/graph projection.':'每个新模块必须交付 Schema、Adapter、Contract tests 和 Search/graph projection。'}</span></div>
+      <div className="platformSectionHead"><p>03 / CONTRACT FIRST</p><h2 id="platform-contracts-title">{en?'Shared contracts':'共享接口合同'}</h2><span>{en?'Each module delivers a schema, adapter, contract tests and search/graph projection.':'各模块须交付模式、适配器、合同测试及检索/图谱投影。'}</span></div>
       <div className="platformContractGrid">{contractRows.map(([title, copy], index) => <article key={title}><span>{String(index + 1).padStart(2, '0')}</span><h3>{title}</h3><p>{copy}</p></article>)}</div>
       <div className="platformStorageTable" role="table" aria-label={en?'Authoritative roles of data systems':'数据系统权威角色'}>
         <div role="row" className="head"><b role="columnheader">{en?'System':'系统'}</b><b role="columnheader">{en?'Authoritative role':'权威角色'}</b><b role="columnheader">{en?'Integration rule':'接入规则'}</b></div>
@@ -120,7 +120,7 @@ function PlatformContent({en}:{en:boolean}) {
     </section>
 
     <section className="platformStack" id="stack" aria-labelledby="platform-stack-title">
-      <div className="platformSectionHead"><p>04 / TECHNOLOGY CHOICES</p><h2 id="platform-stack-title">{en?'Choose technology by workload and trust boundary':'以负载和边界选择技术'}</h2><span>{en?'Do not introduce multiple message buses, graph databases, workflow engines or retrieval systems at once.':'不同时引入多套消息、图数据库、工作流或检索系统。'}</span></div>
+      <div className="platformSectionHead"><p>04 / TECHNOLOGY CHOICES</p><h2 id="platform-stack-title">{en?'Technology choices':'技术选型'}</h2><span>{en?'Do not introduce multiple message buses, graph databases, workflow engines or retrieval systems at once.':'不同时引入多套消息、图数据库、工作流或检索系统。'}</span></div>
       <div className="platformStackTable" role="table" aria-label={en?'Recommended technology stack':'推荐技术栈'}>
         <div role="row" className="head"><b role="columnheader">{en?'Layer':'层'}</b><b role="columnheader">{en?'Recommended choice':'推荐选型'}</b><b role="columnheader">{en?'Decision':'决策'}</b></div>
         {stackRows.map(([layer, choice, decision]) => <div role="row" key={layer}><strong role="cell">{layer}</strong><span role="cell">{choice}</span><span role="cell">{decision}</span></div>)}
@@ -130,7 +130,7 @@ function PlatformContent({en}:{en:boolean}) {
     <VisualizationRoutePlanner en={en} />
 
     <section className="platformRoadmap" id="roadmap" aria-labelledby="platform-roadmap-title">
-      <div className="platformSectionHead"><p>06 / DELIVERY ROADMAP</p><h2 id="platform-roadmap-title">{en?'Data and contracts first; simulation, diagnostics and control next':'先数据与合同，再仿真、诊断和控制'}</h2><span>{en?'Durations assume an 8–10 person core team. Safety-critical closed-loop work requires an independent facility safety process.':'工期按 8–10 人核心团队估算；安全关键闭环需要独立装置安全流程。'}</span></div>
+      <div className="platformSectionHead"><p>06 / DELIVERY ROADMAP</p><h2 id="platform-roadmap-title">{en?'Delivery sequence':'建设顺序'}</h2><span>{en?'Durations assume an 8–10 person core team. Safety-critical closed-loop work requires an independent facility safety process.':'工期按 8–10 人核心团队估算；安全关键闭环需要独立装置安全流程。'}</span></div>
       <ol>{roadmapRows.map(([id, period, title, copy]) => <li key={id}><span>{id}</span><time>{period}</time><h3>{title}</h3><p>{copy}</p></li>)}</ol>
       <aside className="platformFirst90"><p>{en?'Next 90 days':'未来 90 天'}</p><div><b>{en?'Freeze core contracts':'冻结核心合同'}</b><b>{en?'Establish shot 18303 as a golden shot':'建立 18303 黄金炮'}</b><b>{en?'MDSplus read-only gateway':'MDSplus 只读网关'}</b><b>MEQ / DINA Run API</b><b>{en?'CAD–EFIT coordinate registration':'CAD–EFIT 坐标注册'}</b><b>{en?'Publication and VVUQ gates':'发布与 VVUQ 门禁'}</b></div></aside>
     </section>

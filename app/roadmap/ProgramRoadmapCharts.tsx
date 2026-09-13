@@ -801,7 +801,7 @@ function ProgramPillarSubrouteMap({ pillar }: { pillar: ProgramPillar }) {
   return <LocalizedChartRegion><section className="programPillarSubrouteMap" aria-labelledby={`${chartId}-title`}>
     <header className="programPillarSubrouteHeader">
       <div><small>PROFESSIONAL SUBROUTE MAP</small><h4 id={`${chartId}-title`}>{ui(locale, '专业覆盖 → 工具链 → 技术子路线 → 阶段交付', 'Professional coverage → Toolchain → Technical subroute → Programme delivery')}</h4></div>
-      <p>{ui(locale, '节点展示“研究覆盖什么、用什么工具、如何接成受控技术链、形成什么可验收结果”。工具为候选技术栈，须经装置基准题与适用域审查后固化。', 'Each node states the covered physics or engineering scope, selected tools, controlled technical chain and measurable result. Tools remain candidates until frozen by machine-specific benchmarks and an applicability-domain review.')}</p>
+      <p>{ui(locale, '节点列出专业范围、工具、技术链与交付物。候选工具须经装置基准题和适用域审查后确定。', 'Nodes show scope, tools, technical chains and deliverables. Tools remain candidates pending facility benchmarks and applicability review.')}</p>
     </header>
     <div className="programPillarSubrouteControls">
       <nav className="programPillarPhaseFilter" aria-label={`${pillar.title} ${ui(locale, '路线阶段筛选', 'subroute phase filter')}`}>

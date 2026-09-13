@@ -60,27 +60,27 @@ function localizedBoundary(
   const copy = {
     public: en ? {
       eyebrow: "FUSIONDIGITAL / PUBLIC ANONYMOUS BOUNDARY",
-      title: "Private analytics are not exposed by this deployment.",
+      title: "Private analytics are disabled here.",
       detail: "The public-anonymous edition does not trust identity headers, query the analytics database, or render administrator controls.",
       status: "Public content remains available without sign-in",
       action: { href: "/", label: "Return to the public atlas" },
     } : {
       eyebrow: "FUSIONDIGITAL / 公开匿名版边界",
-      title: "此部署不开放私有访问分析。",
+      title: "此部署不提供私有统计。",
       detail: "公开匿名版不信任身份请求头、不查询访问分析数据库，也不渲染管理员控制项。",
       status: "公开内容仍可免登录访问",
       action: { href: "/", label: "返回公开图谱" },
     },
     "signed-out": en ? {
       eyebrow: "FUSIONDIGITAL / ADMIN ANALYTICS",
-      title: "Sign in before requesting the analytics console.",
-      detail: "ChatGPT sign-in establishes your site account. The server then checks the active account and administrator role before any report request is allowed.",
+      title: "Sign in to access analytics.",
+      detail: "ChatGPT sign-in creates your account. Reports require server verification of active status and the admin role.",
       status: "No analytics data has been requested",
       action: { href: chatGPTSignInPath("/admin/analytics"), label: "Sign in with ChatGPT" },
     } : {
       eyebrow: "FUSIONDIGITAL / 管理员访问分析",
-      title: "请先登录，再申请进入统计控制台。",
-      detail: "ChatGPT 登录用于建立站内账户；服务端随后检查账户状态与管理员角色，通过前不会发起任何报表请求。",
+      title: "请先登录以访问统计。",
+      detail: "ChatGPT 登录建立账户；服务端核验活跃状态和 admin 角色后才请求报表。",
       status: "尚未请求任何访问统计数据",
       action: { href: chatGPTSignInPath("/admin/analytics"), label: "使用 ChatGPT 登录" },
     },

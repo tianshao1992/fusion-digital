@@ -37,7 +37,7 @@ export default function SearchPage() {
     </header>
     <details className="researchMethodNote"><summary>检索与问答说明</summary><p>仅依据含来源的站内记录回答。模型未配置、超时或引用校验失败时返回检索结果；证据不足时不生成结论。</p></details>
     <SearchWorkspace />
-    <section className="knowledgeGraphPortal"><div><p>02 / KNOWLEDGE GRAPH</p><h2>继续探索知识图谱。</h2><span>来源和更新时间随记录保留；数据合同与接入方式集中在平台架构页。</span></div><div className="knowledgePortalActions"><Link href="/knowledge-graph">打开知识图谱 <b>→</b></Link><Link href="/platform#contracts">平台架构</Link></div></section>
+    <section className="knowledgeGraphPortal"><div><p>02 / KNOWLEDGE GRAPH</p><h2>探索关联研究。</h2><span>记录保留来源与更新时间；数据合同和接入说明见平台架构。</span></div><div className="knowledgePortalActions"><Link href="/knowledge-graph">打开知识图谱 <b>→</b></Link><Link href="/platform#contracts">平台架构</Link></div></section>
     <SiteFooter />
   </main>;
   const en=<main className="knowledgePage">
@@ -57,7 +57,7 @@ export default function SearchPage() {
     </header>
     <details className="researchMethodNote"><summary>How search and answers work</summary><p>Answers use retrieved, source-linked records. If a model is unavailable or citation validation fails, search results remain available. Insufficient evidence does not become a generated conclusion.</p></details>
     <SearchWorkspace />
-    <section className="knowledgeGraphPortal"><div><p>02 / KNOWLEDGE GRAPH</p><h2>Explore related work in the graph.</h2><span>Every record retains its sources and update date; data contracts and integration guidance are maintained on the platform architecture page.</span></div><div className="knowledgePortalActions"><Link href="/knowledge-graph">Open knowledge graph <b>→</b></Link><Link href="/platform#contracts">Platform architecture</Link></div></section>
+    <section className="knowledgeGraphPortal"><div><p>02 / KNOWLEDGE GRAPH</p><h2>Explore related research.</h2><span>Records retain sources and update dates. See platform architecture for data contracts and integration.</span></div><div className="knowledgePortalActions"><Link href="/knowledge-graph">Open knowledge graph <b>→</b></Link><Link href="/platform#contracts">Platform architecture</Link></div></section>
     <SiteFooter />
   </main>;
   return <StaticLocaleContent zh={zh} en={en}/>;

@@ -169,7 +169,7 @@ export default function AdminAnalyticsDashboard({ adminIdentity }: Props) {
       <header className="analyticsHero">
         <div className="analyticsHeroCopy">
           <p>FUSIONDIGITAL / ADMIN ANALYTICS</p>
-          <h1>{en ? <>Understand what people explore,<br /><em>without exposing who they are.</em></> : <>看清用户在探索什么，<br /><em>而不是暴露用户是谁。</em></>}</h1>
+          <h1>{en ? <>Visit analytics.<br /><em>Trends and content.</em></> : <>访问分析。<br /><em>趋势与内容分布。</em></>}</h1>
           <div className="analyticsPrivacyNote">
             <b>{en ? "PRIVACY BOUNDARY" : "隐私边界"}</b>
             <span>{en
@@ -189,7 +189,7 @@ export default function AdminAnalyticsDashboard({ adminIdentity }: Props) {
         <div className="analyticsConsoleHeader">
           <div>
             <p>01 / REPORT WINDOW</p>
-            <h2 id="analytics-console-title">{en ? "Visit intelligence console" : "访问洞察控制台"}</h2>
+            <h2 id="analytics-console-title">{en ? "Visit report" : "访问统计"}</h2>
             <span>{report
               ? `${report.startDate} → ${report.endDate} · ${report.timeZone} · ${en ? "updated" : "最近入库"} ${formatDateTime(report.updatedAt, en)}`
               : en ? "Select an observation window; reports are requested only after authorization." : "选择观察窗口；报表只会在完成授权后请求。"}</span>
@@ -228,7 +228,7 @@ export default function AdminAnalyticsDashboard({ adminIdentity }: Props) {
           </div> : <AnalyticsCharts report={report} />}
 
           <section className="analyticsDataSection" aria-labelledby="analytics-content-title">
-            <header><div><p>05 / CONTENT DETAIL</p><h2 id="analytics-content-title">{en ? "What people visited" : "用户分别访问了哪些信息"}</h2></div><span>{en ? "Path and approved content key only" : "只展示路径与已批准内容键"}</span></header>
+            <header><div><p>05 / CONTENT DETAIL</p><h2 id="analytics-content-title">{en ? "Visited content" : "访问内容"}</h2></div><span>{en ? "Path and approved content key only" : "只展示路径与已批准内容键"}</span></header>
             {report.topContent.length ? <div className="analyticsTableScroll"><table className="analyticsDataTable analyticsContentTable">
               <caption className="srOnly">{en ? "Content visits ranked by views" : "按访问次数排序的内容访问表"}</caption>
               <thead><tr><th>#</th><th>{en ? "Path / content" : "路径 / 内容"}</th><th>{en ? "Views" : "访问次数"}</th><th>{en ? "Visitors" : "访客"}</th><th>{en ? "Avg engagement" : "平均有效停留"}</th></tr></thead>

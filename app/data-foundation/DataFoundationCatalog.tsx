@@ -59,8 +59,8 @@ export default function DataFoundationCatalog() {
   return <section id="catalog" className="dataCatalog" aria-labelledby="data-catalog-title">
     <div className="dataSectionHead">
       <p className="dataEyebrow">05 / {en ? 'EVIDENCE CATALOGUE' : '证据目录'}</p>
-      <h2 id="data-catalog-title">{en ? 'Platforms, archives, standards, databases, reports and code' : '平台、档案、标准、数据库、报告与代码'}</h2>
-      <p>{en ? 'Every record separates openness from maturity and states what the cited evidence does not establish. Filters describe the evidence catalogue, not a procurement shortlist.' : '每条记录分别标注开放性与成熟度，并说明来源尚不能证明什么。筛选结果是证据目录，不是采购短名单。'}</p>
+      <h2 id="data-catalog-title">{en ? 'Evidence catalogue' : '证据目录'}</h2>
+      <p>{en ? 'Records distinguish access, maturity and evidence limits. Filters are not procurement recommendations.' : '条目分别标注开放性、成熟度与证据边界；筛选结果不作为采购建议。'}</p>
     </div>
     <div className="dataFilters" role="search">
       <label><span>{en ? 'Search' : '搜索'}</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={en ? 'Platform, device, standard or interface…' : '平台、装置、标准或接口…'} /></label>

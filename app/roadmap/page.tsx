@@ -69,8 +69,8 @@ function ProgramRoadmapContent({en}:{en:boolean}) {
       </div>
       <aside className="programMandate">
         <span>{en?'EXECUTIVE THESIS':'汇报主张 / EXECUTIVE THESIS'}</span>
-        <blockquote>{en?'Phase I proves that one experiment can proceed traceably from planning and verification through execution and review. Phase II proves that the platform can support EHL-2 first-plasma virtual commissioning and online read-only shadow operation without assuming safety-control authority.':'第一期证明一次实验能从计划、验证、执行到复盘完整且可追溯地跑通；第二期证明平台能在不接管安全控制的前提下，为 EHL‑2 首等离子体提供虚拟调试和在线只读影子运行。'}</blockquote>
-        <p>{en?'The digital twin strengthens experimental decisions and evidence management; it does not replace experiments, independent protection, engineering review or the formal Go/No-Go organization.':'数字孪生增强实验决策与证据管理，不替代实验、独立保护、工程审查或正式 Go / No-Go 组织。'}</p>
+        <blockquote>{en?'Phase I validates one traceable experiment. Phase II supports EHL-2 first-plasma virtual commissioning and online read-only shadow operation, without safety-control authority.':'一期验证可追溯的实验闭环；二期支撑 EHL‑2 首等离子体虚拟调试与在线只读影子运行，不接管安全控制。'}</blockquote>
+        <p>{en?'It does not replace experiments, independent protection, engineering review or formal Go/No-Go decisions.':'不替代实验、独立保护、工程审查或正式 Go/No-Go 决策。'}</p>
       </aside>
       <dl className="programHeroMetrics">
         <div><dt>{en?'12 weeks':'12 周'}</dt><dd>{en?'EXL-50U minimum closed loop':'EXL‑50U 最小闭环'}</dd></div>
@@ -83,8 +83,8 @@ function ProgramRoadmapContent({en}:{en:boolean}) {
     <section className="programDefinition" aria-labelledby="program-definition-title">
       <div className="programSectionHead">
         <p>00 / PROGRAM DEFINITION</p>
-        <h2 id="program-definition-title">{en?'The deliverable is not a dashboard; it is an evidence-bearing experimental digital thread.':'交付的不是“大屏”，而是一条有证据的实验数字线程。'}</h2>
-        <span>{en?'Every result must bind its shot/run, machine and geometry revision, coordinates and timebase, calibration and data-dictionary versions, code and container, input/output checksums, applicability domain and approval state.':'每个结果必须绑定 shot / run、装置与几何版次、坐标与时基、校准和数据字典版本、代码与容器、输入输出校验和、适用域和审批状态。'}</span>
+        <h2 id="program-definition-title">{en?'An evidence-linked experiment':'可追溯的实验链'}</h2>
+        <span>{en?'Each result records shot/run, machine and geometry revisions, coordinates/timebase, calibration/DD versions, code/container, input/output checksums, applicability and approval.':'每项结果须记录炮号/运行、装置/几何版本、坐标/时基、校准/字典版本、代码/容器、输入输出校验和、适用域与审批状态。'}</span>
       </div>
       <ol className="programDigitalThread">
         {threadRows.map((step, index) => <li key={step}><small>{String(index + 1).padStart(2, '0')}</small><b>{step}</b>{index < threadRows.length - 1 && <i aria-hidden="true">→</i>}</li>)}
@@ -100,8 +100,8 @@ function ProgramRoadmapContent({en}:{en:boolean}) {
     <section className="programSystemMap" id="system-map" aria-labelledby="system-map-title">
       <div className="programSectionHead">
         <p>01 / INTEGRATED TECHNICAL ROUTE</p>
-        <h2 id="system-map-title">{en?'Five professional domains turn models into verifiable experimental capabilities.':'五大专业环节，共同把模型变成可验证的实验能力。'}</h2>
-        <span>{en?'Inspect the support relationships, then select any domain to drill into fusion-physics scope, candidate toolchains, technical sub-route and Phase I/II delivery. Each route exposes inputs, outputs, V&V evidence, applicability limits, work packages and gates.':'先看总览中的支撑关系，再点击任一环节，下钻“聚变专业覆盖 → 候选工具链 → 技术子路线 → 一期 / 二期交付”；每条路线同步显示输入输出、V&V 证据、适用边界、工作包与阶段门。'}</span>
+        <h2 id="system-map-title">{en?'Five connected domains':'五大专业环节'}</h2>
+        <span>{en?'Select a domain for scope, candidate tools and delivery plans, with inputs, outputs, V&V evidence, limits and gates.':'点击环节，查看专业范围、候选工具与两期交付，以及输入输出、V&V 证据、适用边界和阶段门。'}</span>
       </div>
       <ProgramSystemMap />
     </section>
@@ -126,8 +126,8 @@ function ProgramRoadmapContent({en}:{en:boolean}) {
     <section className="programAcceptance" id="acceptance" aria-labelledby="acceptance-title">
       <div className="programSectionHead">
         <p>03 / ACCEPTANCE &amp; CREDIBILITY</p>
-        <h2 id="acceptance-title">{en?'Pass gates on evidence—not automatically on the calendar.':'按证据过门，不按日历自动“完成”。'}</h2>
-        <span>{en?'Numerical error, real-time budgets and machine-success criteria must be frozen by accountable owners at G0/G5 against local baselines; this page does not invent scientific tolerances on behalf of experts.':'数值误差、实时预算和装置成功判据必须在 G0 / G5 由责任人结合本地基线冻结；本页不凭空替专家定义科学容差。'}</span>
+        <h2 id="acceptance-title">{en?'Evidence-based acceptance':'按证据验收'}</h2>
+        <span>{en?'Owners freeze numerical tolerances, real-time budgets and success criteria at G0/G5 against local baselines; this page supplies no substitute thresholds.':'责任人须在 G0/G5 依据本地基线冻结误差、实时预算与成功判据；本页不代定科学容差。'}</span>
       </div>
       <div className="acceptanceGrid">{acceptanceRows.map((item, index) => <article key={item.title}><span>{String(index + 1).padStart(2, '0')}</span><h3>{item.title}</h3><b>{item.target}</b><p>{item.detail}</p></article>)}</div>
       <div className="programRedLines">
@@ -139,8 +139,8 @@ function ProgramRoadmapContent({en}:{en:boolean}) {
     <section className="programTechnology" id="technology" aria-labelledby="technology-title">
       <div className="programSectionHead">
         <p>04 / TECHNOLOGY DECISIONS</p>
-        <h2 id="technology-title">{en?'Technology choices follow the question, evidence and deployment boundary.':'技术选型服从问题、证据与部署边界。'}</h2>
-        <span>{en?'The goal is not to integrate as many solvers as possible, but to select a validated, reproducible and replaceable model chain for each decision.':'不是集成尽可能多的求解器，而是为每个决策选择一条被验证、能复现、可替换的模型链。'}</span>
+        <h2 id="technology-title">{en?'Technology choices':'技术选型'}</h2>
+        <span>{en?'Choose validated, reproducible and replaceable model chains for each decision and deployment boundary.':'按决策需求与部署边界，选择经验证、可复现、可替换的模型链。'}</span>
       </div>
       <div className="technologyTable" role="table" aria-label={en?'Fusion digital-twin technology decisions':'聚变数字孪生技术路线选型'}>
         <div className="technologyTableHead" role="row"><span role="columnheader">{en?'Architecture layer':'架构层'}</span><span role="columnheader">{en?'Recommended route':'推荐路线'}</span><span role="columnheader">{en?'Rationale and boundary':'选择依据与边界'}</span><span role="columnheader">{en?'Modules':'模块'}</span></div>
@@ -151,24 +151,24 @@ function ProgramRoadmapContent({en}:{en:boolean}) {
     <section className="programModuleMap" id="modules" aria-labelledby="module-map-title">
       <div className="programSectionHead">
         <p>05 / KNOWLEDGE MODULE MAPPING</p>
-        <h2 id="module-map-title">{en?'The ten modules are not parallel tracks; they divide responsibility within one experimental closed loop.':'十大模块不是十条平行线，而是同一实验闭环的职责分工。'}</h2>
-        <span>{en?'A linked module indicates project ownership. The current knowledge graph has structured evidence domains chiefly for physics, engineering, control, diagnostics, AI and facilities; independent evidence domains for modules 05–09 still require expansion.':'“关联模块”表示项目归属；当前知识图谱已结构化的证据域主要覆盖物理、工程、控制、诊断、AI 与装置，05–09 的独立证据域仍需后续扩建。'}</span>
+        <h2 id="module-map-title">{en?'Module responsibilities':'模块分工'}</h2>
+        <span>{en?'Links identify ownership. Structured graph evidence mainly covers physics, engineering, control, diagnostics, AI and facilities; independent domains for modules 05–09 remain incomplete.':'关联模块表示项目归属。图谱主要覆盖物理、工程、控制、诊断、AI 与装置证据；05–09 的独立证据域尚待扩建。'}</span>
       </div>
       <div className="programModuleGrid">{moduleRows.map((module) => <Link href={module.route} id={`module-${module.id}`} data-roadmap-module={module.id} key={module.id}><span>{module.no}</span><h3>{module.title}</h3><dl><div><dt>{en?'Phase I':'一期'}</dt><dd>{module.phase1}</dd></div><div><dt>{en?'Phase II':'二期'}</dt><dd>{module.phase2}</dd></div></dl><b>{en?'Open module':'进入模块'} ↗</b></Link>)}</div>
-      <div className="programEvidenceProjection"><p><b>{en?'Evidence projection':'证据投影'}</b>　{en?'The roadmap maps work packages to existing knowledge modules. Papers, code, facilities and model evidence remain governed by the Knowledge Graph; large datasets and solver results are not duplicated here.':'路线页把工作包映射到现有知识模块；论文、代码、装置和模型依据仍由 Knowledge Graph 管理，不复制大规模数据或求解结果。'}</p><Link href="/knowledge-graph">{en?'Verify paper, code and facility evidence in the graph':'从图谱核对论文、代码与装置证据'} →</Link></div>
+      <div className="programEvidenceProjection"><p><b>{en?'Evidence projection':'证据投影'}</b>　{en?'Work packages link to knowledge modules. The graph manages paper, code, facility and model evidence; large datasets and solver outputs stay at source.':'工作包关联知识模块；论文、代码、装置和模型证据由图谱管理，大型数据与求解结果不在此复制。'}</p><Link href="/knowledge-graph">{en?'Check graph evidence':'到图谱核对证据'} →</Link></div>
     </section>
 
     <section className="programDecision" id="decisions" aria-labelledby="decision-title">
       <div>
         <p>06 / DECISIONS REQUESTED</p>
-        <h2 id="decision-title">{en?'Three decisions requiring institute-level confirmation':'需要院级确认的三项决定'}</h2>
-        <span>{en?'Freeze common interfaces and accountability boundaries before adding solvers and pages; otherwise the three-month window will be consumed by data, coordinate and version disputes.':'先冻结共同接口和责任边界，再增加求解器与页面；否则三个月会被数据、坐标与版本争议耗尽。'}</span>
+        <h2 id="decision-title">{en?'Three institute-level decisions':'三项院级决策'}</h2>
+        <span>{en?'Freeze shared interfaces and responsibilities before adding solvers or pages.':'先冻结共同接口与责任边界，再扩展求解器和页面。'}</span>
       </div>
       <ol>{decisionRows.map((decision, index) => <li key={decision}><span>{String(index + 1).padStart(2, '0')}</span><p>{decision}</p></li>)}</ol>
     </section>
 
     <section className="programSources" aria-labelledby="sources-title">
-      <div className="programSectionHead"><p>07 / PRIMARY SOURCES</p><h2 id="sources-title">{en?'Planning basis and primary-source entry points':'规划依据与一手入口'}</h2><span>{en?'Durations and work packages are project recommendations, not commitments by the source organizations. Facility parameters and technical capabilities must be checked against the linked official or primary material.':'时间区间与工作包是本项目建议，并非来源机构的承诺；装置参数和技术能力以链接中的官方 / 原始材料为准。'}</span></div>
+      <div className="programSectionHead"><p>07 / PRIMARY SOURCES</p><h2 id="sources-title">{en?'Planning sources':'规划依据'}</h2><span>{en?'Schedules and work packages are project proposals, not source-organization commitments. Verify parameters and capabilities in the linked primary sources.':'工期与工作包为项目建议，非来源机构承诺；参数与能力以所列一手材料为准。'}</span></div>
       <div>{roadmapSources.map((source, index) => <a href={source.url} key={source.url} target="_blank" rel="noreferrer"><span>S{String(index + 1).padStart(2, '0')}</span><b>{en?sourceLabelsEn[index]:source.label}</b><i>↗</i></a>)}</div>
     </section>
 

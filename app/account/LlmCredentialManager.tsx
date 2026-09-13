@@ -275,8 +275,8 @@ export default function LlmCredentialManager() {
     <header className="llmCredentialHeader">
       <div>
         <p>02 / PERSONAL MODEL APIS</p>
-        <h2 id="llm-credentials-title">{en?'Manage your language-model APIs':'管理你的大模型 API'}</h2>
-        <span>{en?'Connections are isolated per account. Personal credentials are encrypted server-side and are never displayed again after saving.':'每个账户独立保存自己的连接。个人密钥由服务端加密，写入后不会重新显示。'}</span>
+        <h2 id="llm-credentials-title">{en?'Model APIs':'模型 API'}</h2>
+        <span>{en?'Connections are account-specific; credentials are encrypted server-side and never redisplayed.':'连接按账户隔离；密钥在服务端加密，保存后不再显示。'}</span>
       </div>
       <div className="llmDefaultProvider">
         <label htmlFor="llm-default-provider">{en?'Default service':'默认服务'}</label>

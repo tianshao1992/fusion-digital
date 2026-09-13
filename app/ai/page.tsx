@@ -194,23 +194,23 @@ export default function AIPage() {
           <TwinAgentMotion />
         </header>
 
-        <section className="aiThesis"><p className="aiIndex">00 / OPERATING PRINCIPLE</p><h2><span>A digital twin supplies the world model, synchronized state and evidence.</span> AI supplies representation, search, optimization and orchestration. Their purpose is not to replace physics, but to form verifiable, explainable and reversible decisions faster within a declared applicability domain.</h2></section>
+        <section className="aiThesis"><p className="aiIndex">00 / OPERATING PRINCIPLE</p><h2><span>Twin-grounded AI:</span> declared scope, verifiable decisions, clear explanations and rollback.</h2></section>
 
-        <section className="aiCapabilities" id="capabilities"><div className="aiSectionHead"><p className="aiIndex">01 / CAPABILITY STACK</p><h2>From machine learning to agents</h2><p>These layers are complementary. Foundation models provide reusable representations, task-specific models perform deterministic work, and agents orchestrate tools. The twin contributes state, simulation environments, configuration and evidence boundaries.</p></div><div className="capabilityGrid">{capabilityLayersEn.map((item) => <article key={item.index}><header><span>{item.index}</span><b>{item.en}</b></header><h3>{item.title}</h3><p>{item.role}</p><dl><div><dt>Suitable tasks</dt><dd>{item.tasks}</dd></div><div><dt>Gate before twin integration</dt><dd>{item.gate}</dd></div></dl></article>)}</div></section>
+        <section className="aiCapabilities" id="capabilities"><div className="aiSectionHead"><p className="aiIndex">01 / CAPABILITY STACK</p><h2>From machine learning to agents</h2><p>Foundation models provide representations, task models perform deterministic work, and agents orchestrate tools. The twin supplies state, simulation, configuration and evidence boundaries.</p></div><div className="capabilityGrid">{capabilityLayersEn.map((item) => <article key={item.index}><header><span>{item.index}</span><b>{item.en}</b></header><h3>{item.title}</h3><p>{item.role}</p><dl><div><dt>Suitable tasks</dt><dd>{item.tasks}</dd></div><div><dt>Gate before twin integration</dt><dd>{item.gate}</dd></div></dl></article>)}</div></section>
 
-        <section className="aiLandscape" id="catalog"><div className="aiSectionHead aiLandscapeHead"><div><p className="aiIndex">02 / SEARCHABLE RESEARCH LANDSCAPE</p><h2>Search problem–facility–paper–code–evidence links across nine domains.</h2><p>Records prioritize primary papers, official facility or institution pages and author repositories. Missing implementations are marked “not publicly available”; enabling tools and community reproductions are not presented as the paper authors&apos; code.</p></div><div className="landscapeDownloads"><a href="/fusion-ai-native-research-report.docx" download><b>WORD</b><span>Technical report (Chinese)</span></a><a href="/data/fusion-ai-native-landscape.json" download><b>JSON</b><span>Maintainable research data</span></a><a href="/fusion-ai-native-paper-code-index.csv" download><b>CSV</b><span>Paper and code index</span></a></div></div><AIResearchCatalog /></section>
+        <section className="aiLandscape" id="catalog"><div className="aiSectionHead aiLandscapeHead"><div><p className="aiIndex">02 / SEARCHABLE RESEARCH LANDSCAPE</p><h2>Research catalogue across nine domains</h2><p>Sources prioritize papers, official pages and author repositories. Non-public code, enabling tools and community reproductions are distinguished from the paper authors&apos; implementation.</p></div><div className="landscapeDownloads"><a href="/fusion-ai-native-research-report.docx" download><b>WORD</b><span>Technical report (Chinese)</span></a><a href="/data/fusion-ai-native-landscape.json" download><b>JSON</b><span>Maintainable research data</span></a><a href="/fusion-ai-native-paper-code-index.csv" download><b>CSV</b><span>Paper and code index</span></a></div></div><AIResearchCatalog /></section>
 
-        <section className="aiDomains" id="domains"><div className="aiSectionHead"><p className="aiIndex">03 / NINE-DOMAIN SYNTHESIS</p><h2>Applications across nine research domains</h2><p>Each domain requires its own data, physics constraints, validation metrics and responsibility boundaries. The same algorithm can have very different credibility requirements in different domains.</p></div><div className="domainSynthesisGrid">{(Object.keys(domainMeta) as AIDomain[]).map((key) => { const meta = domainMeta[key]; const analysis = domainAnalysisEn[key]; return <article key={key} style={{ '--domain-accent': meta.color } as React.CSSProperties}><header><span>{meta.index}</span><b>{meta.en}</b><i>{domainCounts[key]} records</i></header><h3>{meta.en}</h3><dl><div><dt>Focus</dt><dd>{analysis.focus}</dd></div><div><dt>Frontier</dt><dd>{analysis.frontier}</dd></div><div><dt>Gap</dt><dd>{analysis.gap}</dd></div></dl></article>; })}</div></section>
+        <section className="aiDomains" id="domains"><div className="aiSectionHead"><p className="aiIndex">03 / NINE-DOMAIN SYNTHESIS</p><h2>Applications across nine research domains</h2><p>Each domain sets its own data, physics constraints, validation metrics and responsibility boundaries.</p></div><div className="domainSynthesisGrid">{(Object.keys(domainMeta) as AIDomain[]).map((key) => { const meta = domainMeta[key]; const analysis = domainAnalysisEn[key]; return <article key={key} style={{ '--domain-accent': meta.color } as React.CSSProperties}><header><span>{meta.index}</span><b>{meta.en}</b><i>{domainCounts[key]} records</i></header><h3>{meta.en}</h3><dl><div><dt>Focus</dt><dd>{analysis.focus}</dd></div><div><dt>Frontier</dt><dd>{analysis.frontier}</dd></div><div><dt>Gap</dt><dd>{analysis.gap}</dd></div></dl></article>; })}</div></section>
 
-        <section className="aiDevices" id="devices"><div className="aiSectionHead"><p className="aiIndex">04 / FACILITY ADOPTION</p><h2>Facility evidence determines adoption order: experimental closed loop is not the same as planned adaptation.</h2></div><div className="deviceEvidenceTable" role="table" aria-label="Evidence for AI-native applications on fusion facilities"><div className="deviceEvidenceHeader" role="row"><span>Facility</span><span>Representative work</span><span>Highest evidence</span><span>Interpretation boundary</span></div>{deviceMatrixEn.map((row) => <div role="row" key={row[0]}>{row.map((cell) => <span role="cell" key={cell}>{cell}</span>)}</div>)}</div></section>
+        <section className="aiDevices" id="devices"><div className="aiSectionHead"><p className="aiIndex">04 / FACILITY ADOPTION</p><h2>Facility adoption: distinguish experiments from plans</h2></div><div className="deviceEvidenceTable" role="table" aria-label="Evidence for AI-native applications on fusion facilities"><div className="deviceEvidenceHeader" role="row"><span>Facility</span><span>Representative work</span><span>Highest evidence</span><span>Interpretation boundary</span></div>{deviceMatrixEn.map((row) => <div role="row" key={row[0]}>{row.map((cell) => <span role="cell" key={cell}>{cell}</span>)}</div>)}</div></section>
 
-        <section className="aiArchitecture"><div><p className="aiIndex">05 / REFERENCE ARCHITECTURE</p><h2>Two speeds, separated authority, reversible releases</h2><p>The online loop accepts only frozen, time-bounded and reversible models. Offline agents retrieve, simulate, train, compare and report. A model progresses from the offline factory to shadow or bounded closed loop only after passing data, physics, real-time, robustness and authorization gates.</p></div><div className="archStack"><article><span>ONLINE · ms–s</span><b>Diagnostics → state estimation → fast prediction → deterministic safety controller</b><i>Worst-case latency · independent protection · OOD detection · degraded modes</i></article><article><span>EVIDENCE GATE</span><b>Data lineage · physical conservation · VVUQ · HIL · authorization · signed release</b><i>Approve / reject / roll back / re-validate</i></article><article><span>OFFLINE · min–week</span><b>High-fidelity simulation → training and evaluation → agent orchestration → expert review</b><i>Cross-facility validation · adversarial testing · fault injection · model cards</i></article></div></section>
+        <section className="aiArchitecture"><div><p className="aiIndex">05 / REFERENCE ARCHITECTURE</p><h2>Online and offline architecture</h2><p>Online models must be frozen, time-bounded and reversible. Offline agents retrieve, simulate, train, compare and report. Data, physics, timing, robustness and authorization gates precede shadow or bounded closed-loop use.</p></div><div className="archStack"><article><span>ONLINE · ms–s</span><b>Diagnostics → state estimation → fast prediction → deterministic safety controller</b><i>Worst-case latency · independent protection · OOD detection · degraded modes</i></article><article><span>EVIDENCE GATE</span><b>Data lineage · physical conservation · VVUQ · HIL · authorization · signed release</b><i>Approve / reject / roll back / re-validate</i></article><article><span>OFFLINE · min–week</span><b>High-fidelity simulation → training and evaluation → agent orchestration → expert review</b><i>Cross-facility validation · adversarial testing · fault injection · model cards</i></article></div></section>
 
-        <section className="aiRisks"><div className="aiSectionHead"><p className="aiIndex">06 / TRUST GAPS</p><h2>The principal gap to a digital twin is trustworthy operation—not parameter count.</h2></div><div className="riskGrid">{risksEn.map((item, index) => <article key={item[0]}><span>{String(index + 1).padStart(2, '0')}</span><h3>{item[0]}</h3><p>{item[1]}</p></article>)}</div></section>
+        <section className="aiRisks"><div className="aiSectionHead"><p className="aiIndex">06 / TRUST GAPS</p><h2>Key risks to trustworthy operation</h2></div><div className="riskGrid">{risksEn.map((item, index) => <article key={item[0]}><span>{String(index + 1).padStart(2, '0')}</span><h3>{item[0]}</h3><p>{item[1]}</p></article>)}</div></section>
 
-        <section className="aiRoute" id="route"><div className="aiSectionHead"><p className="aiIndex">07 / FUSIONDIGITAL ROADMAP</p><h2>Begin with DINA/MEQ and narrow tasks; earn bounded autonomy step by step.</h2><p>Establish reproducible evaluation and surrogate services first, then deploy AI in shadow mode. Closed-loop authority is granted only inside a narrow, verified applicability domain. The ability to generate an action and the authority to execute it are separate milestones.</p></div><div className="aiRouteGrid">{roadmapEn.map((item) => <article key={item[0]}><span>{item[0]}</span><h3>{item[1]}</h3><p>{item[2]}</p></article>)}</div></section>
+        <section className="aiRoute" id="route"><div className="aiSectionHead"><p className="aiIndex">07 / FUSIONDIGITAL ROADMAP</p><h2>Start with DINA / MEQ and narrow tasks</h2><p>Start with reproducible evaluation and surrogate services, then shadow mode. Authorize closed loop only in a narrow, verified domain. Generating an action does not authorize execution.</p></div><div className="aiRouteGrid">{roadmapEn.map((item) => <article key={item[0]}><span>{item[0]}</span><h3>{item[1]}</h3><p>{item[2]}</p></article>)}</div></section>
 
-        <section className="platformInlineLink"><span>Every record retains evidence level, source, code relationship and limitations; any facility-affecting action still requires server-side authorization and human approval.</span><a href="/platform#architecture">View the agent-integration architecture →</a></section>
+        <section className="platformInlineLink"><span>Records retain evidence, sources, code relationships and limitations. Facility actions still require server-side authorization and human approval.</span><a href="/platform#architecture">View the agent-integration architecture →</a></section>
         <SiteFooter />
       </main>
     );
@@ -243,14 +243,14 @@ export default function AIPage() {
 
       <section className="aiThesis">
         <p className="aiIndex">00 / OPERATING PRINCIPLE</p>
-        <h2><span>数字孪生提供“世界模型、实时状态与证据”，</span>人工智能提供“表征、搜索、优化与编排”。二者融合的目标不是取代物理，而是在已知边界内更快形成可验证、可解释、可回退的决策。</h2>
+        <h2><span>以孪生支撑 AI：</span>明确适用范围，决策可验证、可解释、可回退。</h2>
       </section>
 
       <section className="aiCapabilities" id="capabilities">
         <div className="aiSectionHead">
           <p className="aiIndex">01 / CAPABILITY STACK</p>
-          <h2>从机器学习到智能体：能力逐层增加，治理必须同步前置。</h2>
-          <p>四类技术不是互相替代。基础模型提供通用表征，专用模型承担确定性任务，智能体负责编排；数字孪生提供状态、仿真环境、配置与证据边界。</p>
+          <h2>从机器学习到智能体</h2>
+          <p>基础模型提供表征，专用模型执行确定性任务，智能体编排工具；孪生提供状态、仿真、配置与证据边界。</p>
         </div>
         <div className="capabilityGrid">
           {capabilityLayers.map((item) => (
@@ -267,8 +267,8 @@ export default function AIPage() {
         <div className="aiSectionHead aiLandscapeHead">
           <div>
             <p className="aiIndex">02 / SEARCHABLE RESEARCH LANDSCAPE</p>
-            <h2>按九个知识域检索“问题—装置—论文—代码—证据”。</h2>
-            <p>条目优先采用原始论文、装置/机构官方页面和作者仓库。没有公开对应实现的工作明确标记“未公开”；使能工具和社区复现不会冒充论文原代码。</p>
+            <h2>九域研究目录</h2>
+            <p>来源优先选原论文、官方页面和作者仓库。未公开实现单独标注，使能工具、社区复现与论文原代码分别记录。</p>
           </div>
           <div className="landscapeDownloads">
             <a href="/fusion-ai-native-research-report.docx" download><b>WORD</b><span>完整技术报告</span></a>
@@ -282,8 +282,8 @@ export default function AIPage() {
       <section className="aiDomains" id="domains">
         <div className="aiSectionHead">
           <p className="aiIndex">03 / NINE-DOMAIN SYNTHESIS</p>
-          <h2>智能原生不是独立第十座孤岛，而是贯穿其余九域的共同能力层。</h2>
-          <p>每一域都需要自己的数据、物理约束、验证指标和责任边界；同一种算法在不同知识域的可信度要求并不相同。</p>
+          <h2>AI 在九个知识域的应用</h2>
+          <p>各域分别定义数据、物理约束、验证指标与责任边界。</p>
         </div>
         <div className="domainSynthesisGrid">
           {(Object.keys(domainMeta) as AIDomain[]).map((key) => {
@@ -303,7 +303,7 @@ export default function AIPage() {
       <section className="aiDevices" id="devices">
         <div className="aiSectionHead">
           <p className="aiIndex">04 / DEVICE ADOPTION</p>
-          <h2>装置证据决定采用顺序：实验闭环与“计划适配”不能混为一谈。</h2>
+          <h2>装置应用：实验闭环与计划分别标注</h2>
         </div>
         <div className="deviceEvidenceTable" role="table" aria-label="聚变装置智能原生应用证据">
           <div className="deviceEvidenceHeader" role="row"><span>装置</span><span>代表工作</span><span>最高证据</span><span>阅读边界</span></div>
@@ -312,7 +312,7 @@ export default function AIPage() {
       </section>
 
       <section className="aiArchitecture">
-        <div><p className="aiIndex">05 / REFERENCE ARCHITECTURE</p><h2>双速、分权、可回退</h2><p>在线环只部署已冻结、可计时、可回退的模型；离线智能体负责检索、仿真、训练、比较和报告。模型必须通过数据、物理、实时、鲁棒性与权限证据门，才能从离线工厂进入影子或有限闭环。</p></div>
+        <div><p className="aiIndex">05 / REFERENCE ARCHITECTURE</p><h2>在线与离线架构</h2><p>在线模型须冻结、可计时、可回退；离线智能体检索、仿真、训练、比较和报告。进入影子或有限闭环前，须通过数据、物理、实时性、鲁棒性与权限审查。</p></div>
         <div className="archStack">
           <article><span>ONLINE · ms–s</span><b>诊断 → 状态估计 → 快速预测 → 确定性安全控制器</b><i>最坏时延 · 独立保护 · OOD 检测 · 降级模式</i></article>
           <article><span>EVIDENCE GATE</span><b>数据谱系 · 物理守恒 · VVUQ · HIL · 权限 · 签名发布</b><i>批准 / 拒绝 / 回退 / 再验证</i></article>
@@ -321,16 +321,16 @@ export default function AIPage() {
       </section>
 
       <section className="aiRisks">
-        <div className="aiSectionHead"><p className="aiIndex">06 / TRUST GAPS</p><h2>距离数字孪生的主要差距在可信运行，而不是模型参数量。</h2></div>
+        <div className="aiSectionHead"><p className="aiIndex">06 / TRUST GAPS</p><h2>可信运行的主要风险</h2></div>
         <div className="riskGrid">{risks.map((item, index) => <article key={item[0]}><span>{String(index + 1).padStart(2, '0')}</span><h3>{item[0]}</h3><p>{item[1]}</p></article>)}</div>
       </section>
 
       <section className="aiRoute" id="route">
-        <div className="aiSectionHead"><p className="aiIndex">07 / FUSIONDIGITAL ROADMAP</p><h2>从 DINA / MEQ 与窄任务切入，逐步获得受控自治。</h2><p>先建立可复现评测和代理服务，再把 AI 放入影子模式，最后只在狭窄、经验证的适用域开放闭环权限；“会生成方案”与“有权执行方案”必须是两个独立里程碑。</p></div>
+        <div className="aiSectionHead"><p className="aiIndex">07 / FUSIONDIGITAL ROADMAP</p><h2>从 DINA / MEQ 与窄任务起步</h2><p>先评测与代理服务，再影子运行；仅在经验证的狭窄适用域授权闭环。生成方案不等于获准执行。</p></div>
         <div className="aiRouteGrid">{roadmap.map((item) => <article key={item[0]}><span>{item[0]}</span><h3>{item[1]}</h3><p>{item[2]}</p></article>)}</div>
       </section>
 
-      <section className="platformInlineLink"><span>研究条目保留证据等级、来源、代码状态与局限；任何影响装置的动作仍需服务端授权和人工批准。</span><a href="/platform#architecture">查看智能体接入架构 →</a></section>
+      <section className="platformInlineLink"><span>条目保留证据、来源、代码状态与局限。装置操作仍需服务端授权和人工批准。</span><a href="/platform#architecture">查看智能体接入架构 →</a></section>
 
       <SiteFooter />
     </main>

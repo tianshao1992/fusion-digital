@@ -63,13 +63,13 @@ const typeMeta = {
 
 const copy = {
   zh: {
-    workspace: 'FusionDigital 交互式知识图谱工作区', heading: '从问题进入证据网络', entityTopic: '实体或主题',
+    workspace: 'FusionDigital 交互式知识图谱工作区', heading: '检索关系与证据', entityTopic: '实体或主题',
     queryExample: '例如：EXL-50U、DINA、破裂预测', domain: '知识域', allDomains: '全部知识域', type: '实体类型',
     allTypes: '全部实体', device: '关联装置', allDevices: '全部装置', searching: '检索中…', search: '检索图谱', reset: '重置',
     snapshot: '下载完整快照', shapeLegend: '节点形状图例', neighborhood: (depth: number) => `${depth} 跳邻域`, subgraph: '全域检索子图',
     entities: '实体', relations: '关系', truncated: '已按关联度截断', loadError: '图谱查询暂时不可用，请稍后重试。',
     chartAria: '论文、代码、装置、工具、任务和机构构成的 FusionDigital 交互知识图谱',
-    loading: '正在加载论文、代码、装置与任务的关系子图；下方文本列表提供完整的键盘浏览入口。',
+    loading: '正在加载关系图；下方文本列表支持完整的键盘浏览。',
     controls: '滚轮缩放 · 拖动平移 · 点击节点查看关系', nodeLimit: '节点上限', more: '加载更多',
     browse: (count: number) => `使用文本列表浏览当前 ${count} 个实体`, recorded: (count: number) => `${count} 条关系`,
     evidence: '证据', deployment: '部署', depth: '展开深度', oneHop: '1 跳 · 直接关系', twoHops: '2 跳 · 关系链',
@@ -83,13 +83,13 @@ const copy = {
     select: '选择一个节点查看实体详情、关系和原始证据。', chatContext: 'FusionDigital 知识图谱', openAgent: '在智能体中继续',
   },
   en: {
-    workspace: 'FusionDigital interactive knowledge-graph workspace', heading: 'Enter the evidence network through a question', entityTopic: 'Entity or topic',
+    workspace: 'FusionDigital interactive knowledge-graph workspace', heading: 'Find relationships and evidence', entityTopic: 'Entity or topic',
     queryExample: 'For example: EXL-50U, DINA, disruption prediction', domain: 'Knowledge domain', allDomains: 'All domains', type: 'Entity type',
     allTypes: 'All entities', device: 'Associated device', allDevices: 'All devices', searching: 'Searching…', search: 'Search graph', reset: 'Reset',
     snapshot: 'Download full snapshot', shapeLegend: 'Node-shape legend', neighborhood: (depth: number) => `${depth}-hop neighbourhood`, subgraph: 'Cross-domain result subgraph',
     entities: 'entities', relations: 'relations', truncated: 'Truncated by graph relevance', loadError: 'The knowledge-graph query is temporarily unavailable. Please try again.',
     chartAria: 'Interactive FusionDigital knowledge graph of publications, code, devices, tools, tasks and organizations',
-    loading: 'Loading the relation subgraph for publications, code, devices and tasks. The text list below provides complete keyboard access.',
+    loading: 'Loading relationships. The text list below supports full keyboard access.',
     controls: 'Wheel to zoom · drag to pan · select a node to inspect relations', nodeLimit: 'Node limit', more: 'Load more',
     browse: (count: number) => `Browse the ${count} entities in this view as a text list`, recorded: (count: number) => `${count} relations`,
     evidence: 'evidence', deployment: 'deployment', depth: 'Expansion depth', oneHop: '1 hop · direct relations', twoHops: '2 hops · relation chains',
