@@ -64,6 +64,8 @@ const SHARED_PATHS = [
   "/device-data/exl50u-efit-v2/index.json",
   "/device-data/exl50u-efit-v2/shot-20213-part-000.jsonl.gz",
   "/data/exl50u-mdsplus-snapshot-v1/manifest.json",
+  "/data/exl50u-mdsplus-snapshot-v1/manifest.exl50u-imas-20260917-r1.json",
+  ...Array.from({ length: 253 }, (_, index) => `/data/exl50u-mdsplus-snapshot-v1/shot-${21132 + index}.jsonl.gz`),
   "/data/exl50u-mdsplus-snapshot-v1/shot-20831.jsonl.gz",
   "/data/exl50u-mdsplus-snapshot-v1/shot-20833.jsonl.gz",
   "/data/exl50u-mdsplus-snapshot-v1/shot-20835.jsonl.gz",
@@ -449,6 +451,8 @@ test("contract pins both repositories, Hong Kong premium EIP, and Sites", () => 
     contract.sharedContent.paths.filter((path) => path.startsWith("/data/exl50u-mdsplus-snapshot-v1/")),
     [
       "/data/exl50u-mdsplus-snapshot-v1/manifest.json",
+      "/data/exl50u-mdsplus-snapshot-v1/manifest.exl50u-imas-20260917-r1.json",
+      ...Array.from({ length: 253 }, (_, index) => `/data/exl50u-mdsplus-snapshot-v1/shot-${21132 + index}.jsonl.gz`),
       "/data/exl50u-mdsplus-snapshot-v1/shot-20831.jsonl.gz",
       "/data/exl50u-mdsplus-snapshot-v1/shot-20833.jsonl.gz",
       "/data/exl50u-mdsplus-snapshot-v1/shot-20835.jsonl.gz",
