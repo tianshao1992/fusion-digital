@@ -43,6 +43,7 @@ function readShot(entry: SnapshotManifest['shots'][number]) {
 }
 
 const addedPulses = [21066, 21067, 21068, 21069, 21070, 21071, 21074, 21075, 21076, 21077, 21078, 21079, 21080, 21081, 21082, 21083, 21084, 21085, 21093, 21094, 21095, 21096, 21097, 21098, 21099, 21100, 21101, 21102, 21103];
+const septemberPulses = Array.from({ length: 253 }, (_, index) => 21132 + index);
 
 test('all shot groups and comparisons default to -0.2 through 1.1 seconds without cropping data', () => {
   assert.deepEqual(DEFAULT_TIME_WINDOW_SECONDS, [-0.2, 1.1]);
@@ -96,7 +97,7 @@ test('ECharts starts every linked time axis at the requested window and can expa
   }
 });
 
-test('public manifest retains four legacy shots and adds 29 unique captured shots', () => {
+test('public manifest retains 33 prior shots and adds 253 date-verified September shots', () => {
   assert.equal(manifest.schemaVersion, SNAPSHOT_SCHEMA);
   assert.equal(manifest.snapshotId, SNAPSHOT_RELEASE_ID);
   assert.equal(manifest.facility, 'EXL-50U');
@@ -109,16 +110,16 @@ test('public manifest retains four legacy shots and adds 29 unique captured shot
   assert.equal(manifest.publication.missingValuePolicy, 'preserve-null');
   assert.equal(manifest.publication.qualityBasis, 'per-signal-disclosure');
   assert.equal(manifest.publication.peakClaims, 'not-published');
-  assert.deepEqual(manifest.shots.map(({ pulse }) => pulse), [20831, 20833, 20835, 20836, ...addedPulses]);
+  assert.deepEqual(manifest.shots.map(({ pulse }) => pulse), [20831, 20833, 20835, 20836, ...addedPulses, ...septemberPulses]);
   assert.equal(new Set(manifest.shots.map(({ pulse }) => pulse)).size, manifest.shots.length);
-  assert.equal(manifest.shots.length, 33);
+  assert.equal(manifest.shots.length, 286);
   assert.equal(manifest.shots.filter(({ campaignDate }) => campaignDate === '2026-09-07').length, 18);
   assert.equal(manifest.shots.filter(({ campaignDate }) => campaignDate === '2026-09-08').length, 11);
   assert.equal(new Date(manifest.generatedAt).toISOString(), manifest.generatedAt);
 });
 
 test('manifest is a complete allowlist for deterministic raw-gzip shot assets', () => {
-  const expected = [...new Set(['manifest.json', `manifest.${SNAPSHOT_RELEASE_ID}.json`, ...manifest.shots.map(({ path }) => path), ...manifest.shots.map(({ pulse }) => `shot-${pulse}.jsonl.gz`)])].sort();
+  const expected = [...new Set(['manifest.json', 'manifest.exl50u-imas-20260908-r2.json', `manifest.${SNAPSHOT_RELEASE_ID}.json`, ...manifest.shots.map(({ path }) => path), ...manifest.shots.map(({ pulse }) => `shot-${pulse}.jsonl.gz`)])].sort();
   const actual = readdirSync(DATA_ROOT, { withFileTypes: true }).filter((entry) => entry.isFile()).map(({ name }) => name).sort();
   assert.deepEqual(actual, expected);
   for (const entry of manifest.shots) {
@@ -147,9 +148,10 @@ test('every published signal is traceable, finite, independently timed and non-s
     assert.equal(shot.facility, 'EXL-50U');
     assert.equal(shot.pulse, entry.pulse);
     assert.equal(shot.source.transport, 'reviewed public snapshot');
-    const offline = addedPulses.includes(shot.pulse);
-    assert.equal(shot.signals.length, offline && shot.pulse !== 21096 ? 10 : 4);
-    assert.deepEqual(shot.signals.slice(0, 4).map(({ id }) => id), expectedSignals.map(([id]) => id));
+    const offline = !!entry.campaignDate;
+    assert.equal(shot.signals.length, entry.signalCount);
+    if (shot.pulse < 21132) assert.equal(shot.signals.length, offline && shot.pulse !== 21096 ? 10 : 4);
+    if (shot.signals.length > 0) assert.deepEqual(shot.signals.slice(0, 4).map(({ id }) => id), expectedSignals.map(([id]) => id));
 
     for (const [index, signal] of shot.signals.entries()) {
       if (index < 4) {
@@ -165,7 +167,7 @@ test('every published signal is traceable, finite, independently timed and non-s
         assert.equal(signal.unit, index === 4 ? 'A' : index === 9 ? '1' : 'm');
       }
       assert.equal(signal.sampling.publishedPoints, signal.samples.length);
-      assert.ok(signal.samples.length > 2 && signal.samples.length <= 800);
+      assert.ok(signal.samples.length >= 2 && signal.samples.length <= 800);
       assert.equal(signal.sampling.requestedMaxPoints, 800);
       assert.equal(signal.sampling.method, offline ? 'offline-index-subsample' : 'gateway-downsample');
       assert.equal(signal.sampling.samplePolicy, 'nearest');
@@ -207,14 +209,14 @@ test('missing equilibrium is explicit and no uncertain log entry becomes a measu
 
 test('28 shape extensions retain prior signals and disclose derived quantities, not PCS feedback', () => {
   let added = 0;
-  for (const entry of manifest.shots) {
+  for (const entry of manifest.shots.filter(({ pulse }) => pulse < 21132)) {
     const { shot } = readShot(entry);
     const original = JSON.parse(gunzipSync(readFileSync(new URL(`shot-${entry.pulse}.jsonl.gz`, DATA_ROOT))).toString()) as SnapshotShot;
     assert.deepEqual(shot.signals.slice(0, original.signals.length), original.signals);
     const derived = shot.signals.filter(({ derivation }) => derivation);
     if (!derived.length) continue;
     added++;
-    assert.equal(entry.path, `shot-${entry.pulse}.${SNAPSHOT_RELEASE_ID}.jsonl.gz`);
+    assert.equal(entry.path, `shot-${entry.pulse}.exl50u-imas-20260908-r2.jsonl.gz`);
     assert.deepEqual(derived.map(({ id }) => id), ['boundary-rmax', 'boundary-rmin', 'boundary-kappa']);
     for (const signal of derived) {
       assert.equal(signal.processingLevel, 'boundary-derived');
@@ -231,7 +233,7 @@ test('28 shape extensions retain prior signals and disclose derived quantities, 
     }
   }
   assert.equal(added, 28);
-  assert.equal(manifest.shots.reduce((n, s) => n + s.signalCount, 0), 300);
+  assert.equal(manifest.shots.filter(({ pulse }) => pulse < 21132).reduce((n, s) => n + s.signalCount, 0), 300);
   const sparse = readShot(manifest.shots.find(({ pulse }) => pulse === 21084)!).shot;
   assert.equal(sparse.signals.find(({ id }) => id === 'boundary-kappa')!.samples.length, 4);
   const late = readShot(manifest.shots.find(({ pulse }) => pulse === 21103)!).shot;
@@ -253,6 +255,39 @@ test('catalog is release-pinned so cached legacy manifests cannot hide the added
     return new Response(JSON.stringify(manifest));
   });
   await assert.rejects(() => loadSnapshotManifest(async () => new Response(JSON.stringify({ ...manifest, snapshotId: 'exl50u-mdsplus-20260901-r1' }))), /catalog version/);
+});
+
+test('September dates are explicit, previous publications unchanged and empty records load honestly', async () => {
+  const previous = JSON.parse(readFileSync(new URL('manifest.exl50u-imas-20260908-r2.json', DATA_ROOT), 'utf8')) as SnapshotManifest;
+  for (const entry of previous.shots) assert.deepEqual(manifest.shots.find(({ pulse }) => pulse === entry.pulse), entry);
+  const ranges = [[9, 21132, 21165], [10, 21166, 21210], [11, 21211, 21253], [13, 21254, 21297], [14, 21298, 21334], [15, 21335, 21384]];
+  for (const [day, first, last] of ranges) {
+    const shots = manifest.shots.filter(({ campaignDate }) => campaignDate === `2026-09-${String(day).padStart(2, '0')}`);
+    assert.deepEqual(shots.map(({ pulse }) => pulse), Array.from({ length: last - first + 1 }, (_, i) => first + i));
+    assert.ok(shots.every(({ campaignDateSource }) => campaignDateSource === 'mds-shot-timestamp'));
+  }
+  assert.equal(manifest.shots.filter(({ campaignDate }) => campaignDate === '2026-09-12').length, 0);
+  const fresh = manifest.shots.filter(({ pulse }) => pulse >= 21132);
+  assert.equal(fresh.filter(({ signalCount }) => signalCount === 10).length, 192);
+  assert.equal(fresh.filter(({ signalCount }) => signalCount === 4).length, 49);
+  assert.equal(fresh.filter(({ signalCount }) => signalCount === 0).length, 12);
+  assert.equal(fresh.reduce((sum, entry) => sum + entry.signalCount, 0), 2116);
+  for (const entry of fresh) {
+    const { compressed } = readShot(entry);
+    const shot = await loadSnapshotShot(manifest, entry.pulse, async () => new Response(new Uint8Array(compressed)));
+    assert.equal(shot.signals.length, entry.signalCount);
+    if (entry.signalCount === 0) assert.deepEqual(entry.missingDataItems, ['magnetics', 'pf_active', 'tf', 'langmuir_probes', 'equilibrium']);
+    for (const signal of shot.signals.filter(({ derivation }) => derivation)) {
+      assert.equal(signal.derivation!.notControllerTelemetry, true);
+      assert.equal(signal.derivation!.invalidOutlinePolicy, 'whole-frame-null');
+      assert.equal(signal.processingLevel, 'boundary-derived');
+      assert.ok(signal.samples.every(([, value]) => value === null || value > 0));
+    }
+  }
+  assert.match(workspaceSource, /shot && shot.signals.length === 0/);
+  assert.match(workspaceSource, /暂无可发布信号/);
+  assert.match(workspaceSource, /record.signalCount === 0/);
+  assert.match(workspaceSource, /实验日期/);
 });
 
 test('local preview serves original gzip bytes through an exact GET/HEAD allowlist', async () => {

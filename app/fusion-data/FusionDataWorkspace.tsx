@@ -220,15 +220,21 @@ export default function FusionDataWorkspace() {
       <aside className="fusionShotRail">
         <div className="fusionPanelHeading"><div><span>01</span><h2>{en ? 'Published shots' : '已发布炮次'}</h2></div><small>{filteredShots.length}/{manifest.shots.length}</small></div>
         <label className="fusionShotSearch"><span className="srOnly">{en ? 'Filter shots or datasets' : '筛选炮次或数据集'}</span><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={en ? 'Shot or IDS…' : '炮号或 IDS…'} /></label>
-        <label className="fusionCampaignFilter"><span>{en ? 'Experiment batch (log date)' : '实验批次（日志日期）'}</span><select value={campaign} onChange={(event) => setCampaign(event.target.value)}><option value="all">{en ? 'All shots' : '全部炮次'}</option>{[...new Set(manifest.shots.flatMap(({ campaignDate }) => campaignDate ? [campaignDate] : []))].sort().reverse().map((date) => <option key={date} value={date}>{date}</option>)}<option value="previous">{en ? 'Previous snapshot' : '原有快照'}</option></select></label>
+        <label className="fusionCampaignFilter"><span>{en ? 'Experiment date' : '实验日期'}</span><select value={campaign} onChange={(event) => {
+          const date = event.target.value;
+          setCampaign(date);
+          const candidates = manifest.shots.filter((record) => date === 'all' || (record.campaignDate ?? 'previous') === date);
+          const next = candidates.filter(({ signalCount }) => signalCount > 0).at(-1) ?? candidates.at(-1);
+          if (next) selectShot(next.pulse);
+        }}><option value="all">{en ? 'All shots' : '全部炮次'}</option>{[...new Set(manifest.shots.flatMap(({ campaignDate }) => campaignDate ? [campaignDate] : []))].sort().reverse().map((date) => <option key={date} value={date}>{date}</option>)}<option value="previous">{en ? 'Previous snapshot' : '原有快照'}</option></select></label>
         <div className="fusionShotList">
           {filteredShots.map((record) => <div className="fusionShotRow" key={record.pulse}>
             <button className="fusionShotSelect" type="button" aria-pressed={record.pulse === selectedPulse} onClick={() => selectShot(record.pulse)}>
               <span className="fusionQuality fusionQuality--unknown" aria-hidden="true" />
-              <span><b>EXL #{record.pulse}</b><small>{record.signalCount} {en ? 'signals' : '条信号'} · {record.campaignDate?.slice(5) ?? (en ? 'previous' : '原有')}</small>{record.missingDataItems?.includes('equilibrium') && <small>{en ? 'Equilibrium unavailable' : '缺少平衡重建'}</small>}</span>
+              <span><b>EXL #{record.pulse}</b><small>{record.signalCount} {en ? 'signals' : '条信号'} · {record.campaignDate?.slice(5) ?? (en ? 'previous' : '原有')}</small>{record.signalCount === 0 ? <small>{en ? 'No available signals' : '暂无可用信号'}</small> : record.missingDataItems?.includes('equilibrium') && <small>{en ? 'Equilibrium unavailable' : '缺少平衡重建'}</small>}</span>
               <em>{record.campaignDate ? 'H5' : 'MDS'}</em>
             </button>
-            <button className="fusionCompareButton" type="button" disabled={record.pulse === selectedPulse} aria-pressed={record.pulse === comparePulse} aria-label={en ? `Compare shot ${record.pulse}` : `对比炮 ${record.pulse}`} onClick={() => setComparePulse((current) => current === record.pulse ? null : record.pulse)}>{record.pulse === comparePulse ? '−' : '+'}</button>
+            <button className="fusionCompareButton" type="button" disabled={record.pulse === selectedPulse || record.signalCount === 0} aria-pressed={record.pulse === comparePulse} aria-label={en ? `Compare shot ${record.pulse}` : `对比炮 ${record.pulse}`} onClick={() => setComparePulse((current) => current === record.pulse ? null : record.pulse)}>{record.pulse === comparePulse ? '−' : '+'}</button>
           </div>)}
         </div>
         {filteredShots.length === 0 && <p className="fusionLoadNotice">{en ? 'No matching shots. Change the filter.' : '没有匹配的炮次，请调整筛选条件。'}</p>}
@@ -236,12 +242,17 @@ export default function FusionDataWorkspace() {
       </aside>
 
       <div className="fusionMainPanels">
-        {!shot || !selectedSignal ? <><LoadingState en={en} error={primary.error} />{primary.error && <button className="fusionRetry" type="button" onClick={primary.retry}>{en ? 'Retry selected shot' : '重试当前炮次'}</button>}</> : <>
+        {shot && shot.signals.length === 0 ? <article className="fusionPanel fusionLoadNotice" role="status">
+          <h2>Shot {shot.pulse} · {selectedManifestShot?.campaignDate}</h2>
+          <p>{en ? 'Shot date verified; no publishable signals are available in this snapshot.' : '炮次日期已核实；本次快照暂无可发布信号。'}</p>
+          <p>{en ? 'Missing or unusable datasets' : '缺失或不可用的数据集'}: {selectedManifestShot?.missingDataItems?.join(', ')}</p>
+          <p>{en ? 'No other shot or synthetic data is substituted.' : '不使用其他炮次或合成数据替代。'}</p>
+        </article> : !shot || !selectedSignal ? <><LoadingState en={en} error={primary.error} />{primary.error && <button className="fusionRetry" type="button" onClick={primary.retry}>{en ? 'Retry selected shot' : '重试当前炮次'}</button>}</> : <>
         <div className="fusionShotHeader">
           <div><span>EXL-50U · {en ? 'facility record' : '装置记录'}</span><h2>Shot {shot.pulse}{compareShot && <em>vs {compareShot.pulse}</em>}</h2></div>
           <dl>
             <div><dt>{en ? 'signals' : '信号'}</dt><dd>{shot.signals.length}</dd></div>
-            <div><dt>{en ? 'snapshot' : '快照'}</dt><dd>{manifest.snapshotId.split('-').at(-1)}</dd></div>
+            <div><dt>{en ? 'experiment date' : '实验日期'}</dt><dd title={selectedManifestShot?.campaignDateSource === 'mds-shot-timestamp' ? (en ? 'MDSplus shot-record timestamp · Asia/Shanghai; not the precise trigger time' : 'MDSplus 炮次记录时间 · 北京时间；非精确触发时间') : (en ? 'Experiment log' : '实验日志')}>{selectedManifestShot?.campaignDate ?? '—'}</dd></div>
             <div><dt>{en ? 'generated' : '生成'}</dt><dd>{formatSnapshotDate(manifest.generatedAt, en)}</dd></div>
           </dl>
         </div>
@@ -256,7 +267,7 @@ export default function FusionDataWorkspace() {
 
         <article className="fusionPanel fusionPulsePanel">
           <div className="fusionPanelHeading"><div><span>02</span><h2>{signalGroup === 'equilibrium' ? (en ? 'Reconstructed time series' : '平衡重建时序') : (en ? 'Measured time series' : '实测时序')}</h2></div><small>{compareShot ? (en ? `solid #${shot.pulse} · dotted #${compareShot.pulse}` : `实线 #${shot.pulse} · 点线 #${compareShot.pulse}`) : (en ? 'shared physical time · no interpolation' : '共享物理时间 · 未插值')}</small></div>
-          {visibleSignals.length === 0 ? <div className="fusionLoadNotice">{selectedManifestShot?.missingDataItems?.includes('equilibrium') ? (en ? 'No recommended equilibrium dataset was available in the captured catalog for this shot.' : '该炮的已下载目录中没有可用的推荐平衡数据集。') : (en ? 'Equilibrium was not exported in this earlier snapshot.' : '该原有快照未导出平衡重建数据。')}{en ? ' No substituted curves are displayed.' : ' 不以其他炮或合成曲线替代。'}</div> : <ScientificChart
+          {visibleSignals.length === 0 ? <div className="fusionLoadNotice">{signalGroup === 'equilibrium' ? (en ? 'No usable equilibrium time series is available in this snapshot.' : '本次快照没有可用的平衡重建时序。') : (en ? 'No current or probe signals are available in this snapshot.' : '本次快照没有可用的电流或探针信号。')}{en ? ' No substituted curves are displayed.' : ' 不以其他炮或合成曲线替代。'}</div> : <ScientificChart
             id="fusion-real-discharge-overview"
             option={pulseOption}
             ariaLabel={en ? 'EXL-50U signals using independent sampled time bases' : '使用各自采样时间基的 EXL-50U 实际信号'}

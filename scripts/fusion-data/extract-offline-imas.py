@@ -71,7 +71,7 @@ def sample_indices(values, limit=800):
     return np.array(sorted(mandatory.union(uniform.tolist())))
 
 
-def extract(root, shots):
+def extract(root, shots, campaign_dates=None, allow_partial=False):
     verified = json.loads((root / "verified-h5-manifest.json").read_text(encoding="utf-8"))
     results = []
     for pulse in shots:
@@ -80,7 +80,8 @@ def extract(root, shots):
         missing = []
         for ids in dict.fromkeys(spec[4] for spec in SIGNALS):
             candidates = [item for item in verified["downloads"] if item["shot"] == pulse and item["idsName"] == ids and item["occurrence"] == 0]
-            if not candidates and ids == "equilibrium":
+            approved = [item for item in catalog if item["ids_name"] == ids and item["occurrence"] == 0 and item["status"] == "valid" and item["publish_state"] == "published" and item["is_recommended"] and item.get("h5_path")]
+            if not candidates and (ids == "equilibrium" or allow_partial) and not approved:
                 missing.append(ids)
                 continue
             if len(candidates) != 1:
@@ -98,6 +99,11 @@ def extract(root, shots):
                 raise ValueError(f"Capture integrity failed: {pulse}/{ids}")
             with h5py.File(path, "r") as handle:
                 group = handle[ids]
+                if allow_partial:
+                    base_times = np.asarray(group["embedded[]&time"][0] if ids == "langmuir_probes" else group["time"][()], dtype=float)
+                    if base_times.ndim != 1 or len(base_times) < 2 or not np.all(np.isfinite(base_times)) or not np.all(np.diff(base_times) > 0):
+                        missing.append(ids)
+                        continue
                 for sid, zh, en, color, _, logical, unit, field, index in [spec for spec in SIGNALS if spec[4] == ids]:
                     values = np.asarray(group[field][()] if index is None else group[field][index], dtype=float)
                     # Embedded probes can each have their own acquisition clock.
@@ -140,7 +146,18 @@ def extract(root, shots):
                             "sampling": {"sourcePoints": len(values), "publishedPoints": len(samples), "requestedMaxPoints": 800, "method": "offline-index-subsample", "timeRange": [samples[0][0], samples[-1][0]], "samplePolicy": "nearest", "noInterpolation": True, "connectAcrossGaps": False, "missingValues": sum(v is None for _, v in samples), "sourceMissingValues": int(np.count_nonzero(~np.isfinite(values)))},
                             "quality": {"state": "unknown", "basis": "not-exported"}, "samples": samples,
                         })
-        results.append({"pulse": pulse, "campaignDate": "2026-09-07" if pulse <= 21085 else "2026-09-08", "missingDataItems": missing, "signals": records})
+        if campaign_dates is not None:
+            if pulse not in campaign_dates:
+                raise ValueError(f"Missing verified campaign date: {pulse}")
+            campaign_date = campaign_dates[pulse]
+        elif 21066 <= pulse <= 21085 or 21093 <= pulse <= 21103:
+            campaign_date = "2026-09-07" if pulse <= 21085 else "2026-09-08"
+        else:
+            raise ValueError(f"A verified date manifest is required: {pulse}")
+        result = {"pulse": pulse, "campaignDate": campaign_date, "missingDataItems": missing, "signals": records}
+        if campaign_dates is not None:
+            result["campaignDateSource"] = "mds-shot-timestamp"
+        results.append(result)
         print(f"#{pulse}: {len(records)} signals; missing: {','.join(missing) or 'none'}", flush=True)
     return results
 
@@ -150,7 +167,22 @@ if __name__ == "__main__":
     parser.add_argument("--capture-root", type=Path, required=True)
     parser.add_argument("--shots", required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--date-manifest", type=Path)
+    parser.add_argument("--allow-partial", action="store_true")
     args = parser.parse_args()
     pulses = sorted({int(value) for value in args.shots.split(",")})
-    data = extract(args.capture_root, pulses)
+    dates = None
+    if args.date_manifest:
+        from datetime import date
+        manifest = json.loads(args.date_manifest.read_text(encoding="utf-8"))
+        dates = {}
+        for day in manifest["daily"]:
+            date.fromisoformat(day["date"])
+            if day.get("inferred") is not False or day.get("source") != "raw-mds-timestamp" or day.get("timezone") != "Asia/Shanghai":
+                raise ValueError("Campaign dates must be directly verified raw shot dates")
+            for pulse in day["shots"]:
+                if pulse in dates:
+                    raise ValueError("Duplicate shot date")
+                dates[pulse] = day["date"]
+    data = extract(args.capture_root, pulses, dates, args.allow_partial)
     args.output.write_text(json.dumps(data, ensure_ascii=False, allow_nan=False), encoding="utf-8")

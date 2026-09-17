@@ -13,7 +13,7 @@ const previousId = manifest.snapshotId;
 const sourceProjection = 'offline IMAS H5 time-series extraction';
 const hash = (value) => createHash('sha256').update(value).digest('hex');
 const incoming = JSON.parse(readFileSync(input, 'utf8'));
-assert.ok(Array.isArray(incoming) && incoming.length > 0 && incoming.length <= 100);
+assert.ok(Array.isArray(incoming) && incoming.length > 0 && incoming.length <= 1000);
 assert.equal(new Set(incoming.map(({ pulse }) => pulse)).size, incoming.length);
 
 // Verify existing bytes BEFORE merging. Never rewrite an existing shot payload.
@@ -27,7 +27,11 @@ for (const entry of manifest.shots) {
 const staged = [];
 for (const record of incoming) {
   assert.ok(Number.isSafeInteger(record.pulse) && record.pulse > 0);
-  assert.ok(record.signals.length >= 4 && record.signals.length <= 10);
+  assert.ok(record.signals.length >= 0 && record.signals.length <= 10);
+  assert.match(record.campaignDate, /^\d{4}-\d{2}-\d{2}$/);
+  assert.equal(new Date(`${record.campaignDate}T00:00:00.000Z`).toISOString().slice(0, 10), record.campaignDate);
+  assert.ok(record.campaignDateSource === undefined || record.campaignDateSource === 'mds-shot-timestamp');
+  assert.ok(record.signals.length > 0 || record.missingDataItems?.length > 0, 'Empty shots must disclose missing data');
   for (const signal of record.signals) {
     assert.equal(signal.projection, 'imas-h5-offline');
     assert.equal(signal.dataset.id, `${record.pulse}/${signal.dataItem}/${signal.dataset.occurrence}/r${signal.dataset.run}`);
@@ -55,6 +59,7 @@ for (const record of incoming) {
   }
   const entry = { pulse: record.pulse, path: existing ? `shot-${record.pulse}.${snapshotId}.jsonl.gz` : `shot-${record.pulse}.jsonl.gz`, snapshotId, campaignDate: record.campaignDate, signalCount: shot.signals.length, compressedBytes: compressed.length, compressedSha256: hash(compressed), contentBytes: content.length, contentSha256: hash(content), datasetIds: shot.signals.map(({ dataset }) => dataset.id), missingDataItems: record.missingDataItems };
   const target = new URL(entry.path, root);
+  if (record.campaignDateSource) entry.campaignDateSource = record.campaignDateSource;
   if (existsSync(target)) assert.equal(hash(readFileSync(target)), entry.compressedSha256, 'Untracked shot collision');
   staged.push({ target, compressed });
   if (existing) manifest.shots[manifest.shots.indexOf(existing)] = entry;

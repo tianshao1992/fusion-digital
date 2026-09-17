@@ -1,6 +1,6 @@
 // Pin the catalog to this UI release: an hour-old browser/CDN catalog must not
 // silently replace the new shot list. Shot extensions also use immutable URLs.
-export const SNAPSHOT_RELEASE_ID = 'exl50u-imas-20260908-r2';
+export const SNAPSHOT_RELEASE_ID = 'exl50u-imas-20260917-r1';
 export const SNAPSHOT_MANIFEST_URL = `/data/exl50u-mdsplus-snapshot-v1/manifest.${SNAPSHOT_RELEASE_ID}.json`;
 export const SNAPSHOT_SCHEMA = 'fusiondigital.exl50u.public-snapshot.v1';
 type SourceProjection = 'read-only MDSplus time-series projection' | 'offline IMAS H5 time-series extraction';
@@ -17,6 +17,7 @@ export type SnapshotManifestShot = {
   datasetIds: string[];
   snapshotId?: string;
   campaignDate?: string;
+  campaignDateSource?: 'mds-shot-timestamp';
   missingDataItems?: string[];
 };
 
@@ -131,7 +132,7 @@ function assertManifest(value: unknown): asserts value is SnapshotManifest {
     || typeof value.generatedAt !== 'string'
     || !Array.isArray(value.shots)
     || value.shots.length < 1
-    || value.shots.length > 100) {
+    || value.shots.length > 1000) {
     throw new Error('FusionData snapshot manifest identity is invalid');
   }
   if (new Date(value.generatedAt).toISOString() !== value.generatedAt) throw new Error('Snapshot generatedAt is not canonical UTC');
@@ -158,7 +159,9 @@ function assertManifest(value: unknown): asserts value is SnapshotManifest {
       && !(typeof shot.snapshotId === 'string' && /^exl50u-imas-\d{8}-r\d+$/.test(shot.snapshotId) && shot.path === `shot-${shot.pulse}.${shot.snapshotId}.jsonl.gz`)) {
       throw new Error('Snapshot shot path is invalid');
     }
-    assertSafePositiveInteger(shot.signalCount, 'signalCount');
+    if (!Number.isSafeInteger(shot.signalCount) || Number(shot.signalCount) < 0) throw new Error('Invalid signalCount');
+    if (shot.signalCount === 0 && (!Array.isArray(shot.missingDataItems) || shot.missingDataItems.length === 0)) throw new Error('Empty shot must disclose missing data');
+    if (shot.campaignDateSource !== undefined && shot.campaignDateSource !== 'mds-shot-timestamp') throw new Error('Invalid campaign date source');
     assertSafePositiveInteger(shot.compressedBytes, 'compressedBytes');
     assertSafePositiveInteger(shot.contentBytes, 'contentBytes');
     if (Number(shot.signalCount) > 32 || Number(shot.contentBytes) > 4_000_000 || Number(shot.compressedBytes) > 2_000_000) throw new Error('Snapshot exceeds per-shot size budget');

@@ -1,5 +1,7 @@
 """Optional exporter QA: requires the isolated numpy/h5py export environment."""
 import importlib.util
+import json
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -11,6 +13,32 @@ spec.loader.exec_module(module)
 
 
 class OfflineSamplingTests(unittest.TestCase):
+    def test_partial_capture_preserves_empty_shot_and_verified_date(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / '21132').mkdir()
+            (root / '21132/datasets.json').write_text('[]', encoding='utf-8')
+            (root / 'verified-h5-manifest.json').write_text('{"downloads":[]}', encoding='utf-8')
+            record = module.extract(root, [21132], {21132: '2026-09-09'}, True)[0]
+            self.assertEqual(record['signals'], [])
+            self.assertEqual(record['campaignDate'], '2026-09-09')
+            self.assertEqual(record['campaignDateSource'], 'mds-shot-timestamp')
+            self.assertEqual(len(record['missingDataItems']), 5)
+            with self.assertRaisesRegex(ValueError, 'verified date manifest'):
+                module.extract(root, [21132], allow_partial=True)
+            with self.assertRaisesRegex(ValueError, 'Missing verified campaign date'):
+                module.extract(root, [21132], {}, True)
+
+    def test_partial_capture_does_not_hide_an_incomplete_download(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / '21132').mkdir()
+            catalog = [{'id': '21132/magnetics/0/r0', 'ids_name': 'magnetics', 'occurrence': 0, 'status': 'valid', 'publish_state': 'published', 'is_recommended': 1, 'h5_path': 'private-source'}]
+            (root / '21132/datasets.json').write_text(json.dumps(catalog), encoding='utf-8')
+            (root / 'verified-h5-manifest.json').write_text('{"downloads":[]}', encoding='utf-8')
+            with self.assertRaisesRegex(ValueError, 'missing dataset'):
+                module.extract(root, [21132], {21132: '2026-09-09'}, True)
+
     def test_outline_extrema_ignore_padding_and_preserve_real_geometry(self):
         r = np.array([[.3, 1.3, .8, .8, -9e40], [.4, 1.4, .9, .9, 999]])
         z = np.array([[0., 0., .95, -.95, -9e40], [0., 0., 1., -1., 999]])
