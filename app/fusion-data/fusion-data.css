@@ -208,7 +208,7 @@
   .fusionWorkspaceToolbar > strong { width: 100%; min-height: 36px; border-top: 1px solid var(--color-workbench-line); }
   .fusionWorkspaceGrid { grid-template-columns: 1fr; }
   .fusionShotRail { position: static; max-height: none; }
-  .fusionShotList { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fusionShotList { grid-template-columns: repeat(2, minmax(0, 1fr)); max-height: min(24rem, 40vh); overflow-y: auto; }
   .fusionShotHeader { align-items: flex-start; flex-direction: column; }
   .fusionShotHeader dl { width: 100%; }
   .fusionShotHeader dl > div { flex: 1; min-width: 0; padding: 0 8px; }
