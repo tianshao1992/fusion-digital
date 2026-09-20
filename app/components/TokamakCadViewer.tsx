@@ -1,6 +1,11 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useContext, useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useSiteActionAdapter } from './agent-workspace/SiteOperations';
+import { waitForSiteCondition } from '../agent/site-action-runtime';
+import type { SiteAction, SiteActionContext } from '../agent/site-actions';
+import { CadSiteActionScope } from './device-viewer/cadSiteActionScope';
+import { CAD_VIEWER_ACTION_TYPES, cadActionAbortError, isCadViewerAction, prepareCadSiteAction, renderCadActionFrame } from './device-viewer/cadSiteActions';
 import type {
   Material,
   Mesh,
@@ -215,6 +220,7 @@ type ViewerApi = {
   focusWebPoint: (pointWebMetres: readonly [number, number, number]) => void;
   captureView: () => ViewSnapshot;
   applyView: (snapshot: ViewSnapshot) => void;
+  renderForAction: () => void;
   resize: (refit: boolean) => void;
   efitOverlay: EfitThreeOverlay | null;
   diagnosticOverlay: Ehl2DiagnosticThreeOverlay | null;
@@ -483,6 +489,16 @@ function TokamakCadViewerSession({
 }: TokamakCadViewerProps = {}) {
   const { content, locale, t } = useI18n();
   const { resolvedTheme } = useTheme();
+  const cadAdapterId = useId();
+  const cadActionScope = useContext(CadSiteActionScope);
+  const cadActionStateRef = useRef<Ehl2DiagnosticViewerState | null>(null);
+  const cadActionRevisionRef = useRef({ fingerprint: '', revision: 0 });
+  const cadActionUserInteractingRef = useRef(false);
+  const cadActionMountedRef = useRef(false);
+  useEffect(() => {
+    cadActionMountedRef.current = true;
+    return () => { cadActionMountedRef.current = false; };
+  }, []);
   const ehl2Session = isEhl2ViewerSession(viewerId, manifestUrl);
   const diagnosticOverlaySession = ehl2Session || diagnosticOverlayEnabled;
   const wireframeAllowed = !ehl2Session;
@@ -667,6 +683,7 @@ function TokamakCadViewerSession({
       partOpacities: Object.fromEntries(Object.entries(partOpacities).sort(([left], [right]) => left.localeCompare(right))),
       cameraView,
     };
+    cadActionStateRef.current = snapshot;
     const key = JSON.stringify(snapshot);
     if (pendingControlledViewerStateRef.current) {
       if (key === pendingControlledViewerStateRef.current) {
@@ -867,6 +884,7 @@ function TokamakCadViewerSession({
     const releaseResources = () => {
       if (resourcesReleased) return;
       resourcesReleased = true;
+      cadActionUserInteractingRef.current = false;
       modelLoadController.abort();
       window.cancelAnimationFrame(frame);
       resizeObserver?.disconnect();
@@ -987,8 +1005,10 @@ function TokamakCadViewerSession({
       controls.minDistance = 4.2;
       controls.maxDistance = 15;
       controls.autoRotateSpeed = 0.72;
+      controls.addEventListener('start', () => { if (!disposed) cadActionUserInteractingRef.current = true; });
       controls.addEventListener('end', () => {
         if (disposed) return;
+        cadActionUserInteractingRef.current = false;
         const snapshot = {
           position: camera.position.toArray() as [number, number, number],
           target: controls.target.toArray() as [number, number, number],
@@ -2005,6 +2025,11 @@ function TokamakCadViewerSession({
           camera.updateProjectionMatrix();
           controls.update();
         },
+        renderForAction: () => {
+          if (disposed || renderer.getContext().isContextLost()) throw new Error('CAD 渲染上下文不可用。');
+          controls.update();
+          renderer.render(scene, camera);
+        },
         resize,
         efitOverlay: localEfitOverlay,
         diagnosticOverlay: localDiagnosticOverlay,
@@ -2235,6 +2260,139 @@ function TokamakCadViewerSession({
     if (retryAnonymousHigh) setModelAttempt((value) => value + 1);
     else setSelectedModelId(next.id);
   };
+  const cadReadyRef = useRef({ status, activate, ehl2LoadBlocked, manifest, selectedModel });
+  const cadBindingsRef = useRef<{
+    getContext: () => Partial<Pick<SiteActionContext, 'viewer'>>;
+    execute: (action: SiteAction, signal: AbortSignal) => Promise<{ message: string; undo: (signal: AbortSignal) => Promise<void> }>;
+  } | null>(null);
+
+  useEffect(() => {
+    cadReadyRef.current = { status, activate, ehl2LoadBlocked, manifest, selectedModel };
+    const applySnapshot = (next: Ehl2DiagnosticViewerState, viewer: ViewerApi, cameraOverride?: ViewSnapshot) => {
+      if (viewerRef.current !== viewer) throw new Error('模型已切换，此 CAD 操作已失效。');
+      const previous = cadActionStateRef.current;
+      const selected = new Set(next.selectedPartIds);
+      const hidden = new Set(next.hiddenPartIds);
+      const isolated = new Set(next.isolatedPartIds);
+      selectedPartIdsRef.current = selected;
+      hiddenPartIdsRef.current = hidden;
+      isolatedPartIdsRef.current = isolated;
+      opacityRef.current = { global: next.globalOpacity, selected: next.selectedOpacity };
+      analyticPlasmaVisibleRef.current = next.analyticPlasmaVisible;
+      interactionRef.current = { activeView: next.activeView, autoRotate: next.autoRotate, wireframe: next.wireframe,
+        clipping: next.clipping, clipAxis: next.clipAxis, clipOffset: next.clipOffset };
+      cameraViewRef.current = next.cameraView;
+      viewSnapshotRef.current = next.cameraView;
+      setActiveView(next.activeView); setAutoRotate(next.autoRotate); setWireframe(next.wireframe);
+      setClipping(next.clipping); setClipAxis(next.clipAxis); setClipOffset(next.clipOffset);
+      setGlobalOpacity(next.globalOpacity); setSelectedOpacity(next.selectedOpacity);
+      setAnalyticPlasmaVisible(next.analyticPlasmaVisible);
+      setSelectedPartIds(selected); setSelectedPartId(next.selectedPartIds[0] ?? null);
+      setHiddenPartIds(hidden); setIsolatedPartIds(isolated); setCameraView(next.cameraView);
+      const cameraPose = cameraOverride ?? next.cameraView;
+      if (cameraPose) viewer.applyView(cameraPose); else viewer.setView(next.activeView);
+      viewer.controls.autoRotate = next.autoRotate;
+      if (previous?.wireframe !== next.wireframe) viewer.setWireframe(next.wireframe);
+      if (!previous || previous.clipping !== next.clipping || previous.clipAxis !== next.clipAxis || previous.clipOffset !== next.clipOffset) {
+        viewer.setClipping(next.clipping, next.clipAxis, next.clipOffset);
+      }
+      const partOpacityChanged = JSON.stringify(previous?.partOpacities) !== JSON.stringify(next.partOpacities);
+      if (partOpacityChanged) setPartOpacityMap(viewer.setPartOpacities(next.partOpacities));
+      if (partOpacityChanged || previous?.globalOpacity !== next.globalOpacity || previous?.selectedOpacity !== next.selectedOpacity) {
+        viewer.setOpacity(next.globalOpacity, next.selectedOpacity);
+      }
+      viewer.setAnalyticPlasmaVisible(next.analyticPlasmaVisible);
+      viewer.applyVisibility(hidden, isolated);
+      viewer.selectParts(selected);
+    };
+    const applyAndRender = async (next: Ehl2DiagnosticViewerState, viewer: ViewerApi, signal: AbortSignal, cameraOverride?: ViewSnapshot) => {
+      if (signal.aborted) throw cadActionAbortError();
+      applySnapshot(next, viewer, cameraOverride);
+      const expected = JSON.stringify(next);
+      await waitForSiteCondition(() => {
+        if (viewerRef.current !== viewer) throw new Error('模型已切换，此 CAD 操作已失效。');
+        if (cadActionUserInteractingRef.current) throw new Error('鼠标已接管 CAD 视口，操作已停止。');
+        return JSON.stringify(cadActionStateRef.current) === expected;
+      }, signal, 2_000);
+      await renderCadActionFrame(() => {
+        if (viewerRef.current !== viewer) throw new Error('模型已切换，此 CAD 操作已失效。');
+        viewer.renderForAction();
+      }, signal);
+    };
+    cadBindingsRef.current = {
+      getContext: () => {
+        const state = cadActionStateRef.current;
+        const fingerprint = JSON.stringify([manifestUrl, selectedModel?.id, loadedQuality, status, state, cameraViewRef.current, cadActionUserInteractingRef.current]);
+        if (fingerprint !== cadActionRevisionRef.current.fingerprint) {
+          cadActionRevisionRef.current = { fingerprint, revision: cadActionRevisionRef.current.revision + 1 };
+        }
+        return { viewer: {
+          viewerId, deviceId: cadActionScope?.deviceId ?? viewerId, ready: status === 'ready' && !!viewerRef.current,
+          revision: cadActionRevisionRef.current.revision,
+          parts: anonymousVisualization ? [] : parts.slice(0, 80).map(part => ({ id: part.id, label: content(part.title) })),
+          selectedPartIds: [...selectedPartIdsRef.current].slice(0, 32), view: cameraViewRef.current ? 'custom' : state?.activeView ?? 'iso',
+        } };
+      },
+      execute: async (action, signal) => {
+        if (!isCadViewerAction(action)) throw new Error('此视口不支持该操作。');
+        let activationRequested = false;
+        await waitForSiteCondition(() => {
+          if (!cadActionMountedRef.current) throw cadActionAbortError();
+          const current = cadReadyRef.current;
+          if (current.status === 'error') throw new Error('CAD 模型加载失败，请先在视口中重试。');
+          if (ehl2Session && !currentEhl2RuntimePolicy().allowed) throw new Error('当前设备不满足该 CAD 模型的加载条件。');
+          if (current.status === 'ready' && viewerRef.current) return true;
+          if (current.status === 'idle' && current.manifest && current.selectedModel && !activationRequested) {
+            activationRequested = true;
+            current.activate();
+          }
+          return false;
+        }, signal, 55_000);
+        const viewer = viewerRef.current;
+        const state = cadActionStateRef.current;
+        if (!viewer || !state) throw new Error('CAD 视口尚未就绪。');
+        if (cadActionUserInteractingRef.current) throw new Error('请先结束当前鼠标操作，再执行对话命令。');
+        const currentManifest = cadReadyRef.current.manifest;
+        const resolved = prepareCadSiteAction(state, action, {
+          anonymous: isAnonymousVisualizationManifest(currentManifest),
+          partIds: new Set(viewer.nodeByPartId.keys()),
+          defaults: { ...defaultInteraction, analyticPlasmaVisible: currentManifest?.visualizations?.analyticPlasma
+            ? ANALYTIC_PLASMA_VISIBLE_BY_DEFAULT : state.analyticPlasmaVisible },
+        }, viewer.captureView());
+        try {
+          await applyAndRender(resolved.state, viewer, signal, resolved.cameraOverride);
+        } catch (error) {
+          // Never undo a later user edit or a replacement model while cancelling this action.
+          if (!cadActionUserInteractingRef.current && viewerRef.current === viewer && JSON.stringify(cadActionStateRef.current) === JSON.stringify(resolved.state)) {
+            applySnapshot(resolved.before, viewer, resolved.beforeCamera);
+          }
+          throw error;
+        }
+        return {
+          message: resolved.message,
+          undo: async (undoSignal) => {
+            if (viewerRef.current !== viewer) throw new Error('模型已切换，不能撤销旧视口的操作。');
+            if (cadActionUserInteractingRef.current || JSON.stringify(cadActionStateRef.current) !== JSON.stringify(resolved.state)) {
+              throw new Error('显示状态已被后续操作改变，不能覆盖新状态来撤销旧命令。');
+            }
+            await applyAndRender(resolved.before, viewer, undoSignal, resolved.beforeCamera);
+          },
+        };
+      },
+    };
+  });
+
+  useSiteActionAdapter(cadActionScope?.deviceId === viewerId && manifest ? {
+    id: `cad-viewer:${cadAdapterId}`, path: '/',
+    capabilities: CAD_VIEWER_ACTION_TYPES.filter(type => type !== 'cad.select_parts' || (manifest !== null && !anonymousVisualization)),
+    getContext: () => cadBindingsRef.current?.getContext() ?? {},
+    execute: async (action, { signal }) => {
+      const binding = cadBindingsRef.current;
+      if (!binding) throw new Error('CAD 视口尚未注册。');
+      return binding.execute(action, signal);
+    },
+  } : null);
+
   const ready = status === 'ready';
   const ehl2ConstraintMessage = ehl2RuntimePolicy === null
     ? t('viewer.ehlChecking')
@@ -2341,9 +2499,9 @@ function TokamakCadViewerSession({
               ? t('viewer.ehlLaunchCopy', { size: estimatedMegabytes })
               : anonymousVisualization
                 ? t('viewer.anonymousLaunchCopy', { model: content(selectedModel?.label ?? t('viewer.standard')), size: estimatedMegabytes })
-                : t('viewer.launchCopy', { model: content(selectedModel?.label ?? t('viewer.standard')), size: estimatedMegabytes })}</span>{lodNotice && <em className="tokamakCadLodNotice">{lodNotice}</em>}<button type="button" onClick={activate} disabled={!manifest || !selectedModel}>{t('viewer.launch')} <i>→</i></button></div>}
+                : t('viewer.launchCopy', { model: content(selectedModel?.label ?? t('viewer.standard')), size: estimatedMegabytes })}</span>{lodNotice && <em className="tokamakCadLodNotice">{lodNotice}</em>}<button type="button" data-agent-safe="click" aria-label={t('viewer.launch')} onClick={activate} disabled={!manifest || !selectedModel}>{t('viewer.launch')} <i>→</i></button></div>}
             {status === 'loading' && <div className="tokamakCadLoading" role="status" aria-live="polite"><span>MANIFEST → {selectedModel?.quality === 'high' ? 'HIGH LOD' : 'PREVIEW LOD'} → GPU</span><div><i style={{ width: `${Math.max(6, progress)}%` }} /></div><b>{progress > 0 ? `${progress}% · ${content(selectedModel?.label ?? 'MODEL')} ${estimatedMegabytes} MB${selectedModel?.decodedGpuBytes ? ` · ${t('viewer.decodedMemory', { size: megabytes(selectedModel.decodedGpuBytes) })}` : ''}` : t('viewer.loadingModel', { model: content(selectedModel?.label ?? t('viewer.standard')) })}</b>{shardProgressLabel && <strong className="tokamakCadShardProgress">{shardProgressLabel}</strong>}{lodNotice && <em className="tokamakCadLodNotice">{lodNotice}</em>}</div>}
-            {status === 'error' && <div className="tokamakCadFallback"><div className="tokamakFallbackTorus" aria-hidden="true"><span /><i /><b /></div><p>WEBGL FALLBACK</p><h3>{t('viewer.unavailable')}</h3><span>{errorMessage}</span><div><button type="button" onClick={activate}>{t('viewer.reload')}</button>{showDownloadActions && <a href={sourceCadPath} download>{t('viewer.downloadStep')}</a>}</div></div>}
+            {status === 'error' && <div className="tokamakCadFallback"><div className="tokamakFallbackTorus" aria-hidden="true"><span /><i /><b /></div><p>WEBGL FALLBACK</p><h3>{t('viewer.unavailable')}</h3><span>{errorMessage}</span><div><button type="button" data-agent-safe="click" aria-label={t('viewer.reload')} onClick={activate}>{t('viewer.reload')}</button>{showDownloadActions && <a href={sourceCadPath} download>{t('viewer.downloadStep')}</a>}</div></div>}
             {!anonymousVisualization && <div className="tokamakCadLegend" aria-label={t('viewer.legendAria')}><span title={manifest?.visualizations?.analyticPlasma ? t('viewer.analyticPlasmaHelp') : undefined}><i className="plasma" />{manifest?.visualizations?.analyticPlasma ? t('viewer.analyticPlasma') : 'PLASMA'}</span><span><i className="tf" />TF COILS</span><span><i className="pf" />PF COILS / CASES</span><span><i className="structure" />STRUCTURE</span></div>}
             <div className="tokamakCadReadout" aria-label={t('viewer.statsAria')}><span><small>QUALITY</small><b>{content(presentationModel?.label ?? 'STANDARD')} · {estimatedMegabytes} MB</b></span><span><small>MESHES</small><b>{ready ? formatCount(stats.meshes, locale) : '—'}</b></span><span><small>TRIANGLES</small><b>{ready ? formatCount(stats.triangles, locale) : viewerModelTriangleCount(presentationModel) ? formatCount(viewerModelTriangleCount(presentationModel) ?? 0, locale) : '—'}</b></span><span><small>RENDER</small><b>{ready ? stats.renderer : 'ON DEMAND'}</b></span></div>
           </div>

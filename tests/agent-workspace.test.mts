@@ -14,6 +14,7 @@ const layout = read('app/layout.tsx');
 const search = read('app/search/SearchWorkspace.tsx');
 const graph = read('app/knowledge-graph/KnowledgeGraphExplorer.tsx');
 const chat = read('app/components/knowledge-chat/KnowledgeChat.tsx');
+const nativeAgent = read('app/components/agent-workspace/NativeAgent.tsx');
 const messages = read('app/i18n/messages.ts');
 
 test('the Agent Workspace is mounted once at the root and owns the single chat surface', () => {
@@ -26,7 +27,7 @@ test('the Agent Workspace is mounted once at the root and owns the single chat s
 });
 
 test('chat is the primary surface, Context is not a view, and Canvas opens only on demand', () => {
-  assert.match(workspace, /<div className="agentWorkspaceBody">\s*<div className="agentWorkspaceChat">/);
+  assert.match(workspace, /<div className="agentWorkspaceBody">\s*<div className="agentWorkspaceChat"/);
   assert.match(workspace, /showContext=\{false\}/);
   assert.match(workspace, /onCanvasArtifact=\{acceptCanvasArtifact\}/);
   assert.match(chat, /if \(payload\.canvas\) onCanvasArtifact\?\.\(\{\s*\.\.\.payload\.canvas,\s*sourceTurnId: assistantTurn\.id,\s*citations: payload\.citations,/);
@@ -51,6 +52,19 @@ test('the anonymous workspace login bridge always opens the fixed Sites account 
   assert.doesNotMatch(workspace, /authenticatedWorkspaceOrigin\}\$\{pathname\}/);
   assert.match(workspace, /登录后使用任意模型对话/);
   assert.match(workspace, /Sign in \/ AI workspace ↗/);
+});
+
+test('unavailable native connections show a completed status and an explicit usable reference entry', () => {
+  assert.match(nativeAgent, /const checkingConnection = connection === null && !connectionError/);
+  assert.match(nativeAgent, /const connectionUnavailable = connection\?\.available === false \|\| Boolean\(connectionError\)/);
+  assert.match(nativeAgent, /checkingConnection \? \(en \? 'Checking availability…'/);
+  assert.match(nativeAgent, /当前站点未开放模型连接/);
+  assert.match(nativeAgent, /Model connections are not enabled on this site/);
+  assert.match(nativeAgent, /\{connectionUnavailable && <button[^>]+onClick=\{onOpenReference\}/);
+  assert.match(nativeAgent, /使用检索与快捷操作/);
+  assert.match(workspace, /onOpenReference=\{\(\) => setWorkspaceMode\('reference'\)\}/);
+  // The hidden native panel must never switch tabs from its connection effect.
+  assert.doesNotMatch(nativeAgent, /onOpenReference\s*\(/);
 });
 
 test('chat sign-in guidance follows structured authentication state in both locales', () => {

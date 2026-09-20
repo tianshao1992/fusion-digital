@@ -2,6 +2,7 @@
 
 import {
   useEffect,
+  useId,
   useMemo,
   useRef,
   useState,
@@ -10,6 +11,11 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from 'react';
 import { trackAnalyticsContent } from '@/app/analytics/client';
+import { waitForSiteCondition } from '../agent/site-action-runtime';
+import { useSiteActionAdapter } from '../components/agent-workspace/SiteOperations';
+import { isSiteAction } from '../agent/site-actions';
+import { CadSiteActionScope } from '../components/device-viewer/cadSiteActionScope';
+import { cadActionAbortError, renderCadActionFrame } from '../components/device-viewer/cadSiteActions';
 import TokamakCadViewer from '../components/TokamakCadViewer';
 import type { Ehl2DiagnosticOverlayOptions } from '../components/device-viewer/Ehl2DiagnosticThreeOverlay';
 import { createEfitHybridDataSource, createEfitStore, EfitPanel, type EfitStore } from '../components/efit';
@@ -343,6 +349,45 @@ export default function MultiDeviceWorkspace({ catalog }: { catalog: DeviceCatal
   const { content, t } = useI18n();
   const [selectedId, setSelectedId] = useState(catalog.devices[0].id);
   const current = catalog.devices.find((device) => device.id === selectedId) ?? catalog.devices[0];
+  const catalogAdapterId = useId();
+  const selectedDeviceRef = useRef(current.id);
+  const workspaceMountedRef = useRef(false);
+  const cadActionScope = useMemo(() => ({ deviceId: current.id }), [current.id]);
+
+  useEffect(() => {
+    workspaceMountedRef.current = true;
+    return () => { workspaceMountedRef.current = false; };
+  }, []);
+  useEffect(() => { selectedDeviceRef.current = current.id; }, [current.id]);
+
+  const selectDevice = async (deviceId: string, signal: AbortSignal) => {
+    if (signal.aborted || !workspaceMountedRef.current) throw cadActionAbortError();
+    setSelectedId(deviceId);
+    await waitForSiteCondition(() => {
+      if (!workspaceMountedRef.current) throw cadActionAbortError();
+      return selectedDeviceRef.current === deviceId;
+    }, signal, 2_000);
+    await renderCadActionFrame(() => {
+      if (!workspaceMountedRef.current || selectedDeviceRef.current !== deviceId) throw new Error('装置选择已改变。');
+    }, signal);
+  };
+  useSiteActionAdapter({
+      id: `cad-device-catalog:${catalogAdapterId}`, path: '/', capabilities: ['cad.open'], getContext: () => ({}),
+      execute: async (action, { signal }) => {
+        if (!isSiteAction(action) || action.type !== 'cad.open') throw new Error('装置选择参数无效。');
+        const device = catalog.devices.find(item => item.id === action.deviceId);
+        if (!device || device.viewer.mode !== 'real-3d' || !device.viewer.manifestEndpoint) throw new Error('该装置不在当前可交互 CAD 目录中。');
+        const previous = selectedDeviceRef.current;
+        await selectDevice(device.id, signal);
+        return {
+          message: `已选择 ${device.title}；模型将按页面加载策略准备，后续显示操作会等待模型就绪。`,
+          undo: async (undoSignal) => {
+            if (selectedDeviceRef.current !== device.id) throw new Error('装置已被后续操作切换，不能覆盖新选择来撤销旧命令。');
+            await selectDevice(previous, undoSignal);
+          },
+        };
+      },
+  });
 
   useEffect(() => {
     trackAnalyticsContent('prototype-device', selectedId);
@@ -361,7 +406,7 @@ export default function MultiDeviceWorkspace({ catalog }: { catalog: DeviceCatal
     document.getElementById(`device-tab-${next.id}`)?.focus();
   };
 
-  return <section className="multiDeviceSection" id="prototype-workspace" aria-labelledby="multi-device-title">
+  return <CadSiteActionScope.Provider value={cadActionScope}><section className="multiDeviceSection" id="prototype-workspace" aria-labelledby="multi-device-title">
     <div className="multiDeviceIntro">
       <h2 id="multi-device-title">{t('workspace.title')}</h2>
     </div>
@@ -413,7 +458,7 @@ export default function MultiDeviceWorkspace({ catalog }: { catalog: DeviceCatal
     })}
     <noscript><Ehl2DiagnosticNoScriptSummary /></noscript>
 
-  </section>;
+  </section></CadSiteActionScope.Provider>;
 }
 
 function DeviceAnalysisPanel({

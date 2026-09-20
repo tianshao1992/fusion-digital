@@ -78,6 +78,7 @@ export function ThemeSwitcher({
           key={item}
           ref={(node) => { refs.current[index] = node; }}
           type="button"
+          data-agent-safe="click"
           role="radio"
           aria-checked={preference === item}
           aria-label={activeLabels[item]}

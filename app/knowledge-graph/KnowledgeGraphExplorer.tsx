@@ -326,15 +326,15 @@ export default function KnowledgeGraphExplorer({ initial, devices }: ExplorerPro
     <aside className="kgFilters">
       <p className="kgPanelIndex">01 / QUERY</p>
       <h2>{ui.heading}</h2>
-      <form onSubmit={(event) => { event.preventDefault(); void load(); }}>
-        <label><span>{ui.entityTopic}</span><input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={ui.queryExample} /></label>
-        <label><span>{ui.domain}</span><select value={domain} onChange={(event) => setDomain(event.target.value)}><option value="all">{ui.allDomains}</option>{Object.entries(domainMeta).map(([value, meta]) => <option value={value} key={value}>{meta[key]}</option>)}</select></label>
-        <label><span>{ui.type}</span><select value={type} onChange={(event) => setType(event.target.value)}><option value="all">{ui.allTypes}</option>{Object.entries(typeMeta).map(([value, meta]) => <option value={value} key={value}>{meta[key]}</option>)}</select></label>
-        <label><span>{ui.device}</span><select value={device} onChange={(event) => setDevice(event.target.value)}><option value="">{ui.allDevices}</option>{devices.slice(0, 90).map((item) => <option value={item.label} key={item.id}>{locale === 'en' && HAN.test(item.label) ? `Fusion device · ${clientRecordCode(item.id)}` : item.label} · {item.degree}</option>)}</select></label>
-        <button type="submit" disabled={pending}>{pending ? ui.searching : ui.search}</button>
+      <form data-agent-readonly="true" onSubmit={(event) => { event.preventDefault(); void load(); }}>
+        <label><span>{ui.entityTopic}</span><input data-agent-safe="fill" type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={ui.queryExample} /></label>
+        <label><span>{ui.domain}</span><select data-agent-safe="select" aria-label={ui.domain} value={domain} onChange={(event) => setDomain(event.target.value)}><option value="all">{ui.allDomains}</option>{Object.entries(domainMeta).map(([value, meta]) => <option value={value} key={value}>{meta[key]}</option>)}</select></label>
+        <label><span>{ui.type}</span><select data-agent-safe="select" aria-label={ui.type} value={type} onChange={(event) => setType(event.target.value)}><option value="all">{ui.allTypes}</option>{Object.entries(typeMeta).map(([value, meta]) => <option value={value} key={value}>{meta[key]}</option>)}</select></label>
+        <label><span>{ui.device}</span><select data-agent-safe="select" aria-label={ui.device} value={device} onChange={(event) => setDevice(event.target.value)}><option value="">{ui.allDevices}</option>{devices.slice(0, 90).map((item) => <option value={item.label} key={item.id}>{locale === 'en' && HAN.test(item.label) ? `Fusion device · ${clientRecordCode(item.id)}` : item.label} · {item.degree}</option>)}</select></label>
+        <button data-agent-safe="click" type="submit" disabled={pending}>{pending ? ui.searching : ui.search}</button>
       </form>
       <div className="kgFilterFoot">
-        <button type="button" onClick={() => { setQuery(''); setDomain('all'); setType('all'); setDevice(''); setLimit(350); setData(initial); setSelectedId(initial.nodes[0]?.id ?? ''); }}>{ui.reset}</button>
+        <button data-agent-safe="click" type="button" onClick={() => { setQuery(''); setDomain('all'); setType('all'); setDevice(''); setLimit(350); setData(initial); setSelectedId(initial.nodes[0]?.id ?? ''); }}>{ui.reset}</button>
         <button type="button" onClick={() => agentWorkspace.open({ context: {
           path: '/knowledge-graph',
           title: ui.chatContext,
@@ -357,13 +357,13 @@ export default function KnowledgeGraphExplorer({ initial, devices }: ExplorerPro
       <ScientificChart id="fusion-knowledge-graph" option={option} ariaLabel={ui.chartAria} fallbackSrc="" fallbackAlt="" height={670} eager onChartClick={handleChartClick} fallback={<div className="kgChartFallback"><b>ENTITY → CLAIM → EVIDENCE</b><span>{ui.loading}</span></div>} />
       <div className="kgCanvasTools">
         <span>{ui.controls}</span>
-        <label>{ui.nodeLimit} <select value={limit} onChange={(event) => setLimit(Number(event.target.value))}><option value="200">200</option><option value="350">350</option><option value="500">500</option><option value="800">800</option></select></label>
-        {data.truncated && limit < 800 && <button type="button" onClick={() => { const next = Math.min(800, limit + 150); setLimit(next); void load({ requestedLimit: next, focus: data.query.focus || undefined }); }}>{ui.more}</button>}
+        <label>{ui.nodeLimit} <select data-agent-safe="select" aria-label={ui.nodeLimit} value={limit} onChange={(event) => setLimit(Number(event.target.value))}><option value="200">200</option><option value="350">350</option><option value="500">500</option><option value="800">800</option></select></label>
+        {data.truncated && limit < 800 && <button data-agent-safe="click" type="button" onClick={() => { const next = Math.min(800, limit + 150); setLimit(next); void load({ requestedLimit: next, focus: data.query.focus || undefined }); }}>{ui.more}</button>}
       </div>
       <noscript><p className="kgNoScriptNotice">{ui.noScript} <a href="/data/fusion-knowledge-graph.json">{ui.snapshot}</a></p></noscript>
       <details className="kgAccessibleList">
-        <summary>{ui.browse(data.nodes.length)}</summary>
-        <div>{data.nodes.map((node) => <button type="button" key={node.id} onClick={() => setSelectedId(node.id)} aria-pressed={node.id === selectedId}><b>{typeMeta[node.type][key]}</b><span>{nodeLabel(node, locale)}</span><small>{domainMeta[node.domain][key]} · {ui.recorded(node.degree)}</small></button>)}</div>
+        <summary data-agent-safe="click">{ui.browse(data.nodes.length)}</summary>
+        <div>{data.nodes.map((node) => <button data-agent-safe="click" type="button" key={node.id} onClick={() => setSelectedId(node.id)} aria-pressed={node.id === selectedId}><b>{typeMeta[node.type][key]}</b><span>{nodeLabel(node, locale)}</span><small>{domainMeta[node.domain][key]} · {ui.recorded(node.degree)}</small></button>)}</div>
       </details>
     </div>
 
@@ -380,8 +380,8 @@ export default function KnowledgeGraphExplorer({ initial, devices }: ExplorerPro
         <p className="kgDescription">{nodeDescription(selected, locale)}</p>
         <div className="kgBadges">{selected.evidenceLevel && <span>{selected.evidenceLevel} {ui.evidence}</span>}{selected.deploymentLevel && <span>{selected.deploymentLevel} {ui.deployment}</span>}<span>{ui.recorded(selected.degree)}</span></div>
         <div className="kgNeighborhood">
-          <label>{ui.depth} <select value={depth} onChange={(event) => setDepth(Number(event.target.value) as 1 | 2)}><option value="1">{ui.oneHop}</option><option value="2">{ui.twoHops}</option></select></label>
-          <button type="button" disabled={pending} onClick={() => void load({ focus: selected.id })}>{ui.expand}</button>
+          <label>{ui.depth} <select data-agent-safe="select" aria-label={ui.depth} value={depth} onChange={(event) => setDepth(Number(event.target.value) as 1 | 2)}><option value="1">{ui.oneHop}</option><option value="2">{ui.twoHops}</option></select></label>
+          <button data-agent-safe="click" type="button" disabled={pending} onClick={() => void load({ focus: selected.id })}>{ui.expand}</button>
         </div>
         <section className="kgEvidenceSources" aria-labelledby="kg-evidence-sources-title">
           <h3 id="kg-evidence-sources-title">{ui.sourcesTitle}</h3>

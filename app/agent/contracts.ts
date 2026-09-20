@@ -1,6 +1,7 @@
 import type { SearchHit } from "@/app/search/search-core";
+import type { SiteActionPlan } from './site-actions';
 
-export type AgentTurnMode = "assistant-chat" | "ai-grounded" | "retrieval-only" | "assistant-direct";
+export type AgentTurnMode = "assistant-chat" | "ai-grounded" | "retrieval-only" | "assistant-direct" | "site-operation";
 
 export const AGENT_CANVAS_LIMITS = Object.freeze({
   maxTitleCharacters: 120,
@@ -31,6 +32,8 @@ export type AgentCompletedMessage = {
   results: SearchHit[];
   notice?: string;
   canvas?: AgentCanvasArtifact | null;
+  /** A proposed local UI plan; message completion does not prove page execution. */
+  actionPlan?: SiteActionPlan;
   conversationId?: string;
   provider?: "openai" | "anthropic" | "deepseek" | "kimi";
   model?: string;

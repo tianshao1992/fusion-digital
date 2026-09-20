@@ -3,10 +3,14 @@ import { createHash } from 'node:crypto';
 import { readFile, readdir, stat } from 'node:fs/promises';
 import test from 'node:test';
 
+async function loadBuiltWorker() {
+  // React permits one RSC renderer per process. Reuse the production module;
+  // each fetch below still receives a fresh Request, bindings and context.
+  return (await import('../dist/server/index.js')).default;
+}
+
 async function render(pathname = '/', headers = {}) {
-  const workerUrl = new URL('../dist/server/index.js', import.meta.url);
-  workerUrl.searchParams.set('test', `${process.pid}-${Date.now()}-${pathname}`);
-  const { default: worker } = await import(workerUrl.href);
+  const worker = await loadBuiltWorker();
   return worker.fetch(
     new Request(`http://localhost${pathname}`, { headers: { accept: 'text/html', ...headers } }),
     { ASSETS: { fetch: async () => new Response('Not found', { status: 404 }) } },
@@ -121,9 +125,7 @@ test('production build retains every catalog device and excludes only obsolete r
   ));
   assert.ok(sourceSearchIndex.entries.length > 0, 'tracked search index source must remain available');
 
-  const workerUrl = new URL('../dist/server/index.js', import.meta.url);
-  workerUrl.searchParams.set('search-test', `${process.pid}-${Date.now()}`);
-  const { default: worker } = await import(workerUrl.href);
+  const worker = await loadBuiltWorker();
   const searchResponse = await worker.fetch(
     new Request('http://localhost/api/search?q=EFIT&locale=en&limit=3', {
       headers: { accept: 'application/json' },
@@ -1032,7 +1034,7 @@ test('ships and server-renders the evidence-first knowledge graph', async () => 
   assert.match(html, /1 跳 · 直接关系/);
   assert.match(html, /在智能体中继续/);
   assert.match(html, /aria-controls="fusion-agent-workspace"/);
-  assert.match(html, /智能体.*持续对话/s);
+  assert.match(html, /AI 助手.*对话与操作/s);
   assert.match(html, /href="\/platform#contracts"/);
   assert.doesNotMatch(html, /04 \/ GOVERNANCE|图谱是证据索引/);
 });
@@ -1054,7 +1056,7 @@ test('ships and server-renders evidence-grounded knowledge search', async () => 
   assert.match(html, /检索与问答说明/);
   assert.match(html, /在侧栏继续提问/);
   assert.match(html, /aria-controls="fusion-agent-workspace"/);
-  assert.match(html, /AI 助手.*持续对话/s);
+  assert.match(html, /AI 助手.*对话与操作/s);
   assert.match(html, /证据不足时不生成结论/);
   assert.match(html, /href="\/platform#contracts"/);
   assert.doesNotMatch(html, /03 \/ TRUST BOUNDARY|当前能力边界/);

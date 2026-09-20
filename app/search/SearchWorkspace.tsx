@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useAgentWorkspace } from "@/app/components/agent-workspace/AgentWorkspace";
 import { useI18n } from "@/app/i18n";
 import { trackAnalyticsContent } from "@/app/analytics/client";
@@ -14,6 +15,7 @@ const typeValues = ["", "work", "paper", "code", "tool", "device", "framework"] 
 export default function SearchWorkspace() {
   const { locale } = useI18n();
   const agentWorkspace = useAgentWorkspace();
+  const urlQuery = useSearchParams().get('q')?.normalize('NFKC').trim().slice(0, 240);
   const copy = locale === "en" ? EN : ZH;
   const examples = copy.examples;
   const [query, setQuery] = useState("EXL-50U");
@@ -26,8 +28,18 @@ export default function SearchWorkspace() {
   const requestId = useRef(0);
 
   // Re-project the initial result set whenever the UI language changes.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { void runSearch(query); }, [locale]);
+  useEffect(() => {
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      const nextQuery = urlQuery ?? query;
+      if (urlQuery !== undefined) setQuery(urlQuery);
+      void runSearch(nextQuery);
+    });
+    return () => { cancelled = true; };
+    // User edits are submitted explicitly; only URL navigation and locale changes refresh automatically.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locale, urlQuery]);
 
   async function runSearch(nextQuery = query) {
     const current = ++requestId.current;
@@ -61,17 +73,17 @@ export default function SearchWorkspace() {
   }
 
   return <div className="searchWorkspace">
-    <form className="searchConsole" onSubmit={submitSearch} role="search">
+    <form className="searchConsole" onSubmit={submitSearch} role="search" data-agent-readonly="true">
       <label className="queryField">
         <span>{copy.queryLabel}</span>
-        <textarea value={query} onChange={(event) => setQuery(event.target.value.slice(0, 600))} maxLength={600} rows={2} placeholder={copy.placeholder} />
+        <textarea data-agent-safe="fill" value={query} onChange={(event) => setQuery(event.target.value.slice(0, 600))} maxLength={600} rows={2} placeholder={copy.placeholder} />
         <small>{query.length} / 600</small>
       </label>
       <div className="searchControls">
-        <select aria-label={copy.domainAria} value={domain} onChange={(event) => setDomain(event.target.value)}>{domainValues.map((value) => <option key={value} value={value}>{copy.domains[value]}</option>)}</select>
-        <select aria-label={copy.typeAria} value={type} onChange={(event) => setType(event.target.value)}>{typeValues.map((value) => <option key={value} value={value}>{copy.types[value]}</option>)}</select>
-        <label className="citedToggle"><input type="checkbox" checked={citedOnly} onChange={(event) => setCitedOnly(event.target.checked)} />{copy.citedOnly}</label>
-        <button type="submit" disabled={searching}>{searching ? copy.searching : copy.search}</button>
+        <select data-agent-safe="select" aria-label={copy.domainAria} value={domain} onChange={(event) => setDomain(event.target.value)}>{domainValues.map((value) => <option key={value} value={value}>{copy.domains[value]}</option>)}</select>
+        <select data-agent-safe="select" aria-label={copy.typeAria} value={type} onChange={(event) => setType(event.target.value)}>{typeValues.map((value) => <option key={value} value={value}>{copy.types[value]}</option>)}</select>
+        <label className="citedToggle"><input data-agent-safe="click" type="checkbox" checked={citedOnly} onChange={(event) => setCitedOnly(event.target.checked)} />{copy.citedOnly}</label>
+        <button data-agent-safe="click" type="submit" disabled={searching}>{searching ? copy.searching : copy.search}</button>
       </div>
       <div className="queryExamples"><button className="agentLaunch" type="button" onClick={() => agentWorkspace.open({
         context: { path: '/search', title: copy.chatContext, focusLabel: query, focusDescription: `${copy.domainAria}: ${copy.domains[domain as keyof typeof copy.domains]} · ${copy.typeAria}: ${copy.types[type as keyof typeof copy.types]}` },

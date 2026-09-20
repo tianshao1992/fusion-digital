@@ -4,6 +4,7 @@ import {
   CHAT_LIMITS,
   compactConversation,
   deserializeConversation,
+  endOperationForLocaleChange,
   historyForRequest,
   knowledgeChatStorageKey,
   serializeConversation,
@@ -66,6 +67,47 @@ test('English and Chinese conversations use isolated persistence keys', () => {
   assert.equal(knowledgeChatStorageKey('en'), 'fusiondigital.knowledge-chat.v1.en');
   assert.equal(knowledgeChatStorageKey('zh-CN'), 'fusiondigital.knowledge-chat.v1.zh-CN');
   assert.notEqual(knowledgeChatStorageKey('en'), knowledgeChatStorageKey('zh-CN'));
+});
+
+test('leaving a language seals the active operation while retaining each actual receipt once', () => {
+  const receipt = { actionId: 'active-0', type: 'cad.open' as const, status: 'applied' as const,
+    message: 'Model selected', path: '/digital-prototype' };
+  const active: ChatTurn = { ...turn(1), id: 'active', mode: 'site-operation', content: '正在执行网站操作…', actionReceipts: [receipt] };
+  const input = [turn(0), active, turn(2)];
+  const snapshot = structuredClone(input);
+  const ended = endOperationForLocaleChange(input, { turn: active, receipts: [receipt] }, 'zh-CN');
+  assert.match(ended[1].content, /已切换语言.*请求已结束/);
+  assert.deepEqual(ended[1].actionReceipts, [receipt]);
+  assert.deepEqual(ended.map(item => item.id), input.map(item => item.id));
+  assert.deepEqual(input, snapshot);
+  assert.equal(ended[0].content, input[0].content);
+  assert.equal(ended[2].content, input[2].content);
+  assert.deepEqual(deserializeConversation(serializeConversation(ended)), ended);
+});
+
+test('a receipt that arrived before React committed is retained in the departing language only', () => {
+  const receipt = { actionId: 'active-0', type: 'cad.set_view' as const, status: 'applied' as const,
+    message: 'Top view rendered', path: '/digital-prototype' };
+  const active: ChatTurn = { ...turn(1), id: 'active', mode: 'site-operation', content: '正在执行网站操作…' };
+  const storage = new Map<string, string>();
+  const english = serializeConversation([{ ...turn(3), content: 'Existing English history' }]);
+  storage.set(knowledgeChatStorageKey('en'), english);
+  storage.set(knowledgeChatStorageKey('zh-CN'), serializeConversation(endOperationForLocaleChange([turn(0)], { turn: active, receipts: [receipt] }, 'zh-CN')));
+  const restoredChinese = deserializeConversation(storage.get(knowledgeChatStorageKey('zh-CN'))!);
+  assert.deepEqual(restoredChinese[1].actionReceipts, [receipt]);
+  assert.equal(restoredChinese[1].id, 'active');
+  assert.equal(storage.get(knowledgeChatStorageKey('en')), english);
+  assert.equal(restoredChinese.flatMap(item => item.actionReceipts ?? []).some(item => item.status === 'cancelled'), false, 'no unobserved cancellation receipt is invented');
+});
+
+test('language changes during planning do not create an assistant operation or execution result', () => {
+  const userOnly = [turn(0, 'user')];
+  assert.deepEqual(endOperationForLocaleChange(userOnly, null, 'en'), compactConversation(userOnly));
+  const dispatched: ChatTurn = { ...turn(1), mode: 'site-operation' };
+  const ended = endOperationForLocaleChange(userOnly, { turn: dispatched, receipts: [] }, 'en');
+  assert.match(ended[1].content, /language changed.*request ended/);
+  assert.equal(ended[1].actionReceipts, undefined);
+  assert.doesNotMatch(ended[1].content, /success|completed all/i);
 });
 
 test('English assistant-direct and retrieval-only responses remain English without upstream calls', async () => {

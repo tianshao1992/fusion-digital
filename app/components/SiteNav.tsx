@@ -59,6 +59,7 @@ export default function SiteNav({active = 'home'}: SiteNavProps) {
   };
   const localeButton = (className = 'siteLocaleSwitch') => <button
     type="button"
+    data-agent-safe="click"
     className={className}
     aria-label={t('locale.switchTo')}
     title={t('locale.current')}
@@ -196,7 +197,7 @@ export default function SiteNav({active = 'home'}: SiteNavProps) {
     data-primary-nav="knowledge"
     ref={mobile ? mobileKnowledgeRef : knowledgeRef}
   >
-    <summary className={active === 'knowledge' ? 'active' : ''} aria-label={t('nav.knowledgeModules')}>
+    <summary data-agent-safe="click" className={active === 'knowledge' ? 'active' : ''} aria-label={t('nav.knowledgeModules')}>
       {t('nav.knowledge')}<span aria-hidden="true">⌄</span>
     </summary>
     <div className="siteKnowledgeMenu">
@@ -253,6 +254,7 @@ export default function SiteNav({active = 'home'}: SiteNavProps) {
         {overflowItems.length > 0 && <div className="siteMoreNav" ref={moreRef}>
           <button
             type="button"
+            data-agent-safe="click"
             className={`siteMoreButton${overflowContainsActive ? ' active' : ''}`}
             aria-haspopup="menu"
             aria-expanded={moreOpen}
@@ -283,7 +285,7 @@ export default function SiteNav({active = 'home'}: SiteNavProps) {
     </div>
     {renderAccountAccess()}
     <details className="mobileNav">
-      <summary aria-label={t('nav.open')}>{t('nav.menu')}</summary>
+      <summary data-agent-safe="click" aria-label={t('nav.open')}>{t('nav.menu')}</summary>
       <div>{links.map((item) => renderLink(item))}{renderKnowledgeMenu(true)}{renderAccountAccess(true)}<div className="siteMobilePreferences" aria-label={t('preferences.group')}>{localeButton('siteLocaleSwitch siteLocaleSwitch--mobile')}<ThemeSwitcher labels={themeLabels} compact /></div></div>
     </details>
   </nav>;

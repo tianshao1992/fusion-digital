@@ -1,3 +1,5 @@
+import { normalizeSiteActionReceipts, type SiteActionReceipt } from '@/app/agent/site-actions';
+
 export type ChatRole = 'user' | 'assistant';
 export type ChatProviderId = 'openai' | 'anthropic' | 'deepseek' | 'kimi';
 
@@ -14,7 +16,8 @@ export type ChatTurn = {
   role: ChatRole;
   content: string;
   createdAt: string;
-  mode?: 'assistant-chat' | 'ai-grounded' | 'retrieval-only' | 'assistant-direct';
+  mode?: 'assistant-chat' | 'ai-grounded' | 'retrieval-only' | 'assistant-direct' | 'site-operation';
+  actionReceipts?: SiteActionReceipt[];
   citations?: ChatCitation[];
   caveats?: string[];
   notice?: string;
@@ -28,6 +31,24 @@ export const KNOWLEDGE_CHAT_STORAGE_KEY = 'fusiondigital.knowledge-chat.v1';
 
 export function knowledgeChatStorageKey(locale: 'zh-CN' | 'en') {
   return `${KNOWLEDGE_CHAT_STORAGE_KEY}.${locale === 'en' ? 'en' : 'zh-CN'}`;
+}
+
+export type ActiveOperationTurn = { turn: ChatTurn; receipts: SiteActionReceipt[] };
+
+export function endOperationForLocaleChange(turns: ChatTurn[], active: ActiveOperationTurn | null, locale: 'zh-CN' | 'en'): ChatTurn[] {
+  if (!active) return compactConversation(turns);
+  const current = turns.find(turn => turn.id === active.turn.id) ?? active.turn;
+  const receipts = [...new Map([...(current.actionReceipts ?? []), ...active.receipts].map(receipt => [receipt.actionId, receipt])).values()];
+  const ended: ChatTurn = {
+    ...current,
+    content: locale === 'en'
+      ? 'The language changed and this request ended. Completed steps remain applied; see the recorded results.'
+      : '已切换语言，本轮请求已结束。已完成的步骤保留，执行情况见已记录回执。',
+    ...(receipts.length ? { actionReceipts: receipts } : {}),
+  };
+  return compactConversation(turns.some(turn => turn.id === ended.id)
+    ? turns.map(turn => turn.id === ended.id ? ended : turn)
+    : [...turns, ended]);
 }
 
 export const CHAT_LIMITS = Object.freeze({
@@ -67,7 +88,8 @@ export function compactConversation(input: unknown): ChatTurn[] {
       role: item.role,
       content,
       createdAt: validDate(item.createdAt) ? item.createdAt! : new Date().toISOString(),
-      mode: item.mode === 'assistant-chat' || item.mode === 'ai-grounded' || item.mode === 'retrieval-only' || item.mode === 'assistant-direct' ? item.mode : undefined,
+      mode: item.mode === 'assistant-chat' || item.mode === 'ai-grounded' || item.mode === 'retrieval-only' || item.mode === 'assistant-direct' || item.mode === 'site-operation' ? item.mode : undefined,
+      ...(item.actionReceipts ? { actionReceipts: normalizeSiteActionReceipts(item.actionReceipts) ?? undefined } : {}),
       citations,
       caveats: Array.isArray(item.caveats) ? item.caveats.map((entry) => cleanText(entry, 500)).filter(Boolean).slice(0, 5) : undefined,
       notice: cleanText(item.notice, 500) || undefined,

@@ -26,6 +26,8 @@ import KnowledgeChat, {
 } from '@/app/components/knowledge-chat/KnowledgeChat';
 import type { AgentCapabilities } from '@/app/agent/capabilities';
 import type { SearchHit } from '@/app/search/search-core';
+import { SiteOperationsProvider } from './SiteOperations';
+import NativeAgent from './NativeAgent';
 import './agent-workspace.css';
 
 type AgentSurface = 'chat' | 'canvas';
@@ -59,6 +61,9 @@ export default function AgentWorkspaceProvider({ children }: { children: ReactNo
   const en = locale === 'en';
   const copy = en ? EN : ZH;
   const [open, setOpen] = useState(false);
+  const [workspaceMode, setWorkspaceMode] = useState<'agent' | 'reference'>('agent');
+  const [agentBusy, setAgentBusy] = useState(false);
+  const [referenceBusy, setReferenceBusy] = useState(false);
   const [canvasOpen, setCanvasOpen] = useState(false);
   const [canvasView, setCanvasView] = useState<CanvasView>('preview');
   const [draft, setDraft] = useState('');
@@ -146,6 +151,7 @@ export default function AgentWorkspaceProvider({ children }: { children: ReactNo
   }, [open]);
 
   const openWorkspace = useCallback((options?: OpenAgentOptions) => {
+    if (options?.draft !== undefined || options?.onEvidenceResults || options?.filters) setWorkspaceMode('reference');
     if (options?.context) {
       setPageContext((current) => ({
         ...current,
@@ -184,7 +190,7 @@ export default function AgentWorkspaceProvider({ children }: { children: ReactNo
     ? `${capabilities.authentication.authenticatedWorkspaceOrigin}/account`
     : null;
 
-  return <WorkspaceContext.Provider value={api}>
+  return <SiteOperationsProvider><WorkspaceContext.Provider value={api}>
     {children}
     <div className="agentWorkspaceRoot" data-open={open ? 'true' : 'false'} data-canvas={canvasOpen ? 'true' : 'false'}>
       <button
@@ -199,9 +205,9 @@ export default function AgentWorkspaceProvider({ children }: { children: ReactNo
       >
         <span aria-hidden="true">✦</span><b>{copy.trigger}</b><small>{copy.triggerHint}</small>
       </button>
-      {open ? <>
-        <button className="agentWorkspaceBackdrop" type="button" aria-label={copy.close} onClick={closeWorkspace} />
-        <aside id="fusion-agent-workspace" className="agentWorkspacePanel" role="dialog" aria-label={copy.title}>
+      <>
+        {open && <button className="agentWorkspaceBackdrop" type="button" aria-label={copy.close} onClick={closeWorkspace} />}
+        <aside id="fusion-agent-workspace" className="agentWorkspacePanel" hidden={!open} role="dialog" aria-label={copy.title}>
           <header className="agentWorkspaceTopbar">
             <div><span>FUSIONDIGITAL</span><h2>{copy.title}</h2></div>
             <div className="agentWorkspaceTopbarActions">
@@ -213,12 +219,20 @@ export default function AgentWorkspaceProvider({ children }: { children: ReactNo
                 aria-pressed={canvasOpen}
                 onClick={() => setCanvasOpen((value) => !value)}
               ><span aria-hidden="true">▤</span>{copy.canvas}</button>
-              <span data-profile={capabilities?.profile || 'loading'}>{capabilities?.profile === 'standalone-public' ? copy.retrieval : capabilities ? copy.modelReady : copy.detecting}</span>
+              <span>{agentBusy ? (en ? 'Task running' : '任务运行中') : (en ? 'Website agent' : '全站智能体')}</span>
               <button ref={closeButtonRef} type="button" onClick={closeWorkspace} aria-label={copy.close}>×</button>
             </div>
           </header>
+          <div className="agentWorkspaceModeTabs" role="group" aria-label={en ? 'Assistant workspace' : '助手工作模式'}>
+            <button type="button" aria-pressed={workspaceMode === 'agent'} disabled={referenceBusy} onClick={() => setWorkspaceMode('agent')}>{en ? 'Agent tasks' : '智能体任务'}</button>
+            <button type="button" aria-pressed={workspaceMode === 'reference'} disabled={agentBusy} onClick={() => setWorkspaceMode('reference')}>{en ? 'Research and shortcuts' : '检索与快捷操作'}</button>
+          </div>
           <div className="agentWorkspaceBody">
-            <div className="agentWorkspaceChat">
+            <div className="agentWorkspaceChat" data-native={workspaceMode === 'agent'}>
+              <div className="agentWorkspaceModeContent" hidden={workspaceMode !== 'agent'}>
+                <NativeAgent onBusyChange={setAgentBusy} onCanvasArtifact={acceptCanvasArtifact} onOpenReference={() => setWorkspaceMode('reference')} />
+              </div>
+              <div className="agentWorkspaceModeContent" hidden={workspaceMode !== 'reference'}>
               {sitesHref ? <div className="agentWorkspaceBoundary" role="status">
                 <b>{copy.hkBoundaryTitle}</b><span>{copy.hkBoundaryCopy}</span><a href={sitesHref} target="_blank" rel="noreferrer">{copy.openSites}</a>
               </div> : null}
@@ -233,8 +247,10 @@ export default function AgentWorkspaceProvider({ children }: { children: ReactNo
                 filters={chatFilters}
                 showContext={false}
                 onCanvasArtifact={acceptCanvasArtifact}
+                onBusyChange={setReferenceBusy}
                 onEvidenceResults={(results) => evidenceResultsRef.current?.(results)}
               />
+              </div>
             </div>
 
             {canvasOpen ? <section id="fusion-agent-canvas" className="agentWorkspaceCanvasPanel" aria-labelledby="fusion-agent-canvas-title">
@@ -254,9 +270,9 @@ export default function AgentWorkspaceProvider({ children }: { children: ReactNo
             </section> : null}
           </div>
         </aside>
-      </> : null}
+      </>
     </div>
-  </WorkspaceContext.Provider>;
+  </WorkspaceContext.Provider></SiteOperationsProvider>;
 }
 
 function CanvasPreview({ content, emptyCopy }: { content: string; emptyCopy: string }) {
@@ -278,18 +294,18 @@ function CanvasPreview({ content, emptyCopy }: { content: string; emptyCopy: str
 }
 
 const ZH = {
-  trigger: 'AI 助手', triggerHint: '持续对话', title: 'FusionDigital 助手', close: '关闭 FusionDigital 助手',
-  canvas: 'Canvas', detecting: '检测能力中', retrieval: '检索模式', modelReady: 'Sites AI 边界',
-  hkBoundaryTitle: '当前站点保持匿名安全边界', hkBoundaryCopy: '这里可持续检索站内证据；前往 Sites 登录后使用任意模型对话（以该工作区已配置且可用的模型为准）。', openSites: '登录 / AI 工作区 ↗',
+  trigger: 'AI 助手', triggerHint: '对话与操作', title: 'FusionDigital 助手', close: '关闭 FusionDigital 助手',
+  canvas: 'Canvas', detecting: '检测能力中', retrieval: '站内操作', modelReady: 'AI 工作区',
+  hkBoundaryTitle: '可直接操作当前网站', hkBoundaryCopy: '支持导航、CAD 显示和数据选择；当前使用本地指令识别与站内检索。登录后使用任意模型对话（以工作区已配置且可用的模型为准）。', openSites: '登录 / AI 工作区 ↗',
   conversationTitle: '和 FusionDigital 助手对话',
   prompts: ['介绍你能如何协助我的聚变项目', '围绕当前页面主题，从站内已索引知识说明可探索方向', '结合站内已索引知识，和我讨论聚变数据与数字孪生方案'],
   canvasTitle: '按需 Canvas', canvasHint: '仅在你打开或助手返回结构化内容时显示。', canvasPlaceholder: '记录假设、方案、代码、证据或待验证问题…', canvasEmpty: 'Canvas 目前为空。你可以切换到编辑模式，或把一条助手回复发送到这里。', previewCanvas: '渲染', editCanvas: '编辑', closeCanvas: '关闭 Canvas', clearCanvas: '清空', canvasBoundary: 'Canvas 使用安全的轻量 Markdown 渲染并只保存在本浏览器；它不会执行 HTML，也不会自动提交给模型。',
 } as const;
 
 const EN = {
-  trigger: 'AI Assistant', triggerHint: 'Continuous chat', title: 'FusionDigital Assistant', close: 'Close FusionDigital Assistant',
-  canvas: 'Canvas', detecting: 'Detecting capabilities', retrieval: 'Retrieval mode', modelReady: 'Sites AI boundary',
-  hkBoundaryTitle: 'This host retains its anonymous security boundary', hkBoundaryCopy: 'You can continue evidence-grounded retrieval here. On Sites, sign in to chat with any model available to that workspace.', openSites: 'Sign in / AI workspace ↗',
+  trigger: 'AI Assistant', triggerHint: 'Chat and operate', title: 'FusionDigital Assistant', close: 'Close FusionDigital Assistant',
+  canvas: 'Canvas', detecting: 'Detecting capabilities', retrieval: 'Site operations', modelReady: 'AI workspace',
+  hkBoundaryTitle: 'Operate the current website', hkBoundaryCopy: 'Navigate, change CAD views and select data using local commands. Evidence search remains available. Sign in to use a model configured for the AI workspace.', openSites: 'Sign in / AI workspace ↗',
   conversationTitle: 'Chat with the FusionDigital Assistant',
   prompts: ['Tell me how you can help with my fusion project', 'Use indexed site knowledge to explain what to explore around this page topic', 'Use indexed site knowledge to discuss fusion data and digital twins with me'],
   canvasTitle: 'On-demand Canvas', canvasHint: 'Shown only when you open it or the assistant returns structured content.', canvasPlaceholder: 'Capture hypotheses, plans, code, evidence, or open questions…', canvasEmpty: 'The Canvas is empty. Switch to Edit, or send an assistant response here.', previewCanvas: 'Render', editCanvas: 'Edit', closeCanvas: 'Close Canvas', clearCanvas: 'Clear', canvasBoundary: 'Canvas uses a safe, limited Markdown renderer and stays in this browser. It never executes HTML or submits itself to the model.',

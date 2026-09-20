@@ -1,4 +1,5 @@
 import { POST as ask } from "@/app/api/ask/route";
+import { POST as operate } from "@/app/api/agent/operate";
 import { readBoundedRequestBody } from "@/app/api/ask/request-body";
 import type {
   AgentCompletedMessage,
@@ -24,7 +25,11 @@ export async function POST(request: Request): Promise<Response> {
   // native Request constructor without violating its private brand checks.
   // Snapshot portable primitives before the asynchronous SSE pump begins.
   const snapshot = await snapshotAskRequest(request);
-  return createAgentTurnResponseFromSnapshot(request.signal, Promise.resolve(snapshot), ask);
+  let execute: AskExecutor = ask;
+  try {
+    if (JSON.parse(new TextDecoder().decode(snapshot.body))?.mode === 'operate') execute = operate;
+  } catch { /* The ask handler retains the bounded invalid-JSON response. */ }
+  return createAgentTurnResponseFromSnapshot(request.signal, Promise.resolve(snapshot), execute);
 }
 
 /**

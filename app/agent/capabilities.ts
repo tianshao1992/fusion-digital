@@ -24,6 +24,8 @@ export type AgentCapabilities = {
   tools: {
     siteSearch: true;
     pageContext: true;
+    siteOperations: true;
+    operationExecution: "browser";
     modelGateway: boolean;
     imageInput: false;
     fileInput: false;
@@ -58,6 +60,8 @@ export function buildAgentCapabilities(publicAnonymous: boolean): AgentCapabilit
     tools: {
       siteSearch: true,
       pageContext: true,
+      siteOperations: true,
+      operationExecution: "browser",
       modelGateway: !publicAnonymous,
       imageInput: false,
       fileInput: false,

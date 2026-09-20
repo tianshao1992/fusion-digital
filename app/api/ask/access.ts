@@ -61,6 +61,34 @@ export async function settleAsk(access: AskAccess, input: { status: "succeeded" 
   }
 }
 
+export type StrictAskSettlementRuntime = {
+  settleUsage: typeof import("@/db/usage")["settleUsage"];
+  audit: typeof safeAudit;
+};
+
+/** Native tools may be dispatched only after the ledger confirms settlement.
+ * Keep the existing knowledge-answer settleAsk entry point best-effort. */
+export async function settleAskStrict(
+  access: AskAccess,
+  input: Parameters<typeof settleAsk>[1],
+  runtime: StrictAskSettlementRuntime = {
+    settleUsage: async value => (await import("@/db/usage")).settleUsage(value),
+    audit: safeAudit,
+  },
+): Promise<void> {
+  if (!access.authenticated || !access.reserved || !access.userId || access.quotaPolicy !== "database-ledger-v1") {
+    throw new Error("Native usage settlement requires an authenticated reservation");
+  }
+  // Do not catch database errors: the native runtime must stop before dispatching a tool.
+  const settled = await runtime.settleUsage({ userId: access.userId, requestId: access.requestId,
+    status: input.status, inputTokens: input.inputTokens, outputTokens: input.outputTokens });
+  await runtime.audit({ actorUserId: access.userId, requestId: access.requestId,
+    outcome: input.status === "succeeded" && settled ? "success" : "failure",
+    action: "knowledge.ask.settle", provider: input.provider, model: input.model });
+  // False also covers missing/expired reservations, overage and conflicting replay.
+  if (!settled) throw new Error("Native usage settlement was not confirmed by the ledger");
+}
+
 function effectiveQuota(override: { dailyRequestLimit: number | null; dailyTokenLimit: number | null; maxTokensPerRequest: number | null } | null, defaults: { dailyRequestLimit: number; dailyTokenLimit: number; maxTokensPerRequest: number }) {
   return {
     dailyRequestLimit: override?.dailyRequestLimit ?? defaults.dailyRequestLimit,

@@ -1,7 +1,12 @@
 'use client';
 
 import type { EChartsCoreOption } from 'echarts/core';
-import { useEffect, useMemo, useRef, useState, type RefObject } from 'react';
+import { useEffect, useId, useMemo, useRef, useState, type RefObject } from 'react';
+import { isSiteAction } from '../agent/site-actions';
+import { waitForSiteCondition } from '../agent/site-action-runtime';
+import { useSiteActionAdapter } from '../components/agent-workspace/SiteOperations';
+import { renderSiteActionFrame, siteActionAbortError } from '../components/site-action-frame';
+import { publishedShotContextIds, publishedShotSelectionMessage, publishedShotViewReady, resolvePublishedPulse, resolvePublishedSignalSelection } from './fusionDataSiteActions';
 import ScientificChart from '../components/charts/ScientificChart';
 import { useChartTheme } from '../components/charts/chart-theme';
 import { useI18n } from '../i18n';
@@ -90,6 +95,7 @@ export default function FusionDataWorkspace() {
   const [selectedPulse, setSelectedPulse] = useState<number | null>(null);
   const [comparePulse, setComparePulse] = useState<number | null>(null);
   const [selectedSignalId, setSelectedSignalId] = useState('plasma-current');
+  const [selectedSignalIds, setSelectedSignalIds] = useState<string[] | null>(null);
   const [selectedTime, setSelectedTime] = useState(.3);
 
   useEffect(() => {
@@ -113,8 +119,10 @@ export default function FusionDataWorkspace() {
   const shot = primary.shot;
   const compareShot = comparison.shot;
   const commonIds = useMemo(() => shot ? commonSignalIds(shot, compareShot) : [], [compareShot, shot]);
-  const visibleSignals = useMemo(() => (shot?.signals.filter((signal) => (signal.dataItem === 'equilibrium') === (signalGroup === 'equilibrium')) ?? [])
-    .sort((a, b) => Number(b.processingLevel === 'boundary-derived') - Number(a.processingLevel === 'boundary-derived')), [shot, signalGroup]);
+  const visibleSignals = useMemo(() => (shot?.signals.filter((signal) => selectedSignalIds
+    ? selectedSignalIds.includes(signal.id)
+    : (signal.dataItem === 'equilibrium') === (signalGroup === 'equilibrium')) ?? [])
+    .sort((a, b) => Number(b.processingLevel === 'boundary-derived') - Number(a.processingLevel === 'boundary-derived')), [shot, signalGroup, selectedSignalIds]);
   const selectedSignal = visibleSignals.find(({ id }) => id === selectedSignalId) ?? visibleSignals[0] ?? shot?.signals[0] ?? null;
   const selectedSample = selectedSignal ? nearestSample(selectedSignal, selectedTime) : null;
   const selectedTimeDelta = selectedSample ? selectedSample[0] - selectedTime : null;
@@ -182,6 +190,93 @@ export default function FusionDataWorkspace() {
     };
   }, [commonIds, compareShot, en, globalTimeRange, palette, selectedTime, shot, visibleSignals]);
 
+  const dataAdapterId = useId();
+  const workspaceDomRef = useRef<HTMLElement>(null);
+  const operationState = { selectedPulse, comparePulse, selectedSignalId, selectedSignalIds, signalGroup, selectedTime, search, campaign };
+  type SelectionState = typeof operationState;
+  const operationStateRef = useRef({ selection: operationState, shot, error: primary.error });
+  const workspaceMountedRef = useRef(false);
+  useEffect(() => {
+    workspaceMountedRef.current = true;
+    return () => { workspaceMountedRef.current = false; };
+  }, []);
+  useEffect(() => { operationStateRef.current = { selection: operationState, shot, error: primary.error }; });
+
+  const applySelection = (next: SelectionState) => {
+    setSelectedPulse(next.selectedPulse); setComparePulse(next.comparePulse);
+    setSelectedSignalId(next.selectedSignalId); setSelectedSignalIds(next.selectedSignalIds);
+    setSignalGroup(next.signalGroup); setSelectedTime(next.selectedTime);
+    setSearch(next.search); setCampaign(next.campaign);
+  };
+  const waitForSelection = async (next: SelectionState, signal: AbortSignal) => {
+    const expected = JSON.stringify(next);
+    let selectionCommitted = false;
+    await waitForSiteCondition(() => {
+      if (!workspaceMountedRef.current) throw siteActionAbortError();
+      const current = operationStateRef.current;
+      const matches = JSON.stringify(current.selection) === expected;
+      if (selectionCommitted && !matches) throw new Error('数据选择已被后续操作改变。');
+      selectionCommitted ||= matches;
+      if (!matches) return false;
+      if (current.error) throw new Error('选中炮次的数据包加载失败，请在页面重试。');
+      if (current.shot?.pulse !== next.selectedPulse || !workspaceDomRef.current?.isConnected) return false;
+      return publishedShotViewReady(workspaceDomRef.current, current.shot.pulse, current.shot.signals.length);
+    }, signal, 20_000);
+    await renderSiteActionFrame(() => {
+      if (!workspaceMountedRef.current || JSON.stringify(operationStateRef.current.selection) !== expected) {
+        throw new Error('数据页面或选择已改变。');
+      }
+    }, signal);
+  };
+  useSiteActionAdapter(manifest ? {
+    id: `fusion-data:${dataAdapterId}`, path: '/fusion-data',
+    capabilities: shot?.signals.length ? ['data.select_shot', 'data.select_signals'] : ['data.select_shot'],
+    getContext: () => shot && selectedPulse !== null ? { data: {
+      shotIds: publishedShotContextIds(manifest.shots, selectedPulse, filteredShots), selectedShotId: String(selectedPulse),
+      signalIds: shot.signals.map(signal => signal.id).slice(0, 100),
+      selectedSignalIds: selectedSignalIds ?? (selectedSignal ? [selectedSignal.id] : []),
+    } } : {},
+    execute: async (action, { signal }) => {
+      if (signal.aborted) throw siteActionAbortError();
+      if (!isSiteAction(action) || (action.type !== 'data.select_shot' && action.type !== 'data.select_signals')) {
+        throw new Error('数据操作参数无效。');
+      }
+      const before = structuredClone(operationStateRef.current.selection);
+      let next: SelectionState;
+      let message: string;
+      if (action.type === 'data.select_shot') {
+        const pulse = resolvePublishedPulse(manifest.shots, action.shotId);
+        next = { ...before, selectedPulse: pulse, comparePulse: before.comparePulse === pulse ? null : before.comparePulse,
+          selectedSignalId: 'plasma-current', selectedSignalIds: null, signalGroup: 'diagnostics', selectedTime: .3, search: '', campaign: 'all' };
+        message = `已打开公开快照炮次 ${pulse}；该记录不是实时装置数据。`;
+      } else {
+        const currentShot = operationStateRef.current.shot;
+        if (!currentShot || currentShot.pulse !== before.selectedPulse) throw new Error('当前炮次尚未加载完成。');
+        const selection = resolvePublishedSignalSelection(currentShot.signals, action.signalIds);
+        next = { ...before, selectedSignalIds: selection.signalIds, selectedSignalId: selection.focusedSignalId,
+          signalGroup: selection.signalGroup };
+        message = `已在炮次 ${currentShot.pulse} 中显示 ${selection.signalIds.length} 条已发布信号；保持各自采样时间基。`;
+      }
+      applySelection(next);
+      try { await waitForSelection(next, signal); }
+      catch (cause) {
+        if (workspaceMountedRef.current && JSON.stringify(operationStateRef.current.selection) === JSON.stringify(next)) applySelection(before);
+        throw cause;
+      }
+      if (action.type === 'data.select_shot' && operationStateRef.current.shot) {
+        message = publishedShotSelectionMessage(operationStateRef.current.shot);
+      }
+      return { message, undo: async (undoSignal) => {
+        if (undoSignal.aborted) throw siteActionAbortError();
+        if (!workspaceMountedRef.current || JSON.stringify(operationStateRef.current.selection) !== JSON.stringify(next)) {
+          throw new Error('数据选择已改变，不能覆盖新状态来撤销旧命令。');
+        }
+        applySelection(before);
+        await waitForSelection(before, undoSignal);
+      } };
+    },
+  } : null);
+
   if (!manifest) return <LoadingState en={en} error={error} />;
 
   const selectedManifestShot = manifest.shots.find(({ pulse }) => pulse === selectedPulse);
@@ -191,12 +286,14 @@ export default function FusionDataWorkspace() {
   function selectSignal(id: string) {
     const signal = shot?.signals.find((item) => item.id === id);
     if (!signal) return;
+    if (selectedSignalIds && !selectedSignalIds.includes(id)) setSelectedSignalIds(null);
     setSignalGroup(signal.dataItem === 'equilibrium' ? 'equilibrium' : 'diagnostics');
     setSelectedSignalId(id);
   }
 
   function selectShot(pulse: number) {
     setSelectedPulse(pulse);
+    setSelectedSignalIds(null);
     if (comparePulse === pulse) setComparePulse(null);
     setSelectedSignalId('plasma-current');
     setSelectedTime(.3);
@@ -207,7 +304,7 @@ export default function FusionDataWorkspace() {
     if (Array.isArray(value) && Number.isFinite(Number(value[0]))) setSelectedTime(Number(value[0]));
   }
 
-  return <section className="fusionWorkspace" aria-label={en ? 'EXL-50U public data snapshot' : 'EXL-50U 公开数据快照'}>
+  return <section ref={workspaceDomRef} className="fusionWorkspace" aria-label={en ? 'EXL-50U public data snapshot' : 'EXL-50U 公开数据快照'}>
     <div className="fusionWorkspaceToolbar">
       <div><span>{en ? 'SOURCE' : '来源'}</span><b>EXL-50U · IMAS H5</b></div>
       <div><span>{en ? 'PROJECTION' : '投影'}</span><b>{shot ? projectionLabel : '—'}</b></div>
@@ -219,8 +316,8 @@ export default function FusionDataWorkspace() {
     <div className="fusionWorkspaceGrid">
       <aside className="fusionShotRail">
         <div className="fusionPanelHeading"><div><span>01</span><h2>{en ? 'Published shots' : '已发布炮次'}</h2></div><small>{filteredShots.length}/{manifest.shots.length}</small></div>
-        <label className="fusionShotSearch"><span className="srOnly">{en ? 'Filter shots or datasets' : '筛选炮次或数据集'}</span><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={en ? 'Shot or IDS…' : '炮号或 IDS…'} /></label>
-        <label className="fusionCampaignFilter"><span>{en ? 'Experiment date' : '实验日期'}</span><select value={campaign} onChange={(event) => {
+        <label className="fusionShotSearch"><span className="srOnly">{en ? 'Filter shots or datasets' : '筛选炮次或数据集'}</span><input data-agent-safe="fill" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={en ? 'Shot or IDS…' : '炮号或 IDS…'} /></label>
+        <label className="fusionCampaignFilter"><span>{en ? 'Experiment date' : '实验日期'}</span><select data-agent-safe="select" aria-label={en ? 'Experiment date' : '实验日期'} value={campaign} onChange={(event) => {
           const date = event.target.value;
           setCampaign(date);
           const candidates = manifest.shots.filter((record) => date === 'all' || (record.campaignDate ?? 'previous') === date);
@@ -229,12 +326,12 @@ export default function FusionDataWorkspace() {
         }}><option value="all">{en ? 'All shots' : '全部炮次'}</option>{[...new Set(manifest.shots.flatMap(({ campaignDate }) => campaignDate ? [campaignDate] : []))].sort().reverse().map((date) => <option key={date} value={date}>{date}</option>)}<option value="previous">{en ? 'Previous snapshot' : '原有快照'}</option></select></label>
         <div className="fusionShotList">
           {filteredShots.map((record) => <div className="fusionShotRow" key={record.pulse}>
-            <button className="fusionShotSelect" type="button" aria-pressed={record.pulse === selectedPulse} onClick={() => selectShot(record.pulse)}>
+            <button data-agent-safe="click" className="fusionShotSelect" type="button" aria-pressed={record.pulse === selectedPulse} onClick={() => selectShot(record.pulse)}>
               <span className="fusionQuality fusionQuality--unknown" aria-hidden="true" />
               <span><b>EXL #{record.pulse}</b><small>{record.signalCount} {en ? 'signals' : '条信号'} · {record.campaignDate?.slice(5) ?? (en ? 'previous' : '原有')}</small>{record.signalCount === 0 ? <small>{en ? 'No available signals' : '暂无可用信号'}</small> : record.missingDataItems?.includes('equilibrium') && <small>{en ? 'Equilibrium unavailable' : '缺少平衡重建'}</small>}</span>
               <em>{record.campaignDate ? 'H5' : 'MDS'}</em>
             </button>
-            <button className="fusionCompareButton" type="button" disabled={record.pulse === selectedPulse || record.signalCount === 0} aria-pressed={record.pulse === comparePulse} aria-label={en ? `Compare shot ${record.pulse}` : `对比炮 ${record.pulse}`} onClick={() => setComparePulse((current) => current === record.pulse ? null : record.pulse)}>{record.pulse === comparePulse ? '−' : '+'}</button>
+            <button data-agent-safe="click" className="fusionCompareButton" type="button" disabled={record.pulse === selectedPulse || record.signalCount === 0} aria-pressed={record.pulse === comparePulse} aria-label={en ? `Compare shot ${record.pulse}` : `对比炮 ${record.pulse}`} onClick={() => setComparePulse((current) => current === record.pulse ? null : record.pulse)}>{record.pulse === comparePulse ? '−' : '+'}</button>
           </div>)}
         </div>
         {filteredShots.length === 0 && <p className="fusionLoadNotice">{en ? 'No matching shots. Change the filter.' : '没有匹配的炮次，请调整筛选条件。'}</p>}
@@ -242,7 +339,7 @@ export default function FusionDataWorkspace() {
       </aside>
 
       <div className="fusionMainPanels">
-        {shot && shot.signals.length === 0 ? <article className="fusionPanel fusionLoadNotice" role="status">
+        {shot && shot.signals.length === 0 ? <article className="fusionPanel fusionLoadNotice fusionEmptyShot" data-shot={shot.pulse} role="status">
           <h2>Shot {shot.pulse} · {selectedManifestShot?.campaignDate}</h2>
           <p>{en ? 'Shot date verified; no publishable signals are available in this snapshot.' : '炮次日期已核实；本次快照暂无可发布信号。'}</p>
           <p>{en ? 'Missing or unusable datasets' : '缺失或不可用的数据集'}: {selectedManifestShot?.missingDataItems?.join(', ')}</p>
@@ -257,16 +354,17 @@ export default function FusionDataWorkspace() {
           </dl>
         </div>
         {comparePulse !== null && !compareShot && <div className="fusionLoadNotice" role="status">{comparison.error ? `${en ? 'Comparison failed' : '对比炮加载失败'} #${comparePulse}: ${comparison.error}` : `${en ? 'Loading comparison' : '正在加载对比炮'} #${comparePulse}`}{comparison.error && <button type="button" onClick={comparison.retry}>{en ? 'Retry' : '重试'}</button>}</div>}
-        <nav className="fusionSignalGroups" aria-label={en ? 'Signal group' : '信号分组'}>{(['diagnostics', 'equilibrium'] as const).map((group) => <button type="button" key={group} aria-pressed={signalGroup === group} onClick={() => { setSignalGroup(group); setSelectedSignalId(group === 'equilibrium' ? 'boundary-rmax' : 'plasma-current'); setSelectedTime(.3); }}>{group === 'diagnostics' ? (en ? 'Currents & probe' : '电流与探针') : (en ? 'Shape & equilibrium · Rmax / Rmin / κ' : '位形与平衡 · Rmax / Rmin / κ')}</button>)}</nav>
-        {signalGroup === 'equilibrium' && visibleSignals.some(({ derivation }) => derivation) && <div className="fusionLoadNotice">
+        <nav className="fusionSignalGroups" aria-label={en ? 'Signal group' : '信号分组'}>{(['diagnostics', 'equilibrium'] as const).map((group) => <button type="button" key={group} aria-pressed={!selectedSignalIds && signalGroup === group} onClick={() => { setSelectedSignalIds(null); setSignalGroup(group); setSelectedSignalId(group === 'equilibrium' ? 'boundary-rmax' : 'plasma-current'); setSelectedTime(.3); }}>{group === 'diagnostics' ? (en ? 'Currents & probe' : '电流与探针') : (en ? 'Shape & equilibrium · Rmax / Rmin / κ' : '位形与平衡 · Rmax / Rmin / κ')}</button>)}</nav>
+        {selectedSignalIds && <div className="fusionLoadNotice" role="status">{en ? `Showing ${selectedSignalIds.length} selected signals. ` : `正在显示已选择的 ${selectedSignalIds.length} 条信号。`}<button type="button" onClick={() => setSelectedSignalIds(null)}>{en ? 'Show current group' : '显示当前分组全部信号'}</button></div>}
+        {visibleSignals.some(({ derivation }) => derivation) && <div className="fusionLoadNotice">
           <b>{en ? 'Boundary-derived shape parameters' : '位形参数：边界重建派生值'}</b>
           <p>{en ? 'Rmax = max(R), Rmin = min(R), κ = (max(Z) − min(Z)) / (Rmax − Rmin), using each stored boundary outline. These are not controller setpoints or real-time feedback; their definition may differ from the PCS. Source quality remains unverified.' : '按每帧已保存边界计算：Rmax = max(R)，Rmin = min(R)，κ = (max(Z) − min(Z)) / (Rmax − Rmin)。不是控制器目标或实时反馈，定义可能与 PCS 不同；源数据质量尚未核验。'}</p>
           {visibleSignals[0].sampling.sourcePoints < 100 && <p>{en ? `Sparse reconstruction: only ${visibleSignals[0].sampling.sourcePoints} frames; shown as sample points, not a continuous control trace.` : `平衡数据稀疏：仅 ${visibleSignals[0].sampling.sourcePoints} 帧，仅显示采样点，不连成连续控制曲线。`}</p>}
           {!visibleSignals[0].samples.some(([time]) => time >= .3 && time <= .65) && <p>{en ? 'No reconstruction samples cover the 0.300–0.650 s interval discussed in the experiment log.' : '没有重建样本覆盖实验记录所关注的 0.300–0.650 s 区间。'}</p>}
         </div>}
 
-        <article className="fusionPanel fusionPulsePanel">
-          <div className="fusionPanelHeading"><div><span>02</span><h2>{signalGroup === 'equilibrium' ? (en ? 'Reconstructed time series' : '平衡重建时序') : (en ? 'Measured time series' : '实测时序')}</h2></div><small>{compareShot ? (en ? `solid #${shot.pulse} · dotted #${compareShot.pulse}` : `实线 #${shot.pulse} · 点线 #${compareShot.pulse}`) : (en ? 'shared physical time · no interpolation' : '共享物理时间 · 未插值')}</small></div>
+        <article className="fusionPanel fusionPulsePanel" data-shot={shot.pulse} data-signal-ids={visibleSignals.map(signal => signal.id).join(',')}>
+          <div className="fusionPanelHeading"><div><span>02</span><h2>{selectedSignalIds ? (en ? 'Selected signal time series' : '已选择信号时序') : signalGroup === 'equilibrium' ? (en ? 'Reconstructed time series' : '平衡重建时序') : (en ? 'Measured time series' : '实测时序')}</h2></div><small>{compareShot ? (en ? `solid #${shot.pulse} · dotted #${compareShot.pulse}` : `实线 #${shot.pulse} · 点线 #${compareShot.pulse}`) : (en ? 'shared physical time · no interpolation' : '共享物理时间 · 未插值')}</small></div>
           {visibleSignals.length === 0 ? <div className="fusionLoadNotice">{signalGroup === 'equilibrium' ? (en ? 'No usable equilibrium time series is available in this snapshot.' : '本次快照没有可用的平衡重建时序。') : (en ? 'No current or probe signals are available in this snapshot.' : '本次快照没有可用的电流或探针信号。')}{en ? ' No substituted curves are displayed.' : ' 不以其他炮或合成曲线替代。'}</div> : <ScientificChart
             id="fusion-real-discharge-overview"
             option={pulseOption}
@@ -277,7 +375,7 @@ export default function FusionDataWorkspace() {
             eager
             onChartClick={handleChartClick}
             keepFallbackAccessible
-            fallback={<table><caption>{en ? 'Nearest published samples' : '最近发布样本'}</caption><thead><tr><th>{en ? 'Signal' : '信号'}</th><th>{en ? 'Time' : '时间'}</th><th>{en ? 'Value' : '值'}</th></tr></thead><tbody>{shot.signals.map((signal) => { const sample = nearestSample(signal, selectedTime); return <tr key={signal.id}><th>{en ? signal.labelEn : signal.label}</th><td>{sample?.[0].toFixed(6) ?? '—'} s</td><td>{formatValue(sample?.[1] ?? null, locale)} {signal.unit}</td></tr>; })}</tbody></table>}
+            fallback={<table><caption>{en ? 'Nearest published samples' : '最近发布样本'}</caption><thead><tr><th>{en ? 'Signal' : '信号'}</th><th>{en ? 'Time' : '时间'}</th><th>{en ? 'Value' : '值'}</th></tr></thead><tbody>{visibleSignals.map((signal) => { const sample = nearestSample(signal, selectedTime); return <tr key={signal.id}><th>{en ? signal.labelEn : signal.label}</th><td>{sample?.[0].toFixed(6) ?? '—'} s</td><td>{formatValue(sample?.[1] ?? null, locale)} {signal.unit}</td></tr>; })}</tbody></table>}
           />}
           <nav className="fusionCoverageTrack" aria-label={en ? 'Signal acquisition windows' : '信号采集时窗'}><span>{en ? 'WINDOWS' : '时窗'}</span>{shot.signals.map((signal) => <button type="button" key={signal.id} aria-pressed={signal.id === selectedSignal.id} onClick={() => selectSignal(signal.id)}><b>{en ? signal.labelEn : signal.label}</b><time>{signal.sampling.timeRange[0].toFixed(3)} → {signal.sampling.timeRange[1].toFixed(3)} s</time></button>)}</nav>
         </article>
@@ -309,7 +407,7 @@ export default function FusionDataWorkspace() {
         <div className="fusionTimebar">
           <button type="button" onClick={() => setSelectedTime((value) => Math.max(globalTimeRange[0], value - .01))} aria-label={en ? 'Move time backward' : '时间向前移'}>‹</button>
           <output>{selectedTime.toFixed(3)} s</output>
-          <input aria-label={en ? 'Shared physical time cursor' : '共享物理时间游标'} type="range" min={globalTimeRange[0]} max={globalTimeRange[1]} step="0.001" value={selectedTime} onChange={(event) => setSelectedTime(Number(event.target.value))} />
+          <input data-agent-safe="fill" aria-label={en ? 'Shared physical time cursor' : '共享物理时间游标'} type="range" min={globalTimeRange[0]} max={globalTimeRange[1]} step="0.001" value={selectedTime} onChange={(event) => setSelectedTime(Number(event.target.value))} />
           <button type="button" onClick={() => setSelectedTime((value) => Math.min(globalTimeRange[1], value + .01))} aria-label={en ? 'Move time forward' : '时间向后移'}>›</button>
           <span>{en ? 'nearest sample on each independent time base' : '每条信号在独立时间基上取最近样本'}</span>
         </div>

@@ -4,6 +4,7 @@ import type {
   AgentStreamEventName,
 } from "./contracts";
 import { AGENT_CANVAS_LIMITS } from "./contracts";
+import { isSiteActionPlan } from './site-actions';
 
 export const AGENT_STREAM_LIMITS = Object.freeze({
   maxDeltaCharacters: 180,
@@ -135,11 +136,12 @@ export class AgentEventStreamParser {
 export function isAgentCompletedMessage(value: unknown): value is AgentCompletedMessage {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
   const message = value as Record<string, unknown>;
-  return (message.mode === "assistant-chat" || message.mode === "ai-grounded" || message.mode === "retrieval-only" || message.mode === "assistant-direct")
+  return (message.mode === "assistant-chat" || message.mode === "ai-grounded" || message.mode === "retrieval-only" || message.mode === "assistant-direct" || message.mode === 'site-operation')
     && typeof message.answer === "string"
     && message.answer.length > 0
     && Array.isArray(message.citations)
     && Array.isArray(message.results)
+    && (message.mode === 'site-operation' ? isSiteActionPlan(message.actionPlan) : message.actionPlan === undefined)
     && validCanvasArtifact(message.canvas);
 }
 

@@ -4,6 +4,7 @@ import hostingConfig from "./.openai/hosting.json";
 import sitesStaticOffloadLock from "./assets/sites-static-offload.lock.json" with { type: "json" };
 import { sites } from "./build/sites-vite-plugin";
 import { fusionDataPreview } from "./build/fusion-data-preview";
+import { localAgentPreview } from "./build/local-agent-preview";
 
 const SITE_CREATOR_PLACEHOLDER_DATABASE_ID =
   "00000000-0000-4000-8000-000000000000";
@@ -81,6 +82,7 @@ export default defineConfig(async () => {
       ? { watch: { useFsEvents: false, usePolling: true } }
       : undefined,
     plugins: [
+      localAgentPreview(),
       fusionDataPreview(),
       vinext(),
       sites(),
