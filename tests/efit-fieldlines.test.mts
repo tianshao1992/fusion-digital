@@ -3,14 +3,15 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { gunzipSync, gzipSync } from 'node:zlib';
-import { Group, Plane, type WebGLRenderer, type Mesh } from 'three';
+import { DynamicDrawUsage, Group, Plane, type InterleavedBufferAttribute, type WebGLRenderer, type Mesh } from 'three';
 import { createFieldlineSource, parseFieldlineCatalog, parseFieldlineFrame, fieldlineTimeSelection,
-  antennaFluxAtRadius,
+  antennaFluxAtRadius, FIELDLINE_PREPARE_LIMITS, fieldlineViewAtFrame,
   type FieldlineFrame, type FieldlineShot, type FieldlineSummary } from '../app/components/efit/fieldlines.ts';
 import { createEfitFieldLineOverlay, fieldlineWebPoints } from '../app/components/device-viewer/EfitFieldLineOverlay.ts';
 import { createEfitThreeOverlay, type EfitRenderableFrame } from '../app/components/device-viewer/EfitThreeOverlay.ts';
 import { fieldlineEfitFrame, fieldlineEfitSummary, withFieldlineEquilibria } from '../app/components/efit/fieldline-data-source.ts';
 import type { EfitDataSource, EfitManifest } from '../app/components/efit/types.ts';
+import { createEfitStore } from '../app/components/efit/store.ts';
 
 const sha = 'a'.repeat(64);
 const scalars = { currentA: 500000, rAxisM: .8, zAxisM: 0, bcentrT: .8, psiAxisWb: -1, psiBoundaryWb: 1, q95: 9 };
@@ -34,6 +35,134 @@ function fixtureCatalog() {
   const first = fixtureShot(); const second = fixtureShot(); second.shot = 21138; second.chunks[0].file = 'shot-21138-part-000.jsonl.gz';
   return { schemaVersion: 'fusion.efit.fieldlines.v2', model: 'axisymmetric-equilibrium', coordinates: 'R-phi-Z:m-rad-m', algorithmVersion: 'axisymmetric-core-full-poloid-rk45-v2', phiDegrees: 300, seedPsiN: [.25, .5, .75, .9, .97], shots: [first, second] };
 }
+
+function preparedFixture(id = 21066, count = 8) {
+  const shot = fixtureShot(); shot.shot = id; shot.frames = []; shot.chunks = []; shot.sourceFrameCount = count;
+  const payloads = new Map<string, Buffer>();
+  for (let i = 0; i < count; i++) {
+    const f = fixtureFrame(); f.shot = id; f.index = i; f.sourceIndex = i; f.timeMs = 100 + i;
+    shot.frames.push({ ...fixtureShot().frames[0], index: i, sourceIndex: i, timeMs: f.timeMs });
+    const bytes = gzipSync(JSON.stringify(f) + '\n'); const file = `shot-${id}-part-${String(i).padStart(3, '0')}.jsonl.gz`;
+    shot.chunks.push({ file, firstIndex: i, frameCount: 1, byteLength: bytes.length, sha256: createHash('sha256').update(bytes).digest('hex') });
+    payloads.set(file, bytes);
+  }
+  return { shot, payloads };
+}
+
+test('whole-shot preparation bounds concurrency, then random seek and replay make no downloads', async () => {
+  const { shot, payloads } = preparedFixture();
+  let calls = 0; let active = 0; let peak = 0; const progress: number[] = [];
+  const source = createFieldlineSource(async (url) => {
+    calls++; active++; peak = Math.max(peak, active);
+    await new Promise((r) => setTimeout(r, 2)); active--;
+    return new Response(new Uint8Array(payloads.get(new URL(String(url), 'http://test').pathname.split('/').at(-1)!)!));
+  });
+  const signal = new AbortController().signal;
+  await source.prepareShot(shot, signal, (p) => { progress.push(p.completed); assert.equal(p.total, 8); });
+  assert.ok(peak > 1 && peak <= FIELDLINE_PREPARE_LIMITS.concurrency);
+  assert.deepEqual(progress, [0, 1, 2, 3, 4, 5, 6, 7, 8]); assert.equal(calls, 8);
+  const first = await source.frame(shot, 0, signal);
+  for (const i of [7, 0, 4, 2, 6, 1, 5, 3, 0, 7, 0]) {
+    source.retain(shot, i); assert.equal((await source.frame(shot, i, signal)).timeMs, 100 + i);
+  }
+  await source.prepareShot(shot, signal);
+  assert.equal(await source.frame(shot, 0, signal), first); assert.equal(calls, 8);
+  source.clear(); await source.frame(shot, 0, signal); assert.equal(calls, 9);
+});
+
+test('failed preparation never admits a partial shot; corruption and size budget fail closed and retry works', async () => {
+  const { shot, payloads } = preparedFixture(); let corrupt = true; let calls = 0;
+  const source = createFieldlineSource(async (url) => {
+    calls++; const file = new URL(String(url), 'http://test').pathname.split('/').at(-1)!;
+    const bytes = Buffer.from(payloads.get(file)!);
+    if (corrupt && file === shot.chunks[3].file) bytes[20] ^= 1;
+    return new Response(bytes);
+  });
+  const signal = new AbortController().signal;
+  await assert.rejects(source.prepareShot(shot, signal), /hash mismatch/);
+  const before = calls; await source.frame(shot, 0, signal);
+  assert.equal(calls, before + 1, 'partially prepared frames must not escape into the live cache');
+  const tooBig = structuredClone(shot); tooBig.chunks[0].byteLength = FIELDLINE_PREPARE_LIMITS.compressedBytes + 1;
+  const prior = calls; await assert.rejects(source.prepareShot(tooBig, signal), /download budget/); assert.equal(calls, prior);
+  corrupt = false; await source.prepareShot(shot, signal);
+  const ready = calls; await source.frame(shot, 7, signal); assert.equal(calls, ready); source.clear();
+});
+
+test('A to B to A and clear cancel stale preparation even when fetch ignores abort', async () => {
+  const a = preparedFixture(); const b = preparedFixture(21138);
+  const payloads = new Map([...a.payloads, ...b.payloads]);
+  let calls = 0; let release!: () => void;
+  const gate = new Promise<void>((resolve) => { release = resolve; });
+  const source = createFieldlineSource(async (url) => {
+    calls++; await gate;
+    return new Response(new Uint8Array(payloads.get(new URL(String(url), 'http://test').pathname.split('/').at(-1)!)!));
+  });
+  const signal = new AbortController().signal; let staleProgress = 0;
+  const first = source.prepareShot(a.shot, signal, (p) => { if (p.completed) staleProgress++; }).catch((e) => e.name);
+  const second = source.prepareShot(b.shot, signal).catch((e) => e.name);
+  const current = source.prepareShot(a.shot, signal);
+  release(); await current;
+  assert.equal(await first, 'AbortError'); assert.equal(await second, 'AbortError'); assert.equal(staleProgress, 0);
+  const ready = calls; assert.equal((await source.frame(a.shot, 7, signal)).shot, 21066); assert.equal(calls, ready);
+  source.clear();
+  const abandoned = source.prepareShot(b.shot, signal).catch((e) => e.name); source.clear();
+  assert.equal(await abandoned, 'AbortError');
+});
+
+test('decoded and retained preparation budgets fail closed and cancel sibling workers', async () => {
+  const { shot, payloads } = preparedFixture();
+  for (const budget of [{ decodedBytes: 64 }, { retainedBytes: 32 }]) {
+    let calls = 0; let admitted = 0;
+    const source = createFieldlineSource(async (url) => {
+      calls++; return new Response(new Uint8Array(payloads.get(new URL(String(url), 'http://test').pathname.split('/').at(-1)!)!));
+    }, budget);
+    await assert.rejects(source.prepareShot(shot, new AbortController().signal, p => { admitted += p.completed; }), /memory budget/);
+    assert.equal(admitted, 0); assert.ok(calls <= FIELDLINE_PREPARE_LIMITS.concurrency);
+    const before = calls; await source.frame(shot, 0, new AbortController().signal); assert.equal(calls, before + 1);
+    source.clear();
+  }
+});
+
+test('external preparation abort releases consumers and never publishes late progress', async () => {
+  const { shot, payloads } = preparedFixture(); const controller = new AbortController(); let ready = 0; let aborted = 0;
+  const source = createFieldlineSource(async (url, init) => {
+    await new Promise<void>((resolve, reject) => {
+      const timer = setTimeout(resolve, 1000);
+      init!.signal!.addEventListener('abort', () => { clearTimeout(timer); aborted++; reject(init!.signal!.reason); }, { once: true });
+    });
+    return new Response(new Uint8Array(payloads.get(new URL(String(url), 'http://test').pathname.split('/').at(-1)!)!));
+  });
+  const task = source.prepareShot(shot, controller.signal, p => { ready += p.completed; });
+  controller.abort(); await assert.rejects(task, { name: 'AbortError' });
+  assert.equal(aborted, FIELDLINE_PREPARE_LIMITS.concurrency); assert.equal(ready, 0); source.clear();
+});
+
+test('shared store waits for magnetic preparation; playback and flux keep the exact source frame offline', async () => {
+  const a = preparedFixture(); const b = preparedFixture(21138); const catalog = fixtureCatalog(); catalog.shots = [a.shot, b.shot];
+  const payloads = new Map([...a.payloads, ...b.payloads]); let release!: () => void;
+  const gate = new Promise<void>((resolve) => { release = resolve; }); let calls = 0; let basePrepares = 0;
+  const original = { schema: 'test', device: 'EXL-50U', psiNLevels: [.5, 1], geometry: { limiterRzM: { rM: [], zM: [], validPoints: 0 } }, shots: [] } as unknown as EfitManifest;
+  const base: EfitDataSource = { loadManifest: async () => original, loadTimeline: async () => [], loadFrame: async () => { throw new Error('unexpected base frame'); }, prepareShot: async () => { basePrepares++; } };
+  const source = withFieldlineEquilibria(base, async (url) => {
+    if (String(url).endsWith('index.json')) return new Response(JSON.stringify(catalog));
+    calls++; await gate; return new Response(new Uint8Array(payloads.get(new URL(String(url), 'http://test').pathname.split('/').at(-1)!)!));
+  });
+  let scheduled: ((time: number) => void) | undefined;
+  const store = createEfitStore(source, { now: () => 0, schedule: (callback) => { scheduled = callback; return 1; }, cancel: () => { scheduled = undefined; } });
+  const init = store.actions.initialize(21066);
+  await new Promise((r) => setTimeout(r, 5));
+  assert.equal(store.getSnapshot().status, 'loading-shot'); assert.equal(store.getSnapshot().timeline.length, 0);
+  assert.deepEqual(store.getSnapshot().preparationProgress, { completed: 0, total: 8 });
+  store.actions.play(); assert.equal(store.getSnapshot().isPlaying, false);
+  release(); await init;
+  assert.equal(store.getSnapshot().status, 'ready'); assert.equal(store.getSnapshot().preparationProgress, null);
+  assert.equal(basePrepares, 0); const ready = calls;
+  store.actions.play(); scheduled!(50);
+  await new Promise((r) => setTimeout(r, 0));
+  assert.equal(store.currentFrame!.timeMs, 105); assert.equal(store.currentFrame!.fieldlineFrame!.timeMs, 105);
+  assert.ok(antennaFluxAtRadius(store.currentFrame!.fieldlineFrame, 1350)); assert.equal(calls, ready);
+  store.destroy();
+});
 
 test('catalog binds two source shots, exact frames, sorted time and controlled chunk paths', () => {
   assert.equal(parseFieldlineCatalog(fixtureCatalog()).shots.length, 2);
@@ -87,6 +216,11 @@ test('overlay reuses fixed buffers; hide, clipping and dispose do not duplicate 
   overlay.setView({ frame: f, xray: false, clip: true, copies: 8 });
   assert.equal((layer.geometry as unknown as { instanceCount: number }).instanceCount, 16);
   assert.equal(layer.geometry.getAttribute('instanceStart'), original);
+  const buffer = (original as InterleavedBufferAttribute).data;
+  assert.equal(buffer.usage, DynamicDrawUsage); assert.deepEqual(buffer.updateRanges, [{ start: 0, count: 96 }]);
+  overlay.setView({ frame: f, xray: false, clip: true, copies: 1 });
+  assert.equal((layer.geometry as unknown as { instanceCount: number }).instanceCount, 2);
+  assert.deepEqual(buffer.updateRanges, [{ start: 0, count: 12 }]);
   overlay.setView({ frame: null, xray: true, clip: false }); assert.equal(root.children[0].visible, false);
   overlay.dispose(); overlay.dispose(); assert.equal(root.children.length, 0);
 });
@@ -114,6 +248,19 @@ test('one EFIT adapter preserves exact source identity and converts total Wb to 
   assert.equal(frame.contours[0].kind, 'lcfs');
   const rejected = { ...shot.frames[0], state: 'unavailable' as const, lineCount: 0 };
   assert.equal(fieldlineEfitSummary(21066, rejected).quality.state, 'good');
+});
+
+test('direct store-to-overlay binding is same-frame and clears on hide, rejected frame or shot change', () => {
+  const raw = fixtureFrame(); const current = fieldlineEfitFrame(fixtureShot(), raw);
+  const settings = { enabled: true, frame: null, xray: true, clip: false, copies: 8 };
+  assert.equal(fieldlineViewAtFrame(settings, current).frame, raw);
+  assert.equal(fieldlineViewAtFrame({ ...settings, enabled: false }, current).frame, null);
+  assert.equal(fieldlineViewAtFrame(undefined, current).frame, null);
+  assert.equal(fieldlineViewAtFrame(settings, null).frame, null);
+  for (const patch of [{ shot: 21138 }, { index: 1 }, { timeMs: 101 }]) {
+    assert.equal(fieldlineViewAtFrame(settings, { ...current, ...patch }).frame, null);
+  }
+  assert.equal(fieldlineViewAtFrame(settings, { ...current, fieldlineFrame: { ...raw, state: 'unavailable', lines: [] } }).frame, null);
 });
 
 test('abort of one seek cannot poison another consumer of the same chunk', async () => {

@@ -35,6 +35,7 @@ export function withFieldlineEquilibria(base: EfitDataSource, fetcher: typeof fe
   let rawShots: FieldlineShot[] = [];
   let currentRaw: { shot: number; part: number } | null = null;
   const controller = new AbortController();
+  const converted = new WeakMap<FieldlineFrame, EfitFrame>();
   async function loadManifest(request?: { signal?: AbortSignal }) {
     if (manifest) return manifest;
     const signal = request?.signal ?? controller.signal;
@@ -64,8 +65,10 @@ export function withFieldlineEquilibria(base: EfitDataSource, fetcher: typeof fe
         ? manifest!.shots.find((s) => s.shot === shotId)!.frames : base.loadTimeline(shotId, request);
     },
     async prepareShot(shotId, request) {
-      source.retain(); currentRaw = null;
-      if (!rawShots.some((s) => s.shot === shotId)) await base.prepareShot?.(shotId, request);
+      currentRaw = null;
+      const shot = rawShots.find((s) => s.shot === shotId);
+      if (shot) await source.prepareShot(shot, request?.signal ?? controller.signal, request?.onProgress);
+      else { source.retain(); await base.prepareShot?.(shotId, request); }
     },
     async loadFrame(shotId, index, request) {
       const shot = rawShots.find((s) => s.shot === shotId);
@@ -73,7 +76,9 @@ export function withFieldlineEquilibria(base: EfitDataSource, fetcher: typeof fe
       currentRaw = { shot: shotId, part: shot.chunks.findIndex((c) => index >= c.firstIndex && index < c.firstIndex + c.frameCount) };
       source.retain(shot, index);
       const frame = await source.frame(shot, index, request?.signal ?? controller.signal);
-      return fieldlineEfitFrame(shot, frame);
+      let result = converted.get(frame);
+      if (!result) { result = fieldlineEfitFrame(shot, frame); converted.set(frame, result); }
+      return result;
     },
     prefetchFrame(shotId, index) {
       const shot = rawShots.find((s) => s.shot === shotId);

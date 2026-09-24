@@ -21,7 +21,10 @@ export default function EfitFieldlinePanel({ active, store, onView }: {
   const source = current?.shot === snapshot.activeShot ? current.fieldlineFrame : undefined;
   const supported = snapshot.activeShot === 21066 || snapshot.activeShot === 21138;
   const displayed = active && shown && source?.state === 'valid' ? source : null;
-  useEffect(() => { onView({ frame: displayed, xray, clip, copies }); }, [displayed, xray, clip, copies, onView]);
+  const enabled = active && shown && supported;
+  // Send settings only. The viewer subscribes to the same EFIT store directly;
+  // lifting every source frame would re-render the entire assembly workspace.
+  useEffect(() => { onView({ frame: null, enabled, xray, clip, copies }); }, [enabled, xray, clip, copies, onView]);
   useEffect(() => () => onView({ frame: null, xray: true, clip: false }), [onView]);
 
   return <section className="fieldlinePanel" aria-label={en ? 'Magnetic field-line overlay' : '磁力线叠加'}

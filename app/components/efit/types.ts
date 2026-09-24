@@ -432,6 +432,8 @@ export type EfitManifest = {
 
 export type EfitDataRequest = {
   signal?: AbortSignal;
+  /** Verified preparation units; no timeline is playable until all are ready. */
+  onProgress?: (progress: { completed: number; total: number }) => void;
 };
 
 /**

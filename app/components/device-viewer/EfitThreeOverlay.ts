@@ -26,6 +26,7 @@ import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeome
 import { deriveReviewedDivertorRegion, deriveVerifiedDivertorGraphRegion } from '../efit/divertor-region';
 import { colorForPsiN } from '../efit/psi-n-palette';
 import type { EfitGeometryCatalog } from '../efit/shot-geometry';
+import type { FieldlineFrame } from '../efit/fieldlines';
 
 type Vec3Tuple = readonly [number, number, number];
 
@@ -133,6 +134,7 @@ export type EfitRenderableTopologyGraph = {
 };
 
 export type EfitRenderableFrame = {
+  fieldlineFrame?: FieldlineFrame;
   shot?: number | string;
   index?: number;
   timeMs: number;

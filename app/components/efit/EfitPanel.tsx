@@ -157,7 +157,9 @@ export default function EfitPanel({
 
       <div className="efitStatusRail" aria-live="polite">
         {snapshot.status !== 'ready' && snapshot.status !== 'idle' && snapshot.status !== 'error' && (
-          <span className="efitStatusPill isLoading">{snapshot.status === 'loading-index' ? t('efit.loadingIndex') : snapshot.status === 'loading-shot' ? t('efit.loadingShot') : t('efit.loadingFrame')}</span>
+          <span className="efitStatusPill isLoading">{snapshot.status === 'loading-index' ? t('efit.loadingIndex') : snapshot.status === 'loading-shot' ? t('efit.loadingShot') : t('efit.loadingFrame')}
+            {snapshot.status === 'loading-shot' && snapshot.preparationProgress && <> · {locale === 'en' ? 'Preparing smooth playback' : '准备连续播放'} {snapshot.preparationProgress.completed}/{snapshot.preparationProgress.total}</>}
+          </span>
         )}
         {quality && <span className={`efitStatusPill quality-${quality.state}`} title={qualityDetail} aria-label={qualityDetail}>{qualityLabel}</span>}
         {snapshot.activeShot !== null && !activeGeometry && (

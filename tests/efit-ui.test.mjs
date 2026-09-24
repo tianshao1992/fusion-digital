@@ -564,3 +564,12 @@ test('EFIT component runtime stays lazy and does not expose raw-data URLs', asyn
   assert.match(chart, /import\('\.\/echarts-canvas-runtime'\)/);
   assert.doesNotMatch(allUi.join('\n'), /D:\\Downloads|EFIT数据\.zip|\/data\/exl50u-efit\/shot-/i);
 });
+
+test('magnetic playback updates the overlay directly, not the entire assembly workspace per frame', async () => {
+  const panel = await source('app/digital-prototype/EfitFieldlinePanel.tsx');
+  const viewer = await source('app/components/TokamakCadViewer.tsx');
+  assert.match(panel, /onView\(\{ frame: null, enabled, xray, clip, copies \}\)/);
+  assert.doesNotMatch(panel, /onView\(\{ frame: displayed/);
+  assert.match(viewer, /fieldlineRef\.current\?\.setView\(fieldlineViewAtFrame\(fieldlineViewRef\.current, frame\)\)/);
+  assert.match(viewer, /return efitStore\.subscribe\(sync\)/);
+});

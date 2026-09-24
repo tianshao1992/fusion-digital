@@ -77,7 +77,7 @@ import './tokamak-cad-viewer.css';
 import { antennaPlacement, ICRF_DEFAULT_OPTIONS, type IcrfAntennaOptions, type IcrfAntennaStatus } from './device-viewer/icrfAntenna';
 import type { IcrfAntennaOverlay } from './device-viewer/IcrfAntennaOverlay';
 import type { EfitFieldLineOverlay } from './device-viewer/EfitFieldLineOverlay';
-import type { FieldlineView } from './efit/fieldlines';
+import { fieldlineViewAtFrame, type FieldlineView } from './efit/fieldlines';
 
 const DEFAULT_MANIFEST_URL = '/models/paramak-tokamak-demo/model-manifest.json';
 // GLTFLoader parsing cannot be cancelled. Keep one client-module decode lane so
@@ -752,21 +752,21 @@ function TokamakCadViewerSession({
   useEffect(() => { antennaStatusRef.current = onAntennaStatus; }, [onAntennaStatus]);
   useEffect(() => {
     fieldlineViewRef.current = fieldlineView;
-    fieldlineRef.current?.setView(fieldlineView ?? { frame: null, xray: true, clip: false });
-  }, [fieldlineView]);
+    fieldlineRef.current?.setView(fieldlineViewAtFrame(fieldlineView, currentEfitFrame(efitStore)));
+  }, [fieldlineView, efitStore]);
   useEffect(() => {
     const viewer = viewerRef.current;
     if (!antennaEnabled || status !== 'ready' || !viewer) return;
     let disposed = false; let overlay: EfitFieldLineOverlay | null = null;
-    void import('./device-viewer/EfitFieldLineOverlay').then(({ createEfitFieldLineOverlay, EMPTY_FIELDLINE_VIEW }) => {
+    void import('./device-viewer/EfitFieldLineOverlay').then(({ createEfitFieldLineOverlay }) => {
       if (disposed) return;
       overlay = createEfitFieldLineOverlay(viewer.model, viewer.renderer, viewer.clippingPlane);
       fieldlineRef.current = overlay;
       overlay.setClippingEnabled(interactionRef.current.clipping);
-      overlay.setView(fieldlineViewRef.current ?? EMPTY_FIELDLINE_VIEW);
+      overlay.setView(fieldlineViewAtFrame(fieldlineViewRef.current, currentEfitFrame(efitStore)));
     });
     return () => { disposed = true; overlay?.dispose(); if (fieldlineRef.current === overlay) fieldlineRef.current = null; };
-  }, [antennaEnabled, status]);
+  }, [antennaEnabled, status, efitStore]);
   useEffect(() => {
     antennaOptionsRef.current = antennaOptions;
     antennaRef.current?.setOptions(antennaOptions);
@@ -2190,13 +2190,9 @@ function TokamakCadViewerSession({
       if (identity === renderedIdentity) return;
       renderedIdentity = identity;
       overlay.setFrame(frame);
-      // Never leave an older line frame over a newly committed EFIT equilibrium.
-      const lines = fieldlineViewRef.current;
-      const current = frame;
-      if (lines?.frame && (lines.frame.shot !== current?.shot || lines.frame.sourceIndex !== current.index
-        || lines.frame.timeMs !== current.timeMs)) {
-        fieldlineRef.current?.setView({ ...lines, frame: null });
-      }
+      // Same commit, same source identity; no hide/React-effect/show cycle and
+      // no per-frame parent/assembly-tree render just to deliver line geometry.
+      fieldlineRef.current?.setView(fieldlineViewAtFrame(fieldlineViewRef.current, frame));
     };
     sync();
     return efitStore.subscribe(sync);

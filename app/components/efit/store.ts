@@ -22,6 +22,7 @@ export type EfitStoreSnapshot = {
   playbackRate: number;
   loop: boolean;
   gapNotice: EfitGap | null;
+  preparationProgress: { completed: number; total: number } | null;
 };
 
 export type EfitStoreActions = {
@@ -76,6 +77,7 @@ const INITIAL_SNAPSHOT: EfitStoreSnapshot = Object.freeze({
   playbackRate: EFIT_DEFAULT_PLAYBACK_RATE,
   loop: true,
   gapNotice: null,
+  preparationProgress: null,
 });
 
 function errorMessage(error: unknown): string {
@@ -302,6 +304,7 @@ export function createEfitStore(
       currentFrameIndex: -1,
       currentTimeMs: 0,
       status: 'loading-shot',
+      preparationProgress: null,
       error: null,
       isPlaying: false,
       gapNotice: null,
@@ -314,13 +317,18 @@ export function createEfitStore(
       // Make playback transport-independent before publishing the first frame.
       // The legacy source retains one reviewed whole shot in memory when it is
       // within budget, while alternative sources may resolve without preloading.
-      await dataSource.prepareShot?.(shot, { signal: requestController.signal });
+      await dataSource.prepareShot?.(shot, { signal: requestController.signal, onProgress(progress) {
+        if (!destroyed && sequence === requestSequence && snapshot.activeShot === shot) {
+          emit({ preparationProgress: progress });
+        }
+      } });
       if (destroyed || sequence !== requestSequence || snapshot.activeShot !== shot) return;
       // Keep timeline controls disabled while preparation is pending. Publishing
       // the timeline earlier would let a seek abort the same request controller
       // and silently push playback back onto per-frame network requests.
       emit({
         timeline,
+        preparationProgress: null,
         currentTimeMs: timeline[0].timeMs,
         status: 'loading-frame',
       });

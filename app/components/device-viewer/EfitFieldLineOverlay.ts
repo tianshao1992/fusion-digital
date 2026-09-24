@@ -1,4 +1,4 @@
-import { Group, type Object3D, type Plane, type WebGLRenderer } from 'three';
+import { DynamicDrawUsage, Group, type InterleavedBufferAttribute, type Object3D, type Plane, type WebGLRenderer } from 'three';
 import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js';
 import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
@@ -19,6 +19,7 @@ export function createEfitFieldLineOverlay(root: Object3D, renderer: WebGLRender
   const layers = FIELDLINE_COLORS.map((color) => {
     const positions = new Float32Array(4094 * 8 * 6);
     const geometry = new LineSegmentsGeometry(); geometry.setPositions(positions); geometry.instanceCount = 0;
+    (geometry.getAttribute('instanceStart') as InterleavedBufferAttribute).data.setUsage(DynamicDrawUsage);
     const outline = new LineMaterial({ color: '#101710', linewidth: 4.5, depthWrite: false, toneMapped: false });
     const material = new LineMaterial({ color, linewidth: 2.5, depthWrite: false, toneMapped: false });
     const halo = new LineSegments2(geometry, outline); const line = new LineSegments2(geometry, material);
@@ -67,8 +68,9 @@ export function createEfitFieldLineOverlay(root: Object3D, renderer: WebGLRender
         }
         layer.geometry.instanceCount = segment;
         // Reuse the same GPU buffer throughout playback, not new attributes every frame.
-        const start = layer.geometry.getAttribute('instanceStart');
-        start.needsUpdate = true;
+        const buffer = (layer.geometry.getAttribute('instanceStart') as InterleavedBufferAttribute).data;
+        buffer.clearUpdateRanges(); buffer.addUpdateRange(0, segment * 6);
+        buffer.needsUpdate = true;
       });
     },
     resize(width: number, height: number) {

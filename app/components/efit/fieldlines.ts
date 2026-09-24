@@ -40,7 +40,17 @@ export type FieldlineFrame = {
   efitContours: { psiN: number; pointsRzM: number[]; closed: true }[];
   antennaMidplaneFlux: AntennaMidplaneFlux | null;
 };
-export type FieldlineView = { frame: FieldlineFrame | null; xray: boolean; clip: boolean; copies?: number };
+export type FieldlineView = { frame: FieldlineFrame | null; xray: boolean; clip: boolean; copies?: number; enabled?: boolean };
+
+/** Resolve geometry directly on a store commit, without lifting each frame into React. */
+export function fieldlineViewAtFrame(view: FieldlineView | undefined,
+  current: { shot?: number | string; index?: number; timeMs: number; fieldlineFrame?: FieldlineFrame } | null): FieldlineView {
+  const options = view ?? { frame: null, xray: true, clip: false };
+  const candidate = options.enabled ? current?.fieldlineFrame : options.frame;
+  const matching = options.enabled !== false && candidate?.state === 'valid'
+    && candidate.shot === current?.shot && candidate.sourceIndex === current?.index && candidate.timeMs === current?.timeMs;
+  return { ...options, frame: matching ? candidate : null };
+}
 
 /** Flux function at the outer-limiter midplane reference, NOT flux through the antenna. */
 export function antennaFluxAtRadius(frame: FieldlineFrame | null | undefined, radiusMm: number) {
@@ -119,7 +129,7 @@ export function parseFieldlineFrame(value: unknown, shot: FieldlineShot, expecte
     insist(Array.isArray(line.points) && line.points.length >= 6 && line.points.length <= 3 * 4095
       && line.points.length % 3 === 0, 'Invalid line point budget.');
     for (let p = 0; p < line.points.length; p += 3) {
-      const [r, phi, z] = line.points.slice(p, p + 3);
+      const r = line.points[p]; const phi = line.points[p + 1]; const z = line.points[p + 2];
       insist(finite(r) && r >= 0.2 && r <= 2.2 && finite(phi) && Math.abs(phi) <= 207
         && finite(z) && Math.abs(z) <= 1.901, 'Field-line point escaped the source domain.');
     }
@@ -198,15 +208,122 @@ async function limitedBytes(response: Response, maximum: number): Promise<Uint8A
   return bytes;
 }
 
-export function createFieldlineSource(fetcher: typeof fetch = fetch) {
+export const FIELDLINE_PREPARE_LIMITS = Object.freeze({
+  concurrency: 3, compressedBytes: 48 * 1024 * 1024,
+  decodedBytes: 128 * 1024 * 1024, retainedBytes: 96 * 1024 * 1024,
+});
+type PreparationProgress = { completed: number; total: number };
+
+// Logical retained payload budget (double precision arrays + conservative record
+// allowance), not a promise about a browser's implementation-dependent JS heap.
+function framePayloadBytes(frame: FieldlineFrame): number {
+  const coordinates = frame.lines.reduce((n, line) => n + line.points.length, 0)
+    + frame.boundaryRz.length + frame.axisRz.length
+    + frame.efitContours.reduce((n, contour) => n + contour.pointsRzM.length, 0)
+    + (frame.antennaMidplaneFlux?.psiWb.length ?? 0);
+  return coordinates * 8 + 2048 + frame.lines.length * 512;
+}
+
+export function createFieldlineSource(fetcher: typeof fetch = fetch,
+  budgets: Partial<Pick<typeof FIELDLINE_PREPARE_LIMITS, 'compressedBytes' | 'decodedBytes' | 'retainedBytes'>> = {}) {
+  // Embedders/tests may tighten, never enlarge the reviewed ceilings.
+  const limits = { ...FIELDLINE_PREPARE_LIMITS };
+  for (const name of ['compressedBytes', 'decodedBytes', 'retainedBytes'] as const) {
+    const value = budgets[name];
+    if (value !== undefined) {
+      insist(Number.isSafeInteger(value) && value > 0, 'Invalid preparation budget.');
+      limits[name] = Math.min(value, limits[name]);
+    }
+  }
   // Keep four decoded chunks; rapid seeks retain only current + next downloads.
   const cache = new Map<string, FieldlineFrame[]>();
   const pending = new Map<string, { task: Promise<FieldlineFrame[]>; controller: AbortController }>();
+  let prepared: { key: string; frames: FieldlineFrame[] } | null = null;
+  let preparing: AbortController | null = null;
+  let generation = 0;
+  const shotKeys = new WeakMap<FieldlineShot, string>();
+  const shotKey = (shot: FieldlineShot) => {
+    let key = shotKeys.get(shot);
+    if (!key) { key = `${shot.sourceSha256}:${shot.chunks.map((c) => c.sha256).join(':')}`; shotKeys.set(shot, key); }
+    return key;
+  };
   const keyFor = (shot: FieldlineShot, chunk: FieldlineChunk) => `${shot.sourceSha256}:${chunk.sha256}`;
   function retain(shot?: FieldlineShot, index?: number) {
+    if (!shot) { generation++; preparing?.abort(); preparing = null; prepared = null; cache.clear(); }
     const part = shot?.chunks.findIndex((c) => index !== undefined && index >= c.firstIndex && index < c.firstIndex + c.frameCount) ?? -1;
     const wanted = new Set(shot && part >= 0 ? shot.chunks.slice(part, part + 2).map((c) => keyFor(shot, c)) : []);
     for (const [key, entry] of pending) if (!wanted.has(key)) { entry.controller.abort(); pending.delete(key); }
+  }
+  async function decodeChunk(shot: FieldlineShot, chunk: FieldlineChunk, signal: AbortSignal,
+    account?: (decoded: number, retained: number) => void) {
+    signal.throwIfAborted();
+    const response = await fetcher(`${FIELDLINE_INDEX_URL.slice(0, -10)}${chunk.file}?sha256=${chunk.sha256}`, { signal });
+    const bytes = await limitedBytes(response, chunk.byteLength);
+    insist(bytes.byteLength === chunk.byteLength, 'Truncated field-line chunk.');
+    const hash = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes as Uint8Array<ArrayBuffer>)), (b) => b.toString(16).padStart(2, '0')).join('');
+    signal.throwIfAborted();
+    insist(hash === chunk.sha256 && bytes[0] === 31 && bytes[1] === 139, 'Field-line hash mismatch.');
+    const stream = new Blob([bytes as Uint8Array<ArrayBuffer>]).stream().pipeThrough(new DecompressionStream('gzip'));
+    const decoded = await limitedBytes(new Response(stream), 24 * 1024 * 1024);
+    signal.throwIfAborted(); account?.(decoded.byteLength, 0);
+    const rows = new TextDecoder().decode(decoded).trim().split('\n');
+    insist(rows.length === chunk.frameCount, 'Field-line chunk frame count mismatch.');
+    const frames: FieldlineFrame[] = [];
+    for (let i = 0; i < rows.length; i++) {
+      signal.throwIfAborted();
+      const frame = parseFieldlineFrame(JSON.parse(rows[i]), shot, shot.frames[chunk.firstIndex + i]);
+      account?.(0, framePayloadBytes(frame)); frames.push(frame);
+      // Preparation happens before playback. Yield to paint progress and accept
+      // a shot switch instead of parsing an entire shot in one main-thread task.
+      if (account) await new Promise<void>((resolve) => setTimeout(resolve, 0));
+    }
+    signal.throwIfAborted(); return frames;
+  }
+  async function prepareShot(shot: FieldlineShot, signal: AbortSignal, onProgress?: (progress: PreparationProgress) => void) {
+    signal.throwIfAborted();
+    const key = shotKey(shot);
+    if (prepared?.key === key) return;
+    retain();
+    const ownGeneration = generation;
+    const controller = new AbortController(); preparing = controller;
+    const abort = () => controller.abort(signal.reason);
+    signal.addEventListener('abort', abort, { once: true });
+    const frames: FieldlineFrame[] = new Array(shot.frames.length);
+    let next = 0; let completed = 0; let decodedBytes = 0; let retainedBytes = 0;
+    const account = (decoded: number, retained: number) => {
+      decodedBytes += decoded; retainedBytes += retained;
+      insist(decodedBytes <= limits.decodedBytes
+        && retainedBytes <= limits.retainedBytes, 'Field-line preparation exceeds memory budget.');
+    };
+    try {
+      insist(shot.chunks.reduce((n, c) => n + c.byteLength, 0) <= limits.compressedBytes,
+        'Field-line preparation exceeds download budget.');
+      onProgress?.({ completed: 0, total: shot.chunks.length });
+      const workers = Array.from({ length: Math.min(FIELDLINE_PREPARE_LIMITS.concurrency, shot.chunks.length) }, async () => {
+        try {
+          while (next < shot.chunks.length) {
+            controller.signal.throwIfAborted();
+            const chunk = shot.chunks[next++];
+            const loaded = await decodeChunk(shot, chunk, controller.signal, account);
+            controller.signal.throwIfAborted();
+            loaded.forEach((frame, i) => { frames[chunk.firstIndex + i] = frame; });
+            completed++;
+            onProgress?.({ completed, total: shot.chunks.length });
+          }
+        } catch (error) { controller.abort(error); throw error; }
+      });
+      // Drain cancelled siblings before returning: none can publish late progress
+      // or keep a half-prepared shot alive after a retry / A -> B -> A switch.
+      await Promise.allSettled(workers);
+      controller.signal.throwIfAborted(); signal.throwIfAborted();
+      insist(completed === shot.chunks.length && frames.filter(Boolean).length === shot.frames.length,
+        'Incomplete prepared field-line shot.');
+      if (ownGeneration !== generation) throw new DOMException('Superseded', 'AbortError');
+      prepared = { key, frames }; // Atomic admission, one reviewed shot only.
+    } finally {
+      signal.removeEventListener('abort', abort);
+      if (preparing === controller) preparing = null;
+    }
   }
   async function loadChunk(shot: FieldlineShot, chunk: FieldlineChunk) {
     const key = `${shot.sourceSha256}:${chunk.sha256}`;
@@ -217,18 +334,7 @@ export function createFieldlineSource(fetcher: typeof fetch = fetch) {
     // retain()/clear() own download lifetime; individual callers race their own signal.
     const controller = new AbortController(); const signal = controller.signal;
     const task = (async () => {
-      const response = await fetcher(`${FIELDLINE_INDEX_URL.slice(0, -10)}${chunk.file}?sha256=${chunk.sha256}`, { signal });
-      const bytes = await limitedBytes(response, chunk.byteLength);
-      insist(bytes.byteLength === chunk.byteLength, 'Truncated field-line chunk.');
-      const hash = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes as Uint8Array<ArrayBuffer>)), (b) => b.toString(16).padStart(2, '0')).join('');
-      signal.throwIfAborted();
-      insist(hash === chunk.sha256 && bytes[0] === 31 && bytes[1] === 139, 'Field-line hash mismatch.');
-      const stream = new Blob([bytes as Uint8Array<ArrayBuffer>]).stream().pipeThrough(new DecompressionStream('gzip'));
-      const decoded = await limitedBytes(new Response(stream), 24 * 1024 * 1024);
-      signal.throwIfAborted();
-      const rows = new TextDecoder().decode(decoded).trim().split('\n');
-      insist(rows.length === chunk.frameCount, 'Field-line chunk frame count mismatch.');
-      const frames = rows.map((row, i) => parseFieldlineFrame(JSON.parse(row), shot, shot.frames[chunk.firstIndex + i]));
+      const frames = await decodeChunk(shot, chunk, signal);
       signal.throwIfAborted(); cache.set(key, frames);
       while (cache.size > 4) cache.delete(cache.keys().next().value!);
       return frames;
@@ -242,12 +348,16 @@ export function createFieldlineSource(fetcher: typeof fetch = fetch) {
     },
     async frame(shot: FieldlineShot, index: number, signal: AbortSignal) {
       signal.throwIfAborted();
+      if (prepared?.key === shotKey(shot)) {
+        insist(prepared.frames[index], 'Missing prepared field-line frame.');
+        return prepared.frames[index];
+      }
       const chunk = shot.chunks.find((c) => index >= c.firstIndex && index < c.firstIndex + c.frameCount);
       insist(chunk, 'Missing field-line chunk.');
       const frames = await abortableFrame(loadChunk(shot, chunk), signal); signal.throwIfAborted();
       return frames[index - chunk.firstIndex];
     },
-    retain,
+    retain, prepareShot,
     clear() { retain(); cache.clear(); },
   };
 }
