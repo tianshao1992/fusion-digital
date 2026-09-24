@@ -40,11 +40,11 @@ export default function EfitPanel({
   const { locale, t, content } = useI18n();
   const panelTitle = title ?? t('efit.title');
   const snapshot = useEfitStore(store);
-  const initializedRef = useRef(false);
+  const initializedRef = useRef<EfitStore | null>(null);
 
   useEffect(() => {
-    if (initializedRef.current) return;
-    initializedRef.current = true;
+    if (initializedRef.current === store) return;
+    initializedRef.current = store;
     void (async () => {
       await store.actions.initialize(preferredShot);
       if (preferredTimeMs !== undefined && Number.isFinite(preferredTimeMs)) {

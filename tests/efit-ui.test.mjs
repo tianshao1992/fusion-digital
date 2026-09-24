@@ -56,10 +56,18 @@ test('EFIT controls, store and Three overlay share one external frame state', as
   const dataSource = await source('app/components/efit/data-source.ts');
   const overlay = await source('app/components/device-viewer/EfitThreeOverlay.ts');
 
-  assert.match(workspace, /createEfitStore\(createEfitHybridDataSource/);
+  assert.match(workspace, /const base = createEfitHybridDataSource/);
+  assert.match(workspace, /createEfitStore\(device\.id === 'exl-50u-2026-upgrade' \? withFieldlineEquilibria\(base\) : base\)/,
+    'EXL reviewed raw equilibria must extend the existing source without a second playback store');
+  assert.equal((workspace.match(/createEfitStore\(/g) ?? []).length, 1);
   assert.match(workspace, /createEfitHybridDataSource\(\{ indexUrl: endpoint \}\)/);
   assert.match(workspace, /<EfitPanel[\s\S]*?store=\{store\}/);
   assert.match(workspace, /efitStore=\{efitStore\}/);
+  assert.match(workspace, /<EfitFieldlinePanel[\s\S]*?store=\{efitStore\}/);
+  assert.match(workspace, /overlayControls=\{fieldlinePanel\}/);
+  const panel = await source('app/components/efit/EfitPanel.tsx');
+  assert.match(panel, /if \(initializedRef\.current === store\) return/,
+    'a replacement store must initialize even if the persistent panel remains mounted');
   assert.match(workspace, /onShowSurfaceChange/);
   assert.match(viewer, /return efitStore\.subscribe\(sync\)/);
   assert.match(viewer, /efitFrameIdentity/);
@@ -111,8 +119,11 @@ test('EXL analysis sidebar switches accessibly between persistent EFIT and revie
   assert.match(workspace, /role="tab"[\s\S]*?aria-selected=\{mode === 'sensors'\}[\s\S]*?Host points/);
   assert.match(workspace, /if \(nextMode === 'diagnostic'\) efitStore\.actions\.pause\(\)/,
     'leaving EFIT must pause playback without destroying its state');
-  assert.match(workspace, /efitActive=\{analysisMode === 'efit' && efitDisplayMode === 'sections'\}/,
-    'the original geometry must hide in field-line mode as well as other analysis tabs');
+  assert.match(workspace, /efitActive=\{analysisMode === 'efit'\}/,
+    'EFIT geometry and field lines must coexist in the same analysis tab');
+  assert.match(workspace, /fieldlineView=\{analysisMode === 'efit' \? fieldlineView : undefined\}/);
+  assert.doesNotMatch(workspace, /efitDisplayMode/,
+    'field lines must not reintroduce a separate page or independent shot/time state');
   assert.match(workspace, /diagnosticOverlayOptions=\{analysisMode === 'diagnostic'[\s\S]*?\? diagnosticOverlayOptions[\s\S]*?: analysisMode === 'sensors' \? sensorOverlayOptions : undefined\}/);
   assert.match(workspace, /hidden=\{Boolean\(diagnosticContract\) && mode !== 'efit'\}/,
     'EFIT remains mounted while its tab is hidden so shot and time selections persist');
