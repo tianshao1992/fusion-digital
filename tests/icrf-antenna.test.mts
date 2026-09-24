@@ -2,9 +2,9 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
-import { Matrix4, Vector3, Mesh } from 'three';
+import { Color, Matrix4, Vector3, Mesh, MeshStandardMaterial } from 'three';
 import { antennaPlacement, ICRF_MODEL } from '../app/components/device-viewer/icrfAntenna.ts';
-import { loadIcrfAntenna } from '../app/components/device-viewer/IcrfAntennaOverlay.ts';
+import { ICRF_APPEARANCE, loadIcrfAntenna } from '../app/components/device-viewer/IcrfAntennaOverlay.ts';
 
 test('outer limiter is user-confirmed R1350; inner geometry is not deformed', () => {
   const result = antennaPlacement();
@@ -41,19 +41,36 @@ test('fine GLB verifies, decodes all 25 meshes, moves without a new fetch, and d
   globalThis.fetch = async () => { fetches++; return new Response(bytes); };
   try {
     const overlay = await loadIcrfAntenna(new AbortController().signal);
-    let meshes = 0, triangles = 0, disposed = 0;
+    let meshes = 0, triangles = 0, disposed = 0, bodies = 0, limiters = 0, materialsDisposed = 0;
+    const materials = new Set<MeshStandardMaterial>();
     overlay.root.traverse((node) => {
       if (!(node as Mesh).isMesh) return;
       const mesh = node as Mesh;
       meshes++;
       triangles += (mesh.geometry.index?.count ?? mesh.geometry.attributes.position.count) / 3;
       mesh.geometry.addEventListener('dispose', () => disposed++);
+      const isLimiter = mesh.name.includes('限制器');
+      if (isLimiter) limiters++; else bodies++;
+      const style = ICRF_APPEARANCE[isLimiter ? 'limiter' : 'body'];
       for (const material of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
+        assert.ok(material instanceof MeshStandardMaterial);
+        if (!materials.has(material)) material.addEventListener('dispose', () => materialsDisposed++);
+        materials.add(material);
+        assert.ok(material.color.equals(new Color(style.color)));
+        assert.ok(material.emissive.equals(new Color(style.emissive)));
+        assert.equal(material.metalness, style.metalness);
+        assert.equal(material.roughness, style.roughness);
+        assert.equal(material.emissiveIntensity, style.emissiveIntensity);
         assert.equal(material.opacity, 1);
         assert.equal(material.transparent, false);
+        assert.equal(material.depthTest, true);
+        assert.equal(material.depthWrite, true);
+        assert.equal(material.clippingPlanes, null);
       }
     });
     assert.equal(meshes, 25);
+    assert.equal(bodies, 9);
+    assert.equal(limiters, 16);
     assert.equal(triangles, ICRF_MODEL.triangles);
     overlay.setOptions({ visible: true, radiusMm: 1350 });
     overlay.setOptions({ visible: false, radiusMm: 1410 });
@@ -62,6 +79,7 @@ test('fine GLB verifies, decodes all 25 meshes, moves without a new fetch, and d
     assert.equal(fetches, 1);
     overlay.dispose(); overlay.dispose();
     assert.equal(disposed, 25);
+    assert.equal(materialsDisposed, materials.size);
     assert.equal(overlay.root.children.length, 0);
     const controller = new AbortController(); controller.abort();
     await assert.rejects(loadIcrfAntenna(controller.signal));
