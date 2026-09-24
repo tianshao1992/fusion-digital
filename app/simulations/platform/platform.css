@@ -48,6 +48,24 @@
 .transportFieldCanvas > .efitChartFallback { z-index:1; display:grid; place-items:center; padding:40px 24px; }
 .transportFieldCanvas.isReady > .efitChartFallback { visibility:hidden; }
 .transportFieldCanvas > .efitChartStatus { position:absolute; z-index:3; right:12px; bottom:10px; color:var(--color-ink-muted); font-size:13px; }
+.transportLineLayout { display:grid; grid-template-columns:minmax(0,1fr) 205px; gap:18px; margin-top:18px; }
+.transportLineStage { position:relative; min-height:430px; border:1px solid var(--color-border); border-radius:10px; overflow:hidden; background:radial-gradient(ellipse at 46% 44%,color-mix(in srgb,var(--color-accent-strong) 10%,transparent),transparent 68%),var(--color-canvas); }
+.transportLineViewport { position:absolute; inset:0; }
+.transportLineViewport canvas { display:block; width:100%; height:100%; touch-action:none; }
+.transportLineQualifier { position:absolute; top:14px; left:15px; padding:5px 7px; border:1px solid var(--color-border); border-radius:5px; background:var(--color-surface); color:var(--color-ink-muted); font-size:10px; letter-spacing:.02em; pointer-events:none; }
+.transportLineStageFoot { position:absolute; bottom:14px; left:16px; right:16px; display:flex; align-items:center; justify-content:space-between; gap:12px; font-size:11px; color:var(--color-ink-muted); pointer-events:none; }
+.transportLineStageFoot button { pointer-events:auto; font-size:11px; padding:6px 10px; }
+.transportLineStatus { position:absolute; top:42%; left:12%; right:12%; border:1px solid var(--color-border); border-radius:9px; padding:14px; background:var(--color-surface); text-align:center; font-size:12px; }
+.transportLineAside { display:flex; flex-direction:column; gap:14px; padding:12px 0; font-size:12px; }
+.transportLineAside label { display:flex; align-items:center; gap:7px; color:var(--color-ink); }
+.transportLineAside label:has(select) { flex-direction:column; align-items:stretch; }
+.transportLineAside input { accent-color:var(--color-accent-strong); }
+.transportLineLegend { display:grid; gap:8px; border-top:1px solid var(--color-border); padding-top:14px; font:11px/1.4 ui-monospace,monospace; color:var(--color-ink-muted); }
+.transportLineLegend span { display:flex; align-items:center; gap:7px; white-space:nowrap; }
+.transportLineLegend i { width:8px; height:8px; border-radius:50%; box-shadow:0 0 0 1px rgba(0,0,0,.3); }
+.transportLineIdentity { display:block; margin-top:10px; overflow-wrap:anywhere; font-size:10px; color:var(--color-ink-muted); }
+.transportLineUnavailable { margin:18px 0; padding:20px; border:1px dashed var(--color-border); border-radius:9px; background:var(--color-canvas); }
+@media(max-width:720px) { .transportLineLayout { grid-template-columns:1fr; }.transportLineAside { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }.transportLineAside > .transportEyebrow,.transportLineLegend { grid-column:1/-1; }.transportLineStage { min-height:360px; } }
 @media(max-width:1100px) { .engineNavigation > div:first-child > span:last-child { display:none; }.transportLayout { grid-template-columns:210px minmax(0,1fr); gap:18px; }.transportMetrics > div { padding:14px 12px; }.transportMetrics strong { font-size:21px; }.transportPlayback { flex-wrap:wrap; }.transportPanel { padding:20px; }.enginePipeline { gap:10px; }.enginePipeline > button,.enginePipeline > div { padding:14px; } }
 @media(max-width:800px) { .engineNavigation,.transportStudio { width:calc(100% - 32px); }.engineNavigation { flex-direction:column; align-items:flex-start; }.transportHeading { align-items:flex-start; }.transportHeading h1 span { display:block; margin:5px 0 0; font-size:19px; }.transportIdentity { font-size:12px; }.transportLayout { grid-template-columns:1fr; }.transportRecipes { display:flex; gap:12px; overflow:auto; }.transportRailTitle { display:none; }.transportRecipes section { flex:0 0 205px; }.transportRecipes section h3 { margin:0 0 8px; }.transportRecipes button { padding:8px; }.transportMetrics { grid-template-columns:repeat(2,1fr); }.transportMetrics > div { border-bottom:1px solid var(--color-border); }.transportMetrics > div:nth-child(2) { border-right:0; }.transportForm,.transportGateway .transportForm { grid-template-columns:1fr; }.transportTwoColumns { grid-template-columns:1fr; }.enginePipeline { grid-template-columns:1fr; }.enginePipeline > span { text-align:center; transform:rotate(90deg); }.transportCheckGrid { grid-template-columns:1fr; }.transportControls { align-items:flex-start; }.transportControls label { flex-wrap:wrap; }.transportHeading h1 { font-size:28px; }.transportCaseHeading { flex-wrap:wrap; } }
 .transportCompute fieldset { border: 1px solid var(--border, #c6d5ce); border-radius: 12px; padding: 16px; margin: 18px 0; min-width: 0; }

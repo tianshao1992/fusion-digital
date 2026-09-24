@@ -38,6 +38,16 @@
 - 执行成功、示例数值判据、模型适用域、装置验证分开；未建立 EXL-50U 资格。
 - 缺失/非有限样本为 null 或未提供，不补零。线圈初始占位时间/电流可为 null，表格显示“—”。
 
+### 三维磁力线走向展示的资格边界
+
+数字样机 EXL-50U EFIT 的五色磁力线来自指定炮次的离线磁场积分；其坐标不能移植到 DIII-D、FPP、ITER 或 STEP 仿真。仿真工作台只复用五色、环向副本、透视开关与 Three.js 线段显示技术。
+
+- FUSE：在同一个已校验 `fuse-physics` 投影中取五个闭合 ψN 轮廓及 `q(ψN)`，按轮廓弧长铺排每一极向周次的总环向绕行数。支持正负 q；轮廓或剖面缺失、多值、越界时整组不显示。使用平衡快照时间，不能套用不同时刻的核心输运剖面。
+- TORAX：仅对已校验的同一运行 `transport-geometry` 参数化闭合环和 `q(t,ρtor,N)` 构造五色走向示意。播放改变 q 和线的绕行，几何仍是固定输入/重建截面；`cocos:null` 不得默认为 COCOS 11。STEP 输入网格目前没有已审定闭合轮廓，三维线条保持不可用，二维原生场仍可查看。
+- 两者输出均为浏览器端 `derived-display / q-constrained-geometric-helix`，不是引擎原生 `B_R/B_φ/B_Z` 的数值积分线，不证明局部磁场方向、三维平衡、MHD、湍流或装置验证。导出原始求解结果不加入这些示意坐标。
+
+下一阶段如需真正计算磁力线，应新增独立、可版本化的引擎结果制品：源运行 ID 与原生摘要、平衡时刻、坐标与 COCOS、ψ/F 或三分量 B 网格、网格边界/缺失掩膜、积分算法及容差、起点/终止条件、轨迹质量与 SHA-256。发布适配器先校验物理与数值资格，再接入共享渲染层；不能以 q 示意自动升级为真实 B 积分结果。
+
 ## 数据和版本管理
 
 ```text
@@ -58,7 +68,7 @@
 
 ## 复现和开发
 
-保护原工作区的开发位置：`D:\Code\FusionDigital-worktrees\simulation-studio`，分支 `codex/simulation-studio`。可用 Cursor 打开该目录。
+历史开发工作树已迁至 `D:\Code\FusionDigital\work\local-ops\worktrees\simulation-studio`；请先执行 `git worktree list` 核对当前路径与分支，再用 Cursor 打开目标目录，不沿用旧的顶层路径。
 
 ```powershell
 npm ci
