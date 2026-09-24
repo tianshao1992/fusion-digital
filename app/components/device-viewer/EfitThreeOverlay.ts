@@ -1035,7 +1035,7 @@ export function createEfitThreeOverlay(
       && frame?.quality?.state !== 'missing'
       && alignmentValid;
     root.visible = options.visible && frameUsable;
-    if (!frameUsable || !frame) {
+    if (!options.visible || !frameUsable || !frame) {
       sectionLines.visible = false;
       sectionFill.visible = false;
       sectionFillMirror.visible = false;

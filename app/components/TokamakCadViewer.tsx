@@ -76,6 +76,8 @@ import {
 import './tokamak-cad-viewer.css';
 import { antennaPlacement, ICRF_DEFAULT_OPTIONS, type IcrfAntennaOptions, type IcrfAntennaStatus } from './device-viewer/icrfAntenna';
 import type { IcrfAntennaOverlay } from './device-viewer/IcrfAntennaOverlay';
+import type { EfitFieldLineOverlay } from './device-viewer/EfitFieldLineOverlay';
+import type { FieldlineView } from './efit/fieldlines';
 
 const DEFAULT_MANIFEST_URL = '/models/paramak-tokamak-demo/model-manifest.json';
 // GLTFLoader parsing cannot be cancelled. Keep one client-module decode lane so
@@ -92,6 +94,7 @@ const ANALYTIC_FLUX_DARK_COLORS = [
 ];
 
 export type TokamakCadViewerProps = {
+  fieldlineView?: FieldlineView;
   antennaEnabled?: boolean;
   antennaOptions?: IcrfAntennaOptions;
   antennaFocusRequest?: number;
@@ -467,6 +470,7 @@ export default function TokamakCadViewer(props: TokamakCadViewerProps = {}) {
 }
 
 function TokamakCadViewerSession({
+  fieldlineView,
   antennaEnabled = false,
   antennaOptions = ICRF_DEFAULT_OPTIONS,
   antennaFocusRequest = 0,
@@ -524,6 +528,8 @@ function TokamakCadViewerSession({
   const fullscreenRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<ViewerApi | null>(null);
   const antennaRef = useRef<IcrfAntennaOverlay | null>(null);
+  const fieldlineRef = useRef<EfitFieldLineOverlay | null>(null);
+  const fieldlineViewRef = useRef(fieldlineView);
   const antennaOptionsRef = useRef(antennaOptions);
   const antennaStatusRef = useRef(onAntennaStatus);
   useEffect(() => {
@@ -744,6 +750,23 @@ function TokamakCadViewerSession({
   const ehl2LoadBlocked = ehl2Session && ehl2RuntimePolicy?.allowed !== true;
 
   useEffect(() => { antennaStatusRef.current = onAntennaStatus; }, [onAntennaStatus]);
+  useEffect(() => {
+    fieldlineViewRef.current = fieldlineView;
+    fieldlineRef.current?.setView(fieldlineView ?? { frame: null, xray: true, clip: false });
+  }, [fieldlineView]);
+  useEffect(() => {
+    const viewer = viewerRef.current;
+    if (!antennaEnabled || status !== 'ready' || !viewer) return;
+    let disposed = false; let overlay: EfitFieldLineOverlay | null = null;
+    void import('./device-viewer/EfitFieldLineOverlay').then(({ createEfitFieldLineOverlay, EMPTY_FIELDLINE_VIEW }) => {
+      if (disposed) return;
+      overlay = createEfitFieldLineOverlay(viewer.model, viewer.renderer, viewer.clippingPlane);
+      fieldlineRef.current = overlay;
+      overlay.setClippingEnabled(interactionRef.current.clipping);
+      overlay.setView(fieldlineViewRef.current ?? EMPTY_FIELDLINE_VIEW);
+    });
+    return () => { disposed = true; overlay?.dispose(); if (fieldlineRef.current === overlay) fieldlineRef.current = null; };
+  }, [antennaEnabled, status]);
   useEffect(() => {
     antennaOptionsRef.current = antennaOptions;
     antennaRef.current?.setOptions(antennaOptions);
@@ -968,6 +991,8 @@ function TokamakCadViewerSession({
       localControls?.dispose();
       antennaRef.current?.dispose();
       antennaRef.current = null;
+      fieldlineRef.current?.dispose();
+      fieldlineRef.current = null;
       localDiagnosticOverlay?.dispose();
       localDiagnosticOverlay = null;
       localEfitOverlay?.dispose();
@@ -1968,6 +1993,7 @@ function TokamakCadViewerSession({
         camera.aspect = width / height;
         renderer.setSize(width, height, false);
         localEfitOverlay?.resize(width, height);
+        fieldlineRef.current?.resize(width, height);
         if (refit) {
           setView(currentPreset);
         } else {
@@ -2064,6 +2090,7 @@ function TokamakCadViewerSession({
           cadClippingEnabled = enabled;
           applyCadClippingPlanes();
           localEfitOverlay?.setClippingEnabled(enabled);
+          fieldlineRef.current?.setClippingEnabled(enabled);
           if (analyticFluxBandRoot) analyticFluxBandRoot.visible = enabled && axis === 'z';
         },
         setOpacity,

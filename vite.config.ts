@@ -38,6 +38,10 @@ const localBindingConfig = {
       "/device-data/exl50u-efit-v2/*",
       "/data/exl50u-efit-v2",
       "/data/exl50u-efit-v2/*",
+      "/device-data/exl50u-fieldlines-v1",
+      "/device-data/exl50u-fieldlines-v1/*",
+      "/data/exl50u-fieldlines-v1",
+      "/data/exl50u-fieldlines-v1/*",
     ],
   },
   d1_databases: d1

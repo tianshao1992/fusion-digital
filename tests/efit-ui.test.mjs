@@ -111,7 +111,8 @@ test('EXL analysis sidebar switches accessibly between persistent EFIT and revie
   assert.match(workspace, /role="tab"[\s\S]*?aria-selected=\{mode === 'sensors'\}[\s\S]*?Host points/);
   assert.match(workspace, /if \(nextMode === 'diagnostic'\) efitStore\.actions\.pause\(\)/,
     'leaving EFIT must pause playback without destroying its state');
-  assert.match(workspace, /efitActive=\{analysisMode === 'efit'\}/);
+  assert.match(workspace, /efitActive=\{analysisMode === 'efit' && efitDisplayMode === 'sections'\}/,
+    'the original geometry must hide in field-line mode as well as other analysis tabs');
   assert.match(workspace, /diagnosticOverlayOptions=\{analysisMode === 'diagnostic'[\s\S]*?\? diagnosticOverlayOptions[\s\S]*?: analysisMode === 'sensors' \? sensorOverlayOptions : undefined\}/);
   assert.match(workspace, /hidden=\{Boolean\(diagnosticContract\) && mode !== 'efit'\}/,
     'EFIT remains mounted while its tab is hidden so shot and time selections persist');

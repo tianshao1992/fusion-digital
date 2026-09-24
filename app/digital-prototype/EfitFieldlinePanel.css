@@ -1,0 +1,28 @@
+.fieldlinePanel { margin: 16px; padding: 20px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); color: var(--color-ink); }
+.fieldlinePanel header, .fieldlineTime, .fieldlinePlayback { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.fieldlinePanel h3 { margin: 6px 0 18px; font-size: 1.4rem; }
+.fieldlinePanel small { font-size: .8rem; letter-spacing: .08em; }
+.fieldlinePanel label { display: inline-flex; align-items: center; gap: 8px; font-size: .9rem; }
+.fieldlinePanel select, .fieldlinePanel button { padding: 9px 12px; border: 1px solid var(--color-border); border-radius: 5px; background: var(--color-canvas); color: inherit; font: inherit; cursor: pointer; }
+.fieldlinePanel button:disabled { opacity: .45; cursor: default; }
+.fieldlinePanel input[type=range] { width: 100%; margin: 16px 0; accent-color: var(--color-accent); }
+.fieldlinePanel input[type=checkbox] { accent-color: var(--color-accent); }
+.fieldlineTime strong { font-size: 1.7rem; font-variant-numeric: tabular-nums; }
+.fieldlineTime span, .fieldlineStatus { font-size: .9rem; }
+.fieldlineStatus { margin-top: 10px; min-height: 2.5em; }
+.fieldlineOptions, .fieldlineLegend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 18px; font-size: .9rem; }
+.fieldlineLegend span { display: inline-flex; gap: 5px; align-items: center; }
+.fieldlineLegend i { width: 13px; height: 13px; border: 1px solid #111; border-radius: 50%; }
+.fieldlineSection { display: flex; gap: 12px; align-items: center; margin: 20px 0; }
+.fieldlineSection svg { width: 55%; max-height: 280px; overflow: visible; }
+.fieldlineSection text { fill: currentColor; font-size: 11px; }
+.fieldlineSection figcaption { font-size: .9rem; line-height: 1.7; }
+.fieldlineAxes { stroke: var(--line); fill: none; }
+.fieldlineBoundary { stroke: currentColor; fill: none; stroke-width: 1.5; }
+.fieldlineAntennaMark { stroke: var(--color-accent); stroke-width: 5; }
+.fieldlinePanel p, .fieldlinePanel summary { font-size: .875rem; line-height: 1.7; }
+.fieldlinePanel summary { cursor: pointer; }
+.fieldlineDigest { overflow-wrap: anywhere; font-family: monospace; }
+.efitDisplayModes { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px; }
+.efitDisplayModes button { flex: 1; min-width: 130px; font: inherit; font-size: .9rem; padding: 12px; border: 1px solid var(--color-border); color: var(--color-ink); background: var(--color-surface); cursor: pointer; }
+.efitDisplayModes button[aria-pressed=true] { border-color: var(--color-accent); background: var(--color-accent-soft); color: var(--color-accent-strong); box-shadow: inset 0 -2px var(--color-accent); }

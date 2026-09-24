@@ -350,12 +350,23 @@ for (const [shot, partCount] of controlledEfitV2ChunkCounts) {
   }
 }
 
+// Line-only IMAS derivative: two audited shots, never a wildcard to source H5/grids.
+controlledEfitAssets.set('/device-data/exl50u-fieldlines-v1/index.json', '/data/exl50u-fieldlines-v1/index.json');
+for (const [shot, count] of [[21066, 49], [21138, 51]]) {
+  for (let part = 0; part < count; part++) {
+    const name = `shot-${shot}-part-${String(part).padStart(3, '0')}.jsonl.gz`;
+    controlledEfitAssets.set(`/device-data/exl50u-fieldlines-v1/${name}`, `/data/exl50u-fieldlines-v1/${name}`);
+  }
+}
+
 function isControlledEfitNamespace(pathname: string): boolean {
   return [
     "/device-data/exl50u-efit",
     "/device-data/exl50u-efit-v2",
     "/data/exl50u-efit",
     "/data/exl50u-efit-v2",
+    "/device-data/exl50u-fieldlines-v1",
+    "/data/exl50u-fieldlines-v1",
   ].some((root) => pathname === root || pathname.startsWith(`${root}/`));
 }
 

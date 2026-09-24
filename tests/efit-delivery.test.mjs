@@ -203,6 +203,28 @@ test("EFIT v2 Worker serves only raw-gzip reviewed chunks with no HTTP content d
   assert.deepEqual([...Buffer.from(await ranged.response.arrayBuffer()).subarray(0, 2)], [0x1f, 0x8b]);
 });
 
+test("Field-line delivery retains compressed bytes and rejects unreviewed paths", async () => {
+  const routes = ["index.json", "shot-21066-part-000.jsonl.gz", "shot-21066-part-048.jsonl.gz", "shot-21138-part-000.jsonl.gz", "shot-21138-part-050.jsonl.gz"];
+  for (const file of routes) {
+    const route = `/device-data/exl50u-fieldlines-v1/${file}`;
+    const { response, assetRequests } = await fetchFromWorker(route);
+    assert.equal(response.status, 200, route);
+    secureHeaders(response);
+    assert.equal(response.headers.get("content-encoding"), null);
+    assert.equal(assetRequests[0].pathname, route.replace("/device-data/", "/data/"));
+    const payload = Buffer.from(await response.arrayBuffer());
+    assert.deepEqual(payload, await readFile(resolve(publicRoot, "data/exl50u-fieldlines-v1", file)));
+    const { response: head } = await fetchFromWorker(route, { method: "HEAD" });
+    assert.equal(head.status, 200);
+    assert.equal((await head.arrayBuffer()).byteLength, 0);
+  }
+  for (const route of ["/device-data/exl50u-fieldlines-v1/", "/device-data/exl50u-fieldlines-v1/shot-21066-part-049.jsonl.gz", "/device-data/exl50u-fieldlines-v1/shot-21138-part-051.jsonl.gz", "/data/exl50u-fieldlines-v1/index.json", "/device-data/exl50u-fieldlines-v1/equilibrium.h5"]) {
+    const { response, assetRequests } = await fetchFromWorker(route);
+    assert.equal(response.status, 404, route);
+    assert.equal(assetRequests.length, 0);
+  }
+});
+
 test("EFIT Worker blocks direct storage paths, unknown files, directories, and write methods", async () => {
   const denied = [
     "/device-data/exl50u-efit",
