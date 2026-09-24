@@ -13,6 +13,7 @@ import { revolveContours, type RevolvedSurface } from './flux-surface-geometry';
 import { buildFieldDisplayRaster } from './field-display-raster';
 import { buildFuseQFieldLines } from './simulation-fieldlines';
 import type { SimulationFieldLineOverlay } from './SimulationFieldLineOverlay';
+import { SURFACE_SCENE_STYLE } from './surface-scene-style';
 import './flux-surface-demo.css';
 
 type CameraPose = { position: [number, number, number]; target: [number, number, number] };
@@ -99,13 +100,14 @@ export default function FluxSurfaceDemo({ data, coordinateMap, field, onFieldCha
         fieldLineOccluder.current = null;
         renderScene.current = null;
         renderer.dispose();
+        renderer.forceContextLoss();
         renderer.domElement.remove();
         reset.current = null;
       };
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
       renderer.setClearColor(0x000000, 0);
       renderer.toneMapping = T.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.35;
+      renderer.toneMappingExposure = SURFACE_SCENE_STYLE.exposure;
       renderer.domElement.setAttribute('role', 'img');
       renderer.domElement.setAttribute('aria-label', en ? 'Axisymmetric flux surface, derived from the exported R-Z contour' : '由导出 R-Z 轮廓旋转生成的轴对称磁通面');
       renderer.domElement.addEventListener('webglcontextlost', lost);
@@ -113,15 +115,15 @@ export default function FluxSurfaceDemo({ data, coordinateMap, field, onFieldCha
       const scene = new T.Scene();
       const radius = Math.max(bounds.rMax, (bounds.zMax - bounds.zMin) / 2, 0.1);
       const centerZ = (bounds.zMin + bounds.zMax) / 2;
-      const camera = new T.PerspectiveCamera(36, 1, radius / 100, radius * 100);
+      const camera = new T.PerspectiveCamera(SURFACE_SCENE_STYLE.fov, 1, radius / 100, radius * 100);
       const controls = new OrbitControls(camera, renderer.domElement);
       resources.controls = controls;
       controls.enableDamping = false;
-      controls.minDistance = radius * 0.7;
-      controls.maxDistance = radius * 12;
-      controls.maxPolarAngle = Math.PI * 0.94;
+      controls.minDistance = radius * SURFACE_SCENE_STYLE.minDistance;
+      controls.maxDistance = radius * SURFACE_SCENE_STYLE.maxDistance;
+      controls.maxPolarAngle = SURFACE_SCENE_STYLE.maxPolarAngle;
       const home = () => {
-        camera.position.set(radius * 2.7, centerZ + radius * 1.9, radius * 3.5);
+        camera.position.set(radius * SURFACE_SCENE_STYLE.home[0], centerZ + radius * SURFACE_SCENE_STYLE.home[1], radius * SURFACE_SCENE_STYLE.home[2]);
         controls!.target.set(0, centerZ, 0);
         controls!.update();
       };
@@ -162,7 +164,7 @@ export default function FluxSurfaceDemo({ data, coordinateMap, field, onFieldCha
       occluder.visible = !currentFieldLineView.current.xray && currentFieldLineView.current.lines.length > 0;
       fieldLineOccluder.current = occluder;
       scene.add(occluder);
-      if (fieldRaster && fieldProjection) {
+      if (slice && fieldRaster && fieldProjection) {
         // The native LCFS polygon supplies the edge, avoiding a staircase of cell rectangles.
         const shape = new T.Shape(data.equilibrium.boundary.map(([r, z]) => new T.Vector2(r, z)));
         const sliceGeometry = new T.ShapeGeometry(shape); geometries.push(sliceGeometry);
