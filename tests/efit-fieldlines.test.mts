@@ -5,23 +5,34 @@ import { createHash } from 'node:crypto';
 import { gunzipSync, gzipSync } from 'node:zlib';
 import { Group, Plane, type WebGLRenderer, type Mesh } from 'three';
 import { createFieldlineSource, parseFieldlineCatalog, parseFieldlineFrame, fieldlineTimeSelection,
+  antennaFluxAtRadius,
   type FieldlineFrame, type FieldlineShot, type FieldlineSummary } from '../app/components/efit/fieldlines.ts';
 import { createEfitFieldLineOverlay, fieldlineWebPoints } from '../app/components/device-viewer/EfitFieldLineOverlay.ts';
 import { createEfitThreeOverlay, type EfitRenderableFrame } from '../app/components/device-viewer/EfitThreeOverlay.ts';
+import { fieldlineEfitFrame, fieldlineEfitSummary, withFieldlineEquilibria } from '../app/components/efit/fieldline-data-source.ts';
+import type { EfitDataSource, EfitManifest } from '../app/components/efit/types.ts';
 
 const sha = 'a'.repeat(64);
+const scalars = { currentA: 500000, rAxisM: .8, zAxisM: 0, bcentrT: .8, psiAxisWb: -1, psiBoundaryWb: 1, q95: 9 };
 function fixtureFrame(): FieldlineFrame {
   return { shot: 21066, index: 0, sourceIndex: 0, timeMs: 100, state: 'valid', boundaryRz: [1, 0, 1.1, 0, 1, .1], axisRz: [.8, 0],
-    lines: [.25, .5, .75, .9, .97].map((psiN) => ({ psiN, points: [1, 0, 0, 1, 1, 0, 1, 2, 0], maxPsiNDrift: 1e-6, termination: ['toroidal-turn-limit', 'toroidal-turn-limit'], arcLengthM: [6, 6] })) };
+    efitScalars: { ...scalars }, efitContours: [{ psiN: 1, pointsRzM: [1, 0, 1.1, 0, 1, .1, 1, 0], closed: true }],
+    antennaMidplaneFlux: { rStartM: 1.1, rStepM: .001, zM: 0, phiDegrees: 300,
+      psiWb: Array.from({ length: 501 }, (_, i) => i / 1000 + .5), psiAxisWb: -1, psiBoundaryWb: 1,
+      lcfsIntervalsRM: [[.3, 1.35]], method: 'cubic-source-grid-sampled-linear-display' },
+    lines: [.25, .5, .75, .9, .97].map((psiN) => ({ psiN, points: [1, 0, 0, 1, 1, 0, 1, 2, 0], maxPsiNDrift: 1e-6,
+      termination: ['poloidal-coverage-complete', 'poloidal-coverage-complete'], arcLengthM: [6, 6],
+      poloidalSpanRad: [Math.PI, Math.PI], toroidalSpanRad: [Math.PI, Math.PI], sourceQ: 1, qTrace: 1,
+      qRelativeDifference: 0, poloidalClosureErrorM: 0 })) };
 }
 function fixtureShot(): FieldlineShot {
   return { shot: 21066, sourceSha256: sha, sourceFrameCount: 1,
-    frames: [{ index: 0, sourceIndex: 0, timeMs: 100, state: 'valid', lineCount: 5, maxPsiNDrift: 1e-6 }],
+    frames: [{ index: 0, sourceIndex: 0, timeMs: 100, state: 'valid', lineCount: 5, maxPsiNDrift: 1e-6, efitScalars: { ...scalars } }],
     chunks: [{ file: 'shot-21066-part-000.jsonl.gz', firstIndex: 0, frameCount: 1, byteLength: 100, sha256: sha }] };
 }
 function fixtureCatalog() {
   const first = fixtureShot(); const second = fixtureShot(); second.shot = 21138; second.chunks[0].file = 'shot-21138-part-000.jsonl.gz';
-  return { schemaVersion: 'fusion.efit.fieldlines.v1', model: 'axisymmetric-equilibrium', coordinates: 'R-phi-Z:m-rad-m', algorithmVersion: 'test-v1', phiDegrees: 300, seedPsiN: [.25, .5, .75, .9, .97], shots: [first, second] };
+  return { schemaVersion: 'fusion.efit.fieldlines.v2', model: 'axisymmetric-equilibrium', coordinates: 'R-phi-Z:m-rad-m', algorithmVersion: 'axisymmetric-core-full-poloid-rk45-v2', phiDegrees: 300, seedPsiN: [.25, .5, .75, .9, .97], shots: [first, second] };
 }
 
 test('catalog binds two source shots, exact frames, sorted time and controlled chunk paths', () => {
@@ -42,6 +53,8 @@ test('frames fail closed on shot/time mismatch, nonfinite coordinates, excess dr
     (f: FieldlineFrame) => { f.shot = 21138; }, (f: FieldlineFrame) => { f.timeMs = 101; },
     (f: FieldlineFrame) => { f.lines[0].points[1] = NaN; },
     (f: FieldlineFrame) => { f.lines[0].maxPsiNDrift = .1; },
+    (f: FieldlineFrame) => { f.lines[0].poloidalSpanRad = [1, 1]; },
+    (f: FieldlineFrame) => { f.lines[0].sourceQ = 20; f.lines[0].qTrace = .05; },
     (f: FieldlineFrame) => { f.lines[0].points = new Array(100_000).fill(1); },
   ]) { const f = fixtureFrame(); mutate(f); assert.throws(() => parseFieldlineFrame(f, shot, shot.frames[0])); }
 });
@@ -71,8 +84,66 @@ test('overlay reuses fixed buffers; hide, clipping and dispose do not duplicate 
   overlay.setView({ frame: f, xray: false, clip: true });
   assert.equal(layer.geometry.getAttribute('instanceStart'), original);
   assert.equal(root.children.length, 1); assert.equal(root.children[0].children.length, 10);
+  overlay.setView({ frame: f, xray: false, clip: true, copies: 8 });
+  assert.equal((layer.geometry as unknown as { instanceCount: number }).instanceCount, 16);
+  assert.equal(layer.geometry.getAttribute('instanceStart'), original);
   overlay.setView({ frame: null, xray: true, clip: false }); assert.equal(root.children[0].visible, false);
   overlay.dispose(); overlay.dispose(); assert.equal(root.children.length, 0);
+});
+
+test('antenna flux updates at the reference radius and labels outside LCFS without extrapolation', () => {
+  const f = fixtureFrame();
+  const a = antennaFluxAtRadius(f, 1350)!;
+  assert.ok(Math.abs(a.psiWb - .75) < 1e-12); assert.ok(a.insideLcfs);
+  assert.ok(Math.abs(a.psiN - .875) < 1e-12);
+  assert.equal(antennaFluxAtRadius(f, 1500)!.insideLcfs, false);
+  assert.ok(Math.abs(antennaFluxAtRadius(f, 1350.5)!.psiWb - .7505) < 1e-12);
+  for (const r of [1099, 1601, NaN]) assert.equal(antennaFluxAtRadius(f, r), null);
+  f.state = 'unavailable'; f.lines = [];
+  assert.ok(antennaFluxAtRadius(f, 1350), 'line rejection does not invalidate source flux');
+  f.antennaMidplaneFlux!.psiWb[250] = null;
+  assert.equal(antennaFluxAtRadius(f, 1350), null);
+});
+
+test('one EFIT adapter preserves exact source identity and converts total Wb to Wb/rad', () => {
+  const raw = fixtureFrame(); const shot = fixtureShot();
+  const frame = fieldlineEfitFrame(shot, raw);
+  assert.equal(frame.fieldlineFrame, raw); assert.equal(frame.timeMs, 100);
+  assert.equal(frame.psiAxisWbPerRad, -1 / (2 * Math.PI));
+  assert.equal(frame.psiBoundaryWbPerRad, 1 / (2 * Math.PI));
+  assert.equal(frame.contours[0].kind, 'lcfs');
+  const rejected = { ...shot.frames[0], state: 'unavailable' as const, lineCount: 0 };
+  assert.equal(fieldlineEfitSummary(21066, rejected).quality.state, 'good');
+});
+
+test('abort of one seek cannot poison another consumer of the same chunk', async () => {
+  const shot = fixtureShot(); const bytes = gzipSync(JSON.stringify(fixtureFrame()) + '\n');
+  shot.chunks[0].byteLength = bytes.length; shot.chunks[0].sha256 = createHash('sha256').update(bytes).digest('hex');
+  let complete!: () => void; let calls = 0;
+  const source = createFieldlineSource(async () => { calls++; await new Promise<void>((r) => { complete = r; }); return new Response(bytes); });
+  const first = new AbortController(); const second = new AbortController();
+  const abandoned = source.frame(shot, 0, first.signal).catch((e) => e.name);
+  first.abort();
+  const retained = source.frame(shot, 0, second.signal);
+  complete();
+  assert.equal(await abandoned, 'AbortError'); assert.equal((await retained).timeMs, 100);
+  assert.equal(calls, 1); source.clear();
+});
+
+test('composed catalogue keeps old shots and independent raw geometry, with one same-frame load', async () => {
+  const original = { schema: 'test', device: 'EXL-50U', psiNLevels: [.5, 1],
+    geometry: { geometryId: 'old-wall', limiterRzM: { rM: [], zM: [], validPoints: 0 } },
+    shots: [{ shot: 18301, frames: [] }] } as unknown as EfitManifest;
+  let baseLoads = 0; let baseDisposed = false;
+  const base: EfitDataSource = { loadManifest: async () => original, loadTimeline: async () => [],
+    loadFrame: async () => { baseLoads++; return {} as never; }, dispose: () => { baseDisposed = true; } };
+  const source = withFieldlineEquilibria(base, async () => new Response(JSON.stringify(fixtureCatalog())));
+  const manifest = await source.loadManifest();
+  assert.deepEqual(manifest.shots.map((s) => s.shot), [18301, 21066, 21138]);
+  assert.notEqual(manifest.shots[1].geometryId, 'old-wall');
+  assert.equal((await source.loadTimeline(21066))[0].timeMs, 100);
+  await source.loadFrame(18301, 0); assert.equal(baseLoads, 1);
+  source.dispose?.(); assert.ok(baseDisposed);
 });
 
 test('hidden legacy EFIT does not rebuild geometry while field lines play; showing restores its latest frame', () => {

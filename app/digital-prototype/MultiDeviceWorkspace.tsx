@@ -29,6 +29,7 @@ import TurntableDeviceViewer from './TurntableDeviceViewer';
 import IcrfAntennaPanel from './IcrfAntennaPanel';
 import EfitFieldlinePanel from './EfitFieldlinePanel';
 import type { FieldlineView } from '../components/efit/fieldlines';
+import { withFieldlineEquilibria } from '../components/efit/fieldline-data-source';
 import type { EfitAlignmentContract, EfitThreeOverlayOptions } from '../components/device-viewer/EfitThreeOverlay';
 import { ICRF_DEFAULT_OPTIONS, type IcrfAntennaOptions, type IcrfAntennaStatus } from '../components/device-viewer/icrfAntenna';
 
@@ -171,7 +172,6 @@ function ResizableDeviceExperience({
   const [preferenceLoaded, setPreferenceLoaded] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [analysisMode, setAnalysisMode] = useState<Exl50uAnalysisMode>('efit');
-  const [efitDisplayMode, setEfitDisplayMode] = useState<'sections' | 'fieldlines'>('sections');
   const [fieldlineView, setFieldlineView] = useState<FieldlineView>({ frame: null, xray: true, clip: false });
   const [antennaOptions, setAntennaOptions] = useState<IcrfAntennaOptions>({ ...ICRF_DEFAULT_OPTIONS });
   const [antennaStatus, setAntennaStatus] = useState<IcrfAntennaStatus>('waiting');
@@ -291,8 +291,8 @@ function ResizableDeviceExperience({
         device={device}
         efitOverlay={efitOverlay}
         efitStore={efitStore}
-        efitActive={analysisMode === 'efit' && efitDisplayMode === 'sections'}
-        fieldlineView={analysisMode === 'efit' && efitDisplayMode === 'fieldlines' ? fieldlineView : undefined}
+        efitActive={analysisMode === 'efit'}
+        fieldlineView={analysisMode === 'efit' ? fieldlineView : undefined}
         diagnosticOverlayOptions={analysisMode === 'diagnostic'
           ? diagnosticOverlayOptions
           : analysisMode === 'sensors' ? sensorOverlayOptions : undefined}
@@ -343,13 +343,11 @@ function ResizableDeviceExperience({
       onSelectedSensorIdChange={setSelectedSensorId}
       onSensorOverlayChange={setSensorOverlayOptions}
       onSensorFocusPoint={(point) => setSensorFocusPoint([...point] as [number, number, number])}
-      efitDisplayMode={efitDisplayMode}
-      onEfitDisplayModeChange={(mode) => { efitStore.actions.pause(); setEfitDisplayMode(mode); }}
       fieldlinePanel={device.id === 'exl-50u-2026-upgrade' ? <EfitFieldlinePanel
-        active={analysisMode === 'efit' && efitDisplayMode === 'fieldlines'}
-        antennaRadiusMm={antennaOptions.radiusMm} onView={setFieldlineView}
+        active={analysisMode === 'efit'} store={efitStore} onView={setFieldlineView}
       /> : undefined}
       antennaPanel={device.id === 'exl-50u-2026-upgrade' ? <IcrfAntennaPanel
+        store={efitStore}
         options={antennaOptions} status={antennaStatus} onChange={setAntennaOptions}
         onFocus={() => { setAntennaOptions((current) => ({ ...current, visible: true })); setAntennaFocusRequest((value) => value + 1); }}
         onRetry={() => setAntennaRetry((value) => value + 1)}
@@ -368,9 +366,11 @@ function DeviceExperience({ device }: { device: DeviceCatalogEntry }) {
 function StandardDeviceExperience({ device }: { device: DeviceCatalogEntry }) {
   const efitOverlay = device.physicsOverlays.find((overlay) => overlay.kind === 'axisymmetric-equilibrium');
   const endpoint = efitOverlay?.manifestEndpoint ?? null;
-  const efitStore = useMemo(() => endpoint
-    ? createEfitStore(createEfitHybridDataSource({ indexUrl: endpoint }))
-    : null, [endpoint]);
+  const efitStore = useMemo(() => {
+    if (!endpoint) return null;
+    const base = createEfitHybridDataSource({ indexUrl: endpoint });
+    return createEfitStore(device.id === 'exl-50u-2026-upgrade' ? withFieldlineEquilibria(base) : base);
+  }, [endpoint, device.id]);
 
   useEffect(() => () => efitStore?.destroy(), [efitStore]);
 
@@ -517,7 +517,7 @@ function DeviceAnalysisPanel({
   onSensorOverlayChange,
   onSensorFocusPoint,
   antennaPanel,
-  fieldlinePanel, efitDisplayMode, onEfitDisplayModeChange,
+  fieldlinePanel,
 }: {
   device: DeviceCatalogEntry;
   overlay: DeviceCatalogEntry['physicsOverlays'][number];
@@ -533,8 +533,6 @@ function DeviceAnalysisPanel({
   onSensorFocusPoint: (point: readonly [number, number, number]) => void;
   antennaPanel?: ReactNode;
   fieldlinePanel?: ReactNode;
-  efitDisplayMode: 'sections' | 'fieldlines';
-  onEfitDisplayModeChange: (mode: 'sections' | 'fieldlines') => void;
 }) {
   const { content, locale, t } = useI18n();
   const english = locale === 'en';
@@ -583,20 +581,14 @@ function DeviceAnalysisPanel({
       aria-labelledby={diagnosticContract ? efitTabId : undefined}
       hidden={Boolean(diagnosticContract) && mode !== 'efit'}
     >
-      {antennaPanel}
-      {fieldlinePanel && <div className="efitDisplayModes" role="group" aria-label={english ? 'EFIT display' : 'EFIT 显示方式'}>
-        <button type="button" aria-pressed={efitDisplayMode === 'sections'} onClick={() => onEfitDisplayModeChange('sections')}>{english ? 'Sections & surfaces' : '截面与曲面'}</button>
-        <button type="button" aria-pressed={efitDisplayMode === 'fieldlines'} onClick={() => onEfitDisplayModeChange('fieldlines')}>{english ? '3D field lines · 2 shots' : '三维磁力线 · 2 炮'}</button>
-      </div>}
-      <div hidden={efitDisplayMode !== 'fieldlines'}>{fieldlinePanel}</div>
-      <div hidden={Boolean(fieldlinePanel) && efitDisplayMode !== 'sections'}>
       <EfitPanel
         store={store}
         preferredShot={overlay.defaultShot}
         preferredTimeMs={overlay.defaultTimeMs}
         title={t('workspace.efitTitle')}
+        overlayControls={fieldlinePanel}
       />
-      </div>
+      {antennaPanel}
     </div>
     {diagnosticContract && <div
       id={diagnosticPanelId}

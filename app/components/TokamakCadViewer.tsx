@@ -2190,6 +2190,13 @@ function TokamakCadViewerSession({
       if (identity === renderedIdentity) return;
       renderedIdentity = identity;
       overlay.setFrame(frame);
+      // Never leave an older line frame over a newly committed EFIT equilibrium.
+      const lines = fieldlineViewRef.current;
+      const current = frame;
+      if (lines?.frame && (lines.frame.shot !== current?.shot || lines.frame.sourceIndex !== current.index
+        || lines.frame.timeMs !== current.timeMs)) {
+        fieldlineRef.current?.setView({ ...lines, frame: null });
+      }
     };
     sync();
     return efitStore.subscribe(sync);

@@ -1,9 +1,20 @@
-/** Public, line-only derivative. Source H5 and magnetic-field grids stay private. */
+/** Reviewed public derivatives; source H5 and full field grids stay private. */
 export const FIELDLINE_INDEX_URL = '/device-data/exl50u-fieldlines-v1/index.json';
 export const FIELDLINE_COLORS = ['#ffdf00', '#ff5266', '#42a5ff', '#92ff53', '#ff75d8'] as const;
+export const FIELDLINE_COPIES = [1, 2, 4, 8] as const;
+export type EfitSourceScalars = {
+  currentA: number; rAxisM: number; zAxisM: number; bcentrT: number;
+  psiAxisWb: number; psiBoundaryWb: number; q95: number | null;
+};
+export type AntennaMidplaneFlux = {
+  rStartM: number; rStepM: number; zM: 0; phiDegrees: 300;
+  psiWb: (number | null)[]; psiAxisWb: number; psiBoundaryWb: number;
+  lcfsIntervalsRM: [number, number][]; method: 'cubic-source-grid-sampled-linear-display';
+};
 export type FieldlineSummary = {
   index: number; sourceIndex: number; timeMs: number; state: 'valid' | 'unavailable';
   reason?: string; lineCount: number; maxPsiNDrift: number;
+  efitScalars: EfitSourceScalars | null;
 };
 export type FieldlineChunk = { file: string; firstIndex: number; frameCount: number; byteLength: number; sha256: string };
 export type FieldlineShot = {
@@ -11,20 +22,43 @@ export type FieldlineShot = {
   frames: FieldlineSummary[]; chunks: FieldlineChunk[];
 };
 export type FieldlineCatalog = {
-  schemaVersion: 'fusion.efit.fieldlines.v1'; model: 'axisymmetric-equilibrium';
+  schemaVersion: 'fusion.efit.fieldlines.v2'; model: 'axisymmetric-equilibrium';
   coordinates: 'R-phi-Z:m-rad-m'; algorithmVersion: string; seedPsiN: number[]; phiDegrees: number;
   shots: FieldlineShot[];
 };
 export type Fieldline = {
   psiN: number; points: number[]; maxPsiNDrift: number;
   termination: [string, string]; arcLengthM: [number, number];
+  poloidalSpanRad: [number, number]; toroidalSpanRad: [number, number];
+  sourceQ: number; qTrace: number; qRelativeDifference: number; poloidalClosureErrorM: number;
 };
 export type FieldlineFrame = {
   shot: number; index: number; sourceIndex: number; timeMs: number;
   state: 'valid' | 'unavailable'; reason?: string; lines: Fieldline[];
   boundaryRz: number[]; axisRz: number[];
+  efitScalars: EfitSourceScalars | null;
+  efitContours: { psiN: number; pointsRzM: number[]; closed: true }[];
+  antennaMidplaneFlux: AntennaMidplaneFlux | null;
 };
-export type FieldlineView = { frame: FieldlineFrame | null; xray: boolean; clip: boolean };
+export type FieldlineView = { frame: FieldlineFrame | null; xray: boolean; clip: boolean; copies?: number };
+
+/** Flux function at the outer-limiter midplane reference, NOT flux through the antenna. */
+export function antennaFluxAtRadius(frame: FieldlineFrame | null | undefined, radiusMm: number) {
+  const data = frame?.antennaMidplaneFlux;
+  if (!data || !Number.isFinite(radiusMm)) return null;
+  const r = radiusMm / 1000;
+  const x = (r - data.rStartM) / data.rStepM;
+  if (x < -1e-9 || x > data.psiWb.length - 1 + 1e-9) return null;
+  const bounded = Math.max(0, Math.min(data.psiWb.length - 1, x));
+  const i = Math.floor(bounded); const j = Math.min(i + 1, data.psiWb.length - 1);
+  const a = data.psiWb[i]; const b = data.psiWb[j];
+  if (a === null || b === null) return null;
+  const psiWb = a + (b - a) * (bounded - i);
+  const span = data.psiBoundaryWb - data.psiAxisWb;
+  if (!Number.isFinite(psiWb) || Math.abs(span) < 1e-12) return null;
+  return { psiWb, psiN: (psiWb - data.psiAxisWb) / span,
+    insideLcfs: data.lcfsIntervalsRM.some(([lo, hi]) => r >= lo && r <= hi) };
+}
 
 function insist(ok: unknown, message: string): asserts ok { if (!ok) throw new Error(message); }
 function finite(n: unknown): n is number { return typeof n === 'number' && Number.isFinite(n); }
@@ -37,9 +71,9 @@ function obj(value: unknown): Record<string, unknown> {
 
 export function parseFieldlineCatalog(value: unknown): FieldlineCatalog {
   const data = obj(value);
-  insist(data.schemaVersion === 'fusion.efit.fieldlines.v1' && data.model === 'axisymmetric-equilibrium'
+  insist(data.schemaVersion === 'fusion.efit.fieldlines.v2' && data.model === 'axisymmetric-equilibrium'
     && data.coordinates === 'R-phi-Z:m-rad-m' && data.phiDegrees === 300, 'Unsupported field-line convention.');
-  insist(typeof data.algorithmVersion === 'string' && data.algorithmVersion.length < 128, 'Missing algorithm version.');
+  insist(data.algorithmVersion === 'axisymmetric-core-full-poloid-rk45-v2', 'Unreviewed algorithm version.');
   insist(Array.isArray(data.seedPsiN) && JSON.stringify(data.seedPsiN) === '[0.25,0.5,0.75,0.9,0.97]', 'Unreviewed seeds.');
   insist(Array.isArray(data.shots) && data.shots.length === 2, 'Expected the two reviewed shots.');
   const seen = new Set<number>();
@@ -56,6 +90,7 @@ export function parseFieldlineCatalog(value: unknown): FieldlineCatalog {
       insist(frame.state === 'valid' || frame.state === 'unavailable', 'Invalid frame state.');
       insist(integer(frame.lineCount, 0, 5) && finite(frame.maxPsiNDrift) && frame.maxPsiNDrift >= 0 && frame.maxPsiNDrift <= 0.0001, 'Field-line quality exceeds budget.');
       insist(frame.state === 'valid' ? frame.lineCount === 5 : frame.lineCount === 0, 'Incomplete field-line set.');
+      validateScalars(frame.efitScalars);
       previous = frame.timeMs;
     }
     insist(Array.isArray(shot.chunks) && shot.chunks.length <= 128, 'Invalid chunk count.');
@@ -64,7 +99,7 @@ export function parseFieldlineCatalog(value: unknown): FieldlineCatalog {
       const chunk = obj(raw);
       insist(chunk.file === `shot-${shot.shot}-part-${String(i).padStart(3, '0')}.jsonl.gz`, 'Unsafe asset path.');
       insist(chunk.firstIndex === count && integer(chunk.frameCount, 1, 16)
-        && integer(chunk.byteLength, 1, 4 * 1024 * 1024) && digest(chunk.sha256), 'Invalid chunk identity or budget.');
+        && integer(chunk.byteLength, 1, 8 * 1024 * 1024) && digest(chunk.sha256), 'Invalid chunk identity or budget.');
       count += chunk.frameCount as number;
     }
     insist(count === shot.frames.length, 'Chunk coverage differs from timeline.');
@@ -81,23 +116,65 @@ export function parseFieldlineFrame(value: unknown, shot: FieldlineShot, expecte
     const line = obj(raw);
     insist(line.psiN === [0.25, 0.5, 0.75, 0.9, 0.97][i], 'Unexpected seed.');
     insist(finite(line.maxPsiNDrift) && line.maxPsiNDrift >= 0 && line.maxPsiNDrift <= 0.0001, 'Excessive flux drift.');
-    insist(Array.isArray(line.points) && line.points.length >= 6 && line.points.length <= 3 * 1024
+    insist(Array.isArray(line.points) && line.points.length >= 6 && line.points.length <= 3 * 4095
       && line.points.length % 3 === 0, 'Invalid line point budget.');
     for (let p = 0; p < line.points.length; p += 3) {
       const [r, phi, z] = line.points.slice(p, p + 3);
-      insist(finite(r) && r >= 0.2 && r <= 2.2 && finite(phi) && Math.abs(phi) <= 20
+      insist(finite(r) && r >= 0.2 && r <= 2.2 && finite(phi) && Math.abs(phi) <= 207
         && finite(z) && Math.abs(z) <= 1.901, 'Field-line point escaped the source domain.');
     }
     insist(Array.isArray(line.arcLengthM) && line.arcLengthM.length === 2
-      && line.arcLengthM.every((n) => finite(n) && n >= 0 && n <= 10.001), 'Invalid traced length.');
+      && line.arcLengthM.every((n) => finite(n) && n >= 0 && n <= 300.001), 'Invalid traced length.');
     insist(Array.isArray(line.termination) && line.termination.length === 2
-      && line.termination.every((s) => typeof s === 'string' && s.length <= 80), 'Missing termination evidence.');
+      && line.termination.every((s) => s === 'poloidal-coverage-complete'), 'Incomplete poloidal coverage.');
+    insist(Array.isArray(line.poloidalSpanRad) && line.poloidalSpanRad.length === 2
+      && line.poloidalSpanRad.every((n) => finite(n) && Math.abs(n - Math.PI) <= 1e-6), 'Incomplete poloidal sweep.');
+    insist(Array.isArray(line.toroidalSpanRad) && line.toroidalSpanRad.length === 2
+      && line.toroidalSpanRad.every((n) => finite(n) && n > 0 && n <= 32 * 2 * Math.PI + 1e-6), 'Invalid toroidal span.');
+    insist(finite(line.sourceQ) && finite(line.qTrace) && line.qTrace > 0
+      && Math.abs(line.qTrace - Math.abs(line.sourceQ)) <= Math.max(.05, .05 * Math.abs(line.sourceQ)) + 1e-8
+      && finite(line.qRelativeDifference) && line.qRelativeDifference >= 0
+      && finite(line.poloidalClosureErrorM) && line.poloidalClosureErrorM >= 0 && line.poloidalClosureErrorM <= .0001,
+    'Field-line/source-q consistency failed.');
   }
   insist(Array.isArray(data.boundaryRz) && data.boundaryRz.length <= 4096 && data.boundaryRz.length % 2 === 0
     && data.boundaryRz.every((n) => finite(n) && Math.abs(n) <= 3), 'Invalid boundary.');
   insist(Array.isArray(data.axisRz) && (data.axisRz.length === 2 || data.state === 'unavailable' && data.axisRz.length === 0)
     && data.axisRz.every((n) => finite(n) && Math.abs(n) <= 3), 'Invalid magnetic axis.');
+  validateScalars(data.efitScalars);
+  insist(JSON.stringify(data.efitScalars) === JSON.stringify(expected.efitScalars), 'Scalar/index mismatch.');
+  insist(Array.isArray(data.efitContours) && data.efitContours.length <= 6, 'Invalid EFIT contours.');
+  for (const raw of data.efitContours) {
+    const c = obj(raw);
+    insist(finite(c.psiN) && c.psiN > 0 && c.psiN <= 1 && c.closed === true
+      && Array.isArray(c.pointsRzM) && c.pointsRzM.length >= 6 && c.pointsRzM.length <= 512
+      && c.pointsRzM.length % 2 === 0 && c.pointsRzM.every((n) => finite(n) && Math.abs(n) <= 3), 'Invalid contour points.');
+    const p = c.pointsRzM as number[];
+    insist(Math.hypot(p[0] - p.at(-2)!, p[1] - p.at(-1)!) <= 1e-6, 'Open contour mislabeled closed.');
+  }
+  if (data.antennaMidplaneFlux !== null) {
+    const flux = obj(data.antennaMidplaneFlux);
+    insist(flux.rStartM === 1.1 && flux.rStepM === .001 && flux.zM === 0 && flux.phiDegrees === 300
+      && flux.method === 'cubic-source-grid-sampled-linear-display', 'Unreviewed flux reference.');
+    insist(Array.isArray(flux.psiWb) && flux.psiWb.length === 501
+      && flux.psiWb.every((n) => n === null || finite(n)), 'Invalid radial flux samples.');
+    insist(finite(flux.psiAxisWb) && finite(flux.psiBoundaryWb)
+      && Math.abs(flux.psiBoundaryWb - flux.psiAxisWb) > 1e-12, 'Degenerate flux normalization.');
+    const scalars = data.efitScalars as EfitSourceScalars | null;
+    insist(scalars && Math.abs(flux.psiAxisWb - scalars.psiAxisWb) <= 2e-15
+      && Math.abs(flux.psiBoundaryWb - scalars.psiBoundaryWb) <= 2e-15,
+      'Flux reference differs from EFIT source.');
+    insist(Array.isArray(flux.lcfsIntervalsRM) && flux.lcfsIntervalsRM.length <= 32
+      && flux.lcfsIntervalsRM.every((p) => Array.isArray(p) && p.length === 2 && p.every(finite) && p[0] < p[1]), 'Invalid LCFS intervals.');
+  }
   return data as FieldlineFrame;
+}
+
+function validateScalars(value: unknown) {
+  if (value === null) return;
+  const s = obj(value);
+  insist(['currentA', 'rAxisM', 'zAxisM', 'bcentrT', 'psiAxisWb', 'psiBoundaryWb'].every((key) => finite(s[key]))
+    && (s.q95 === null || finite(s.q95)), 'Invalid source scalars.');
 }
 
 /** Floor in actual source time, with explicit holes. Never blend equilibria. */
@@ -131,21 +208,23 @@ export function createFieldlineSource(fetcher: typeof fetch = fetch) {
     const wanted = new Set(shot && part >= 0 ? shot.chunks.slice(part, part + 2).map((c) => keyFor(shot, c)) : []);
     for (const [key, entry] of pending) if (!wanted.has(key)) { entry.controller.abort(); pending.delete(key); }
   }
-  async function loadChunk(shot: FieldlineShot, chunk: FieldlineChunk, sessionSignal: AbortSignal) {
+  async function loadChunk(shot: FieldlineShot, chunk: FieldlineChunk) {
     const key = `${shot.sourceSha256}:${chunk.sha256}`;
     const hit = cache.get(key);
     if (hit) { cache.delete(key); cache.set(key, hit); return hit; }
     const inflight = pending.get(key); if (inflight && !inflight.controller.signal.aborted) return inflight.task;
-    const controller = new AbortController(); const signal = AbortSignal.any([sessionSignal, controller.signal]);
+    // A seek aborts one consumer, not a verified chunk still needed by the next seek.
+    // retain()/clear() own download lifetime; individual callers race their own signal.
+    const controller = new AbortController(); const signal = controller.signal;
     const task = (async () => {
-      const response = await fetcher(`${FIELDLINE_INDEX_URL.slice(0, -10)}${chunk.file}`, { signal });
+      const response = await fetcher(`${FIELDLINE_INDEX_URL.slice(0, -10)}${chunk.file}?sha256=${chunk.sha256}`, { signal });
       const bytes = await limitedBytes(response, chunk.byteLength);
       insist(bytes.byteLength === chunk.byteLength, 'Truncated field-line chunk.');
       const hash = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes as Uint8Array<ArrayBuffer>)), (b) => b.toString(16).padStart(2, '0')).join('');
       signal.throwIfAborted();
       insist(hash === chunk.sha256 && bytes[0] === 31 && bytes[1] === 139, 'Field-line hash mismatch.');
       const stream = new Blob([bytes as Uint8Array<ArrayBuffer>]).stream().pipeThrough(new DecompressionStream('gzip'));
-      const decoded = await limitedBytes(new Response(stream), 8 * 1024 * 1024);
+      const decoded = await limitedBytes(new Response(stream), 24 * 1024 * 1024);
       signal.throwIfAborted();
       const rows = new TextDecoder().decode(decoded).trim().split('\n');
       insist(rows.length === chunk.frameCount, 'Field-line chunk frame count mismatch.');
@@ -158,17 +237,27 @@ export function createFieldlineSource(fetcher: typeof fetch = fetch) {
   }
   return {
     async catalog(signal: AbortSignal) {
-      const bytes = await limitedBytes(await fetcher(FIELDLINE_INDEX_URL, { signal, cache: 'no-cache' }), 1024 * 1024);
+      const bytes = await limitedBytes(await fetcher(FIELDLINE_INDEX_URL, { signal, cache: 'no-cache' }), 2 * 1024 * 1024);
       return parseFieldlineCatalog(JSON.parse(new TextDecoder().decode(bytes)));
     },
     async frame(shot: FieldlineShot, index: number, signal: AbortSignal) {
       signal.throwIfAborted();
       const chunk = shot.chunks.find((c) => index >= c.firstIndex && index < c.firstIndex + c.frameCount);
       insist(chunk, 'Missing field-line chunk.');
-      const frames = await loadChunk(shot, chunk, signal); signal.throwIfAborted();
+      const frames = await abortableFrame(loadChunk(shot, chunk), signal); signal.throwIfAborted();
       return frames[index - chunk.firstIndex];
     },
     retain,
     clear() { retain(); cache.clear(); },
   };
+}
+
+function abortableFrame<T>(task: Promise<T>, signal: AbortSignal): Promise<T> {
+  signal.throwIfAborted();
+  return new Promise((resolve, reject) => {
+    const abort = () => reject(signal.reason ?? new DOMException('Aborted', 'AbortError'));
+    signal.addEventListener('abort', abort, { once: true });
+    task.then((value) => { signal.removeEventListener('abort', abort); resolve(value); },
+      (error) => { signal.removeEventListener('abort', abort); reject(error); });
+  });
 }

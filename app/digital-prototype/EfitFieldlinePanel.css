@@ -2,6 +2,8 @@
 .fieldlinePanel header, .fieldlineTime, .fieldlinePlayback { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .fieldlinePanel h3 { margin: 6px 0 18px; font-size: 1.4rem; }
 .fieldlinePanel small { font-size: .8rem; letter-spacing: .08em; }
+.fieldlinePanel header > span { font-size: .8rem; color: var(--color-muted); }
+.fieldlinePanel .fieldlineToggle { font-weight: 600; }
 .fieldlinePanel label { display: inline-flex; align-items: center; gap: 8px; font-size: .9rem; }
 .fieldlinePanel select, .fieldlinePanel button { padding: 9px 12px; border: 1px solid var(--color-border); border-radius: 5px; background: var(--color-canvas); color: inherit; font: inherit; cursor: pointer; }
 .fieldlinePanel button:disabled { opacity: .45; cursor: default; }

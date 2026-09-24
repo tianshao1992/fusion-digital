@@ -9,8 +9,8 @@
       "public/models/exl50u-general-assembly-v1/*.glb"
     ],
     "fileCount": 893,
-    "totalBytes": 364558985,
-    "treeSha256": "f0b34cf989e117684ddb1822c61a4d5ad8605c9bc604373580eb37a9532f97dc",
+    "totalBytes": 385731692,
+    "treeSha256": "2a13ed85cd189b9e8870b7f6e63437a4acad574ea0df383e837955f5b7923f8a",
     "files": [
       {
         "path": "public/FusionDigital-technical-roadmap-2026-08-15.docx",
@@ -1149,508 +1149,508 @@
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/index.json",
-        "bytes": 183736,
-        "sha256": "cb72ff39d0f49c7763733492497f7bce13cec21fee27ea76f0c122955c065721"
+        "bytes": 495064,
+        "sha256": "b19510250e5088ff2668799d27878787db71bcba9fa60ff03e3cd2ecce4a2d96"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21066-part-000.jsonl.gz",
-        "bytes": 484823,
-        "sha256": "d6c9c68bd0f54fdc2083e5abfa387eaaae6e2eb05b858a52609785882878bae1"
+        "bytes": 895628,
+        "sha256": "d074ddb0bef1834ac53c2aa687e94b1b3e79440094c9af0a29fd6da56e246abc"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21066-part-001.jsonl.gz",
-        "bytes": 483377,
-        "sha256": "7b9d1f01a8d6d9b7a7cb8925be9e5c0759713830b627b342b33ff845b4a09c7c"
+        "bytes": 732886,
+        "sha256": "2d32bde297a10ba630dd27aa27fcd7a800329d73f5ec85805f5f08a784f1c94b"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21066-part-002.jsonl.gz",
-        "bytes": 484495,
-        "sha256": "ddc15f8628510c87c59a14c9d6618e720e23911989331eedd088e4af6652447a"
+        "bytes": 713896,
+        "sha256": "988ada64ba2ae6c2cdb2ea1211244550de510a799e6ff5502dbbc69e32a58897"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21066-part-003.jsonl.gz",
-        "bytes": 485383,
-        "sha256": "95551e217dc896e378c8890f257fb55168bc7f445dd056686ed4b0fd9cdc8e5d"
+        "bytes": 760307,
+        "sha256": "3eec3d1d7ede1cd932dcc093e8ef080a982182c767f084bbf4db9707a440656e"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21066-part-004.jsonl.gz",
-        "bytes": 484334,
-        "sha256": "a85c961cda29df8ab5fd176851053442820de8bff00de0849b2fa8e5c1d3f224"
+        "bytes": 757008,
+        "sha256": "2790d8ea555ff0fbcfc0172835275aa9e41505567f1a5089a68cbd69be40a419"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21066-part-005.jsonl.gz",
-        "bytes": 486595,
-        "sha256": "e5b089da8365128d978c9ec4cd5574ba736bc690577f840007d77ee2770e9624"
+        "bytes": 710850,
+        "sha256": "7ea81e34569b913a25d925f2245a859e7694f59fbf5fdd765866e9d2175a634b"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21066-part-006.jsonl.gz",
-        "bytes": 485674,
-        "sha256": "fe5a8b49fa7b6c02edf60a0511f1e72f5f2397694e56764356bb5e3fb990e12e"
+        "bytes": 717868,
+        "sha256": "a2e504d416855e3517b50e3c3315839d79ee19db542f5b2f1b305a428ef8ad66"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21066-part-007.jsonl.gz",
-        "bytes": 485135,
-        "sha256": "9d82577eb8976e2bcaaf03b9614dd685c5a1bc1eaa6d6e0b3b6185008392509c"
+        "bytes": 736583,
+        "sha256": "d7d231e2ee07f4210b3e675f2c0663224868556f9e1bf08a086b5b71ff8239a4"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21066-part-008.jsonl.gz",
-        "bytes": 485422,
-        "sha256": "7547094464c62d599e3f84bf83c72f8b306858512e55e5ab91b28e1dd570b32d"
+        "bytes": 707749,
+        "sha256": "b72f9fca34fd76a843623f603c668ceb4d60a7ed08fd3f9877af0f6234028c40"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21066-part-009.jsonl.gz",
-        "bytes": 485869,
-        "sha256": "017ae16abab3b9c968e7228f2470b92bb3c9eb6a3cc838aa124d3aa7befb6181"
+        "bytes": 699932,
+        "sha256": "b38a50b8425c5790d27e7e8b1f41bd0f7a9e662f9f7f2559a5860a9cec45609f"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21066-part-010.jsonl.gz",
-        "bytes": 486084,
-        "sha256": "6eee4921b1a295ec25b0625276adceba687ac496e92886d6686ae2fce9b5fe9f"
+        "bytes": 689352,
+        "sha256": "3d4bc3123779a17ebebb43c839d0c506cba9a08a1ee28ef4246a5c3250689536"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21066-part-011.jsonl.gz",
-        "bytes": 485687,
-        "sha256": "298f88a8fa0d2bd8e28675fd73a1653db0e3f2c60115b9ade1679948319354e0"
+        "bytes": 685177,
+        "sha256": "5cce5225704bc53305d49ba986d118767ce2f97767fcfe811e5f2a8a206fd064"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21066-part-012.jsonl.gz",
-        "bytes": 485802,
-        "sha256": "3bb11af0157cddbb1bd28a1f1938f2cf04b7fefcd3bea960569dd01ba129fbe7"
+        "bytes": 680781,
+        "sha256": "afa42794afdbb86971b8d3858557ed3624ee5f57cd9507270015f738658e17fb"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21066-part-013.jsonl.gz",
-        "bytes": 486308,
-        "sha256": "6d9a02c0546a402fa5ce0c898a9a7ca85476664b72765f0d24f568ddaec0a92d"
+        "bytes": 683031,
+        "sha256": "d7c6f189e7d24ba7df0f68ba4dd8a372a03006de2cdb57bd289868e8438b2d1f"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21066-part-014.jsonl.gz",
-        "bytes": 486197,
-        "sha256": "dfc43db551459b0eef468c8f7474d7a097bc2ed675c7890d44e2e2c4cc36095b"
+        "bytes": 681329,
+        "sha256": "2e8d22b235896b3235ac89134e3c70949875199d103d83b9b555eb2c24a8c2b2"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21066-part-015.jsonl.gz",
-        "bytes": 486625,
-        "sha256": "e0744e433183a5037997a6609ac7f19607002678103afa709db58692bf62ba72"
+        "bytes": 681619,
+        "sha256": "0bad78cd8f317c896b16e29f7d57cb351e5529aa2a75a1b9c2c2ed841381e3ca"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21066-part-016.jsonl.gz",
-        "bytes": 486598,
-        "sha256": "b5994283c0f206d68bb7f58e2f59fb9c94a24542d95aea9354163e53246d1c88"
+        "bytes": 683434,
+        "sha256": "4fca4e6a62e08a2292bae0b951af6265fb8113e6e403bef3d2970a37d36cf5d7"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21066-part-017.jsonl.gz",
-        "bytes": 487114,
-        "sha256": "d9b94e177914e441e0357472b1d90987c0af5a0c6af548382f4f2e4de618e7ed"
+        "bytes": 684943,
+        "sha256": "3f6549a0e8860218d9de2fa2ffd31695d089d91a69fe06af51671588b3d11326"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21066-part-018.jsonl.gz",
-        "bytes": 487562,
-        "sha256": "b58c556f84bb03ec569e6eafa39ac10ecc4c7376a285f534a051ddee280d322b"
+        "bytes": 685372,
+        "sha256": "181ea2ba43ac413f290062c36db4948a0d4296a3eadf1123c9c1a1a5c410c0a1"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21066-part-019.jsonl.gz",
-        "bytes": 487712,
-        "sha256": "be91f687ae27fa297593e8bd0a0169dab54a82329237fa18d935f901dccd9ae8"
+        "bytes": 681460,
+        "sha256": "d933b4aa4dfa046e10e22f07e26e6cdda35305f98f100376a4e4486f91587a81"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21066-part-020.jsonl.gz",
-        "bytes": 487704,
-        "sha256": "dd54413723d40a3ce6c78e9522bd2e2f693164c58678f890b9c8f0a02cb50cab"
+        "bytes": 681107,
+        "sha256": "ff7b58d2e7d96015781f79cf276ee7c86b83615c7419d491409125b262fb114c"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21066-part-021.jsonl.gz",
-        "bytes": 487892,
-        "sha256": "2d479f57c84f28d5543e5e2f41b5e39f0355264f31fdff6fea23259ea377957c"
+        "bytes": 680401,
+        "sha256": "9ecbd3f21fa7275acd37664125b9c2901a22238d9f2cc9ec7cba9c6634c5adf9"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21066-part-022.jsonl.gz",
-        "bytes": 487930,
-        "sha256": "6e370b524f80e2c5f296315282675c3a092894f84fc645302f770434317f19ef"
+        "bytes": 680058,
+        "sha256": "25f7d1578dc5518577f5d72946af1ff05a18b63af986483cf35c95930129cfa0"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21066-part-023.jsonl.gz",
-        "bytes": 487604,
-        "sha256": "8ea1e73d7a7ab2b40d48b3b93078fba2aff13c21d41ffee909628b7497bd85cf"
+        "bytes": 679774,
+        "sha256": "2715fef252233031a025004284dd8646f9aa01f9cb019b845ab9176a1f950ff4"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21066-part-024.jsonl.gz",
-        "bytes": 487887,
-        "sha256": "1f257690e0e047cf36a4e1a5ecd6e1d57c497f3ca0b0f464efd7df0d3bbee36b"
+        "bytes": 679077,
+        "sha256": "e6841b4371e2914a798ce2e7d8e29b4ebe67862fd607940e8003d3b078abd954"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21066-part-025.jsonl.gz",
-        "bytes": 487649,
-        "sha256": "4be689cc97d32f5cc98a930eacd0531d63fd5f3e8e27317757ef05b1ca90bcfc"
+        "bytes": 678900,
+        "sha256": "57111e50616b50477e86953022bc5b45e1c4b5dab533ac02019fd968bc9bc4c6"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21066-part-026.jsonl.gz",
-        "bytes": 487808,
-        "sha256": "0acddae5fbb3300271b86bee56033e59c7d7c93932867a0b4bf5e9de5f3e8d19"
+        "bytes": 678138,
+        "sha256": "b536d502893d450139c63bfdd0a94cb22f255af4fd3de64836207b6d6f671c02"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21066-part-027.jsonl.gz",
-        "bytes": 488081,
-        "sha256": "1aecd52482d3f754e1425826ce618065dc6cfa17dd70caa9d31ea24410d18000"
+        "bytes": 678841,
+        "sha256": "db13c3fb528a687b820b273145ed365cdaaa340921202fb600ff94f3232c001e"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21066-part-028.jsonl.gz",
-        "bytes": 487874,
-        "sha256": "32a4060082ce13cfe1f1358c6751e2c88a848521b9232f157bae5768a03acea9"
+        "bytes": 679182,
+        "sha256": "4465b7ce8361e8e7a619343dde01b130b17841b6df3b91299d49a8dbf1a04d90"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21066-part-029.jsonl.gz",
-        "bytes": 488102,
-        "sha256": "90a11c97532bc01a72a92a44b86bb574314d8c54d6bd5e3be1e51f26d0c9e1a2"
+        "bytes": 679383,
+        "sha256": "816b9bdd2a26794fc5c02521ad287e11eeafb5ee1bc9b267036701e96b504e5d"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21066-part-030.jsonl.gz",
-        "bytes": 487393,
-        "sha256": "8c7a9ce77354da275bfadd7e01795f69d2bf4305c97d15ae3f16e484a3f15dd0"
+        "bytes": 679752,
+        "sha256": "94013a0fc6dec3bd883a851f54c45ead0b29d0cd6660448530113af6355850e1"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21066-part-031.jsonl.gz",
-        "bytes": 487757,
-        "sha256": "af1d844e5bc6efa6b818ab5c96c696cf89983abfb0ee3cfa7ba06e8abc6933c2"
+        "bytes": 679354,
+        "sha256": "d5bdd62138f1f8f15f4f561d4b1249b672bcfa362c50f9ed42f6a9abb6b1903b"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21066-part-032.jsonl.gz",
-        "bytes": 487784,
-        "sha256": "0249fe769aaeeda4e35a155ae373cd4bbf775c28a91f70a87bd93f39e7649e66"
+        "bytes": 679108,
+        "sha256": "f97f5921303a4edc1f570bf168931eec7e0cdc318ce27f2491a44299dd20d2e9"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21066-part-033.jsonl.gz",
-        "bytes": 487286,
-        "sha256": "2dd6ce56785ed7b402dd646964a15d415af7b5c014224e6daaef881ed1d62060"
+        "bytes": 677817,
+        "sha256": "1c138c263855b2759216a97dc394545abc4c8e1492a3b30579eda455f1bb089e"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21066-part-034.jsonl.gz",
-        "bytes": 487142,
-        "sha256": "3066236d4d0b5bae56227f529135d5ccf3406476feac68621a4519a49a38c694"
+        "bytes": 671675,
+        "sha256": "00a5d544a29e2888a37ac1399cbd4a410ddd7af9880f43df264a685061169287"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21066-part-035.jsonl.gz",
-        "bytes": 487905,
-        "sha256": "bc6ebeabbcebc475b0866ad94f42e05699f873982d4b8537f48494a62ef654a2"
+        "bytes": 671631,
+        "sha256": "a4ce62607993a2bcc6d491c314d97163baa40a5b21599993beb42885c6f11ee0"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21066-part-036.jsonl.gz",
-        "bytes": 488157,
-        "sha256": "64816fc484351693b5d6b6c0413018f9addc5eb155dac0ea2b4a6b5c5a9512f4"
+        "bytes": 675240,
+        "sha256": "800381f35ae508d26b3102dbf22c5182e89bbfe43179e87836e29d7bf736bda5"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21066-part-037.jsonl.gz",
-        "bytes": 488057,
-        "sha256": "1d9e6b4cbb2fd2b0ff9c5249ef2678900176dbe52ae7f07206e9a40dde7060c4"
+        "bytes": 677865,
+        "sha256": "81387f995ed253f8833b7c86040ddded30dd23f8e45cf3c1c6e1afef5b75e58b"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21066-part-038.jsonl.gz",
-        "bytes": 488002,
-        "sha256": "420d1b845e6f6c00156cf285139f5fa617da0022e21851398609542d91ace608"
+        "bytes": 682668,
+        "sha256": "a42d71357c573a768fb64296c8c3e112032fa18799ee3d543a01ee1b97e2cf01"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21066-part-039.jsonl.gz",
-        "bytes": 487419,
-        "sha256": "8d1a5843824ef5525f04805732eeaf81391a94052c6c7e08b30ef9d791ac3bda"
+        "bytes": 682920,
+        "sha256": "a49842432ead929fa30de1e3707f835625f70013cda158d92c9256852cd46341"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21066-part-040.jsonl.gz",
-        "bytes": 487402,
-        "sha256": "e0adce9cd036baccd82242f21b20e79f183e7fca904134cd311284d7e607c13a"
+        "bytes": 683954,
+        "sha256": "4183e26e41a274a25969dc1a1bcbbd3cb595a6375881c2ad73ef6890a9179411"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21066-part-041.jsonl.gz",
-        "bytes": 486968,
-        "sha256": "34af5a2ee14c9a000fdec9bb1d6f5fed420d4d987786cb31efefa8fed51d97f1"
+        "bytes": 695328,
+        "sha256": "2193fe4501cdb9ed11f5abb038613a2e29683345cf08bb9d17faeb2b00c34fa8"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21066-part-042.jsonl.gz",
-        "bytes": 487380,
-        "sha256": "a4adeda2f54d2e37ad3845e71b733c244170bc08bf75ed0ce030e68b9d1e8f07"
+        "bytes": 709084,
+        "sha256": "8fd62c6882e9fe85f0fa96e8d1840638788098bc90da01f6e6af79a8197e7f2b"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21066-part-043.jsonl.gz",
-        "bytes": 487178,
-        "sha256": "698b3e290ffee4a1259a67a1b4182a94507ac95b4a0f194d20313af18ece8d56"
+        "bytes": 682584,
+        "sha256": "a52cb3fb5f057efe78a6e6b82f9a260688f8ec5ff75849c5b8c150dab564738c"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21066-part-044.jsonl.gz",
-        "bytes": 484576,
-        "sha256": "611b6d6ff599a6fc90453fe2777f87ca4839ae7e16a1704450994df8d2dd8674"
+        "bytes": 664932,
+        "sha256": "96b8e8931adab8668c179287a56b72b100eafa7ac22b4bc77f8f0c45d939a5ad"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21066-part-045.jsonl.gz",
-        "bytes": 482887,
-        "sha256": "46c0385a5efb448cbc069a58c20027c491ab5af00ffc2d51f92f366d9dd7ad57"
+        "bytes": 658015,
+        "sha256": "ba1425d052d5f027e5f8ed7252568c82bd97749fcd6feb6fddb32a780e31340b"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21066-part-046.jsonl.gz",
-        "bytes": 479932,
-        "sha256": "284ef84866825905332c2b7a2f58d7860d16418d40418f200754e23f5cecfa6f"
+        "bytes": 658047,
+        "sha256": "002392a955d5c16fbce5438b60e0bf0523f559525e3077e7397d2a2245385604"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21066-part-047.jsonl.gz",
-        "bytes": 473776,
-        "sha256": "c73f99abbf4a58fd47bc7e09006f5be13a0153b9f4786475957a9a686076aeae"
+        "bytes": 670276,
+        "sha256": "625ce1e7855df6684bbb20b7880d2e02ead3cd65b63d44c2f7216a7b9d48dd74"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21066-part-048.jsonl.gz",
-        "bytes": 264900,
-        "sha256": "6614c6f062c78375677f0b5a55ba0759810892767c910d33e7dc7e358ff57245"
+        "bytes": 344053,
+        "sha256": "a60aa967f756b837d86d6e61c481d189f80ff809061ae06660f137a00f9558c7"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-000.jsonl.gz",
-        "bytes": 483515,
-        "sha256": "780547bdbe77ca0953bb0a6848a43bfdd2ac35f7d0953c56b4f248a9250cfe54"
+        "bytes": 960695,
+        "sha256": "c9cdf4bdae1f54e8a012499c06aec541742ffa6d0314bb608d47aaf4543ebeb7"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-001.jsonl.gz",
-        "bytes": 483596,
-        "sha256": "967628deb74b08a5eded7f5aed7ee19ea2a11af06c06ad2e8beac2f8b18ea552"
+        "bytes": 880679,
+        "sha256": "62571c5ff2039cb0aa1398bb249f3090f680809b95e09375534043be85e0f04b"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-002.jsonl.gz",
-        "bytes": 485059,
-        "sha256": "0cf2750c2291d165c3327385e93846dec7437d1384c90bc35c775c9343aa2c66"
+        "bytes": 807627,
+        "sha256": "e2bf79c04d3b2805651a3fe437e9ab055002d79bd98a613c6f23b23b9a8a8195"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-003.jsonl.gz",
-        "bytes": 485503,
-        "sha256": "e01cc11a7e4367d129b1fe6461750510bf86b4fec6931ca69f3e27d030931c53"
+        "bytes": 762565,
+        "sha256": "e185bbfdcd7b3bfb15076f42fc585e16eac08e594005e6f9731f675574bcf252"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-004.jsonl.gz",
-        "bytes": 485696,
-        "sha256": "3eae604784599622a56d821342791db7db45493c91be58bb6d9fe50632ec08da"
+        "bytes": 736099,
+        "sha256": "bded704f607078d9b1c2e06d4846eb4b6eee5c8cabae24c59c962eff5ad87ebc"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-005.jsonl.gz",
-        "bytes": 487074,
-        "sha256": "b7518598cb605af7f638bcba85ea4440b417ac891368386a6e8c5b7c80b154ae"
+        "bytes": 715671,
+        "sha256": "fca55f6612d1225ef82c6ed9f94f8308b0735a772d6f32e1d7448921fad56e1a"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-006.jsonl.gz",
-        "bytes": 485347,
-        "sha256": "0d459ae95790b575511674818a221361add268190a242164f0fadcc43826cb84"
+        "bytes": 731749,
+        "sha256": "7e565de41590bef14924598f96948ba9122b21f856e68aeaef367d85895c592b"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-007.jsonl.gz",
-        "bytes": 486621,
-        "sha256": "3447e0dcda6f65b027eefcce01e68798e48463bd0527bf7d22cf51fede17477f"
+        "bytes": 739274,
+        "sha256": "193d2e00afad8a68cd97e487b561590b4ce4ba7af1746f2f97fd6605f46e6416"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-008.jsonl.gz",
-        "bytes": 486597,
-        "sha256": "9685a60c7a7dbaf021ced31c51475e0b6dff6730897c9052276d07fd47db1502"
+        "bytes": 711354,
+        "sha256": "212ca14236b255d9a9ed944e06babadbaa80ebec66003e698305ce9ecb0afd31"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-009.jsonl.gz",
-        "bytes": 486398,
-        "sha256": "7a6a5cad23d3fde7de57caa8ff245ad7ce07f25bea6008bfe267fa2f0eb42d91"
+        "bytes": 689109,
+        "sha256": "053be8babbf38d358d68d5016627302f56c9051e647773d7b49d13d474a90d79"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-010.jsonl.gz",
-        "bytes": 486546,
-        "sha256": "fc9309092fc24c41075c5032ba2cb981663a21d3784b23cbd9a3b0a138405fdc"
+        "bytes": 679319,
+        "sha256": "4e22e6b26cc35f9fcf9728f50f4c9c924ca8eccaae09f163ac85c145abf79aa0"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-011.jsonl.gz",
-        "bytes": 486603,
-        "sha256": "6787b7c1ade85be77681a7142eda0665d54e66fba4fb1ded702f9d33980b35c5"
+        "bytes": 675508,
+        "sha256": "75bf5fd7fbc9b26f6cb36250fed15c44ca16c4755614428b4af788dd0fb68e01"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-012.jsonl.gz",
-        "bytes": 486660,
-        "sha256": "27f5d89a76cf6cc8509119e35336111e51212038bb2fcbf5da532cdc49ade8f0"
+        "bytes": 675388,
+        "sha256": "5c53840ccdcf137dc81e684d917fdd8547adbef5ab56c8c104dce968b9d8a83a"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-013.jsonl.gz",
-        "bytes": 486682,
-        "sha256": "9153d0312569d1684182bf36c5c71bcad5495893f017a40e586904d2a349ea4d"
+        "bytes": 677892,
+        "sha256": "b984506f5d17aaf024c999b157fd4359d65c3c11d92c541fd66eda570e6de902"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-014.jsonl.gz",
-        "bytes": 487267,
-        "sha256": "e8758b3f0757f20d898a2cf164f563fcfcaeaf306822f25600491dbdba97886f"
+        "bytes": 680589,
+        "sha256": "b897b16755147c5e77c58ebbdc911d64f8677505894f24794278abd42b806c8b"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-015.jsonl.gz",
-        "bytes": 487501,
-        "sha256": "898cd630fa7f1e8e0035e133f78bb84d6a9c06feab9e825d6484fc6bc920f0e7"
+        "bytes": 685380,
+        "sha256": "4a811855ed4903abf73e3e2e8ceb7e11efac82464b26cdacf8947e1846fb4147"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-016.jsonl.gz",
-        "bytes": 487884,
-        "sha256": "17a51438191ab35f3501d557b39323429dc995b441b5d056c10377ecc685fdfa"
+        "bytes": 685422,
+        "sha256": "7e0fc00439603daae9f4015871691e77e743e70f45c465e7738d3518c1014832"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-017.jsonl.gz",
-        "bytes": 488267,
-        "sha256": "45be295b4641abc985104339038c76b3b6a61676deade2716df8d7a659296d32"
+        "bytes": 687442,
+        "sha256": "3527902831d7ff6ed6f3843c3ec946b07d4c530a85a603a0c52abb0a43e88669"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-018.jsonl.gz",
-        "bytes": 488551,
-        "sha256": "32a918bd0f9a53acca50bf78d803b9663d12111406cd42cecf8183bcdca4751a"
+        "bytes": 688459,
+        "sha256": "f10864f74f078079c186f40ac4412d72fb148b09ee5f1da79a73040a21400d77"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-019.jsonl.gz",
-        "bytes": 488625,
-        "sha256": "77a791d9353168b60b230da103b30c64a12cfb77e3cfb6ad85ea35195224075d"
+        "bytes": 688916,
+        "sha256": "4f5a30f10e13187d17be111979a38318dd33d660e741173e8549e0523df58677"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-020.jsonl.gz",
-        "bytes": 488899,
-        "sha256": "25866f0719f4186ebf85449ae5cad1aff6f984de973362227e6eba3de480445e"
+        "bytes": 686850,
+        "sha256": "b951ad93ac603ec2aa741b4586cc2fc5bb0703da7a7aff86f29536d898867faa"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-021.jsonl.gz",
-        "bytes": 489035,
-        "sha256": "2c3d792b455cf7a78a77dbdd81de24a865fb84e391907562491d9bea17a2c20e"
+        "bytes": 687633,
+        "sha256": "a13882a5622c64fc2bbb7e37bff7bbb73fcf7dee7a049ce7359fed8908607046"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-022.jsonl.gz",
-        "bytes": 488742,
-        "sha256": "aa2f5a3ae8033a8c08e4d08c9ddd1cc2141f71735fb8c16986e8502c896814de"
+        "bytes": 688417,
+        "sha256": "9a0399de3949d9586ce8c74a8086bd594dd862d4987f31854a4b0aa872b88ba3"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-023.jsonl.gz",
-        "bytes": 489138,
-        "sha256": "bb10a07271f10ca1e8a2c2efb00d4f309a6760759794775da0638e1282ac783b"
+        "bytes": 687015,
+        "sha256": "231fa3d951f8ccc9ff8a7e683ccf8d2eabed0c61af52b5ea91806ee6816ae8aa"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-024.jsonl.gz",
-        "bytes": 489337,
-        "sha256": "14610d2cdcf242944b29390bce56a596140a9c7984eb360e070c95ef95fc823a"
+        "bytes": 687923,
+        "sha256": "4e67ee60cf65b6a7651a8088adeba3fa10585396aef0cb23a9edb08e3734decc"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-025.jsonl.gz",
-        "bytes": 488697,
-        "sha256": "0cd5c81eb840749fc5abee5e5962301d8458c57fff84ccd5dae9fa1d1c3305cf"
+        "bytes": 690298,
+        "sha256": "6beb6ab6d9f00fbd6dd512b44e3929052d78cc80f2917f0ec85f6dcbec5a2170"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-026.jsonl.gz",
-        "bytes": 488661,
-        "sha256": "a4f31706bcdfe1d186d695a4b231b0e8905c60d292c99bb93dc48a5bebad0c6e"
+        "bytes": 689559,
+        "sha256": "d0b0dcd79104a0560ba6a54ad57c34982456c0f7f7911fffebe0276660b8059f"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-027.jsonl.gz",
-        "bytes": 488938,
-        "sha256": "febed880d4b211b8d1d9fe819af9b6601836debf8cc1ee6ece04831c5e4ccab8"
+        "bytes": 683676,
+        "sha256": "883688fe33d37ae4b19e5f28aca7ccd6b7099337936f79060c86402c2319d48d"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-028.jsonl.gz",
-        "bytes": 489077,
-        "sha256": "31ff35285d35ac18abda7d8fba7d1940f5c4e8ae171bf30df31f1d2363896932"
+        "bytes": 686942,
+        "sha256": "b7c833ea659a47ca69a8aefe0c62f03380ec9345522f4e8d94b488d607a71f25"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-029.jsonl.gz",
-        "bytes": 489110,
-        "sha256": "efb977334b05cd66fb4233c7ff6b723bfb00f68d73ebb524daf2d45ce2dcdd77"
+        "bytes": 687620,
+        "sha256": "08a38ea130f9b40797e39186e93eef62adcf2fa16274311e8d933f3ac9a1ab82"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-030.jsonl.gz",
-        "bytes": 488966,
-        "sha256": "f8b478c6123487db148ef8c1bd0582685a98de3eb3601cab0d27def8d5cfaffa"
+        "bytes": 686487,
+        "sha256": "8c39e4870ca6a4e0765056a43b31c5d03b0f215c92ab422eb009c1234e5ecfc7"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-031.jsonl.gz",
-        "bytes": 488798,
-        "sha256": "a188ea2262a85fdb8dd70967b478dc08f1cf7edb94d290e5958bf7787a9b1b36"
+        "bytes": 685319,
+        "sha256": "e8ab08e1d203921dbc46e6bf8ae698263db3e8f99155b696bea800c061d7e048"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-032.jsonl.gz",
-        "bytes": 488995,
-        "sha256": "1ec1b9e8071cdc6bcc7160a16eddba9e0818e1e22c7c1299da842dc7a49a5870"
+        "bytes": 685944,
+        "sha256": "3c334376e3dc59ddf676a2d90d839e1acf9cdcb03f9a5d64477b79819a9329aa"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-033.jsonl.gz",
-        "bytes": 488813,
-        "sha256": "86f73c10bed03231768192b4efd7fc0e05fa352a79ed32b063eb9375e5f9253b"
+        "bytes": 685508,
+        "sha256": "6c43008a89074014bd42f462b5b0efe50a60825aaa8c321033eef05f196f3aa6"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-034.jsonl.gz",
-        "bytes": 488631,
-        "sha256": "fe20cbf1940bc2bca52ec737a4735b675854ab4348e305e2d9a408f25920cf72"
+        "bytes": 688003,
+        "sha256": "93dd6fa3fac4c4b4f5202410e0f4c920155a02c20faf06ec723ceb9f1596568f"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-035.jsonl.gz",
-        "bytes": 488676,
-        "sha256": "5b09d5935a7086e363e554008b5d4a937d06dbe239dca203b350c3c97e70172f"
+        "bytes": 688773,
+        "sha256": "fb8e55fc740ff2a4f103ba2324df2ccb5ce3a35f27333c0b63d5fde99232d1f1"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-036.jsonl.gz",
-        "bytes": 488940,
-        "sha256": "731ca2e84f47cd70692cdfec5cf57bbdec454d59b47cd8823241de7e2c75c12e"
+        "bytes": 696099,
+        "sha256": "893e5c9fbb9f83c6f5db41f1970a5458328910b3f56b1214328a2d54d01212ee"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-037.jsonl.gz",
-        "bytes": 488847,
-        "sha256": "d54a23adecbd68f62a1bf305d4e1fb0bb8cf1277aff5128c1f937e57da0b4db6"
+        "bytes": 706621,
+        "sha256": "d0dc3b70307a9354903e0fc7967fe68b1863e5cf06c960eab8377164ef312dcb"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-038.jsonl.gz",
-        "bytes": 488479,
-        "sha256": "15931bb9729759fd35d38d4b92e326854ea82c83dea94c8aaa6f7e882af83ffa"
+        "bytes": 704470,
+        "sha256": "e6c5ba958529c42e27965157ab5ee0a33754698d4244ab32aa493c386701760b"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-039.jsonl.gz",
-        "bytes": 487993,
-        "sha256": "f6870985defbbdc10bc8f7d06e11921667cf3ef26d5a9fd364199258121ee474"
+        "bytes": 696249,
+        "sha256": "b95314722a896c9993246eb55296ddc7021192521b15f6e8b318d970a64b23af"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-040.jsonl.gz",
-        "bytes": 487841,
-        "sha256": "ef50aa48646f3bb1bd7454ec60d12b84c95c7715dd529c2595138cff625b0bca"
+        "bytes": 678957,
+        "sha256": "f33170f7d3381b570b53bb964136f0f0c6ad1e4ea2cab7ffc622825d2f4daadf"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-041.jsonl.gz",
-        "bytes": 490011,
-        "sha256": "88cb8a6929bf374149c051010b2078b374afbebd68c61e03c07c7d527f4ab282"
+        "bytes": 661089,
+        "sha256": "ce21fd8fba2b912f4851e508428df9ba66904527d54550da10990791471deaf2"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-042.jsonl.gz",
-        "bytes": 487616,
-        "sha256": "9f72be154155ff819566cbd9ea73b8c93aed3ce13fe34b23e97ac2079e1f9560"
+        "bytes": 649245,
+        "sha256": "d13c5eb7ab297fe9e4518b580a647e82ede8350dd42f960a5a3e8ce83de969a4"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-043.jsonl.gz",
-        "bytes": 487006,
-        "sha256": "9b8dfa6d332db7663b756d92e2fb9093d38794c793c14c7ae5e64af94b33242a"
+        "bytes": 662860,
+        "sha256": "3b6cd9ace0a8dadfb2d0780cbf21c3f79b3c430ff329fb660197d26cce2d47f6"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-044.jsonl.gz",
-        "bytes": 487785,
-        "sha256": "50b476c56bcf7726861bab6c8cbd957db31da37ee2a9e81927c867f98881a005"
+        "bytes": 673305,
+        "sha256": "d7dd0e06a6f8111a88bf19ec62174e1231739bb1016cc6be103e3c4ff17831d1"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-045.jsonl.gz",
-        "bytes": 488812,
-        "sha256": "0b1b0e5b0fbcc5550a90641842f03386c5cb582c15429160e9f2e77abb02de74"
+        "bytes": 698225,
+        "sha256": "639e7e19620cbd1b0e6f3886a970f569cf700bcce1a2518a4b8ef8ad755b8978"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-046.jsonl.gz",
-        "bytes": 487855,
-        "sha256": "bc6b65cc0e8e0cb921e8784a3d3a2ad91494a61cc1b6213d7e7f11e8f211e1a3"
+        "bytes": 718876,
+        "sha256": "c4f2829172d59c7f9ff237be44b2ec1f079217ba791a9661cc05c610612eced7"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-047.jsonl.gz",
-        "bytes": 485269,
-        "sha256": "cbb64ede891c014066ca6b2e478a3ebd271dd1be89d781ca813e2158b28289d9"
+        "bytes": 663149,
+        "sha256": "d42e5b426e0e34545129a8edb45bf3cea26442175ee3853856717ad53f302ee9"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-048.jsonl.gz",
-        "bytes": 453426,
-        "sha256": "df0de76bdaf8258e963b54d71ac3aef981878e674d244fbe846f2123cde4080f"
+        "bytes": 522001,
+        "sha256": "7433867d7a9b9a430a0678daf96f6ebd1aaae97f4b5ee04dc3c2c05f9f205119"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-049.jsonl.gz",
-        "bytes": 478189,
-        "sha256": "0590b1705d28513030010f6f07f08368de85a283d57f1928f69b9b09e718191b"
+        "bytes": 575360,
+        "sha256": "bf074bc88d91e117f6838b5ae07bc2dfab6e58d459a124beb04ba896cca9b233"
       },
       {
         "path": "public/data/exl50u-fieldlines-v1/shot-21138-part-050.jsonl.gz",
-        "bytes": 297440,
-        "sha256": "6e9e59443f337a4bcc3ab24905c012023834f00a2faec05a2563719dc70f7d7d"
+        "bytes": 636642,
+        "sha256": "6eb6e975dbf15370e9aff4120c17e141c40aabbe9955b3029f157c645b91c4ae"
       },
       {
         "path": "public/data/exl50u-mdsplus-snapshot-v1/manifest.exl50u-imas-20260908-r2.json",

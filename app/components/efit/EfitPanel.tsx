@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, type KeyboardEvent } from 'react';
+import { useEffect, useRef, type KeyboardEvent, type ReactNode } from 'react';
 import { deriveReviewedDivertorRegion, deriveVerifiedDivertorGraphRegion } from './divertor-region';
 import EfitEquilibriumChart, { efitTopologyMessageKey } from './EfitEquilibriumChart';
 import { useI18n } from '../../i18n';
@@ -18,6 +18,7 @@ type EfitPanelProps = {
   preferredTimeMs?: number;
   className?: string;
   title?: string;
+  overlayControls?: ReactNode;
 };
 
 function finiteText(value: number | undefined, digits: number, suffix: string): string {
@@ -34,6 +35,7 @@ export default function EfitPanel({
   preferredTimeMs,
   className = '',
   title,
+  overlayControls,
 }: EfitPanelProps) {
   const { locale, t, content } = useI18n();
   const panelTitle = title ?? t('efit.title');
@@ -144,6 +146,14 @@ export default function EfitPanel({
           </select>
         </label>
       </header>
+
+      {overlayControls}
+      {frame?.fieldlineFrame && <p className="efitNoScript">{locale === 'en'
+        ? 'IMAS source equilibrium · q95 interpolated from the source q profile. Wall/divertor outline not verified for these shots.'
+        : 'IMAS 源平衡 · q95 取自源 q 剖面插值；这两炮尚未核验壁面／偏滤器轮廓。'}</p>}
+      {frame?.fieldlineFrame?.state === 'unavailable' && <p className="efitError" role="status">{locale === 'en'
+        ? 'Source consistency warning: 3D tracing rejected. Only independently retained source contours and flux are shown.'
+        : '源数据一致性警告：三维追踪未通过，仅保留独立校验后可显示的源轮廓和磁通。'}</p>}
 
       <div className="efitStatusRail" aria-live="polite">
         {snapshot.status !== 'ready' && snapshot.status !== 'idle' && snapshot.status !== 'error' && (

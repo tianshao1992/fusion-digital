@@ -13,3 +13,7 @@
 .icrfPanel p { margin-bottom: 0; }
 .icrfPanel summary { cursor: pointer; }
 .icrfPanel details { margin-top: 12px; }
+.icrfFlux { margin-bottom: 16px; padding: 14px; border: 1px solid var(--line); background: var(--color-canvas); }
+.icrfFlux dl { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0 0; }
+.icrfFlux dt { font-size: 12px; }
+.icrfFlux dd { margin: 4px 0 0; font: 600 19px monospace; }

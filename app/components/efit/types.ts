@@ -267,6 +267,8 @@ export type EfitFrameSummary = {
 };
 
 export type EfitFrame = EfitFrameSummary & {
+  /** Same hash-verified source frame; never a nearest-shot/time overlay. */
+  fieldlineFrame?: import('./fieldlines').FieldlineFrame;
   contours: readonly EfitContour[];
   /** Optional reviewed divertor-topology derivative; absent in the v1 contour package. */
   topology?: EfitTopology;
@@ -438,6 +440,7 @@ export type EfitDataRequest = {
  * can therefore be injected without changing playback or rendering code.
  */
 export interface EfitDataSource {
+  dispose?(): void;
   loadManifest(request?: EfitDataRequest): Promise<EfitManifest>;
   loadTimeline(shot: EfitShotId, request?: EfitDataRequest): Promise<readonly EfitFrameSummary[]>;
   /**

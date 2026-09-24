@@ -482,6 +482,7 @@ export function createEfitStore(
       cancelPlaybackFrame();
       requestController?.abort();
       listeners.clear();
+      dataSource.dispose?.();
     },
   };
 }
