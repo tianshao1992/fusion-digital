@@ -230,6 +230,18 @@ test('publishes only catalog-declared EXL, ITER and EHL browser derivatives and 
     const publicModelPath = relative(repositoryRoot, endpointToPublicPath(asset.path)).replaceAll('\\', '/').toLowerCase();
     return [publicModelPath, publicModelPath.replace(/^public\//, 'dist/client/')];
   }));
+  // One explicitly reviewed, user-authorized antenna derivative; no directory-wide exception.
+  const antenna = JSON.parse(await readFile(resolve(publicRoot, 'models/exl50u-icrf-antenna/manifest.json'), 'utf8'));
+  assert.equal(antenna.deviceId, 'exl-50u-2026-upgrade');
+  assert.equal(antenna.webModel.path, '/models/exl50u-icrf-antenna/antenna.f897f661.glb');
+  assert.equal(antenna.webModel.sha256, 'f897f661495308c5a9eacb654c56e8e7f6f0b383cb9320d90316269aff35e466');
+  assert.equal(antenna.webModel.bytes, 17625344);
+  assert.equal(antenna.installation.outerLimiterRadiusMm, 1350);
+  const antennaBytes = await readFile(endpointToPublicPath(antenna.webModel.path));
+  assert.equal(antennaBytes.length, antenna.webModel.bytes);
+  assert.equal(createHash('sha256').update(antennaBytes).digest('hex'), antenna.webModel.sha256);
+  allowedExlGeometry.add(`public${antenna.webModel.path}`);
+  allowedExlGeometry.add(`dist/client${antenna.webModel.path}`);
   const exlGeneralAssembly = catalog.devices.find(
     (device) => device.id === 'exl50u-general-assembly-20260630',
   );

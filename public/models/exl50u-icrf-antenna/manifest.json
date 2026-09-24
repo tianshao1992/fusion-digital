@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "fusiondigital.icrf-antenna.v1",
+  "deviceId": "exl-50u-2026-upgrade",
+  "publication": "User-authorized browser derivative, 2026-09-24; raw STEP excluded",
+  "sourceSha256": "dc405f1a502abea146ab53dce07983b57e045757d6ae76e0f68173b9936a28da",
+  "webModel": {
+    "path": "/models/exl50u-icrf-antenna/antenna.f897f661.glb",
+    "format": "glTF 2.0 binary + EXT_meshopt_compression; lossless Float32",
+    "sha256": "f897f661495308c5a9eacb654c56e8e7f6f0b383cb9320d90316269aff35e466",
+    "bytes": 17625344,
+    "triangles": 1374440,
+    "meshInstances": 25
+  },
+  "installation": { "phiDegrees": 300, "zMm": 0, "outerLimiterRadiusMm": 1350, "motion": "radial rigid translation", "cadRegistration": "geometry-derived, not survey-calibrated" }
+}

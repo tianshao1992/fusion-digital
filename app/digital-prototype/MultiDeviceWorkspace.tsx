@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type ReactNode,
   type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent,
 } from 'react';
@@ -25,6 +26,8 @@ import Ehl2DiagnosticExperience, { Ehl2DiagnosticNoScriptSummary } from './Ehl2D
 import Exl50uDiagnosticPanel from './Exl50uDiagnosticPanel';
 import Exl50uSensorPointPanel from './Exl50uSensorPointPanel';
 import TurntableDeviceViewer from './TurntableDeviceViewer';
+import IcrfAntennaPanel from './IcrfAntennaPanel';
+import { ICRF_DEFAULT_OPTIONS, type IcrfAntennaOptions, type IcrfAntennaStatus } from '../components/device-viewer/icrfAntenna';
 
 type Exl50uAnalysisMode = 'efit' | 'diagnostic' | 'sensors';
 
@@ -48,6 +51,7 @@ function DeviceViewer({
   diagnosticOverlayOptions,
   onDiagnosticMarkerSelect,
   diagnosticFocusPoint,
+  antennaOptions, antennaFocusRequest, antennaRetry, onAntennaStatus,
 }: {
   device: DeviceCatalogEntry;
   efitOverlay?: DevicePhysicsOverlay;
@@ -56,6 +60,10 @@ function DeviceViewer({
   diagnosticOverlayOptions?: Ehl2DiagnosticOverlayOptions;
   onDiagnosticMarkerSelect?: (markerId: string) => void;
   diagnosticFocusPoint?: readonly [number, number, number] | null;
+  antennaOptions?: IcrfAntennaOptions;
+  antennaFocusRequest?: number;
+  antennaRetry?: number;
+  onAntennaStatus?: (status: IcrfAntennaStatus) => void;
 }) {
   const [showEfitSection, setShowEfitSection] = useState(true);
   const [showEfitSurface, setShowEfitSurface] = useState(true);
@@ -113,6 +121,11 @@ function DeviceViewer({
     diagnosticOverlayOptions={diagnosticOverlayOptions}
     onDiagnosticMarkerSelect={onDiagnosticMarkerSelect}
     diagnosticFocusPoint={diagnosticFocusPoint}
+    antennaEnabled={device.id === 'exl-50u-2026-upgrade'}
+    antennaOptions={antennaOptions}
+    antennaFocusRequest={antennaFocusRequest}
+    antennaRetry={antennaRetry}
+    onAntennaStatus={onAntennaStatus}
   />;
   if (device.viewer.mode === 'turntable-3d' && device.viewer.turntableManifestEndpoint) return <TurntableDeviceViewer
     title={device.title}
@@ -151,6 +164,10 @@ function ResizableDeviceExperience({
   const [preferenceLoaded, setPreferenceLoaded] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [analysisMode, setAnalysisMode] = useState<Exl50uAnalysisMode>('efit');
+  const [antennaOptions, setAntennaOptions] = useState<IcrfAntennaOptions>({ ...ICRF_DEFAULT_OPTIONS });
+  const [antennaStatus, setAntennaStatus] = useState<IcrfAntennaStatus>('waiting');
+  const [antennaFocusRequest, setAntennaFocusRequest] = useState(0);
+  const [antennaRetry, setAntennaRetry] = useState(0);
   const [diagnosticOverlayOptions, setDiagnosticOverlayOptions] = useState<Ehl2DiagnosticOverlayOptions | undefined>();
   const [sensorOverlayOptions, setSensorOverlayOptions] = useState<Ehl2DiagnosticOverlayOptions | undefined>();
   const [selectedSensorId, setSelectedSensorId] = useState<string | null>(null);
@@ -271,6 +288,10 @@ function ResizableDeviceExperience({
           : analysisMode === 'sensors' ? sensorOverlayOptions : undefined}
         onDiagnosticMarkerSelect={analysisMode === 'sensors' ? setSelectedSensorId : undefined}
         diagnosticFocusPoint={analysisMode === 'sensors' ? sensorFocusPoint : null}
+        antennaOptions={antennaOptions}
+        antennaFocusRequest={antennaFocusRequest}
+        antennaRetry={antennaRetry}
+        onAntennaStatus={setAntennaStatus}
       />
     </div>
     <div
@@ -312,6 +333,11 @@ function ResizableDeviceExperience({
       onSelectedSensorIdChange={setSelectedSensorId}
       onSensorOverlayChange={setSensorOverlayOptions}
       onSensorFocusPoint={(point) => setSensorFocusPoint([...point] as [number, number, number])}
+      antennaPanel={device.id === 'exl-50u-2026-upgrade' ? <IcrfAntennaPanel
+        options={antennaOptions} status={antennaStatus} onChange={setAntennaOptions}
+        onFocus={() => { setAntennaOptions((current) => ({ ...current, visible: true })); setAntennaFocusRequest((value) => value + 1); }}
+        onRetry={() => setAntennaRetry((value) => value + 1)}
+      /> : undefined}
     />
   </div>;
 }
@@ -474,6 +500,7 @@ function DeviceAnalysisPanel({
   onSelectedSensorIdChange,
   onSensorOverlayChange,
   onSensorFocusPoint,
+  antennaPanel,
 }: {
   device: DeviceCatalogEntry;
   overlay: DeviceCatalogEntry['physicsOverlays'][number];
@@ -487,6 +514,7 @@ function DeviceAnalysisPanel({
   onSelectedSensorIdChange: (pointId: string) => void;
   onSensorOverlayChange: (options?: Ehl2DiagnosticOverlayOptions) => void;
   onSensorFocusPoint: (point: readonly [number, number, number]) => void;
+  antennaPanel?: ReactNode;
 }) {
   const { content, locale, t } = useI18n();
   const english = locale === 'en';
@@ -535,6 +563,7 @@ function DeviceAnalysisPanel({
       aria-labelledby={diagnosticContract ? efitTabId : undefined}
       hidden={Boolean(diagnosticContract) && mode !== 'efit'}
     >
+      {antennaPanel}
       <EfitPanel
         store={store}
         preferredShot={overlay.defaultShot}

@@ -74,6 +74,8 @@ import {
   type DeviceManifest,
 } from './deviceManifest';
 import './tokamak-cad-viewer.css';
+import { antennaPlacement, ICRF_DEFAULT_OPTIONS, type IcrfAntennaOptions, type IcrfAntennaStatus } from './device-viewer/icrfAntenna';
+import type { IcrfAntennaOverlay } from './device-viewer/IcrfAntennaOverlay';
 
 const DEFAULT_MANIFEST_URL = '/models/paramak-tokamak-demo/model-manifest.json';
 // GLTFLoader parsing cannot be cancelled. Keep one client-module decode lane so
@@ -90,6 +92,11 @@ const ANALYTIC_FLUX_DARK_COLORS = [
 ];
 
 export type TokamakCadViewerProps = {
+  antennaEnabled?: boolean;
+  antennaOptions?: IcrfAntennaOptions;
+  antennaFocusRequest?: number;
+  antennaRetry?: number;
+  onAntennaStatus?: (status: IcrfAntennaStatus) => void;
   manifestUrl?: string;
   viewerId?: string;
   sectionId?: string;
@@ -194,7 +201,7 @@ export type Ehl2DiagnosticCameraView = {
   target: [number, number, number];
   up: [number, number, number];
 };
-type ViewSnapshot = Ehl2DiagnosticCameraView;
+type ViewSnapshot = Ehl2DiagnosticCameraView & { fov?: number };
 type ViewerApi = {
   controls: OrbitControls;
   renderer: WebGLRenderer;
@@ -460,6 +467,11 @@ export default function TokamakCadViewer(props: TokamakCadViewerProps = {}) {
 }
 
 function TokamakCadViewerSession({
+  antennaEnabled = false,
+  antennaOptions = ICRF_DEFAULT_OPTIONS,
+  antennaFocusRequest = 0,
+  antennaRetry = 0,
+  onAntennaStatus,
   manifestUrl = DEFAULT_MANIFEST_URL,
   viewerId = 'paramak-tokamak-demo',
   sectionId,
@@ -511,6 +523,9 @@ function TokamakCadViewerSession({
   const mountRef = useRef<HTMLDivElement>(null);
   const fullscreenRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<ViewerApi | null>(null);
+  const antennaRef = useRef<IcrfAntennaOverlay | null>(null);
+  const antennaOptionsRef = useRef(antennaOptions);
+  const antennaStatusRef = useRef(onAntennaStatus);
   useEffect(() => {
     visualThemeRef.current = resolvedTheme;
     viewerRef.current?.setVisualTheme(resolvedTheme);
@@ -728,6 +743,55 @@ function TokamakCadViewerSession({
 
   const ehl2LoadBlocked = ehl2Session && ehl2RuntimePolicy?.allowed !== true;
 
+  useEffect(() => { antennaStatusRef.current = onAntennaStatus; }, [onAntennaStatus]);
+  useEffect(() => {
+    antennaOptionsRef.current = antennaOptions;
+    antennaRef.current?.setOptions(antennaOptions);
+  }, [antennaOptions]);
+
+  // Independent attachment lifecycle. Moving/hiding it never reloads the host CAD.
+  useEffect(() => {
+    const viewer = viewerRef.current;
+    if (!antennaEnabled || status !== 'ready' || !viewer) return;
+    const controller = new AbortController();
+    let overlay: IcrfAntennaOverlay | null = null;
+    antennaStatusRef.current?.('loading');
+    void import('./device-viewer/IcrfAntennaOverlay').then(({ loadIcrfAntenna }) =>
+      globalModelDecodeGate.run(() => loadIcrfAntenna(controller.signal)),
+    ).then((loaded) => {
+      if (controller.signal.aborted) { loaded.dispose(); return; }
+      overlay = loaded;
+      antennaRef.current = loaded;
+      loaded.setOptions(antennaOptionsRef.current);
+      viewer.model.add(loaded.root);
+      antennaStatusRef.current?.('ready');
+    }).catch(() => {
+      if (!controller.signal.aborted) antennaStatusRef.current?.('error');
+    });
+    return () => {
+      controller.abort();
+      overlay?.dispose();
+      if (antennaRef.current === overlay) antennaRef.current = null;
+    };
+  }, [antennaEnabled, antennaRetry, status]);
+
+  useEffect(() => {
+    const viewer = viewerRef.current;
+    if (!antennaFocusRequest || !viewer || !antennaRef.current) return;
+    void import('three').then(({ Vector3 }) => {
+      if (viewerRef.current !== viewer || !antennaRef.current) return;
+      const target = new Vector3(...antennaPlacement(antennaOptionsRef.current.radiusMm).focusWebMetres);
+      // View the plasma-facing side from inside the vessel. A close view needs a
+      // smaller orbit minimum than the full-device framing; reset restores it.
+      const cameraPoint = target.clone().add(new Vector3(-0.45, 0.06, -0.779423));
+      viewer.model.updateWorldMatrix(true, false);
+      viewer.model.localToWorld(target);
+      viewer.model.localToWorld(cameraPoint);
+      viewer.controls.minDistance = Math.min(viewer.controls.minDistance, target.distanceTo(cameraPoint) * 0.15);
+      viewer.applyView({ target: target.toArray(), position: cameraPoint.toArray(), up: [0, 1, 0], fov: 66 });
+    });
+  }, [antennaFocusRequest]);
+
   useEffect(() => {
     const nextState = { frame: efitFrame, store: efitStore, alignment: efitAlignment, options: efitOptions };
     efitStateRef.current = nextState;
@@ -902,6 +966,8 @@ function TokamakCadViewerSession({
         localDiagnosticRuntime = null;
       }
       localControls?.dispose();
+      antennaRef.current?.dispose();
+      antennaRef.current = null;
       localDiagnosticOverlay?.dispose();
       localDiagnosticOverlay = null;
       localEfitOverlay?.dispose();
@@ -1516,6 +1582,7 @@ function TokamakCadViewerSession({
       const modelRadius = Math.max(fittedSphere.radius, 0.1);
       let currentPreset: ViewPreset = interactionRef.current.activeView;
       const setView = (preset: ViewPreset) => {
+        camera.fov = 36;
         currentPreset = preset;
         const verticalHalfFov = THREE.MathUtils.degToRad(camera.fov * 0.5);
         const horizontalHalfFov = Math.atan(Math.tan(verticalHalfFov) * Math.max(camera.aspect, 0.1));
@@ -2013,11 +2080,13 @@ function TokamakCadViewerSession({
         pickPart,
         focusWebPoint,
         captureView: () => ({
+          ...(camera.fov !== 36 ? { fov: camera.fov } : {}),
           position: camera.position.toArray() as [number, number, number],
           target: controls.target.toArray() as [number, number, number],
           up: camera.up.toArray() as [number, number, number],
         }),
         applyView: (snapshot) => {
+          camera.fov = snapshot.fov ?? 36;
           camera.position.fromArray(snapshot.position);
           controls.target.fromArray(snapshot.target);
           camera.up.fromArray(snapshot.up);

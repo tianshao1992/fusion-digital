@@ -1,0 +1,15 @@
+.icrfPanel { margin: 16px; padding: 20px; border: 1px solid var(--line, #70867b); border-radius: 12px; background: var(--panel, transparent); color: inherit; }
+.icrfPanel header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.icrfPanel h3 { margin: 6px 0 0; font-size: 20px; }
+.icrfPanel small { letter-spacing: .1em; font-size: 11px; }
+.icrfVisibility { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+.icrfRadius { display: flex; gap: 12px; align-items: center; margin: 8px 0; flex-wrap: wrap; }
+.icrfRadius input { width: 135px; padding: 10px; border: 1px solid var(--line, #70867b); background: transparent; color: inherit; font: inherit; }
+.icrfSlider { width: 100%; margin: 10px 0 18px; accent-color: var(--accent, #d38d6d); }
+.icrfActions { display: flex; gap: 10px; flex-wrap: wrap; }
+.icrfPanel button { padding: 8px 12px; border: 1px solid var(--line, #70867b); background: transparent; color: inherit; cursor: pointer; font: inherit; }
+.icrfPanel button:disabled { opacity: .45; cursor: wait; }
+.icrfPanel p, .icrfPanel summary, .icrfRadius span { font-size: 12px; line-height: 1.7; }
+.icrfPanel p { margin-bottom: 0; }
+.icrfPanel summary { cursor: pointer; }
+.icrfPanel details { margin-top: 12px; }
