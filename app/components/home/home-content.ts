@@ -13,12 +13,12 @@ export const controlEvidence = {
 } as const;
 
 export const capabilities = [
-  { id: '01', href: '/#prototype-workspace', title: ['数字样机', 'Digital prototypes'], sub: 'EXPLORE THE DEVICE', copy: ['在多装置三维视图中探索装配、剖切、平衡重建与诊断覆盖。', 'Explore assemblies, sections, reconstructed equilibria and diagnostic coverage across devices.'] },
-  { id: '02', href: '/fusion-data', title: ['聚变数据', 'Fusion data'], sub: 'CONNECT THE EVIDENCE', copy: ['按炮次连接实验信号、数据语义和来源。公开快照，不是实时遥测。', 'Connect shot signals, semantics and provenance. Public snapshots, not live telemetry.'] },
-  { id: '03', href: '/simulations', title: ['仿真引擎', 'Simulation engines'], sub: 'TEST IN THE DIGITAL WORLD', copy: ['探索 FUSE、TORAX、CHERAB–Raysect 等模拟结果与可追溯计算流程。', 'Explore FUSE, TORAX and CHERAB–Raysect results with traceable simulation workflows.'] },
-  { id: '04', href: '/search', title: ['证据检索', 'Evidence search'], sub: 'FIND THE SOURCE', copy: ['从问题追溯论文、代码与装置资料。公开版提供确定性检索。', 'Trace questions to papers, code and facility sources through deterministic public search.'] },
-  { id: '05', href: '/knowledge-graph', title: ['知识图谱', 'Knowledge graph'], sub: 'SEE THE CONNECTIONS', copy: ['连接物理、工程、诊断与控制，让研究结论回到原始依据。', 'Connect physics, engineering, diagnostics and control, with conclusions linked to sources.'] },
-  { id: '06', href: '/facilities', title: ['装置观测台', 'Fusion facilities'], sub: 'FOLLOW THE PROGRESS', copy: ['按生命周期浏览聚变装置，追踪工程进展、来源与核验日期。', 'Browse fusion facilities by lifecycle, with engineering progress, sources and review dates.'] },
+  { id: '01', href: '/digital-prototype', title: ['数字样机', 'Digital prototypes'], short: ['三维装置与放电回放', '3D devices & shot replay'] },
+  { id: '02', href: '/fusion-data', title: ['聚变数据', 'Fusion data'], short: ['炮次、信号与数据来源', 'Shots, signals & provenance'] },
+  { id: '03', href: '/simulations', title: ['仿真引擎', 'Simulation engines'], short: ['计算流程与模拟结果', 'Workflows & simulation results'] },
+  { id: '04', href: '/search', title: ['证据检索', 'Evidence search'], short: ['论文、代码与原始依据', 'Papers, code & original sources'] },
+  { id: '05', href: '/knowledge-graph', title: ['知识图谱', 'Knowledge graph'], short: ['连接跨领域研究', 'Connected research'] },
+  { id: '06', href: '/facilities', title: ['装置观测台', 'Fusion facilities'], short: ['全球装置与工程进展', 'Devices & engineering progress'] },
 ] as const;
 
 export const layers = [

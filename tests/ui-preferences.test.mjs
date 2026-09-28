@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
+import { runInNewContext } from 'node:vm';
+import ts from 'typescript';
 
 const source = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
@@ -34,7 +36,7 @@ test('typed locale registry supports Chinese and English with durable fallback',
   assert.match(messages, /'viewer\.fullscreen': 'Fullscreen'/);
 });
 
-test('root shell and navigation wire locale and theme preferences without changing routes', async () => {
+test('root shell and navigation wire preferences with a direct prototype destination', async () => {
   const [layout, nav, backLink, modules] = await Promise.all([
     source('app/layout.tsx'),
     source('app/components/SiteNav.tsx'),
@@ -49,8 +51,8 @@ test('root shell and navigation wire locale and theme preferences without changi
   assert.match(nav, /ThemeSwitcher/);
   assert.match(nav, /setLocale\(locale === 'zh-CN' \? 'en' : 'zh-CN'\)/);
   assert.match(nav, /t\('theme\.light'\)/);
-  assert.match(nav, /key: 'prototype', href: '\/#prototype-workspace', label: 'nav\.prototype'/);
-  assert.doesNotMatch(nav, /key: 'prototype', href: '\/digital-prototype'/);
+  assert.match(nav, /key: 'prototype', href: '\/digital-prototype', label: 'nav\.prototype'/);
+  assert.doesNotMatch(nav, /key: 'prototype', href: '\/#prototype-workspace'/);
   assert.match(nav, /selectVisibleNavigationKeys/);
   assert.match(nav, /new ResizeObserver\(update\)/);
   assert.match(nav, /window\.addEventListener\('resize', update\)/);
@@ -128,9 +130,10 @@ test('restored palette and compact English navigation preserve the original bran
   assert.ok(messages.includes("'nav.fusionData': 'DataPlatforms'"));
 });
 
-test('EXL-50U VR tour belongs to the homepage photograph, not the CAD workspace', async () => {
+test('EXL-50U VR tour belongs to the case page photograph, not the entry page or CAD workspace', async () => {
   const vr = await source('app/digital-prototype/Exl50uVrTour.tsx');
   const home = await source('app/page.tsx');
+  const controlCase = await source('app/control/exl50u/page.tsx');
   const landing = await source('app/components/home/FusionLanding.tsx');
   const photo = await source('app/components/FacilityPhoto.tsx');
   const workspace = await source('app/digital-prototype/MultiDeviceWorkspace.tsx');
@@ -139,7 +142,8 @@ test('EXL-50U VR tour belongs to the homepage photograph, not the CAD workspace'
   assert.match(photo, /href=\{imageLink.href\} target="_blank" rel="noopener noreferrer"/);
   assert.match(vr, /在新窗口打开 EXL-50U VR 实景/);
   assert.doesNotMatch(vr, /allow-top-navigation|allow-downloads|postMessage|dangerouslySetInnerHTML/);
-  assert.ok(home.includes('<FusionControlCase en={en} />'));
+  assert.doesNotMatch(home, /FusionControlCase|Exl50uVrTour/);
+  assert.match(controlCase, /<FusionControlCase en=\{en\}/);
   assert.ok(landing.includes('<Exl50uVrTour en={en} />'));
   assert.ok(vr.includes('heroPhotography heroVrTour'));
   assert.ok(vr.includes('新窗口打开'));
@@ -283,17 +287,80 @@ test('digital prototype operational UI consumes the shared locale layer', async 
   }
 });
 
-test('homepage mounts one full prototype workspace and the legacy route redirects', async () => {
-  const [home, legacyPage] = await Promise.all([
+test('the prototype mounts on an independent page while the homepage remains a lightweight entry', async () => {
+  const [home, prototype] = await Promise.all([
     source('app/page.tsx'),
     source('app/digital-prototype/page.tsx'),
   ]);
 
-  assert.match(home, /<div className="prototypePage prototypePage--embedded">\s*<MultiDeviceWorkspace catalog=\{deviceCatalog\} \/>/);
-  assert.match(home, /parseDeviceCatalog\(deviceCatalogJson\)/);
-  assert.doesNotMatch(home, /<TokamakCadViewer|prototypePortalCta/);
-  assert.match(legacyPage, /redirect\('\/#prototype-workspace'\)/);
-  assert.doesNotMatch(legacyPage, /MultiDeviceWorkspace|DigitalPrototypeContent/);
+  assert.doesNotMatch(home, /MultiDeviceWorkspace|TokamakCadViewer|parseDeviceCatalog|FusionTwinSystemMap|PhaseOneRoadmap|FusionControlCase|ResearchDisclosure/);
+  assert.match(prototype, /<MultiDeviceWorkspace catalog=\{deviceCatalog\} \/>/);
+  assert.match(prototype, /parseDeviceCatalog\(deviceCatalogJson\)/);
+  assert.doesNotMatch(prototype, /redirect\('\/#prototype-workspace'\)/);
+});
+
+test('old homepage bookmarks navigate to dedicated pages without loading a research component', async () => {
+  const component = await source('app/components/home/HomeLegacyRedirect.tsx');
+  const home = await source('app/page.tsx');
+  assert.match(home, /<HomeLegacyRedirect\s*\/>/);
+  assert.doesNotMatch(component, /MultiDeviceWorkspace|TokamakCadViewer|FusionLanding|echarts|fetch\(/);
+  const compiled = ts.transpileModule(component, {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+    fileName: 'HomeLegacyRedirect.tsx',
+  }).outputText;
+  const destinations = {
+    '#prototype-workspace': '/digital-prototype#prototype-workspace',
+    '#domains': '/explore#domains',
+    '#resources': '/explore#resources',
+    '#architecture': '/vision#architecture',
+    '#exl50u-case': '/control/exl50u#exl50u-case',
+    '#learning-loop': '/control/exl50u#learning-loop',
+    '#community': '/#about',
+    ...Object.fromEntries(['physics', 'engineering', 'control', 'diagnostics', 'energy', 'auxiliary', 'hmi', 'data', 'integration', 'ai']
+      .map(id => [`#domain-${id}`, `/explore#domain-${id}`])),
+  };
+  for (const [hash, expected] of Object.entries(destinations)) {
+    const redirects = [];
+    const listeners = new Map();
+    let cleanup;
+    const window = {
+      location: { hash, replace: href => redirects.push(href) },
+      addEventListener: (name, listener) => listeners.set(name, listener),
+      removeEventListener: (name, listener) => { if (listeners.get(name) === listener) listeners.delete(name); },
+    };
+    const commonJsModule = { exports: {} };
+    runInNewContext(compiled, { window, module: commonJsModule, exports: commonJsModule.exports,
+      require: name => {
+        assert.equal(name, 'react', 'bookmark compatibility must have no research-runtime dependencies');
+        return { useEffect: effect => { cleanup = effect(); } };
+      },
+    });
+    commonJsModule.exports.default();
+    assert.deepEqual(redirects, [expected], `${hash} must redirect on initial load`);
+    window.location.hash = '#capabilities';
+    listeners.get('hashchange')();
+    assert.deepEqual(redirects, [expected], 'current landing-page anchors must not redirect');
+    window.location.hash = '#domain-https://example.com';
+    listeners.get('hashchange')();
+    assert.deepEqual(redirects, [expected], 'unknown and external-looking anchors must not navigate');
+    window.location.hash = '#prototype-workspace';
+    listeners.get('hashchange')();
+    assert.equal(redirects.at(-1), '/digital-prototype#prototype-workspace');
+    cleanup();
+    assert.equal(listeners.size, 0, 'the compatibility listener must be released on unmount');
+  }
+});
+
+test('CAD runtime and mounted adapters share the independent prototype route', async () => {
+  const [runtime, viewer, catalog] = await Promise.all([
+    source('app/agent/site-action-runtime.ts'),
+    source('app/components/TokamakCadViewer.tsx'),
+    source('app/digital-prototype/MultiDeviceWorkspace.tsx'),
+  ]);
+  assert.match(runtime, /CAD_WORKSPACE_PATH = '\/digital-prototype'/);
+  assert.match(runtime, /CAD_WORKSPACE_HREF = '\/digital-prototype#prototype-workspace'/);
+  assert.match(viewer, /id: `cad-viewer:\$\{cadAdapterId\}`, path: '\/digital-prototype'/);
+  assert.match(catalog, /id: `cad-device-catalog:\$\{catalogAdapterId\}`, path: '\/digital-prototype'/);
 });
 
 test('editorial introductions preserve original theme decoration without targeting chart controls', async () => {

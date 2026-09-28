@@ -11,7 +11,7 @@ function deferred<T>() {
   return { promise, resolve };
 }
 
-function harness(initial = '/') {
+function harness(initial = '/digital-prototype') {
   const locations: string[] = [];
   const runtime = new SiteActionRuntime((href) => { locations.push(href); runtime.setLocation(href); }, () => 'en');
   runtime.setLocation(initial);
@@ -23,7 +23,7 @@ function viewer(execute?: SiteActionAdapter['execute'], id = 'viewer-one') {
   const calls: SiteAction[] = [];
   const adapter: SiteActionAdapter = {
     id,
-    path: '/',
+    path: '/digital-prototype',
     capabilities: ['cad.open', 'cad.set_view', 'cad.set_rotation'],
     getContext: () => ({ viewer: { viewerId: id, deviceId: 'exl-50u', ready: true, revision: state.revision,
       view: state.view, parts: [], selectedPartIds: [] } }),
@@ -62,7 +62,7 @@ test('navigation and adapter actions run in order, and receipts follow actual co
     { type: 'cad.set_rotation', enabled: true },
   ), { runId: 'sequence', expected: runtime.getContext(), signal: signal(), onReceipt: (receipt) => receipts.push(receipt) });
   await entered.promise;
-  assert.deepEqual(locations, ['/#prototype-workspace']);
+  assert.deepEqual(locations, ['/digital-prototype#prototype-workspace']);
   assert.deepEqual(fake.calls.map(({ type }) => type), ['cad.set_view']);
   assert.deepEqual(receipts.map(({ type }) => type), ['site.navigate']);
   assert.deepEqual(committed, []);
@@ -70,40 +70,51 @@ test('navigation and adapter actions run in order, and receipts follow actual co
   const result = await pending;
   assert.deepEqual(committed, ['cad.set_view', 'cad.set_rotation']);
   assert.deepEqual(result.map(({ status }) => status), ['applied', 'applied', 'applied']);
-  assert.deepEqual(result.map(({ path }) => path), ['/', '/', '/']);
+  assert.deepEqual(result.map(({ path }) => path), ['/digital-prototype', '/digital-prototype', '/digital-prototype']);
   assert.equal(result[1].message, 'Renderer committed cad.set_view');
   assert.equal(result[2].actionId, 'sequence-2');
   assert.deepEqual(receipts, result);
 });
 
-test('opening CAD waits for the home pathname before applying the model and follow-up view', async () => {
+test('opening CAD from the homepage waits for the prototype pathname before applying the model and follow-up view', async () => {
   const navigated = deferred<string>();
   const runtime = new SiteActionRuntime(href => navigated.resolve(href), () => 'en');
-  runtime.setLocation('/search?q=EXL-50U');
+  runtime.setLocation('/');
   const fake = viewer();
   runtime.register(fake.adapter);
   const pending = runtime.execute(plan(
     { type: 'cad.open', deviceId: 'exl50u-general-assembly-20260630' },
     { type: 'cad.set_view', view: 'top' },
-  ), { runId: 'open-home-cad', expected: runtime.getContext(), signal: signal() });
-  assert.equal(await navigated.promise, '/#prototype-workspace');
+  ), { runId: 'open-prototype-cad', expected: runtime.getContext(), signal: signal() });
+  assert.equal(await navigated.promise, '/digital-prototype#prototype-workspace');
   assert.equal(fake.calls.length, 0, 'an adapter registered on another page must not run before navigation completes');
   // The real provider reports pathname and query, without the anchor.
-  runtime.setLocation('/');
+  runtime.setLocation('/digital-prototype');
   const receipts = await pending;
   assert.deepEqual(receipts.map(receipt => receipt.status), ['applied', 'applied']);
-  assert.deepEqual(receipts.map(receipt => receipt.path), ['/', '/']);
+  assert.deepEqual(receipts.map(receipt => receipt.path), ['/digital-prototype', '/digital-prototype']);
   assert.deepEqual(fake.calls.map(action => action.type), ['cad.open', 'cad.set_view']);
   assert.equal(fake.state.view, 'top');
 });
 
-test('same-page CAD navigation reveals the section without changing page identity or adding undo', async () => {
+test('the lightweight homepage cannot execute a stale CAD adapter without opening the workspace', async () => {
   const { runtime, locations } = harness('/');
+  const fake = viewer();
+  runtime.register(fake.adapter);
+  const result = await runtime.execute(plan({ type: 'cad.set_view', view: 'front' }),
+    { runId: 'no-cad-on-home', expected: runtime.getContext(), signal: signal() });
+  assert.equal(result[0].status, 'rejected');
+  assert.deepEqual(locations, []);
+  assert.equal(fake.calls.length, 0);
+});
+
+test('same-page CAD navigation reveals the section without changing page identity or adding undo', async () => {
+  const { runtime, locations } = harness('/digital-prototype');
   const before = runtime.getContext();
   const result = await runtime.execute(plan({ type: 'site.navigate', path: '/digital-prototype' }),
-    { runId: 'reveal-home-cad', expected: before, signal: signal() });
+    { runId: 'reveal-prototype-cad', expected: before, signal: signal() });
   assert.equal(result[0].status, 'applied');
-  assert.deepEqual(locations, ['/#prototype-workspace']);
+  assert.deepEqual(locations, ['/digital-prototype#prototype-workspace']);
   assert.deepEqual(runtime.getContext(), before);
   const undo = await runtime.execute(plan({ type: 'site.undo' }),
     { runId: 'no-anchor-undo', expected: before, signal: signal() });
@@ -112,29 +123,29 @@ test('same-page CAD navigation reveals the section without changing page identit
   const fake = viewer();
   runtime.register(fake.adapter);
   const opened = await runtime.execute(plan({ type: 'cad.open', deviceId: 'exl50u-general-assembly-20260630' }),
-    { runId: 'same-home-open-cad', expected: runtime.getContext(), signal: signal() });
+    { runId: 'same-prototype-open-cad', expected: runtime.getContext(), signal: signal() });
   assert.equal(opened[0].status, 'applied');
-  assert.deepEqual(locations, ['/#prototype-workspace', '/#prototype-workspace']);
+  assert.deepEqual(locations, ['/digital-prototype#prototype-workspace', '/digital-prototype#prototype-workspace']);
   assert.equal(fake.calls[0].type, 'cad.open');
   assert.equal(runtime.getContext().pageInstanceId, before.pageInstanceId);
 });
 
-test('a changed home anchor does not cancel a running CAD action', async () => {
-  const { runtime } = harness('/#prototype-workspace');
+test('a changed prototype anchor does not cancel a running CAD action', async () => {
+  const { runtime } = harness('/digital-prototype#prototype-workspace');
   const entered = deferred<void>();
   const finish = deferred<void>();
   const fake = viewer(async (_action, options) => {
     entered.resolve();
     await finish.promise;
     options.signal.throwIfAborted();
-    return { message: 'Committed the home viewer' };
+    return { message: 'Committed the prototype viewer' };
   });
   runtime.register(fake.adapter);
   const before = runtime.getContext();
   const pending = runtime.execute(plan({ type: 'cad.set_view', view: 'top' }),
-    { runId: 'home-anchor-change', expected: before, signal: signal() });
+    { runId: 'prototype-anchor-change', expected: before, signal: signal() });
   await entered.promise;
-  runtime.setLocation('/#another-section');
+  runtime.setLocation('/digital-prototype#another-section');
   assert.deepEqual(runtime.getContext(), before);
   finish.resolve();
   assert.equal((await pending)[0].status, 'applied');
@@ -163,7 +174,7 @@ test('a changed viewer revision or a returned page instance rejects an old plan 
   assert.equal(staleSelection[0].status, 'rejected');
   const oldPage = runtime.getContext();
   runtime.setLocation('/search');
-  runtime.setLocation('/');
+  runtime.setLocation('/digital-prototype');
   const stalePage = await runtime.execute(plan({ type: 'cad.set_view', view: 'top' }),
     { runId: 'old-page', expected: oldPage, signal: signal() });
   assert.equal(stalePage[0].status, 'rejected');
@@ -265,7 +276,7 @@ test('undo restores an adapter snapshot once, and route undo navigates back', as
   assert.equal(empty[0].status, 'rejected');
   await runtime.execute(plan({ type: 'site.navigate', path: '/search' }), { runId: 'navigate', expected: runtime.getContext(), signal: signal() });
   await runtime.execute(plan({ type: 'site.undo' }), { runId: 'undo-navigation', expected: runtime.getContext(), signal: signal() });
-  assert.deepEqual(locations, ['/search', '/']);
+  assert.deepEqual(locations, ['/search', '/digital-prototype']);
 });
 
 test('viewer actions reject the wrong page and ambiguous targets without invoking adapters', async () => {
@@ -278,7 +289,7 @@ test('viewer actions reject the wrong page and ambiguous targets without invokin
     { runId: 'wrong-page', expected: runtime.getContext(), signal: signal() });
   assert.equal(wrongPage[0].status, 'rejected');
   assert.deepEqual(locations, []);
-  runtime.setLocation('/');
+  runtime.setLocation('/digital-prototype');
   const ambiguous = await runtime.execute(plan({ type: 'cad.set_view', view: 'top' }),
     { runId: 'ambiguous', expected: runtime.getContext(), signal: signal() });
   assert.equal(ambiguous[0].status, 'rejected');

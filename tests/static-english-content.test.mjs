@@ -7,7 +7,11 @@ const root = process.cwd();
 const read = (relativePath) => readFile(path.join(root, relativePath), 'utf8');
 
 const routeExpectations = [
-  ['app/page.tsx', 'ResearchDisclosure'],
+  ['app/page.tsx', 'FusionHero'],
+  ['app/digital-prototype/page.tsx', 'MultiDeviceWorkspace'],
+  ['app/explore/page.tsx', 'knowledgeModules'],
+  ['app/vision/page.tsx', 'FusionArchitecture'],
+  ['app/control/exl50u/page.tsx', 'FusionControlCase'],
   ['app/physics/page.tsx', 'Physics simulation'],
   ['app/engineering/page.tsx', 'Engineering simulation'],
   ['app/control/page.tsx', 'Integrated control coordinates'],
@@ -63,21 +67,28 @@ test('editorial photographs and labelled concepts are local, credited and bounde
     assert.ok(image.length < 600_000, 'each editorial photo stays under 600 kB');
   }
   const home = await read('app/page.tsx');
+  const explore = await read('app/explore/page.tsx');
+  const prototype = await read('app/digital-prototype/page.tsx');
+  const controlCase = await read('app/control/exl50u/page.tsx');
   const photoComponent = await read('app/components/FacilityPhoto.tsx');
   const vr = await read('app/digital-prototype/Exl50uVrTour.tsx');
   assert.match(photoComponent, /fetchPriority/);
   assert.match(vr, /device="EXL-50U"[^>]*priority/);
   const landing = await read('app/components/home/FusionLanding.tsx');
+  const hero = await read('app/components/home/FusionHero.tsx');
   assert.match(landing, /<Exl50uVrTour en=\{en\}/);
-  assert.match(landing, /From AI research/);
+  assert.match(controlCase, /<FusionControlCase/);
+  assert.match(hero, /From AI research/);
   assert.match(landing, /en \?/);
-  assert.match(home, /device="ITER"/);
+  assert.match(explore, /device="ITER"/);
   assert.match(photoComponent, /'lazy'/);
-  assert.match(home, /<FusionTwinSystemMap/);
-  assert.match(home, /<PhaseOneRoadmap/);
-  assert.match(home, /<MultiDeviceWorkspace/);
-  assert.match(home, /knowledgeModules\.map/);
-  assert.doesNotMatch(home, /https:\/\/upload\.wikimedia\.org/, 'page loads local images without a Wikimedia runtime dependency');
+  assert.match(explore, /<FusionTwinSystemMap/);
+  assert.match(explore, /<PhaseOneRoadmap/);
+  assert.match(prototype, /<MultiDeviceWorkspace/);
+  assert.match(explore, /knowledgeModules\.map/);
+  assert.doesNotMatch(home, /MultiDeviceWorkspace|FusionTwinSystemMap|PhaseOneRoadmap|FusionControlCase|ResearchDisclosure/,
+    'the landing route must not import or mount heavy detail-page content');
+  assert.doesNotMatch([home, explore, controlCase, prototype].join('\n'), /https:\/\/upload\.wikimedia\.org/, 'pages load local images without a Wikimedia runtime dependency');
 });
 
 test('research catalogues never publish unreviewed Chinese prose in English mode', async () => {

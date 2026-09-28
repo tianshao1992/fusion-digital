@@ -2482,7 +2482,7 @@ function TokamakCadViewerSession({
   });
 
   useSiteActionAdapter(cadActionScope?.deviceId === viewerId && manifest ? {
-    id: `cad-viewer:${cadAdapterId}`, path: '/',
+    id: `cad-viewer:${cadAdapterId}`, path: '/digital-prototype',
     capabilities: CAD_VIEWER_ACTION_TYPES.filter(type => type !== 'cad.select_parts' || (manifest !== null && !anonymousVisualization)),
     getContext: () => cadBindingsRef.current?.getContext() ?? {},
     execute: async (action, { signal }) => {

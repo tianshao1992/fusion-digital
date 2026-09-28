@@ -4,9 +4,21 @@
 
 The homepage connects the AI4Fusion product thesis to an experimental case: **learn within constraints, extend capability through validation, and evolve through operational feedback**. It does not expose a device-control API.
 
-Page order: fusion-energy concept → three principles → three-layer architecture → six existing capabilities → expandable research workspace → EXL-50U case → digital-twin/RL feedback loop → contact.
+The homepage is a compact entry page, not a combined research application: fusion-energy concept and product thesis → six direct workspace links → a short provisional EXL-50U case teaser → contact. The hero links to the three-layer vision rather than embedding its detailed diagram.
 
-White/ink surfaces, restrained violet plasma geometry, thin chart axes and clear typographic hierarchy replace a dense opening screen. Existing CAD/EFIT workspaces, ten knowledge domains, roadmap, VR tour, language/theme controls and anonymous-access boundaries remain available. The original `/#prototype-workspace` and knowledge-domain anchors are preserved inside a disclosure which opens on deep linking.
+White/ink surfaces, restrained violet plasma geometry and clear typographic hierarchy keep the opening screen concise. Detailed capabilities are preserved on independent pages:
+
+| Route | Responsibility |
+| --- | --- |
+| `/` | Product thesis, conceptual energy animation, six functional entry links, provisional case teaser and contact |
+| `/digital-prototype` | Full multi-device CAD/EFIT/diagnostic workspace; this route no longer redirects to the homepage |
+| `/explore` | Ten knowledge domains, toolchains, digital-thread system map, roadmap and credited ITER photograph |
+| `/vision` | Core principles and interactive three-layer architecture |
+| `/control/exl50u` | Experimental case, statistics and provenance, timeline, VR link and digital-twin/RL feedback loop |
+
+The entry page must not import or mount the CAD workspace, full research map, detailed ECharts case plot or the old expandable research application. Language/theme controls and public-anonymous access boundaries remain available on every route. Canonical capability and primary navigation links point directly to the new pages.
+
+`HomeLegacyRedirect.tsx` preserves existing bookmarks with a small client-side hash compatibility layer: `/#prototype-workspace` → `/digital-prototype#prototype-workspace`; domain/tool anchors → `/explore`; architecture → `/vision`; case/learning anchors → `/control/exl50u`. It does not load the destination application on the homepage. With JavaScript disabled, the homepage still exposes direct links to all destination pages. CAD action runtime and viewer/catalog adapters use `/digital-prototype` as their shared canonical pathname and `/digital-prototype#prototype-workspace` for opening the workspace.
 
 Research references (content structures reviewed 2026-09-28; no layouts or assets copied):
 
@@ -37,16 +49,18 @@ The user-supplied cumulative headline is **750+ successful takeovers**, with a p
 | 2026 Q1 | 64 | Historical chart |
 | 2026 Q2–Q3 | about 634 | **Residual placeholder**, 750 − 8 − 44 − 64; not a measured stage count |
 
-The last column includes the missing Q2 interval; do not relabel it as Q3 alone. It has a distinct dashed/hatched rendering, a visible warning and an accessible data table. No failure counts or success rates are fabricated. The four unequal periods do not establish a scaling law. The page explicitly calls that a research hypothesis and attributes operational progress to the team.
+The last column includes the missing Q2 interval; do not relabel it as Q3 alone. On `/control/exl50u`, it has a distinct dashed/hatched rendering, a visible warning and an accessible data table. No failure counts or success rates are fabricated. The four unequal periods do not establish a scaling law. The case page explicitly calls that a research hypothesis and attributes operational progress to the team. The homepage only shows the 750+ team-reported headline with its provisional/cutoff/unverified label and a link to this detail page.
 
-Editable numbers live in `app/components/home/home-content.ts`; bilingual narrative and chart behavior in `FusionLanding.tsx`. Replace source identity, cutoff, verification status, all stage totals and the associated disclaimer **together**, with shot-level deduplication, eligibility and success criteria. Never just remove the estimate label.
+Editable chart numbers live in `app/components/home/home-content.ts`; bilingual detailed narrative and chart behavior in `FusionLanding.tsx`; the compact teaser lives in `app/page.tsx`. Replace source identity, cutoff, verification status, all stage totals, the homepage teaser and the associated disclaimer **together**, with shot-level deduplication, eligibility and success criteria. Never just remove the estimate label. `FusionHero.tsx` independently owns the conceptual animation so the root entry need not import detailed case charts or VR components.
 
 ## Acceptance and release
 
-- Chinese and English server rendering; a single main heading.
-- Six real capability links, old device/domain anchors, photo credits and VR tour preserved.
-- Chart remains readable before JavaScript, on import failure and with assistive technology.
+- Chinese and English server rendering on the entry and all four detail routes; a single main heading per page.
+- Six real direct capability links; old device/domain bookmarks redirect to the dedicated pages without mounting their applications on the root.
+- Original asset coverage, CAD/EFIT diagnostics, no-script evidence, photo credits and VR access are preserved on their new owning routes; no new direct protected-geometry download links.
+- The case chart remains readable before JavaScript, on import failure and with assistive technology.
 - Pause/step controls; reduced-motion support and off-screen animation suspension.
 - Responsive layouts and existing theme controls; no new dependency or external image/font runtime.
-- Only homepage, contact, metadata and directly affected tests change. Existing independent work is not included.
+- CAD agent actions navigate from the homepage to the prototype route before using an adapter; stale adapters on the homepage must not execute. Cancellation, receipts and undo behavior retain their existing tests.
+- Only the homepage/detail-route split, directly affected navigation, contact and tests change. Existing independent work is not included.
 - Formal release follows `AGENTS.md`, `docs/RELEASE.md` and `deploy/aliyun-hk/README.md`: exact-SHA checks, both Git remotes, isolated paired builds, Hong Kong source verification, DNS gates, Sites mirror and formal evidence gate. Local evidence remains outside the release checkout in the main checkout's ignored `work/local-ops` tree.

@@ -1,72 +1,26 @@
-import FusionTwinSystemMap from './components/FusionTwinSystemMap';
-import PhaseOneRoadmap from './components/PhaseOneRoadmap';
 import SiteFooter from './components/SiteFooter';
-import FacilityPhoto from './components/FacilityPhoto';
 import SiteNav from './components/SiteNav';
 import StaticLocaleContent from './components/StaticLocaleContent';
-import MultiDeviceWorkspace from './digital-prototype/MultiDeviceWorkspace';
-import { parseDeviceCatalog } from './digital-prototype/deviceCatalog';
-import deviceCatalogJson from '../public/models/device-catalog.json';
-import { knowledgeModules } from './data/knowledge-modules';
-import { isPublicAnonymousMode } from './deployment-mode';
+import { FusionHero } from './components/home/FusionHero';
+import HomeLegacyRedirect from './components/home/HomeLegacyRedirect';
+import { capabilities } from './components/home/home-content';
 import './portal.css';
-import './digital-prototype/prototype.css';
-import './digital-prototype/workspace-layout.css';
-import './digital-prototype/turntable.css';
-import { FusionHero, FusionPrinciples, FusionArchitecture, FusionCapabilities, FusionControlCase, FusionLearningLoop, ResearchDisclosure } from './components/home/FusionLanding';
 import './home.css';
 
-const deviceCatalog = parseDeviceCatalog(deviceCatalogJson);
-const domainNotes = [
-  ['平衡、输运与多物理模型', 'Equilibrium, transport and multiphysics models', 'physics'],
-  ['载荷、结构与热流分析', 'Loads, structures and thermal analysis', 'engineering'],
-  ['控制任务、PCS 与闭环验证', 'Control tasks, PCS and closed-loop validation', 'integrated-control'],
-  ['传感器、反演与合成诊断', 'Sensors, inversion and synthetic diagnostics', 'intelligent-diagnostics'],
-  ['热取出、发电循环与电网', 'Heat extraction, power cycles and the grid', 'energy-conversion'],
-  ['真空、低温、燃料与电源', 'Vacuum, cryogenics, fuel and power', 'auxiliary-systems'],
-  ['运行界面与人在回路', 'Operator interfaces and human oversight', 'human-machine-interaction'],
-  ['IMAS、数据接口与溯源', 'IMAS, data interfaces and provenance', 'data-foundation'],
-  ['系统架构、接口与协同仿真', 'Architecture, interfaces and co-simulation', 'whole-plant-integration'],
-  ['代理模型、基础模型与智能体', 'Surrogates, foundation models and agents', 'ai-native'],
-] as const;
-
 function HomeContent({ en }: { en: boolean }) {
-  const publicAnonymousMode = isPublicAnonymousMode();
-  return <main className="portalPage editorialHome fusionHome">
+  return <main className="portalPage editorialHome fusionHome fdCompactHome">
     <SiteNav active="home" />
+    <HomeLegacyRedirect />
     <FusionHero en={en} />
-    <FusionPrinciples en={en} />
-    <FusionArchitecture en={en} />
-    <FusionCapabilities en={en} />
-    <ResearchDisclosure en={en}>
-
-    <div className="prototypePage prototypePage--embedded"><MultiDeviceWorkspace catalog={deviceCatalog} /></div>
-
-    <section className="domainSection" id="domains">
-      <div className="sectionIntro"><p className="sectionIndex">01 / KNOWLEDGE</p><h2>{en ? 'Find your field.' : '从你的研究领域出发。'}</h2><p>{en ? 'Models, tools and source material, organised by discipline.' : '按专业查找模型、工具和原始资料。'}</p></div>
-      <div className="domainCards">{knowledgeModules.map((domain, index) => <article className="domainCard" id={`domain-${domain.id}`} key={domain.id}>
-        <span className="domainNumber">{domain.no}</span>
-        <div className="domainBody"><h3><a href={domain.href}>{en ? domain.en : domain.zh} <span aria-hidden="true">↗</span></a></h3><p>{domainNotes[index][en ? 1 : 0]}</p></div>
-        <div className="domainMeta">{domain.href.startsWith('/#') && <span>{en ? 'Planned' : '规划中'}</span>}<a href={`/figures/domain-${domainNotes[index][2]}-dark-image2.png`} target="_blank" rel="noreferrer" aria-label={`${en ? domain.en : domain.zh} · ${en ? 'systems diagram' : '结构图解'}`}>{en ? 'Diagram' : '图解'} ↗</a></div>
-      </article>)}</div>
+    <section className="fdQuickStart" id="capabilities" aria-labelledby="capabilities-title">
+      <div className="fdQuickHeading"><h2 id="capabilities-title">{en ? 'Choose your workspace.' : '从这里，开始探索。'}</h2><a href="/explore">{en ? 'All research fields' : '全部研究领域'} ↗</a></div>
+      <div className="fdQuickGrid">{capabilities.map(item => <a href={item.href} key={item.id}><span className="fdQuickNumber">{item.id}</span><span><strong>{item.title[en ? 1 : 0]}</strong><small>{item.short[en ? 1 : 0]}</small></span><span className="fdQuickArrow" aria-hidden="true">↗</span></a>)}</div>
     </section>
-
-    <section className="facilityPreview">
-      <FacilityPhoto device="ITER" en={en} />
-      <div><p className="sectionIndex">02 / EXPLORE</p><h2>{en ? 'Real machines. Connected research.' : <>真实装置。<br />相互连接的研究。</>}</h2><p>{en ? 'Compare facilities, follow a research question, and open the original paper or code.' : '查看装置，追踪研究问题，直达论文与代码。'}</p><div className="editorialLinks"><a href="/facilities">{en ? 'Global facilities' : '全球装置'} ↗</a><a href="/knowledge-graph">{en ? 'Knowledge graph' : '知识图谱'} ↗</a><a href="/search">{en ? 'Evidence search & dialogue' : '证据检索与问答'} ↗</a></div></div>
+    <section className="fdCaseTeaser" aria-label={en ? 'EXL-50U control case' : 'EXL-50U 控制案例'}>
+      <div><span className="fdEyebrow">IN OPERATION / EXL-50U</span><h2>{en ? 'From learning to operation.' : '从学习，走向真实运行。'}</h2></div>
+      <div className="fdTeaserMetric"><strong>750+</strong><span>{en ? 'Team-reported successful takeovers' : '团队提供的累计成功接管次数'}<small>{en ? 'Provisional · proposed cutoff 30 Sep 2026 · unverified' : '暂定口径 · 拟截至 2026.09.30 · 待核验'}</small></span></div>
+      <a className="fdTextLink" href="/control/exl50u">{en ? 'Explore the case' : '查看完整案例'} ↗</a>
     </section>
-
-    <section className="resourceSection" id="resources">
-      <div className="sectionIntro"><p className="sectionIndex">03 / TOOLS & METHODS</p><h2>{en ? 'Go deeper, when you need to.' : '需要时，再深入一步。'}</h2></div>
-      <div className="resourceLinks"><a href="/physics#catalog">{en ? 'Physics tools' : '物理工具'} ↗</a><a href="/engineering#tools">{en ? 'Engineering tools' : '工程工具'} ↗</a><a href="/control">{en ? 'Control' : '集成控制'} ↗</a><a href="/diagnostics">{en ? 'Diagnostics' : '诊断感知'} ↗</a><a href="/data-foundation">{en ? 'Data foundation' : '数据基座'} ↗</a><a href="/ai">{en ? 'AI-native' : '智能原生'} ↗</a></div>
-      <details className="editorialDisclosure"><summary>{en ? 'Digital-twin architecture' : '数字孪生架构'}<span aria-hidden="true">＋</span></summary><div className="editorialDisclosureBody"><p>{en ? 'Measurements and models inform decisions; digital twins do not replace physical validation or safety systems.' : '测量与模型为决策提供依据；数字孪生不替代实体验证或安全系统。'}</p><a href="/figures/fusion-twin-ai-native-overview.png" target="_blank" rel="noreferrer">{en ? 'Open the architecture diagram' : '查看总体架构原图'} ↗</a><FusionTwinSystemMap /></div></details>
-      <details className="editorialDisclosure"><summary>{en ? 'Development roadmap' : '开发路线图'}<span aria-hidden="true">＋</span></summary><div className="editorialDisclosureBody"><PhaseOneRoadmap /><a href="/roadmap">{en ? 'Open the full roadmap' : '查看完整路线图'} ↗</a></div></details>
-      {!publicAnonymousMode && <div className="resourceLinks"><a href="/research-review">{en ? 'Review research candidates' : '研究候选审核'} ↗</a><a href="/account">{en ? 'Account & usage' : '账户与用量'} ↗</a></div>}
-    </section>
-    </ResearchDisclosure>
-    <FusionControlCase en={en} />
-    <FusionLearningLoop en={en} />
-    <section className="fdContact" id="community"><div><p className="fdEyebrow">CONTACT US</p><h2>{en ? <>Build the next<br />verifiable step.</> : <>一起，让下一步<br />有据可循。</>}</h2><p>{en ? 'Research collaboration, platform feedback and fusion-control conversations.' : '研究合作、平台共建，或一次关于聚变智能控制的深入交流。'}</p></div><a href="mailto:liutianyuan@enn.cn">liutianyuan@enn.cn <span aria-hidden="true">↗</span></a></section>
     <SiteFooter />
   </main>;
 }

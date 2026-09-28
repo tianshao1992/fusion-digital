@@ -26,6 +26,40 @@
 .fdTextLink span { margin-left: 16px; }
 .fdHeroFoot { display: flex; flex-direction: column; gap: 8px; margin-top: 55px; font-size: 12px; color: var(--fd-muted); letter-spacing: .06em; }
 .fdHeroFoot span:last-child { font-size: 14px; letter-spacing: 0; }
+.fdVisionLink { width: fit-content; }
+.fdVisionLink:hover { color: var(--fd-purple); }
+.fdCompactHome .fdHero { min-height: 0; padding-top: 50px; padding-bottom: 38px; }
+.fdCompactHome .fdHero h1 { margin-top: 24px; }
+.fdCompactHome .fdHeroFoot { margin-top: 28px; }
+.fdQuickStart { max-width: 1536px; margin: auto; padding: 34px 6vw 46px; }
+.fdQuickHeading { display: flex; align-items: baseline; justify-content: space-between; gap: 18px; margin-bottom: 22px; }
+.fdQuickHeading h2 { margin: 0; font-size: 22px; font-weight: 500; }
+.fdQuickHeading a { color: var(--fd-muted); font-size: 13px; }
+.fdQuickGrid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; }
+.fdQuickGrid > a { display: flex; align-items: center; gap: 16px; min-height: 108px; padding: 20px; border: 1px solid var(--fd-line); border-radius: 4px; transition: background .2s,border-color .2s; }
+.fdQuickGrid > a:hover { background: var(--fd-soft); border-color: var(--fd-purple); }
+.fdQuickNumber { align-self: flex-start; font: 11px/1.8 Arial,sans-serif; color: var(--fd-muted); }
+.fdQuickGrid strong { display: block; font-size: 18px; font-weight: 500; line-height: 1.4; }
+.fdQuickGrid small { display: block; margin-top: 8px; color: var(--fd-muted); font-size: 12px; line-height: 1.5; }
+.fdQuickArrow { margin-left: auto; color: var(--fd-purple); font-size: 22px; }
+.fdCaseTeaser { display: flex; align-items: center; justify-content: space-between; gap: 30px; margin: 0 6vw 48px; padding: 30px 0; border-top: 1px solid var(--fd-line); border-bottom: 1px solid var(--fd-line); }
+.fdCaseTeaser .fdEyebrow { font-size: 10px; }
+.fdCaseTeaser h2 { margin: 10px 0 0; font-size: 20px; font-weight: 500; }
+.fdTeaserMetric { display: flex; align-items: center; gap: 20px; }
+.fdTeaserMetric > strong { font: 42px/1 Arial,sans-serif; letter-spacing: -.06em; color: var(--fd-purple); }
+.fdTeaserMetric > span { font-size: 13px; line-height: 1.6; }
+.fdTeaserMetric small { display: block; color: var(--fd-muted); font-size: 11px; margin-top: 5px; }
+.fdCaseTeaser > a { white-space: nowrap; font-size: 13px; }
+.fdDetailHeader { max-width: 1536px; margin: auto; padding: 50px 6vw 55px; }
+.fdDetailHeader > a { font-size: 13px; color: var(--fd-muted); }
+.fdDetailHeader .fdEyebrow { margin-top: 40px; }
+.fdDetailHeader h1 { font-size: clamp(30px,3.8vw,52px); font-weight: 500; line-height: 1.5; letter-spacing: -.04em; margin: 20px 0; }
+.fdDetailHeader > p:last-child { color: var(--fd-muted); font-size: 16px; line-height: 1.9; max-width: 650px; }
+.fdDetailPage .fdCase { padding-top: 25px; }
+.fdDetailNext { padding: 38px 6vw; display: flex; flex-wrap: wrap; gap: 24px; align-items: center; }
+@media (max-width: 1000px) { .fdCaseTeaser { flex-wrap: wrap; } .fdQuickGrid > a { gap: 12px; padding: 18px 14px; } }
+@media (max-width: 760px) { .fdQuickGrid { grid-template-columns: repeat(2,minmax(0,1fr)); } .fdQuickHeading h2 { font-size: 20px; } .fdCaseTeaser { gap: 22px; } .fdDetailHeader { padding-top: 35px; } }
+@media (max-width: 440px) { .fdQuickGrid { gap: 9px; } .fdQuickGrid > a { gap: 9px; padding: 16px 12px; min-height: 103px; } .fdQuickNumber { display: none; } .fdQuickGrid strong { font-size: 17px; } .fdQuickGrid small { font-size: 11px; } .fdQuickHeading { flex-wrap: wrap; gap: 10px; } .fdTeaserMetric { gap: 14px; } .fdTeaserMetric > strong { font-size: 38px; } }
 .fdEnergyFigure { min-width: 0; margin: 0; padding-top: 15px; }
 .fdFigureTop { display: flex; justify-content: space-between; align-items: center; font: 12px/1.5 Arial,sans-serif; letter-spacing: .09em; color: var(--fd-muted); }
 .fdFigureTop button { border: 1px solid var(--fd-line); border-radius: 50px; padding: 6px 12px; background: transparent; color: var(--fd-muted); font-size: 12px; cursor: pointer; }

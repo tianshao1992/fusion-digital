@@ -38,8 +38,8 @@ export async function waitForSiteCondition(predicate: () => boolean, signal: Abo
 }
 
 type UndoEntry = { location?: string; adapter?: SiteActionAdapter; surface?: SitePageSurface; undo: (signal: AbortSignal) => Promise<void> };
-const CAD_WORKSPACE_PATH = '/';
-const CAD_WORKSPACE_HREF = '/#prototype-workspace';
+const CAD_WORKSPACE_PATH = '/digital-prototype';
+const CAD_WORKSPACE_HREF = '/digital-prototype#prototype-workspace';
 const routeOf = (location: string) => location.split('?')[0];
 // Match useSearchParams().toString(): %20 and + encode the same space, while
 // %2B remains a literal plus. Encoding-only changes are not page transitions.

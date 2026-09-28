@@ -1,0 +1,91 @@
+import FusionTwinSystemMap from '../components/FusionTwinSystemMap';
+import PhaseOneRoadmap from '../components/PhaseOneRoadmap';
+import SiteFooter from '../components/SiteFooter';
+import FacilityPhoto from '../components/FacilityPhoto';
+import SiteNav from '../components/SiteNav';
+import StaticLocaleContent from '../components/StaticLocaleContent';
+import { knowledgeModules } from '../data/knowledge-modules';
+import { isPublicAnonymousMode } from '../deployment-mode';
+import '../portal.css';
+
+const domainNotes = [
+  ['平衡、输运与多物理模型', 'Equilibrium, transport and multiphysics models', 'physics'],
+  ['载荷、结构与热流分析', 'Loads, structures and thermal analysis', 'engineering'],
+  ['控制任务、PCS 与闭环验证', 'Control tasks, PCS and closed-loop validation', 'integrated-control'],
+  ['传感器、反演与合成诊断', 'Sensors, inversion and synthetic diagnostics', 'intelligent-diagnostics'],
+  ['热取出、发电循环与电网', 'Heat extraction, power cycles and the grid', 'energy-conversion'],
+  ['真空、低温、燃料与电源', 'Vacuum, cryogenics, fuel and power', 'auxiliary-systems'],
+  ['运行界面与人在回路', 'Operator interfaces and human oversight', 'human-machine-interaction'],
+  ['IMAS、数据接口与溯源', 'IMAS, data interfaces and provenance', 'data-foundation'],
+  ['系统架构、接口与协同仿真', 'Architecture, interfaces and co-simulation', 'whole-plant-integration'],
+  ['代理模型、基础模型与智能体', 'Surrogates, foundation models and agents', 'ai-native'],
+] as const;
+
+function ExploreContent({ en }: { en: boolean }) {
+  const publicAnonymousMode = isPublicAnonymousMode();
+  return <main className="portalPage editorialHome explorePage">
+    <SiteNav active="knowledge" />
+    <section className="domainSection" id="domains">
+      <div className="sectionIntro">
+        <p className="sectionIndex">01 / KNOWLEDGE</p>
+        <h1>{en ? 'Find your field.' : '从你的研究领域出发。'}</h1>
+        <p>{en ? 'Models, tools and source material, organised by discipline.' : '按专业查找模型、工具和原始资料。'}</p>
+      </div>
+      <div className="domainCards">{knowledgeModules.map((domain, index) => <article className="domainCard" id={`domain-${domain.id}`} key={domain.id}>
+        <span className="domainNumber">{domain.no}</span>
+        <div className="domainBody">
+          <h3><a href={domain.href}>{en ? domain.en : domain.zh} <span aria-hidden="true">↗</span></a></h3>
+          <p>{domainNotes[index][en ? 1 : 0]}</p>
+        </div>
+        <div className="domainMeta">
+          {domain.href.startsWith('/explore#domain-') && <span>{en ? 'Planned' : '规划中'}</span>}
+          <a href={`/figures/domain-${domainNotes[index][2]}-dark-image2.png`} target="_blank" rel="noreferrer" aria-label={`${en ? domain.en : domain.zh} · ${en ? 'systems diagram' : '结构图解'}`}>{en ? 'Diagram' : '图解'} ↗</a>
+        </div>
+      </article>)}</div>
+    </section>
+
+    <section className="facilityPreview">
+      <FacilityPhoto device="ITER" en={en} />
+      <div>
+        <p className="sectionIndex">02 / EXPLORE</p>
+        <h2>{en ? 'Real machines. Connected research.' : <>真实装置。<br />相互连接的研究。</>}</h2>
+        <p>{en ? 'Compare facilities, follow a research question, and open the original paper or code.' : '查看装置，追踪研究问题，直达论文与代码。'}</p>
+        <div className="editorialLinks">
+          <a href="/facilities">{en ? 'Global facilities' : '全球装置'} ↗</a>
+          <a href="/knowledge-graph">{en ? 'Knowledge graph' : '知识图谱'} ↗</a>
+          <a href="/search">{en ? 'Evidence search & dialogue' : '证据检索与问答'} ↗</a>
+        </div>
+      </div>
+    </section>
+
+    <section className="resourceSection" id="resources">
+      <div className="sectionIntro"><p className="sectionIndex">03 / TOOLS & METHODS</p><h2>{en ? 'Go deeper, when you need to.' : '需要时，再深入一步。'}</h2></div>
+      <div className="resourceLinks">
+        <a href="/physics#catalog">{en ? 'Physics tools' : '物理工具'} ↗</a>
+        <a href="/engineering#tools">{en ? 'Engineering tools' : '工程工具'} ↗</a>
+        <a href="/control">{en ? 'Control' : '集成控制'} ↗</a>
+        <a href="/diagnostics">{en ? 'Diagnostics' : '诊断感知'} ↗</a>
+        <a href="/data-foundation">{en ? 'Data foundation' : '数据基座'} ↗</a>
+        <a href="/ai">{en ? 'AI-native' : '智能原生'} ↗</a>
+      </div>
+      <details className="editorialDisclosure">
+        <summary>{en ? 'Digital-twin architecture' : '数字孪生架构'}<span aria-hidden="true">＋</span></summary>
+        <div className="editorialDisclosureBody">
+          <p>{en ? 'Measurements and models inform decisions; digital twins do not replace physical validation or safety systems.' : '测量与模型为决策提供依据；数字孪生不替代实体验证或安全系统。'}</p>
+          <a href="/figures/fusion-twin-ai-native-overview.png" target="_blank" rel="noreferrer">{en ? 'Open the architecture diagram' : '查看总体架构原图'} ↗</a>
+          <FusionTwinSystemMap />
+        </div>
+      </details>
+      <details className="editorialDisclosure">
+        <summary>{en ? 'Development roadmap' : '开发路线图'}<span aria-hidden="true">＋</span></summary>
+        <div className="editorialDisclosureBody"><PhaseOneRoadmap /><a href="/roadmap">{en ? 'Open the full roadmap' : '查看完整路线图'} ↗</a></div>
+      </details>
+      {!publicAnonymousMode && <div className="resourceLinks"><a href="/research-review">{en ? 'Review research candidates' : '研究候选审核'} ↗</a><a href="/account">{en ? 'Account & usage' : '账户与用量'} ↗</a></div>}
+    </section>
+    <SiteFooter />
+  </main>;
+}
+
+export default function ExplorePage() {
+  return <StaticLocaleContent zh={<ExploreContent en={false} />} en={<ExploreContent en />} />;
+}

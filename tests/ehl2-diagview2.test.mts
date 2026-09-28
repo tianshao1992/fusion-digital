@@ -689,7 +689,7 @@ test('the EHL-2 workbench exposes the complete bilingual DiagView2 workflow with
   assert.match(workspace, /if \(device\.diagnosticWorkspace\?\.kind === 'ehl2-diagview2'\) \{\s*return <Ehl2DiagnosticExperience device=\{device\} \/>;\s*\}/);
   assert.match(workspace, /return <StandardDeviceExperience device=\{device\} \/>;/);
   assert.match(workspace, /<noscript><Ehl2DiagnosticNoScriptSummary \/><\/noscript>/,
-    'the EHL-2 evidence table must remain reachable in homepage SSR without selecting a client-only tab');
+    'the EHL-2 evidence table must remain reachable in prototype-page SSR without selecting a client-only tab');
 });
 
 test('analysis results stay bound to geometry and trace context while invalid geometry fails inside the workbench', async () => {

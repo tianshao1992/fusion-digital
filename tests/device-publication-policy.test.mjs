@@ -178,12 +178,12 @@ function meshNodeSignatures(glb) {
   }));
 }
 
-async function renderHomepageWorkspace() {
+async function renderPrototypeWorkspace() {
   const workerUrl = new URL('../dist/server/index.js', import.meta.url);
   workerUrl.searchParams.set('publication-policy-test', `${process.pid}-${Date.now()}`);
   const { default: worker } = await import(workerUrl.href);
   return worker.fetch(
-    new Request('http://localhost/', { headers: { accept: 'text/html' } }),
+    new Request('http://localhost/digital-prototype', { headers: { accept: 'text/html' } }),
     { ASSETS: { fetch: async () => new Response('Not found', { status: 404 }) } },
     { waitUntil() {}, passThroughOnException() {} },
   );
@@ -863,8 +863,8 @@ test('public device catalog is fail-closed and authorizes only bounded, verifiab
   }
 });
 
-test('homepage prototype workspace exposes no direct EXL/ITER/EHL model download link or private filesystem path', async () => {
-  const response = await renderHomepageWorkspace();
+test('dedicated prototype workspace exposes no direct EXL/ITER/EHL model download link or private filesystem path', async () => {
+  const response = await renderPrototypeWorkspace();
   assert.equal(response.status, 200);
   const html = await response.text();
   assert.doesNotMatch(html, localPathPattern);
@@ -876,7 +876,7 @@ test('homepage prototype workspace exposes no direct EXL/ITER/EHL model download
     assert.fail(`digital-prototype must not server-render a direct protected model/source URL: ${url}`);
   }
   assert.doesNotMatch(html, /<a\b[^>]*(?:href=["'][^"']*\.(?:glb|gltf|step|stp|zip|pptx?)[^"']*["']|\bdownload\b)[^>]*>/i,
-    'homepage prototype workspace must expose no direct model/source download UI');
+    'prototype workspace must expose no direct model/source download UI');
   assert.match(html, /(?:technically saved|技术性保存|无法从技术上(?:阻止|保证))/i,
     'page must disclose that browser-delivered geometry cannot be made non-copyable');
 });

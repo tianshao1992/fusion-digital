@@ -39,7 +39,7 @@ function englishPresentationText(html) {
 
 test('English presentation surfaces contain no source-language Han text', async () => {
   const routes = [
-    '/', '/physics', '/engineering', '/control', '/diagnostics', '/data-foundation', '/fusion-data', '/simulations', '/ai', '/facilities',
+    '/', '/digital-prototype', '/explore', '/vision', '/control/exl50u', '/physics', '/engineering', '/control', '/diagnostics', '/data-foundation', '/fusion-data', '/simulations', '/ai', '/facilities',
     '/platform', '/search', '/knowledge-graph', '/roadmap', '/account', '/research-review',
   ];
   for (const pathname of routes) {
@@ -59,7 +59,7 @@ async function htmlFor(pathname) {
 }
 
 test('principal page headings stay concise in both languages', async () => {
-  const routes = ['/physics', '/engineering', '/control', '/diagnostics', '/ai', '/facilities',
+  const routes = ['/digital-prototype', '/explore', '/vision', '/control/exl50u', '/physics', '/engineering', '/control', '/diagnostics', '/ai', '/facilities',
     '/data-foundation', '/fusion-data', '/simulations', '/platform', '/roadmap',
     '/knowledge-graph', '/search', '/account', '/research-review'];
   for (const locale of ['zh-CN', 'en']) {
@@ -316,7 +316,7 @@ test('server-renders the FusionDigital community portal', async () => {
   assert.match(html, /href="\/diagnostics"[^>]*data-knowledge-module="diagnostics"[^>]*>[\s\S]*?<span>诊断感知<\/span><\/a>/);
   assert.match(html, /href="\/ai"/);
   assert.match(html, /href="\/facilities"/);
-  assert.match(html, /href="\/#prototype-workspace"/);
+  assert.match(html, /href="\/digital-prototype"/);
   assert.match(html, /href="\/fusion-data"/);
   assert.equal((html.match(/class="siteKnowledgeHome[^\"]*"[^>]*href="\/knowledge-graph"|href="\/knowledge-graph"[^>]*class="siteKnowledgeHome[^\"]*"/g) ?? []).length, 2, 'desktop and mobile Knowledge menus must link to the graph home');
   assert.equal((html.match(/data-knowledge-module=/g) ?? []).length, 20, 'desktop and mobile Knowledge menus must expose all ten modules');
@@ -344,9 +344,24 @@ test('server-renders the FusionDigital community portal', async () => {
   assert.match(html, /class="brandWordmark"/);
   assert.match(html, /class="brandFusion">Fusion/);
   assert.match(html, /class="brandDigital">Digital/);
+  assert.match(html, /让 AI4Fusion/);
+  assert.match(englishHomeHtml, /From AI research\./);
+  for (const href of ['/digital-prototype', '/explore', '/vision', '/control/exl50u']) {
+    assert.ok(html.includes(`href="${href}"`), `homepage must link directly to ${href}`);
+  }
+  assert.doesNotMatch(html, /id="prototype-workspace"|data-three-viewer=|class="fdResearchDisclosure"|data-echart="homepage-control-evidence"/);
+});
+
+test('independent research pages preserve diagrams, devices, photographs and scientific boundaries', async () => {
+  const routes = ['/digital-prototype', '/explore', '/control/exl50u'];
+  const html = (await Promise.all(routes.map(htmlFor))).join('\n');
+  const englishHtml = (await Promise.all(routes.map(async (route) => {
+    const response = await render(route, { cookie: 'fusiondigital_locale=en' });
+    assert.equal(response.status, 200, `${route} must remain available in English`);
+    return response.text();
+  }))).join('\n');
   assert.match(html, /TOOLS &amp; METHODS/);
   assert.equal((html.match(/id="prototype-workspace"/g) ?? []).length, 1);
-  assert.match(html, /class="prototypePage prototypePage--embedded"/);
   assert.doesNotMatch(html, />三维与 EFIT 联动<\/a>/);
   assert.match(html, /data-three-viewer="paramak-full-device"/);
   assert.match(html, /装置三维可视化/);
@@ -388,12 +403,10 @@ test('server-renders the FusionDigital community portal', async () => {
   assert.doesNotMatch(html, /COMMUNITY THESIS|DIGITAL TWIN MAINLINE|一炮一链：聚变数字孪生的共同主线/);
   assert.match(html, /fusion-twin-ai-native-overview\.png/);
   assert.match(html, /loading="lazy" decoding="async"/);
-  assert.match(html, /让 AI4Fusion/);
-  assert.match(englishHomeHtml, /From AI research\./);
   assert.match(html, /src="\/photos\/exl50u-device\.jpg"/);
   assert.match(html, /class="heroPhotography heroVrTour"/);
   assert.match(html, /进入 VR 实景/);
-  assert.match(englishHomeHtml, /Enter the VR tour/);
+  assert.match(englishHtml, /Enter the VR tour/);
   assert.doesNotMatch(html, /class="deviceVrTour"/);
   assert.match(html, /src="\/photos\/iter-assembly\.jpg"/);
   assert.match(html, /© ENN Research/);
@@ -402,12 +415,12 @@ test('server-renders the FusionDigital community portal', async () => {
   assert.doesNotMatch(html, /class="plantValue"|class="heroMetrics"/);
   assert.match(html, /数字孪生不替代实体验证或安全系统/);
   assert.match(html, /能量转化/);
-  assert.match(englishHomeHtml, /Energy Conversion/);
+  assert.match(englishHtml, /Energy Conversion/);
   assert.match(html, /辅机模拟/);
   assert.match(html, /人机交互/);
   assert.match(html, /总体集成/);
-  assert.match(englishHomeHtml, /Whole-Plant Integration/);
-  assert.match(englishHomeHtml, /Diagnostics &amp; Sensing/);
+  assert.match(englishHtml, /Whole-Plant Integration/);
+  assert.match(englishHtml, /Diagnostics &amp; Sensing/);
   assert.doesNotMatch(html, /智能诊断|INTELLIGENT DIAGNOSTICS/);
   for (const figure of [
     'domain-physics-dark-image2.png',
@@ -424,31 +437,46 @@ test('server-renders the FusionDigital community portal', async () => {
   assert.doesNotMatch(html, /发电系统|POWER SYSTEMS|本质安全/);
 });
 
-test('AI4Fusion homepage preserves evidence boundaries and meaningful no-JS content', async () => {
+test('AI4Fusion homepage is a lightweight entry point with meaningful no-JS links and provisional case summary', async () => {
   const html = (await htmlFor('/')).replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
   assert.equal((html.match(/<h1\b/g) ?? []).length, 1);
-  for (const id of ['architecture', 'capabilities', 'exl50u-case', 'learning-loop', 'prototype-workspace']) {
-    assert.equal((html.match(new RegExp(`id="${id}"`, 'g')) ?? []).length, 1);
+  assert.equal((html.match(/id="capabilities"/g) ?? []).length, 1);
+  for (const href of ['/digital-prototype', '/fusion-data', '/simulations', '/search', '/knowledge-graph', '/facilities', '/vision', '/explore', '/control/exl50u']) {
+    assert.ok(html.includes(`href="${href}"`), `homepage must expose ${href} without client interaction`);
   }
-  for (const text of ['FusionEvolve', 'FusionDigital', 'FusionControl', '750', '634', '2026 Q2–Q3',
-    '拟截至 2026.09.30', '暂定口径', '待逐炮核验', '占位估算', '不构成实验证据',
-    '不代表 EXL-50U 已实现燃烧等离子体或发电', '本网站不连接装置执行器', '研究假设']) {
+  for (const text of ['750', '暂定', '核验', '不代表 EXL-50U 已实现燃烧等离子体或发电']) {
     assert.ok(html.includes(text), `homepage must retain ${text}`);
   }
   assert.match(html, /href="mailto:liutianyuan@enn\.cn"/);
   assert.doesNotMatch(html, /mailto:tianshao1992@gmail\.com/);
+  assert.match(html, /aria-label="聚变能量转化阶段"/);
+  assert.doesNotMatch(html, /id="(?:prototype-workspace|learning-loop|domains)"|data-three-viewer=|data-echart=|class="fdChartFallback"|class="fdResearchDisclosure"/);
+});
+
+test('architecture and EXL-50U detail pages retain evidence semantics and accessible chart fallback', async () => {
+  const architecture = (await htmlFor('/vision')).replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
+  const html = (await htmlFor('/control/exl50u')).replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
+  for (const id of ['exl50u-case', 'learning-loop']) {
+    assert.equal((html.match(new RegExp(`id="${id}"`, 'g')) ?? []).length, 1);
+  }
+  assert.equal((architecture.match(/id="architecture"/g) ?? []).length, 1);
+  for (const text of ['FusionEvolve', 'FusionDigital', 'FusionControl', '本网站不连接装置执行器']) {
+    assert.ok(architecture.includes(text), `architecture page must retain ${text}`);
+  }
+  for (const text of ['750', '634', '2026 Q2–Q3', '拟截至 2026.09.30', '暂定口径', '待逐炮核验', '占位估算', '不构成实验证据', '研究假设']) {
+    assert.ok(html.includes(text), `case page must retain ${text}`);
+  }
   assert.match(html, /class="fdChartFallback"/);
   assert.match(html, /<caption>历史与占位统计明细<\/caption>/);
-  assert.match(html, /aria-label="聚变能量转化阶段"/);
-  assert.match(html, /class="fdResearchDisclosure"/);
   const source = await readFile(new URL('../app/components/home/home-content.ts', import.meta.url), 'utf8');
   assert.match(source, /success: 18 \+ 26/);
   assert.match(source, /success: 750 - 8 - \(18 \+ 26\) - 64/);
   assert.match(source, /source: 'estimated-residual', estimated: true/);
   assert.match(source, /verified: false/);
   const landing = await readFile(new URL('../app/components/home/FusionLanding.tsx', import.meta.url), 'utf8');
+  const hero = await readFile(new URL('../app/components/home/FusionHero.tsx', import.meta.url), 'utf8');
   assert.match(landing, /prefers-reduced-motion: reduce/);
-  assert.match(landing, /window\.addEventListener\('hashchange', reveal\)/);
+  assert.match(hero, /prefers-reduced-motion: reduce/);
   assert.match(landing, /chart\?\.dispose\(\)/);
 });
 
@@ -515,11 +543,11 @@ test('standalone knowledge-module pages return to the Knowledge graph', async ()
   }
 });
 
-test('homepage owns the public full-device digital-prototype workspace', async () => {
-  const html = await htmlFor('/');
+test('dedicated prototype page owns the public full-device workspace', async () => {
+  const html = await htmlFor('/digital-prototype');
   assert.equal((html.match(/id="prototype-workspace"/g) ?? []).length, 1);
-  assert.ok(html.indexOf('id="prototype-workspace"') < html.indexOf('data-echart="fusion-twin-system-map"'),
-    'the working interface must replace the former preview before the system map');
+  assert.doesNotMatch(html, /data-echart="fusion-twin-system-map"/,
+    'the full device workspace should not duplicate the independent research map');
   assert.match(html, /装置三维可视化/);
   assert.doesNotMatch(html, /装置、三维与 EFIT 联动|从顶部装置卡选择样机/);
   assert.match(html, /data-three-viewer="paramak-full-device"/);
@@ -554,9 +582,9 @@ test('homepage owns the public full-device digital-prototype workspace', async (
   assert.doesNotMatch(html, /paramak-tokamak-demo-poster\.png/);
   assert.doesNotMatch(html, /iter-cad-private|127\.0\.0\.1/i);
   assert.doesNotMatch(html, /href=["'][^"']*\/models\/iter[^"']*\.glb/i,
-    'the homepage must not expose the ITER GLB as a direct download link');
+    'the prototype page must not expose the ITER GLB as a direct download link');
   assert.doesNotMatch(html, /href=["'][^"']*\/models\/ehl2[^"']*\.glb/i,
-    'the homepage must not expose the EHL GLB as a direct download link');
+    'the prototype page must not expose the EHL GLB as a direct download link');
 
   const catalog = JSON.parse(await readFile(
     new URL('../public/models/device-catalog.json', import.meta.url),
@@ -756,8 +784,8 @@ test('homepage owns the public full-device digital-prototype workspace', async (
   assert.match(manifest.disclaimer, /not an engineering model of ITER, EXL-50U/);
 });
 
-test('homepage SSR keeps the EHL-2 DiagView2 evidence fallback readable in both locales', async () => {
-  const chineseHtml = await htmlFor('/');
+test('prototype SSR keeps the EHL-2 DiagView2 evidence fallback readable in both locales', async () => {
+  const chineseHtml = await htmlFor('/digital-prototype');
   const chineseNoScript = chineseHtml.match(/<noscript>([\s\S]*?EHL(?:‑|-)?2[\s\S]*?)<\/noscript>/)?.[1] ?? '';
   assert.match(chineseNoScript, /EHL(?:‑|-)?2 DiagView2 诊断分析合同/);
   assert.match(chineseNoScript, /交互几何、CAD BVH 与虚拟正向模型保持关闭/);
@@ -768,7 +796,7 @@ test('homepage SSR keeps the EHL-2 DiagView2 evidence fallback readable in both 
   assert.match(chineseNoScript, /role="region"[^>]*aria-label="诊断方案来源表"|aria-label="诊断方案来源表"[^>]*role="region"/);
   assert.match(chineseNoScript, /tabindex="0"/i);
 
-  const englishResponse = await render('/', { cookie: 'fusiondigital_locale=en' });
+  const englishResponse = await render('/digital-prototype', { cookie: 'fusiondigital_locale=en' });
   assert.equal(englishResponse.status, 200);
   const englishHtml = await englishResponse.text();
   const englishNoScript = englishHtml.match(/<noscript>([\s\S]*?EHL-2[\s\S]*?)<\/noscript>/)?.[1] ?? '';
@@ -781,10 +809,14 @@ test('homepage SSR keeps the EHL-2 DiagView2 evidence fallback readable in both 
   assert.equal((englishNoScript.match(/<tr>/g) ?? []).length, 6);
 });
 
-test('legacy digital-prototype route redirects to the homepage workspace anchor', async () => {
+test('digital-prototype is an independent page rather than a homepage redirect', async () => {
   const response = await render('/digital-prototype');
-  assert.ok([307, 308].includes(response.status));
-  assert.match(response.headers.get('location') ?? '', /\/#prototype-workspace$/);
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get('location'), null);
+  const html = await response.text();
+  assert.match(html, /id="prototype-workspace"/);
+  const activeLinks = html.match(/<a(?=[^>]*href="\/digital-prototype")(?=[^>]*aria-current="page")(?=[^>]*data-primary-nav="prototype")[^>]*>/g) ?? [];
+  assert.equal(activeLinks.length, 2, 'desktop and mobile prototype navigation entries must be active');
 });
 
 test('server-renders the consolidated platform architecture and technical roadmap', async () => {

@@ -414,7 +414,7 @@ export default function MultiDeviceWorkspace({ catalog }: { catalog: DeviceCatal
     }, signal);
   };
   useSiteActionAdapter({
-      id: `cad-device-catalog:${catalogAdapterId}`, path: '/', capabilities: ['cad.open'], getContext: () => ({}),
+      id: `cad-device-catalog:${catalogAdapterId}`, path: '/digital-prototype', capabilities: ['cad.open'], getContext: () => ({}),
       execute: async (action, { signal }) => {
         if (!isSiteAction(action) || action.type !== 'cad.open') throw new Error('装置选择参数无效。');
         const device = catalog.devices.find(item => item.id === action.deviceId);
