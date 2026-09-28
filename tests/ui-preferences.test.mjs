@@ -130,6 +130,22 @@ test('restored palette and compact English navigation preserve the original bran
   assert.ok(messages.includes("'nav.fusionData': 'DataPlatforms'"));
 });
 
+test('the light homepage palette outranks the legacy portal bridge while preserving explicit dark mode', async () => {
+  const [home, bridge] = await Promise.all([source('app/home.css'), source('app/theme.css')]);
+  // The bridge uses (0,1,1). Two classes (0,2,0) must win even if the bridge loads later.
+  // A bare .fusionHome would let the inverse-background token override the intended white canvas.
+  const lightPalette = home.match(/^\s*\.portalPage\.fusionHome\s*\{([^}]+)\}/)?.[1];
+  assert.ok(lightPalette, 'homepage palette must use the compound portal/home selector');
+  assert.match(bridge, /html\s+\.portalPage\s*\{[^}]*--fd-bg:\s*var\(--color-inverse\)/);
+  assert.match(lightPalette, /--fd-bg:\s*#fff\s*;/);
+  assert.match(lightPalette, /--fd-ink:\s*#20202c\s*;/);
+  assert.match(lightPalette, /--color-canvas:\s*var\(--fd-bg\)/);
+  assert.match(lightPalette, /background:\s*var\(--fd-bg\)/);
+  assert.match(lightPalette, /color:\s*var\(--fd-ink\)/);
+  assert.doesNotMatch(lightPalette, /!important/, 'dark mode must remain overridable through its more specific selector');
+  assert.match(home, /:root\[data-theme='dark'\]\s+\.fusionHome\s*\{[^}]*--fd-bg:\s*#14141e\s*;[^}]*--fd-ink:\s*#f3f2f8\s*;/);
+});
+
 test('EXL-50U VR tour belongs to the case page photograph, not the entry page or CAD workspace', async () => {
   const vr = await source('app/digital-prototype/Exl50uVrTour.tsx');
   const home = await source('app/page.tsx');

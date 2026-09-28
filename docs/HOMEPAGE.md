@@ -18,6 +18,8 @@ White/ink surfaces, restrained violet plasma geometry and clear typographic hier
 
 The entry page must not import or mount the CAD workspace, full research map, detailed ECharts case plot or the old expandable research application. Language/theme controls and public-anonymous access boundaries remain available on every route. Canonical capability and primary navigation links point directly to the new pages.
 
+The light homepage palette is scoped by `.portalPage.fusionHome`, not the less-specific `.fusionHome`: it must outrank the existing `html .portalPage` theme bridge, which otherwise replaces `--fd-bg` with the inverse-background token and produces a dark canvas with dark text. Explicit `:root[data-theme='dark'] .fusionHome` still has higher specificity and retains the supported dark appearance. Keep this cascade boundary in the static style regression test and verify both appearances in the browser after CSS changes.
+
 `HomeLegacyRedirect.tsx` preserves existing bookmarks with a small client-side hash compatibility layer: `/#prototype-workspace` → `/digital-prototype#prototype-workspace`; domain/tool anchors → `/explore`; architecture → `/vision`; case/learning anchors → `/control/exl50u`. It does not load the destination application on the homepage. With JavaScript disabled, the homepage still exposes direct links to all destination pages. CAD action runtime and viewer/catalog adapters use `/digital-prototype` as their shared canonical pathname and `/digital-prototype#prototype-workspace` for opening the workspace.
 
 Research references (content structures reviewed 2026-09-28; no layouts or assets copied):

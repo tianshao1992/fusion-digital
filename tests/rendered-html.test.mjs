@@ -522,11 +522,11 @@ test('server-renders the EXL-50U to EHL-2 program roadmap', async () => {
   assert.match(html, /展示成功 ≠ 科学验证/);
   assert.match(html, /数字孪生 ≠ 安全联锁/);
   assert.equal((html.match(/data-roadmap-module=/g) ?? []).length, 10);
-  assert.match(html, /href="\/#domain-energy"/);
-  assert.match(html, /href="\/#domain-auxiliary"/);
-  assert.match(html, /href="\/#domain-hmi"/);
+  assert.match(html, /href="\/explore#domain-energy"/);
+  assert.match(html, /href="\/explore#domain-auxiliary"/);
+  assert.match(html, /href="\/explore#domain-hmi"/);
   assert.match(html, /href="\/data-foundation"/);
-  assert.match(html, /href="\/#domain-integration"/);
+  assert.match(html, /href="\/explore#domain-integration"/);
   assert.match(html, /href="\/knowledge-graph"/);
   assert.match(html, /href="\/physics"/);
   assert.match(html, /href="\/engineering"/);

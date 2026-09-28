@@ -1,4 +1,4 @@
-.fusionHome {
+.portalPage.fusionHome {
   --fd-bg: #fff; --fd-surface: #f5f5f8; --fd-ink: #20202c; --fd-muted: #696977;
   --fd-line: #dddde6; --fd-purple: #6542a5; --fd-soft: #f0ebf8; --fd-teal: #256f75;
   --color-canvas: var(--fd-bg); --color-surface: var(--fd-bg); --color-surface-raised: var(--fd-bg);
