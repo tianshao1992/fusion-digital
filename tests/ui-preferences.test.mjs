@@ -131,6 +131,7 @@ test('restored palette and compact English navigation preserve the original bran
 test('EXL-50U VR tour belongs to the homepage photograph, not the CAD workspace', async () => {
   const vr = await source('app/digital-prototype/Exl50uVrTour.tsx');
   const home = await source('app/page.tsx');
+  const landing = await source('app/components/home/FusionLanding.tsx');
   const photo = await source('app/components/FacilityPhoto.tsx');
   const workspace = await source('app/digital-prototype/MultiDeviceWorkspace.tsx');
   assert.ok(vr.includes('https://www.720yun.com/vr/ac7jzpsavm5'));
@@ -138,7 +139,8 @@ test('EXL-50U VR tour belongs to the homepage photograph, not the CAD workspace'
   assert.match(photo, /href=\{imageLink.href\} target="_blank" rel="noopener noreferrer"/);
   assert.match(vr, /在新窗口打开 EXL-50U VR 实景/);
   assert.doesNotMatch(vr, /allow-top-navigation|allow-downloads|postMessage|dangerouslySetInnerHTML/);
-  assert.ok(home.includes('<Exl50uVrTour en={en} />'));
+  assert.ok(home.includes('<FusionControlCase en={en} />'));
+  assert.ok(landing.includes('<Exl50uVrTour en={en} />'));
   assert.ok(vr.includes('heroPhotography heroVrTour'));
   assert.ok(vr.includes('新窗口打开'));
   assert.doesNotMatch(workspace, /Exl50uVrTour|deviceVrTour/);

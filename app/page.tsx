@@ -2,7 +2,6 @@ import FusionTwinSystemMap from './components/FusionTwinSystemMap';
 import PhaseOneRoadmap from './components/PhaseOneRoadmap';
 import SiteFooter from './components/SiteFooter';
 import FacilityPhoto from './components/FacilityPhoto';
-import Exl50uVrTour from './digital-prototype/Exl50uVrTour';
 import SiteNav from './components/SiteNav';
 import StaticLocaleContent from './components/StaticLocaleContent';
 import MultiDeviceWorkspace from './digital-prototype/MultiDeviceWorkspace';
@@ -14,6 +13,8 @@ import './portal.css';
 import './digital-prototype/prototype.css';
 import './digital-prototype/workspace-layout.css';
 import './digital-prototype/turntable.css';
+import { FusionHero, FusionPrinciples, FusionArchitecture, FusionCapabilities, FusionControlCase, FusionLearningLoop, ResearchDisclosure } from './components/home/FusionLanding';
+import './home.css';
 
 const deviceCatalog = parseDeviceCatalog(deviceCatalogJson);
 const domainNotes = [
@@ -31,26 +32,13 @@ const domainNotes = [
 
 function HomeContent({ en }: { en: boolean }) {
   const publicAnonymousMode = isPublicAnonymousMode();
-  return <main className="portalPage editorialHome">
+  return <main className="portalPage editorialHome fusionHome">
     <SiteNav active="home" />
-    <header className="portalHero" id="top">
-      <div className="heroText">
-        <p className="kicker">FUSION / DIGITAL / RESEARCH</p>
-        <h1>{en ? <>See the device.<br /><span>Understand the data.</span></> : <>看见装置。<br /><span>理解数据。</span></>}</h1>
-        <p className="heroLead">{en ? 'Explore fusion devices, experimental data and simulation tools in one workspace.' : '连接聚变装置、实验数据与仿真工具。'}</p>
-        <div className="heroActions">
-          <a className="solid" href="#prototype-workspace">{en ? 'Explore the prototype' : '探索数字样机'} <span aria-hidden="true">↗</span></a>
-          <a href="/fusion-data">{en ? 'Browse experimental data' : '查看实验数据'} <span aria-hidden="true">→</span></a>
-        </div>
-      </div>
-      <Exl50uVrTour en={en} />
-      <nav className="heroShortcuts" aria-label={en ? 'Research workspaces' : '研究工作台'}>
-        <a href="/facilities"><span>01</span>{en ? 'Global facilities' : '全球装置'}<i>↗</i></a>
-        <a href="/simulations"><span>02</span>{en ? 'Simulation engines' : '仿真引擎'}<i>↗</i></a>
-        <a href="/search"><span>03</span>{en ? 'Papers & code' : '论文与代码'}<i>↗</i></a>
-        <a href="#domains"><span>04</span>{en ? 'Knowledge domains' : '知识领域'}<i>↓</i></a>
-      </nav>
-    </header>
+    <FusionHero en={en} />
+    <FusionPrinciples en={en} />
+    <FusionArchitecture en={en} />
+    <FusionCapabilities en={en} />
+    <ResearchDisclosure en={en}>
 
     <div className="prototypePage prototypePage--embedded"><MultiDeviceWorkspace catalog={deviceCatalog} /></div>
 
@@ -75,7 +63,10 @@ function HomeContent({ en }: { en: boolean }) {
       <details className="editorialDisclosure"><summary>{en ? 'Development roadmap' : '开发路线图'}<span aria-hidden="true">＋</span></summary><div className="editorialDisclosureBody"><PhaseOneRoadmap /><a href="/roadmap">{en ? 'Open the full roadmap' : '查看完整路线图'} ↗</a></div></details>
       {!publicAnonymousMode && <div className="resourceLinks"><a href="/research-review">{en ? 'Review research candidates' : '研究候选审核'} ↗</a><a href="/account">{en ? 'Account & usage' : '账户与用量'} ↗</a></div>}
     </section>
-    <section className="communityBand" id="community"><h2>{en ? 'Build with us.' : '一起完善。'}</h2><a href="mailto:tianshao1992@gmail.com">{en ? 'Contact the ENN Fusion AI Team' : '联系新奥聚变人工智能团队'} ↗</a></section>
+    </ResearchDisclosure>
+    <FusionControlCase en={en} />
+    <FusionLearningLoop en={en} />
+    <section className="fdContact" id="community"><div><p className="fdEyebrow">CONTACT US</p><h2>{en ? <>Build the next<br />verifiable step.</> : <>一起，让下一步<br />有据可循。</>}</h2><p>{en ? 'Research collaboration, platform feedback and fusion-control conversations.' : '研究合作、平台共建，或一次关于聚变智能控制的深入交流。'}</p></div><a href="mailto:liutianyuan@enn.cn">liutianyuan@enn.cn <span aria-hidden="true">↗</span></a></section>
     <SiteFooter />
   </main>;
 }

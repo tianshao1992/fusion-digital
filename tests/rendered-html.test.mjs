@@ -388,8 +388,8 @@ test('server-renders the FusionDigital community portal', async () => {
   assert.doesNotMatch(html, /COMMUNITY THESIS|DIGITAL TWIN MAINLINE|一炮一链：聚变数字孪生的共同主线/);
   assert.match(html, /fusion-twin-ai-native-overview\.png/);
   assert.match(html, /loading="lazy" decoding="async"/);
-  assert.match(html, /看见装置。/);
-  assert.match(englishHomeHtml, /See the device\./);
+  assert.match(html, /让 AI4Fusion/);
+  assert.match(englishHomeHtml, /From AI research\./);
   assert.match(html, /src="\/photos\/exl50u-device\.jpg"/);
   assert.match(html, /class="heroPhotography heroVrTour"/);
   assert.match(html, /进入 VR 实景/);
@@ -422,6 +422,34 @@ test('server-renders the FusionDigital community portal', async () => {
     'domain-ai-native-dark-image2.png',
   ]) assert.match(html, new RegExp(figure.replaceAll('.', '\\.')));
   assert.doesNotMatch(html, /发电系统|POWER SYSTEMS|本质安全/);
+});
+
+test('AI4Fusion homepage preserves evidence boundaries and meaningful no-JS content', async () => {
+  const html = (await htmlFor('/')).replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
+  assert.equal((html.match(/<h1\b/g) ?? []).length, 1);
+  for (const id of ['architecture', 'capabilities', 'exl50u-case', 'learning-loop', 'prototype-workspace']) {
+    assert.equal((html.match(new RegExp(`id="${id}"`, 'g')) ?? []).length, 1);
+  }
+  for (const text of ['FusionEvolve', 'FusionDigital', 'FusionControl', '750', '634', '2026 Q2–Q3',
+    '拟截至 2026.09.30', '暂定口径', '待逐炮核验', '占位估算', '不构成实验证据',
+    '不代表 EXL-50U 已实现燃烧等离子体或发电', '本网站不连接装置执行器', '研究假设']) {
+    assert.ok(html.includes(text), `homepage must retain ${text}`);
+  }
+  assert.match(html, /href="mailto:liutianyuan@enn\.cn"/);
+  assert.doesNotMatch(html, /mailto:tianshao1992@gmail\.com/);
+  assert.match(html, /class="fdChartFallback"/);
+  assert.match(html, /<caption>历史与占位统计明细<\/caption>/);
+  assert.match(html, /aria-label="聚变能量转化阶段"/);
+  assert.match(html, /class="fdResearchDisclosure"/);
+  const source = await readFile(new URL('../app/components/home/home-content.ts', import.meta.url), 'utf8');
+  assert.match(source, /success: 18 \+ 26/);
+  assert.match(source, /success: 750 - 8 - \(18 \+ 26\) - 64/);
+  assert.match(source, /source: 'estimated-residual', estimated: true/);
+  assert.match(source, /verified: false/);
+  const landing = await readFile(new URL('../app/components/home/FusionLanding.tsx', import.meta.url), 'utf8');
+  assert.match(landing, /prefers-reduced-motion: reduce/);
+  assert.match(landing, /window\.addEventListener\('hashchange', reveal\)/);
+  assert.match(landing, /chart\?\.dispose\(\)/);
 });
 
 test('server-renders the EXL-50U to EHL-2 program roadmap', async () => {
