@@ -50,7 +50,7 @@ export default function ControlEvidence({ en }: { en: boolean }) {
           series: [
             ...(['success', 'failed', 'operation'] as const).map((key, index) => ({ name: labels[index], type: 'bar', stack: 'shots', barMaxWidth: 65, itemStyle: { color: ['#72ad44','#ec8832','#a4a4a4'][index] }, data: controlEvidence.stages.map(item => item[key]), label: { show: index === 0, position: 'inside', color: '#fff', fontSize: 13, formatter: (p: {value: number}) => p.value >= 40 ? String(p.value) : '' } })),
             { type: 'bar', barGap: '-100%', barMaxWidth: 65, silent: true, itemStyle: { color: 'transparent' }, data: controlEvidence.stages.map(item => item.total), label: { show: true, position: 'top', color: '#4e72aa', fontSize: 14 } },
-            { name: labels[3], type: 'line', yAxisIndex: 1, connectNulls: false, symbolSize: 8, itemStyle: { color: '#5b9fe3' }, lineStyle: { width: 2 }, data: controlEvidence.stages.map(item => item.ratePending ? null : item.reportedRate), label: { show: true, position: 'top', formatter: '{c}%', color: '#347bbd', fontSize: 13 } },
+            { name: labels[3], type: 'line', yAxisIndex: 1, connectNulls: false, symbolSize: 8, itemStyle: { color: '#5b9fe3' }, lineStyle: { width: 2 }, data: controlEvidence.stages.map(item => item.ratePending ? null : item.reportedRate), label: { show: true, position: 'right', distance: 10, formatter: '{c}%', color: '#347bbd', fontSize: 13 } },
           ],
         });
         resize = new ResizeObserver(() => chart?.resize()); resize.observe(element); setReady(true);
