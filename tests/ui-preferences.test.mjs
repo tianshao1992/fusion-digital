@@ -158,9 +158,11 @@ test('EXL-50U VR tour belongs to the case page photograph, not the entry page or
   assert.match(photo, /href=\{imageLink.href\} target="_blank" rel="noopener noreferrer"/);
   assert.match(vr, /在新窗口打开 EXL-50U VR 实景/);
   assert.doesNotMatch(vr, /allow-top-navigation|allow-downloads|postMessage|dangerouslySetInnerHTML/);
-  assert.doesNotMatch(home, /FusionControlCase|Exl50uVrTour/);
+  assert.doesNotMatch(home, /Exl50uVrTour/);
+  assert.match(home, /<FusionControlCase en=\{en\} compact/);
+  assert.match(landing, /!compact &&/);
   assert.match(controlCase, /<FusionControlCase en=\{en\}/);
-  assert.ok(landing.includes('<Exl50uVrTour en={en} />'));
+  assert.match(landing, /<Exl50uVrTour en=\{en\}\s*\/>/);
   assert.ok(vr.includes('heroPhotography heroVrTour'));
   assert.ok(vr.includes('新窗口打开'));
   assert.doesNotMatch(workspace, /Exl50uVrTour|deviceVrTour/);
@@ -309,7 +311,8 @@ test('the prototype mounts on an independent page while the homepage remains a l
     source('app/digital-prototype/page.tsx'),
   ]);
 
-  assert.doesNotMatch(home, /MultiDeviceWorkspace|TokamakCadViewer|parseDeviceCatalog|FusionTwinSystemMap|PhaseOneRoadmap|FusionControlCase|ResearchDisclosure/);
+  assert.doesNotMatch(home, /MultiDeviceWorkspace|TokamakCadViewer|parseDeviceCatalog|FusionTwinSystemMap|PhaseOneRoadmap|ResearchDisclosure/);
+  assert.match(home, /<FusionControlCase en=\{en\} compact/);
   assert.match(prototype, /<MultiDeviceWorkspace catalog=\{deviceCatalog\} \/>/);
   assert.match(prototype, /parseDeviceCatalog\(deviceCatalogJson\)/);
   assert.doesNotMatch(prototype, /redirect\('\/#prototype-workspace'\)/);
@@ -328,9 +331,6 @@ test('old homepage bookmarks navigate to dedicated pages without loading a resea
     '#prototype-workspace': '/digital-prototype#prototype-workspace',
     '#domains': '/explore#domains',
     '#resources': '/explore#resources',
-    '#architecture': '/vision#architecture',
-    '#exl50u-case': '/control/exl50u#exl50u-case',
-    '#learning-loop': '/control/exl50u#learning-loop',
     '#community': '/#about',
     ...Object.fromEntries(['physics', 'engineering', 'control', 'diagnostics', 'energy', 'auxiliary', 'hmi', 'data', 'integration', 'ai']
       .map(id => [`#domain-${id}`, `/explore#domain-${id}`])),
@@ -356,6 +356,11 @@ test('old homepage bookmarks navigate to dedicated pages without loading a resea
     window.location.hash = '#capabilities';
     listeners.get('hashchange')();
     assert.deepEqual(redirects, [expected], 'current landing-page anchors must not redirect');
+    for (const current of ['#architecture', '#exl50u-case', '#learning-loop']) {
+      window.location.hash = current;
+      listeners.get('hashchange')();
+      assert.deepEqual(redirects, [expected], `${current} is now a homepage section`);
+    }
     window.location.hash = '#domain-https://example.com';
     listeners.get('hashchange')();
     assert.deepEqual(redirects, [expected], 'unknown and external-looking anchors must not navigate');

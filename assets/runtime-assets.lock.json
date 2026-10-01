@@ -8,9 +8,9 @@
       "public/models/iter-high-detail-v1/",
       "public/models/exl50u-general-assembly-v1/*.glb"
     ],
-    "fileCount": 893,
-    "totalBytes": 385731692,
-    "treeSha256": "2a13ed85cd189b9e8870b7f6e63437a4acad574ea0df383e837955f5b7923f8a",
+    "fileCount": 894,
+    "totalBytes": 385871533,
+    "treeSha256": "5083af93749a67ade09a0f7adfd471501eae7ba08101720db523f8a672bcc393",
     "files": [
       {
         "path": "public/FusionDigital-technical-roadmap-2026-08-15.docx",
@@ -3816,6 +3816,11 @@
         "path": "public/globe.svg",
         "bytes": 1035,
         "sha256": "b614b9bf183925957661ac851498fe1d8029fd43a62fbfed86f9e2624a57e7cf"
+      },
+      {
+        "path": "public/images/exl50u-control-20261001.png",
+        "bytes": 139841,
+        "sha256": "d4f4cee3829525704e01c706d884c048a5da01cc34b6e5c41c56c6ccec71cd4a"
       },
       {
         "path": "public/licenses/EXL50U-PUBLIC-DERIVATIVE.txt",

@@ -93,6 +93,7 @@
 .fdBoronFigure .fdEnergyDescription { min-height: 78px; }
 .fdBoronFigure .fdEnergySteps button { font-size: 14px; }
 .fdMobilePlasma { display: none; }
+@media (max-width: 440px) { .fusionHome .siteNav > .siteAccountAccess { display: none; } }
 .fdHandoffStrip { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 22px 0; margin-top: 30px; border-block: 1px solid var(--fd-line); font-size: 16px; }
 .fdHandoffStrip strong { color: var(--fd-teal); font-weight: 500; }
 .fdHandoffStrip i { font-style: normal; color: var(--fd-purple); }
