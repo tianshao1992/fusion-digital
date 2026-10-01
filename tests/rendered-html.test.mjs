@@ -349,7 +349,7 @@ test('server-renders the FusionDigital community portal', async () => {
   for (const href of ['/digital-prototype', '/explore', '/vision', '/control/exl50u']) {
     assert.ok(html.includes(`href="${href}"`), `homepage must link directly to ${href}`);
   }
-  assert.doesNotMatch(html, /id="prototype-workspace"|data-three-viewer=|class="fdResearchDisclosure"|data-echart="homepage-control-evidence"/);
+  assert.doesNotMatch(html, /id="prototype-workspace"|data-three-viewer=|class="fdResearchDisclosure"/);
 });
 
 test('independent research pages preserve diagrams, devices, photographs and scientific boundaries', async () => {
@@ -437,20 +437,20 @@ test('independent research pages preserve diagrams, devices, photographs and sci
   assert.doesNotMatch(html, /发电系统|POWER SYSTEMS|本质安全/);
 });
 
-test('AI4Fusion homepage is a lightweight entry point with meaningful no-JS links and provisional case summary', async () => {
+test('AI4Fusion homepage exposes architecture, proton-boron energy and reported control outcomes', async () => {
   const html = (await htmlFor('/')).replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
   assert.equal((html.match(/<h1\b/g) ?? []).length, 1);
   assert.equal((html.match(/id="capabilities"/g) ?? []).length, 1);
   for (const href of ['/digital-prototype', '/fusion-data', '/simulations', '/search', '/knowledge-graph', '/facilities', '/vision', '/explore', '/control/exl50u']) {
     assert.ok(html.includes(`href="${href}"`), `homepage must expose ${href} without client interaction`);
   }
-  for (const text of ['750', '暂定', '核验', '不代表 EXL-50U 已实现燃烧等离子体或发电']) {
+  for (const text of ['700+', '≤ 2 cm', '&lt; 10 kA', '400–600 kA', '678', '786', 'FusionEvolve', 'FusionControl', '氢硼', '不代表 EXL-50U 已实现燃烧等离子体或发电']) {
     assert.ok(html.includes(text), `homepage must retain ${text}`);
   }
   assert.match(html, /href="mailto:liutianyuan@enn\.cn"/);
   assert.doesNotMatch(html, /mailto:tianshao1992@gmail\.com/);
   assert.match(html, /aria-label="聚变能量转化阶段"/);
-  assert.doesNotMatch(html, /id="(?:prototype-workspace|learning-loop|domains)"|data-three-viewer=|data-echart=|class="fdChartFallback"|class="fdResearchDisclosure"/);
+  assert.doesNotMatch(html, /id="(?:prototype-workspace|domains)"|data-three-viewer=|class="fdResearchDisclosure"/);
 });
 
 test('architecture and EXL-50U detail pages retain evidence semantics and accessible chart fallback', async () => {
@@ -463,20 +463,22 @@ test('architecture and EXL-50U detail pages retain evidence semantics and access
   for (const text of ['FusionEvolve', 'FusionDigital', 'FusionControl', '本网站不连接装置执行器']) {
     assert.ok(architecture.includes(text), `architecture page must retain ${text}`);
   }
-  for (const text of ['750', '634', '2026 Q2–Q3', '拟截至 2026.09.30', '暂定口径', '待逐炮核验', '占位估算', '不构成实验证据', '研究假设']) {
+  for (const text of ['700+', '786', '678', '606', '562', '2026 Q1', '73%', '75.3%', '口径待核验', 'Operation']) {
     assert.ok(html.includes(text), `case page must retain ${text}`);
   }
   assert.match(html, /class="fdChartFallback"/);
-  assert.match(html, /<caption>历史与占位统计明细<\/caption>/);
+  assert.match(html, /<caption>用户提供的分阶段统计<\/caption>/);
   const source = await readFile(new URL('../app/components/home/home-content.ts', import.meta.url), 'utf8');
-  assert.match(source, /success: 18 \+ 26/);
-  assert.match(source, /success: 750 - 8 - \(18 \+ 26\) - 64/);
-  assert.match(source, /source: 'estimated-residual', estimated: true/);
+  assert.match(source, /total: 606, success: 562, failed: 33, operation: 11/);
+  assert.match(source, /reportedRate: 73, ratePending: true/);
+  assert.doesNotMatch(source, /estimated-residual|cumulativeFloor|634/);
   assert.match(source, /verified: false/);
-  const landing = await readFile(new URL('../app/components/home/FusionLanding.tsx', import.meta.url), 'utf8');
+  const landing = await readFile(new URL('../app/components/home/ControlEvidence.tsx', import.meta.url), 'utf8');
   const hero = await readFile(new URL('../app/components/home/FusionHero.tsx', import.meta.url), 'utf8');
   assert.match(landing, /prefers-reduced-motion: reduce/);
   assert.match(hero, /prefers-reduced-motion: reduce/);
+  assert.doesNotMatch(hero, /neutron|blanket|中子|包层|D–T/i);
+  assert.match(html, /exl50u-control-20261001\.png/);
   assert.match(landing, /chart\?\.dispose\(\)/);
 });
 

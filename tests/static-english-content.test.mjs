@@ -86,7 +86,7 @@ test('editorial photographs and labelled concepts are local, credited and bounde
   assert.match(explore, /<PhaseOneRoadmap/);
   assert.match(prototype, /<MultiDeviceWorkspace/);
   assert.match(explore, /knowledgeModules\.map/);
-  assert.doesNotMatch(home, /MultiDeviceWorkspace|FusionTwinSystemMap|PhaseOneRoadmap|FusionControlCase|ResearchDisclosure/,
+  assert.doesNotMatch(home, /MultiDeviceWorkspace|FusionTwinSystemMap|PhaseOneRoadmap|ResearchDisclosure/,
     'the landing route must not import or mount heavy detail-page content');
   assert.doesNotMatch([home, explore, controlCase, prototype].join('\n'), /https:\/\/upload\.wikimedia\.org/, 'pages load local images without a Wikimedia runtime dependency');
 });

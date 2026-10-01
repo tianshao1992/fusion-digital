@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import type { EChartsType } from 'echarts/core';
-import { controlEvidence, layers } from './home-content';
+import { useState } from 'react';
+import { layers } from './home-content';
+import ControlEvidence, { ControlMetrics } from './ControlEvidence';
 import Exl50uVrTour from '../../digital-prototype/Exl50uVrTour';
 
 type Localized = { en: boolean };
@@ -24,6 +24,7 @@ export function FusionArchitecture({ en }: Localized) {
   const layer = layers[selected];
   return <section className="fdSection fdArchitecture" id="architecture">
     <div className="fdSectionHead"><p className="fdEyebrow">01 / A CONNECTED INTELLIGENCE</p><h2>{en ? <>Three layers.<br /><em>One verifiable loop.</em></> : <>三层协同。<br /><em>一条可验证闭环。</em></>}</h2><p>{en ? 'Agents propose. Digital twins verify. Real-time systems execute. Device feedback closes the loop.' : '智能体提出方案，数字孪生验证方案，实时控制执行策略。装置反馈，闭合下一轮学习。'}</p></div>
+    <div className="fdHandoffStrip"><span>{en?'Goals & candidate experiments':'目标与候选实验'}</span><i aria-hidden="true">→</i><strong>{en?'Twin training & validation':'孪生训练与验证'}</strong><i aria-hidden="true">→</i><span>{en?'Approved real-time policies':'已批准的实时策略'}</span></div>
     <div className="fdArchitectureLayout">
       <div className="fdArchitectureMap" aria-label={en ? 'Select an architecture layer' : '选择技术架构层'}>
         <div className="fdMapCaption"><span>{en ? 'EXPERT GOALS & BOUNDARIES' : '专家目标与边界'}</span><span>{en ? 'EXPERIMENTAL FEEDBACK' : '真实实验反馈'}</span></div>
@@ -31,70 +32,33 @@ export function FusionArchitecture({ en }: Localized) {
         <div className="fdSafetyGate"><span aria-hidden="true">◇</span>{en ? 'Human approval · Physics constraints · Independent interlocks' : '人工审批 · 物理约束 · 独立安全联锁'}</div>
         <div className="fdDeviceNode"><span className="fdWave" aria-hidden="true">⌁</span><div><strong>{en ? 'FUSION DEVICE' : '聚变装置'}</strong><span>EXL-50U / {en ? 'future devices' : '未来装置'}</span></div><span className="fdDeviceReturn">{en ? 'Signals → evidence' : '信号 → 证据'} ↟</span></div>
       </div>
-      <div className={`fdLayerDetail fdLayerDetail${selected}`} aria-live="polite"><p className="fdEyebrow">{layer.name.toUpperCase()}</p><h3>{layer.headline[en ? 1 : 0]}</h3><p>{layer.copy[en ? 1 : 0]}</p><div className="fdTags">{layer.tags[en ? 1 : 0].map(tag => <span key={tag}>{tag}</span>)}</div><p className="fdBoundary">{en ? 'Architecture vision, not a claim that all three layers are deployed. Agents never bypass validation or safety systems. This website has no actuator write path.' : '架构愿景，不代表三层能力已全部部署。智能体不绕过验证与安全系统；本网站不连接装置执行器。'}</p></div>
+      <div className={`fdLayerDetail fdLayerDetail${selected}`} aria-live="polite"><p className="fdEyebrow">{layer.name.toUpperCase()}</p><h3>{layer.headline[en ? 1 : 0]}</h3><p>{layer.copy[en ? 1 : 0]}</p><div className="fdTags">{layer.tags[en ? 1 : 0].map(tag => <span key={tag}>{tag}</span>)}</div><p className="fdBoundary">{en ? 'Architecture vision, not a claim that all three layers are deployed. Agents never bypass validation or safety systems. This website has no actuator write path.' : '架构愿景，不代表三层能力已全部部署。智能体不绕过验证与安全系统；本网站不连接装置执行器。'}</p><a className="fdTextLink" href="/vision">{en?'Explore the complete architecture':'查看完整技术理念'}</a></div>
     </div>
   </section>;
 }
 
-function ControlChart({ en }: Localized) {
-  const container = useRef<HTMLDivElement>(null);
-  const [ready, setReady] = useState(false);
-  useEffect(() => {
-    const element = container.current;
-    if (!element) return;
-    let disposed = false;
-    let chart: EChartsType | undefined;
-    let resize: ResizeObserver | undefined;
-    const observer = new IntersectionObserver(async ([entry]) => {
-      if (!entry.isIntersecting) return;
-      observer.disconnect();
-      try {
-        const [echarts, charts, components, renderers] = await Promise.all([import('echarts/core'), import('echarts/charts'), import('echarts/components'), import('echarts/renderers')]);
-        if (disposed) return;
-        echarts.use([charts.BarChart, components.GridComponent, components.TooltipComponent, components.AriaComponent, renderers.SVGRenderer]);
-        chart = echarts.init(element, undefined, { renderer: 'svg' });
-        chart.setOption({
-          animation: !window.matchMedia('(prefers-reduced-motion: reduce)').matches,
-          aria: { enabled: true },
-          grid: { left: 44, right: 18, top: 40, bottom: 44 },
-          textStyle: { fontFamily: 'Arial, Microsoft YaHei, sans-serif' },
-          tooltip: { trigger: 'axis', renderMode: 'richText', formatter: (params: unknown) => {
-            const list = params as { dataIndex: number }[];
-            const item = controlEvidence.stages[list[0]?.dataIndex ?? 0];
-            return `${item.period}\n${item.estimated ? (en ? 'Placeholder estimate: ≈' : '占位估算：约 ') : (en ? 'Historical slide: ' : '历史图表：')}${item.success}${en ? ' successful takeovers' : ' 次成功接管'}`;
-          } },
-          xAxis: { type: 'category', data: controlEvidence.stages.map(item => item.period.replace(/[. ]/, '\n')), axisLine: { lineStyle: { color: '#d7d5e0' } }, axisTick: { show: false }, axisLabel: { color: '#646276', fontSize: 12, interval: 0, margin: 12, lineHeight: 16 } },
-          yAxis: { type: 'value', max: 700, interval: 200, axisLabel: { color: '#757286', fontSize: 12 }, splitLine: { lineStyle: { color: '#e8e6ed', type: 'dashed' } } },
-          series: [{ type: 'bar', barMaxWidth: 58, label: { show: true, position: 'top', color: '#4c356f', fontSize: 14, formatter: (p: { dataIndex: number; value: unknown }) => `${p.dataIndex === 3 ? '≈ ' : ''}${p.value}` }, data: controlEvidence.stages.map(item => ({ value: item.success, itemStyle: item.estimated ? { color: '#e5ddf3', borderColor: '#8160b6', borderWidth: 1.5, borderType: 'dashed', decal: { symbol: 'rect', dashArrayX: [1, 0], dashArrayY: [2, 5], rotation: -.6, color: 'rgba(101,66,165,.12)' } } : { color: '#76618e', borderRadius: [3, 3, 0, 0] } })) }],
-        });
-        resize = new ResizeObserver(() => chart?.resize());
-        resize.observe(element);
-        setReady(true);
-      } catch { /* The complete accessible fallback remains visible. */ }
-    }, { rootMargin: '150px' });
-    observer.observe(element);
-    return () => { disposed = true; observer.disconnect(); resize?.disconnect(); chart?.dispose(); };
-  }, [en]);
-  return <div className="fdChartShell"><div className="fdChartTitle"><span>{en ? 'SUCCESSFUL TAKEOVERS / BY STAGE' : '成功接管次数 / 按阶段'}</span><span>{en ? 'Dashed = estimate' : '虚线 = 占位估算'}</span></div><div ref={container} className="fdControlChart" data-echart="homepage-control-evidence" aria-hidden="true" />{!ready && <div className="fdChartFallback" aria-hidden="true">{controlEvidence.stages.map(item => <div key={item.period}><strong>{item.estimated ? '≈ ' : ''}{item.success}</strong><span className={item.estimated ? 'estimated' : ''} style={{ height: `${Math.max(5, item.success / 700 * 210)}px` }} /><small>{item.period}</small></div>)}</div>}<p className="srOnly">{controlEvidence.stages.map(item => `${item.period}: ${item.success}${item.estimated ? (en ? ' estimated, unverified' : '，估算、未核验') : (en ? ' from historical slide' : '，来自历史图表')}`).join('; ')}</p></div>;
-}
-
-export function FusionControlCase({ en }: Localized) {
+export function FusionControlCase({ en, compact = false }: Localized & { compact?: boolean }) {
   const milestones = en ? [
-    ['2025.07', 'First takeover', 'Limiter configuration control on EXL-50U.'],
-    ['2025 Q4', 'A wider operating space', 'Divertor configurations and transitions between shapes.'],
-    ['2026 Q1', 'Changing targets', 'Control without predesigned discharge waveforms, supporting locked-mode analysis experiments.'],
-    ['2026', 'Toward full-process control', 'Expanding experimental use and routine controller operation.'],
+    ['01', 'Limiter control', 'Validate shape control on EXL-50U.'],
+    ['02', 'Divertor & transitions', 'Extend to different plasma configurations.'],
+    ['03', 'Changing targets', 'Support locked-mode studies without predesigned discharge waveforms.'],
+    ['04', 'Routine operation', 'Support everyday experiments across 400–600 kA current plateaus.'],
   ] : [
-    ['2025.07', '第一次接管', '在 EXL-50U 完成强化学习限制器位形控制。'],
-    ['2025 Q4', '走向更多位形', '完成偏滤器位形控制与不同位形之间的过渡。'],
-    ['2026 Q1', '目标可以改变', '无需预设放电波形的变目标控制，支撑锁模分析实验。'],
-    ['2026', '迈向全流程接管', '随高参数实验持续调用，打磨常态化运行能力。'],
+    ['01', '限制器位形控制', '在 EXL-50U 验证强化学习位形控制。'],
+    ['02', '偏滤器与位形过渡', '扩展到不同等离子体位形与切换任务。'],
+    ['03', '变目标控制', '无需预设放电波形，支撑锁模研究实验。'],
+    ['04', '常态化运行', '覆盖 400–600 kA 电流平台，稳定支持日常物理实验。'],
   ];
-  return <section className="fdSection fdCase" id="exl50u-case"><div className="fdSectionHead fdSplitHead"><div><p className="fdEyebrow">03 / IN OPERATION · EXL-50U</p><h2>{en ? <>From the first takeover.<br /><em>To routine operation.</em></> : <>从第一次接管，<br /><em>到常态化运行。</em></>}</h2></div><p>{en ? 'An experimental path from digital-twin training to reinforcement-learning control, developed against increasingly demanding device tasks.' : '一条从数字孪生训练走向强化学习控制的实验路径。在更具挑战的装置任务中，持续积累可用能力。'}</p></div>
-    <div className="fdCaseGrid"><div className="fdCaseMetric"><p>{en ? 'TEAM-REPORTED CUMULATIVE TOTAL' : '团队提供的累计成功接管口径'}</p><strong>750<span>+</span></strong><h3>{en ? 'Successful takeover experiments' : '次成功接管实验'}</h3><span className="fdEstimateBadge">{en ? 'PROVISIONAL · AWAITING SHOT-LEVEL REVIEW' : '暂定口径 · 待逐炮核验'}</span><p className="fdMetricNote">{en ? 'Proposed cutoff: 30 Sep 2026. Supplied on 28 Sep; this is not an independently verified count at that future date.' : '拟截至 2026.09.30；资料提供于 09.28。该未来截止日口径尚未独立核验。'}</p></div><div className="fdCaseChart"><ControlChart en={en} /><details className="fdDataNote"><summary>{en ? 'Data provenance & estimate' : '数据口径与估算说明'}</summary><p>{en ? 'Historical successes: 8 (read from the slide), 44 (Q4-1: 18 + Q4-2: 26), and 64. The last bar is a residual placeholder: 750 − 8 − 44 − 64 = 634, covering Q2–Q3; it is not a measured period total. The initial period follows the supplied July narrative, correcting the older Q2 label. No new success rate is inferred.' : '历史成功次数：8（按原图约读）、44（Q4-1 的 18 + Q4-2 的 26）、64。末柱为差额占位：750 − 8 − 44 − 64 = 634，覆盖 Q2–Q3，并非该阶段实测总数。起始月份按本次提供的 7 月叙述修正旧图 Q2 标签；不据此推算新成功率。'}</p><table><caption>{en ? 'Editable historical and provisional figures' : '历史与占位统计明细'}</caption><thead><tr><th>{en ? 'Stage' : '阶段'}</th><th>{en ? 'Successes' : '成功次数'}</th><th>{en ? 'Source' : '来源'}</th></tr></thead><tbody>{controlEvidence.stages.map(item => <tr key={item.period}><td>{item.period}</td><td>{item.estimated ? '≈ ' : ''}{item.success}</td><td>{item.estimated ? (en ? 'Estimate, unverified' : '估算，待核验') : (en ? 'Supplied slide' : '提供的历史图表')}</td></tr>)}</tbody></table></details><p className="fdChartNotice">{en ? 'Final bar: placeholder estimate, not experimental evidence. Historical slide figures also await shot-level reconciliation.' : '末柱为占位估算，不构成实验证据。历史图表数字亦待逐炮对账。'}</p></div></div>
-    <div className="fdTimeline">{milestones.map(([date, title, copy]) => <article key={date}><span>{date}</span><h3>{title}</h3><p>{copy}</p></article>)}</div>
-    <div className="fdCaseConclusion"><p>{en ? 'More demanding experiments. More frequent use. A controller learning its way into everyday operation.' : '实验挑战不断提高，调用规模持续增长。DRL 控制器正在真实运行中打磨出常态化能力。'}</p><span>{en ? 'Team-reported progress. An AI-control scaling hypothesis to investigate, not a proven scaling law.' : '以上为团队进展陈述。“AI 控制 scaling law”是待研究假设，而非由占位图证明的定律。'}</span></div>
-    <div className="fdCasePhoto"><Exl50uVrTour en={en} /><div><p className="fdEyebrow">EXL-50U / EXPERIMENTAL CONTEXT</p><h3>{en ? <>A real device.<br />A bounded claim.</> : <>真实的装置。<br />有边界的结论。</>}</h3><p>{en ? 'Control experiments demonstrate progress within tested operating conditions. They do not establish burning-plasma operation, net electricity generation or universal policy transfer.' : '控制实验展示的是已测试运行条件内的进展，不等同于燃烧等离子体、净发电或策略的普适迁移能力。'}</p><a className="fdTextLink" href="/control">{en ? 'Explore control research' : '探索集成控制研究'} ↗</a></div></div>
+  return <section className="fdSection fdCase" id="exl50u-case">
+    <div className="fdSectionHead fdSplitHead"><div><p className="fdEyebrow">02 / EXPERIMENTAL RESULTS · EXL-50U</p><h2>{en ? <>Control, tested in experiments.<br /><em>Ready for routine use.</em></> : <>从位形控制，<br /><em>走向常态化实验应用。</em></>}</h2></div><p>{en ? 'Team-reported experiments demonstrate adaptation to different current levels and operating conditions, supporting daily physics research.' : '实验结果表明，控制器适应不同电流等级与运行工况，稳定支持日常物理实验。以下为团队提供的实验总结。'}</p></div>
+    <ControlMetrics en={en} />
+    <p className="fdPerformanceNote">{en ? 'Reported within tested conditions. Error definitions, evaluation windows and shot-level coverage await detailed supporting data; these are not guarantees for every discharge.' : '指标适用于已测试工况；误差定义、统计窗口及逐炮覆盖范围待补充，不代表对所有放电的性能保证。'}</p>
+    <div className="fdResultsGrid"><div className="fdApplications"><p className="fdEyebrow">{en?'SUPPORTING REAL PHYSICS':'服务真实物理实验'}</p>
+      {(en ? [['Locked-mode studies','Flexible targets support experimental analysis.'],['High ion temperature','Maintain controlled operating conditions for high-parameter experiments.'],['Proton–boron fusion','Support physics experiments with stable shape and current control.']] : [['锁模研究','灵活变目标控制，为锁模分析提供实验支撑。'],['高离子温度提升','面向高参数实验，维持受控运行工况。'],['氢硼聚变反应','以稳定的位形与电流控制，支持氢硼物理实验。']]).map(([title,copy])=><article key={title}><h3>{title}</h3><p>{copy}</p></article>)}
+      <a className="fdTextLink" href={compact?'/control/exl50u':'/control'}>{en?'Explore the control research':compact?'查看案例与完整流程':'探索集成控制研究'}</a>
+    </div><ControlEvidence en={en}/></div>
+    {!compact && <><div className="fdTimeline">{milestones.map(([date,title,copy])=><article key={date}><span>{date}</span><h3>{title}</h3><p>{copy}</p></article>)}</div>
+      <div className="fdCasePhoto"><Exl50uVrTour en={en}/><div><p className="fdEyebrow">EXL-50U / EXPERIMENTAL CONTEXT</p><h3>{en?'Real operation. Bounded evidence.':'真实运行，有边界的证据。'}</h3><p>{en?'These control results do not establish burning-plasma operation, net electricity generation or universal policy transfer. Increased experimental use alone does not establish a scaling law.':'这些控制结果不等同于燃烧等离子体、净发电或策略普适迁移；实验调用增长也不单独构成已证实的 scaling law。'}</p></div></div></>}
   </section>;
 }
 

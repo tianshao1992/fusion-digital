@@ -11,9 +11,6 @@ export default function HomeLegacyRedirect() {
         '#prototype-workspace': '/digital-prototype#prototype-workspace',
         '#domains': '/explore#domains',
         '#resources': '/explore#resources',
-        '#architecture': '/vision#architecture',
-        '#exl50u-case': '/control/exl50u#exl50u-case',
-        '#learning-loop': '/control/exl50u#learning-loop',
         '#community': '/#about',
       };
       const domain = /^#domain-(physics|engineering|control|diagnostics|energy|auxiliary|hmi|data|integration|ai)$/.test(hash);
