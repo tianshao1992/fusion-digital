@@ -1,14 +1,7 @@
 .portalPage.fusionHome {
-  --fd-bg: #fff; --fd-surface: #f5f5f8; --fd-ink: #20202c; --fd-muted: #696977;
-  --fd-line: #dddde6; --fd-purple: #6542a5; --fd-soft: #f0ebf8; --fd-teal: #256f75;
-  --color-canvas: var(--fd-bg); --color-surface: var(--fd-bg); --color-surface-raised: var(--fd-bg);
-  --color-ink: var(--fd-ink); --color-ink-muted: var(--fd-muted); --color-border: var(--fd-line);
-  --color-accent: var(--fd-purple); --color-accent-strong: var(--fd-purple); --color-accent-soft: var(--fd-soft);
+  --fd-bg: var(--color-canvas); --fd-surface: var(--color-surface); --fd-ink: var(--color-ink); --fd-muted: var(--color-ink-muted);
+  --fd-line: var(--color-border); --fd-purple: var(--color-accent-strong); --fd-soft: var(--color-accent-soft); --fd-teal: var(--color-info-strong);
   background: var(--fd-bg); color: var(--fd-ink); overflow: clip;
-}
-:root[data-theme='dark'] .fusionHome {
-  --fd-bg: #14141e; --fd-surface: #1d1d2b; --fd-ink: #f3f2f8; --fd-muted: #b4b3c4;
-  --fd-line: #39384b; --fd-purple: #bc9bee; --fd-soft: #2d253d; --fd-teal: #88cfd3;
 }
 .fusionHome .siteNav { background: var(--fd-bg); border-bottom-color: var(--fd-line); }
 .fusionHome :is(a,button,summary):focus-visible { outline: 2px solid var(--fd-purple); outline-offset: 5px; }
@@ -61,6 +54,58 @@
 @media (max-width: 760px) { .fdQuickGrid { grid-template-columns: repeat(2,minmax(0,1fr)); } .fdQuickHeading h2 { font-size: 20px; } .fdCaseTeaser { gap: 22px; } .fdDetailHeader { padding-top: 35px; } }
 @media (max-width: 440px) { .fdQuickGrid { gap: 9px; } .fdQuickGrid > a { gap: 9px; padding: 16px 12px; min-height: 103px; } .fdQuickNumber { display: none; } .fdQuickGrid strong { font-size: 17px; } .fdQuickGrid small { font-size: 11px; } .fdQuickHeading { flex-wrap: wrap; gap: 10px; } .fdTeaserMetric { gap: 14px; } .fdTeaserMetric > strong { font-size: 38px; } }
 .fdEnergyFigure { min-width: 0; margin: 0; padding-top: 15px; }
+.fdEnergyAtlas { border: 1px solid var(--fd-line); background: var(--fd-surface); padding: 22px 24px 18px; }
+.fdEnergySchematic { position: relative; aspect-ratio: 720 / 500; margin: 12px -10px 0; isolation: isolate; }
+.fdEnergySchematic svg { width: 100%; height: 100%; display: block; }
+.fdEnergyGrid { stroke: var(--fd-line); stroke-width: .7; opacity: .65; }
+.fdEnergyConduits { stroke: var(--color-accent); stroke-width: 1.8; }
+.fdEnergyConduits path { opacity: .45; transition: opacity .45s; }
+.fdEnergyAtlas[data-stage='0'] .fdHeatingPath,
+.fdEnergyAtlas[data-stage='1'] .fdSelfHeatingPath,
+.fdEnergyAtlas[data-stage='2'] .fdConversionPath,
+.fdEnergyAtlas[data-stage='3'] :is(.fdOutputPath,.fdReturnPath) { opacity: 1; stroke-width: 3; stroke-dasharray: 7 9; animation: fdEnergyTravel 4s linear infinite; }
+.fdConverterGlyph { stroke: var(--fd-teal); stroke-width: 1.5; }
+.fdConverterGlyph circle:first-child { stroke: var(--fd-line); stroke-dasharray: 2 6; }
+.fdLossPath { stroke: var(--fd-muted); stroke-width: 1; stroke-dasharray: 3 5; }
+.fdEnergyParticles { opacity: .8; }
+.fdEnergyLabel { position: absolute; font-size: 14px; line-height: 1.5; color: var(--fd-muted); text-align: center; }
+.fdEnergyLabel small { display: block; font: 11px/1.8 Arial,sans-serif; letter-spacing: .08em; }
+.fdEnergyLabel strong { font-weight: 500; color: var(--fd-ink); display: block; }
+.fdLabelPlasma { left: 14%; top: 45%; width: 40%; padding: 7px 0; background: color-mix(in srgb,var(--fd-surface) 85%,transparent); }
+.fdLabelPlasma strong { font-size: 19px; }
+.fdLabelSelfHeat { left: 19%; top: 10%; width: 38%; color: var(--fd-purple); }
+.fdLabelInput { left: 0; top: 67%; width: 23%; }
+.fdLabelConversion { left: 55%; top: 23%; width: 30%; }
+.fdLabelOutput { right: 0; top: 52%; width: 25%; }
+.fdLabelLoss { left: 30%; top: 76%; width: 58%; font-size: 12px; }
+.fdLabelReturn { bottom: 2%; left: 5%; right: 5%; font-size: 12px; letter-spacing: .04em; }
+.fdEnergyAtlas .fdEnergyBalance { padding: 16px 0; display: flex; justify-content: space-between; gap: 15px; border-top: 1px solid var(--fd-line); text-align: left; }
+.fdEnergyAtlas .fdEnergyBalance span { margin: 0; font-size: 12px; color: var(--fd-muted); }
+.fdEnergyAtlas .fdEnergyBalance strong { font-size: 14px; font-weight: 500; color: var(--fd-teal); }
+.fdEnergyAtlas .fdEnergyDescription { min-height: 76px; margin: 14px 0; }
+.fdEnergyAtlas .fdEnergySteps button { font-size: 14px; }
+.fdEnergyAtlas[data-running='false'] * { animation-play-state: paused; }
+@media (min-width: 901px) { .fdCompactHome .fdHero { grid-template-columns: .95fr 1.15fr; gap: 4vw; padding-block: 56px; } .fdHero h1 { font-size: clamp(36px,3.4vw,56px); letter-spacing: -.04em; } }
+@media (max-width: 600px) {
+  .fdEnergyAtlas { padding: 18px 14px; }
+  .fdEnergyAtlas .fdFigureTop { letter-spacing: .04em; }
+  .fdEnergySchematic { aspect-ratio: 720 / 560; margin-top: 22px; }
+  .fdEnergySchematic svg { position: absolute; top: 20px; height: auto; }
+  .fdEnergyLabel { font-size: 12px; }
+  .fdEnergyLabel small { display: none; }
+  .fdLabelPlasma { top: 42%; }
+  .fdLabelPlasma strong { font-size: 15px; }
+  .fdLabelSelfHeat { top: 12%; }
+  .fdLabelConversion { top: 25%; }
+  .fdLabelOutput { top: 53%; }
+  .fdLabelInput { top: 67%; }
+  .fdLabelLoss { top: 77%; left: 23%; width: 75%; }
+  .fdLabelReturn { bottom: 0; font-size: 12px; }
+  .fdEnergyAtlas .fdEnergyBalance { flex-direction: column; gap: 5px; }
+  .fdEnergyAtlas .fdEnergySteps { grid-template-columns: 1fr 1fr; }
+  .fdEnergyAtlas .fdEnergySteps button { min-height: 70px; }
+  .fdEnergyAtlas .fdEnergyDescription { min-height: 100px; }
+}
 .fdFigureTop { display: flex; justify-content: space-between; align-items: center; font: 12px/1.5 Arial,sans-serif; letter-spacing: .09em; color: var(--fd-muted); }
 .fdFigureTop button { border: 1px solid var(--fd-line); border-radius: 50px; padding: 6px 12px; background: transparent; color: var(--fd-muted); font-size: 12px; cursor: pointer; }
 .fdPlasma { width: 100%; display: block; color: var(--fd-muted); overflow: visible; }
@@ -79,20 +124,6 @@
 .fdEnergyFigure figcaption { border-top: 1px solid var(--fd-line); padding-top: 12px; font-size: 12px; color: var(--fd-muted); line-height: 1.7; }
 @keyframes fdOrbit { to { stroke-dashoffset: -1144; } }
 @keyframes fdEnergyTravel { to { stroke-dashoffset: -90; } }
-.fdBoronDiagram { background: #211c32; border-radius: 8px; margin: 18px 0; padding: 20px 16px 16px; color: #f1edf9; }
-.fdBoronDiagram svg { display: block; width: 100%; height: auto; }
-.fdFuelRow { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-.fdFuelRow span { color: #c9bddb; font-size: 12px; letter-spacing: .06em; }
-.fdFuelRow strong { font: 400 30px/1.3 Arial,sans-serif; color: #ffca9d; }
-.fdConversionFlow { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 18px 8px; border-block: 1px solid #4b405e; font-size: 14px; }
-.fdConversionFlow i { font-style: normal; color: #b59bd8; }
-.fdConversionFlow strong { color: #c7e6dc; font-weight: 500; }
-.fdEnergyBalance { text-align: center; font: 14px/1.7 Arial,Microsoft YaHei,sans-serif; padding-top: 12px; }
-.fdEnergyBalance span { display: block; color: #bcb0ca; font-size: 12px; margin-top: 3px; }
-.fdSelfHeat { stroke-dasharray: 6 8; animation: fdEnergyTravel 5s linear infinite; }
-.fdBoronFigure .fdEnergyDescription { min-height: 78px; }
-.fdBoronFigure .fdEnergySteps button { font-size: 14px; }
-.fdMobilePlasma { display: none; }
 @media (max-width: 440px) { .fusionHome .siteNav > .siteAccountAccess { display: none; } }
 .fdHandoffStrip { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 22px 0; margin-top: 30px; border-block: 1px solid var(--fd-line); font-size: 16px; }
 .fdHandoffStrip strong { color: var(--fd-teal); font-weight: 500; }
@@ -117,16 +148,22 @@
 .fdCompactHome .fdCase { background: var(--fd-surface); }
 .fdCompactHome .fdSection { padding-top: 68px; padding-bottom: 68px; }
 @media (max-width: 900px) { .fdResultsGrid { grid-template-columns: 1fr; gap: 28px; } .fdApplications { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; } .fdApplications > p,.fdApplications > a { grid-column: 1 / -1; } .fdPerformanceMetrics { grid-template-columns: 1fr 1fr; } .fdPerformanceMetrics > div:nth-child(2) { border-right: 0; } .fdPerformanceMetrics > div:nth-child(3) { padding-left: 0; } }
-@media (max-width: 600px) { .fdHandoffStrip { flex-direction: column; align-items: flex-start; gap: 10px; } .fdHandoffStrip i { transform: rotate(90deg); } .fdApplications { display: block; } .fdBoronDiagram svg { display: none; } .fdMobilePlasma { display: flex; flex-direction: column; align-items: center; margin: 24px 0; gap: 12px; padding-block: 20px; border-block: 1px solid #554867; font-size: 14px; } .fdMobilePlasma i { font-style: normal; color: #bdb0dc; } .fdMobilePlasma strong { font-weight: 500; font-size: 18px; color: #ffca9d; } .fdMobilePlasma p { margin: 0; } .fdMobilePlasma small { color: #bfb5ce; font-size: 12px; } .fdConversionFlow { gap: 6px; font-size: 12px; } .fdPerformanceMetrics > div { padding: 20px 10px; } .fdPerformanceMetrics strong { font-size: 24px; } .fdBoronFigure .fdEnergySteps { grid-template-columns: 1fr 1fr; } .fdBoronFigure .fdEnergySteps button { min-height: 60px; } }
+@media (max-width: 600px) { .fdHandoffStrip { flex-direction: column; align-items: flex-start; gap: 10px; } .fdHandoffStrip i { transform: rotate(90deg); } .fdApplications { display: block; } .fdPerformanceMetrics > div { padding: 20px 10px; } .fdPerformanceMetrics strong { font-size: 24px; } }
 .fdSection { max-width: 1536px; margin: auto; padding: 96px 6vw; }
 .fdSectionHead h2 { font-size: clamp(30px,3.1vw,46px); line-height: 1.4; letter-spacing: -.035em; font-weight: 500; margin: 22px 0; }
 .fdSectionHead h2 em { font-style: normal; color: var(--fd-muted); }
 .fdSectionHead > p:last-child { max-width: 680px; color: var(--fd-muted); font-size: 16px; line-height: 1.85; }
-.fdPrinciples { display: grid; grid-template-columns: repeat(3,1fr); gap: 4vw; padding: 38px 6vw 44px; border-top: 1px solid var(--fd-line); border-bottom: 1px solid var(--fd-line); }
-.fdPrinciples article { display: flex; gap: 18px; }
-.fdPrinciples article > span { color: var(--fd-purple); font: 13px/2.2 Arial,sans-serif; }
-.fdPrinciples h2 { font-size: 18px; font-weight: 500; margin: 0 0 13px; }
-.fdPrinciples p { font-size: 14px; color: var(--fd-muted); line-height: 1.85; margin: 0; }
+.fdPrinciples { max-width: 1536px; margin: auto; padding: 70px 6vw; border-top: 1px solid var(--fd-line); }
+.fdPrinciplesIntro { display: grid; grid-template-columns: 1.2fr 1fr; gap: 18px 6vw; align-items: end; margin-bottom: 42px; }
+.fdPrinciplesIntro .fdEyebrow { grid-column: 1 / -1; margin: 0; }
+.fdPrinciples h2 { font-size: clamp(28px,3vw,42px); font-weight: 500; line-height: 1.5; margin: 0; letter-spacing: -.035em; }
+.fdPrinciplesIntro > p:last-child { font-size: 17px; color: var(--fd-muted); line-height: 1.9; margin: 0; max-width: 420px; }
+.fdPrincipleGrid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 4vw; }
+.fdPrincipleGrid article { padding-top: 22px; border-top: 1px solid var(--fd-line); }
+.fdPrincipleGrid article > span { color: var(--fd-purple); font: 12px/1.8 Arial,sans-serif; letter-spacing: .08em; }
+.fdPrincipleGrid h3 { font-size: 21px; font-weight: 500; margin: 24px 0 14px; line-height: 1.6; }
+.fdPrincipleGrid p { font-size: 16px; color: var(--fd-muted); line-height: 1.9; margin: 0; }
+@media (max-width: 760px) { .fdPrinciplesIntro { grid-template-columns: 1fr; gap: 22px; } .fdPrincipleGrid { grid-template-columns: 1fr; gap: 32px; } .fdPrinciples { padding-block: 50px; } }
 .fdArchitectureLayout { display: grid; grid-template-columns: 1.3fr 1fr; gap: 6vw; margin-top: 48px; align-items: center; }
 .fdArchitectureMap { min-width: 0; }
 .fdMapCaption { display: flex; justify-content: space-between; font-size: 12px; color: var(--fd-muted); padding-bottom: 18px; }
@@ -139,7 +176,7 @@
 .fdLayer[aria-pressed='true'] { background: var(--fd-soft); border-color: var(--fd-purple); }
 .fdLayer[aria-pressed='true'] .fdLayerNumber { color: var(--fd-purple); }
 .fdLayer1[aria-pressed='true'] { background: color-mix(in srgb,var(--fd-teal) 6%,var(--fd-bg)); border-color: var(--fd-teal); }
-.fdLayer2[aria-pressed='true'] { background: color-mix(in srgb,#c87840 7%,var(--fd-bg)); border-color: #c87840; }
+.fdLayer2[aria-pressed='true'] { background: color-mix(in srgb,var(--color-accent) 7%,var(--fd-bg)); border-color: var(--color-accent); }
 .fdLayerPort { position: absolute; right: -35px; height: 1px; background: var(--fd-line); width: 34px; }
 .fdFeedbackRail { position: absolute; right: 0; top: 44px; bottom: -78px; border-right: 1px solid var(--fd-purple); }
 .fdFeedbackRail span { position: absolute; right: -6px; top: -16px; color: var(--fd-purple); font-size: 19px; background: var(--fd-bg); }
@@ -182,23 +219,23 @@
 .fdCaseMetric h3 { font-size: 20px; font-weight: 500; margin: 7px 0 20px; }
 .fdEstimateBadge { display: inline-block; border: 1px solid var(--fd-line); padding: 6px 10px; color: var(--fd-purple); font-size: 12px; border-radius: 2px; }
 .fdCaseMetric p.fdMetricNote { font-size: 12px; color: var(--fd-muted); line-height: 1.8; max-width: 350px; margin-top: 17px; }
-.fdCaseChart { min-width: 0; background: #fbfaff; color: #2c2935; border: 1px solid #e6e2ed; padding: 20px 22px; border-radius: 4px; }
-.fdChartTitle { display: flex; justify-content: space-between; font-size: 12px; color: #72697e; gap: 18px; }
+.fdCaseChart { min-width: 0; background: var(--color-surface); color: var(--fd-ink); border: 1px solid var(--fd-line); padding: 20px 22px; border-radius: 4px; }
+.fdChartTitle { display: flex; justify-content: space-between; font-size: 13px; color: var(--fd-muted); gap: 18px; }
 .fdControlChart { height: 300px; width: 100%; }
 .fdChartShell { position: relative; }
 .fdChartFallback { position: absolute; inset: 44px 20px 14px 44px; display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; align-items: end; }
 .fdChartFallback > div { display: flex; flex-direction: column; align-items: center; gap: 10px; }
-.fdChartFallback strong { font: 14px Arial,sans-serif; color: #6542a5; }
-.fdChartFallback span { display: block; width: 48px; background: #76618e; border-radius: 3px 3px 0 0; }
+.fdChartFallback strong { font: 14px Arial,sans-serif; color: var(--fd-purple); }
+.fdChartFallback span { display: block; width: 48px; background: var(--fd-teal); border-radius: 3px 3px 0 0; }
 .fdChartFallback span.estimated { background: repeating-linear-gradient(135deg,#ebe4f4,#ebe4f4 4px,#d6c7ea 4px,#d6c7ea 5px); border: 1px dashed #8160b6; }
 .fdChartFallback small { font: 12px/1.5 Arial,sans-serif; max-width: 64px; text-align: center; }
-.fdDataNote { border-top: 1px solid #e6e2ed; padding-top: 12px; font-size: 12px; color: #615a6c; }
+.fdDataNote { border-top: 1px solid var(--fd-line); padding-top: 12px; font-size: 14px; color: var(--fd-muted); }
 .fdDataNote summary { cursor: pointer; }
 .fdDataNote p { line-height: 1.8; }
 .fdDataNote table { width: 100%; border-collapse: collapse; margin: 12px 0; text-align: left; }
 .fdDataNote caption { text-align: left; padding-bottom: 8px; }
-.fdDataNote :is(th,td) { padding: 8px 4px; border-bottom: 1px solid #e6e2ed; }
-.fdChartNotice { color: #72697e; font-size: 12px; line-height: 1.7; margin-bottom: 0; }
+.fdDataNote :is(th,td) { padding: 8px 4px; border-bottom: 1px solid var(--fd-line); }
+.fdChartNotice { color: var(--fd-muted); font-size: 13px; line-height: 1.7; margin-bottom: 0; }
 .fdTimeline { display: grid; grid-template-columns: repeat(4,1fr); margin: 48px 0; gap: 28px; }
 .fdTimeline article { position: relative; border-top: 1px solid var(--fd-line); padding-top: 22px; }
 .fdTimeline article::before { content: ''; position: absolute; width: 6px; height: 6px; top: -4px; left: 0; background: var(--fd-purple); border-radius: 50%; }
@@ -214,18 +251,18 @@
 .fdCasePhoto h3 { font-size: 30px; font-weight: 500; line-height: 1.5; margin: 18px 0; }
 .fdCasePhoto > div > p:not(.fdEyebrow) { font-size: 15px; color: var(--fd-muted); line-height: 1.85; }
 .fdCasePhoto .fdTextLink { display: inline-block; margin-top: 10px; }
-.fdLearning { padding: 80px 6vw; background: #232035; color: #f8f6ff; }
-.fdLearning .fdEyebrow, .fdLearning .fdSectionHead > p:last-child { color: #c4bed5; }
+.fdLearning { padding: 80px 6vw; background: var(--color-inverse); color: var(--color-on-inverse); }
+.fdLearning .fdEyebrow, .fdLearning .fdSectionHead > p:last-child { color: var(--color-on-inverse-muted); }
 .fdLoopFlow { display: grid; grid-template-columns: repeat(5,1fr); gap: 24px; margin-top: 40px; }
-.fdLoopFlow article { position: relative; border-top: 1px solid #5d526e; padding-top: 20px; }
-.fdLoopFlow article:not(:last-child)::after { content: '→'; position: absolute; right: -18px; top: 43px; color: #b9a5d7; }
-.fdLoopFlow article > span { font: 12px Arial,sans-serif; color: #ad98d0; }
+.fdLoopFlow article { position: relative; border-top: 1px solid var(--color-inverse-border); padding-top: 20px; }
+.fdLoopFlow article:not(:last-child)::after { content: '→'; position: absolute; right: -18px; top: 43px; color: var(--color-on-inverse-muted); }
+.fdLoopFlow article > span { font: 12px Arial,sans-serif; color: var(--color-on-inverse-muted); }
 .fdLoopFlow h3 { font-size: 21px; font-weight: 500; margin: 16px 0 10px; }
-.fdLoopFlow p { font-size: 13px; line-height: 1.75; color: #c4bed5; }
-.fdLoopReturn { display: flex; align-items: center; justify-content: space-between; border: 1px solid #5d526e; border-top: 0; border-radius: 0 0 14px 14px; padding: 0 18px 12px; margin-top: 28px; color: #d2bcee; }
+.fdLoopFlow p { font-size: 13px; line-height: 1.75; color: var(--color-on-inverse-muted); }
+.fdLoopReturn { display: flex; align-items: center; justify-content: space-between; border: 1px solid var(--color-inverse-border); border-top: 0; border-radius: 0 0 14px 14px; padding: 0 18px 12px; margin-top: 28px; color: var(--color-on-inverse-muted); }
 .fdLoopReturn span { font-size: 23px; }
 .fdLoopReturn p { font-size: 13px; padding: 0 20px; text-align: center; }
-.fdLoopNote { font-size: 12px; line-height: 1.8; color: #b8b1c7; margin: 23px 0 0; }
+.fdLoopNote { font-size: 12px; line-height: 1.8; color: var(--color-on-inverse-muted); margin: 23px 0 0; }
 .fdContact { display: flex; justify-content: space-between; align-items: center; gap: 30px; padding: 90px 6vw; }
 .fdContact h2 { font-size: clamp(32px,3.5vw,49px); line-height: 1.45; letter-spacing: -.03em; font-weight: 500; margin: 20px 0; }
 .fdContact p:not(.fdEyebrow) { font-size: 15px; color: var(--fd-muted); line-height: 1.8; }
@@ -239,3 +276,11 @@
 @media (max-width: 500px) { .fdHero { padding: 32px 6vw; } .fdHero h1 { font-size: 36px; } .fdEyebrow { font-size: 10px; letter-spacing: .07em; } .fdLead { font-size: 16px; } .fdActions { gap: 18px; } .fdEnergySteps button { font-size: 12px; } }
 @media (max-width: 760px) { html[lang='en'] .fdLoopFlow article { grid-template-columns: 25px 1fr; } html[lang='en'] .fdLoopFlow article p { grid-column: 2; } }
 @media (prefers-reduced-motion: reduce) { html:has(.fusionHome) { scroll-behavior: auto; } .fusionHome *, .fusionHome *::before, .fusionHome *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+.fdChartLegend { display: flex; justify-content: flex-start; flex-wrap: wrap; gap: 12px 20px; list-style: none; padding: 0; margin: 24px 0 0; color: var(--fd-muted); font-size: 13px; }
+.fdChartLegend li { display: inline-flex; align-items: center; gap: 7px; }
+.fdLegendKey { display: inline-block; width: 16px; height: 10px; background: currentColor; border-radius: 1px; }
+.fdLegendKey3 { width: 22px; height: 0; background: none; border-top: 2px solid currentColor; position: relative; }
+.fdLegendKey3::after { content: ''; position: absolute; width: 6px; height: 6px; border: 2px solid currentColor; background: var(--fd-surface); border-radius: 50%; top: -5px; left: 6px; }
+.fdLearning .fdSectionHead h2 { color: var(--color-on-inverse); }
+.fdLearning .fdLoopFlow p { font-size: 14px; }
+@media (max-width: 440px) { .fdChartTitle { font-size: 12px; flex-wrap: wrap; gap: 5px; } .fdChartLegend { gap: 10px 12px; font-size: 12px; } }

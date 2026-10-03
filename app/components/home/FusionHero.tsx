@@ -1,25 +1,26 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 
 const stages = [
   ['约束与加热', 'Confine & heat'], ['聚变与自加热', 'Fusion & self-heating'],
-  ['能量转换', 'Energy conversion'], ['电力输出', 'Electricity'],
+  ['能量转换', 'Energy conversion'], ['电力与循环', 'Power & recirculation'],
 ] as const;
 const descriptions = [
-  ['磁场约束氢硼等离子体；外部加热、燃料供给与实时控制共同维持运行条件。', 'Magnetic fields confine proton–boron plasma. Heating, fuelling and real-time control sustain operating conditions.'],
-  ['p + ¹¹B → 3α。聚变产物携带能量；沉积在等离子体内的能量参与自加热。燃烧等离子体是面向未来的研究目标。', 'p + ¹¹B → 3α. Fusion products carry energy; the deposited fraction contributes to self-heating. Burning plasma remains a future research goal.'],
-  ['从等离子体到工程系统，研究能量提取与转换；图中不预设具体发电技术路线。', 'Energy extraction and conversion connect the plasma to engineering systems. This diagram does not prescribe a power-conversion technology.'],
-  ['电力系统输出还需覆盖加热、磁体、冷却等厂用功耗；净发电需要独立的能量平衡验证。', 'Electricity output must also cover heating, magnets, cooling and other plant loads. Net generation requires a separately verified energy balance.'],
+  ['磁约束、外部加热与燃料供给共同建立等离子体运行条件；控制系统持续调节状态。', 'Magnetic confinement, external heating and fuelling establish plasma conditions. Control systems continuously regulate the state.'],
+  ['聚变释放能量，沉积在等离子体中的部分参与自加热，并与辐射、输运损失竞争。燃烧等离子体是未来研究目标。', 'Fusion releases energy. The deposited fraction supports self-heating while radiation and transport remove energy. Burning plasma is a future research goal.'],
+  ['能量提取连接等离子体与工程系统。转换效率、运行稳定性和系统损耗需要共同验证，不预设具体转换路线。', 'Energy extraction connects plasma physics with plant engineering. Efficiency, stability and losses must be validated together; no conversion technology is prescribed.'],
+  ['一部分电力返回加热、磁体与冷却系统；扣除厂用功耗后，才是净电力。闭合能量账本，是走向发电的必要验证。', 'Part of the electricity supplies heating, magnets and cooling. Net electricity remains after plant loads. Closing this energy balance is essential to power generation.'],
 ] as const;
 
-/** Functional energy-flow diagram, not a reactor drawing or measured plasma. */
+/** An energy-balance schematic, not a reactor design or a measured plasma. */
 export function FusionHero({ en }: { en: boolean }) {
   const [step, setStep] = useState(0);
   const [paused, setPaused] = useState(false);
   const [reduced, setReduced] = useState(true);
   const [visible, setVisible] = useState(false);
   const figure = useRef<HTMLElement>(null);
+  const uid = useId().replaceAll(':', '');
   useEffect(() => {
     const media = window.matchMedia('(prefers-reduced-motion: reduce)');
     const update = () => setReduced(media.matches);
@@ -30,32 +31,51 @@ export function FusionHero({ en }: { en: boolean }) {
   }, []);
   useEffect(() => {
     if (paused || reduced || !visible) return;
-    const timer = window.setInterval(() => setStep(value => (value + 1) % stages.length), 4500);
+    const timer = window.setInterval(() => setStep(value => (value + 1) % stages.length), 5000);
     return () => window.clearInterval(timer);
   }, [paused, reduced, visible]);
   return <header className="fdHero" id="top">
     <div className="fdHeroCopy">
-      <p className="fdEyebrow"><span className="fdSmallLine" /> AI4FUSION / FROM PHYSICS TO PRODUCTS</p>
-      <h1>{en ? <>From AI research.<br />To <em>verifiable</em><br />fusion products.</> : <>让 AI4Fusion<br />从算法研发<br />走向<em>可验证产品。</em></>}</h1>
-      <p className="fdLead">{en ? 'FusionEvolve plans. FusionDigital verifies. FusionControl operates. Together, data, models and experiments form a learning loop toward proton–boron fusion energy.' : 'FusionEvolve 规划，FusionDigital 验证，FusionControl 执行。让数据、模型与实验形成持续学习的闭环，面向氢硼聚变能源。'}</p>
-      <div className="fdActions"><a className="fdButton" href="#architecture">{en ? 'Explore the architecture' : '了解三层技术体系'}</a><a className="fdTextLink" href="#exl50u-case">{en ? 'EXL-50U results' : '查看 EXL-50U 实验成效'}</a></div>
-      <p className="fdHeroFoot">{en ? 'Learn within constraints. Validate before operation. Evolve with evidence.' : '在约束内学习 · 在验证中扩域 · 在运行中演化'}</p>
+      <p className="fdEyebrow"><span className="fdSmallLine" /> AI FOR SCIENCE &amp; ENGINEERING</p>
+      <h1>{en ? <>Beyond the known.<br />Grounded in<br /><em>evidence.</em></> : <>让智能，走出已知。<br />让每一步，<br /><em>都有证据。</em></>}</h1>
+      <p className="fdLead">{en ? 'The next step is more than a better algorithm. It is knowing when to trust, exploring beyond the training domain efficiently, and turning real feedback into new capability.' : 'AI 的下一步，不止是更好的算法。是验证何时可信，以更少的试错探索未知，让真实反馈成为持续进化的起点。'}</p>
+      <div className="fdActions"><a className="fdButton" href="#architecture">{en ? 'Explore the architecture' : '了解三层技术体系'}</a><a className="fdTextLink" href="#exl50u-case">{en ? 'EXL-50U evidence' : '查看 EXL-50U 实验证据'}</a></div>
+      <p className="fdHeroFoot">{en ? 'FusionDigital / Connect models, experiments and operation.' : 'FusionDigital / 连接模型、实验与真实运行。'}</p>
     </div>
-    <figure className="fdEnergyFigure fdBoronFigure" ref={figure} data-stage={step} data-running={!paused && !reduced && visible}>
-      <div className="fdFigureTop"><span>p–¹¹B / FUSION ENERGY</span>{reduced ? <span>{en ? 'Static view' : '静态展示'}</span> : <button type="button" aria-pressed={paused} onClick={() => setPaused(value => !value)}>{paused ? (en ? 'Play' : '播放') : (en ? 'Pause' : '暂停')}</button>}</div>
-      <div className="fdBoronDiagram">
-        <div className="fdFuelRow"><span>{en ? 'PROTON + BORON-11' : '氢核 + 硼-11'}</span><strong>p + ¹¹B → 3α</strong><span>{en ? 'CHARGED FUSION PRODUCTS' : '带电聚变产物'}</span></div>
-        <svg viewBox="0 0 600 280" role="img" aria-label={en ? 'Energy-flow concept: heating and confinement, proton–boron fusion, alpha energy deposition and self-heating, energy extraction. Not experimental data.' : '能量流概念图：加热与约束、氢硼聚变、α 能量沉积与自加热、能量提取。非实验数据。'}>
-          <defs><linearGradient id="fd-boron-field"><stop stopColor="#ac9af5"/><stop offset="1" stopColor="#ffb675"/></linearGradient><marker id="fd-flow-arrow" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0 0L7 3.5L0 7" fill="#bcb0e0"/></marker></defs>
-          <g fill="none" stroke="#514765" strokeWidth=".7" opacity=".7"><path d="M24 70H576M24 140H576M24 210H576M100 20V260M200 20V260M300 20V260M400 20V260M500 20V260"/></g>
-          <g fill="none" stroke="url(#fd-boron-field)">{Array.from({length: 11}, (_, i) => <ellipse key={i} cx="289" cy="140" rx={66+i*5} ry={37+i*7} strokeWidth={i===10?1.8:.7} opacity={.85-i*.04} />)}</g>
-          <g fill="none" strokeWidth="2" markerEnd="url(#fd-flow-arrow)"><path className="fdEnergyPulse" d="M36 140H174" stroke="#bcb0e0"/><path className="fdEnergyPulse" d="M405 140H567" stroke="#edb185"/><path className="fdSelfHeat" d="M348 87C371 10 208 0 218 84" stroke="#f0b386"/><path d="M289 226V263" stroke="#8d839e"/></g>
-          <g fontFamily="Arial, Microsoft YaHei, sans-serif" textAnchor="middle" fill="#ece8f5"><text x="289" y="123" fontSize="16">{en?'FUSION PLASMA':'聚变等离子体'}</text><text x="289" y="149" fontSize="23" fill="#ffc794">p–¹¹B</text><text x="289" y="175" fontSize="13">{en?'CONFINEMENT + CONTROL':'磁约束 + 运行控制'}</text><text x="83" y="119" fontSize="14">{en?'HEATING':'外部加热'}</text><text x="502" y="119" fontSize="14">{en?'ENERGY OUT':'能量提取'}</text><text x="290" y="26" fontSize="14" fill="#ffc794">{en?'α DEPOSITION / SELF-HEATING':'α 能量沉积 / 自加热'}</text><text x="393" y="265" fontSize="13" fill="#bbb2ca">{en?'RADIATION + TRANSPORT LOSSES':'辐射与输运损失'}</text></g>
+    <figure className="fdEnergyFigure fdEnergyAtlas" ref={figure} data-stage={step} data-running={!paused && !reduced && visible}>
+      <div className="fdFigureTop"><span>FUSION / ENERGY SYSTEM</span>{reduced ? <span>{en ? 'Static view' : '静态展示'}</span> : <button type="button" aria-pressed={paused} onClick={() => setPaused(value => !value)}>{paused ? (en ? 'Play' : '播放') : (en ? 'Pause' : '暂停')}</button>}</div>
+      <div className="fdEnergySchematic" role="img" aria-label={en ? 'Conceptual energy circuit: heating and confinement, fusion plasma and self-heating, extraction and conversion, electricity, recirculating plant power, and losses. Not experimental data.' : '能量循环概念图：约束与加热、聚变等离子体与自加热、能量提取与转换、电力输出、厂用电回流及损失。非实验数据。'}>
+        <svg viewBox="0 0 720 500" aria-hidden="true">
+          <defs>
+            <radialGradient id={uid+'-glow'}><stop stopColor="var(--color-accent)" stopOpacity=".24"/><stop offset="1" stopColor="var(--color-accent)" stopOpacity="0"/></radialGradient>
+            <linearGradient id={uid+'-flux'} x1="0" y1="0" x2="1" y2="1"><stop stopColor="var(--color-info-strong)"/><stop offset=".55" stopColor="var(--color-accent)"/><stop offset="1" stopColor="var(--color-info)"/></linearGradient>
+            <marker id={uid+'-arrow'} markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0 0L6 3L0 6" fill="var(--color-accent)"/></marker>
+          </defs>
+          <g className="fdEnergyGrid" fill="none"><path d="M0 110H720M0 220H720M0 330H720M0 440H720M90 0V500M200 0V500M310 0V500M420 0V500M530 0V500M640 0V500"/><circle cx="245" cy="237" r="175"/><circle cx="245" cy="237" r="145"/></g>
+          <ellipse cx="245" cy="237" rx="193" ry="175" fill={'url(#'+uid+'-glow)'}/>
+          <g className="fdFluxSurfaces" fill="none" stroke={'url(#'+uid+'-flux)'}>
+            {Array.from({length: 18}, (_, index) => <ellipse key={index} cx="245" cy="237" rx={120 - index * 2.1} ry={48 + index * 4.2} transform={'rotate('+index*10+' 245 237)'} strokeWidth={index % 3 === 0 ? 1.5 : .7} opacity={index % 3 === 0 ? .8 : .38}/>)}
+          </g>
+          <g fill="none" className="fdEnergyConduits" markerEnd={'url(#'+uid+'-arrow)'}>
+            <path className="fdHeatingPath" d="M50 302H96Q112 302 125 287L155 256"/>
+            <path className="fdSelfHeatingPath" d="M201 149C179 75 333 63 322 161"/>
+            <path className="fdConversionPath" d="M367 237H451"/>
+            <path className="fdOutputPath" d="M557 237H674"/>
+            <path className="fdReturnPath" d="M606 247V416Q606 434 588 434H67Q50 434 50 416V320"/>
+          </g>
+          <g className="fdConverterGlyph" fill="none"><circle cx="505" cy="237" r="52"/><circle cx="505" cy="237" r="38"/><path d="M479 244L492 223L505 249L518 224L531 237"/></g>
+          <g className="fdLossPath" fill="none"><path d="M275 353V378M525 293V343"/><path d="M270 373L275 378L280 373M520 338L525 343L530 338"/></g>
+          <g className="fdEnergyParticles" fill="var(--color-accent)"><circle cx="398" cy="237" r="4"/><circle cx="578" cy="237" r="4"/><circle cx="390" cy="434" r="4"/></g>
         </svg>
-        <div className="fdMobilePlasma"><span>{en?'External heating + fuel':'外部加热 + 燃料供给'}</span><i aria-hidden="true">↓</i><strong>{en?'Confined p–¹¹B plasma':'受约束的氢硼等离子体'}</strong><p>{en?'α energy deposition ↺ self-heating':'α 能量沉积 ↺ 自加热'}</p><small>{en?'Balance radiation & transport losses':'平衡辐射与输运损失'}</small></div>
-        <div className="fdConversionFlow"><span>{en?'Plasma energy':'等离子体能量'}</span><i aria-hidden="true">→</i><span>{en?'Energy conversion':'能量转换系统'}</span><i aria-hidden="true">→</i><strong>{en?'Electricity':'电力输出'}</strong></div>
-        <div className="fdEnergyBalance">{en?'OUTPUT − PLANT LOADS = NET ELECTRICITY':'电力输出 − 厂用功耗 = 净电力'}<span>{en?'Research goal · energy balance to be verified':'研究目标 · 能量平衡需验证'}</span></div>
+        <span className="fdEnergyLabel fdLabelPlasma"><small>01 / PLASMA</small><strong>{en?'Controlled plasma':'受控等离子体'}</strong></span>
+        <span className="fdEnergyLabel fdLabelSelfHeat">{en?'Fusion · self-heating':'聚变 · 自加热'}</span>
+        <span className="fdEnergyLabel fdLabelInput">{en?'Heating & fuel':'加热与供给'}</span>
+        <span className="fdEnergyLabel fdLabelConversion"><small>02 / CONVERSION</small><strong>{en?'Energy conversion':'能量转换'}</strong></span>
+        <span className="fdEnergyLabel fdLabelOutput"><small>03 / POWER</small><strong>{en?'Electricity':'电力输出'}</strong></span>
+        <span className="fdEnergyLabel fdLabelLoss">{en?'Radiation · transport · conversion losses':'辐射 · 输运 · 转换损失'}</span>
+        <span className="fdEnergyLabel fdLabelReturn">{en?'RECIRCULATING POWER / HEATING · MAGNETS · COOLING':'厂用电回流 / 加热 · 磁体 · 冷却'}</span>
       </div>
+      <div className="fdEnergyBalance"><span>{en?'THE ENERGY BALANCE':'能量账本'}</span><strong>{en?'Electricity output − plant loads = net electricity':'电力输出 − 厂用功耗 = 净电力'}</strong></div>
       <div className="fdEnergySteps" aria-label={en ? 'Fusion energy stages' : '聚变能量转化阶段'}>{stages.map((label, index) => <button type="button" key={label[1]} aria-pressed={step === index} onClick={() => { setStep(index); setPaused(true); }}><span>0{index + 1}</span>{label[en ? 1 : 0]}</button>)}</div>
       <p className="fdEnergyDescription">{descriptions[step][en ? 1 : 0]}</p>
       <figcaption>{en ? 'Future-energy concept, not a claim that EXL-50U has achieved burning plasma or electricity generation.' : '面向未来能源的概念示意，不代表 EXL-50U 已实现燃烧等离子体或发电。'}</figcaption>

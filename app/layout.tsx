@@ -13,11 +13,11 @@ export async function generateMetadata(): Promise<Metadata> {
   const locale = resolveLocale(cookieStore.get(LOCALE_COOKIE_NAME)?.value) ?? DEFAULT_LOCALE;
   const en = locale === 'en';
   const title = en
-    ? 'FusionDigital | From AI Research to Verifiable Fusion Products'
-    : 'FusionDigital｜让 AI4Fusion 从算法研发走向可验证产品';
+    ? 'FusionDigital | Beyond the Known. Grounded in Evidence.'
+    : 'FusionDigital｜让智能走出已知，让每一步都有证据';
   const description = en
-    ? 'Connect data, digital twins and experiments. Explore fusion devices, simulation engines and evidence-linked research, from AI development to bounded experimental validation.'
-    : '连接数据、数字孪生与实验，探索聚变装置、仿真引擎与可追溯研究。在约束内学习，在验证中拓展能力，在运行中持续进化。';
+    ? 'AI for science and engineering, beyond algorithms: validate trust, explore efficiently and learn from experiments. Connect agents, digital twins and bounded control.'
+    : 'AI for Science & Engineering，不止算法研发。连接智能体、数字孪生与受约束控制，让验证建立可信边界，让实验检验高效外推，让反馈驱动持续进化。';
   const socialDescription = en
     ? 'Evidence-linked specialist digital twins for lifecycle cost control, efficient operation, dependable availability and defensible safety in future fusion power plants.'
     : '以总体集成、智能原生与可追溯知识图谱连接专业孪生，服务成本可控、高效运行、可靠可用与安全可证的未来聚变电厂。';

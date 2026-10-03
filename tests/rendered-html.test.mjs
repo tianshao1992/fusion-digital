@@ -344,8 +344,8 @@ test('server-renders the FusionDigital community portal', async () => {
   assert.match(html, /class="brandWordmark"/);
   assert.match(html, /class="brandFusion">Fusion/);
   assert.match(html, /class="brandDigital">Digital/);
-  assert.match(html, /让 AI4Fusion/);
-  assert.match(englishHomeHtml, /From AI research\./);
+  assert.match(html, /让智能，走出已知。/);
+  assert.match(englishHomeHtml, /Beyond the known\./);
   for (const href of ['/digital-prototype', '/explore', '/vision', '/control/exl50u']) {
     assert.ok(html.includes(`href="${href}"`), `homepage must link directly to ${href}`);
   }
@@ -437,7 +437,7 @@ test('independent research pages preserve diagrams, devices, photographs and sci
   assert.doesNotMatch(html, /发电系统|POWER SYSTEMS|本质安全/);
 });
 
-test('AI4Fusion homepage exposes architecture, proton-boron energy and reported control outcomes', async () => {
+test('AI4Fusion homepage connects verification, extrapolation, evolution and experimental evidence', async () => {
   const html = (await htmlFor('/')).replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
   assert.equal((html.match(/<h1\b/g) ?? []).length, 1);
   assert.equal((html.match(/id="capabilities"/g) ?? []).length, 1);
@@ -450,6 +450,12 @@ test('AI4Fusion homepage exposes architecture, proton-boron energy and reported 
   assert.match(html, /href="mailto:liutianyuan@enn\.cn"/);
   assert.doesNotMatch(html, /mailto:tianshao1992@gmail\.com/);
   assert.match(html, /aria-label="聚变能量转化阶段"/);
+  for (const text of ['知道何时可信', '让每次探索更有效', '让经验成为能力', '厂用电回流', '能量账本']) {
+    assert.ok(html.includes(text), 'homepage must explain '+text);
+  }
+  const heroHtml = html.match(/<header class="fdHero"[\s\S]*?<\/header>/)?.[0] ?? '';
+  assert.ok(heroHtml.includes('让智能，走出已知'));
+  assert.doesNotMatch(heroHtml, /氢硼|p–¹¹B|p \+ ¹¹B/);
   assert.doesNotMatch(html, /id="(?:prototype-workspace|domains)"|data-three-viewer=|class="fdResearchDisclosure"/);
 });
 
@@ -475,7 +481,9 @@ test('architecture and EXL-50U detail pages retain evidence semantics and access
   assert.match(source, /verified: false/);
   const landing = await readFile(new URL('../app/components/home/ControlEvidence.tsx', import.meta.url), 'utf8');
   const hero = await readFile(new URL('../app/components/home/FusionHero.tsx', import.meta.url), 'utf8');
-  assert.match(landing, /prefers-reduced-motion: reduce/);
+  const chartOption = await readFile(new URL('../app/components/home/control-chart-option.ts', import.meta.url), 'utf8');
+  assert.match(chartOption, /animation: false/, 'theme updates must not replay data-growth animations');
+  assert.match(landing, /useChartTheme/);
   assert.match(hero, /prefers-reduced-motion: reduce/);
   assert.doesNotMatch(hero, /neutron|blanket|中子|包层|D–T/i);
   assert.match(html, /exl50u-control-20261001\.png/);

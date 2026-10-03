@@ -78,7 +78,7 @@ test('editorial photographs and labelled concepts are local, credited and bounde
   const hero = await read('app/components/home/FusionHero.tsx');
   assert.match(landing, /<Exl50uVrTour en=\{en\}/);
   assert.match(controlCase, /<FusionControlCase/);
-  assert.match(hero, /From AI research/);
+  assert.match(hero, /Beyond the known/);
   assert.match(landing, /en \?/);
   assert.match(explore, /device="ITER"/);
   assert.match(photoComponent, /'lazy'/);

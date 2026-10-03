@@ -130,20 +130,27 @@ test('restored palette and compact English navigation preserve the original bran
   assert.ok(messages.includes("'nav.fusionData': 'DataPlatforms'"));
 });
 
-test('the light homepage palette outranks the legacy portal bridge while preserving explicit dark mode', async () => {
+test('homepage semantic palette outranks the portal bridge and inherits both product themes without cycles', async () => {
   const [home, bridge] = await Promise.all([source('app/home.css'), source('app/theme.css')]);
   // The bridge uses (0,1,1). Two classes (0,2,0) must win even if the bridge loads later.
-  // A bare .fusionHome would let the inverse-background token override the intended white canvas.
+  // A bare .fusionHome would let the inverse token override the selected theme canvas.
   const lightPalette = home.match(/^\s*\.portalPage\.fusionHome\s*\{([^}]+)\}/)?.[1];
   assert.ok(lightPalette, 'homepage palette must use the compound portal/home selector');
   assert.match(bridge, /html\s+\.portalPage\s*\{[^}]*--fd-bg:\s*var\(--color-inverse\)/);
-  assert.match(lightPalette, /--fd-bg:\s*#fff\s*;/);
-  assert.match(lightPalette, /--fd-ink:\s*#20202c\s*;/);
-  assert.match(lightPalette, /--color-canvas:\s*var\(--fd-bg\)/);
+  for (const [local, shared] of [
+    ['bg', 'canvas'], ['surface', 'surface'], ['ink', 'ink'],
+    ['muted', 'ink-muted'], ['line', 'border'], ['purple', 'accent-strong'],
+    ['soft', 'accent-soft'], ['teal', 'info-strong'],
+  ]) {
+    assert.ok(lightPalette.includes('--fd-'+local+': var(--color-'+shared+')'));
+  }
+  assert.doesNotMatch(home, /--color-[\w-]+:\s*var\(--fd-/, 'theme tokens must not refer back to homepage aliases');
   assert.match(lightPalette, /background:\s*var\(--fd-bg\)/);
   assert.match(lightPalette, /color:\s*var\(--fd-ink\)/);
-  assert.doesNotMatch(lightPalette, /!important/, 'dark mode must remain overridable through its more specific selector');
-  assert.match(home, /:root\[data-theme='dark'\]\s+\.fusionHome\s*\{[^}]*--fd-bg:\s*#14141e\s*;[^}]*--fd-ink:\s*#f3f2f8\s*;/);
+  assert.doesNotMatch(lightPalette, /!important|#[\da-f]{3,8}\b/i, 'homepage inherits resolved semantic colors, not a fixed light palette');
+  for (const theme of ['light', 'dark']) {
+    assert.ok(bridge.includes(":root[data-theme='"+theme+"']"), theme+' theme must remain defined');
+  }
 });
 
 test('EXL-50U VR tour belongs to the case page photograph, not the entry page or CAD workspace', async () => {

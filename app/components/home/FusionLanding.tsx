@@ -8,22 +8,22 @@ import Exl50uVrTour from '../../digital-prototype/Exl50uVrTour';
 type Localized = { en: boolean };
 export function FusionPrinciples({ en }: Localized) {
   const values = en ? [
-    ['01', 'Validation before action.', 'Test candidate decisions against physics, uncertainty and engineering limits.'],
-    ['02', 'Evidence across the loop.', 'Trace requirements, data, models, versions and experimental outcomes.'],
-    ['03', 'Learn from operation.', 'Let real feedback reveal the next model gap and the next experiment.'],
+    ['01 / VERIFY', 'Know when to trust.', 'Connect physical consistency, uncertainty and engineering constraints. Make the operating boundary explicit, and the evidence traceable.'],
+    ['02 / EXTEND', 'Make exploration count.', 'Use digital twins to screen candidates and experiments to test the most informative hypotheses. Extend capability one validated step at a time.'],
+    ['03 / EVOLVE', 'Learn without losing control.', 'Turn residuals and new observations into model and knowledge updates. Revalidate each change before it returns to operation.'],
   ] : [
-    ['01', '先验证，再行动。', '用物理规律、不确定度与工程约束，检验每一个候选决策。'],
-    ['02', '用证据，贯穿闭环。', '让需求、数据、模型、版本与实验结果相互可追溯。'],
-    ['03', '在运行中，持续进化。', '以真实反馈发现模型缺口，把每一次实验沉淀为下一次能力。'],
+    ['01 / VERIFY', '验证：知道何时可信。', '连接物理一致性、不确定度与工程约束。让适用边界可说明，让决策依据可追溯。'],
+    ['02 / EXTEND', '外推：让每次探索更有效。', '用数字孪生筛选候选，用实验检验关键假设。把有限的验证资源，用在最值得探索的未知。'],
+    ['03 / EVOLVE', '进化：让经验成为能力。', '把残差、异常与新观测回写模型和知识。每次更新重新验证，再进入受约束的运行。'],
   ];
-  return <section className="fdPrinciples" aria-label={en ? 'Our principles' : '核心理念'}>{values.map(([id, title, copy]) => <article key={id}><span>{id}</span><div><h2>{title}</h2><p>{copy}</p></div></article>)}</section>;
+  return <section className="fdPrinciples" id="principles" aria-labelledby="principles-title"><div className="fdPrinciplesIntro"><p className="fdEyebrow">OUR THESIS / AI BEYOND ALGORITHMS</p><h2 id="principles-title">{en ? <>Algorithms propose.<br />Evidence makes them usable.</> : <>算法给出候选。<br />验证，创造可用的能力。</>}</h2><p>{en ? 'In fusion, progress means extending the boundary of what can be trusted—not just fitting what is already known.' : '在聚变中，进步不只是拟合已知，更是有依据地拓展可信边界。'}</p></div><div className="fdPrincipleGrid">{values.map(([id, title, copy]) => <article key={id}><span>{id}</span><h3>{title}</h3><p>{copy}</p></article>)}</div></section>;
 }
 
 export function FusionArchitecture({ en }: Localized) {
   const [selected, setSelected] = useState(1);
   const layer = layers[selected];
   return <section className="fdSection fdArchitecture" id="architecture">
-    <div className="fdSectionHead"><p className="fdEyebrow">01 / A CONNECTED INTELLIGENCE</p><h2>{en ? <>Three layers.<br /><em>One verifiable loop.</em></> : <>三层协同。<br /><em>一条可验证闭环。</em></>}</h2><p>{en ? 'Agents propose. Digital twins verify. Real-time systems execute. Device feedback closes the loop.' : '智能体提出方案，数字孪生验证方案，实时控制执行策略。装置反馈，闭合下一轮学习。'}</p></div>
+    <div className="fdSectionHead"><p className="fdEyebrow">01 / FROM INTENT TO EVIDENCE</p><h2>{en ? <>Three layers.<br /><em>One verifiable loop.</em></> : <>三层协同。<br /><em>一条可验证闭环。</em></>}</h2><p>{en ? 'FusionEvolve asks what is worth testing. FusionDigital establishes what the evidence supports. FusionControl executes approved policies. Device feedback informs the next question.' : 'FusionEvolve 提出值得验证的问题，FusionDigital 建立模型与实验证据，FusionControl 执行获准策略。真实装置的反馈，定义下一轮探索。'}</p></div>
     <div className="fdHandoffStrip"><span>{en?'Goals & candidate experiments':'目标与候选实验'}</span><i aria-hidden="true">→</i><strong>{en?'Twin training & validation':'孪生训练与验证'}</strong><i aria-hidden="true">→</i><span>{en?'Approved real-time policies':'已批准的实时策略'}</span></div>
     <div className="fdArchitectureLayout">
       <div className="fdArchitectureMap" aria-label={en ? 'Select an architecture layer' : '选择技术架构层'}>
@@ -50,11 +50,11 @@ export function FusionControlCase({ en, compact = false }: Localized & { compact
     ['04', '常态化运行', '覆盖 400–600 kA 电流平台，稳定支持日常物理实验。'],
   ];
   return <section className="fdSection fdCase" id="exl50u-case">
-    <div className="fdSectionHead fdSplitHead"><div><p className="fdEyebrow">02 / EXPERIMENTAL RESULTS · EXL-50U</p><h2>{en ? <>Control, tested in experiments.<br /><em>Ready for routine use.</em></> : <>从位形控制，<br /><em>走向常态化实验应用。</em></>}</h2></div><p>{en ? 'Team-reported experiments demonstrate adaptation to different current levels and operating conditions, supporting daily physics research.' : '实验结果表明，控制器适应不同电流等级与运行工况，稳定支持日常物理实验。以下为团队提供的实验总结。'}</p></div>
+    <div className="fdSectionHead fdSplitHead"><div><p className="fdEyebrow">02 / EXPERIMENTAL RESULTS · EXL-50U</p><h2>{en ? <>Capability, built through experiments.<br /><em>From validation to routine use.</em></> : <>能力，建立于真实实验。<br /><em>从验证走向常态化应用。</em></>}</h2></div><p>{en ? 'Team-reported experiments demonstrate adaptation to different current levels and operating conditions, supporting daily physics research.' : '实验结果表明，控制器适应不同电流等级与运行工况，稳定支持日常物理实验。以下为团队提供的实验总结。'}</p></div>
     <ControlMetrics en={en} />
     <p className="fdPerformanceNote">{en ? 'Reported within tested conditions. Error definitions, evaluation windows and shot-level coverage await detailed supporting data; these are not guarantees for every discharge.' : '指标适用于已测试工况；误差定义、统计窗口及逐炮覆盖范围待补充，不代表对所有放电的性能保证。'}</p>
     <div className="fdResultsGrid"><div className="fdApplications"><p className="fdEyebrow">{en?'SUPPORTING REAL PHYSICS':'服务真实物理实验'}</p>
-      {(en ? [['Locked-mode studies','Flexible targets support experimental analysis.'],['High ion temperature','Maintain controlled operating conditions for high-parameter experiments.'],['Proton–boron fusion','Support physics experiments with stable shape and current control.']] : [['锁模研究','灵活变目标控制，为锁模分析提供实验支撑。'],['高离子温度提升','面向高参数实验，维持受控运行工况。'],['氢硼聚变反应','以稳定的位形与电流控制，支持氢硼物理实验。']]).map(([title,copy])=><article key={title}><h3>{title}</h3><p>{copy}</p></article>)}
+      {(en ? [['Locked-mode studies','Flexible targets support experimental analysis.'],['High ion temperature','Maintain controlled operating conditions for high-parameter experiments.'],['Fusion-reaction studies','Stable shape and current control support proton–boron physics experiments.']] : [['锁模研究','灵活变目标控制，为锁模分析提供实验支撑。'],['高离子温度提升','面向高参数实验，维持受控运行工况。'],['聚变反应研究','以稳定的位形与电流控制，支持氢硼等物理实验。']]).map(([title,copy])=><article key={title}><h3>{title}</h3><p>{copy}</p></article>)}
       <a className="fdTextLink" href={compact?'/control/exl50u':'/control'}>{en?'Explore the control research':compact?'查看案例与完整流程':'探索集成控制研究'}</a>
     </div><ControlEvidence en={en}/></div>
     {!compact && <><div className="fdTimeline">{milestones.map(([date,title,copy])=><article key={date}><span>{date}</span><h3>{title}</h3><p>{copy}</p></article>)}</div>
@@ -64,9 +64,9 @@ export function FusionControlCase({ en, compact = false }: Localized & { compact
 
 export function FusionLearningLoop({ en }: Localized) {
   const steps = en ? [
-    ['01', 'Observe', 'Shot data & device constraints'], ['02', 'Calibrate', 'Identify model residuals'], ['03', 'Train', 'RL policies & scenario variation'], ['04', 'Validate', 'Offline evaluation, SIL / HIL'], ['05', 'Operate', 'Approved bounded experiments'],
+    ['01', 'Observe', 'Shot data & device constraints'], ['02', 'Calibrate', 'Identify model residuals'], ['03', 'Explore', 'RL training & boundary scenarios'], ['04', 'Validate', 'Offline evaluation, SIL / HIL'], ['05', 'Operate', 'Approved bounded experiments'],
   ] : [
-    ['01', '观测', '实验数据与装置约束'], ['02', '校准', '识别模型残差与适用域'], ['03', '训练', '强化学习策略与场景扰动'], ['04', '验证', '离线评测、SIL / HIL'], ['05', '运行', '审批后的受限真机实验'],
+    ['01', '观测', '实验数据与装置约束'], ['02', '校准', '识别模型残差与适用域'], ['03', '探索', '策略训练与边界场景'], ['04', '验证', '离线评测、SIL / HIL'], ['05', '运行', '审批后的受限真机实验'],
   ];
-  return <section className="fdLearning" id="learning-loop"><div className="fdSectionHead"><p className="fdEyebrow">THE DIGITAL TWIN × REINFORCEMENT LEARNING</p><h2>{en ? <>The next experiment<br />starts with the last.</> : <>下一次实验，<br />始于上一次反馈。</>}</h2><p>{en ? 'A digital twin is not just a training environment. It is the bridge between experimental evidence, policy evaluation and the next model update.' : '数字孪生不只是训练环境，更是实验依据、策略评估与下一次模型更新之间的桥梁。'}</p></div><div className="fdLoopFlow">{steps.map(([id, title, copy]) => <article key={id}><span>{id}</span><h3>{title}</h3><p>{copy}</p></article>)}</div><div className="fdLoopReturn"><span>↶</span><p>{en ? 'Residuals · anomalies · new observations → model calibration & knowledge updates' : '残差 · 异常 · 新观测 → 模型再校准与知识更新'}</p><span>↵</span></div><p className="fdLoopNote">{en ? 'Illustrative workflow, not a claim that every evaluation gate has been completed. Independent safety systems and human approval remain mandatory.' : '流程示意，不代表各验证门已全部完成；独立安全系统与人工授权始终保留。'}</p></section>;
+  return <section className="fdLearning" id="learning-loop"><div className="fdSectionHead"><p className="fdEyebrow">THE DIGITAL TWIN × REINFORCEMENT LEARNING</p><h2>{en ? <>The next experiment<br />starts with the last.</> : <>下一次实验，<br />始于上一次反馈。</>}</h2><p>{en ? 'Continuous learning does not mean changing a controller mid-discharge. The twin turns new evidence into candidate updates; validation and approval determine what can return to operation.' : '持续学习，不是在放电中随意改变控制器。数字孪生将新证据转化为候选更新，再由验证与审批决定，哪些能力可以进入下一次运行。'}</p></div><div className="fdLoopFlow">{steps.map(([id, title, copy]) => <article key={id}><span>{id}</span><h3>{title}</h3><p>{copy}</p></article>)}</div><div className="fdLoopReturn"><span>↶</span><p>{en ? 'Residuals · anomalies · new observations → model calibration & knowledge updates' : '残差 · 异常 · 新观测 → 模型再校准与知识更新'}</p><span>↵</span></div><p className="fdLoopNote">{en ? 'Illustrative workflow, not a claim that every evaluation gate has been completed. Independent safety systems and human approval remain mandatory.' : '流程示意，不代表各验证门已全部完成；独立安全系统与人工授权始终保留。'}</p></section>;
 }

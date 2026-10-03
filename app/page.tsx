@@ -2,7 +2,7 @@ import SiteFooter from './components/SiteFooter';
 import SiteNav from './components/SiteNav';
 import StaticLocaleContent from './components/StaticLocaleContent';
 import { FusionHero } from './components/home/FusionHero';
-import { FusionArchitecture, FusionControlCase, FusionLearningLoop } from './components/home/FusionLanding';
+import { FusionArchitecture, FusionControlCase, FusionLearningLoop, FusionPrinciples } from './components/home/FusionLanding';
 import HomeLegacyRedirect from './components/home/HomeLegacyRedirect';
 import { capabilities } from './components/home/home-content';
 import './portal.css';
@@ -13,6 +13,7 @@ function HomeContent({ en }: { en: boolean }) {
     <SiteNav active="home" />
     <HomeLegacyRedirect />
     <FusionHero en={en} />
+    <FusionPrinciples en={en} />
     <FusionArchitecture en={en} />
     <FusionControlCase en={en} compact />
     <FusionLearningLoop en={en} />
