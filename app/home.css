@@ -214,4 +214,32 @@
 .fdLegendKey3::after { content: ''; position: absolute; width: 6px; height: 6px; border: 2px solid currentColor; background: var(--fd-surface); border-radius: 50%; top: -5px; left: 6px; }
 .fdLearning .fdSectionHead h2 { color: var(--color-on-inverse); }
 .fdLearning .fdLoopFlow p { font-size: 14px; }
+.fdCompactHome .fdSection { padding-block: 56px; }
+.fdCompactHome .fdSectionHead h2 { font-size: clamp(26px,2.7vw,38px); margin-block: 16px; }
+.fdPrinciplesBrief { padding-block: 36px; }
+.fdPrinciplesBrief .fdPrincipleGrid article { padding-top: 0; border-top: 0; }
+.fdPrinciplesBrief .fdPrincipleGrid h3 { margin: 12px 0 8px; }
+.fdPrinciplesBrief .fdPrincipleGrid p { line-height: 1.7; }
+.fdCompactHome .fdArchitectureLayout { margin-top: 28px; }
+.fdCompactHome .fdLayerDetail { min-height: 0; }
+.fdCompactHome .fdLayerDetail .fdTextLink { display: inline-block; margin-top: 16px; }
+.fdInlineDisclosure { font-size: 14px; line-height: 1.75; color: var(--fd-muted); }
+.fdInlineDisclosure summary { cursor: pointer; width: fit-content; }
+.fdInlineDisclosure p { max-width: 800px; margin: 12px 0 0; }
+.fdArchitectureNote { border-top: 1px solid var(--fd-line); margin-top: 24px; padding-top: 14px; }
+.fdCompactHome .fdResultsGrid { margin-top: 28px; }
+.fdLearningBrief { display: grid; grid-template-columns: 1fr 1.2fr; align-items: center; gap: 36px 6vw; padding-block: 44px; }
+.fdLearningBrief h2 { font-size: clamp(24px,2.2vw,32px); font-weight: 500; line-height: 1.5; margin: 14px 0 8px; }
+.fdLearningBrief .fdTextLink { display: inline-block; border-color: var(--color-inverse-border); color: var(--color-on-inverse-muted); }
+.fdLearningSequence { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 16px; }
+.fdLearningSequence li { border-top: 1px solid var(--color-inverse-border); padding-top: 15px; font-size: 17px; }
+.fdLearningSequence li > span { display: block; color: var(--color-on-inverse-muted); font-size: 12px; margin-bottom: 8px; }
+.fdLearningSummary { color: var(--color-on-inverse-muted); font-size: 14px; line-height: 1.8; margin: 22px 0 0; }
+@media (max-width: 760px) {
+  .fdCompactHome .fdSection { padding-block: 38px; }
+  .fdPrinciplesBrief .fdPrincipleGrid { gap: 22px; }
+  .fdLearningBrief { grid-template-columns: 1fr; gap: 24px; padding-block: 36px; }
+  .fdLearningSequence { gap: 10px; }
+  .fdLearningSequence li { font-size: 15px; overflow-wrap: anywhere; }
+}
 @media (max-width: 440px) { .fdChartTitle { font-size: 12px; flex-wrap: wrap; gap: 5px; } .fdChartLegend { gap: 10px 12px; font-size: 12px; } }

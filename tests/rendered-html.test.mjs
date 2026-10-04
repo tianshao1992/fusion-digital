@@ -450,7 +450,7 @@ test('AI4Fusion homepage connects verification, extrapolation, evolution and exp
   assert.match(html, /href="mailto:liutianyuan@enn\.cn"/);
   assert.doesNotMatch(html, /mailto:tianshao1992@gmail\.com/);
   assert.match(html, /aria-label="聚变能量转化阶段"/);
-  for (const text of ['知道何时可信', '让每次探索更有效', '让经验成为能力', '厂用电回流', '能量账本']) {
+  for (const text of ['验证，让算法可用', '外推，让探索高效', '进化，让经验生长', '厂用电回流', '能量账本']) {
     assert.ok(html.includes(text), 'homepage must explain '+text);
   }
   const heroHtml = html.match(/<header class="fdHero[^\"]*"[\s\S]*?<\/header>/)?.[0] ?? '';
@@ -459,9 +459,35 @@ test('AI4Fusion homepage connects verification, extrapolation, evolution and exp
   for (const stage of ['plasma', 'conversion', 'power']) {
     assert.ok(heroHtml.includes(`/images/fusion-energy/${stage}-v1.webp`));
   }
-  assert.match(heroHtml, /AI 生成的工程概念画面/);
+  assert.match(heroHtml, /AI 生成概念图/);
   assert.doesNotMatch(heroHtml, /fdEnergySchematic|fdConverterGlyph|<ellipse/);
   assert.doesNotMatch(html, /id="(?:prototype-workspace|domains)"|data-three-viewer=|class="fdResearchDisclosure"/);
+});
+
+test('homepage keeps scope notes collapsed while preserving detailed research pages', async () => {
+  for (const en of [false, true]) {
+    const response = await render('/', en ? { cookie: 'fusiondigital_locale=en' } : {});
+    assert.equal(response.status, 200);
+    const html = (await response.text()).replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
+    const visible = html.replace(/<details\b[^>]*>[\s\S]*?<\/details>/gi, '');
+    assert.match(html, /fdPrinciplesBrief/);
+    assert.match(html, /fdLearningBrief/);
+    assert.match(html, /href="#capabilities"/);
+    assert.doesNotMatch(html, /<details\b[^>]*\sopen(?:[\s=>])/);
+    assert.doesNotMatch(visible, /本网站不连接装置执行器|误差定义、统计窗口|no actuator write path|evaluation windows/);
+    assert.doesNotMatch(html, /class="fdSafetyGate"|class="fdLoopNote"|class="fdPerformanceNote"/);
+    assert.match(html, /fdArchitectureNote/);
+    assert.match(html, /AI 生成概念图|AI-generated concepts/);
+    assert.match(html, /架构愿景|Architecture vision/);
+    assert.match(html, /EXL-50U 团队报告结果|Results reported by the EXL-50U team/);
+    assert.doesNotMatch(visible, /2026-08-15/);
+    for (const rate of ['53%', '70%', '73%', '94%']) assert.ok(visible.includes(rate));
+  }
+  const vision = await htmlFor('/vision');
+  const casePage = await htmlFor('/control/exl50u');
+  assert.match(vision, /class="fdSafetyGate"/);
+  assert.match(vision, /class="fdBoundary"/);
+  assert.match(casePage, /class="fdLoopNote"/);
 });
 
 test('architecture and EXL-50U detail pages retain evidence semantics and accessible chart fallback', async () => {

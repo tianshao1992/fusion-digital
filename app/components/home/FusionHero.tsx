@@ -8,19 +8,19 @@ const stages = [
     id: 'plasma', label: ['燃烧等离子体', 'Burning plasma'],
     detail: ['约束 · 加热 · 自加热', 'Confinement · heating · self-heating'],
     alt: ['磁体与真空室剖面中的环形等离子体，AI 生成的未来装置概念图', 'AI-generated concept: confined toroidal plasma inside a cutaway magnetic fusion device'],
-    description: ['外部加热与燃料供给建立运行条件。聚变产物沉积的能量参与自加热，与辐射和输运损失共同决定等离子体的能量平衡。', 'External heating and fuelling establish operating conditions. Deposited fusion energy contributes to self-heating; radiation and transport losses complete the plasma energy balance.'],
+    description: ['磁场约束等离子体，外部加热启动反应，聚变能量参与自加热。', 'Magnetic fields confine the plasma. External heating starts the reaction; fusion energy contributes to self-heating.'],
   },
   {
     id: 'conversion', label: ['能量转换', 'Energy conversion'],
     detail: ['能量提取 · 转换 · 发电', 'Extraction · conversion · generation'],
     alt: ['换热管路、透平叶片与发电机组的写实概念剖面，并非已选定的工程路线', 'Conceptual cutaway of heat-transfer pipework, turbine blades and a generator, not a selected plant design'],
-    description: ['把等离子体释放的能量交给工程系统，转换为电力。图中透平—发电机仅示意一种热转换路径；效率、损耗与运行稳定性都需要验证。', 'Engineering systems turn extracted energy into electricity. The turbine–generator illustrates one possible thermal conversion route; efficiency, losses and operating stability require validation.'],
+    description: ['提取聚变能量，转换为电力。透平—发电机示意一种可能的热转换路径。', 'Extract fusion energy and convert it into electricity. The turbine–generator illustrates one possible thermal route.'],
   },
   {
     id: 'power', label: ['电力输出', 'Electric power'],
     detail: ['厂用电回流 · 净电力输出', 'Plant loads · net electric output'],
     alt: ['变压器、变电设备与输电设施的未来电力输出概念画面', 'Conceptual transformer, switchyard and transmission equipment for future electricity delivery'],
-    description: ['发出的电力一部分返回加热、磁体与冷却系统。扣除厂用功耗后的净电力，才是能源系统对外供电的结果。', 'Part of the generated electricity returns to heating, magnets and cooling. Net electricity is what remains for delivery after plant loads.'],
+    description: ['电力支持加热、磁体与冷却，扣除厂用功耗后，净电力送往电网。', 'Electricity powers heating, magnets and cooling. Net output is delivered to the grid after plant loads.'],
   },
 ] as const;
 
@@ -50,9 +50,8 @@ export function FusionHero({ en }: { en: boolean }) {
       <h1>{en ? <>Beyond the known.<br />Grounded in <em>evidence.</em></> : <>让智能，走出已知。<br />让每一步，<em>都有证据。</em></>}</h1>
     </div>
     <div className="fdHeroContext">
-      <p className="fdLead">{en ? 'The next step is more than a better algorithm. It is knowing when to trust, exploring beyond the training domain efficiently, and turning real feedback into new capability.' : 'AI 的下一步，不止是更好的算法。是验证何时可信，以更少的试错探索未知，让真实反馈成为持续进化的起点。'}</p>
-      <div className="fdActions"><a className="fdButton" href="#architecture">{en ? 'Explore the architecture' : '了解三层技术体系'}</a><a className="fdTextLink" href="#exl50u-case">{en ? 'EXL-50U evidence' : '查看 EXL-50U 实验证据'}</a></div>
-      <p className="fdHeroFoot">{en ? 'FusionDigital / Connect models, experiments and operation.' : 'FusionDigital / 连接模型、实验与真实运行。'}</p>
+      <p className="fdLead">{en ? 'Beyond algorithms: validate in digital twins, explore with fewer experiments, and learn from real operation.' : '让 AI 从算法走向应用：在数字孪生中验证，以更少实验探索未知，在真实运行中持续进化。'}</p>
+      <div className="fdActions"><a className="fdButton" href="#capabilities">{en ? 'Explore FusionDigital' : '进入功能区'}</a><a className="fdTextLink" href="#architecture">{en ? 'Three-layer architecture' : '了解三层架构'}</a></div>
     </div>
     <figure className="fdEnergyFigure fdEnergyCinema" ref={figure} data-stage={step} data-running={!paused && !reduced && visible}>
       <div className="fdCinemaHeading">
@@ -75,7 +74,7 @@ export function FusionHero({ en }: { en: boolean }) {
         <p id="fusion-energy-description" className="fdCinemaDescription">{stages[step].description[en ? 1 : 0]}</p>
         <div className="fdCinemaBalance"><span>{en ? 'THE ENERGY BALANCE' : '能量账本'}</span><p>{en ? 'Electricity output' : '电力输出'}<i>−</i>{en ? 'Plant loads' : '厂用功耗'}<i>=</i><strong>{en ? 'Net electricity' : '净电力'}</strong></p></div>
       </div>
-      <figcaption>{en ? 'AI-generated engineering concepts, not photographs or an as-built design. This future-energy vision does not mean EXL-50U has achieved burning plasma or electricity generation.' : 'AI 生成的工程概念画面，非实物照片或工程定型方案；不代表 EXL-50U 已实现燃烧等离子体或发电。'}</figcaption>
+      <figcaption className="fdConceptCaption"><span>{en ? 'AI-generated concepts · Future energy system' : 'AI 生成概念图 · 未来能源系统'}</span><details className="fdInlineDisclosure"><summary>{en ? 'About these images' : '图示说明'}</summary><p>{en ? 'Not photographs or an as-built design. This vision does not mean EXL-50U has achieved burning plasma or electricity generation.' : '非实物照片或工程定型方案；不代表 EXL-50U 已实现燃烧等离子体或发电。'}</p></details></figcaption>
     </figure>
   </header>;
 }

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useI18n } from '../i18n';
 import BrandWordmark from './BrandWordmark';
 
-export default function SiteFooter() {
+export default function SiteFooter({ compact = false }: { compact?: boolean }) {
   const { t } = useI18n();
   return <footer className="siteFooter" id="about">
     <div className="footerBrand">
@@ -13,6 +13,6 @@ export default function SiteFooter() {
     </div>
     <div><b>{t('footer.team')}</b><p>{t('footer.teamName')}</p></div>
     <div><b>{t('footer.contact')}</b><p><a href="mailto:liutianyuan@enn.cn">liutianyuan@enn.cn</a></p></div>
-    <div><b>{t('footer.platform')}</b><p><Link href="/platform">{t('footer.platformLink')}</Link><br/>{t('footer.updated')}</p></div>
+    <div><b>{t('footer.platform')}</b><p><Link href="/platform">{t('footer.platformLink')}</Link>{!compact && <><br/>{t('footer.updated')}</>}</p></div>
   </footer>;
 }
