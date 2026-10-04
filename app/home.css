@@ -54,76 +54,7 @@
 @media (max-width: 760px) { .fdQuickGrid { grid-template-columns: repeat(2,minmax(0,1fr)); } .fdQuickHeading h2 { font-size: 20px; } .fdCaseTeaser { gap: 22px; } .fdDetailHeader { padding-top: 35px; } }
 @media (max-width: 440px) { .fdQuickGrid { gap: 9px; } .fdQuickGrid > a { gap: 9px; padding: 16px 12px; min-height: 103px; } .fdQuickNumber { display: none; } .fdQuickGrid strong { font-size: 17px; } .fdQuickGrid small { font-size: 11px; } .fdQuickHeading { flex-wrap: wrap; gap: 10px; } .fdTeaserMetric { gap: 14px; } .fdTeaserMetric > strong { font-size: 38px; } }
 .fdEnergyFigure { min-width: 0; margin: 0; padding-top: 15px; }
-.fdEnergyAtlas { border: 1px solid var(--fd-line); background: var(--fd-surface); padding: 22px 24px 18px; }
-.fdEnergySchematic { position: relative; aspect-ratio: 720 / 500; margin: 12px -10px 0; isolation: isolate; }
-.fdEnergySchematic svg { width: 100%; height: 100%; display: block; }
-.fdEnergyGrid { stroke: var(--fd-line); stroke-width: .7; opacity: .65; }
-.fdEnergyConduits { stroke: var(--color-accent); stroke-width: 1.8; }
-.fdEnergyConduits path { opacity: .45; transition: opacity .45s; }
-.fdEnergyAtlas[data-stage='0'] .fdHeatingPath,
-.fdEnergyAtlas[data-stage='1'] .fdSelfHeatingPath,
-.fdEnergyAtlas[data-stage='2'] .fdConversionPath,
-.fdEnergyAtlas[data-stage='3'] :is(.fdOutputPath,.fdReturnPath) { opacity: 1; stroke-width: 3; stroke-dasharray: 7 9; animation: fdEnergyTravel 4s linear infinite; }
-.fdConverterGlyph { stroke: var(--fd-teal); stroke-width: 1.5; }
-.fdConverterGlyph circle:first-child { stroke: var(--fd-line); stroke-dasharray: 2 6; }
-.fdLossPath { stroke: var(--fd-muted); stroke-width: 1; stroke-dasharray: 3 5; }
-.fdEnergyParticles { opacity: .8; }
-.fdEnergyLabel { position: absolute; font-size: 14px; line-height: 1.5; color: var(--fd-muted); text-align: center; }
-.fdEnergyLabel small { display: block; font: 11px/1.8 Arial,sans-serif; letter-spacing: .08em; }
-.fdEnergyLabel strong { font-weight: 500; color: var(--fd-ink); display: block; }
-.fdLabelPlasma { left: 14%; top: 45%; width: 40%; padding: 7px 0; background: color-mix(in srgb,var(--fd-surface) 85%,transparent); }
-.fdLabelPlasma strong { font-size: 19px; }
-.fdLabelSelfHeat { left: 19%; top: 10%; width: 38%; color: var(--fd-purple); }
-.fdLabelInput { left: 0; top: 67%; width: 23%; }
-.fdLabelConversion { left: 55%; top: 23%; width: 30%; }
-.fdLabelOutput { right: 0; top: 52%; width: 25%; }
-.fdLabelLoss { left: 30%; top: 76%; width: 58%; font-size: 12px; }
-.fdLabelReturn { bottom: 2%; left: 5%; right: 5%; font-size: 12px; letter-spacing: .04em; }
-.fdEnergyAtlas .fdEnergyBalance { padding: 16px 0; display: flex; justify-content: space-between; gap: 15px; border-top: 1px solid var(--fd-line); text-align: left; }
-.fdEnergyAtlas .fdEnergyBalance span { margin: 0; font-size: 12px; color: var(--fd-muted); }
-.fdEnergyAtlas .fdEnergyBalance strong { font-size: 14px; font-weight: 500; color: var(--fd-teal); }
-.fdEnergyAtlas .fdEnergyDescription { min-height: 76px; margin: 14px 0; }
-.fdEnergyAtlas .fdEnergySteps button { font-size: 14px; }
-.fdEnergyAtlas[data-running='false'] * { animation-play-state: paused; }
-@media (min-width: 901px) { .fdCompactHome .fdHero { grid-template-columns: .95fr 1.15fr; gap: 4vw; padding-block: 56px; } .fdHero h1 { font-size: clamp(36px,3.4vw,56px); letter-spacing: -.04em; } }
-@media (max-width: 600px) {
-  .fdEnergyAtlas { padding: 18px 14px; }
-  .fdEnergyAtlas .fdFigureTop { letter-spacing: .04em; }
-  .fdEnergySchematic { aspect-ratio: 720 / 560; margin-top: 22px; }
-  .fdEnergySchematic svg { position: absolute; top: 20px; height: auto; }
-  .fdEnergyLabel { font-size: 12px; }
-  .fdEnergyLabel small { display: none; }
-  .fdLabelPlasma { top: 42%; }
-  .fdLabelPlasma strong { font-size: 15px; }
-  .fdLabelSelfHeat { top: 12%; }
-  .fdLabelConversion { top: 25%; }
-  .fdLabelOutput { top: 53%; }
-  .fdLabelInput { top: 67%; }
-  .fdLabelLoss { top: 77%; left: 23%; width: 75%; }
-  .fdLabelReturn { bottom: 0; font-size: 12px; }
-  .fdEnergyAtlas .fdEnergyBalance { flex-direction: column; gap: 5px; }
-  .fdEnergyAtlas .fdEnergySteps { grid-template-columns: 1fr 1fr; }
-  .fdEnergyAtlas .fdEnergySteps button { min-height: 70px; }
-  .fdEnergyAtlas .fdEnergyDescription { min-height: 100px; }
-}
-.fdFigureTop { display: flex; justify-content: space-between; align-items: center; font: 12px/1.5 Arial,sans-serif; letter-spacing: .09em; color: var(--fd-muted); }
-.fdFigureTop button { border: 1px solid var(--fd-line); border-radius: 50px; padding: 6px 12px; background: transparent; color: var(--fd-muted); font-size: 12px; cursor: pointer; }
-.fdPlasma { width: 100%; display: block; color: var(--fd-muted); overflow: visible; }
-.fdDiagramGrid { color: var(--fd-line); }
-.fdAlphaOrbit { animation: fdOrbit 12s linear infinite; }
-.fdEnergyPulse { stroke-dasharray: 5 10; animation: fdEnergyTravel 3s linear infinite; }
-.fdPowerFlow { opacity: .4; }
-[data-stage='1'] .fdAlphaOrbit { stroke-width: 4; }
-[data-stage='3'] .fdPowerFlow { opacity: 1; stroke: #8c5fc5; stroke-dasharray: 4 5; animation: fdEnergyTravel 6s linear infinite; }
-[data-running='false'] :is(.fdAlphaOrbit,.fdEnergyPulse,.fdSelfHeat,.fdPowerFlow) { animation-play-state: paused; }
-.fdEnergySteps { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); border-top: 1px solid var(--fd-line); }
-.fdEnergySteps button { display: flex; flex-direction: column; align-items: flex-start; gap: 9px; min-height: 64px; padding: 14px 6px; border: 0; border-top: 2px solid transparent; margin-top: -1px; background: transparent; color: var(--fd-muted); font-size: 12px; text-align: left; cursor: pointer; }
-.fdEnergySteps button span { font: 12px Arial,sans-serif; }
-.fdEnergySteps button[aria-pressed='true'] { border-color: var(--fd-purple); color: var(--fd-purple); }
-.fdEnergyDescription { min-height: 52px; margin: 10px 0; font-size: 14px; color: var(--fd-muted); line-height: 1.7; }
 .fdEnergyFigure figcaption { border-top: 1px solid var(--fd-line); padding-top: 12px; font-size: 12px; color: var(--fd-muted); line-height: 1.7; }
-@keyframes fdOrbit { to { stroke-dashoffset: -1144; } }
-@keyframes fdEnergyTravel { to { stroke-dashoffset: -90; } }
 @media (max-width: 440px) { .fusionHome .siteNav > .siteAccountAccess { display: none; } }
 .fdHandoffStrip { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 22px 0; margin-top: 30px; border-block: 1px solid var(--fd-line); font-size: 16px; }
 .fdHandoffStrip strong { color: var(--fd-teal); font-weight: 500; }

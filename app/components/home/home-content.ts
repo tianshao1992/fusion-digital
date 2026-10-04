@@ -1,13 +1,15 @@
 /** User-supplied chart and experimental summary, received 2026-10-01; not a shot database. */
 export const controlEvidence = {
   suppliedOn: '2026-10-01',
+  rateConfirmedOn: '2026-10-05',
+  rateProvenance: 'user-confirmed',
   applicationFloor: 700,
   verified: false,
   stages: [
-    { period: '2025 Q2', total: 15, success: 8, failed: 7, operation: 0, reportedRate: 53, ratePending: false },
-    { period: '2025 Q4', total: 70, success: 44, failed: 19, operation: 7, reportedRate: 70, ratePending: false },
-    { period: '2026 Q1', total: 95, success: 64, failed: 21, operation: 10, reportedRate: 73, ratePending: true },
-    { period: '2026 Q3', total: 606, success: 562, failed: 33, operation: 11, reportedRate: 94, ratePending: false },
+    { period: '2025 Q2', total: 15, success: 8, failed: 7, operation: 0, reportedRate: 53 },
+    { period: '2025 Q4', total: 70, success: 44, failed: 19, operation: 7, reportedRate: 70 },
+    { period: '2026 Q1', total: 95, success: 64, failed: 21, operation: 10, reportedRate: 73 },
+    { period: '2026 Q3', total: 606, success: 562, failed: 33, operation: 11, reportedRate: 94 },
   ],
 } as const;
 

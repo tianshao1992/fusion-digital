@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "createdOn": "2026-10-05",
+  "source": "Original AI-generated illustrations using the built-in image_gen tool",
+  "classification": "GENERATED ENGINEERING CONCEPT",
+  "notPhotographs": true,
+  "notAsBuiltDesigns": true,
+  "notExperimentalEvidence": true,
+  "format": "1536x1024 WebP, quality 88; PNG originals retained locally",
+  "images": [
+    {"path": "/images/fusion-energy/plasma-v1.webp", "subject": "Spherical tokamak cutaway with toroidal plasma", "boundary": "Not an image of EXL-50U or evidence of achieved burning plasma"},
+    {"path": "/images/fusion-energy/conversion-v1.webp", "subject": "Conceptual turbine-generator and heat-transfer assembly", "boundary": "One possible thermal conversion route, not a selected or installed plant design"},
+    {"path": "/images/fusion-energy/power-v1.webp", "subject": "Conceptual transformer, substation and electricity transmission", "boundary": "Not evidence of achieved fusion electricity or net power"}
+  ]
+}

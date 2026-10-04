@@ -2,39 +2,58 @@ import type { EChartsCoreOption } from 'echarts/core';
 import type { ChartThemePalette } from '../charts/chart-theme';
 import { controlEvidence } from './home-content';
 
+/** Shared stage positions, separate zero-based scales: volume and reliability are not the same unit. */
 export function buildControlChartOption(palette: ChartThemePalette, en: boolean): EChartsCoreOption {
-  const labels = en ? ['Success', 'Failed', 'Operation', 'Reported success rate'] : ['成功', '失败', 'Operation', '原图报告成功率'];
+  const labels = en ? ['Success', 'Failed', 'Operation', 'Success rate'] : ['成功', '失败', 'Operation', '成功率'];
+  const stages = controlEvidence.stages;
   return {
     backgroundColor: 'transparent',
     animation: false,
-    grid: { left: 8, right: 12, top: 35, bottom: 12, outerBoundsMode: 'same', outerBoundsContain: 'axisLabel' },
+    grid: [
+      { left: 43, right: 12, top: 30, height: '40%' },
+      { left: 43, right: 12, top: '70%', height: '21%' },
+    ],
     textStyle: { fontFamily: 'Arial, Microsoft YaHei, sans-serif', color: palette.text },
     tooltip: {
       trigger: 'axis', renderMode: 'richText', confine: true,
       backgroundColor: palette.tooltipBackground, borderColor: palette.tooltipBorder,
-      textStyle: { color: palette.tooltipText },
-      axisPointer: { type: 'shadow', shadowStyle: { color: palette.grid } },
+      textStyle: { color: palette.tooltipText, fontSize: 12 },
+      axisPointer: { type: 'line', lineStyle: { color: palette.line, type: 'dashed' } },
       formatter: (params: unknown) => {
         if (!Array.isArray(params) || !params.length) return '';
-        const item = controlEvidence.stages[params[0]?.dataIndex as number];
+        const item = stages[params[0]?.dataIndex as number];
         if (!item) return '';
-        return item.period+'\n'+(en?'Total':'总数')+' '+item.total+'\n'+labels[0]+' '+item.success+' · '+labels[1]+' '+item.failed+' · Operation '+item.operation+'\n'+(en?'Source rate':'原图成功率')+' '+item.reportedRate+'%'+(item.ratePending ? (en?' (definition pending)':'（口径待核验）'):'');
+        return item.period+'\n'+(en?'Applications':'应用次数')+' '+item.total+'\n'+labels[0]+' '+item.success+' · '+labels[1]+' '+item.failed+'\nOperation '+item.operation+'\n'+labels[3]+' '+item.reportedRate+'%';
       },
     },
-    xAxis: { type: 'category', data: controlEvidence.stages.map(item => item.period), axisLine: { lineStyle: { color: palette.line } }, axisTick: { show: false }, axisLabel: { color: palette.muted, fontSize: 12, interval: 0 } },
+    xAxis: [0, 1].map(gridIndex => ({
+      type: 'category', gridIndex, data: stages.map(item => item.period),
+      axisLine: { lineStyle: { color: palette.line } }, axisTick: { show: false },
+      axisLabel: { color: palette.muted, fontSize: 12, interval: 0, margin: 12 },
+      axisPointer: { show: true },
+    })),
     yAxis: [
-      { type: 'value', min: 0, max: 700, interval: 200, axisLabel: { color: palette.muted, fontSize: 12 }, splitLine: { lineStyle: { color: palette.grid } } },
-      { type: 'value', min: 50, max: 100, interval: 10, axisLabel: { color: palette.muted, formatter: '{value}%', fontSize: 12 }, splitLine: { show: false } },
+      { type: 'value', gridIndex: 0, min: 0, max: 700, interval: 350, axisLabel: { color: palette.muted, fontSize: 12 }, splitLine: { lineStyle: { color: palette.grid } } },
+      { type: 'value', gridIndex: 1, min: 0, max: 100, interval: 50, axisLabel: { color: palette.muted, formatter: '{value}%', fontSize: 12 }, splitLine: { lineStyle: { color: palette.grid } } },
     ],
     series: [
       ...(['success', 'failed', 'operation'] as const).map((key, index) => ({
-        name: labels[index], type: 'bar', stack: 'shots', barMaxWidth: 56,
+        name: labels[index], type: 'bar', stack: 'shots', xAxisIndex: 0, yAxisIndex: 0,
+        barMaxWidth: 56, barWidth: '35%', emphasis: { disabled: true },
         itemStyle: { color: [palette.info, palette.accent, palette.subtle][index] },
-        data: controlEvidence.stages.map(item => item[key]),
-        label: { show: index === 0, position: 'inside', color: palette.mode === 'dark' ? palette.background : palette.surfaceRaised, fontSize: 13, formatter: (p: {value: number}) => p.value >= 40 ? String(p.value) : '' },
+        data: stages.map(item => item[key]),
+        label: { show: index === 0, position: 'inside', color: palette.mode === 'dark' ? palette.background : palette.surfaceRaised, fontSize: 13, formatter: (p: {value: number}) => p.value >= 200 ? String(p.value) : '' },
       })),
-      { type: 'bar', barGap: '-100%', barMaxWidth: 56, silent: true, tooltip: {show: false}, itemStyle: { color: 'transparent' }, data: controlEvidence.stages.map(item => item.total), label: { show: true, position: 'top', color: palette.text, fontSize: 14 } },
-      { name: labels[3], type: 'line', yAxisIndex: 1, connectNulls: false, symbol: 'circle', symbolSize: 8, itemStyle: { color: palette.violet, borderColor: palette.background, borderWidth: 2 }, lineStyle: { color: palette.violet, width: 2 }, data: controlEvidence.stages.map(item => item.ratePending ? null : item.reportedRate), label: { show: true, position: 'left', distance: 12, offset: [0,-5], formatter: '{c}%', color: palette.violet, fontSize: 13 } },
+      { type: 'bar', xAxisIndex: 0, yAxisIndex: 0, barGap: '-100%', barMaxWidth: 56, barWidth: '35%', silent: true, tooltip: { show: false }, itemStyle: { color: 'transparent' }, data: stages.map(item => item.total), label: { show: true, position: 'top', distance: 8, color: palette.text, fontSize: 17, fontWeight: 600 } },
+      {
+        name: labels[3], type: 'line', xAxisIndex: 1, yAxisIndex: 1,
+        connectNulls: false, smooth: false, symbol: 'circle', symbolSize: 9,
+        itemStyle: { color: palette.violet, borderColor: palette.background, borderWidth: 2 },
+        lineStyle: { color: palette.violet, width: 3 },
+        areaStyle: { color: palette.violet, opacity: 0.07 },
+        data: stages.map(item => item.reportedRate),
+        label: { show: true, position: 'top', distance: 10, formatter: '{c}%', color: palette.violet, fontSize: 16, fontWeight: 600 },
+      },
     ],
   };
 }

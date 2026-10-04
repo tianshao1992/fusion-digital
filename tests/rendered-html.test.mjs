@@ -453,9 +453,14 @@ test('AI4Fusion homepage connects verification, extrapolation, evolution and exp
   for (const text of ['知道何时可信', '让每次探索更有效', '让经验成为能力', '厂用电回流', '能量账本']) {
     assert.ok(html.includes(text), 'homepage must explain '+text);
   }
-  const heroHtml = html.match(/<header class="fdHero"[\s\S]*?<\/header>/)?.[0] ?? '';
+  const heroHtml = html.match(/<header class="fdHero[^\"]*"[\s\S]*?<\/header>/)?.[0] ?? '';
   assert.ok(heroHtml.includes('让智能，走出已知'));
   assert.doesNotMatch(heroHtml, /氢硼|p–¹¹B|p \+ ¹¹B/);
+  for (const stage of ['plasma', 'conversion', 'power']) {
+    assert.ok(heroHtml.includes(`/images/fusion-energy/${stage}-v1.webp`));
+  }
+  assert.match(heroHtml, /AI 生成的工程概念画面/);
+  assert.doesNotMatch(heroHtml, /fdEnergySchematic|fdConverterGlyph|<ellipse/);
   assert.doesNotMatch(html, /id="(?:prototype-workspace|domains)"|data-three-viewer=|class="fdResearchDisclosure"/);
 });
 
@@ -469,14 +474,16 @@ test('architecture and EXL-50U detail pages retain evidence semantics and access
   for (const text of ['FusionEvolve', 'FusionDigital', 'FusionControl', '本网站不连接装置执行器']) {
     assert.ok(architecture.includes(text), `architecture page must retain ${text}`);
   }
-  for (const text of ['700+', '786', '678', '606', '562', '2026 Q1', '73%', '75.3%', '口径待核验', 'Operation']) {
+  for (const text of ['700+', '786', '678', '606', '562', '2026 Q1', '53%', '70%', '73%', '94%', 'Operation']) {
     assert.ok(html.includes(text), `case page must retain ${text}`);
   }
-  assert.match(html, /class="fdChartFallback"/);
-  assert.match(html, /<caption>用户提供的分阶段统计<\/caption>/);
+  assert.match(html, /class="fdEvidenceFallback"/);
+  assert.match(html, /<caption>用户提供的分阶段统计与确认成功率<\/caption>/);
   const source = await readFile(new URL('../app/components/home/home-content.ts', import.meta.url), 'utf8');
   assert.match(source, /total: 606, success: 562, failed: 33, operation: 11/);
-  assert.match(source, /reportedRate: 73, ratePending: true/);
+  assert.match(source, /reportedRate: 73/);
+  assert.match(source, /rateConfirmedOn: '2026-10-05'/);
+  assert.doesNotMatch(html, /折线点暂不显示|口径待核验|rate omitted/);
   assert.doesNotMatch(source, /estimated-residual|cumulativeFloor|634/);
   assert.match(source, /verified: false/);
   const landing = await readFile(new URL('../app/components/home/ControlEvidence.tsx', import.meta.url), 'utf8');
