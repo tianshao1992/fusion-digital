@@ -8,9 +8,9 @@
       "public/models/iter-high-detail-v1/",
       "public/models/exl50u-general-assembly-v1/*.glb"
     ],
-    "fileCount": 898,
-    "totalBytes": 386677100,
-    "treeSha256": "ef58f18b2146dc98dbe4f430af78bc2dc7b55f83fae409a180c8d5bf715c4929",
+    "fileCount": 901,
+    "totalBytes": 393554529,
+    "treeSha256": "f9cce147dda3a217c109cf0091597fea50807d9680bd05d59dca652183c3746e",
     "files": [
       {
         "path": "public/FusionDigital-technical-roadmap-2026-08-15.docx",
@@ -3841,6 +3841,21 @@
         "path": "public/images/fusion-energy/power-v1.webp",
         "bytes": 265500,
         "sha256": "e634736f753454b5de8e18d6e200fc7fda0e741246c70ee18c9c8dea7bf72443"
+      },
+      {
+        "path": "public/images/story/agent-twin.png",
+        "bytes": 2300560,
+        "sha256": "a5600a4840b8e23f024f46e0e8d5c91d145a7901c8f2293c2477416bc7a97efe"
+      },
+      {
+        "path": "public/images/story/fusion-energy-source.png",
+        "bytes": 2425041,
+        "sha256": "982e88838f61895a2ec4c0dceff938405f13a91d6db379bbda07668ad1629f5e"
+      },
+      {
+        "path": "public/images/story/power-conversion-atlas.png",
+        "bytes": 2151828,
+        "sha256": "b483cfab7d297743ca6c30b9d7333e6d074b4df2876c2eb9f1029eb90f067863"
       },
       {
         "path": "public/licenses/EXL50U-PUBLIC-DERIVATIVE.txt",
