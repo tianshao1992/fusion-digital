@@ -8,9 +8,9 @@
       "public/models/iter-high-detail-v1/",
       "public/models/exl50u-general-assembly-v1/*.glb"
     ],
-    "fileCount": 901,
-    "totalBytes": 393554529,
-    "treeSha256": "f9cce147dda3a217c109cf0091597fea50807d9680bd05d59dca652183c3746e",
+    "fileCount": 902,
+    "totalBytes": 395584578,
+    "treeSha256": "c74de6c4729d2ba619a04c7aee19c9fb11e55732d4b9e1d49e21ffe872647cde",
     "files": [
       {
         "path": "public/FusionDigital-technical-roadmap-2026-08-15.docx",
@@ -3846,6 +3846,11 @@
         "path": "public/images/story/agent-twin.png",
         "bytes": 2300560,
         "sha256": "a5600a4840b8e23f024f46e0e8d5c91d145a7901c8f2293c2477416bc7a97efe"
+      },
+      {
+        "path": "public/images/story/electric-grid.png",
+        "bytes": 2030049,
+        "sha256": "4b6c52d648a62f1ad75b52c6e22eb4a1de930acf51d7047e69363498a3d5ce1e"
       },
       {
         "path": "public/images/story/fusion-energy-source.png",

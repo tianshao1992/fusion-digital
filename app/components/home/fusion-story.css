@@ -16,9 +16,10 @@ html:has(.storyHome) { scroll-snap-type:y proximity; scroll-padding-top:76px; }
 .ssButton { display:inline-flex; justify-content:center; padding:15px 24px; background:var(--color-info-strong); color:var(--color-canvas); border:1px solid transparent; border-radius:3px; font-size:15px; font-weight:600; transition:background .2s,transform .2s; }
 .ssButton:hover { background:var(--color-accent-strong); transform:translateY(-2px); }
 .ssTextLink { font-size:15px; padding:12px 0; border-bottom:1px solid var(--color-border-strong); }
-.ssPlasma { --ss-plasma-core:#fff1d3; --ss-field-line:color-mix(in srgb,var(--color-info-strong) 78%,#3c9999); --ss-field-highlight:color-mix(in srgb,var(--color-info-strong) 70%,#70dad7); width:calc(100% + 10vw); margin:0 -7vw 0 -3vw; position:relative; align-self:center; }
+/* Emission and field geometry have an independent conceptual palette, not a temperature scale. */
+.ssPlasma { --ss-plasma-core:#fff8ff; --ss-plasma-violet:#743bff; --ss-plasma-magenta:#ef36b9; --ss-plasma-rose:#ff709b; --ss-field-line:#377bff; --ss-field-highlight:#8edfff; width:calc(100% + 10vw); margin:0 -7vw 0 -3vw; position:relative; align-self:center; }
 .ssPlasma svg { display:block; width:100%; overflow:visible; }
-.ssFlow { stroke:var(--ss-field-highlight); stroke-width:1.9; stroke-dasharray:36 964; filter:drop-shadow(0 0 3px var(--ss-field-line)); animation:ss-field-flow 13s linear infinite; animation-play-state:paused; }
+.ssFlow { stroke:var(--ss-field-highlight); stroke-width:1.4; stroke-dasharray:24 976; filter:drop-shadow(0 0 2px var(--ss-field-line)); animation:ss-field-flow 16s linear infinite; animation-play-state:paused; }
 .is-current .ssFlow { animation-play-state:running; }
 .ssPlasma[data-paused='true'] .ssFlow { animation-play-state:paused; }
 .ssPlasma figcaption { display:flex; justify-content:space-between; gap:10px; align-items:center; padding:0 14%; font:400 12px/1.7 Arial,sans-serif; letter-spacing:.06em; color:var(--color-ink-muted); }
@@ -164,7 +165,7 @@ html:has(.storyHome) { scroll-snap-type:y proximity; scroll-padding-top:76px; }
 .ssPlasma[data-paused='true'] .ssPlasmaBloom { animation-play-state:paused; }
 @keyframes ss-plasma-breathe { 50% { opacity:.5; } }
 .ssPlasmaVolume { opacity:.9; animation:ss-volume-heat 11s ease-in-out infinite; }
-.ssPlasmaThermalCore { opacity:.65; }
+.ssPlasmaThermalCore { opacity:.88; }
 .ssReactionHalo { transform-origin:0 0; opacity:.4; animation:ss-energy-deposition 9s ease-out infinite; }
 .ssReactionLight { opacity:.45; animation:ss-reaction-light 9s ease-in-out infinite; }
 .ssPlasma :is(.ssPlasmaVolume,.ssReactionHalo,.ssReactionLight) { animation-play-state:paused; }

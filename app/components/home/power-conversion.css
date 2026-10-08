@@ -6,7 +6,7 @@
 .pcMapIntro { display:flex; justify-content:space-between; gap:20px; padding-bottom:22px; border-bottom:1px solid var(--color-border); }
 .pcMapIntro > span { font-size:18px; }
 .pcMapIntro small { font-size:14px; color:var(--color-ink-muted); }
-.pcNetwork { display:grid; grid-template-columns:minmax(160px, .8fr) minmax(0, 2.7fr) minmax(110px, .4fr); gap:34px; align-items:center; padding:28px 0; }
+.pcNetwork { display:grid; grid-template-columns:minmax(160px, .8fr) minmax(0, 2.7fr) minmax(165px, .6fr); gap:34px; align-items:center; padding:28px 0; }
 .pcSource { position:relative; margin:0; min-width:0; text-align:center; }
 .pcOverline { font:500 12px/1.6 Arial,sans-serif; letter-spacing:.12em; color:var(--color-ink-muted); }
 .pcSource img { display:block; width:140%; max-width:none; height:auto; margin:12px -20%; }
@@ -39,10 +39,13 @@
 .pcReferences { font-size:14px; line-height:1.8; margin-top:20px; }
 .pcReferences a { text-decoration:underline; }
 .pcRoute[data-route='direct'] { background:color-mix(in srgb,var(--color-info-strong) 5%,transparent); }
-.pcElectricity { position:relative; display:grid; gap:12px; text-align:center; font-size:14px; line-height:1.6; }
+.pcElectricity { position:relative; display:grid; gap:18px; margin:0; min-width:0; text-align:center; font-size:14px; line-height:1.6; }
+.pcGridEquipment { display:block; width:100%; max-width:230px; height:auto; margin:0 auto; }
+:root[data-theme='dark'] .pcGridEquipment { filter:brightness(1.45); }
+.pcElectricity figcaption { display:grid; gap:10px; }
 .pcElectricity::before { content:''; position:absolute; height:1px; left:-34px; width:34px; top:50%; background:var(--color-border-strong); }
 .pcElectricity strong { font-weight:500; font-size:20px; }
-.pcElectricity > span:not(.pcOverline) { color:var(--color-ink-muted); }
+.pcElectricity figcaption > span:not(.pcOverline) { color:var(--color-ink-muted); }
 .pcGrid { border:1px solid var(--color-info-strong); padding:8px 4px; margin-top:2px; }
 .pcSupportLoops { display:grid; grid-template-columns:1fr 1fr; gap:32px; border-top:1px solid var(--color-border); padding:20px 0; }
 .pcSupportLoops > div { display:flex; align-items:center; gap:16px; }
@@ -65,7 +68,7 @@
 .pcRoute::after { background:none; border-top:1px solid var(--color-info-strong); }
 .pcRouteEquipment::after { content:''; position:absolute; right:-18px; top:calc(50% - 3px); border-left:5px solid var(--color-info-strong); border-top:3px solid transparent; border-bottom:3px solid transparent; }
 @media(min-width:1101px) { .ssSection.ssPlant { padding-top:42px; } .ssPlant .ssChapter { margin-bottom:24px; } .ssPlant .pcHeading h2 { font-size:clamp(34px,2.8vw,50px); } .pcHeading > div { max-width:340px; } .pcMap { margin-top:24px; } .pcMapIntro { padding-bottom:16px; } .pcNetwork { padding:16px 0; } .pcRoute { padding:8px 16px; } .pcSupportLoops { padding:14px 0; } }
-@media(min-width:1600px) { .pcNetwork { grid-template-columns:1fr 2.6fr .5fr; } .pcRoute { padding:16px 22px; } .pcRouteHeading h3 { font-size:21px; } .pcEquipmentCrop { max-height:110px; } }
+@media(min-width:1600px) { .pcNetwork { grid-template-columns:1fr 2.6fr .65fr; } .pcRoute { padding:16px 22px; } .pcRouteHeading h3 { font-size:21px; } .pcEquipmentCrop { max-height:110px; } }
 @media(max-width:1100px) { .pcNetwork { grid-template-columns:140px minmax(0,1fr); gap:26px; } .pcElectricity { grid-column:2; display:flex; justify-content:center; align-items:center; flex-wrap:wrap; border-top:1px solid var(--color-border); padding-top:20px; } .pcElectricity::before { left:50%; width:1px; height:26px; top:-26px; } .pcRoutes::after,.pcRoute::after { display:none; } .pcRoute { gap:5px 12px; padding:12px; } .pcHeading { align-items:flex-start; } .pcHeading > div { max-width:300px; } .pcChain { font-size:11px; } }
 @media(max-width:760px) { .pcHeading { display:block; } .pcHeading > div { max-width:100%; margin-top:20px; } .pcMapIntro { display:block; } .pcMapIntro small { display:block; margin-top:8px; } .pcNetwork { grid-template-columns:1fr; gap:20px; padding-top:20px; } .pcSource { display:grid; grid-template-columns:1fr 1fr; align-items:center; text-align:left; } .pcSource > .pcOverline { grid-column:2; grid-row:1; align-self:end; margin-bottom:12px; } .pcSource img { grid-column:1; grid-row:1/3; width:115%; margin:0 -10%; } .pcSource figcaption { grid-column:2; grid-row:2; align-self:start; } .pcSource strong { font-size:23px; } .pcSource::after,.pcRoutes::before,.pcRoute::before { display:none; } .pcRoute { grid-template-columns:1fr 1.2fr; padding:18px 0; gap:8px 16px; } .pcRouteHeading { gap:9px; } .pcRouteHeading h3 { font-size:17px; } .pcRouteNote { padding-left:24px; } .pcEquipmentCrop { aspect-ratio:10/3; } .pcChain { font-size:12px; gap:10px; } .pcChain li:not(:last-child)::after { right:-10px; } .pcElectricity { grid-column:1; } .pcSupportLoops { grid-template-columns:1fr; gap:18px; } .pcCaption { flex-direction:column; gap:8px; } .pcDetailsGrid { grid-template-columns:1fr; } }
 @media(max-width:440px) { .pcRoute { grid-template-columns:1fr; gap:8px; padding:22px 0; } .pcRouteHeading { align-items:center; } .pcRouteHeading h3 { font-size:20px; } .pcRouteHeading small { display:inline; } .pcRouteNumber { font-size:24px; } .pcInput { margin-top:5px; } .pcRouteEquipment { padding:0 10px; } .pcEquipmentCrop { aspect-ratio:10/3; } .pcRouteNote { padding-left:0; } .pcChain { font-size:13px; } }
@@ -73,3 +76,5 @@
 @media(max-width:1100px) { .pcRouteEquipment::after { display:none; } }
 @media(max-width:760px) { .pcRouteNote { padding-left:0; } }
 @media(max-width:440px) { .pcEquipmentCrop { height:auto; } }
+@media(max-width:1100px) { .pcElectricity { gap:26px; flex-wrap:nowrap; } .pcGridEquipment { width:120px; margin:0; } .pcElectricity figcaption { text-align:left; } }
+@media(max-width:440px) { .pcElectricity { gap:18px; } .pcGridEquipment { width:110px; } .pcElectricity strong { font-size:21px; } }

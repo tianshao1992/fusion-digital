@@ -1,6 +1,6 @@
 /** Functional diagram, not a device drawing or experimental measurement. */
 
-export function TwinValueDiagram({ en }: { en: boolean }) {
+export function TwinValueDiagram({ en, phase = 0 }: { en: boolean; phase?: number }) {
   return <figure className="ssArt ssValueArt">
     <svg className="ssValueDiagram" viewBox="0 0 480 355" role="img" aria-labelledby="value-diagram-title value-diagram-desc">
       <title id="value-diagram-title">{en ? 'Validate, extend, learn' : '验证、外推与学习'}</title>
@@ -22,6 +22,9 @@ export function TwinValueDiagram({ en }: { en: boolean }) {
       <circle cx="52" cy="332" r="4" className="diagramSample"/><text x="64" y="337">{en ? 'Observations' : '观测'}</text>
       <path className="diagramModel" d="M168 332H188"/><text x="200" y="337">{en ? 'Model' : '模型'}</text>
       <rect x="285" y="326" width="18" height="12" className="diagramEnvelope"/><text x="316" y="337">{en ? 'Uncertainty' : '不确定性'}</text>
+      <ellipse className="alFocus" data-current={phase === 0} cx="127" cy="214" rx="94" ry="55" transform="rotate(-30 127 214)"/>
+      <circle className="alFocus" data-current={phase === 1} cx="346" cy="141" r="16"/>
+      <path className="alFocus" data-current={phase === 2} d="M348 156C345 290 193 315 132 278"/>
     </svg>
     <figcaption>{en ? 'METHOD SCHEMATIC · NOT EXPERIMENTAL DATA' : '方法示意 · 非实验数据'}</figcaption>
   </figure>;

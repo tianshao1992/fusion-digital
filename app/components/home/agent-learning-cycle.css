@@ -1,0 +1,45 @@
+.alCycle { display:grid; grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr); gap:5vw; align-items:center; margin-top:36px; }
+.alOverview { min-width:0; }
+.alEyebrow { font-size:14px; letter-spacing:.06em; color:var(--color-info-strong); margin:0 0 24px; }
+.alEyebrow span { padding:0 8px; color:var(--color-accent-strong); }
+.alContext { border-left:2px solid var(--color-accent-strong); padding:4px 0 4px 20px; margin-top:28px; min-height:115px; }
+.alContext > span { font-size:12px; letter-spacing:.09em; color:var(--color-accent-strong); }
+.alContext p { margin:10px 0 0; font-size:16px; line-height:1.8; max-width:460px; color:var(--color-ink-muted); }
+.alStages { min-width:0; }
+.alStage { padding:16px 18px; border-top:1px solid var(--color-border); border-left:2px solid transparent; transition:background .2s,border-color .2s; }
+.alStage[data-active='true'] { background:color-mix(in srgb,var(--color-info-strong) 5%,transparent); border-left-color:var(--color-info-strong); }
+.alStageSelect { display:grid; grid-template-columns:22px max-content 1fr; gap:14px; align-items:center; padding:0; width:100%; color:var(--color-ink); background:none; border:0; text-align:left; cursor:pointer; }
+.alStageSelect:focus-visible { outline:2px solid var(--color-info-strong); outline-offset:6px; }
+.alNumber { font:400 12px/1.6 Arial,sans-serif; color:var(--color-ink-muted); }
+.alStageHeading { margin:0; font-weight:400; }
+.alTitle { font-size:26px; font-weight:500; line-height:1.4; }
+.alAction { color:var(--color-ink-muted); font-size:14px; line-height:1.6; }
+.alStageBody { display:grid; grid-template-columns:minmax(0,1fr) minmax(150px,.9fr); gap:20px; align-items:center; margin:10px 0 8px 36px; }
+.alSteps { margin:0; padding:0; list-style:none; font-size:14px; line-height:1.65; }
+.alSteps li { position:relative; display:flex; gap:12px; align-items:center; padding:3px 0; }
+.alSteps li:not(:last-child)::after { content:''; position:absolute; width:1px; height:8px; left:8px; bottom:-4px; background:var(--color-border-strong); }
+.alSteps li > span { display:grid; place-items:center; flex:0 0 17px; height:17px; border:1px solid var(--color-border-strong); border-radius:50%; font-size:10px; color:var(--color-info-strong); }
+.alGraphic { display:block; width:100%; height:auto; overflow:visible; }
+.alGraphic text { fill:var(--color-ink-muted); font:13px Arial,sans-serif; }
+.alGraphic .alVersion { font-size:18px; fill:var(--color-info-strong); }
+.alAxis { fill:none; stroke:var(--color-border-strong); stroke-width:1; }
+.alBand { fill:var(--color-info-soft); }
+.alModel { fill:none; stroke:var(--color-info-strong); stroke-width:1.8; }
+.alCandidate { fill:none; stroke:var(--color-info-strong); stroke-width:1.6; stroke-dasharray:4 4; }
+.alSample,.alSelected { fill:var(--color-accent-strong); stroke:var(--color-surface); stroke-width:2; }
+.alOpenSample { fill:var(--color-surface); stroke:var(--color-border-strong); stroke-width:1.5; }
+.alResidual { fill:none; stroke:var(--color-accent-strong); stroke-width:1.4; }
+.alArrow { fill:none; stroke:var(--color-info-strong); stroke-width:1.5; }
+.alNode { fill:var(--color-surface); stroke:var(--color-border-strong); }
+.alNextNode { fill:var(--color-info-soft); stroke:var(--color-info-strong); }
+.alResult { margin:0 0 0 36px; font-size:13px; line-height:1.65; color:var(--color-info-strong); }
+.alResult > span { display:inline-block; font-size:11px; letter-spacing:.08em; margin-right:12px; color:var(--color-ink-muted); }
+.alCycleReturn { display:flex; gap:12px; padding:14px 0 0; margin:0; border-top:1px solid var(--color-border); font-size:13px; line-height:1.6; color:var(--color-info-strong); }
+.alCycleReturn > span { font-size:23px; line-height:1; }
+.alFocus { stroke:var(--color-accent-strong); stroke-width:2; fill:none; transition:opacity .25s; }
+.alFocus[data-current='false'] { opacity:0; }
+@media(min-width:1600px) { .alStage { padding:22px; } .alStageBody { margin-top:14px; } .alTitle { font-size:32px; } }
+@media(max-width:1100px) { .alCycle { gap:3vw; grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr); } .alStage { padding:14px 10px; } .alStageSelect { gap:9px; } .alTitle { font-size:22px; } .alStageBody { margin-left:0; gap:10px; } .alResult { margin-left:0; } }
+@media(max-width:800px) { .alCycle { grid-template-columns:1fr; gap:28px; } .alOverview .ssValueArt { max-width:500px; margin:0 auto; } .alContext { min-height:0; } .alStageSelect { grid-template-columns:22px max-content 1fr; gap:14px; } .alTitle { font-size:26px; } .alStageBody { grid-template-columns:1fr 1fr; gap:24px; margin:12px 0 10px 36px; } .alResult { margin-left:36px; } }
+@media(max-width:440px) { .alStage { padding:18px 10px; } .alStageSelect { grid-template-columns:22px 1fr; } .alAction { grid-column:2; } .alStageBody { margin-left:0; grid-template-columns:1fr; gap:12px; } .alGraphic { max-width:260px; justify-self:center; } .alResult { margin-left:0; font-size:14px; } .alContext p { font-size:15px; } }
+@media(prefers-reduced-motion:reduce) { .alStage,.alFocus { transition:none; } }

@@ -462,7 +462,7 @@ test('each homepage chapter includes a themed visual with truthful image scope',
   assert.equal(sections.length, 6);
   for (const section of sections) assert.match(section[0], /<svg\b|<img\b/, `chapter ${section[1]} needs a visual`);
   assert.doesNotMatch(html, /螺旋磁约束|高温等离子体|ssPlasmaLabels/);
-  for (const file of ['fusion-energy-source.png', 'power-conversion-atlas.png', 'agent-twin.png']) {
+  for (const file of ['fusion-energy-source.png', 'power-conversion-atlas.png', 'electric-grid.png', 'agent-twin.png']) {
     assert.ok(html.includes(`/images/story/${file}`));
     assert.ok((await stat(new URL(`../public/images/story/${file}`, import.meta.url))).size > 1000);
   }
@@ -486,6 +486,9 @@ test('plant chapter compares five conditional conversion paths with separate hea
     assert.match(plant, /依装置选择的候选路线，并非同时接入|Alternative routes, selected for the device/);
     assert.match(plant, /data-from="conversion" data-to="heat-sink"/);
     assert.match(plant, /data-from="electricity" data-to="grid"/);
+    assert.match(plant, /<img[^>]*class="pcGridEquipment"[^>]*src="\/images\/story\/electric-grid\.png"[^>]*width="1024" height="1536"/);
+    assert.match(plant, /升压变压器、开关设备与输电铁塔的概念插画|Concept illustration of a step-up transformer, switchgear and transmission pylons/);
+    assert.match(plant, /调节 · 保护 · 升压|Condition · protect · step up/);
     assert.match(plant, /data-from="electricity" data-to="auxiliary-systems"/);
     assert.match(plant, /布雷顿热循环|Brayton thermal cycle/);
     assert.match(plant, /不能假定任意托卡马克可直接接入|not a plug-in option for any tokamak/);
@@ -496,6 +499,31 @@ test('plant chapter compares five conditional conversion paths with separate hea
     assert.doesNotMatch(plant, /future-plant\.png|中子|包层|neutron|blanket|\d+%/);
     assert.equal((plant.match(/href="\/images\/story\/power-conversion-atlas.png"/g) ?? []).length, 5);
   }
+});
+
+test('agent value chapter visualizes validation, exploration and conditional self-improvement', async () => {
+  for (const en of [false, true]) {
+    const response = await render('/', en ? { cookie: 'fusiondigital_locale=en' } : {});
+    const html = (await response.text()).replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
+    const section = html.match(/<section\b[^>]*id="twin-value"[\s\S]*?<\/section>/)?.[0];
+    assert.ok(section);
+    assert.deepEqual([...section.matchAll(/data-agent-phase="([^"]+)"/g)].map(m => m[1]), ['verify', 'extend', 'evolve']);
+    assert.equal((section.match(/class="alGraphic"/g) ?? []).length, 3);
+    assert.equal((section.match(/class="alSteps"/g) ?? []).length, 3);
+    assert.equal((section.match(/class="alResult"/g) ?? []).length, 3);
+    assert.equal((section.match(/aria-controls="agent-cycle-context"/g) ?? []).length, 3);
+    assert.equal((section.match(/aria-pressed="true"/g) ?? []).length, 1);
+    assert.match(section, /role="status" aria-live="polite" aria-atomic="true" id="agent-cycle-context"/);
+    assert.match(section, /data-phase="verify"/);
+    assert.match(section, /未参与校准的实验数据|held-out experiments/);
+    assert.match(section, /待验证的实验候选|An experiment candidate, not a verified result/);
+    assert.match(section, /改写工具与工作流|Revise tools &amp; workflow/);
+    assert.match(section, /通过才更新 Aₙ₊₁；否则保留 Aₙ|Promote Aₙ₊₁ only if it passes; otherwise retain Aₙ/);
+    assert.match(section, /方法示意 · 非实验数据|METHOD SCHEMATIC · NOT EXPERIMENTAL DATA/);
+  }
+  const styles = await readFile(new URL('../app/components/home/agent-learning-cycle.css', import.meta.url), 'utf8');
+  for (const token of ['--color-ink', '--color-info-strong', '--color-accent-strong', '--color-surface']) assert.ok(styles.includes(`var(${token})`));
+  assert.match(styles, /prefers-reduced-motion:reduce/);
 });
 
 test('homepage keeps scientific scope notes collapsed and presents confirmed rates in both languages', async () => {
@@ -526,9 +554,9 @@ test('hero illustrates confined reaction energy without presenting it as observe
     const hero = html.match(/<section\b[^>]*id="top"[\s\S]*?<\/section>/)?.[0];
     assert.ok(hero);
     for (const layer of ['ssPlasmaVolume', 'ssPlasmaThermalCore', 'ssPlasmaReactions', 'ssReactionHalo', 'ssReactionLight']) assert.ok(hero.includes(`class="${layer}"`));
-    assert.equal((hero.match(/class="ssReactionLight"/g) ?? []).length, 18);
+    assert.equal((hero.match(/class="ssReactionLight"/g) ?? []).length, 8);
     const grains = hero.match(/<g class="ssPlasmaGrains"[\s\S]*?<\/g>/)?.[0];
-    assert.equal((grains?.match(/cx="\d+\.\d{2}" cy="\d+\.\d{2}"/g) ?? []).length, 100, 'grain coordinates must serialize at stable precision across server/browser');
+    assert.equal((grains?.match(/cx="\d+\.\d{2}" cy="\d+\.\d{2}"/g) ?? []).length, 40, 'grain coordinates must serialize at stable precision across server/browser');
     const fieldGradient = hero.match(/<linearGradient id="plasma-line"[\s\S]*?<\/linearGradient>/)?.[0];
     assert.match(fieldGradient, /--ss-field-line/);
     assert.match(fieldGradient, /--ss-field-highlight/);
@@ -537,6 +565,9 @@ test('hero illustrates confined reaction energy without presenting it as observe
       assert.match(hero, new RegExp(`class="${layer}"[^>]+stroke="url\\(#plasma-line\\)"`));
     }
     assert.match(hero, /class="ssPlasmaVolume"[^>]+stroke="url\(#plasma-heat\)"/);
+    assert.match(hero, /class="ssPlasmaFilaments"[^>]+stroke="url\(#plasma-hot-core\)"/);
+    assert.match(hero, /class="ssPlasmaStage"/);
+    assert.doesNotMatch(hero, /var\(--color-(?:accent|info)/, 'plasma colors must not inherit the website brand palette');
     assert.match(hero, /产物沉积带来的自加热|deposited-product self-heating/);
     assert.match(hero, /不对应反应率、温度|not measured particle trajectories, reaction rates, temperatures/);
     assert.match(hero, /不表示已实现燃烧等离子体|not measured[\s\S]*an achieved burning plasma/);
@@ -547,6 +578,11 @@ test('hero illustrates confined reaction energy without presenting it as observe
   const styles = await readFile(new URL('../app/components/home/fusion-story.css', import.meta.url), 'utf8');
   assert.match(motion, /visible && !document.hidden/);
   assert.match(motion, /observer.disconnect\(\)/);
+  const plasmaPalette = styles.match(/\.ssPlasma \{[^}]+\}/)?.[0];
+  assert.match(plasmaPalette, /--ss-plasma-core:#fff8ff/);
+  assert.match(plasmaPalette, /--ss-plasma-magenta:#ef36b9/);
+  assert.match(plasmaPalette, /--ss-field-line:#377bff/);
+  assert.doesNotMatch(plasmaPalette, /--color-|color-mix/);
   assert.match(styles, /data-active='true'\]\[data-paused='false'\]/);
   assert.match(styles, /prefers-reduced-motion:reduce\) \{ \.ssPlasmaBloom,\.ssPlasmaVolume,\.ssReactionHalo,\.ssReactionLight \{ animation:none/);
 });

@@ -72,7 +72,15 @@ export default function PowerConversionMap({ en }: { en: boolean }) {
           </div>
         </li>)}
       </ol>
-      <div className="pcElectricity"><span className="pcOverline">ELECTRICITY</span><strong>{en ? 'Electrical system' : '电力系统'}</strong><span>{en ? 'Conditioning & protection' : '调节与保护'}</span><span className="pcGrid" data-from="electricity" data-to="grid">{en ? 'Grid exchange' : '电网交换'}</span></div>
+      <figure className="pcElectricity" data-from="electricity" data-to="grid">
+        <img className="pcGridEquipment" src="/images/story/electric-grid.png" width="1024" height="1536" loading="lazy" alt={en ? 'Concept illustration of a step-up transformer, switchgear and transmission pylons' : '升压变压器、开关设备与输电铁塔的概念插画'}/>
+        <figcaption>
+          <span className="pcOverline">ELECTRICITY & GRID</span>
+          <strong>{en ? 'Connect to the grid' : '连接电网'}</strong>
+          <span>{en ? 'Condition · protect · step up' : '调节 · 保护 · 升压'}</span>
+          <span className="pcGrid"><span aria-hidden="true">⇄</span> {en ? 'Grid exchange' : '电网交换'}</span>
+        </figcaption>
+      </figure>
     </div>
     <div className="pcSupportLoops">
       <div className="pcHeatLoop" data-from="conversion" data-to="heat-sink"><span aria-hidden="true">↘</span><p><strong>{en ? 'Heat rejection & cooling' : '排热与冷却'}</strong><span>{en ? 'A separate heat sink, not an electrical stage' : '独立冷端支路，不串接在电力输出链上'}</span></p></div>

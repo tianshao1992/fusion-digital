@@ -1,7 +1,7 @@
 import PlasmaTrajectories from './PlasmaTrajectories';
 import StoryProgress from './StoryProgress';
 import StoryControlTimeline from './StoryControlTimeline';
-import { TwinValueDiagram } from './StoryScienceGraphics';
+import AgentLearningCycle from './AgentLearningCycle';
 import { LayerDiagram } from './ArchitectureVisuals';
 import PowerConversionMap from './PowerConversionMap';
 import { capabilities } from './home-content';
@@ -45,11 +45,7 @@ export default function FusionStory({ en }: { en: boolean }) {
     <section className="ssSection ssValue" id="twin-value" data-story="3" aria-labelledby="value-heading">
       <Chapter number="04" label="BEYOND ALGORITHMS" en={en}/>
       <div className="ssValueHeading"><h2 id="value-heading">{en ? <>The next frontier of AI<br/>is <em>making it work.</em></> : <>AI 的下一步，<br/>不止于<em>算法。</em></>}</h2><p>{en ? 'For fusion, intelligence matters when it can be tested, extended and improved.' : '面向聚变，真正的价值在于：如何验证，如何高效外推，如何持续进化。'}</p></div>
-      <div className="ssValueLayout"><TwinValueDiagram en={en}/><div className="ssValueRows">{[
-        ['01', '验证', 'Verify', '让算法接受物理与实验的检验。', 'Test algorithms against physics and experiments.', '把“看起来有效”变成“有证据可依”。', 'Turn a promising result into an evidence-backed one.'],
-        ['02', '外推', 'Extend', '以更少的真实实验，探索更多未知工况。', 'Explore more conditions with fewer physical experiments.', '用孪生筛选假设，用实验检验边界。', 'Screen hypotheses in the twin. Test the boundary in reality.'],
-        ['03', '进化', 'Evolve', '让每一次运行，成为下一次改进的起点。', 'Make each run the starting point of the next improvement.', '数据回流，模型校准，策略迭代。', 'Return data. Calibrate models. Refine policies.'],
-      ].map(([number, zh, english, zhCopy, enCopy, zhSmall, enSmall]) => <article key={number}><span>{number}</span><h3>{en ? english : zh}</h3><div><p>{en ? enCopy : zhCopy}</p><small>{en ? enSmall : zhSmall}</small></div></article>)}</div></div>
+      <AgentLearningCycle en={en}/>
       <div className="ssSectionFoot"><span>{en ? 'DATA × PHYSICS × EXPERIMENTS' : '数据 × 物理 × 实验'}</span><a className="ssUnderlink" href="/simulations">{en ? 'Explore simulation engines' : '进入仿真引擎'}</a></div>
     </section>
 
