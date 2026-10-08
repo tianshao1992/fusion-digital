@@ -1,0 +1,55 @@
+/* Shared site tokens keep the three scientific illustrations coherent in both themes. */
+.ssLayerVisual { --diagram-height:clamp(230px,20vw,285px); margin:0 0 26px; width:100%; min-width:0; }
+.ssArchitectureSvg { display:block; width:100%; height:var(--diagram-height); overflow:visible; }
+.ssVisualEyebrow { fill:var(--color-ink-muted); font:500 10px Arial,sans-serif; letter-spacing:.6px; }
+.ssVisualLabel { fill:var(--color-ink); font:500 14px Arial,sans-serif; }
+.ssVisualSmall { fill:var(--color-ink-muted); font:400 11px Arial,sans-serif; }
+.ssRsiNode { fill:var(--color-surface); stroke:var(--color-border-strong); stroke-width:1; }
+.ssRsiAgent { fill:var(--color-info-strong); stroke:var(--color-info-strong); }
+.ssRsiAgentText { fill:var(--color-canvas); font:500 15px Arial,sans-serif; }
+.ssRsiEdges { fill:none; stroke:var(--color-info-strong); stroke-width:1.2; }
+.ssRsiRecursion { fill:none; stroke:var(--color-accent-strong); stroke-width:2.4; stroke-dasharray:8 92; animation:ss-rsi-cycle 7s linear infinite; animation-play-state:paused; }
+.ssRsiRetain { fill:none; stroke:var(--color-info-strong); stroke-width:.9; stroke-dasharray:3 4; opacity:.6; }
+.ssRsiArchive { fill:none; stroke:var(--color-border-strong); stroke-width:1; }
+.ssGeneration { fill:var(--color-info-strong); }
+.ssMhdVisual { height:var(--diagram-height); display:grid; grid-template-rows:20px minmax(0,1fr) 18px 26px; }
+.ssMhdTitle { display:flex; align-items:center; justify-content:space-between; font:500 10px Arial,sans-serif; letter-spacing:.5px; color:var(--color-ink-muted); }
+.ssMhdTitle > span:last-child { font-size:12px; letter-spacing:0; }
+.ssMhdCanvas { min-width:0; min-height:0; position:relative; }
+.ssMhdCanvas > :is(canvas,svg) { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; }
+.ssMhdCanvas svg { opacity:.2; }
+.ssFieldLegend { display:flex; align-items:center; justify-content:flex-end; gap:5px; color:var(--color-ink-muted); font:11px Arial,sans-serif; }
+.ssFieldLegend i { display:block; width:48px; height:4px; background:linear-gradient(90deg,var(--color-info-strong),var(--color-surface),var(--color-accent-strong)); }
+.ssFieldLegend > span:last-child { margin-left:5px; }
+.ssMhdSteps { display:flex; justify-content:space-between; align-items:flex-end; gap:5px; font:11px/1.4 Arial,sans-serif; color:var(--color-ink-muted); }
+.ssMhdSteps b { font-size:16px; font-weight:400; color:var(--color-info-strong); }
+.ssTrackingAxis { fill:none; stroke:var(--color-border-strong); stroke-width:.9; }
+.ssTrackingTarget { fill:none; stroke:var(--color-info-strong); stroke-width:1.4; stroke-dasharray:4 3; }
+.ssTrackingResponse { fill:none; stroke:var(--color-accent-strong); stroke-width:1.8; stroke-linejoin:round; stroke-linecap:round; }
+.ssControlTrace { animation:ss-control-trace 7s linear infinite; animation-play-state:paused; }
+.ssLayerVisual[data-running='true'] :is(.ssRsiRecursion,.ssControlTrace) { animation-play-state:running; }
+.ssLayerVisual figcaption { display:flex; align-items:center; justify-content:space-between; gap:8px; padding-top:14px; margin-top:10px; border-top:1px solid var(--color-border); color:var(--color-ink-muted); font-size:11px; line-height:1.6; }
+.ssLayerVisual figcaption > span { max-width:85%; }
+.ssLayerVisual button { flex-shrink:0; background:transparent; color:var(--color-ink-muted); border:1px solid var(--color-border-strong); border-radius:20px; padding:5px 10px; min-height:30px; font-size:11px; cursor:pointer; }
+.ssLayerVisual button:hover:not(:disabled) { background:var(--color-surface); color:var(--color-ink); }
+.ssLayerVisual button:disabled { cursor:default; opacity:.65; }
+@keyframes ss-rsi-cycle { to { stroke-dashoffset:-100; } }
+@keyframes ss-control-trace { 0% { clip-path:inset(0 60% 0 0); } 65%,100% { clip-path:inset(0 0 0 0); } }
+@media (min-width:801px) and (max-width:1100px) {
+  .ssArchitecture .ssArchitectureFlow { grid-template-columns:1fr; gap:22px; }
+  .ssArchitectureFlow article { display:grid; grid-template-columns:minmax(280px,1fr) 1fr; gap:0 36px; }
+  .ssArchitectureFlow .ssLayerVisual { grid-column:1; grid-row:1/6; margin:0; --diagram-height:260px; }
+  .ssArchitectureFlow article > :not(.ssLayerVisual) { grid-column:2; }
+  .ssArchitectureFlow .ssLayerNumber { font-size:24px; margin:20px 0 10px; }
+  .ssArchitectureFlow h3 { font-size:32px; }
+  .ssArchitectureFlow small { margin-top:10px; }
+  .ssLayerLink { flex-direction:row; justify-content:center; }
+  .ssLayerLink b { transform:rotate(90deg); }
+}
+@media (max-width:800px) {
+  .ssArchitecture h2 em { display:block; }
+  .ssLayerVisual { --diagram-height:280px; margin-bottom:14px; }
+  .ssLayerLink { align-self:start; }
+}
+@media (max-width:400px) { .ssLayerVisual { --diagram-height:235px; } .ssMhdSteps { font-size:10px; } }
+@media (prefers-reduced-motion:reduce) { .ssRsiRecursion,.ssControlTrace { animation:none; } }

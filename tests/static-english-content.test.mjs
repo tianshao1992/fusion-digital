@@ -7,7 +7,7 @@ const root = process.cwd();
 const read = (relativePath) => readFile(path.join(root, relativePath), 'utf8');
 
 const routeExpectations = [
-  ['app/page.tsx', 'FusionHero'],
+  ['app/page.tsx', 'FusionStory'],
   ['app/digital-prototype/page.tsx', 'MultiDeviceWorkspace'],
   ['app/explore/page.tsx', 'knowledgeModules'],
   ['app/vision/page.tsx', 'FusionArchitecture'],
@@ -75,10 +75,10 @@ test('editorial photographs and labelled concepts are local, credited and bounde
   assert.match(photoComponent, /fetchPriority/);
   assert.match(vr, /device="EXL-50U"[^>]*priority/);
   const landing = await read('app/components/home/FusionLanding.tsx');
-  const hero = await read('app/components/home/FusionHero.tsx');
+  const story = await read('app/components/home/FusionStory.tsx');
   assert.match(landing, /<Exl50uVrTour en=\{en\}/);
   assert.match(controlCase, /<FusionControlCase/);
-  assert.match(hero, /Beyond the known/);
+  assert.match(story, /FUSION DIGITAL TWIN/);
   assert.match(landing, /en \?/);
   assert.match(explore, /device="ITER"/);
   assert.match(photoComponent, /'lazy'/);

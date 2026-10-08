@@ -344,8 +344,8 @@ test('server-renders the FusionDigital community portal', async () => {
   assert.match(html, /class="brandWordmark"/);
   assert.match(html, /class="brandFusion">Fusion/);
   assert.match(html, /class="brandDigital">Digital/);
-  assert.match(html, /让智能，走出已知。/);
-  assert.match(englishHomeHtml, /Beyond the known\./);
+  assert.match(html, /让聚变，/);
+  assert.match(englishHomeHtml, /Fusion begins/);
   for (const href of ['/digital-prototype', '/explore', '/vision', '/control/exl50u']) {
     assert.ok(html.includes(`href="${href}"`), `homepage must link directly to ${href}`);
   }
@@ -437,57 +437,163 @@ test('independent research pages preserve diagrams, devices, photographs and sci
   assert.doesNotMatch(html, /发电系统|POWER SYSTEMS|本质安全/);
 });
 
-test('AI4Fusion homepage connects verification, extrapolation, evolution and experimental evidence', async () => {
+test('scroll-story homepage presents six ordered themes and preserves functional entry points', async () => {
   const html = (await htmlFor('/')).replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
+  const text = html.replace(/<!--[^]*?-->/g, '').replace(/<[^>]*>/g, '');
   assert.equal((html.match(/<h1\b/g) ?? []).length, 1);
   assert.equal((html.match(/id="capabilities"/g) ?? []).length, 1);
-  for (const href of ['/digital-prototype', '/fusion-data', '/simulations', '/search', '/knowledge-graph', '/facilities', '/vision', '/explore', '/control/exl50u']) {
+  assert.deepEqual([...html.matchAll(/data-story="(\d)"/g)].map(m => m[1]), ['0', '1', '2', '3', '4', '5']);
+  for (const href of ['/digital-prototype', '/fusion-data', '/simulations', '/search', '/knowledge-graph', '/facilities', '/vision', '/explore', '/control/exl50u', '/ai']) {
     assert.ok(html.includes(`href="${href}"`), `homepage must expose ${href} without client interaction`);
   }
-  for (const text of ['700+', '≤ 2 cm', '&lt; 10 kA', '400–600 kA', '678', '786', 'FusionEvolve', 'FusionControl', '氢硼', '不代表 EXL-50U 已实现燃烧等离子体或发电']) {
-    assert.ok(html.includes(text), `homepage must retain ${text}`);
+  for (const value of ['700+', '≤ 2 cm', '&lt; 10 kA', '400–600 kA', '678', '786', 'FusionEvolve', 'FusionControl', '氢硼', '不代表 EXL-50U 已实现燃烧等离子体或发电']) {
+    assert.ok(text.includes(value), `homepage must retain ${value}`);
   }
   assert.match(html, /href="mailto:liutianyuan@enn\.cn"/);
   assert.doesNotMatch(html, /mailto:tianshao1992@gmail\.com/);
-  assert.match(html, /aria-label="聚变能量转化阶段"/);
-  for (const text of ['验证，让算法可用', '外推，让探索高效', '进化，让经验生长', '厂用电回流', '能量账本']) {
-    assert.ok(html.includes(text), 'homepage must explain '+text);
-  }
-  const heroHtml = html.match(/<header class="fdHero[^\"]*"[\s\S]*?<\/header>/)?.[0] ?? '';
-  assert.ok(heroHtml.includes('让智能，走出已知'));
-  assert.doesNotMatch(heroHtml, /氢硼|p–¹¹B|p \+ ¹¹B/);
-  for (const stage of ['plasma', 'conversion', 'power']) {
-    assert.ok(heroHtml.includes(`/images/fusion-energy/${stage}-v1.webp`));
-  }
-  assert.match(heroHtml, /AI 生成概念图/);
-  assert.doesNotMatch(heroHtml, /fdEnergySchematic|fdConverterGlyph|<ellipse/);
-  assert.doesNotMatch(html, /id="(?:prototype-workspace|domains)"|data-three-viewer=|class="fdResearchDisclosure"/);
+  for (const value of ['让聚变，', '面向一座电厂', '一个演进闭环', '验证', '外推', '进化', '常态化运行', '可验证的试验场', '净电功率']) assert.ok(text.includes(value), value);
+  assert.match(html, /聚变反应概念 · 非实测/);
+  assert.doesNotMatch(html, /id="(?:prototype-workspace|domains)"|data-three-viewer=|\/images\/fusion-energy\//);
 });
 
-test('homepage keeps scope notes collapsed while preserving detailed research pages', async () => {
+test('each homepage chapter includes a themed visual with truthful image scope', async () => {
+  const html = (await htmlFor('/')).replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
+  const sections = [...html.matchAll(/<section\b[^>]*data-story="(\d)"[\s\S]*?<\/section>/g)];
+  assert.equal(sections.length, 6);
+  for (const section of sections) assert.match(section[0], /<svg\b|<img\b/, `chapter ${section[1]} needs a visual`);
+  assert.doesNotMatch(html, /螺旋磁约束|高温等离子体|ssPlasmaLabels/);
+  for (const file of ['fusion-energy-source.png', 'power-conversion-atlas.png', 'agent-twin.png']) {
+    assert.ok(html.includes(`/images/story/${file}`));
+    assert.ok((await stat(new URL(`../public/images/story/${file}`, import.meta.url))).size > 1000);
+  }
+  assert.match(html, /概念插画/);
+  assert.match(html, /方法示意 · 非实验数据/);
+  assert.match(html, /src="\/photos\/exl50u-device\.jpg"/);
+  const styles = await readFile(new URL('../app/components/home/fusion-story.css', import.meta.url), 'utf8');
+  for (const token of ['--color-canvas', '--color-surface', '--color-ink', '--color-info-strong', '--color-accent-strong']) assert.ok(styles.includes(`var(${token})`));
+  assert.doesNotMatch(styles, /--story-|#080c14|#293de0|#b7f7de|#e6e9ff/);
+  assert.match(styles, /data-paused='true'\] \.ssPlasmaBloom/);
+  assert.match(styles, /@media\(max-width:440px\).*\.storyHome \.siteNav > \.siteAccountAccess \{ display:none; \}/);
+});
+
+test('plant chapter compares five conditional conversion paths with separate heat and electricity branches', async () => {
+  for (const en of [false, true]) {
+    const response = await render('/', en ? { cookie: 'fusiondigital_locale=en' } : {});
+    const html = (await response.text()).replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
+    const plant = html.match(/<section\b[^>]*id="power-plant"[\s\S]*?<\/section>/)?.[0];
+    assert.ok(plant);
+    assert.deepEqual([...plant.matchAll(/data-route="([^"]+)"/g)].map(m => m[1]), ['rankine', 'brayton', 'direct', 'mhd', 'solid-state']);
+    assert.match(plant, /依装置选择的候选路线，并非同时接入|Alternative routes, selected for the device/);
+    assert.match(plant, /data-from="conversion" data-to="heat-sink"/);
+    assert.match(plant, /data-from="electricity" data-to="grid"/);
+    assert.match(plant, /data-from="electricity" data-to="auxiliary-systems"/);
+    assert.match(plant, /布雷顿热循环|Brayton thermal cycle/);
+    assert.match(plant, /不能假定任意托卡马克可直接接入|not a plug-in option for any tokamak/);
+    assert.match(plant, /图中仅以热光伏设备作为代表|illustration represents TPV only/);
+    assert.match(plant, /非工程设计|NOT AN ENGINEERING DESIGN/);
+    assert.match(plant, /冷凝 · 给水 · 吸热|Condense · pump · heat addition/);
+    assert.match(plant, /冷却 · 压缩 · 吸热|Cool · compress · heat addition/);
+    assert.doesNotMatch(plant, /future-plant\.png|中子|包层|neutron|blanket|\d+%/);
+    assert.equal((plant.match(/href="\/images\/story\/power-conversion-atlas.png"/g) ?? []).length, 5);
+  }
+});
+
+test('homepage keeps scientific scope notes collapsed and presents confirmed rates in both languages', async () => {
   for (const en of [false, true]) {
     const response = await render('/', en ? { cookie: 'fusiondigital_locale=en' } : {});
     assert.equal(response.status, 200);
     const html = (await response.text()).replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
     const visible = html.replace(/<details\b[^>]*>[\s\S]*?<\/details>/gi, '');
-    assert.match(html, /fdPrinciplesBrief/);
-    assert.match(html, /fdLearningBrief/);
-    assert.match(html, /href="#capabilities"/);
     assert.doesNotMatch(html, /<details\b[^>]*\sopen(?:[\s=>])/);
-    assert.doesNotMatch(visible, /本网站不连接装置执行器|误差定义、统计窗口|no actuator write path|evaluation windows/);
-    assert.doesNotMatch(html, /class="fdSafetyGate"|class="fdLoopNote"|class="fdPerformanceNote"/);
-    assert.match(html, /fdArchitectureNote/);
-    assert.match(html, /AI 生成概念图|AI-generated concepts/);
+    assert.doesNotMatch(visible, /本网站不连接装置执行器|统计定义与逐炮|this website does not connect to device actuators/);
+    assert.match(html, /未来系统概念|FUTURE SYSTEM CONCEPT/);
     assert.match(html, /架构愿景|Architecture vision/);
-    assert.match(html, /EXL-50U 团队报告结果|Results reported by the EXL-50U team/);
-    assert.doesNotMatch(visible, /2026-08-15/);
+    assert.match(html, /EXL-50U 团队报告结果|RESULTS REPORTED BY THE EXL-50U TEAM/);
     for (const rate of ['53%', '70%', '73%', '94%']) assert.ok(visible.includes(rate));
+    assert.match(html, /type="range" min="0" max="3" step="1"/);
+    assert.equal((html.match(/class="ssPlotStage/g) ?? []).length, 4);
+    assert.equal((html.match(/class="ssRatePoint/g) ?? []).length, 4);
+    assert.equal((html.match(/class="ssRateLine/g) ?? []).length, 3);
   }
-  const vision = await htmlFor('/vision');
-  const casePage = await htmlFor('/control/exl50u');
-  assert.match(vision, /class="fdSafetyGate"/);
-  assert.match(vision, /class="fdBoundary"/);
-  assert.match(casePage, /class="fdLoopNote"/);
+  assert.match(await htmlFor('/vision'), /class="fdSafetyGate"/);
+  assert.match(await htmlFor('/control/exl50u'), /class="fdLoopNote"/);
+});
+
+test('hero illustrates confined reaction energy without presenting it as observed burning plasma', async () => {
+  for (const en of [false, true]) {
+    const response = await render('/', en ? { cookie: 'fusiondigital_locale=en' } : {});
+    const html = (await response.text()).replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
+    const hero = html.match(/<section\b[^>]*id="top"[\s\S]*?<\/section>/)?.[0];
+    assert.ok(hero);
+    for (const layer of ['ssPlasmaVolume', 'ssPlasmaThermalCore', 'ssPlasmaReactions', 'ssReactionHalo', 'ssReactionLight']) assert.ok(hero.includes(`class="${layer}"`));
+    assert.equal((hero.match(/class="ssReactionLight"/g) ?? []).length, 18);
+    const grains = hero.match(/<g class="ssPlasmaGrains"[\s\S]*?<\/g>/)?.[0];
+    assert.equal((grains?.match(/cx="\d+\.\d{2}" cy="\d+\.\d{2}"/g) ?? []).length, 100, 'grain coordinates must serialize at stable precision across server/browser');
+    const fieldGradient = hero.match(/<linearGradient id="plasma-line"[\s\S]*?<\/linearGradient>/)?.[0];
+    assert.match(fieldGradient, /--ss-field-line/);
+    assert.match(fieldGradient, /--ss-field-highlight/);
+    assert.doesNotMatch(fieldGradient, /--color-accent|--ss-plasma-core/);
+    for (const layer of ['ssPlasmaField', 'ssPlasmaFieldGlow', 'ssPlasmaFieldCore']) {
+      assert.match(hero, new RegExp(`class="${layer}"[^>]+stroke="url\\(#plasma-line\\)"`));
+    }
+    assert.match(hero, /class="ssPlasmaVolume"[^>]+stroke="url\(#plasma-heat\)"/);
+    assert.match(hero, /产物沉积带来的自加热|deposited-product self-heating/);
+    assert.match(hero, /不对应反应率、温度|not measured particle trajectories, reaction rates, temperatures/);
+    assert.match(hero, /不表示已实现燃烧等离子体|not measured[\s\S]*an achieved burning plasma/);
+    assert.match(hero, /聚变反应概念 · 非实测|FUSION REACTION CONCEPT · NOT MEASURED/);
+    assert.doesNotMatch(hero, /<animate\b|<animateMotion\b|中子|包层|neutron|blanket/);
+  }
+  const motion = await readFile(new URL('../app/components/home/PlasmaTrajectories.tsx', import.meta.url), 'utf8');
+  const styles = await readFile(new URL('../app/components/home/fusion-story.css', import.meta.url), 'utf8');
+  assert.match(motion, /visible && !document.hidden/);
+  assert.match(motion, /observer.disconnect\(\)/);
+  assert.match(styles, /data-active='true'\]\[data-paused='false'\]/);
+  assert.match(styles, /prefers-reduced-motion:reduce\) \{ \.ssPlasmaBloom,\.ssPlasmaVolume,\.ssReactionHalo,\.ssReactionLight \{ animation:none/);
+});
+
+test('story diagrams preserve functional relations without claiming measured particle paths or achieved power', async () => {
+  for (const en of [false, true]) {
+    const response = await render('/', en ? { cookie: 'fusiondigital_locale=en' } : {});
+    const html = (await response.text()).replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
+    for (const [from, to] of [
+      ['plasma', 'engineering'], ['engineering', 'electricity'], ['electricity', 'auxiliary-systems'],
+      ['FusionEvolve', 'FusionDigital'], ['FusionDigital', 'FusionControl'], ['device', 'digital-twin-and-agents'],
+    ]) assert.ok(html.includes(`data-from="${from}" data-to="${to}"`), `${from} must connect to ${to}`);
+    assert.match(html, /排热|rejects? heat|heat rejection/);
+    assert.match(html, /启动或功率不足时|External electricity supplies startup or a deficit/);
+    assert.match(html, /非实测粒子轨迹|not measured particle trajectories/);
+    assert.match(html, /aria-labelledby="plasma-title plasma-description"/);
+    assert.match(html, /aria-labelledby="growth-title growth-desc"/);
+    assert.match(html, /href="https:\/\/www.iter.org\/faqs"/);
+  }
+  const motion = await readFile(new URL('../app/components/home/StoryControlTimeline.tsx', import.meta.url), 'utf8');
+  const styles = await readFile(new URL('../app/components/home/fusion-story.css', import.meta.url), 'utf8');
+  assert.match(motion, /if \(!playing \|\| !visible \|\| reducedMotion\) return/);
+  assert.match(motion, /window\.clearTimeout\(timer\)/);
+  assert.match(motion, /observer\.disconnect\(\)/);
+  assert.match(motion, /media\.removeEventListener/);
+  assert.match(motion, /setPlaying\(false\)/);
+  assert.match(styles, /@media\(prefers-reduced-motion:reduce\)/);
+  assert.doesNotMatch(motion, /setInterval|requestAnimationFrame/);
+});
+
+test('homepage architecture separates RSI, analytic MHD and synthetic tracking from experiment results', async () => {
+  for (const en of [false, true]) {
+    const response = await render('/', en ? { cookie: 'fusiondigital_locale=en' } : {});
+    const html = (await response.text()).replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
+    const section = html.match(/<section\b[^>]*id="architecture"[\s\S]*?<\/section>/)?.[0];
+    assert.ok(section);
+    for (const layer of ['agent', 'twin', 'control']) assert.match(section, new RegExp(`data-layer="${layer}"`));
+    assert.match(section, /递归自我改进|RECURSIVE SELF-IMPROVEMENT/);
+    assert.match(section, /未通过，保留原版本|Retain if rejected/);
+    assert.match(section, /Aₙ → Aₙ₊₁/);
+    assert.match(section, /解析场示意 · 非求解结果|Analytic illustration · not solver output/);
+    assert.match(section, /合成响应 · 非实验波形|Synthetic response · not an experiment/);
+    assert.match(section, /在线推演目标|online inference target/);
+    assert.match(section, /<canvas\b[^>]*aria-hidden="true"/);
+    assert.doesNotMatch(section, /1\s*cm|34\s*keV|10\s*MW|ssLayerDiagram/);
+    assert.equal((section.match(/aria-pressed="false"/g) ?? []).length, 3);
+  }
 });
 
 test('architecture and EXL-50U detail pages retain evidence semantics and accessible chart fallback', async () => {
@@ -513,12 +619,9 @@ test('architecture and EXL-50U detail pages retain evidence semantics and access
   assert.doesNotMatch(source, /estimated-residual|cumulativeFloor|634/);
   assert.match(source, /verified: false/);
   const landing = await readFile(new URL('../app/components/home/ControlEvidence.tsx', import.meta.url), 'utf8');
-  const hero = await readFile(new URL('../app/components/home/FusionHero.tsx', import.meta.url), 'utf8');
   const chartOption = await readFile(new URL('../app/components/home/control-chart-option.ts', import.meta.url), 'utf8');
   assert.match(chartOption, /animation: false/, 'theme updates must not replay data-growth animations');
   assert.match(landing, /useChartTheme/);
-  assert.match(hero, /prefers-reduced-motion: reduce/);
-  assert.doesNotMatch(hero, /neutron|blanket|中子|包层|D–T/i);
   assert.match(html, /exl50u-control-20261001\.png/);
   assert.match(landing, /chart\?\.dispose\(\)/);
 });

@@ -166,7 +166,7 @@ test('EXL-50U VR tour belongs to the case page photograph, not the entry page or
   assert.match(vr, /在新窗口打开 EXL-50U VR 实景/);
   assert.doesNotMatch(vr, /allow-top-navigation|allow-downloads|postMessage|dangerouslySetInnerHTML/);
   assert.doesNotMatch(home, /Exl50uVrTour/);
-  assert.match(home, /<FusionControlCase en=\{en\} compact/);
+  assert.match(home, /<FusionStory en=\{en\}/);
   assert.match(landing, /!compact &&/);
   assert.match(controlCase, /<FusionControlCase en=\{en\}/);
   assert.match(landing, /<Exl50uVrTour en=\{en\}\s*\/>/);
@@ -319,7 +319,7 @@ test('the prototype mounts on an independent page while the homepage remains a l
   ]);
 
   assert.doesNotMatch(home, /MultiDeviceWorkspace|TokamakCadViewer|parseDeviceCatalog|FusionTwinSystemMap|PhaseOneRoadmap|ResearchDisclosure/);
-  assert.match(home, /<FusionControlCase en=\{en\} compact/);
+  assert.match(home, /<FusionStory en=\{en\}/);
   assert.match(prototype, /<MultiDeviceWorkspace catalog=\{deviceCatalog\} \/>/);
   assert.match(prototype, /parseDeviceCatalog\(deviceCatalogJson\)/);
   assert.doesNotMatch(prototype, /redirect\('\/#prototype-workspace'\)/);
